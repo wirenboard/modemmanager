@@ -5,7 +5,6 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="19d2", GOTO="mm_zte_port_types"
 GOTO="mm_zte_port_types_end"
 
 LABEL="mm_zte_port_types"
-
 SUBSYSTEMS=="usb", ATTRS{bInterfaceNumber}=="?*", ENV{.MM_USBIFNUM}="$attr{bInterfaceNumber}"
 
 ATTRS{idVendor}=="19d2", ATTRS{idProduct}=="0001", ENV{.MM_USBIFNUM}=="00", ENV{ID_MM_ZTE_PORT_TYPE_MODEM}="1"

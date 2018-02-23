@@ -51,17 +51,16 @@
     </formalpara>
   </chapter>
 
-  <chapter id="ref-overview-modem-detection-and-setup">
-    <title>Modem detection and setup</title>
+  <chapter id="ref-overview-modem-detection">
+    <title>Modem detection</title>
 
     <section>
-      <title>Detection mechanisms</title>
+      <title>Builds with udev support</title>
       <para>
         ModemManager requires <emphasis>udev</emphasis>-powered Linux kernels in order
         to get notified of possible available Modems. udev will report each of the ports
-        found in the device, and ModemManager will probe each of the ports marked with
-        the <emphasis>ID_MM_CANDIDATE</emphasis> tag in udev. This includes both "tty"
-        and "net" ports.
+        found in the device, and ModemManager will consider for probing each of the ports
+        marked with the <emphasis>ID_MM_CANDIDATE</emphasis> tag in udev.
       </para>
       <para>
         Aditionally, users of RS232-based devices may need to request additional manual
@@ -72,283 +71,556 @@
     </section>
 
     <section>
-      <title>Probing</title>
+      <title>Builds without udev support</title>
       <para>
-        Whenever a new device is detected by ModemManager, port probing process will
-        get started, so that we can determine which kind of ports we have, and also
-        which plugin we need to use for the specific device. Devices may expose one or
-        more ports, and all of them will follow the same probing logic.
+        When the udev daemon isn't available in the system, the
+        <link linkend="gdbus-method-org-freedesktop-ModemManager1.ReportKernelEvent">ReportKernelEvent</link>
+        method in the
+        <link linkend="gdbus-org.freedesktop.ModemManager1">Manager interface</link>
+        may be used to notify the ModemManager daemons of device addition and removals.
       </para>
       <para>
-        The whole probing process, including pre-probing and post-probing filters, is
-        implemented in the core ModemManager daemon. Plugins will just configure their
-        own special needs in the probing process, so that only the steps required by the
-        given plugin are executed. For example, plugins which do not support RS232
-        devices will not need AT-based vendor or product filters.
+        When udev support is disabled in the build, the <emphasis>ID_MM_CANDIDATE</emphasis>
+        tag and manual scan requests are still applicable. ModemManager has a built-in parser
+        of udev rule files that is enabled when udev itself isn't available.
+      </para>
+    </section>
+  </chapter>
+
+  <chapter id="ref-overview-modem-filter">
+    <title>Modem filter</title>
+
+    <para>
+      ModemManager will not probe all TTYs, NET and cdc-wdm ports found in the system,
+      as this may end up interfering e.g. with TTYs that have nothing to do with modem
+      devices.
+    </para>
+    <para>
+      The daemon comes with several predefined <emphasis>filter policies</emphasis>, each
+      of them composed of one or more <emphasis>filter rules</emphasis>.
+    </para>
+
+    <section>
+      <title>Filter rules</title>
+      <para>
+        The device filter in ModemManager defines the following independent filter rules. The
+        predefined filter policies are based on one or more of these predefined filter rules.
+        <itemizedlist>
+          <listitem>
+            <para><emphasis>MM_FILTER_RULE_EXPLICIT_WHITELIST</emphasis></para>
+            <para>
+              This filter allows users to manually tag devices and/or device ports with the
+              <emphasis>ID_MM_DEVICE_PROCESS</emphasis> udev tag. If the filter finds this tag,
+              the device and/or device ports will be automatically accepted and port probing
+              will be allowed.
+            </para>
+            <programlisting>
+$ sudo vim /lib/udev/rules.d/78-mm-whitelist-internal-modem.rules
+    ACTION!="add|change|move", GOTO="mm_whitelist_internal_modem_end"
+    ATTRS{idVendor}=="1199", ATTRS{idProduct}=="a001", ENV{ID_MM_DEVICE_PROCESS}="1"
+    LABEL="mm_whitelist_internal_modem_end"
+// Apply new rules without reboot
+$ sudo udevadm control --reload
+$ sudo udevadm trigger
+            </programlisting>
+          </listitem>
+          <listitem>
+            <para><emphasis>MM_FILTER_RULE_VIRTUAL</emphasis></para>
+            <para>
+              This filter will automatically flag as forbidden all ports exposed by virtual
+              devices, like the 'lo' network interface or the tty0, tty1... virtual terminals.
+              There is no reason to disable this filter, except for testing purposes.
+            </para>
+          </listitem>
+          <listitem>
+            <para><emphasis>MM_FILTER_RULE_NET</emphasis></para>
+            <para>
+              This filter will automatically flag as allowed all network ports exposed by
+              devices. Unless there is a will to explicitly forbid network ports, this filter
+              should always be enabled.
+            </para>
+          </listitem>
+          <listitem>
+            <para><emphasis>MM_FILTER_RULE_CDC_WDM</emphasis></para>
+            <para>
+              This filter will automatically flag as allowed all cdc-wdm ports exposed by
+              devices. Unless there is a will to explicitly forbid the cdc-wdm ports exposed
+              by qmi_wwan, cdc_mbim or huawei-cdc-ncm kernel drivers, this filter should always
+              be enabled.
+            </para>
+          </listitem>
+          <listitem>
+            <para><emphasis>MM_FILTER_RULE_TTY, MM_FILTER_RULE_TTY_DEFAULT_ALLOWED and MM_FILTER_RULE_TTY_DEFAULT_FORBIDDEN</emphasis></para>
+            <para>
+              If the MM_FILTER_RULE_TTY filter is disabled, no TTY port will be allowed. If this
+              filter is enabled, TTY ports will only be allowed if the TTY-specific filters (defined
+              next) allow it.
+            </para>
+            <para>
+              The MM_FILTER_RULE_TTY_DEFAULT_ALLOWED and MM_FILTER_RULE_TTY_DEFAULT_FORBIDDEN rules allow
+              defining what happens when a TTY port isn't explicitly forbidden or accepted by any of
+              the TTY-specific filters. When MM_FILTER_RULE_TTY is enabled, one of these other two options
+              must be set.
+            </para>
+          </listitem>
+          <listitem>
+            <para><emphasis>MM_FILTER_RULE_TTY_BLACKLIST</emphasis></para>
+            <para>
+              This filter will not allow probing any of the devices flagged as
+              <emphasis>ID_MM_DEVICE_IGNORE</emphasis>, like the ones in the default blacklist
+              shipped by ModemManager.
+            </para>
+          </listitem>
+          <listitem>
+            <para><emphasis>MM_FILTER_RULE_TTY_MANUAL_SCAN_ONLY</emphasis></para>
+            <para>
+              This filter will not allow automatic probing any of the devices flagged as
+              <emphasis>ID_MM_DEVICE_MANUAL_SCAN_ONLY</emphasis>, like the ones in the default
+              USB serial adapters greylist shipped by ModemManager. Devices flagged like
+              this will only be probed when a manual scan is requested via the
+              <link linkend="gdbus-method-org-freedesktop-ModemManager1.ScanDevices">ScanDevices</link>
+              method.
+            </para>
+          </listitem>
+          <listitem>
+            <para><emphasis>MM_FILTER_RULE_TTY_PLATFORM_DRIVER</emphasis></para>
+            <para>
+              If this filter is enabled, all platform TTY ports not explicitly flagged with the
+              <emphasis>ID_MM_PLATFORM_DRIVER_PROBE</emphasis> will be forbidden. If the flag
+              is found in a platform TTY port, port probing will be allowed directly.
+            </para>
+            <para>
+              Note that this filter is obsoleted by the more generic MM_FILTER_RULE_EXPLICIT_WHITELIST
+              filter. It is maintained for backwards compatibility with older ModemManager versions.
+            </para>
+          </listitem>
+          <listitem>
+            <para><emphasis>MM_FILTER_RULE_TTY_DRIVER</emphasis></para>
+            <para>
+              If this filter is enabled, all TTY ports managed by modem-specific kernel drivers will be
+              allowed automatically.
+            </para>
+          </listitem>
+          <listitem>
+            <para><emphasis>FILTER_RULE_TTY_ACM_INTERFACE</emphasis></para>
+            <para>
+              If this filter is enabled, all TTY ports managed by the cdc-acm kernel driver with
+              class=2/subclass=2/protocol=1 (AT command capable ttyACM port) will be allowed
+              automatically.
+            </para>
+          </listitem>
+          <listitem>
+            <para><emphasis>MM_FILTER_RULE_TTY_WITH_NET</emphasis></para>
+            <para>
+              If this filter is enabled, all TTY ports for devices that also expose a network
+              interface port will be allowed automatically.
+            </para>
+          </listitem>
+        </itemizedlist>
+      </para>
+    </section>
+
+    <section>
+      <title>Filter policies</title>
+
+      <para>
+        The predefined filter policies are:
+        <itemizedlist>
+          <listitem>
+            <para><emphasis>Whitelist only</emphasis></para>
+            <para>
+              This is a policy where only the MM_FILTER_RULE_EXPLICIT_WHITELIST rule is enabled.
+            </para>
+            <programlisting># /usr/sbin/ModemManager --filter-policy=WHITELIST-ONLY</programlisting>
+          </listitem>
+          <listitem>
+            <para><emphasis>Default</emphasis></para>
+            <para>
+              This is a policy where the following rules are enabled:
+              <itemizedlist>
+                <listitem>MM_FILTER_RULE_EXPLICIT_WHITELIST</listitem>
+                <listitem>MM_FILTER_RULE_VIRTUAL</listitem>
+                <listitem>MM_FILTER_RULE_NET</listitem>
+                <listitem>MM_FILTER_RULE_CDC_WDM</listitem>
+                <listitem>MM_FILTER_RULE_TTY</listitem>
+                <listitem>MM_FILTER_RULE_TTY_BLACKLIST</listitem>
+                <listitem>MM_FILTER_RULE_TTY_MANUAL_SCAN_ONLY</listitem>
+                <listitem>MM_FILTER_RULE_TTY_PLATFORM_DRIVER</listitem>
+                <listitem>MM_FILTER_RULE_TTY_DEFAULT_ALLOWED</listitem>
+              </itemizedlist>
+            </para>
+            <para>
+              This policy is the default one when a different one not explicitly
+              selected, and is equivalent to the way ModemManager has worked in previous
+              releases. This policy is the least restrictive one, and will end up
+              allowing port probing of all TTYs not explicitly blacklisted in one way
+              or another.
+            </para>
+            <programlisting># /usr/sbin/ModemManager --filter-policy=DEFAULT</programlisting>
+          </listitem>
+          <listitem>
+            <para><emphasis>Strict</emphasis></para>
+            <para>
+              This is a policy where the following rules are enabled:
+              <itemizedlist>
+                <listitem>MM_FILTER_RULE_EXPLICIT_WHITELIST</listitem>
+                <listitem>MM_FILTER_RULE_VIRTUAL</listitem>
+                <listitem>MM_FILTER_RULE_NET</listitem>
+                <listitem>MM_FILTER_RULE_CDC_WDM</listitem>
+                <listitem>MM_FILTER_RULE_TTY</listitem>
+                <listitem>MM_FILTER_RULE_TTY_PLATFORM_DRIVER</listitem>
+                <listitem>MM_FILTER_RULE_TTY_DRIVER</listitem>
+                <listitem>MM_FILTER_RULE_TTY_ACM_INTERFACE</listitem>
+                <listitem>MM_FILTER_RULE_TTY_WITH_NET</listitem>
+                <listitem>MM_FILTER_RULE_TTY_DEFAULT_FORBIDDEN</listitem>
+              </itemizedlist>
+            </para>
+            <para>
+              This policy is stricter than the default one, as by default all TTYs are
+              forbidden except for the ones explicitly allowed by one of the TTY-specific
+              rules. Distributions or users should use this policy if they don't want
+              ModemManager to mess around with TTY ports that may not be exposed by
+              actual modems.
+            </para>
+            <programlisting># /usr/sbin/ModemManager --filter-policy=STRICT</programlisting>
+          </listitem>
+          <listitem>
+            <para><emphasis>Paranoid</emphasis></para>
+            <para>
+              This policy is a mix of the Default and Strict ones:
+              <itemizedlist>
+                <listitem>MM_FILTER_RULE_EXPLICIT_WHITELIST</listitem>
+                <listitem>MM_FILTER_RULE_VIRTUAL</listitem>
+                <listitem>MM_FILTER_RULE_NET</listitem>
+                <listitem>MM_FILTER_RULE_CDC_WDM</listitem>
+                <listitem>MM_FILTER_RULE_TTY</listitem>
+                <listitem>MM_FILTER_RULE_TTY_BLACKLIST</listitem>
+                <listitem>MM_FILTER_RULE_TTY_MANUAL_SCAN_ONLY</listitem>
+                <listitem>MM_FILTER_RULE_TTY_PLATFORM_DRIVER</listitem>
+                <listitem>MM_FILTER_RULE_TTY_DRIVER</listitem>
+                <listitem>MM_FILTER_RULE_TTY_ACM_INTERFACE</listitem>
+                <listitem>MM_FILTER_RULE_TTY_WITH_NET</listitem>
+                <listitem>MM_FILTER_RULE_TTY_DEFAULT_FORBIDDEN</listitem>
+              </itemizedlist>
+            </para>
+            <para>
+              This policy is equivalent to the Strict policy, but where the ModemManager
+              provided blacklist and manual scan only greylist are also used. It is not
+              recommended to use this option in normal setups as the blacklists may be
+              obsoleted in future ModemManager versions (in favor of using the Strict
+              policy as default).
+            </para>
+            <programlisting># /usr/sbin/ModemManager --filter-policy=PARANOID</programlisting>
+          </listitem>
+
+          <listitem>
+            <para><emphasis>Custom</emphasis></para>
+            <para>
+              Any of the previously defined predefined policies may be modified rule per rule
+              by explicitly enabling or disabling rules via environment variables.
+            </para>
+            <para>
+              E.g. this would launch ModemManager with the Default filter policy but with all
+              net and cdc-wdm ports forbidden completely:
+              <programlisting>
+# MM_FILTER_RULE_NET=0 \
+  MM_FILTER_RULE_CDC_WDM=0 \
+  /usr/sbin/ModemManager --filter-policy=DEFAULT</programlisting>
+            </para>
+            <para>
+              E.g. this would launch ModemManager with the Whitelist-only filter policy but also
+              explicitly allowing all net and cdc-wdm ports. Note that in this case, all virtual
+              net ports (e.g. 'lo') are also being allowed.
+              <programlisting>
+# MM_FILTER_RULE_NET=1 \
+  MM_FILTER_RULE_CDC_WDM=1 \
+  /usr/sbin/ModemManager --filter-policy=WHITELIST-ONLY</programlisting>
+            </para>
+          </listitem>
+        </itemizedlist>
       </para>
 
-      <section>
-        <title>Pre-probing filters</title>
-        <para>
-          Pre-probing filters are those which control whether the probing, as
-          requested by the specific plugin, takes place.
-        </para>
-        <itemizedlist>
-          <listitem>
-            <para><emphasis>Allowed vendor IDs</emphasis></para>
-            <para>
-              Plugins can provide a list of udev-reported vendor IDs to be used as
-              pre-probing filters. If the vendor ID reported by the device via udev
-              is found in the list provided by the plugin, port probing will be
-              launched as requested by the given plugin.
-            </para>
-            <para>
-              This filter is specified by the <type>MM_PLUGIN_ALLOWED_VENDOR_IDS</type>
-              property in the <structname>MMPlugin</structname> object provided
-              by the plugin.
-            </para>
-          </listitem>
-          <listitem>
-            <para><emphasis>Product IDs</emphasis></para>
-            <para>
-              Plugins can provide a list of udev-reported pairs of vendor and product
-              IDs to be used as pre-probing filters.
-            </para>
-            <para>
-              If the vendor ID and product ID pair reported by the device via udev is
-              found in the list of 'allowed' pairs provided by the plugin, port probing
-              will be launched as requested by the given plugin. This additional filter
-              should be used when the plugin is expected to work only with a given
-              specific product of a given vendor.
-            </para>
-            <para>
-              If the vendor ID and product ID pair reported by the device via udev is
-              found in the list of 'forbidden' pairs provided by the plugin, port probing
-              will not be launched by this plugin. This additional filter
-              should be used when the plugin supports all devices of a given vendor
-              except for some specific ones.
-            </para>
-            <para>
-              These filters are specified by the <type>MM_PLUGIN_ALLOWED_PRODUCT_IDS</type>
-              and <type>MM_PLUGIN_FORBIDDEN_PRODUCT_IDS</type> properties in the
-              <structname>MMPlugin</structname> object provided by the plugin.
-            </para>
-          </listitem>
-          <listitem>
-            <para><emphasis>Subsystems</emphasis></para>
-            <para>
-              Plugins can specify which subsystems they expect, so that we filter out
-              any port detected with a subsystem not listed by the plugin.
-            </para>
-            <para>
-              This filter is specified by the <type>MM_PLUGIN_ALLOWED_SUBSYSTEMS</type>
-              property in the <structname>MMPlugin</structname> object provided
-              by the plugin.
-            </para>
-          </listitem>
-          <listitem>
-            <para><emphasis>Drivers</emphasis></para>
-            <para>
-              Plugins can specify which drivers they expect, so that we filter out
-              any port detected being managed by a driver not listed by the plugin.
-            </para>
-            <para>
-              Plugins can also specify which drivers they do not expect, so that we
-              filter out any port detected being managed by a driver listed by the plugin.
-            </para>
-            <para>
-              These filters are specified by the <type>MM_PLUGIN_ALLOWED_DRIVERS</type>
-              and <type>MM_PLUGIN_FORBIDDEN_DRIVERS</type> properties in the
-              <structname>MMPlugin</structname> object provided by the plugin.
-            </para>
-          </listitem>
-          <listitem>
-            <para><emphasis>udev tags</emphasis></para>
-            <para>
-              Plugins can provide a list of udev tags, so that we filter out
-              any port detected which doesn't expose any of the given tags.
-            </para>
-            <para>
-              This filter is specified by the <type>MM_PLUGIN_ALLOWED_UDEV_TAGS</type>
-              property in the <structname>MMPlugin</structname> object provided
-              by the plugin.
-            </para>
-          </listitem>
-        </itemizedlist>
-      </section>
+    </section>
+  </chapter>
 
-      <section>
-        <title>Probing sequence</title>
-        <para>
-          Whenever all pre-probing filters of a given plugin pass, ModemManager will run
-          the probing sequence as requested by the specific plugin. The main purpose of the
-          probing sequence step is to determine the type of port being probed, and also
-          prepare the information required in any expected post-probing filter.
-        </para>
-        <itemizedlist>
-          <listitem>
-            <para><emphasis>Custom initialization</emphasis></para>
-            <para>
-              This property allows plugins to provide an asynchronous method which will get
-              executed as soon as the AT port gets opened. This method may be used for any
-              purpose, like running an early command in the ports as soon as possible, or
-              querying the modem for info about the port layout.
-            </para>
-            <para>
-              This configuration is specified by the <type>MM_PLUGIN_CUSTOM_INIT</type>
-              property in the <structname>MMPlugin</structname> object provided
-              by the plugin.
-            </para>
-          </listitem>
-          <listitem>
-            <para><emphasis>AT allowed</emphasis></para>
-            <para>
-              This boolean property allows plugins to specify that they expect and support
-              AT serial ports.
-            </para>
-            <para>
-              This configuration is specified by the <type>MM_PLUGIN_ALLOWED_AT</type>
-              property in the <structname>MMPlugin</structname> object provided
-              by the plugin.
-            </para>
-          </listitem>
-          <listitem>
-            <para><emphasis>Single AT expected</emphasis></para>
-            <para>
-              This boolean property allows plugins to specify that they only expect and support
-              one AT serial port. Whenever the first AT port is grabbed, any remaining AT probing
-              in ports of the same device will get cancelled.
-            </para>
-            <para>
-              This configuration is specified by the <type>MM_PLUGIN_ALLOWED_SINGLE_AT</type>
-              property in the <structname>MMPlugin</structname> object provided
-              by the plugin.
-            </para>
-          </listitem>
-          <listitem>
-            <para><emphasis>Custom AT probing</emphasis></para>
-            <para>
-              This property allows plugins to specify custom commands to check whether a port
-              is AT or not. By default, the 'AT' command will be used if no custom one specified.
-            </para>
-            <para>
-              This configuration is specified by the <type>MM_PLUGIN_CUSTOM_AT_PROBE</type>
-              property in the <structname>MMPlugin</structname> object provided
-              by the plugin.
-            </para>
-          </listitem>
-          <listitem>
-            <para><emphasis>QCDM allowed</emphasis></para>
-            <para>
-              This boolean property allows plugins to specify that they expect and support
-              QCDM serial ports.
-            </para>
-            <para>
-              This configuration is specified by the <type>MM_PLUGIN_ALLOWED_QCDM</type>
-              property in the <structname>MMPlugin</structname> object provided
-              by the plugin.
-            </para>
-          </listitem>
-          <listitem>
-            <para><emphasis>Check Icera support</emphasis></para>
-            <para>
-              This boolean property allows plugins to specify that they want to have the Icera
-              support checks included in the probing sequence. They can afterwards get the result
-              of the support check to decide whether they want to create a Icera-based modem
-              object or not.
-            </para>
-            <para>
-              This configuration is specified by the <type>MM_PLUGIN_ICERA_PROBE</type>
-              property in the <structname>MMPlugin</structname> object provided
-              by the plugin.
-            </para>
-          </listitem>
-        </itemizedlist>
-      </section>
+  <chapter id="ref-overview-modem-port-probing">
+    <title>Port probing</title>
+    <para>
+      Whenever a new device is detected by ModemManager, port probing process will
+      get started, so that we can determine which kind of ports we have, and also
+      which plugin we need to use for the specific device. Devices may expose one or
+      more ports, and all of them will follow the same probing logic.
+    </para>
+    <para>
+      The whole probing process, including pre-probing and post-probing filters, is
+      implemented in the core ModemManager daemon. Plugins will just configure their
+      own special needs in the probing process, so that only the steps required by the
+      given plugin are executed. For example, plugins which do not support RS232
+      devices will not need AT-based vendor or product filters.
+    </para>
 
-      <section>
-        <title>Post-probing filters</title>
-        <para>
-          Post-probing filters are required to identify whether a plugin can handle a given
-          modem, in special cases where the information retrieved from udev is either not
-          enough or wrong. This covers, for example, RS232 modems connected through a RS232
-          to USB converter, where udev-reported vendor ID is that of the converter, not the
-          one of the modem.
-        </para>
-        <itemizedlist>
-          <listitem>
-            <para><emphasis>Allowed vendor strings</emphasis></para>
-            <para>
-              Plugins can provide a list of vendor strings to be used as post-probing
-              filters. If the vendor string reported by the device via AT commands
-              is found in the list provided by the plugin, the plugin will report that
-              it can handle this modem.
-            </para>
-            <para>
-              This filter is specified by the <type>MM_PLUGIN_ALLOWED_VENDOR_STRINGS</type>
-              property in the <structname>MMPlugin</structname> object provided
-              by the plugin.
-            </para>
-          </listitem>
-          <listitem>
-            <para><emphasis>Product strings</emphasis></para>
-            <para>
-              Plugins can provide a list of pairs of vendor and product
-              strings to be used as post-probing filters.
-            </para>
-            <para>
-              If the vendor and product string pair reported by the device via AT
-              commands is found in the 'allowed' list provided by the plugin, the
-              plugin will report that it can handle this modem. This additional filter
-              should be used when the plugin is expected to work only with a given
-              specific product of a given vendor.
-            </para>
-            <para>
-              If the vendor and product string pair reported by the device via AT
-              commands is found in the 'forbidden list provided by the plugin, the
-              plugin will report that it cannot handle this modem. This additional filter
-              should be used when the plugin supports all devices of a given vendor, except for some specific ones.
-            </para>
-            <para>
-              These filters are specified by the <type>MM_PLUGIN_ALLOWED_PRODUCT_STRINGS</type>
-              and <type>MM_PLUGIN_FORBIDDEN_PRODUCT_STRINGS</type> properties in the
-              <structname>MMPlugin</structname> object provided by the plugin.
-            </para>
-          </listitem>
-          <listitem>
-            <para><emphasis>Icera support</emphasis></para>
-            <para>
-              Plugins can specify that they only support Icera-based modems, or that they
-              do not support any Icera-based modem. When either of this configurations is
-              enabled, the Icera support checks will be included in the
-              probing sequence, and the result of the check will help to determine whether
-              the plugin supports the modem or not.
-            </para>
-            <para>
-              This filter is specified by the <type>MM_PLUGIN_ALLOWED_ICERA</type> and
-              <type>MM_PLUGIN_FORBIDDEN_ICERA</type> properties in the
-              <structname>MMPlugin</structname> object provided by the plugin.
-            </para>
-          </listitem>
-        </itemizedlist>
-
-        <note>
+    <section>
+      <title>Pre-probing filters</title>
+      <para>
+        Pre-probing filters are those which control whether the probing, as
+        requested by the specific plugin, takes place.
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para><emphasis>Allowed vendor IDs</emphasis></para>
           <para>
-            Plugins which require post-probing filters will always be sorted last, and
-            therefore they will be the last ones being checked for pre-probing filters. This
-            is due to the fact that we need to assume that these plugins aren't able to
-            determine port support just with pre-probing filters, as we want to avoid
-            unnecessary probing sequences launched. Also note that the Generic plugin is
-            anyway always the last one in the list.
+            Plugins can provide a list of udev-reported vendor IDs to be used as
+            pre-probing filters. If the vendor ID reported by the device via udev
+            is found in the list provided by the plugin, port probing will be
+            launched as requested by the given plugin.
           </para>
-        </note>
-      </section>
+          <para>
+            This filter is specified by the <type>MM_PLUGIN_ALLOWED_VENDOR_IDS</type>
+            property in the <structname>MMPlugin</structname> object provided
+            by the plugin.
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>Product IDs</emphasis></para>
+          <para>
+            Plugins can provide a list of udev-reported pairs of vendor and product
+            IDs to be used as pre-probing filters.
+          </para>
+          <para>
+            If the vendor ID and product ID pair reported by the device via udev is
+            found in the list of 'allowed' pairs provided by the plugin, port probing
+            will be launched as requested by the given plugin. This additional filter
+            should be used when the plugin is expected to work only with a given
+            specific product of a given vendor.
+          </para>
+          <para>
+            If the vendor ID and product ID pair reported by the device via udev is
+            found in the list of 'forbidden' pairs provided by the plugin, port probing
+            will not be launched by this plugin. This additional filter
+            should be used when the plugin supports all devices of a given vendor
+            except for some specific ones.
+          </para>
+          <para>
+            These filters are specified by the <type>MM_PLUGIN_ALLOWED_PRODUCT_IDS</type>
+            and <type>MM_PLUGIN_FORBIDDEN_PRODUCT_IDS</type> properties in the
+            <structname>MMPlugin</structname> object provided by the plugin.
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>Subsystems</emphasis></para>
+          <para>
+            Plugins can specify which subsystems they expect, so that we filter out
+            any port detected with a subsystem not listed by the plugin.
+          </para>
+          <para>
+            This filter is specified by the <type>MM_PLUGIN_ALLOWED_SUBSYSTEMS</type>
+            property in the <structname>MMPlugin</structname> object provided
+            by the plugin.
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>Drivers</emphasis></para>
+          <para>
+            Plugins can specify which drivers they expect, so that we filter out
+            any port detected being managed by a driver not listed by the plugin.
+          </para>
+          <para>
+            Plugins can also specify which drivers they do not expect, so that we
+            filter out any port detected being managed by a driver listed by the plugin.
+          </para>
+          <para>
+            These filters are specified by the <type>MM_PLUGIN_ALLOWED_DRIVERS</type>
+            and <type>MM_PLUGIN_FORBIDDEN_DRIVERS</type> properties in the
+            <structname>MMPlugin</structname> object provided by the plugin.
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>udev tags</emphasis></para>
+          <para>
+            Plugins can provide a list of udev tags, so that we filter out
+            any port detected which doesn't expose any of the given tags.
+          </para>
+          <para>
+            This filter is specified by the <type>MM_PLUGIN_ALLOWED_UDEV_TAGS</type>
+            property in the <structname>MMPlugin</structname> object provided
+            by the plugin.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </section>
 
-      <section>
-        <title>Probing setup examples</title>
-        <example>
-          <title>Probing setup for a plugin requiring udev-based vendor/product checks</title>
-          <programlisting>
+    <section>
+      <title>Probing sequence</title>
+      <para>
+        Whenever all pre-probing filters of a given plugin pass, ModemManager will run
+        the probing sequence as requested by the specific plugin. The main purpose of the
+        probing sequence step is to determine the type of port being probed, and also
+        prepare the information required in any expected post-probing filter.
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para><emphasis>Custom initialization</emphasis></para>
+          <para>
+            This property allows plugins to provide an asynchronous method which will get
+            executed as soon as the AT port gets opened. This method may be used for any
+            purpose, like running an early command in the ports as soon as possible, or
+            querying the modem for info about the port layout.
+          </para>
+          <para>
+            This configuration is specified by the <type>MM_PLUGIN_CUSTOM_INIT</type>
+            property in the <structname>MMPlugin</structname> object provided
+            by the plugin.
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>AT allowed</emphasis></para>
+          <para>
+            This boolean property allows plugins to specify that they expect and support
+            AT serial ports.
+          </para>
+          <para>
+            This configuration is specified by the <type>MM_PLUGIN_ALLOWED_AT</type>
+            property in the <structname>MMPlugin</structname> object provided
+            by the plugin.
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>Single AT expected</emphasis></para>
+          <para>
+            This boolean property allows plugins to specify that they only expect and support
+            one AT serial port. Whenever the first AT port is grabbed, any remaining AT probing
+            in ports of the same device will get cancelled.
+          </para>
+          <para>
+            This configuration is specified by the <type>MM_PLUGIN_ALLOWED_SINGLE_AT</type>
+            property in the <structname>MMPlugin</structname> object provided
+            by the plugin.
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>Custom AT probing</emphasis></para>
+          <para>
+            This property allows plugins to specify custom commands to check whether a port
+            is AT or not. By default, the 'AT' command will be used if no custom one specified.
+          </para>
+          <para>
+            This configuration is specified by the <type>MM_PLUGIN_CUSTOM_AT_PROBE</type>
+            property in the <structname>MMPlugin</structname> object provided
+            by the plugin.
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>QCDM allowed</emphasis></para>
+          <para>
+            This boolean property allows plugins to specify that they expect and support
+            QCDM serial ports.
+          </para>
+          <para>
+            This configuration is specified by the <type>MM_PLUGIN_ALLOWED_QCDM</type>
+            property in the <structname>MMPlugin</structname> object provided
+            by the plugin.
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>Check Icera support</emphasis></para>
+          <para>
+            This boolean property allows plugins to specify that they want to have the Icera
+            support checks included in the probing sequence. They can afterwards get the result
+            of the support check to decide whether they want to create a Icera-based modem
+            object or not.
+          </para>
+          <para>
+            This configuration is specified by the <type>MM_PLUGIN_ICERA_PROBE</type>
+            property in the <structname>MMPlugin</structname> object provided
+            by the plugin.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>Post-probing filters</title>
+      <para>
+        Post-probing filters are required to identify whether a plugin can handle a given
+        modem, in special cases where the information retrieved from udev is either not
+        enough or wrong. This covers, for example, RS232 modems connected through a RS232
+        to USB converter, where udev-reported vendor ID is that of the converter, not the
+        one of the modem.
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para><emphasis>Allowed vendor strings</emphasis></para>
+          <para>
+            Plugins can provide a list of vendor strings to be used as post-probing
+            filters. If the vendor string reported by the device via AT commands
+            is found in the list provided by the plugin, the plugin will report that
+            it can handle this modem.
+          </para>
+          <para>
+            This filter is specified by the <type>MM_PLUGIN_ALLOWED_VENDOR_STRINGS</type>
+            property in the <structname>MMPlugin</structname> object provided
+            by the plugin.
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>Product strings</emphasis></para>
+          <para>
+            Plugins can provide a list of pairs of vendor and product
+            strings to be used as post-probing filters.
+          </para>
+          <para>
+            If the vendor and product string pair reported by the device via AT
+            commands is found in the 'allowed' list provided by the plugin, the
+            plugin will report that it can handle this modem. This additional filter
+            should be used when the plugin is expected to work only with a given
+            specific product of a given vendor.
+          </para>
+          <para>
+            If the vendor and product string pair reported by the device via AT
+            commands is found in the 'forbidden list provided by the plugin, the
+            plugin will report that it cannot handle this modem. This additional filter
+            should be used when the plugin supports all devices of a given vendor, except for some specific ones.
+          </para>
+          <para>
+            These filters are specified by the <type>MM_PLUGIN_ALLOWED_PRODUCT_STRINGS</type>
+            and <type>MM_PLUGIN_FORBIDDEN_PRODUCT_STRINGS</type> properties in the
+            <structname>MMPlugin</structname> object provided by the plugin.
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>Icera support</emphasis></para>
+          <para>
+            Plugins can specify that they only support Icera-based modems, or that they
+            do not support any Icera-based modem. When either of this configurations is
+            enabled, the Icera support checks will be included in the
+            probing sequence, and the result of the check will help to determine whether
+            the plugin supports the modem or not.
+          </para>
+          <para>
+            This filter is specified by the <type>MM_PLUGIN_ALLOWED_ICERA</type> and
+            <type>MM_PLUGIN_FORBIDDEN_ICERA</type> properties in the
+            <structname>MMPlugin</structname> object provided by the plugin.
+          </para>
+        </listitem>
+      </itemizedlist>
+
+      <note>
+        <para>
+          Plugins which require post-probing filters will always be sorted last, and
+          therefore they will be the last ones being checked for pre-probing filters. This
+          is due to the fact that we need to assume that these plugins aren't able to
+          determine port support just with pre-probing filters, as we want to avoid
+          unnecessary probing sequences launched. Also note that the Generic plugin is
+          anyway always the last one in the list.
+        </para>
+      </note>
+    </section>
+
+    <section>
+      <title>Probing setup examples</title>
+      <example>
+        <title>Probing setup for a plugin requiring udev-based vendor/product checks</title>
+        <programlisting>
 G_MODULE_EXPORT MMPlugin *
 mm_plugin_create (void)
 {
@@ -374,12 +646,12 @@ mm_plugin_create (void)
                       /* No post-probing filters */
                       NULL));
 }
-          </programlisting>
-        </example>
+        </programlisting>
+      </example>
 
-        <example>
-          <title>Probing setup for a plugin requiring AT-probed vendor/product checks</title>
-          <programlisting>
+      <example>
+        <title>Probing setup for a plugin requiring AT-probed vendor/product checks</title>
+        <programlisting>
 G_MODULE_EXPORT MMPlugin *
 mm_plugin_create (void)
 {
@@ -402,12 +674,12 @@ mm_plugin_create (void)
                       MM_PLUGIN_PRODUCT_STRINGS, product_strings,
                       NULL));
 }
-          </programlisting>
-        </example>
+        </programlisting>
+      </example>
 
-        <example>
-          <title>Probing setup for a plugin with custom initialization requirements</title>
-          <programlisting>
+      <example>
+        <title>Probing setup for a plugin with custom initialization requirements</title>
+        <programlisting>
 static gboolean
 parse_custom_at (const gchar *response,
                  const GError *error,
@@ -451,25 +723,23 @@ mm_plugin_create (void)
                       /* No post-probing filters */
                       NULL));
 }
-          </programlisting>
-        </example>
-      </section>
+        </programlisting>
+      </example>
     </section>
+  </chapter>
 
-    <section>
-      <title>Port grabbing and Modem object creation</title>
-      <para>
-        Once a port passes all probing filters of a given plugin, the plugin will grab
-        the port. When the first port of a given device is grabbed, the plugin will create
-        the required Modem object.
-      </para>
-      <para>
-        While preparing to get the Modem object grab the specific port probed, udev-based
-        port type hints can be used to specify AT port flags (e.g. if a port is to be
-        considered primary, secondary or for PPP).
-      </para>
-    </section>
-
+  <chapter id="ref-overview-modem-object-creation">
+    <title>Modem object creation</title>
+    <para>
+      Once a port passes all probing filters of a given plugin, the plugin will grab
+      the port. When the first port of a given device is grabbed, the plugin will create
+      the required Modem object.
+    </para>
+    <para>
+      While preparing to get the Modem object grab the specific port probed, udev-based
+      port type hints can be used to specify AT port flags (e.g. if a port is to be
+      considered primary, secondary or for PPP).
+    </para>
   </chapter>
 
   <chapter id="ref-overview-modem-state-machine">

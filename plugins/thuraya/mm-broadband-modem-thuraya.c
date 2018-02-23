@@ -48,63 +48,66 @@ G_DEFINE_TYPE_EXTENDED (MMBroadbandModemThuraya, mm_broadband_modem_thuraya, MM_
 /* Operator Code and Name loading (3GPP interface) */
 
 static gchar *
-load_operator_code_finish (MMIfaceModem3gpp *self,
-                           GAsyncResult *res,
-                           GError **error)
+load_operator_code_finish (MMIfaceModem3gpp  *self,
+                           GAsyncResult      *res,
+                           GError           **error)
 {
-    /* Only "90103" operator code is assumed */
-    return g_strdup ("90106");
-}
-
-static gchar *
-load_operator_name_finish (MMIfaceModem3gpp *self,
-                           GAsyncResult *res,
-                           GError **error)
-{
-    /* Only "THURAYA" operator name is assumed */
-    return g_strdup ("THURAYA");
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
-load_operator_name_or_code (MMIfaceModem3gpp *self,
-                            GAsyncReadyCallback callback,
-                            gpointer user_data)
+load_operator_code (MMIfaceModem3gpp    *self,
+                    GAsyncReadyCallback  callback,
+                    gpointer             user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        load_operator_name_or_code);
-    g_simple_async_result_set_op_res_gboolean (result, TRUE);
-    g_simple_async_result_complete_in_idle (result);
-    g_object_unref (result);
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_return_pointer (task, g_strdup ("90106"), g_free);
+    g_object_unref (task);
+}
+
+static gchar *
+load_operator_name_finish (MMIfaceModem3gpp  *self,
+                           GAsyncResult      *res,
+                           GError           **error)
+{
+    return g_task_propagate_pointer (G_TASK (res), error);
+}
+
+static void
+load_operator_name (MMIfaceModem3gpp    *self,
+                    GAsyncReadyCallback  callback,
+                    gpointer             user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_return_pointer (task, g_strdup ("THURAYA"), g_free);
+    g_object_unref (task);
 }
 
 /*****************************************************************************/
 /* Load supported modes (Modem inteface) */
 
 static GArray *
-load_supported_modes_finish (MMIfaceModem *self,
-                             GAsyncResult *res,
-                             GError **error)
+load_supported_modes_finish (MMIfaceModem  *self,
+                             GAsyncResult  *res,
+                             GError       **error)
 {
-    return g_array_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
-load_supported_modes (MMIfaceModem *self,
-                      GAsyncReadyCallback callback,
-                      gpointer user_data)
+load_supported_modes (MMIfaceModem        *self,
+                      GAsyncReadyCallback  callback,
+                      gpointer             user_data)
 {
-    GSimpleAsyncResult *result;
-    GArray *combinations;
-    MMModemModeCombination mode;
+    GTask                  *task;
+    GArray                 *combinations;
+    MMModemModeCombination  mode;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        load_supported_modes);
+    task = g_task_new (self, NULL, callback, user_data);
 
     /* Build list of combinations */
     combinations = g_array_sized_new (FALSE, FALSE, sizeof (MMModemModeCombination), 1);
@@ -114,9 +117,8 @@ load_supported_modes (MMIfaceModem *self,
     mode.preferred = MM_MODEM_MODE_NONE;
     g_array_append_val (combinations, mode);
 
-    g_simple_async_result_set_op_res_gpointer (result, combinations, (GDestroyNotify) g_array_unref);
-    g_simple_async_result_complete_in_idle (result);
-    g_object_unref (result);
+    g_task_return_pointer (task, combinations, (GDestroyNotify) g_array_unref);
+    g_object_unref (task);
 }
 
 /*****************************************************************************/
@@ -141,40 +143,39 @@ supported_storages_result_free (SupportedStoragesResult *result)
 }
 
 static gboolean
-modem_messaging_load_supported_storages_finish (MMIfaceModemMessaging *self,
-                                                GAsyncResult *res,
-                                                GArray **mem1,
-                                                GArray **mem2,
-                                                GArray **mem3,
-                                                GError **error)
+modem_messaging_load_supported_storages_finish (MMIfaceModemMessaging  *self,
+                                                GAsyncResult           *res,
+                                                GArray                **mem1,
+                                                GArray                **mem2,
+                                                GArray                **mem3,
+                                                GError                **error)
 {
     SupportedStoragesResult *result;
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+    result = g_task_propagate_pointer (G_TASK (res), error);
+    if (!result)
         return FALSE;
 
-    result = (SupportedStoragesResult *)g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
     *mem1 = g_array_ref (result->mem1);
     *mem2 = g_array_ref (result->mem2);
     *mem3 = g_array_ref (result->mem3);
-
+    supported_storages_result_free (result);
     return TRUE;
 }
 
 static void
-cpms_format_check_ready (MMBroadbandModem *self,
+cpms_format_check_ready (MMBaseModem  *self,
                          GAsyncResult *res,
-                         GSimpleAsyncResult *simple)
+                         GTask        *task)
 {
-    const gchar *response;
-    GError *error = NULL;
+    const gchar             *response;
+    GError                  *error = NULL;
     SupportedStoragesResult *result;
 
-    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
+    response = mm_base_modem_at_command_finish (self, res, &error);
     if (error) {
-        g_simple_async_result_take_error (simple, error);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -185,43 +186,32 @@ cpms_format_check_ready (MMBroadbandModem *self,
                                                    &result->mem1,
                                                    &result->mem2,
                                                    &result->mem3)) {
-        g_simple_async_result_set_error (simple,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_FAILED,
-                                         "Couldn't parse supported storages reply: '%s'",
-                                         response);
         supported_storages_result_free (result);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Couldn't parse supported storages reply: '%s'",
+                                 response);
+        g_object_unref (task);
         return;
     }
 
-    g_simple_async_result_set_op_res_gpointer (simple,
-                                               result,
-                                               (GDestroyNotify)supported_storages_result_free);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+    g_task_return_pointer (task, result, (GDestroyNotify) supported_storages_result_free);
+    g_object_unref (task);
 }
 
 static void
 modem_messaging_load_supported_storages (MMIfaceModemMessaging *self,
-                                         GAsyncReadyCallback callback,
-                                         gpointer user_data)
+                                         GAsyncReadyCallback    callback,
+                                         gpointer               user_data)
 {
-    GSimpleAsyncResult *result;
-
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        modem_messaging_load_supported_storages);
-
     /* Check support storages */
     mm_base_modem_at_command (MM_BASE_MODEM (self),
                               "+CPMS=?",
                               3,
                               TRUE,
                               (GAsyncReadyCallback)cpms_format_check_ready,
-                              result);
+                              g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
@@ -267,9 +257,9 @@ static void
 iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
 {
     /* Fixed operator code and name to be reported */
-    iface->load_operator_name = load_operator_name_or_code;
+    iface->load_operator_name = load_operator_name;
     iface->load_operator_name_finish = load_operator_name_finish;
-    iface->load_operator_code = load_operator_name_or_code;
+    iface->load_operator_code = load_operator_code;
     iface->load_operator_code_finish = load_operator_code_finish;
 
     /* Don't try to scan networks with AT+COPS=?.

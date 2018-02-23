@@ -503,6 +503,47 @@ mm_modem_dup_revision (MMModem *self)
 /*****************************************************************************/
 
 /**
+ * mm_modem_get_hardware_revision:
+ * @self: A #MMModem.
+ *
+ * Gets the equipment hardware revision, as reported by this #MMModem.
+ *
+ * <warning>The returned value is only valid until the property changes so
+ * it is only safe to use this function on the thread where
+ * @self was constructed. Use mm_modem_dup_hardware_revision() if on another
+ * thread.</warning>
+ *
+ * Returns: (transfer none): The equipment hardware revision, or %NULL if none available. Do not free the returned value, it belongs to @self.
+ */
+const gchar *
+mm_modem_get_hardware_revision (MMModem *self)
+{
+    g_return_val_if_fail (MM_IS_MODEM (self), NULL);
+
+    RETURN_NON_EMPTY_CONSTANT_STRING (
+        mm_gdbus_modem_get_hardware_revision (MM_GDBUS_MODEM (self)));
+}
+
+/**
+ * mm_modem_dup_hardware_revision:
+ * @self: A #MMModem.
+ *
+ * Gets a copy of the equipment hardware revision, as reported by this #MMModem.
+ *
+ * Returns: (transfer full): The equipment hardware revision, or %NULL if none available. The returned value should be freed with g_free().
+ */
+gchar *
+mm_modem_dup_hardware_revision (MMModem *self)
+{
+    g_return_val_if_fail (MM_IS_MODEM (self), NULL);
+
+    RETURN_NON_EMPTY_STRING (
+        mm_gdbus_modem_dup_hardware_revision (MM_GDBUS_MODEM (self)));
+}
+
+/*****************************************************************************/
+
+/**
  * mm_modem_get_device_identifier:
  * @self: A #MMModem.
  *
@@ -1752,9 +1793,6 @@ mm_modem_disable_sync (MMModem *self,
 /*****************************************************************************/
 
 typedef struct {
-    MMModem *self;
-    GSimpleAsyncResult *result;
-    GCancellable *cancellable;
     gchar **bearer_paths;
     GList *bearer_objects;
     guint i;
@@ -1763,20 +1801,14 @@ typedef struct {
 static void
 bearer_object_list_free (GList *list)
 {
-    g_list_free_full (list, (GDestroyNotify) g_object_unref);
+    g_list_free_full (list, g_object_unref);
 }
 
 static void
-list_bearers_context_complete_and_free (ListBearersContext *ctx)
+list_bearers_context_free (ListBearersContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-
     g_strfreev (ctx->bearer_paths);
     bearer_object_list_free (ctx->bearer_objects);
-    g_object_unref (ctx->result);
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
-    g_object_ref (ctx->self);
     g_slice_free (ListBearersContext, ctx);
 }
 
@@ -1795,70 +1827,73 @@ mm_modem_list_bearers_finish (MMModem *self,
                               GAsyncResult *res,
                               GError **error)
 {
-    GList *list;
-
     g_return_val_if_fail (MM_IS_MODEM (self), NULL);
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    list = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
-
-    /* The list we got, including the objects within, is owned by the async result;
-     * so we'll make sure we return a new list */
-    g_list_foreach (list, (GFunc)g_object_ref, NULL);
-    return g_list_copy (list);
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
-static void create_next_bearer (ListBearersContext *ctx);
+static void create_next_bearer (GTask *task);
 
 static void
 modem_list_bearers_build_object_ready (GDBusConnection *connection,
                                        GAsyncResult *res,
-                                       ListBearersContext *ctx)
+                                       GTask *task)
 {
     GObject *bearer;
     GError *error = NULL;
     GObject *source_object;
+    ListBearersContext *ctx;
 
     source_object = g_async_result_get_source_object (res);
     bearer = g_async_initable_new_finish (G_ASYNC_INITABLE (source_object), res, &error);
     g_object_unref (source_object);
 
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        list_bearers_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
+
+    ctx = g_task_get_task_data (task);
 
     /* Keep the object */
     ctx->bearer_objects = g_list_prepend (ctx->bearer_objects, bearer);
 
     /* If no more bearers, just end here. */
     if (!ctx->bearer_paths[++ctx->i]) {
-        g_simple_async_result_set_op_res_gpointer (ctx->result,
-                                                   ctx->bearer_objects,
-                                                   (GDestroyNotify)bearer_object_list_free);
-        ctx->bearer_objects = NULL;
-        list_bearers_context_complete_and_free (ctx);
+        GList *bearer_objects;
+
+        bearer_objects = g_list_copy_deep (ctx->bearer_objects,
+                                           (GCopyFunc)g_object_ref,
+                                           NULL);
+        g_task_return_pointer (task,
+                               bearer_objects,
+                               (GDestroyNotify)bearer_object_list_free);
+        g_object_unref (task);
         return;
     }
 
     /* Keep on creating next object */
-    create_next_bearer (ctx);
+    create_next_bearer (task);
 }
 
 static void
-create_next_bearer (ListBearersContext *ctx)
+create_next_bearer (GTask *task)
 {
+    MMModem *self;
+    ListBearersContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     g_async_initable_new_async (MM_TYPE_BEARER,
                                 G_PRIORITY_DEFAULT,
-                                ctx->cancellable,
+                                g_task_get_cancellable (task),
                                 (GAsyncReadyCallback)modem_list_bearers_build_object_ready,
-                                ctx,
+                                task,
                                 "g-flags",          G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
                                 "g-name",           MM_DBUS_SERVICE,
-                                "g-connection",     g_dbus_proxy_get_connection (G_DBUS_PROXY (ctx->self)),
+                                "g-connection",     g_dbus_proxy_get_connection (G_DBUS_PROXY (self)),
                                 "g-object-path",    ctx->bearer_paths[ctx->i],
                                 "g-interface-name", "org.freedesktop.ModemManager1.Bearer",
                                 NULL);
@@ -1885,31 +1920,28 @@ mm_modem_list_bearers (MMModem *self,
                        gpointer user_data)
 {
     ListBearersContext *ctx;
+    GTask *task;
 
     g_return_if_fail (MM_IS_MODEM (self));
 
     ctx = g_slice_new0 (ListBearersContext);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_modem_list_bearers);
-    if (cancellable)
-        ctx->cancellable = g_object_ref (cancellable);
 
     /* Read from the property, skip List() */
     ctx->bearer_paths = mm_gdbus_modem_dup_bearers (MM_GDBUS_MODEM (self));
 
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)list_bearers_context_free);
+
     /* If no bearers, just end here. */
     if (!ctx->bearer_paths || !ctx->bearer_paths[0]) {
-        g_simple_async_result_set_op_res_gpointer (ctx->result, NULL, NULL);
-        list_bearers_context_complete_and_free (ctx);
+        g_task_return_pointer (task, NULL, NULL);
+        g_object_unref (task);
         return;
     }
 
     /* Got list of paths. If at least one found, start creating objects for each */
     ctx->i = 0;
-    create_next_bearer (ctx);
+    create_next_bearer (task);
 }
 
 /**
@@ -1971,21 +2003,6 @@ mm_modem_list_bearers_sync (MMModem *self,
 
 /*****************************************************************************/
 
-typedef struct {
-    GSimpleAsyncResult *result;
-    GCancellable *cancellable;
-} CreateBearerContext;
-
-static void
-create_bearer_context_complete_and_free (CreateBearerContext *ctx)
-{
-    g_simple_async_result_complete (ctx->result);
-    g_object_unref (ctx->result);
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
-    g_slice_free (CreateBearerContext, ctx);
-}
-
 /**
  * mm_modem_create_bearer_finish:
  * @self: A #MMModem.
@@ -2003,16 +2020,13 @@ mm_modem_create_bearer_finish (MMModem *self,
 {
     g_return_val_if_fail (MM_IS_MODEM (self), NULL);
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    return g_object_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 modem_new_bearer_ready (GDBusConnection *connection,
                         GAsyncResult *res,
-                        CreateBearerContext *ctx)
+                        GTask *task)
 {
     GError *error = NULL;
     GObject *bearer;
@@ -2023,19 +2037,17 @@ modem_new_bearer_ready (GDBusConnection *connection,
     g_object_unref (source_object);
 
     if (error)
-        g_simple_async_result_take_error (ctx->result, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gpointer (ctx->result,
-                                                   bearer,
-                                                   (GDestroyNotify)g_object_unref);
+        g_task_return_pointer (task, bearer, g_object_unref);
 
-    create_bearer_context_complete_and_free (ctx);
+    g_object_unref (task);
 }
 
 static void
 modem_create_bearer_ready (MMModem *self,
                            GAsyncResult *res,
-                           CreateBearerContext *ctx)
+                           GTask *task)
 {
     GError *error = NULL;
     gchar *bearer_path = NULL;
@@ -2044,17 +2056,17 @@ modem_create_bearer_ready (MMModem *self,
                                                    &bearer_path,
                                                    res,
                                                    &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        create_bearer_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         g_free (bearer_path);
         return;
     }
 
     g_async_initable_new_async (MM_TYPE_BEARER,
                                 G_PRIORITY_DEFAULT,
-                                ctx->cancellable,
+                                g_task_get_cancellable (task),
                                 (GAsyncReadyCallback)modem_new_bearer_ready,
-                                ctx,
+                                task,
                                 "g-flags",          G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
                                 "g-name",           MM_DBUS_SERVICE,
                                 "g-connection",     g_dbus_proxy_get_connection (G_DBUS_PROXY (self)),
@@ -2091,18 +2103,12 @@ mm_modem_create_bearer (MMModem *self,
                         GAsyncReadyCallback callback,
                         gpointer user_data)
 {
-    CreateBearerContext *ctx;
+    GTask *task;
     GVariant *dictionary;
 
     g_return_if_fail (MM_IS_MODEM (self));
 
-    ctx = g_slice_new0 (CreateBearerContext);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_modem_create_bearer);
-    if (cancellable)
-        ctx->cancellable = g_object_ref (cancellable);
+    task = g_task_new (self, cancellable, callback, user_data);
 
     dictionary = mm_bearer_properties_get_dictionary (properties);
 
@@ -2111,7 +2117,7 @@ mm_modem_create_bearer (MMModem *self,
         dictionary,
         cancellable,
         (GAsyncReadyCallback)modem_create_bearer_ready,
-        ctx);
+        task);
 
     g_variant_unref (dictionary);
 }
@@ -2837,23 +2843,15 @@ mm_modem_get_sim_finish (MMModem *self,
                          GAsyncResult *res,
                          GError **error)
 {
-    MMSim *sim;
-
     g_return_val_if_fail (MM_IS_MODEM (self), NULL);
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    sim = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
-    g_return_val_if_fail (sim != NULL, NULL);
-
-    return MM_SIM (g_object_ref (sim));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 modem_get_sim_ready (GDBusConnection *connection,
                      GAsyncResult *res,
-                     GSimpleAsyncResult *simple)
+                     GTask *task)
 {
     GError *error = NULL;
     GObject *sim;
@@ -2864,14 +2862,11 @@ modem_get_sim_ready (GDBusConnection *connection,
     g_object_unref (source_object);
 
     if (error)
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gpointer (simple,
-                                                   sim,
-                                                   (GDestroyNotify)g_object_unref);
+        g_task_return_pointer (task, sim, g_object_unref);
 
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+    g_object_unref (task);
 }
 
 /**
@@ -2894,24 +2889,20 @@ mm_modem_get_sim (MMModem *self,
                   GAsyncReadyCallback callback,
                   gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
     const gchar *sim_path;
 
     g_return_if_fail (MM_IS_MODEM (self));
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        mm_modem_get_sim);
+    task = g_task_new (self, cancellable, callback, user_data);
 
     sim_path = mm_modem_get_sim_path (self);
     if (!sim_path || g_str_equal (sim_path, "/")) {
-        g_simple_async_result_set_error (result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_NOT_FOUND,
-                                         "No SIM object available");
-        g_simple_async_result_complete_in_idle (result);
-        g_object_unref (result);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_NOT_FOUND,
+                                 "No SIM object available");
+        g_object_unref (task);
         return;
     }
 
@@ -2919,7 +2910,7 @@ mm_modem_get_sim (MMModem *self,
                                 G_PRIORITY_DEFAULT,
                                 cancellable,
                                 (GAsyncReadyCallback)modem_get_sim_ready,
-                                result,
+                                task,
                                 "g-flags",          G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
                                 "g-name",           MM_DBUS_SERVICE,
                                 "g-connection",     g_dbus_proxy_get_connection (G_DBUS_PROXY (self)),

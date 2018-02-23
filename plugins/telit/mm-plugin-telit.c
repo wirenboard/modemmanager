@@ -28,6 +28,15 @@
 #include "mm-common-telit.h"
 #include "mm-broadband-modem-telit.h"
 
+
+#if defined WITH_QMI
+# include "mm-broadband-modem-qmi.h"
+#endif
+
+#if defined WITH_MBIM
+# include "mm-broadband-modem-mbim.h"
+#endif
+
 G_DEFINE_TYPE (MMPluginTelit, mm_plugin_telit, MM_TYPE_PLUGIN)
 
 MM_PLUGIN_DEFINE_MAJOR_VERSION
@@ -37,14 +46,36 @@ MM_PLUGIN_DEFINE_MINOR_VERSION
 
 static MMBaseModem *
 create_modem (MMPlugin *self,
-              const gchar *sysfs_path,
+              const gchar *uid,
               const gchar **drivers,
               guint16 vendor,
               guint16 product,
               GList *probes,
               GError **error)
 {
-    return MM_BASE_MODEM (mm_broadband_modem_telit_new (sysfs_path,
+#if defined WITH_QMI
+    if (mm_port_probe_list_has_qmi_port (probes)) {
+        mm_dbg ("QMI-powered Telit modem found...");
+        return MM_BASE_MODEM (mm_broadband_modem_qmi_new (uid,
+                                                          drivers,
+                                                          mm_plugin_get_name (self),
+                                                          vendor,
+                                                          product));
+    }
+#endif
+
+#if defined WITH_MBIM
+    if (mm_port_probe_list_has_mbim_port (probes)) {
+        mm_dbg ("MBIM-powered Telit modem found...");
+        return MM_BASE_MODEM (mm_broadband_modem_mbim_new (uid,
+                                                           drivers,
+                                                           mm_plugin_get_name (self),
+                                                           vendor,
+                                                           product));
+    }
+#endif
+
+    return MM_BASE_MODEM (mm_broadband_modem_telit_new (uid,
                                                         drivers,
                                                         mm_plugin_get_name (self),
                                                         vendor,
@@ -56,14 +87,10 @@ create_modem (MMPlugin *self,
 G_MODULE_EXPORT MMPlugin *
 mm_plugin_create (void)
 {
-    static const gchar *subsystems[] = { "tty", NULL };
+    static const gchar *subsystems[] = { "tty", "net", "usb", NULL };
     /* Vendors: Telit */
     static const guint16 vendor_ids[] = { 0x1bc7, 0 };
-    /* Only handle TELIT tagged devices here. */
-    static const gchar *udev_tags[] = {
-        "ID_MM_TELIT_TAGGED",
-        NULL
-    };
+    static const gchar *vendor_strings[] = { "telit", NULL };
     /* Custom init for port identification */
     static const MMAsyncMethod custom_init = {
         .async  = G_CALLBACK (telit_custom_init),
@@ -72,12 +99,14 @@ mm_plugin_create (void)
 
     return MM_PLUGIN (
         g_object_new (MM_TYPE_PLUGIN_TELIT,
-                      MM_PLUGIN_NAME,               "Telit",
-                      MM_PLUGIN_ALLOWED_SUBSYSTEMS, subsystems,
-                      MM_PLUGIN_ALLOWED_VENDOR_IDS, vendor_ids,
-                      MM_PLUGIN_ALLOWED_AT,         TRUE,
-                      MM_PLUGIN_ALLOWED_UDEV_TAGS,  udev_tags,
-                      MM_PLUGIN_CUSTOM_INIT,        &custom_init,
+                      MM_PLUGIN_NAME,                   "Telit",
+                      MM_PLUGIN_ALLOWED_SUBSYSTEMS,     subsystems,
+                      MM_PLUGIN_ALLOWED_VENDOR_IDS,     vendor_ids,
+                      MM_PLUGIN_ALLOWED_VENDOR_STRINGS, vendor_strings,
+                      MM_PLUGIN_ALLOWED_AT,             TRUE,
+                      MM_PLUGIN_ALLOWED_QMI,            TRUE,
+                      MM_PLUGIN_ALLOWED_MBIM,           TRUE,
+                      MM_PLUGIN_CUSTOM_INIT,            &custom_init,
                       NULL));
 }
 

@@ -9,8 +9,6 @@
 
 
 ACTION!="add|change|move", GOTO="mm_x22x_port_types_end"
-SUBSYSTEM!="tty", GOTO="mm_x22x_port_types_end"
-
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="1bbb", GOTO="mm_x22x_generic_vendorcheck"
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="0b3c", GOTO="mm_x22x_olivetti_vendorcheck"
 GOTO="mm_x22x_port_types_end"

@@ -2,6 +2,7 @@
 SUBDIRS = \
 	. \
 	build-aux \
+	po \
 	data \
 	include \
 	libqcdm \
@@ -13,33 +14,31 @@ SUBDIRS = \
 	vapi \
 	introspection \
 	uml290 \
-	po \
 	test \
 	examples \
 	docs \
 	$(NULL)
 
-DISTCHECK_CONFIGURE_FLAGS = \
+ChangeLog:
+	$(AM_V_GEN) if test -d "$(srcdir)/.git"; then \
+	  (GIT_DIR=$(top_srcdir)/.git $(top_srcdir)/missing --run git log --stat) | fmt --split-only > $@.tmp \
+	  && mv -f $@.tmp $@ \
+	  || ($(RM) $@.tmp; \
+	      echo Failed to generate ChangeLog, your ChangeLog may be outdated >&2; \
+	      (test -f $@ || echo git-log is required to generate this file >> $@)); \
+	else \
+	  test -f $@ || \
+	  (echo A git checkout and git-log is required to generate ChangeLog >&2 && \
+	  echo A git checkout and git-log is required to generate this file >> $@); \
+	fi
+
+AM_DISTCHECK_CONFIGURE_FLAGS = \
 	--with-udev-base-dir="$$dc_install_base" \
 	--with-systemdsystemunitdir="$$dc_install_base/$(SYSTEMD_UNIT_DIR)" \
 	--enable-gtk-doc=yes \
 	$(NULL)
 
-INTLTOOL_FILES = \
-	intltool-extract.in \
-	intltool-merge.in \
-	intltool-update.in \
-	$(NULL)
-
-DISTCLEANFILES = \
-	intltool-extract \
-	intltool-merge \
-	intltool-update \
-	po/.intltool-merge-cache \
-	$(NULL)
-
 EXTRA_DIST = \
-	$(INTLTOOL_FILES) \
 	autogen.sh \
 	gtester.make \
 	COPYING.LIB \

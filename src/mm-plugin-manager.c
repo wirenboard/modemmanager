@@ -38,12 +38,15 @@ G_DEFINE_TYPE_EXTENDED (MMPluginManager, mm_plugin_manager, G_TYPE_OBJECT, 0,
 enum {
     PROP_0,
     PROP_PLUGIN_DIR,
+    PROP_FILTER,
     LAST_PROP
 };
 
 struct _MMPluginManagerPrivate {
     /* Path to look for plugins */
     gchar *plugin_dir;
+    /* Device filter */
+    MMFilter *filter;
 
     /* This list contains all plugins except for the generic one, order is not
      * important. It is loaded once when the program starts, and the list is NOT
@@ -62,7 +65,7 @@ struct _MMPluginManagerPrivate {
 static GList *
 plugin_manager_build_plugins_list (MMPluginManager *self,
                                    MMDevice        *device,
-                                   GUdevDevice     *port)
+                                   MMKernelDevice  *port)
 {
     GList *list = NULL;
     GList *l;
@@ -87,7 +90,7 @@ plugin_manager_build_plugins_list (MMPluginManager *self,
         case MM_PLUGIN_SUPPORTS_HINT_SUPPORTED:
             /* Really supported, clean existing list and add it alone */
             if (list) {
-                g_list_free_full (list, (GDestroyNotify) g_object_unref);
+                g_list_free_full (list, g_object_unref);
                 list = NULL;
             }
             list = g_list_prepend (list, g_object_ref (l->data));
@@ -95,7 +98,7 @@ plugin_manager_build_plugins_list (MMPluginManager *self,
             supported_found = TRUE;
             break;
         default:
-            g_assert_not_reached();
+            g_assert_not_reached ();
         }
     }
 
@@ -179,8 +182,8 @@ struct _PortContext {
     gchar *name;
     /* The device where the port is*/
     MMDevice *device;
-    /* The GUDev reported port object */
-    GUdevDevice *port;
+    /* The reported kernel port object */
+    MMKernelDevice *port;
 
     /* The operation task */
     GTask *task;
@@ -224,7 +227,7 @@ port_context_unref (PortContext *port_context)
         if (port_context->suggested_plugin)
             g_object_unref (port_context->suggested_plugin);
         if (port_context->plugins)
-            g_list_free_full (port_context->plugins, (GDestroyNotify) g_object_unref);
+            g_list_free_full (port_context->plugins, g_object_unref);
         if (port_context->cancellable)
             g_object_unref (port_context->cancellable);
         g_free (port_context->name);
@@ -255,8 +258,11 @@ port_context_complete (PortContext *port_context)
 {
     GTask *task;
 
-    /* Steal the task from the task */
-    g_assert (port_context->task);
+    /* If already completed, do nothing */
+    if (!port_context->task)
+        return;
+
+    /* Steal the task from the context, we only will complete once */
     task = port_context->task;
     port_context->task = NULL;
 
@@ -540,25 +546,28 @@ port_context_cancel (PortContext *port_context)
     mm_dbg ("[plugin manager) task %s: cancellation requested",
             port_context->name);
 
-    /* The port context is cancelled now */
-    g_cancellable_cancel (port_context->cancellable);
+    /* Make sure we hold a port context reference while cancelling, as the
+     * cancellable signal handlers may end up unref-ing our last reference
+     * otherwise. */
+    port_context_ref (port_context);
+    {
+        /* The port context is cancelled now */
+        g_cancellable_cancel (port_context->cancellable);
 
-    /* If the task was deferred, we can cancel and complete it right away */
-    if (port_context->defer_id) {
-        g_source_remove (port_context->defer_id);
-        port_context->defer_id = 0;
-        port_context_complete (port_context);
-        return TRUE;
+        /* If the task was deferred, we can cancel and complete it right away */
+        if (port_context->defer_id) {
+            g_source_remove (port_context->defer_id);
+            port_context->defer_id = 0;
+            port_context_complete (port_context);
+        }
+        /* If the task was deferred until a result is suggested, we can also
+         * complete it right away */
+        else if (port_context->defer_until_suggested)
+            port_context_complete (port_context);
+        /* else, the task may be currently checking support with a given plugin */
     }
+    port_context_unref (port_context);
 
-    /* If the task was deferred until a result is suggested, we can also
-     * complete it right away */
-    if (port_context->defer_until_suggested) {
-        port_context_complete (port_context);
-        return TRUE;
-    }
-
-    /* The task may be currently checking support with a given plugin */
     return TRUE;
 }
 
@@ -642,7 +651,7 @@ static PortContext *
 port_context_new (MMPluginManager *self,
                   const gchar     *parent_name,
                   MMDevice        *device,
-                  GUdevDevice     *port)
+                  MMKernelDevice  *port)
 {
     PortContext *port_context;
 
@@ -653,7 +662,7 @@ port_context_new (MMPluginManager *self,
     port_context->timer     = g_timer_new ();
 
     /* Set context name */
-    port_context->name = g_strdup_printf ("%s,%s", parent_name, g_udev_device_get_name (port));
+    port_context->name = g_strdup_printf ("%s,%s", parent_name, mm_kernel_device_get_name (port));
 
     return port_context;
 }
@@ -757,8 +766,8 @@ device_context_ref (DeviceContext *device_context)
 }
 
 static PortContext *
-device_context_peek_running_port_context (DeviceContext *device_context,
-                                          GUdevDevice   *port)
+device_context_peek_running_port_context (DeviceContext  *device_context,
+                                          MMKernelDevice *port)
 {
     GList *l;
 
@@ -767,15 +776,15 @@ device_context_peek_running_port_context (DeviceContext *device_context,
 
         port_context = (PortContext *)(l->data);
         if ((port_context->port == port) ||
-            (!g_strcmp0 (g_udev_device_get_name (port_context->port), g_udev_device_get_name (port))))
+            (!g_strcmp0 (mm_kernel_device_get_name (port_context->port), mm_kernel_device_get_name (port))))
             return port_context;
     }
     return NULL;
 }
 
 static PortContext *
-device_context_peek_waiting_port_context (DeviceContext *device_context,
-                                          GUdevDevice   *port)
+device_context_peek_waiting_port_context (DeviceContext  *device_context,
+                                          MMKernelDevice *port)
 {
     GList *l;
 
@@ -784,7 +793,7 @@ device_context_peek_waiting_port_context (DeviceContext *device_context,
 
         port_context = (PortContext *)(l->data);
         if ((port_context->port == port) ||
-            (!g_strcmp0 (g_udev_device_get_name (port_context->port), g_udev_device_get_name (port))))
+            (!g_strcmp0 (mm_kernel_device_get_name (port_context->port), mm_kernel_device_get_name (port))))
             return port_context;
     }
     return NULL;
@@ -837,7 +846,7 @@ device_context_complete (DeviceContext *device_context)
         g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
                                  "not supported by any plugin");
     else
-        g_task_return_pointer (task, g_object_ref (device_context->best_plugin), (GDestroyNotify) g_object_unref);
+        g_task_return_pointer (task, g_object_ref (device_context->best_plugin), g_object_unref);
     g_object_unref (task);
 }
 
@@ -988,7 +997,7 @@ device_context_continue (DeviceContext *device_context)
         PortContext *port_context = (PortContext *) (l->data);
         const gchar *portname;
 
-        portname = g_udev_device_get_name (port_context->port);
+        portname = mm_kernel_device_get_name (port_context->port);
         if (!s)
             s = g_string_new (portname);
         else
@@ -1102,33 +1111,44 @@ device_context_min_wait_time_elapsed (DeviceContext *device_context)
 {
     MMPluginManager *self;
     GList           *l;
+    GList           *tmp;
 
-    /* Recover plugin manager */
-    self = MM_PLUGIN_MANAGER (device_context->self);
+    self = device_context->self;
 
     device_context->min_wait_time_id = 0;
     mm_dbg ("[plugin manager] task %s: min wait time elapsed", device_context->name);
 
     /* Move list of port contexts out of the wait list */
     g_assert (!device_context->port_contexts);
-    device_context->port_contexts = device_context->wait_port_contexts;
+    tmp = device_context->wait_port_contexts;
     device_context->wait_port_contexts = NULL;
 
     /* Launch supports check for each port in the Plugin Manager */
-    for (l = device_context->port_contexts; l; l = g_list_next (l))
-        device_context_run_port_context (device_context, (PortContext *)(l->data));
+    for (l = tmp; l; l = g_list_next (l)) {
+        PortContext *port_context = (PortContext *)(l->data);
+
+        if (!mm_filter_device_and_port (self->priv->filter, port_context->device, port_context->port)) {
+            /* If port is filtered, unref it right away */
+            port_context_unref (port_context);
+        } else {
+            /* If port not filtered, store and run it */
+            device_context->port_contexts = g_list_append (device_context->port_contexts, port_context);
+            device_context_run_port_context (device_context, port_context);
+        }
+    }
+    g_list_free (tmp);
 
     return G_SOURCE_REMOVE;
 }
 
 static void
-device_context_port_released (DeviceContext *device_context,
-                              GUdevDevice   *port)
+device_context_port_released (DeviceContext  *device_context,
+                              MMKernelDevice *port)
 {
     PortContext *port_context;
 
     mm_dbg ("[plugin manager] task %s: port released: %s",
-            device_context->name, g_udev_device_get_name (port));
+            device_context->name, mm_kernel_device_get_name (port));
 
     /* Check if there's a waiting port context */
     port_context = device_context_peek_waiting_port_context (device_context, port);
@@ -1150,12 +1170,12 @@ device_context_port_released (DeviceContext *device_context,
     /* This is not something worth warning. If the probing task has already
      * been finished, it will already be removed from the list */
     mm_dbg ("[plugin manager] task %s: port wasn't found: %s",
-            device_context->name, g_udev_device_get_name (port));
+            device_context->name, mm_kernel_device_get_name (port));
 }
 
 static void
-device_context_port_grabbed (DeviceContext *device_context,
-                             GUdevDevice   *port)
+device_context_port_grabbed (DeviceContext  *device_context,
+                             MMKernelDevice *port)
 {
     MMPluginManager *self;
     PortContext     *port_context;
@@ -1164,7 +1184,7 @@ device_context_port_grabbed (DeviceContext *device_context,
     self = MM_PLUGIN_MANAGER (device_context->self);
 
     mm_dbg ("[plugin manager] task %s: port grabbed: %s",
-            device_context->name, g_udev_device_get_name (port));
+            device_context->name, mm_kernel_device_get_name (port));
 
     /* Ignore if for any reason we still have it in the running list */
     port_context = device_context_peek_running_port_context (device_context, port);
@@ -1355,7 +1375,7 @@ plugin_manager_peek_device_context (MMPluginManager *self,
 
         device_context = (DeviceContext *)(l->data);
         if ((device == device_context->device) ||
-            (! g_strcmp0 (mm_device_get_path (device_context->device), mm_device_get_path (device))))
+            (!g_strcmp0 (mm_device_get_uid (device_context->device), mm_device_get_uid (device))))
             return device_context;
     }
     return NULL;
@@ -1401,7 +1421,7 @@ device_context_run_ready (MMPluginManager    *self,
     if (!best_plugin)
         g_task_return_error (common->task, error);
     else
-        g_task_return_pointer (common->task, best_plugin, (GDestroyNotify) g_object_unref);
+        g_task_return_pointer (common->task, best_plugin, g_object_unref);
     common_async_context_free (common);
 }
 
@@ -1427,7 +1447,7 @@ mm_plugin_manager_device_support_check (MMPluginManager     *self,
     if (device_context) {
         g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_IN_PROGRESS,
                                  "Device support check task already available for device '%s'",
-                                 mm_device_get_path (device));
+                                 mm_device_get_uid (device));
         g_object_unref (task);
         return;
     }
@@ -1439,7 +1459,7 @@ mm_plugin_manager_device_support_check (MMPluginManager     *self,
     self->priv->device_contexts = g_list_prepend (self->priv->device_contexts, device_context);
 
     mm_dbg ("[plugin manager] task %s: new support task for device: %s",
-            device_context->name, mm_device_get_path (device_context->device));
+            device_context->name, mm_device_get_uid (device_context->device));
 
     /* Run device context */
     device_context_run (self,
@@ -1618,13 +1638,15 @@ out:
 }
 
 MMPluginManager *
-mm_plugin_manager_new (const gchar *plugin_dir,
-                       GError **error)
+mm_plugin_manager_new (const gchar  *plugin_dir,
+                       MMFilter     *filter,
+                       GError      **error)
 {
     return g_initable_new (MM_TYPE_PLUGIN_MANAGER,
                            NULL,
                            error,
                            MM_PLUGIN_MANAGER_PLUGIN_DIR, plugin_dir,
+                           MM_PLUGIN_MANAGER_FILTER,     filter,
                            NULL);
 }
 
@@ -1650,6 +1672,9 @@ set_property (GObject *object,
         g_free (priv->plugin_dir);
         priv->plugin_dir = g_value_dup_string (value);
         break;
+    case PROP_FILTER:
+        priv->filter = g_value_dup_object (value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -1667,6 +1692,9 @@ get_property (GObject *object,
     switch (prop_id) {
     case PROP_PLUGIN_DIR:
         g_value_set_string (value, priv->plugin_dir);
+        break;
+    case PROP_FILTER:
+        g_value_set_object (value, priv->filter);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1690,13 +1718,15 @@ dispose (GObject *object)
 
     /* Cleanup list of plugins */
     if (self->priv->plugins) {
-        g_list_free_full (self->priv->plugins, (GDestroyNotify)g_object_unref);
+        g_list_free_full (self->priv->plugins, g_object_unref);
         self->priv->plugins = NULL;
     }
     g_clear_object (&self->priv->generic);
 
     g_free (self->priv->plugin_dir);
     self->priv->plugin_dir = NULL;
+
+    g_clear_object (&self->priv->filter);
 
     G_OBJECT_CLASS (mm_plugin_manager_parent_class)->dispose (object);
 }
@@ -1726,5 +1756,12 @@ mm_plugin_manager_class_init (MMPluginManagerClass *manager_class)
                               "Plugin directory",
                               "Where to look for plugins",
                               NULL,
+                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    g_object_class_install_property
+        (object_class, PROP_FILTER,
+         g_param_spec_object (MM_PLUGIN_MANAGER_FILTER,
+                              "Filter",
+                              "Device filter",
+                              MM_TYPE_FILTER,
                               G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }

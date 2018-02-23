@@ -30,7 +30,7 @@
 #include "mm-log.h"
 #include "mm-context.h"
 
-#if WITH_SUSPEND_RESUME
+#if defined WITH_SYSTEMD_SUSPEND_RESUME
 # include "mm-sleep-monitor.h"
 #endif
 
@@ -55,7 +55,7 @@ quit_cb (gpointer user_data)
     return FALSE;
 }
 
-#if WITH_SUSPEND_RESUME
+#if defined WITH_SYSTEMD_SUSPEND_RESUME
 
 static void
 sleeping_cb (MMSleepMonitor *sleep_monitor)
@@ -86,7 +86,9 @@ bus_acquired_cb (GDBusConnection *connection,
     g_assert (!manager);
     manager = mm_base_manager_new (connection,
                                    mm_context_get_test_plugin_dir (),
-                                   !mm_context_get_test_no_auto_scan (),
+                                   !mm_context_get_no_auto_scan (),
+                                   mm_context_get_filter_policy (),
+                                   mm_context_get_initial_kernel_events (),
                                    mm_context_get_test_enable (),
                                    &error);
     if (!manager) {
@@ -135,16 +137,14 @@ main (int argc, char *argv[])
     GError *err = NULL;
     guint name_id;
 
-    g_type_init ();
-
     /* Setup application context */
     mm_context_init (argc, argv);
 
     if (!mm_log_setup (mm_context_get_log_level (),
                        mm_context_get_log_file (),
-                       mm_context_get_timestamps (),
-                       mm_context_get_relative_timestamps (),
-                       mm_context_get_debug (),
+                       mm_context_get_log_journal (),
+                       mm_context_get_log_timestamps (),
+                       mm_context_get_log_relative_timestamps (),
                        &err)) {
         g_warning ("Failed to set up logging: %s", err->message);
         g_error_free (err);
@@ -166,7 +166,7 @@ main (int argc, char *argv[])
                               name_lost_cb,
                               NULL,
                               NULL);
-#if WITH_SUSPEND_RESUME
+#if defined WITH_SYSTEMD_SUSPEND_RESUME
     {
         MMSleepMonitor *sleep_monitor;
 

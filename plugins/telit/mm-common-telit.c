@@ -34,14 +34,20 @@ telit_grab_port (MMPlugin *self,
                  MMPortProbe *probe,
                  GError **error)
 {
-    GUdevDevice *port;
+    MMKernelDevice *port;
     MMDevice *device;
     MMPortType ptype;
     MMPortSerialAtFlag pflags = MM_PORT_SERIAL_AT_FLAG_NONE;
+    const gchar *subsys;
 
     port = mm_port_probe_peek_port (probe);
     ptype = mm_port_probe_get_port_type (probe);
     device = mm_port_probe_peek_device (probe);
+    subsys = mm_port_probe_get_port_subsys (probe);
+
+    /* Just skip custom port identification for subsys different than tty */
+    if (!g_str_equal (subsys, "tty"))
+        goto out;
 
     /* Look for port type hints; just probing can't distinguish which port should
      * be the data/primary port on these devices.  We have to tag them based on
@@ -50,33 +56,33 @@ telit_grab_port (MMPlugin *self,
      * If no udev rules are found, AT#PORTCFG (if supported) can be used for
      * identifying the port layout
      */
-    if (g_udev_device_get_property_as_boolean (port, TAG_TELIT_MODEM_PORT)) {
+    if (mm_kernel_device_get_property_as_boolean (port, TAG_TELIT_MODEM_PORT)) {
         mm_dbg ("telit: AT port '%s/%s' flagged as primary",
                 mm_port_probe_get_port_subsys (probe),
                 mm_port_probe_get_port_name (probe));
         pflags = MM_PORT_SERIAL_AT_FLAG_PRIMARY;
-    } else if (g_udev_device_get_property_as_boolean (port, TAG_TELIT_AUX_PORT)) {
+    } else if (mm_kernel_device_get_property_as_boolean (port, TAG_TELIT_AUX_PORT)) {
         mm_dbg ("telit: AT port '%s/%s' flagged as secondary",
                 mm_port_probe_get_port_subsys (probe),
                 mm_port_probe_get_port_name (probe));
         pflags = MM_PORT_SERIAL_AT_FLAG_SECONDARY;
-    } else if (g_udev_device_get_property_as_boolean (port, TAG_TELIT_NMEA_PORT)) {
+    } else if (mm_kernel_device_get_property_as_boolean (port, TAG_TELIT_NMEA_PORT)) {
         mm_dbg ("telit: port '%s/%s' flagged as NMEA",
                 mm_port_probe_get_port_subsys (probe),
                 mm_port_probe_get_port_name (probe));
         ptype = MM_PORT_TYPE_GPS;
     } else if (g_object_get_data (G_OBJECT (device), TAG_GETPORTCFG_SUPPORTED) != NULL) {
-        if (g_strcmp0 (g_udev_device_get_property (port, "ID_USB_INTERFACE_NUM"), g_object_get_data (G_OBJECT (device), TAG_TELIT_MODEM_PORT)) == 0) {
+        if (g_strcmp0 (mm_kernel_device_get_property (port, "ID_USB_INTERFACE_NUM"), g_object_get_data (G_OBJECT (device), TAG_TELIT_MODEM_PORT)) == 0) {
             mm_dbg ("telit: AT port '%s/%s' flagged as primary",
                 mm_port_probe_get_port_subsys (probe),
                 mm_port_probe_get_port_name (probe));
             pflags = MM_PORT_SERIAL_AT_FLAG_PRIMARY;
-        } else if (g_strcmp0 (g_udev_device_get_property (port, "ID_USB_INTERFACE_NUM"), g_object_get_data (G_OBJECT (device), TAG_TELIT_AUX_PORT)) == 0) {
+        } else if (g_strcmp0 (mm_kernel_device_get_property (port, "ID_USB_INTERFACE_NUM"), g_object_get_data (G_OBJECT (device), TAG_TELIT_AUX_PORT)) == 0) {
             mm_dbg ("telit: AT port '%s/%s' flagged as secondary",
                 mm_port_probe_get_port_subsys (probe),
                 mm_port_probe_get_port_name (probe));
             pflags = MM_PORT_SERIAL_AT_FLAG_SECONDARY;
-        } else if (g_strcmp0 (g_udev_device_get_property (port, "ID_USB_INTERFACE_NUM"), g_object_get_data (G_OBJECT (device), TAG_TELIT_NMEA_PORT)) == 0) {
+        } else if (g_strcmp0 (mm_kernel_device_get_property (port, "ID_USB_INTERFACE_NUM"), g_object_get_data (G_OBJECT (device), TAG_TELIT_NMEA_PORT)) == 0) {
             mm_dbg ("telit: port '%s/%s' flagged as NMEA",
                 mm_port_probe_get_port_subsys (probe),
                 mm_port_probe_get_port_name (probe));
@@ -102,10 +108,9 @@ telit_grab_port (MMPlugin *self,
             ptype = MM_PORT_TYPE_IGNORED;
     }
 
+out:
     return mm_base_modem_grab_port (modem,
-                                    mm_port_probe_get_port_subsys (probe),
-                                    mm_port_probe_get_port_name (probe),
-                                    mm_port_probe_get_parent_path (probe),
+                                    port,
                                     ptype,
                                     pflags,
                                     error);
@@ -115,10 +120,7 @@ telit_grab_port (MMPlugin *self,
 /* Custom init */
 
 typedef struct {
-    MMPortProbe *probe;
     MMPortSerialAt *port;
-    GCancellable *cancellable;
-    GSimpleAsyncResult *result;
     gboolean getportcfg_done;
     guint getportcfg_retries;
 } TelitCustomInitContext;
@@ -128,10 +130,10 @@ telit_custom_init_finish (MMPortProbe *probe,
                           GAsyncResult *result,
                           GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (result), error);
+    return g_task_propagate_boolean (G_TASK (result), error);
 }
 
-static void telit_custom_init_step (TelitCustomInitContext *ctx);
+static void telit_custom_init_step (GTask *task);
 
 static gboolean
 cache_port_mode (MMDevice *device,
@@ -212,10 +214,15 @@ out:
 static void
 getportcfg_ready (MMPortSerialAt *port,
                   GAsyncResult *res,
-                  TelitCustomInitContext *ctx)
+                  GTask *task)
 {
     const gchar *response;
     GError *error = NULL;
+    MMPortProbe *probe;
+    TelitCustomInitContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+    probe = g_task_get_source_object (task);
 
     response = mm_port_serial_at_command_finish (port, res, &error);
     if (error) {
@@ -232,7 +239,7 @@ getportcfg_ready (MMPortSerialAt *port,
     } else {
         MMDevice *device;
 
-        device = mm_port_probe_peek_device (ctx->probe);
+        device = mm_port_probe_peek_device (probe);
 
         /* Results are cached in the parent device object */
         if (g_object_get_data (G_OBJECT (device), TAG_GETPORTCFG_SUPPORTED) == NULL) {
@@ -244,35 +251,34 @@ getportcfg_ready (MMPortSerialAt *port,
         }
 
         /* Port answered to #PORTCFG, so mark it as being AT already */
-        mm_port_probe_set_result_at (ctx->probe, TRUE);
+        mm_port_probe_set_result_at (probe, TRUE);
     }
 
     if (error)
         g_error_free (error);
 
-    telit_custom_init_step (ctx);
+    telit_custom_init_step (task);
 }
 
 static void
-telit_custom_init_context_complete_and_free (TelitCustomInitContext *ctx)
+telit_custom_init_context_free (TelitCustomInitContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
     g_object_unref (ctx->port);
-    g_object_unref (ctx->probe);
-    g_object_unref (ctx->result);
     g_slice_free (TelitCustomInitContext, ctx);
 }
 
 static void
-telit_custom_init_step (TelitCustomInitContext *ctx)
+telit_custom_init_step (GTask *task)
 {
-    GUdevDevice *port;
+    MMKernelDevice *port;
+    MMPortProbe *probe;
+    TelitCustomInitContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+    probe = g_task_get_source_object (task);
 
     /* If cancelled, end */
-    if (g_cancellable_is_cancelled (ctx->cancellable)) {
+    if (g_cancellable_is_cancelled (g_task_get_cancellable (task))) {
         mm_dbg ("telit: no need to keep on running custom init in (%s)",
                 mm_port_get_device (MM_PORT (ctx->port)));
         goto out;
@@ -281,9 +287,9 @@ telit_custom_init_step (TelitCustomInitContext *ctx)
     /* Try to get a port configuration from the modem: usb interface 00
      * is always linked to an AT port
      */
-    port = mm_port_probe_peek_port (ctx->probe);
+    port = mm_port_probe_peek_port (probe);
     if (!ctx->getportcfg_done &&
-        g_strcmp0 (g_udev_device_get_property (port, "ID_USB_INTERFACE_NUM"), "00") == 0) {
+        g_strcmp0 (mm_kernel_device_get_property (port, "ID_USB_INTERFACE_NUM"), "00") == 0) {
 
         if (ctx->getportcfg_retries == 0)
             goto out;
@@ -295,15 +301,15 @@ telit_custom_init_step (TelitCustomInitContext *ctx)
             2,
             FALSE, /* raw */
             FALSE, /* allow_cached */
-            ctx->cancellable,
+            g_task_get_cancellable (task),
             (GAsyncReadyCallback)getportcfg_ready,
-            ctx);
+            task);
         return;
     }
 
 out:
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    telit_custom_init_context_complete_and_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 void
@@ -313,30 +319,17 @@ telit_custom_init (MMPortProbe *probe,
                    GAsyncReadyCallback callback,
                    gpointer user_data)
 {
-    MMDevice *device;
-    GUdevDevice *udevDevice;
     TelitCustomInitContext *ctx;
-
-    device = mm_port_probe_peek_device (probe);
-    udevDevice = mm_port_probe_peek_port (probe);
+    GTask *task;
 
     ctx = g_slice_new (TelitCustomInitContext);
-    ctx->result = g_simple_async_result_new (G_OBJECT (probe),
-                                             callback,
-                                             user_data,
-                                             telit_custom_init);
-    ctx->probe = g_object_ref (probe);
     ctx->port = g_object_ref (port);
-    ctx->cancellable = cancellable ? g_object_ref (cancellable) : NULL;
     ctx->getportcfg_done = FALSE;
     ctx->getportcfg_retries = 3;
 
-    /* If the device is tagged for supporting #PORTCFG do the custom init */
-    if (g_udev_device_get_property_as_boolean (udevDevice, "ID_MM_TELIT_PORTS_TAGGED")) {
-        telit_custom_init_step (ctx);
-        return;
-    }
+    task = g_task_new (probe, cancellable, callback, user_data);
+    g_task_set_check_cancellable (task, FALSE);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)telit_custom_init_context_free);
 
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    telit_custom_init_context_complete_and_free (ctx);
+    telit_custom_init_step (task);
 }

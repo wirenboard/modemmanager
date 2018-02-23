@@ -10,12 +10,15 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details:
  *
+ * Copyright (C) 2016 Trimble Navigation Limited
  * Copyright (C) 2014 Aleksander Morgado <aleksander@aleksander.es>
+ * Contributor: Matthew Stanger <matthew_stanger@trimble.com>
  */
 
 #include <config.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "ModemManager.h"
 #define _LIBMM_INSIDE_MM
@@ -24,6 +27,7 @@
 #include "mm-charsets.h"
 #include "mm-errors-types.h"
 #include "mm-modem-helpers-cinterion.h"
+#include "mm-modem-helpers.h"
 
 /* Setup relationship between the 3G band bitmask in the modem and the bitmask
  * in ModemManager. */
@@ -38,15 +42,15 @@ typedef struct {
  * set, so you shouldn't for example set 3G frequency bands, and then use a
  * 2G-only allowed mode. */
 static const CinterionBand cinterion_bands[] = {
-    { (1 << 0), MM_MODEM_BAND_EGSM  },
-    { (1 << 1), MM_MODEM_BAND_DCS   },
-    { (1 << 2), MM_MODEM_BAND_PCS   },
-    { (1 << 3), MM_MODEM_BAND_G850  },
-    { (1 << 4), MM_MODEM_BAND_U2100 },
-    { (1 << 5), MM_MODEM_BAND_U1900 },
-    { (1 << 6), MM_MODEM_BAND_U850  },
-    { (1 << 7), MM_MODEM_BAND_U900  },
-    { (1 << 8), MM_MODEM_BAND_U800  }
+    { (1 << 0), MM_MODEM_BAND_EGSM    },
+    { (1 << 1), MM_MODEM_BAND_DCS     },
+    { (1 << 2), MM_MODEM_BAND_PCS     },
+    { (1 << 3), MM_MODEM_BAND_G850    },
+    { (1 << 4), MM_MODEM_BAND_UTRAN_1 },
+    { (1 << 5), MM_MODEM_BAND_UTRAN_2 },
+    { (1 << 6), MM_MODEM_BAND_UTRAN_5 },
+    { (1 << 7), MM_MODEM_BAND_UTRAN_8 },
+    { (1 << 8), MM_MODEM_BAND_UTRAN_6 }
 };
 
 /* Check valid combinations in 2G-only devices */
@@ -244,43 +248,6 @@ mm_cinterion_parse_scfg_response (const gchar *response,
  *   +CNMI: (0,1,2),(0,1),(0,2),(0),(1)
  */
 
-static GArray *
-read_number_list (const gchar *str)
-{
-    GError *inner_error = NULL;
-    GArray *out = NULL;
-    GRegex *r;
-    GMatchInfo *match_info;
-
-    if (!str)
-        return NULL;
-
-    r = g_regex_new ("(\\d),?", G_REGEX_UNGREEDY, 0, NULL);
-    g_assert (r != NULL);
-
-    g_regex_match_full (r, str, strlen (str), 0, 0, &match_info, &inner_error);
-    while (!inner_error && g_match_info_matches (match_info)) {
-        guint aux;
-
-        if (mm_get_uint_from_match_info (match_info, 1, &aux)) {
-            if (!out)
-                out = g_array_sized_new (FALSE, FALSE, sizeof (guint), 3);
-            g_array_append_val (out, aux);
-        }
-        g_match_info_next (match_info, &inner_error);
-    }
-
-    if (inner_error) {
-        mm_warn ("Unexpected error matching +CNMI response: '%s'", inner_error->message);
-        g_error_free (inner_error);
-    }
-
-    g_match_info_free (match_info);
-    g_regex_unref (r);
-
-    return out;
-}
-
 gboolean
 mm_cinterion_parse_cnmi_test (const gchar *response,
                               GArray **supported_mode,
@@ -293,6 +260,11 @@ mm_cinterion_parse_cnmi_test (const gchar *response,
     GRegex *r;
     GMatchInfo *match_info;
     GError *inner_error = NULL;
+    GArray *tmp_supported_mode = NULL;
+    GArray *tmp_supported_mt = NULL;
+    GArray *tmp_supported_bm = NULL;
+    GArray *tmp_supported_ds = NULL;
+    GArray *tmp_supported_bfr = NULL;
 
     if (!response) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "Missing response");
@@ -310,76 +282,75 @@ mm_cinterion_parse_cnmi_test (const gchar *response,
             gchar *str;
 
             str = mm_get_string_unquoted_from_match_info (match_info, 1);
-            *supported_mode = read_number_list (str);
+            tmp_supported_mode = mm_parse_uint_list (str, &inner_error);
             g_free (str);
+            if (inner_error)
+                goto out;
         }
         if (supported_mt) {
             gchar *str;
 
             str = mm_get_string_unquoted_from_match_info (match_info, 2);
-            *supported_mt = read_number_list (str);
+            tmp_supported_mt = mm_parse_uint_list (str, &inner_error);
             g_free (str);
+            if (inner_error)
+                goto out;
         }
         if (supported_bm) {
             gchar *str;
 
             str = mm_get_string_unquoted_from_match_info (match_info, 3);
-            *supported_bm = read_number_list (str);
+            tmp_supported_bm = mm_parse_uint_list (str, &inner_error);
             g_free (str);
+            if (inner_error)
+                goto out;
         }
         if (supported_ds) {
             gchar *str;
 
             str = mm_get_string_unquoted_from_match_info (match_info, 4);
-            *supported_ds = read_number_list (str);
+            tmp_supported_ds = mm_parse_uint_list (str, &inner_error);
             g_free (str);
+            if (inner_error)
+                goto out;
         }
         if (supported_bfr) {
             gchar *str;
 
             str = mm_get_string_unquoted_from_match_info (match_info, 5);
-            *supported_bfr = read_number_list (str);
+            tmp_supported_bfr = mm_parse_uint_list (str, &inner_error);
             g_free (str);
+            if (inner_error)
+                goto out;
         }
     }
+
+out:
 
     if (match_info)
         g_match_info_free (match_info);
     g_regex_unref (r);
 
-    if ((supported_mode && *supported_mode == NULL) ||
-        (supported_mt   && *supported_mt == NULL) ||
-        (supported_bm   && *supported_bm == NULL) ||
-        (supported_ds   && *supported_ds == NULL) ||
-        (supported_bfr  && *supported_bfr == NULL))
-        inner_error = g_error_new (MM_CORE_ERROR,
-                                   MM_CORE_ERROR_FAILED,
-                                   "Error parsing +CNMI=? response");
-
     if (inner_error) {
-        if (supported_mode && *supported_mode) {
-            g_array_unref (*supported_mode);
-            *supported_mode = NULL;
-        }
-        if (supported_mt && *supported_mt) {
-            g_array_unref (*supported_mt);
-            *supported_mt = NULL;
-        }
-        if (supported_bm && *supported_bm) {
-            g_array_unref (*supported_bm);
-            *supported_bm = NULL;
-        }
-        if (supported_ds && *supported_ds) {
-            g_array_unref (*supported_ds);
-            *supported_ds = NULL;
-        }
-        if (supported_bfr && *supported_bfr) {
-            g_array_unref (*supported_bfr);
-            *supported_bfr = NULL;
-        }
+        g_clear_pointer (&tmp_supported_mode, g_array_unref);
+        g_clear_pointer (&tmp_supported_mt,   g_array_unref);
+        g_clear_pointer (&tmp_supported_bm,   g_array_unref);
+        g_clear_pointer (&tmp_supported_ds,   g_array_unref);
+        g_clear_pointer (&tmp_supported_bfr,  g_array_unref);
         g_propagate_error (error, inner_error);
         return FALSE;
     }
+
+    if (supported_mode)
+        *supported_mode = tmp_supported_mode;
+    if (supported_mt)
+        *supported_mt = tmp_supported_mt;
+    if (supported_bm)
+        *supported_bm = tmp_supported_bm;
+    if (supported_ds)
+        *supported_ds = tmp_supported_ds;
+    if (supported_bfr)
+        *supported_bfr = tmp_supported_bfr;
 
     return TRUE;
 }
@@ -485,6 +456,99 @@ mm_cinterion_parse_sind_response (const gchar *response,
 }
 
 /*****************************************************************************/
+/* ^SWWAN read parser
+ *
+ * Description: Parses <cid>, <state>[, <WWAN adapter>] or CME ERROR from SWWAN.
+ *
+ * The method returns a MMSwwanState with the connection status of a single
+ * PDP context, the one being queried via the cid given as input.
+ *
+ * Note that we use CID for matching because the WWAN adapter field is optional
+ * it seems.
+ *
+ *     Read Command
+ *         AT^SWWAN?
+ *         Response(s)
+ *         [^SWWAN: <cid>, <state>[, <WWAN adapter>]]
+ *         [^SWWAN: ...]
+ *         OK
+ *         ERROR
+ *         +CME ERROR: <err>
+ *
+ *     Examples:
+ *         OK              - If no WWAN connection is active, then read command just returns OK
+ *         ^SWWAN: 3,1,1   - 3rd PDP Context, Activated, First WWAN Adaptor
+ *         +CME ERROR: ?   -
+ */
+
+enum {
+    MM_SWWAN_STATE_DISCONNECTED =  0,
+    MM_SWWAN_STATE_CONNECTED    =  1,
+};
+
+MMBearerConnectionStatus
+mm_cinterion_parse_swwan_response (const gchar  *response,
+                                   guint         cid,
+                                   GError      **error)
+{
+    GRegex                   *r;
+    GMatchInfo               *match_info;
+    GError                   *inner_error = NULL;
+    MMBearerConnectionStatus  status;
+
+    g_assert (response);
+
+    /* If no WWAN connection is active, then ^SWWAN read command just returns OK
+     * (which we receive as an empty string) */
+    if (!response[0])
+        return MM_BEARER_CONNECTION_STATUS_DISCONNECTED;
+
+    if (!g_str_has_prefix (response, "^SWWAN:")) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "Couldn't parse ^SWWAN response: '%s'", response);
+        return MM_BEARER_CONNECTION_STATUS_UNKNOWN;
+    }
+
+    r = g_regex_new ("\\^SWWAN:\\s*(\\d+),\\s*(\\d+)(?:,\\s*(\\d+))?(?:\\r\\n)?",
+                     G_REGEX_DOLLAR_ENDONLY | G_REGEX_RAW, 0, NULL);
+    g_assert (r != NULL);
+
+    status = MM_BEARER_CONNECTION_STATUS_UNKNOWN;
+    g_regex_match_full (r, response, strlen (response), 0, 0, &match_info, &inner_error);
+    while (!inner_error && g_match_info_matches (match_info)) {
+        guint read_state;
+        guint read_cid;
+
+        if (!mm_get_uint_from_match_info (match_info, 1, &read_cid))
+            mm_warn ("Couldn't read cid in ^SWWAN response: '%s'", response);
+        else if (!mm_get_uint_from_match_info (match_info, 2, &read_state))
+            mm_warn ("Couldn't read state in ^SWWAN response: '%s'", response);
+        else if (read_cid == cid) {
+            if (read_state == MM_SWWAN_STATE_CONNECTED) {
+                status = MM_BEARER_CONNECTION_STATUS_CONNECTED;
+                break;
+            }
+            if (read_state == MM_SWWAN_STATE_DISCONNECTED) {
+                status = MM_BEARER_CONNECTION_STATUS_DISCONNECTED;
+                break;
+            }
+            mm_warn ("Invalid state read in ^SWWAN response: %u", read_state);
+            break;
+        }
+        g_match_info_next (match_info, &inner_error);
+    }
+
+    g_match_info_free (match_info);
+    g_regex_unref (r);
+
+    if (status == MM_BEARER_CONNECTION_STATUS_UNKNOWN)
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "No state returned for CID %u", cid);
+
+    return status;
+}
+
+/*****************************************************************************/
 /* ^SMONG response parser */
 
 static MMModemAccessTechnology
@@ -559,4 +623,37 @@ mm_cinterion_parse_smong_response (const gchar              *response,
 
     g_assert (access_tech != MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN);
     return TRUE;
+}
+
+/*****************************************************************************/
+/* ^SIND psinfo helper */
+
+MMModemAccessTechnology
+mm_cinterion_get_access_technology_from_sind_psinfo (guint val)
+{
+    switch (val) {
+    case 0:
+        return MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN;
+    case 1:
+    case 2:
+        return MM_MODEM_ACCESS_TECHNOLOGY_GPRS;
+    case 3:
+    case 4:
+        return MM_MODEM_ACCESS_TECHNOLOGY_EDGE;
+    case 5:
+    case 6:
+        return MM_MODEM_ACCESS_TECHNOLOGY_UMTS;
+    case 7:
+    case 8:
+        return MM_MODEM_ACCESS_TECHNOLOGY_HSDPA;
+    case 9:
+    case 10:
+        return (MM_MODEM_ACCESS_TECHNOLOGY_HSDPA | MM_MODEM_ACCESS_TECHNOLOGY_HSUPA);
+    case 16:
+    case 17:
+        return MM_MODEM_ACCESS_TECHNOLOGY_LTE;
+    default:
+        mm_dbg ("Unable to identify access technology from psinfo reported value: %u", val);
+        return MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN;
+    }
 }

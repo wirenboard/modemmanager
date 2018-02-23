@@ -3,12 +3,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Flags and Enumerations: ModemManager Reference Manual</title>
-<meta name="generator" content="DocBook XSL Stylesheets V1.79.1">
+<meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
 <link rel="home" href="index.html" title="ModemManager Reference Manual">
 <link rel="up" href="ref-common-types.html" title="Part II. Common types and definitions">
 <link rel="prev" href="ModemManager-Version-checks.html" title="Version checks">
 <link rel="next" href="ModemManager-Errors.html" title="Errors">
-<meta name="generator" content="GTK-Doc V1.25.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -86,6 +86,10 @@
 <tr>
 <td class="datatype_keyword">enum</td>
 <td class="function_name"><a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppUssdSessionState" title="enum MMModem3gppUssdSessionState">MMModem3gppUssdSessionState</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppEpsUeModeOperation" title="enum MMModem3gppEpsUeModeOperation">MMModem3gppEpsUeModeOperation</a></td>
 </tr>
 <tr>
 <td class="datatype_keyword">enum</td>
@@ -767,7 +771,7 @@ modem attempts to register with the network.</p>
 <hr>
 <div class="refsect2">
 <a name="MMModem3gppRegistrationState"></a><h3>enum MMModem3gppRegistrationState</h3>
-<p>GSM registration code as defined in 3GPP TS 27.007 section 10.1.19.</p>
+<p>GSM registration code as defined in 3GPP TS 27.007.</p>
 <div class="refsect3">
 <a name="MMModem3gppRegistrationState.members"></a><h4>Members</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -819,6 +823,41 @@ modem attempts to register with the network.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-3GPP-REGISTRATION-STATE-HOME-SMS-ONLY:CAPS"></a>MM_MODEM_3GPP_REGISTRATION_STATE_HOME_SMS_ONLY</p></td>
+<td class="enum_member_description">
+<p>Registered for "SMS only", home network (applicable only when on LTE).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-3GPP-REGISTRATION-STATE-ROAMING-SMS-ONLY:CAPS"></a>MM_MODEM_3GPP_REGISTRATION_STATE_ROAMING_SMS_ONLY</p></td>
+<td class="enum_member_description">
+<p>Registered for "SMS only", roaming network (applicable only when on LTE).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-3GPP-REGISTRATION-STATE-EMERGENCY-ONLY:CAPS"></a>MM_MODEM_3GPP_REGISTRATION_STATE_EMERGENCY_ONLY</p></td>
+<td class="enum_member_description">
+<p>Emergency services only.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-3GPP-REGISTRATION-STATE-HOME-CSFB-NOT-PREFERRED:CAPS"></a>MM_MODEM_3GPP_REGISTRATION_STATE_HOME_CSFB_NOT_PREFERRED</p></td>
+<td class="enum_member_description">
+<p>Registered for "CSFB not preferred", home network (applicable only when on LTE).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-3GPP-REGISTRATION-STATE-ROAMING-CSFB-NOT-PREFERRED:CAPS"></a>MM_MODEM_3GPP_REGISTRATION_STATE_ROAMING_CSFB_NOT_PREFERRED</p></td>
+<td class="enum_member_description">
+<p>Registered for "CSFB not preferred", roaming network (applicable only when on LTE).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
 </tbody>
 </table></div>
 </div>
@@ -861,6 +900,58 @@ modem attempts to register with the network.</p>
 <td class="enum_member_name"><p><a name="MM-MODEM-3GPP-USSD-SESSION-STATE-USER-RESPONSE:CAPS"></a>MM_MODEM_3GPP_USSD_SESSION_STATE_USER_RESPONSE</p></td>
 <td class="enum_member_description">
 <p>The network is waiting for the client's response.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MMModem3gppEpsUeModeOperation"></a><h3>enum MMModem3gppEpsUeModeOperation</h3>
+<p>UE mode of operation for EPS, as per 3GPP TS 24.301.</p>
+<div class="refsect3">
+<a name="MMModem3gppEpsUeModeOperation.members"></a><h4>Members</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-3GPP-EPS-UE-MODE-OPERATION-UNKNOWN:CAPS"></a>MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_UNKNOWN</p></td>
+<td class="enum_member_description">
+<p>Unknown or not applicable.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-3GPP-EPS-UE-MODE-OPERATION-PS-1:CAPS"></a>MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_PS_1</p></td>
+<td class="enum_member_description">
+<p>PS mode 1 of operation: EPS only, voice-centric.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-3GPP-EPS-UE-MODE-OPERATION-PS-2:CAPS"></a>MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_PS_2</p></td>
+<td class="enum_member_description">
+<p>PS mode 2 of operation: EPS only, data-centric.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-3GPP-EPS-UE-MODE-OPERATION-CSPS-1:CAPS"></a>MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_CSPS_1</p></td>
+<td class="enum_member_description">
+<p>CS/PS mode 1 of operation: EPS and non-EPS, voice-centric.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-3GPP-EPS-UE-MODE-OPERATION-CSPS-2:CAPS"></a>MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_CSPS_2</p></td>
+<td class="enum_member_description">
+<p>CS/PS mode 2 of operation: EPS and non-EPS, data-centric.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -1054,457 +1145,709 @@ or connected to a network.</p>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-U2100:CAPS"></a>MM_MODEM_BAND_U2100</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-1:CAPS"></a>MM_MODEM_BAND_UTRAN_1</p></td>
 <td class="enum_member_description">
-<p>WCDMA 2100 MHz (Class I).</p>
+<p>UMTS 2100 MHz (IMT, UTRAN band 1).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-U1800:CAPS"></a>MM_MODEM_BAND_U1800</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-3:CAPS"></a>MM_MODEM_BAND_UTRAN_3</p></td>
 <td class="enum_member_description">
-<p>WCDMA 3GPP 1800 MHz (Class III).</p>
+<p>UMTS 1800 MHz (DCS, UTRAN band 3).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-U17IV:CAPS"></a>MM_MODEM_BAND_U17IV</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-4:CAPS"></a>MM_MODEM_BAND_UTRAN_4</p></td>
 <td class="enum_member_description">
-<p>WCDMA 3GPP AWS 1700/2100 MHz (Class IV).</p>
+<p>UMTS 1700 MHz (AWS A-F, UTRAN band 4).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-U800:CAPS"></a>MM_MODEM_BAND_U800</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-6:CAPS"></a>MM_MODEM_BAND_UTRAN_6</p></td>
 <td class="enum_member_description">
-<p>WCDMA 3GPP UMTS 800 MHz (Class VI).</p>
+<p>UMTS 800 MHz (UTRAN band 6).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-U850:CAPS"></a>MM_MODEM_BAND_U850</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-5:CAPS"></a>MM_MODEM_BAND_UTRAN_5</p></td>
 <td class="enum_member_description">
-<p>WCDMA 3GPP UMTS 850 MHz (Class V).</p>
+<p>UMTS 850 MHz (CLR, UTRAN band 5).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-U900:CAPS"></a>MM_MODEM_BAND_U900</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-8:CAPS"></a>MM_MODEM_BAND_UTRAN_8</p></td>
 <td class="enum_member_description">
-<p>WCDMA 3GPP UMTS 900 MHz (Class VIII).</p>
+<p>UMTS 900 MHz (E-GSM, UTRAN band 8).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-U17IX:CAPS"></a>MM_MODEM_BAND_U17IX</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-9:CAPS"></a>MM_MODEM_BAND_UTRAN_9</p></td>
 <td class="enum_member_description">
-<p>WCDMA 3GPP UMTS 1700 MHz (Class IX).</p>
+<p>UMTS 1700 MHz (UTRAN band 9).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-U1900:CAPS"></a>MM_MODEM_BAND_U1900</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-2:CAPS"></a>MM_MODEM_BAND_UTRAN_2</p></td>
 <td class="enum_member_description">
-<p>WCDMA 3GPP UMTS 1900 MHz (Class II).</p>
+<p>UMTS 1900 MHz (PCS A-F, UTRAN band 2).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-U2600:CAPS"></a>MM_MODEM_BAND_U2600</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-7:CAPS"></a>MM_MODEM_BAND_UTRAN_7</p></td>
 <td class="enum_member_description">
-<p>WCDMA 3GPP UMTS 2600 MHz (Class VII, internal).</p>
+<p>UMTS 2600 MHz (IMT-E, UTRAN band 7).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-I:CAPS"></a>MM_MODEM_BAND_EUTRAN_I</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-G450:CAPS"></a>MM_MODEM_BAND_G450</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band I.</p>
+<p>GSM/GPRS/EDGE 450 MHz.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-II:CAPS"></a>MM_MODEM_BAND_EUTRAN_II</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-G480:CAPS"></a>MM_MODEM_BAND_G480</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band II.</p>
+<p>GSM/GPRS/EDGE 480 MHz.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-III:CAPS"></a>MM_MODEM_BAND_EUTRAN_III</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-G750:CAPS"></a>MM_MODEM_BAND_G750</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band III.</p>
+<p>GSM/GPRS/EDGE 750 MHz.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-IV:CAPS"></a>MM_MODEM_BAND_EUTRAN_IV</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-G380:CAPS"></a>MM_MODEM_BAND_G380</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band IV.</p>
+<p>GSM/GPRS/EDGE 380 MHz.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-V:CAPS"></a>MM_MODEM_BAND_EUTRAN_V</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-G410:CAPS"></a>MM_MODEM_BAND_G410</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band V.</p>
+<p>GSM/GPRS/EDGE 410 MHz.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-VI:CAPS"></a>MM_MODEM_BAND_EUTRAN_VI</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-G710:CAPS"></a>MM_MODEM_BAND_G710</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band VI.</p>
+<p>GSM/GPRS/EDGE 710 MHz.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-VII:CAPS"></a>MM_MODEM_BAND_EUTRAN_VII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-G810:CAPS"></a>MM_MODEM_BAND_G810</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band VII.</p>
+<p>GSM/GPRS/EDGE 810 MHz.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-VIII:CAPS"></a>MM_MODEM_BAND_EUTRAN_VIII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-1:CAPS"></a>MM_MODEM_BAND_EUTRAN_1</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band VIII.</p>
+<p>E-UTRAN band 1.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-IX:CAPS"></a>MM_MODEM_BAND_EUTRAN_IX</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-2:CAPS"></a>MM_MODEM_BAND_EUTRAN_2</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band IX.</p>
+<p>E-UTRAN band 2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-X:CAPS"></a>MM_MODEM_BAND_EUTRAN_X</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-3:CAPS"></a>MM_MODEM_BAND_EUTRAN_3</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band X.</p>
+<p>E-UTRAN band 3.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XI:CAPS"></a>MM_MODEM_BAND_EUTRAN_XI</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-4:CAPS"></a>MM_MODEM_BAND_EUTRAN_4</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XI.</p>
+<p>E-UTRAN band 4.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XII:CAPS"></a>MM_MODEM_BAND_EUTRAN_XII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-5:CAPS"></a>MM_MODEM_BAND_EUTRAN_5</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XII.</p>
+<p>E-UTRAN band 5.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XIII:CAPS"></a>MM_MODEM_BAND_EUTRAN_XIII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-6:CAPS"></a>MM_MODEM_BAND_EUTRAN_6</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XIII.</p>
+<p>E-UTRAN band 6.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XIV:CAPS"></a>MM_MODEM_BAND_EUTRAN_XIV</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-7:CAPS"></a>MM_MODEM_BAND_EUTRAN_7</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XIV.</p>
+<p>E-UTRAN band 7.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XVII:CAPS"></a>MM_MODEM_BAND_EUTRAN_XVII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-8:CAPS"></a>MM_MODEM_BAND_EUTRAN_8</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XVII.</p>
+<p>E-UTRAN band 8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XVIII:CAPS"></a>MM_MODEM_BAND_EUTRAN_XVIII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-9:CAPS"></a>MM_MODEM_BAND_EUTRAN_9</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XVIII.</p>
+<p>E-UTRAN band 9.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XIX:CAPS"></a>MM_MODEM_BAND_EUTRAN_XIX</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-10:CAPS"></a>MM_MODEM_BAND_EUTRAN_10</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XIX.</p>
+<p>E-UTRAN band 10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XX:CAPS"></a>MM_MODEM_BAND_EUTRAN_XX</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-11:CAPS"></a>MM_MODEM_BAND_EUTRAN_11</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XX.</p>
+<p>E-UTRAN band 11.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXI:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXI</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-12:CAPS"></a>MM_MODEM_BAND_EUTRAN_12</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXI.</p>
+<p>E-UTRAN band 12.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXII:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-13:CAPS"></a>MM_MODEM_BAND_EUTRAN_13</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXII.</p>
+<p>E-UTRAN band 13.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXIII:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXIII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-14:CAPS"></a>MM_MODEM_BAND_EUTRAN_14</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXIII.</p>
+<p>E-UTRAN band 14.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXIV:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXIV</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-17:CAPS"></a>MM_MODEM_BAND_EUTRAN_17</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXIV.</p>
+<p>E-UTRAN band 17.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXV:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXV</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-18:CAPS"></a>MM_MODEM_BAND_EUTRAN_18</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXV.</p>
+<p>E-UTRAN band 18.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXVI:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXVI</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-19:CAPS"></a>MM_MODEM_BAND_EUTRAN_19</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXVI.</p>
+<p>E-UTRAN band 19.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXXIII:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXXIII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-20:CAPS"></a>MM_MODEM_BAND_EUTRAN_20</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXXIII.</p>
+<p>E-UTRAN band 20.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXXIV:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXXIV</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-21:CAPS"></a>MM_MODEM_BAND_EUTRAN_21</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXXIV.</p>
+<p>E-UTRAN band 21.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXXV:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXXV</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-22:CAPS"></a>MM_MODEM_BAND_EUTRAN_22</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXXV.</p>
+<p>E-UTRAN band 22.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXXVI:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXXVI</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-23:CAPS"></a>MM_MODEM_BAND_EUTRAN_23</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXXVI.</p>
+<p>E-UTRAN band 23.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXXVII:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXXVII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-24:CAPS"></a>MM_MODEM_BAND_EUTRAN_24</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXXVII.</p>
+<p>E-UTRAN band 24.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXXVIII:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXXVIII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-25:CAPS"></a>MM_MODEM_BAND_EUTRAN_25</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXXVIII.</p>
+<p>E-UTRAN band 25.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XXXIX:CAPS"></a>MM_MODEM_BAND_EUTRAN_XXXIX</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-26:CAPS"></a>MM_MODEM_BAND_EUTRAN_26</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XXXIX.</p>
+<p>E-UTRAN band 26.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XL:CAPS"></a>MM_MODEM_BAND_EUTRAN_XL</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-27:CAPS"></a>MM_MODEM_BAND_EUTRAN_27</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XL.</p>
+<p>E-UTRAN band 27.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XLI:CAPS"></a>MM_MODEM_BAND_EUTRAN_XLI</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-28:CAPS"></a>MM_MODEM_BAND_EUTRAN_28</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XLI.</p>
+<p>E-UTRAN band 28.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XLII:CAPS"></a>MM_MODEM_BAND_EUTRAN_XLII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-29:CAPS"></a>MM_MODEM_BAND_EUTRAN_29</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XLII.</p>
+<p>E-UTRAN band 29.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XLIII:CAPS"></a>MM_MODEM_BAND_EUTRAN_XLIII</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-30:CAPS"></a>MM_MODEM_BAND_EUTRAN_30</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XLIII.</p>
+<p>E-UTRAN band 30.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-XLIV:CAPS"></a>MM_MODEM_BAND_EUTRAN_XLIV</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-31:CAPS"></a>MM_MODEM_BAND_EUTRAN_31</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band XLIV.</p>
+<p>E-UTRAN band 31.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC0-CELLULAR-800:CAPS"></a>MM_MODEM_BAND_CDMA_BC0_CELLULAR_800</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-32:CAPS"></a>MM_MODEM_BAND_EUTRAN_32</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 32.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-33:CAPS"></a>MM_MODEM_BAND_EUTRAN_33</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 33.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-34:CAPS"></a>MM_MODEM_BAND_EUTRAN_34</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 34.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-35:CAPS"></a>MM_MODEM_BAND_EUTRAN_35</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 35.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-36:CAPS"></a>MM_MODEM_BAND_EUTRAN_36</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 36.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-37:CAPS"></a>MM_MODEM_BAND_EUTRAN_37</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 37.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-38:CAPS"></a>MM_MODEM_BAND_EUTRAN_38</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 38.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-39:CAPS"></a>MM_MODEM_BAND_EUTRAN_39</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 39.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-40:CAPS"></a>MM_MODEM_BAND_EUTRAN_40</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 40.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-41:CAPS"></a>MM_MODEM_BAND_EUTRAN_41</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 41.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-42:CAPS"></a>MM_MODEM_BAND_EUTRAN_42</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 42.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-43:CAPS"></a>MM_MODEM_BAND_EUTRAN_43</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 43.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-44:CAPS"></a>MM_MODEM_BAND_EUTRAN_44</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 44.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-45:CAPS"></a>MM_MODEM_BAND_EUTRAN_45</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 45.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-46:CAPS"></a>MM_MODEM_BAND_EUTRAN_46</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 46.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-47:CAPS"></a>MM_MODEM_BAND_EUTRAN_47</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 47.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-48:CAPS"></a>MM_MODEM_BAND_EUTRAN_48</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 48.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-65:CAPS"></a>MM_MODEM_BAND_EUTRAN_65</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 65.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-66:CAPS"></a>MM_MODEM_BAND_EUTRAN_66</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 66.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-67:CAPS"></a>MM_MODEM_BAND_EUTRAN_67</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 67.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-68:CAPS"></a>MM_MODEM_BAND_EUTRAN_68</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 68.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-69:CAPS"></a>MM_MODEM_BAND_EUTRAN_69</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 69.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-70:CAPS"></a>MM_MODEM_BAND_EUTRAN_70</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 70.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-71:CAPS"></a>MM_MODEM_BAND_EUTRAN_71</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 71.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC0:CAPS"></a>MM_MODEM_BAND_CDMA_BC0</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 0 (US Cellular 850MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC1-PCS-1900:CAPS"></a>MM_MODEM_BAND_CDMA_BC1_PCS_1900</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC1:CAPS"></a>MM_MODEM_BAND_CDMA_BC1</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 1 (US PCS 1900MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC2-TACS:CAPS"></a>MM_MODEM_BAND_CDMA_BC2_TACS</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC2:CAPS"></a>MM_MODEM_BAND_CDMA_BC2</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 2 (UK TACS 900MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC3-JTACS:CAPS"></a>MM_MODEM_BAND_CDMA_BC3_JTACS</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC3:CAPS"></a>MM_MODEM_BAND_CDMA_BC3</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 3 (Japanese TACS).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC4-KOREAN-PCS:CAPS"></a>MM_MODEM_BAND_CDMA_BC4_KOREAN_PCS</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC4:CAPS"></a>MM_MODEM_BAND_CDMA_BC4</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 4 (Korean PCS).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC5-NMT450:CAPS"></a>MM_MODEM_BAND_CDMA_BC5_NMT450</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC5:CAPS"></a>MM_MODEM_BAND_CDMA_BC5</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 5 (NMT 450MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC6-IMT2000:CAPS"></a>MM_MODEM_BAND_CDMA_BC6_IMT2000</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC6:CAPS"></a>MM_MODEM_BAND_CDMA_BC6</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 6 (IMT2000 2100MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC7-CELLULAR-700:CAPS"></a>MM_MODEM_BAND_CDMA_BC7_CELLULAR_700</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC7:CAPS"></a>MM_MODEM_BAND_CDMA_BC7</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 7 (Cellular 700MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC8-1800:CAPS"></a>MM_MODEM_BAND_CDMA_BC8_1800</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC8:CAPS"></a>MM_MODEM_BAND_CDMA_BC8</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 8 (1800MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC9-900:CAPS"></a>MM_MODEM_BAND_CDMA_BC9_900</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC9:CAPS"></a>MM_MODEM_BAND_CDMA_BC9</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 9 (900MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC10-SECONDARY-800:CAPS"></a>MM_MODEM_BAND_CDMA_BC10_SECONDARY_800</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC10:CAPS"></a>MM_MODEM_BAND_CDMA_BC10</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 10 (US Secondary 800).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC11-PAMR-400:CAPS"></a>MM_MODEM_BAND_CDMA_BC11_PAMR_400</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC11:CAPS"></a>MM_MODEM_BAND_CDMA_BC11</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 11 (European PAMR 400MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC12-PAMR-800:CAPS"></a>MM_MODEM_BAND_CDMA_BC12_PAMR_800</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC12:CAPS"></a>MM_MODEM_BAND_CDMA_BC12</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 12 (PAMR 800MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC13-IMT2000-2500:CAPS"></a>MM_MODEM_BAND_CDMA_BC13_IMT2000_2500</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC13:CAPS"></a>MM_MODEM_BAND_CDMA_BC13</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 13 (IMT2000 2500MHz Expansion).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC14-PCS2-1900:CAPS"></a>MM_MODEM_BAND_CDMA_BC14_PCS2_1900</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC14:CAPS"></a>MM_MODEM_BAND_CDMA_BC14</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 14 (More US PCS 1900MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC15-AWS:CAPS"></a>MM_MODEM_BAND_CDMA_BC15_AWS</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC15:CAPS"></a>MM_MODEM_BAND_CDMA_BC15</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 15 (AWS 1700MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC16-US-2500:CAPS"></a>MM_MODEM_BAND_CDMA_BC16_US_2500</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC16:CAPS"></a>MM_MODEM_BAND_CDMA_BC16</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 16 (US 2500MHz).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC17-US-FLO-2500:CAPS"></a>MM_MODEM_BAND_CDMA_BC17_US_FLO_2500</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC17:CAPS"></a>MM_MODEM_BAND_CDMA_BC17</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 17 (US 2500MHz Forward Link Only).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC18-US-PS-700:CAPS"></a>MM_MODEM_BAND_CDMA_BC18_US_PS_700</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC18:CAPS"></a>MM_MODEM_BAND_CDMA_BC18</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 18 (US 700MHz Public Safety).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC19-US-LOWER-700:CAPS"></a>MM_MODEM_BAND_CDMA_BC19_US_LOWER_700</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC19:CAPS"></a>MM_MODEM_BAND_CDMA_BC19</p></td>
 <td class="enum_member_description">
 <p>CDMA Band Class 19 (US Lower 700MHz).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-10:CAPS"></a>MM_MODEM_BAND_UTRAN_10</p></td>
+<td class="enum_member_description">
+<p>UMTS 1700 MHz (EAWS A-G, UTRAN band 10).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-11:CAPS"></a>MM_MODEM_BAND_UTRAN_11</p></td>
+<td class="enum_member_description">
+<p>UMTS 1500 MHz (LPDC, UTRAN band 11).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-12:CAPS"></a>MM_MODEM_BAND_UTRAN_12</p></td>
+<td class="enum_member_description">
+<p>UMTS 700 MHz (LSMH A/B/C, UTRAN band 12).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-13:CAPS"></a>MM_MODEM_BAND_UTRAN_13</p></td>
+<td class="enum_member_description">
+<p>UMTS 700 MHz (USMH C, UTRAN band 13).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-14:CAPS"></a>MM_MODEM_BAND_UTRAN_14</p></td>
+<td class="enum_member_description">
+<p>UMTS 700 MHz (USMH D, UTRAN band 14).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-19:CAPS"></a>MM_MODEM_BAND_UTRAN_19</p></td>
+<td class="enum_member_description">
+<p>UMTS 800 MHz (UTRAN band 19).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-20:CAPS"></a>MM_MODEM_BAND_UTRAN_20</p></td>
+<td class="enum_member_description">
+<p>UMTS 800 MHz (EUDD, UTRAN band 20).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-21:CAPS"></a>MM_MODEM_BAND_UTRAN_21</p></td>
+<td class="enum_member_description">
+<p>UMTS 1500 MHz (UPDC, UTRAN band 21).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-22:CAPS"></a>MM_MODEM_BAND_UTRAN_22</p></td>
+<td class="enum_member_description">
+<p>UMTS 3500 MHz (UTRAN band 22).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-25:CAPS"></a>MM_MODEM_BAND_UTRAN_25</p></td>
+<td class="enum_member_description">
+<p>UMTS 1900 MHz (EPCS A-G, UTRAN band 25).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-26:CAPS"></a>MM_MODEM_BAND_UTRAN_26</p></td>
+<td class="enum_member_description">
+<p>UMTS 850 MHz (ECLR, UTRAN band 26).</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-32:CAPS"></a>MM_MODEM_BAND_UTRAN_32</p></td>
+<td class="enum_member_description">
+<p>UMTS 1500 MHz (L-band, UTRAN band 32).</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -3856,6 +4199,6 @@ preferred in a given device.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.25.1</div>
+<hr>Generated by GTK-Doc V1.27</div>
 </body>
 </html>

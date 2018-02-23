@@ -46,91 +46,67 @@ MM_PLUGIN_DEFINE_MINOR_VERSION
 #define TAG_CINTERION_APP_PORT   "cinterion-app-port"
 #define TAG_CINTERION_MODEM_PORT "cinterion-modem-port"
 
-typedef struct {
-    MMPortProbe *probe;
-    MMPortSerialAt *port;
-    GCancellable *cancellable;
-    GSimpleAsyncResult *result;
-} CinterionCustomInitContext;
-
-static void
-cinterion_custom_init_context_complete_and_free (CinterionCustomInitContext *ctx)
-{
-    g_simple_async_result_complete (ctx->result);
-
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
-    g_object_unref (ctx->port);
-    g_object_unref (ctx->probe);
-    g_object_unref (ctx->result);
-    g_slice_free (CinterionCustomInitContext, ctx);
-}
-
 static gboolean
-cinterion_custom_init_finish (MMPortProbe *probe,
-                           GAsyncResult *result,
-                           GError **error)
+cinterion_custom_init_finish (MMPortProbe   *probe,
+                              GAsyncResult  *result,
+                              GError       **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (result), error);
+    return g_task_propagate_boolean (G_TASK (result), error);
 }
 
 static void
 sqport_ready (MMPortSerialAt *port,
-              GAsyncResult *res,
-              CinterionCustomInitContext *ctx)
+              GAsyncResult   *res,
+              GTask          *task)
 {
+    MMPortProbe *probe;
     const gchar *response;
+
+    probe = g_task_get_source_object (task);
 
     /* Ignore errors, just avoid tagging */
     response = mm_port_serial_at_command_finish (port, res, NULL);
     if (response) {
         /* A valid reply to AT^SQPORT tells us this is an AT port already */
-        mm_port_probe_set_result_at (ctx->probe, TRUE);
+        mm_port_probe_set_result_at (probe, TRUE);
 
         if (strstr (response, "Application"))
-            g_object_set_data (G_OBJECT (ctx->probe), TAG_CINTERION_APP_PORT, GUINT_TO_POINTER (TRUE));
+            g_object_set_data (G_OBJECT (probe), TAG_CINTERION_APP_PORT, GUINT_TO_POINTER (TRUE));
         else if (strstr (response, "Modem"))
-            g_object_set_data (G_OBJECT (ctx->probe), TAG_CINTERION_MODEM_PORT, GUINT_TO_POINTER (TRUE));
+            g_object_set_data (G_OBJECT (probe), TAG_CINTERION_MODEM_PORT, GUINT_TO_POINTER (TRUE));
     }
 
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    cinterion_custom_init_context_complete_and_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
-cinterion_custom_init (MMPortProbe *probe,
-                       MMPortSerialAt *port,
-                       GCancellable *cancellable,
-                       GAsyncReadyCallback callback,
-                       gpointer user_data)
+cinterion_custom_init (MMPortProbe         *probe,
+                       MMPortSerialAt      *port,
+                       GCancellable        *cancellable,
+                       GAsyncReadyCallback  callback,
+                       gpointer             user_data)
 {
-    CinterionCustomInitContext *ctx;
+    GTask *task;
 
-    ctx = g_slice_new (CinterionCustomInitContext);
-    ctx->result = g_simple_async_result_new (G_OBJECT (probe),
-                                             callback,
-                                             user_data,
-                                             cinterion_custom_init);
-    ctx->probe = g_object_ref (probe);
-    ctx->port = g_object_ref (port);
-    ctx->cancellable = cancellable ? g_object_ref (cancellable) : NULL;
+    task = g_task_new (probe, cancellable, callback, user_data);
 
     mm_port_serial_at_command (
-        ctx->port,
+        port,
         "AT^SQPORT?",
         3,
         FALSE, /* raw */
         FALSE, /* allow cached */
-        ctx->cancellable,
-        (GAsyncReadyCallback)sqport_ready,
-        ctx);
+        cancellable,
+        (GAsyncReadyCallback) sqport_ready,
+        task);
 }
 
 /*****************************************************************************/
 
 static MMBaseModem *
 create_modem (MMPlugin *self,
-              const gchar *sysfs_path,
+              const gchar *uid,
               const gchar **drivers,
               guint16 vendor,
               guint16 product,
@@ -140,7 +116,7 @@ create_modem (MMPlugin *self,
 #if defined WITH_QMI
     if (mm_port_probe_list_has_qmi_port (probes)) {
         mm_dbg ("QMI-powered Cinterion modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_qmi_cinterion_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_qmi_cinterion_new (uid,
                                                                     drivers,
                                                                     mm_plugin_get_name (self),
                                                                     vendor,
@@ -148,7 +124,7 @@ create_modem (MMPlugin *self,
     }
 #endif
 
-    return MM_BASE_MODEM (mm_broadband_modem_cinterion_new (sysfs_path,
+    return MM_BASE_MODEM (mm_broadband_modem_cinterion_new (uid,
                                                             drivers,
                                                             mm_plugin_get_name (self),
                                                             vendor,
@@ -176,8 +152,8 @@ grab_port (MMPlugin *self,
                 mm_port_probe_get_port_subsys (probe),
                 mm_port_probe_get_port_name (probe));
         pflags = MM_PORT_SERIAL_AT_FLAG_PPP;
-    } else if (g_udev_device_get_property_as_boolean (mm_port_probe_peek_port (probe),
-                                                      "ID_MM_CINTERION_PORT_TYPE_GPS")) {
+    } else if (mm_kernel_device_get_property_as_boolean (mm_port_probe_peek_port (probe),
+                                                         "ID_MM_CINTERION_PORT_TYPE_GPS")) {
         mm_dbg ("(%s/%s)' Port flagged as GPS",
                 mm_port_probe_get_port_subsys (probe),
                 mm_port_probe_get_port_name (probe));
@@ -187,9 +163,7 @@ grab_port (MMPlugin *self,
     }
 
     return mm_base_modem_grab_port (modem,
-                                    mm_port_probe_get_port_subsys (probe),
-                                    mm_port_probe_get_port_name (probe),
-                                    mm_port_probe_get_parent_path (probe),
+                                    mm_port_probe_peek_port (probe),
                                     ptype,
                                     pflags,
                                     error);

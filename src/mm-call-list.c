@@ -88,9 +88,8 @@ MMBaseCall* mm_call_list_get_new_incoming(MMCallList *self)
 {
     MMBaseCall *call = NULL;
     GList *l;
-    guint i;
 
-    for (i = 0, l = self->priv->list; l && !call; l = g_list_next (l)) {
+    for (l = self->priv->list; l && !call; l = g_list_next (l)) {
 
         MMCallState         state;
         MMCallStateReason   reason;
@@ -118,9 +117,8 @@ MMBaseCall* mm_call_list_get_first_ringing_call(MMCallList *self)
 {
     MMBaseCall *call = NULL;
     GList *l;
-    guint i;
 
-    for (i = 0, l = self->priv->list; l && !call; l = g_list_next (l)) {
+    for (l = self->priv->list; l && !call; l = g_list_next (l)) {
 
         MMCallState         state;
 
@@ -143,9 +141,8 @@ MMBaseCall* mm_call_list_get_first_outgoing_dialing_call(MMCallList *self)
 {
     MMBaseCall *call = NULL;
     GList *l;
-    guint i;
 
-    for (i = 0, l = self->priv->list; l && !call; l = g_list_next (l)) {
+    for (l = self->priv->list; l && !call; l = g_list_next (l)) {
 
         MMCallState         state;
         MMCallDirection     direct;
@@ -170,9 +167,8 @@ MMBaseCall* mm_call_list_get_first_non_terminated_call(MMCallList *self)
 {
     MMBaseCall *call = NULL;
     GList *l;
-    guint i;
 
-    for (i = 0, l = self->priv->list; l && !call; l = g_list_next (l)) {
+    for (l = self->priv->list; l && !call; l = g_list_next (l)) {
 
         MMCallState         state;
 
@@ -193,9 +189,8 @@ gboolean mm_call_list_send_dtmf_to_active_calls(MMCallList *self, gchar *dtmf)
 {
     gboolean signaled = FALSE;
     GList *l;
-    guint i;
 
-    for (i = 0, l = self->priv->list; l; l = g_list_next (l)) {
+    for (l = self->priv->list; l; l = g_list_next (l)) {
 
         MMCallState         state;
 
@@ -214,28 +209,12 @@ gboolean mm_call_list_send_dtmf_to_active_calls(MMCallList *self, gchar *dtmf)
 
 /*****************************************************************************/
 
-typedef struct {
-    MMCallList *self;
-    GSimpleAsyncResult *result;
-    gchar *path;
-} DeleteCallContext;
-
-static void
-delete_call_context_complete_and_free (DeleteCallContext *ctx)
-{
-    g_simple_async_result_complete (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->self);
-    g_free (ctx->path);
-    g_free (ctx);
-}
-
 gboolean
 mm_call_list_delete_call_finish (MMCallList *self,
                                GAsyncResult *res,
                                GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static guint
@@ -248,25 +227,29 @@ cmp_call_by_path (MMBaseCall *call,
 static void
 delete_ready (MMBaseCall *call,
               GAsyncResult *res,
-              DeleteCallContext *ctx)
+              GTask *task)
 {
+    MMCallList *self;
+    const gchar *path;
     GError *error = NULL;
     GList *l;
 
+    self = g_task_get_source_object (task);
+    path = g_task_get_task_data (task);
     if (!mm_base_call_delete_finish (call, res, &error)) {
         /* We report the error */
-        g_simple_async_result_take_error (ctx->result, error);
-        delete_call_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* The CALL was properly deleted, we now remove it from our list */
-    l = g_list_find_custom (ctx->self->priv->list,
-                            ctx->path,
+    l = g_list_find_custom (self->priv->list,
+                            path,
                             (GCompareFunc)cmp_call_by_path);
     if (l) {
         g_object_unref (MM_BASE_CALL (l->data));
-        ctx->self->priv->list = g_list_delete_link (ctx->self->priv->list, l);
+        self->priv->list = g_list_delete_link (self->priv->list, l);
     }
 
     /* We don't need to unref the CALL any more, but we can use the
@@ -274,12 +257,12 @@ delete_ready (MMBaseCall *call,
      * during the async operation. */
     mm_base_call_unexport (call);
 
-    g_signal_emit (ctx->self,
+    g_signal_emit (self,
                    signals[SIGNAL_CALL_DELETED], 0,
-                   ctx->path);
+                   path);
 
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    delete_call_context_complete_and_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 void
@@ -288,35 +271,31 @@ mm_call_list_delete_call (MMCallList *self,
                         GAsyncReadyCallback callback,
                         gpointer user_data)
 {
-    DeleteCallContext *ctx;
     GList *l;
+    GTask *task;
 
     l = g_list_find_custom (self->priv->list,
                             (gpointer)call_path,
                             (GCompareFunc)cmp_call_by_path);
     if (!l) {
-        g_simple_async_report_error_in_idle (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_NOT_FOUND,
-                                             "No CALL found with path '%s'",
-                                             call_path);
+        g_task_report_new_error (self,
+                                 callback,
+                                 user_data,
+                                 mm_call_list_delete_call,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_NOT_FOUND,
+                                 "No CALL found with path '%s'",
+                                 call_path);
         return;
     }
 
     /* Delete all CALL parts */
-    ctx = g_new0 (DeleteCallContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->path = g_strdup (call_path);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_call_list_delete_call);
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, g_strdup (call_path), g_free);
 
     mm_base_call_delete (MM_BASE_CALL (l->data),
                         (GAsyncReadyCallback)delete_ready,
-                        ctx);
+                        task);
 }
 
 /*****************************************************************************/
@@ -394,7 +373,7 @@ dispose (GObject *object)
     MMCallList *self = MM_CALL_LIST (object);
 
     g_clear_object (&self->priv->modem);
-    g_list_free_full (self->priv->list, (GDestroyNotify)g_object_unref);
+    g_list_free_full (self->priv->list, g_object_unref);
     self->priv->list = NULL;
 
     G_OBJECT_CLASS (mm_call_list_parent_class)->dispose (object);

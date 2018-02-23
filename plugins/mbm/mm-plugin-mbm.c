@@ -40,7 +40,7 @@ MM_PLUGIN_DEFINE_MINOR_VERSION
 
 static MMBaseModem *
 create_modem (MMPlugin *self,
-              const gchar *sysfs_path,
+              const gchar *uid,
               const gchar **drivers,
               guint16 vendor,
               guint16 product,
@@ -50,7 +50,7 @@ create_modem (MMPlugin *self,
 #if defined WITH_MBIM
     if (mm_port_probe_list_has_mbim_port (probes)) {
         mm_dbg ("MBIM-powered Ericsson modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_mbim_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_mbim_new (uid,
                                                            drivers,
                                                            mm_plugin_get_name (self),
                                                            vendor,
@@ -58,7 +58,7 @@ create_modem (MMPlugin *self,
     }
 #endif
 
-    return MM_BASE_MODEM (mm_broadband_modem_mbm_new (sysfs_path,
+    return MM_BASE_MODEM (mm_broadband_modem_mbm_new (uid,
                                                       drivers,
                                                       mm_plugin_get_name (self),
                                                       vendor,
@@ -72,13 +72,13 @@ grab_port (MMPlugin *self,
            GError **error)
 {
     MMPortSerialAtFlag pflags = MM_PORT_SERIAL_AT_FLAG_NONE;
-    GUdevDevice *port;
+    MMKernelDevice *port;
     MMPortType port_type;
 
     port_type = mm_port_probe_get_port_type (probe);
     port = mm_port_probe_peek_port (probe);
 
-    if (g_udev_device_get_property_as_boolean (port, "ID_MM_ERICSSON_MBM_GPS_PORT")) {
+    if (mm_kernel_device_get_property_as_boolean (port, "ID_MM_ERICSSON_MBM_GPS_PORT")) {
         mm_dbg ("(%s/%s) Port flagged as GPS",
                 mm_port_probe_get_port_subsys (probe),
                 mm_port_probe_get_port_name (probe));
@@ -86,9 +86,7 @@ grab_port (MMPlugin *self,
     }
 
     return mm_base_modem_grab_port (modem,
-                                    mm_port_probe_get_port_subsys (probe),
-                                    mm_port_probe_get_port_name (probe),
-                                    mm_port_probe_get_parent_path (probe),
+                                    port,
                                     port_type,
                                     pflags,
                                     error);

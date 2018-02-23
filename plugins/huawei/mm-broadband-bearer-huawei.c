@@ -72,12 +72,9 @@ typedef enum {
 } Connect3gppContextStep;
 
 typedef struct {
-    MMBroadbandBearerHuawei *self;
     MMBaseModem *modem;
     MMPortSerialAt *primary;
     MMPort *data;
-    GCancellable *cancellable;
-    GSimpleAsyncResult *result;
     Connect3gppContextStep step;
     guint check_count;
     guint failed_ndisstatqry_count;
@@ -85,14 +82,9 @@ typedef struct {
 } Connect3gppContext;
 
 static void
-connect_3gpp_context_complete_and_free (Connect3gppContext *ctx)
+connect_3gpp_context_free (Connect3gppContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-
-    g_object_unref (ctx->cancellable);
-    g_object_unref (ctx->result);
     g_object_unref (ctx->modem);
-    g_object_unref (ctx->self);
 
     g_clear_object (&ctx->ipv4_config);
     g_clear_object (&ctx->data);
@@ -106,32 +98,28 @@ connect_3gpp_finish (MMBroadbandBearer *self,
                      GAsyncResult *res,
                      GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    return mm_bearer_connect_result_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
-static void connect_3gpp_context_step (Connect3gppContext *ctx);
+static void connect_3gpp_context_step (GTask *task);
 
 static void
 connect_dhcp_check_ready (MMBaseModem *modem,
                           GAsyncResult *res,
                           MMBroadbandBearerHuawei *self)
 {
+    GTask *task;
     Connect3gppContext *ctx;
     const gchar *response;
     GError *error = NULL;
 
-    ctx = self->priv->connect_pending;
-    g_assert (ctx != NULL);
+    task = self->priv->connect_pending;
+    g_assert (task != NULL);
+
+    ctx = g_task_get_task_data (task);
 
     /* Balance refcount */
     g_object_unref (self);
-
-    /* Default to automatic/DHCP addressing */
-    ctx->ipv4_config = mm_bearer_ip_config_new ();
-    mm_bearer_ip_config_set_method (ctx->ipv4_config, MM_BEARER_IP_METHOD_DHCP);
 
     /* Cache IPv4 details if available, otherwise clients will have to use DHCP */
     response = mm_base_modem_at_command_full_finish (modem, res, &error);
@@ -193,23 +181,23 @@ connect_dhcp_check_ready (MMBaseModem *modem,
 
     g_clear_error (&error);
     ctx->step++;
-    connect_3gpp_context_step (ctx);
+    connect_3gpp_context_step (task);
 }
 
 static gboolean
 connect_retry_ndisstatqry_check_cb (MMBroadbandBearerHuawei *self)
 {
-    Connect3gppContext *ctx;
+    GTask *task;
 
     /* Recover context */
-    ctx = self->priv->connect_pending;
-    g_assert (ctx != NULL);
+    task = self->priv->connect_pending;
+    g_assert (task != NULL);
 
     /* Balance refcount */
     g_object_unref (self);
 
     /* Retry same step */
-    connect_3gpp_context_step (ctx);
+    connect_3gpp_context_step (task);
 
     return G_SOURCE_REMOVE;
 }
@@ -219,6 +207,7 @@ connect_ndisstatqry_check_ready (MMBaseModem *modem,
                                  GAsyncResult *res,
                                  MMBroadbandBearerHuawei *self)
 {
+    GTask *task;
     Connect3gppContext *ctx;
     const gchar *response;
     GError *error = NULL;
@@ -227,8 +216,10 @@ connect_ndisstatqry_check_ready (MMBaseModem *modem,
     gboolean ipv6_available = FALSE;
     gboolean ipv6_connected = FALSE;
 
-    ctx = self->priv->connect_pending;
-    g_assert (ctx != NULL);
+    task = self->priv->connect_pending;
+    g_assert (task != NULL);
+
+    ctx = g_task_get_task_data (task);
 
     /* Balance refcount */
     g_object_unref (self);
@@ -251,7 +242,7 @@ connect_ndisstatqry_check_ready (MMBaseModem *modem,
     if (ipv4_available && ipv4_connected) {
         /* Success! */
         ctx->step++;
-        connect_3gpp_context_step (ctx);
+        connect_3gpp_context_step (task);
         return;
     }
 
@@ -266,26 +257,29 @@ connect_ndisdup_ready (MMBaseModem *modem,
                        GAsyncResult *res,
                        MMBroadbandBearerHuawei *self)
 {
+    GTask *task;
     Connect3gppContext *ctx;
     GError *error = NULL;
 
-    ctx = self->priv->connect_pending;
-    g_assert (ctx != NULL);
+    task = self->priv->connect_pending;
+    g_assert (task != NULL);
+
+    ctx = g_task_get_task_data (task);
 
     /* Balance refcount */
     g_object_unref (self);
 
     if (!mm_base_modem_at_command_full_finish (modem, res, &error)) {
-        /* Clear context */
+        /* Clear task */
         self->priv->connect_pending = NULL;
-        g_simple_async_result_take_error (ctx->result, error);
-        connect_3gpp_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Go to next step */
     ctx->step++;
-    connect_3gpp_context_step (ctx);
+    connect_3gpp_context_step (task);
 }
 
 typedef enum {
@@ -314,12 +308,18 @@ huawei_parse_auth_type (MMBearerAllowedAuth mm_auth)
 }
 
 static void
-connect_3gpp_context_step (Connect3gppContext *ctx)
+connect_3gpp_context_step (GTask *task)
 {
+    MMBroadbandBearerHuawei *self;
+    Connect3gppContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     /* Check for cancellation */
-    if (g_cancellable_is_cancelled (ctx->cancellable)) {
-        /* Clear context */
-        ctx->self->priv->connect_pending = NULL;
+    if (g_cancellable_is_cancelled (g_task_get_cancellable (task))) {
+        /* Clear task */
+        self->priv->connect_pending = NULL;
 
         /* If we already sent the connetion command, send the disconnection one */
         if (ctx->step > CONNECT_3GPP_CONTEXT_STEP_NDISDUP)
@@ -333,29 +333,29 @@ connect_3gpp_context_step (Connect3gppContext *ctx)
                                            NULL, /* Do not care the AT response */
                                            NULL);
 
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_CANCELLED,
-                                         "Huawei connection operation has been cancelled");
-        connect_3gpp_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_CANCELLED,
+                                 "Huawei connection operation has been cancelled");
+        g_object_unref (task);
         return;
     }
 
     /* Network-initiated disconnect should not be outstanding at this point,
      * because it interferes with the connect attempt.
      */
-    g_assert (ctx->self->priv->network_disconnect_pending_id == 0);
+    g_assert (self->priv->network_disconnect_pending_id == 0);
 
     switch (ctx->step) {
     case CONNECT_3GPP_CONTEXT_STEP_FIRST: {
         MMBearerIpFamily ip_family;
 
-        ip_family = mm_bearer_properties_get_ip_type (mm_base_bearer_peek_config (MM_BASE_BEARER (ctx->self)));
+        ip_family = mm_bearer_properties_get_ip_type (mm_base_bearer_peek_config (MM_BASE_BEARER (self)));
         if (ip_family == MM_BEARER_IP_FAMILY_NONE ||
             ip_family == MM_BEARER_IP_FAMILY_ANY) {
             gchar *ip_family_str;
 
-            ip_family = mm_base_bearer_get_default_ip_family (MM_BASE_BEARER (ctx->self));
+            ip_family = mm_base_bearer_get_default_ip_family (MM_BASE_BEARER (self));
             ip_family_str = mm_bearer_ip_family_build_string_from_mask (ip_family);
             mm_dbg ("No specific IP family requested, defaulting to %s",
                     ip_family_str);
@@ -363,16 +363,16 @@ connect_3gpp_context_step (Connect3gppContext *ctx)
         }
 
         if (ip_family != MM_BEARER_IP_FAMILY_IPV4) {
-            g_simple_async_result_set_error (ctx->result,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_UNSUPPORTED,
-                                             "Only IPv4 is supported by this modem");
-            connect_3gpp_context_complete_and_free (ctx);
+            g_task_return_new_error (task,
+                                     MM_CORE_ERROR,
+                                     MM_CORE_ERROR_UNSUPPORTED,
+                                     "Only IPv4 is supported by this modem");
+            g_object_unref (task);
             return;
         }
 
-        /* Store the context */
-        ctx->self->priv->connect_pending = ctx;
+        /* Store the task */
+        self->priv->connect_pending = task;
 
         ctx->step++;
         /* Fall down to the next step */
@@ -386,14 +386,14 @@ connect_3gpp_context_step (Connect3gppContext *ctx)
         gint                 encoded_auth = MM_BEARER_HUAWEI_AUTH_UNKNOWN;
         gchar               *command;
 
-        apn = mm_bearer_properties_get_apn (mm_base_bearer_peek_config (MM_BASE_BEARER (ctx->self)));
-        user = mm_bearer_properties_get_user (mm_base_bearer_peek_config (MM_BASE_BEARER (ctx->self)));
-        passwd = mm_bearer_properties_get_password (mm_base_bearer_peek_config (MM_BASE_BEARER (ctx->self)));
-        auth = mm_bearer_properties_get_allowed_auth (mm_base_bearer_peek_config (MM_BASE_BEARER (ctx->self)));
+        apn = mm_bearer_properties_get_apn (mm_base_bearer_peek_config (MM_BASE_BEARER (self)));
+        user = mm_bearer_properties_get_user (mm_base_bearer_peek_config (MM_BASE_BEARER (self)));
+        passwd = mm_bearer_properties_get_password (mm_base_bearer_peek_config (MM_BASE_BEARER (self)));
+        auth = mm_bearer_properties_get_allowed_auth (mm_base_bearer_peek_config (MM_BASE_BEARER (self)));
         encoded_auth = huawei_parse_auth_type (auth);
 
         /* Default to no authentication if not specified */
-        if ((encoded_auth = huawei_parse_auth_type (auth)) == MM_BEARER_HUAWEI_AUTH_UNKNOWN)
+        if (encoded_auth == MM_BEARER_HUAWEI_AUTH_UNKNOWN)
             encoded_auth = MM_BEARER_HUAWEI_AUTH_NONE;
 
         if (!user && !passwd)
@@ -419,7 +419,7 @@ connect_3gpp_context_step (Connect3gppContext *ctx)
                                        FALSE,
                                        NULL,
                                        (GAsyncReadyCallback)connect_ndisdup_ready,
-                                       g_object_ref (ctx->self));
+                                       g_object_ref (self));
         g_free (command);
         return;
     }
@@ -431,24 +431,24 @@ connect_3gpp_context_step (Connect3gppContext *ctx)
          */
         if (ctx->check_count > 60) {
             /* Clear context */
-            ctx->self->priv->connect_pending = NULL;
-            g_simple_async_result_set_error (ctx->result,
-                                             MM_MOBILE_EQUIPMENT_ERROR,
-                                             MM_MOBILE_EQUIPMENT_ERROR_NETWORK_TIMEOUT,
-                                             "Connection attempt timed out");
-            connect_3gpp_context_complete_and_free (ctx);
+            self->priv->connect_pending = NULL;
+            g_task_return_new_error (task,
+                                     MM_MOBILE_EQUIPMENT_ERROR,
+                                     MM_MOBILE_EQUIPMENT_ERROR_NETWORK_TIMEOUT,
+                                     "Connection attempt timed out");
+            g_object_unref (task);
             return;
         }
 
         /* Give up if too many unexpected responses to NIDSSTATQRY are encountered. */
         if (ctx->failed_ndisstatqry_count > 10) {
             /* Clear context */
-            ctx->self->priv->connect_pending = NULL;
-            g_simple_async_result_set_error (ctx->result,
-                                             MM_MOBILE_EQUIPMENT_ERROR,
-                                             MM_MOBILE_EQUIPMENT_ERROR_NOT_SUPPORTED,
-                                             "Connection attempt not supported.");
-            connect_3gpp_context_complete_and_free (ctx);
+            self->priv->connect_pending = NULL;
+            g_task_return_new_error (task,
+                                     MM_MOBILE_EQUIPMENT_ERROR,
+                                     MM_MOBILE_EQUIPMENT_ERROR_NOT_SUPPORTED,
+                                     "Connection attempt not supported.");
+            g_object_unref (task);
             return;
         }
 
@@ -462,7 +462,7 @@ connect_3gpp_context_step (Connect3gppContext *ctx)
                                        FALSE,
                                        NULL,
                                        (GAsyncReadyCallback)connect_ndisstatqry_check_ready,
-                                       g_object_ref (ctx->self));
+                                       g_object_ref (self));
         return;
 
     case CONNECT_3GPP_CONTEXT_STEP_IP_CONFIG:
@@ -474,30 +474,26 @@ connect_3gpp_context_step (Connect3gppContext *ctx)
                                        FALSE,
                                        NULL,
                                        (GAsyncReadyCallback)connect_dhcp_check_ready,
-                                       g_object_ref (ctx->self));
+                                       g_object_ref (self));
         return;
 
     case CONNECT_3GPP_CONTEXT_STEP_LAST:
         /* Clear context */
-        ctx->self->priv->connect_pending = NULL;
+        self->priv->connect_pending = NULL;
 
         /* Setup result */
-        {
-            if (ctx->ipv4_config) {
-                g_simple_async_result_set_op_res_gpointer (
-                    ctx->result,
-                    mm_bearer_connect_result_new (ctx->data, ctx->ipv4_config, NULL),
-                    (GDestroyNotify)mm_bearer_connect_result_unref);
-            }
-        }
+        g_task_return_pointer (
+            task,
+            mm_bearer_connect_result_new (ctx->data, ctx->ipv4_config, NULL),
+            (GDestroyNotify)mm_bearer_connect_result_unref);
 
-        connect_3gpp_context_complete_and_free (ctx);
+        g_object_unref (task);
         return;
     }
 }
 
 static void
-connect_3gpp (MMBroadbandBearer *self,
+connect_3gpp (MMBroadbandBearer *_self,
               MMBroadbandModem *modem,
               MMPortSerialAt *primary,
               MMPortSerialAt *secondary,
@@ -505,7 +501,9 @@ connect_3gpp (MMBroadbandBearer *self,
               GAsyncReadyCallback callback,
               gpointer user_data)
 {
-    Connect3gppContext  *ctx;
+    MMBroadbandBearerHuawei *self = MM_BROADBAND_BEARER_HUAWEI (_self);
+    Connect3gppContext *ctx;
+    GTask *task;
     MMPort *data;
 
     g_assert (primary != NULL);
@@ -513,35 +511,39 @@ connect_3gpp (MMBroadbandBearer *self,
     /* We need a net data port */
     data = mm_base_modem_peek_best_data_port (MM_BASE_MODEM (modem), MM_PORT_TYPE_NET);
     if (!data) {
-        g_simple_async_report_error_in_idle (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_NOT_FOUND,
-                                             "No valid data port found to launch connection");
+        g_task_report_new_error (self,
+                                 callback,
+                                 user_data,
+                                 connect_3gpp,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_NOT_FOUND,
+                                 "No valid data port found to launch connection");
         return;
     }
 
     /* Setup connection context */
     ctx = g_slice_new0 (Connect3gppContext);
-    ctx->self = g_object_ref (self);
     ctx->modem = g_object_ref (modem);
     ctx->data = g_object_ref (data);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             connect_3gpp);
-    ctx->cancellable = g_object_ref (cancellable);
     ctx->step = CONNECT_3GPP_CONTEXT_STEP_FIRST;
 
-    g_assert (ctx->self->priv->connect_pending == NULL);
-    g_assert (ctx->self->priv->disconnect_pending == NULL);
+    g_assert (self->priv->connect_pending == NULL);
+    g_assert (self->priv->disconnect_pending == NULL);
 
     /* Get correct dial port to use */
     ctx->primary = get_dial_port (MM_BROADBAND_MODEM_HUAWEI (ctx->modem), ctx->data, primary);
 
+
+    /* Default to automatic/DHCP addressing */
+    ctx->ipv4_config = mm_bearer_ip_config_new ();
+    mm_bearer_ip_config_set_method (ctx->ipv4_config, MM_BEARER_IP_METHOD_DHCP);
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)connect_3gpp_context_free);
+    g_task_set_check_cancellable (task, FALSE);
+
     /* Run! */
-    connect_3gpp_context_step (ctx);
+    connect_3gpp_context_step (task);
 }
 
 /*****************************************************************************/
@@ -555,22 +557,17 @@ typedef enum {
 } Disconnect3gppContextStep;
 
 typedef struct {
-    MMBroadbandBearerHuawei *self;
     MMBaseModem *modem;
     MMPortSerialAt *primary;
-    GSimpleAsyncResult *result;
     Disconnect3gppContextStep step;
     guint check_count;
     guint failed_ndisstatqry_count;
 } Disconnect3gppContext;
 
 static void
-disconnect_3gpp_context_complete_and_free (Disconnect3gppContext *ctx)
+disconnect_3gpp_context_free (Disconnect3gppContext *ctx)
 {
-    g_simple_async_result_complete (ctx->result);
-    g_object_unref (ctx->result);
     g_object_unref (ctx->primary);
-    g_object_unref (ctx->self);
     g_object_unref (ctx->modem);
     g_slice_free (Disconnect3gppContext, ctx);
 }
@@ -580,25 +577,25 @@ disconnect_3gpp_finish (MMBroadbandBearer *self,
                         GAsyncResult *res,
                         GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
-static void disconnect_3gpp_context_step (Disconnect3gppContext *ctx);
+static void disconnect_3gpp_context_step (GTask *task);
 
 static gboolean
 disconnect_retry_ndisstatqry_check_cb (MMBroadbandBearerHuawei *self)
 {
-    Disconnect3gppContext *ctx;
+    GTask *task;
 
     /* Recover context */
-    ctx = self->priv->disconnect_pending;
-    g_assert (ctx != NULL);
+    task = self->priv->disconnect_pending;
+    g_assert (task != NULL);
 
     /* Balance refcount */
     g_object_unref (self);
 
     /* Retry same step */
-    disconnect_3gpp_context_step (ctx);
+    disconnect_3gpp_context_step (task);
     return G_SOURCE_REMOVE;
 }
 
@@ -607,6 +604,7 @@ disconnect_ndisstatqry_check_ready (MMBaseModem *modem,
                                     GAsyncResult *res,
                                     MMBroadbandBearerHuawei *self)
 {
+    GTask *task;
     Disconnect3gppContext *ctx;
     const gchar *response;
     GError *error = NULL;
@@ -615,8 +613,10 @@ disconnect_ndisstatqry_check_ready (MMBaseModem *modem,
     gboolean ipv6_available = FALSE;
     gboolean ipv6_connected = FALSE;
 
-    ctx = self->priv->disconnect_pending;
-    g_assert (ctx != NULL);
+    task = self->priv->disconnect_pending;
+    g_assert (task != NULL);
+
+    ctx = g_task_get_task_data (task);
 
     /* Balance refcount */
     g_object_unref (self);
@@ -639,7 +639,7 @@ disconnect_ndisstatqry_check_ready (MMBaseModem *modem,
     if (ipv4_available && !ipv4_connected) {
         /* Success! */
         ctx->step++;
-        disconnect_3gpp_context_step (ctx);
+        disconnect_3gpp_context_step (task);
         return;
     }
 
@@ -654,42 +654,51 @@ disconnect_ndisdup_ready (MMBaseModem *modem,
                           GAsyncResult *res,
                           MMBroadbandBearerHuawei *self)
 {
+    GTask *task;
     Disconnect3gppContext *ctx;
     GError *error = NULL;
 
-    ctx = self->priv->disconnect_pending;
-    g_assert (ctx != NULL);
+    task = self->priv->disconnect_pending;
+    g_assert (task != NULL);
+
+    ctx = g_task_get_task_data (task);
 
     /* Balance refcount */
     g_object_unref (self);
 
     if (!mm_base_modem_at_command_full_finish (modem, res, &error)) {
-        /* Clear context */
+        /* Clear task */
         self->priv->disconnect_pending = NULL;
-        g_simple_async_result_take_error (ctx->result, error);
-        disconnect_3gpp_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Go to next step */
     ctx->step++;
-    disconnect_3gpp_context_step (ctx);
+    disconnect_3gpp_context_step (task);
 }
 
 static void
-disconnect_3gpp_context_step (Disconnect3gppContext *ctx)
+disconnect_3gpp_context_step (GTask *task)
 {
+    MMBroadbandBearerHuawei *self;
+    Disconnect3gppContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     switch (ctx->step) {
     case DISCONNECT_3GPP_CONTEXT_STEP_FIRST:
-        /* Store the context */
-        ctx->self->priv->disconnect_pending = ctx;
+        /* Store the task */
+        self->priv->disconnect_pending = task;
 
         /* We ignore any pending network-initiated disconnection in order to prevent it
          * from interfering with the client-initiated disconnection, as we would like to
          * proceed with the latter anyway. */
-        if (ctx->self->priv->network_disconnect_pending_id != 0) {
-            g_source_remove (ctx->self->priv->network_disconnect_pending_id);
-            ctx->self->priv->network_disconnect_pending_id = 0;
+        if (self->priv->network_disconnect_pending_id != 0) {
+            g_source_remove (self->priv->network_disconnect_pending_id);
+            self->priv->network_disconnect_pending_id = 0;
         }
 
         ctx->step++;
@@ -704,31 +713,31 @@ disconnect_3gpp_context_step (Disconnect3gppContext *ctx)
                                        FALSE,
                                        NULL,
                                        (GAsyncReadyCallback)disconnect_ndisdup_ready,
-                                       g_object_ref (ctx->self));
+                                       g_object_ref (self));
         return;
 
     case DISCONNECT_3GPP_CONTEXT_STEP_NDISSTATQRY:
         /* If too many retries (1s of wait between the retries), failed */
         if (ctx->check_count > 60) {
-            /* Clear context */
-            ctx->self->priv->disconnect_pending = NULL;
-            g_simple_async_result_set_error (ctx->result,
-                                             MM_MOBILE_EQUIPMENT_ERROR,
-                                             MM_MOBILE_EQUIPMENT_ERROR_NETWORK_TIMEOUT,
-                                             "Disconnection attempt timed out");
-            disconnect_3gpp_context_complete_and_free (ctx);
+            /* Clear task */
+            self->priv->disconnect_pending = NULL;
+            g_task_return_new_error (task,
+                                     MM_MOBILE_EQUIPMENT_ERROR,
+                                     MM_MOBILE_EQUIPMENT_ERROR_NETWORK_TIMEOUT,
+                                     "Disconnection attempt timed out");
+            g_object_unref (task);
             return;
         }
 
         /* Give up if too many unexpected responses to NIDSSTATQRY are encountered. */
         if (ctx->failed_ndisstatqry_count > 10) {
-            /* Clear context */
-            ctx->self->priv->disconnect_pending = NULL;
-            g_simple_async_result_set_error (ctx->result,
-                                             MM_MOBILE_EQUIPMENT_ERROR,
-                                             MM_MOBILE_EQUIPMENT_ERROR_NOT_SUPPORTED,
-                                             "Disconnection attempt not supported.");
-            disconnect_3gpp_context_complete_and_free (ctx);
+            /* Clear task */
+            self->priv->disconnect_pending = NULL;
+            g_task_return_new_error (task,
+                                     MM_MOBILE_EQUIPMENT_ERROR,
+                                     MM_MOBILE_EQUIPMENT_ERROR_NOT_SUPPORTED,
+                                     "Disconnection attempt not supported.");
+            g_object_unref (task);
             return;
         }
 
@@ -742,21 +751,21 @@ disconnect_3gpp_context_step (Disconnect3gppContext *ctx)
                                        FALSE,
                                        NULL,
                                        (GAsyncReadyCallback)disconnect_ndisstatqry_check_ready,
-                                       g_object_ref (ctx->self));
+                                       g_object_ref (self));
         return;
 
     case DISCONNECT_3GPP_CONTEXT_STEP_LAST:
-        /* Clear context */
-        ctx->self->priv->disconnect_pending = NULL;
+        /* Clear task */
+        self->priv->disconnect_pending = NULL;
         /* Set data port as result */
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        disconnect_3gpp_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 }
 
 static void
-disconnect_3gpp (MMBroadbandBearer *self,
+disconnect_3gpp (MMBroadbandBearer *_self,
                  MMBroadbandModem *modem,
                  MMPortSerialAt *primary,
                  MMPortSerialAt *secondary,
@@ -765,27 +774,27 @@ disconnect_3gpp (MMBroadbandBearer *self,
                  GAsyncReadyCallback callback,
                  gpointer user_data)
 {
+    MMBroadbandBearerHuawei *self = MM_BROADBAND_BEARER_HUAWEI (_self);
     Disconnect3gppContext *ctx;
+    GTask *task;
 
     g_assert (primary != NULL);
 
     ctx = g_slice_new0 (Disconnect3gppContext);
-    ctx->self = g_object_ref (self);
     ctx->modem = MM_BASE_MODEM (g_object_ref (modem));
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             disconnect_3gpp);
     ctx->step = DISCONNECT_3GPP_CONTEXT_STEP_FIRST;
 
-    g_assert (ctx->self->priv->connect_pending == NULL);
-    g_assert (ctx->self->priv->disconnect_pending == NULL);
+    g_assert (self->priv->connect_pending == NULL);
+    g_assert (self->priv->disconnect_pending == NULL);
 
     /* Get correct dial port to use */
     ctx->primary = get_dial_port (MM_BROADBAND_MODEM_HUAWEI (ctx->modem), data, primary);
 
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)disconnect_3gpp_context_free);
+
     /* Start! */
-    disconnect_3gpp_context_step (ctx);
+    disconnect_3gpp_context_step (task);
 }
 
 /*****************************************************************************/
@@ -921,7 +930,11 @@ mm_broadband_bearer_huawei_class_init (MMBroadbandBearerHuaweiClass *klass)
     g_type_class_add_private (object_class, sizeof (MMBroadbandBearerHuaweiPrivate));
 
     object_class->dispose = dispose;
+
     base_bearer_class->report_connection_status = report_connection_status;
+    base_bearer_class->load_connection_status = NULL;
+    base_bearer_class->load_connection_status_finish = NULL;
+
     broadband_bearer_class->connect_3gpp = connect_3gpp;
     broadband_bearer_class->connect_3gpp_finish = connect_3gpp_finish;
     broadband_bearer_class->disconnect_3gpp = disconnect_3gpp;

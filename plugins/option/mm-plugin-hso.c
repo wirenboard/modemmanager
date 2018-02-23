@@ -46,7 +46,7 @@ hso_custom_init_finish (MMPortProbe *probe,
                         GAsyncResult *result,
                         GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (result), error);
+    return g_task_propagate_boolean (G_TASK (result), error);
 }
 
 static void
@@ -56,13 +56,13 @@ hso_custom_init (MMPortProbe *probe,
                  GAsyncReadyCallback callback,
                  gpointer user_data)
 {
-    GUdevDevice *udev_port;
-    GSimpleAsyncResult *result;
+    MMKernelDevice *kernel_port;
+    GTask *task;
     const gchar *subsys, *sysfs_path;
 
     subsys = mm_port_probe_get_port_subsys (probe);
-    udev_port = mm_port_probe_peek_port (probe);
-    sysfs_path = g_udev_device_get_sysfs_path (udev_port);
+    kernel_port = mm_port_probe_peek_port (probe);
+    sysfs_path = mm_kernel_device_get_sysfs_path (kernel_port);
 
     if (g_str_equal (subsys, "tty")) {
         gchar *hsotype_path;
@@ -102,27 +102,23 @@ hso_custom_init (MMPortProbe *probe,
         g_free (hsotype_path);
     }
 
-    result = g_simple_async_result_new (G_OBJECT (probe),
-                                        callback,
-                                        user_data,
-                                        hso_custom_init);
-    g_simple_async_result_set_op_res_gboolean (result, TRUE);
-    g_simple_async_result_complete_in_idle (result);
-    g_object_unref (result);
+    task = g_task_new (probe, NULL, callback, user_data);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 /*****************************************************************************/
 
 static MMBaseModem *
 create_modem (MMPlugin *self,
-              const gchar *sysfs_path,
+              const gchar *uid,
               const gchar **drivers,
               guint16 vendor,
               guint16 product,
               GList *probes,
               GError **error)
 {
-    return MM_BASE_MODEM (mm_broadband_modem_hso_new (sysfs_path,
+    return MM_BASE_MODEM (mm_broadband_modem_hso_new (uid,
                                                       drivers,
                                                       mm_plugin_get_name (self),
                                                       vendor,
@@ -160,9 +156,7 @@ grab_port (MMPlugin *self,
     }
 
     return mm_base_modem_grab_port (modem,
-                                    subsys,
-                                    mm_port_probe_get_port_name (probe),
-                                    mm_port_probe_get_parent_path (probe),
+                                    mm_port_probe_peek_port (probe),
                                     port_type,
                                     pflags,
                                     error);
@@ -188,6 +182,7 @@ mm_plugin_create (void)
                       MM_PLUGIN_ALLOWED_AT,         TRUE,
                       MM_PLUGIN_ALLOWED_QCDM,       TRUE,
                       MM_PLUGIN_CUSTOM_INIT,        &custom_init,
+                      MM_PLUGIN_SEND_DELAY,         (guint64) 0,
                       NULL));
 }
 

@@ -88,23 +88,23 @@ change_pin_finish (MMBaseSim *self,
                    GAsyncResult *res,
                    GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 change_pin_ready (MMBaseModem *modem,
                   GAsyncResult *res,
-                  GSimpleAsyncResult *simple)
+                  GTask *task)
 {
     GError *error = NULL;
 
     mm_base_modem_at_command_finish (modem, res, &error);
     if (error)
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+        g_task_return_boolean (task, TRUE);
+
+    g_object_unref (task);
 }
 
 static void
@@ -114,13 +114,10 @@ change_pin (MMBaseSim *self,
             GAsyncReadyCallback callback,
             gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
     gchar *command;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        change_pin);
+    task = g_task_new (self, NULL, callback, user_data);
 
     command = g_strdup_printf ("+CPWD=\"SC\",\"%s\",\"%s\"",
                                old_pin,
@@ -130,7 +127,7 @@ change_pin (MMBaseSim *self,
                               3,
                               FALSE,
                               (GAsyncReadyCallback)change_pin_ready,
-                              result);
+                              task);
     g_free (command);
 }
 
@@ -260,23 +257,23 @@ enable_pin_finish (MMBaseSim *self,
                    GAsyncResult *res,
                    GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 enable_pin_ready (MMBaseModem *modem,
                   GAsyncResult *res,
-                  GSimpleAsyncResult *simple)
+                  GTask *task)
 {
     GError *error = NULL;
 
     mm_base_modem_at_command_finish (modem, res, &error);
     if (error)
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+        g_task_return_boolean (task, TRUE);
+
+    g_object_unref (task);
 }
 
 static void
@@ -286,13 +283,10 @@ enable_pin (MMBaseSim *self,
             GAsyncReadyCallback callback,
             gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
     gchar *command;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        enable_pin);
+    task = g_task_new (self, NULL, callback, user_data);
 
     command = g_strdup_printf ("+CLCK=\"SC\",%d,\"%s\"",
                                enabled ? 1 : 0,
@@ -302,7 +296,7 @@ enable_pin (MMBaseSim *self,
                               3,
                               FALSE,
                               (GAsyncReadyCallback)enable_pin_ready,
-                              result);
+                              task);
     g_free (command);
 }
 
@@ -432,23 +426,23 @@ common_send_pin_puk_finish (MMBaseSim *self,
                             GAsyncResult *res,
                             GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 send_pin_puk_ready (MMBaseModem *modem,
                     GAsyncResult *res,
-                    GSimpleAsyncResult *simple)
+                    GTask *task)
 {
     GError *error = NULL;
 
     mm_base_modem_at_command_finish (modem, res, &error);
     if (error)
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+        g_task_return_boolean (task, TRUE);
+
+    g_object_unref (task);
 }
 
 static void
@@ -458,13 +452,10 @@ common_send_pin_puk (MMBaseSim *self,
                      GAsyncReadyCallback callback,
                      gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
     gchar *command;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        common_send_pin_puk);
+    task = g_task_new (self, NULL, callback, user_data);
 
     command = (puk ?
                g_strdup_printf ("+CPIN=\"%s\",\"%s\"", puk, pin) :
@@ -475,7 +466,7 @@ common_send_pin_puk (MMBaseSim *self,
                               3,
                               FALSE,
                               (GAsyncReadyCallback)send_pin_puk_ready,
-                              result);
+                              task);
     g_free (command);
 }
 
@@ -502,23 +493,13 @@ send_pin (MMBaseSim *self,
 /* SEND PIN/PUK (common logic) */
 
 typedef struct {
-    MMBaseSim *self;
-    GSimpleAsyncResult *result;
     GError *save_error;
-    gulong wait_for_unlock_id;
 } SendPinPukContext;
 
 static void
-send_pin_puk_context_complete_and_free (SendPinPukContext *ctx)
+send_pin_puk_context_free (SendPinPukContext *ctx)
 {
-    if (ctx->wait_for_unlock_id)
-        g_signal_handler_disconnect (ctx->self->priv->modem,
-                                     ctx->wait_for_unlock_id);
-    if (ctx->save_error)
-        g_error_free (ctx->save_error);
-    g_simple_async_result_complete (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->self);
+    g_clear_error (&ctx->save_error);
     g_free (ctx);
 }
 
@@ -559,7 +540,7 @@ mm_base_sim_send_pin_finish (MMBaseSim *self,
                              GAsyncResult *res,
                              GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 gboolean
@@ -567,16 +548,19 @@ mm_base_sim_send_puk_finish (MMBaseSim *self,
                              GAsyncResult *res,
                              GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 update_lock_info_ready (MMIfaceModem *modem,
                         GAsyncResult *res,
-                        SendPinPukContext *ctx)
+                        GTask *task)
 {
+    SendPinPukContext *ctx;
     GError *error = NULL;
     MMModemLock lock;
+
+    ctx = g_task_get_task_data (task);
 
     lock = mm_iface_modem_update_lock_info_finish (modem, res, &error);
     /* Even if we may be SIM-PIN2/PUK2 locked, we don't consider this an error
@@ -590,28 +574,28 @@ update_lock_info_ready (MMIfaceModem *modem,
          *   - Otherwise, build our own error from the lock code.
          */
         if (ctx->save_error) {
-            g_simple_async_result_take_error (ctx->result, ctx->save_error);
-            ctx->save_error = NULL;
             g_clear_error (&error);
-        } else if (error)
-            g_simple_async_result_take_error (ctx->result, error);
-        else
-            g_simple_async_result_take_error (ctx->result,
-                                              error_for_unlock_check (lock));
-        send_pin_puk_context_complete_and_free (ctx);
-        return;
-    }
+            error = ctx->save_error;
+            ctx->save_error = NULL;
+        } else if (!error)
+            error = error_for_unlock_check (lock);
 
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    send_pin_puk_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+    } else
+        g_task_return_boolean (task, TRUE);
+
+    g_object_unref (task);
 }
 
 static void
 send_pin_ready (MMBaseSim *self,
                 GAsyncResult *res,
-                SendPinPukContext *ctx)
+                GTask *task)
 {
+    SendPinPukContext *ctx;
     MMModemLock known_lock = MM_MODEM_LOCK_UNKNOWN;
+
+    ctx = g_task_get_task_data (task);
 
     if (!MM_BASE_SIM_GET_CLASS (self)->send_pin_finish (self, res, &ctx->save_error)) {
         if (g_error_matches (ctx->save_error,
@@ -625,21 +609,25 @@ send_pin_ready (MMBaseSim *self,
         MM_IFACE_MODEM (self->priv->modem),
         known_lock,
         (GAsyncReadyCallback)update_lock_info_ready,
-        ctx);
+        task);
 }
 
 static void
 send_puk_ready (MMBaseSim *self,
                 GAsyncResult *res,
-                SendPinPukContext *ctx)
+                GTask *task)
 {
+    SendPinPukContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+
     MM_BASE_SIM_GET_CLASS (self)->send_puk_finish (self, res, &ctx->save_error);
 
     /* Once pin/puk has been sent, recheck lock */
     mm_iface_modem_update_lock_info (MM_IFACE_MODEM (self->priv->modem),
                                      MM_MODEM_LOCK_UNKNOWN, /* ask */
                                      (GAsyncReadyCallback)update_lock_info_ready,
-                                     ctx);
+                                     task);
 }
 
 void
@@ -649,31 +637,31 @@ mm_base_sim_send_pin (MMBaseSim *self,
                       gpointer user_data)
 {
     SendPinPukContext *ctx;
+    GTask *task;
 
     /* If sending PIN is not implemented, report an error */
     if (!MM_BASE_SIM_GET_CLASS (self)->send_pin ||
         !MM_BASE_SIM_GET_CLASS (self)->send_pin_finish) {
-        g_simple_async_report_error_in_idle (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_UNSUPPORTED,
-                                             "Cannot send PIN: "
-                                             "operation not supported");
+        g_task_report_new_error (self,
+                                 callback,
+                                 user_data,
+                                 mm_base_sim_send_pin,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_UNSUPPORTED,
+                                 "Cannot send PIN: "
+                                 "operation not supported");
         return;
     }
 
     ctx = g_new0 (SendPinPukContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_base_sim_send_pin);
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)send_pin_puk_context_free);
 
     MM_BASE_SIM_GET_CLASS (self)->send_pin (self,
                                        pin,
                                        (GAsyncReadyCallback)send_pin_ready,
-                                       ctx);
+                                       task);
 }
 
 void
@@ -684,32 +672,82 @@ mm_base_sim_send_puk (MMBaseSim *self,
                       gpointer user_data)
 {
     SendPinPukContext *ctx;
+    GTask *task;
 
     /* If sending PIN is not implemented, report an error */
     if (!MM_BASE_SIM_GET_CLASS (self)->send_puk ||
         !MM_BASE_SIM_GET_CLASS (self)->send_puk_finish) {
-        g_simple_async_report_error_in_idle (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_UNSUPPORTED,
-                                             "Cannot send PUK: "
-                                             "operation not supported");
+        g_task_report_new_error (self,
+                                 callback,
+                                 user_data,
+                                 mm_base_sim_send_puk,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_UNSUPPORTED,
+                                 "Cannot send PUK: "
+                                 "operation not supported");
         return;
     }
 
     ctx = g_new0 (SendPinPukContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_base_sim_send_puk);
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)send_pin_puk_context_free);
 
     MM_BASE_SIM_GET_CLASS (self)->send_puk (self,
                                        puk,
                                        new_pin,
                                        (GAsyncReadyCallback)send_puk_ready,
-                                       ctx);
+                                       task);
+}
+
+/*****************************************************************************/
+/* LOAD SIM IDENTIFIER */
+
+gchar *
+mm_base_sim_load_sim_identifier_finish (MMBaseSim *self,
+                                        GAsyncResult *res,
+                                        GError **error)
+{
+    return g_task_propagate_pointer (G_TASK (res), error);
+}
+
+static void
+load_sim_identifier_ready (MMBaseSim *self,
+                           GAsyncResult *res,
+                           GTask *task)
+{
+    gchar *simid;
+    GError *error = NULL;
+
+    simid = MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier_finish (self, res, &error);
+    if (!simid)
+        g_task_return_error (task, error);
+    else
+        g_task_return_pointer (task, simid, g_free);
+    g_object_unref (task);
+}
+
+void
+mm_base_sim_load_sim_identifier (MMBaseSim *self,
+                                 GAsyncReadyCallback callback,
+                                 gpointer user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    if (!MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier ||
+        !MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier_finish) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                 "not implemented");
+        g_object_unref (task);
+        return;
+    }
+
+    MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier (
+            self,
+            (GAsyncReadyCallback)load_sim_identifier_ready,
+            task);
 }
 
 /*****************************************************************************/
@@ -920,21 +958,18 @@ mm_base_sim_get_path (MMBaseSim *self)
     static void                                                         \
     NAME##_command_ready (MMBaseModem *modem,                           \
                           GAsyncResult *res,                            \
-                          GSimpleAsyncResult *operation_result)         \
+                          GTask *task)                                  \
     {                                                                   \
         GError *error = NULL;                                           \
         const gchar *response;                                          \
                                                                         \
         response = mm_base_modem_at_command_finish (modem, res, &error); \
         if (error)                                                      \
-            g_simple_async_result_take_error (operation_result, error); \
+            g_task_return_error (task, error);                          \
         else                                                            \
-            g_simple_async_result_set_op_res_gpointer (operation_result, \
-                                                       (gpointer)response, \
-                                                       NULL);           \
+            g_task_return_pointer (task, g_strdup (response), g_free);  \
                                                                         \
-        g_simple_async_result_complete (operation_result);              \
-        g_object_unref (operation_result);                              \
+        g_object_unref (task);                                          \
     }
 
 /*****************************************************************************/
@@ -979,14 +1014,15 @@ load_sim_identifier_finish (MMBaseSim *self,
                             GAsyncResult *res,
                             GError **error)
 {
-    const gchar *result;
+    gchar *result;
     gchar *sim_identifier;
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+    result = g_task_propagate_pointer (G_TASK (res), error);
+    if (!result)
         return NULL;
-    result = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
 
     sim_identifier = parse_iccid (result, error);
+    g_free (result);
     if (!sim_identifier)
         return NULL;
 
@@ -1010,10 +1046,7 @@ load_sim_identifier (MMBaseSim *self,
         20,
         FALSE,
         (GAsyncReadyCallback)load_sim_identifier_command_ready,
-        g_simple_async_result_new (G_OBJECT (self),
-                                   callback,
-                                   user_data,
-                                   load_sim_identifier));
+        g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
@@ -1049,14 +1082,15 @@ load_imsi_finish (MMBaseSim *self,
                   GAsyncResult *res,
                   GError **error)
 {
-    const gchar *result;
+    gchar *result;
     gchar *imsi;
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+    result = g_task_propagate_pointer (G_TASK (res), error);
+    if (!result)
         return NULL;
-    result = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
 
     imsi = parse_imsi (result, error);
+    g_free (result);
     if (!imsi)
         return NULL;
 
@@ -1079,10 +1113,7 @@ load_imsi (MMBaseSim *self,
         3,
         FALSE,
         (GAsyncReadyCallback)load_imsi_command_ready,
-        g_simple_async_result_new (G_OBJECT (self),
-                                   callback,
-                                   user_data,
-                                   load_imsi));
+        g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
@@ -1158,12 +1189,19 @@ load_operator_identifier_finish (MMBaseSim *self,
 {
     GError *inner_error = NULL;
     const gchar *imsi;
-    const gchar *result;
+    gchar *result;
     guint mnc_length;
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+    result = g_task_propagate_pointer (G_TASK (res), error);
+    if (!result)
         return NULL;
-    result = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
+
+    mnc_length = parse_mnc_length (result, &inner_error);
+    g_free (result);
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return NULL;
+    }
 
     imsi = mm_gdbus_sim_get_imsi (MM_GDBUS_SIM (self));
     if (!imsi) {
@@ -1171,12 +1209,6 @@ load_operator_identifier_finish (MMBaseSim *self,
                      MM_CORE_ERROR,
                      MM_CORE_ERROR_FAILED,
                      "Cannot load Operator ID without IMSI");
-        return NULL;
-    }
-
-    mnc_length = parse_mnc_length (result, &inner_error);
-    if (inner_error) {
-        g_propagate_error (error, inner_error);
         return NULL;
     }
 
@@ -1200,10 +1232,7 @@ load_operator_identifier (MMBaseSim *self,
         10,
         FALSE,
         (GAsyncReadyCallback)load_operator_identifier_command_ready,
-        g_simple_async_result_new (G_OBJECT (self),
-                                   callback,
-                                   user_data,
-                                   load_operator_identifier));
+        g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
@@ -1270,13 +1299,16 @@ load_operator_name_finish (MMBaseSim *self,
                            GAsyncResult *res,
                            GError **error)
 {
-    const gchar *result;
+    gchar *result;
+    gchar *spn;
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+    result = g_task_propagate_pointer (G_TASK (res), error);
+    if (!result)
         return NULL;
-    result = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
 
-    return parse_spn (result, error);
+    spn = parse_spn (result, error);
+    g_free (result);
+    return spn;
 }
 
 STR_REPLY_READY_FN (load_operator_name)
@@ -1295,16 +1327,13 @@ load_operator_name (MMBaseSim *self,
         10,
         FALSE,
         (GAsyncReadyCallback)load_operator_name_command_ready,
-        g_simple_async_result_new (G_OBJECT (self),
-                                   callback,
-                                   user_data,
-                                   load_operator_name));
+        g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
 
 typedef struct _InitAsyncContext InitAsyncContext;
-static void interface_initialization_step (InitAsyncContext *ctx);
+static void interface_initialization_step (GTask *task);
 
 typedef enum {
     INITIALIZATION_STEP_FIRST,
@@ -1316,22 +1345,9 @@ typedef enum {
 } InitializationStep;
 
 struct _InitAsyncContext {
-    GSimpleAsyncResult *result;
-    GCancellable *cancellable;
-    MMBaseSim *self;
     InitializationStep step;
     guint sim_identifier_tries;
 };
-
-static void
-init_async_context_free (InitAsyncContext *ctx)
-{
-    g_object_unref (ctx->self);
-    g_object_unref (ctx->result);
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
-    g_free (ctx);
-}
 
 MMBaseSim *
 mm_base_sim_new_finish (GAsyncResult  *res,
@@ -1358,18 +1374,20 @@ initable_init_finish (GAsyncInitable  *initable,
                       GAsyncResult    *result,
                       GError         **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (result), error);
+    return g_task_propagate_boolean (G_TASK (result), error);
 }
 
 static void
-load_sim_identifier_ready (MMBaseSim *self,
-                           GAsyncResult *res,
-                           InitAsyncContext *ctx)
+init_load_sim_identifier_ready (MMBaseSim *self,
+                                GAsyncResult *res,
+                                GTask *task)
 {
+    InitAsyncContext *ctx;
     GError *error = NULL;
     gchar *simid;
 
-    simid  = MM_BASE_SIM_GET_CLASS (ctx->self)->load_sim_identifier_finish (self, res, &error);
+    ctx = g_task_get_task_data (task);
+    simid  = MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier_finish (self, res, &error);
     if (!simid) {
         /* TODO: make the retries gobi-specific? */
 
@@ -1379,7 +1397,7 @@ load_sim_identifier_ready (MMBaseSim *self,
          */
         if (++ctx->sim_identifier_tries < 2) {
             g_clear_error (&error);
-            interface_initialization_step (ctx);
+            interface_initialization_step (task);
             return;
         }
 
@@ -1393,20 +1411,21 @@ load_sim_identifier_ready (MMBaseSim *self,
 
     /* Go on to next step */
     ctx->step++;
-    interface_initialization_step (ctx);
+    interface_initialization_step (task);
 }
 
 #undef STR_REPLY_READY_FN
 #define STR_REPLY_READY_FN(NAME,DISPLAY)                                \
     static void                                                         \
-    load_##NAME##_ready (MMBaseSim *self,                                   \
-                         GAsyncResult *res,                             \
-                         InitAsyncContext *ctx)                         \
+    init_load_##NAME##_ready (MMBaseSim *self,                          \
+                              GAsyncResult *res,                        \
+                              GTask *task)                              \
     {                                                                   \
+        InitAsyncContext *ctx;                                          \
         GError *error = NULL;                                           \
         gchar *val;                                                     \
                                                                         \
-        val = MM_BASE_SIM_GET_CLASS (ctx->self)->load_##NAME##_finish (self, res, &error); \
+        val = MM_BASE_SIM_GET_CLASS (self)->load_##NAME##_finish (self, res, &error); \
         mm_gdbus_sim_set_##NAME (MM_GDBUS_SIM (self), val);             \
         g_free (val);                                                   \
                                                                         \
@@ -1416,8 +1435,9 @@ load_sim_identifier_ready (MMBaseSim *self,
         }                                                               \
                                                                         \
         /* Go on to next step */                                        \
+        ctx = g_task_get_task_data (task);                              \
         ctx->step++;                                                    \
-        interface_initialization_step (ctx);                            \
+        interface_initialization_step (task);                           \
     }
 
 STR_REPLY_READY_FN (imsi, "IMSI")
@@ -1425,17 +1445,18 @@ STR_REPLY_READY_FN (operator_identifier, "Operator identifier")
 STR_REPLY_READY_FN (operator_name, "Operator name")
 
 static void
-interface_initialization_step (InitAsyncContext *ctx)
+interface_initialization_step (GTask *task)
 {
-    if (g_cancellable_is_cancelled (ctx->cancellable)) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_CANCELLED,
-                                         "Interface initialization cancelled");
-        g_simple_async_result_complete_in_idle (ctx->result);
-        init_async_context_free (ctx);
+    MMBaseSim *self;
+    InitAsyncContext *ctx;
+
+    if (g_task_return_error_if_cancelled (task)) {
+        g_object_unref (task);
         return;
     }
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     switch (ctx->step) {
     case INITIALIZATION_STEP_FIRST:
@@ -1446,13 +1467,13 @@ interface_initialization_step (InitAsyncContext *ctx)
         /* SIM ID is meant to be loaded only once during the whole
          * lifetime of the modem. Therefore, if we already have them loaded,
          * don't try to load them again. */
-        if (mm_gdbus_sim_get_sim_identifier (MM_GDBUS_SIM (ctx->self)) == NULL &&
-            MM_BASE_SIM_GET_CLASS (ctx->self)->load_sim_identifier &&
-            MM_BASE_SIM_GET_CLASS (ctx->self)->load_sim_identifier_finish) {
-            MM_BASE_SIM_GET_CLASS (ctx->self)->load_sim_identifier (
-                ctx->self,
-                (GAsyncReadyCallback)load_sim_identifier_ready,
-                ctx);
+        if (mm_gdbus_sim_get_sim_identifier (MM_GDBUS_SIM (self)) == NULL &&
+            MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier &&
+            MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier_finish) {
+            MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier (
+                self,
+                (GAsyncReadyCallback)init_load_sim_identifier_ready,
+                task);
             return;
         }
         /* Fall down to next step */
@@ -1462,13 +1483,13 @@ interface_initialization_step (InitAsyncContext *ctx)
         /* IMSI is meant to be loaded only once during the whole
          * lifetime of the modem. Therefore, if we already have them loaded,
          * don't try to load them again. */
-        if (mm_gdbus_sim_get_imsi (MM_GDBUS_SIM (ctx->self)) == NULL &&
-            MM_BASE_SIM_GET_CLASS (ctx->self)->load_imsi &&
-            MM_BASE_SIM_GET_CLASS (ctx->self)->load_imsi_finish) {
-            MM_BASE_SIM_GET_CLASS (ctx->self)->load_imsi (
-                ctx->self,
-                (GAsyncReadyCallback)load_imsi_ready,
-                ctx);
+        if (mm_gdbus_sim_get_imsi (MM_GDBUS_SIM (self)) == NULL &&
+            MM_BASE_SIM_GET_CLASS (self)->load_imsi &&
+            MM_BASE_SIM_GET_CLASS (self)->load_imsi_finish) {
+            MM_BASE_SIM_GET_CLASS (self)->load_imsi (
+                self,
+                (GAsyncReadyCallback)init_load_imsi_ready,
+                task);
             return;
         }
         /* Fall down to next step */
@@ -1478,13 +1499,13 @@ interface_initialization_step (InitAsyncContext *ctx)
         /* Operator ID is meant to be loaded only once during the whole
          * lifetime of the modem. Therefore, if we already have them loaded,
          * don't try to load them again. */
-        if (mm_gdbus_sim_get_operator_identifier (MM_GDBUS_SIM (ctx->self)) == NULL &&
-            MM_BASE_SIM_GET_CLASS (ctx->self)->load_operator_identifier &&
-            MM_BASE_SIM_GET_CLASS (ctx->self)->load_operator_identifier_finish) {
-            MM_BASE_SIM_GET_CLASS (ctx->self)->load_operator_identifier (
-                ctx->self,
-                (GAsyncReadyCallback)load_operator_identifier_ready,
-                ctx);
+        if (mm_gdbus_sim_get_operator_identifier (MM_GDBUS_SIM (self)) == NULL &&
+            MM_BASE_SIM_GET_CLASS (self)->load_operator_identifier &&
+            MM_BASE_SIM_GET_CLASS (self)->load_operator_identifier_finish) {
+            MM_BASE_SIM_GET_CLASS (self)->load_operator_identifier (
+                self,
+                (GAsyncReadyCallback)init_load_operator_identifier_ready,
+                task);
             return;
         }
         /* Fall down to next step */
@@ -1494,13 +1515,13 @@ interface_initialization_step (InitAsyncContext *ctx)
         /* Operator Name is meant to be loaded only once during the whole
          * lifetime of the modem. Therefore, if we already have them loaded,
          * don't try to load them again. */
-        if (mm_gdbus_sim_get_operator_name (MM_GDBUS_SIM (ctx->self)) == NULL &&
-            MM_BASE_SIM_GET_CLASS (ctx->self)->load_operator_name &&
-            MM_BASE_SIM_GET_CLASS (ctx->self)->load_operator_name_finish) {
-            MM_BASE_SIM_GET_CLASS (ctx->self)->load_operator_name (
-                ctx->self,
-                (GAsyncReadyCallback)load_operator_name_ready,
-                ctx);
+        if (mm_gdbus_sim_get_operator_name (MM_GDBUS_SIM (self)) == NULL &&
+            MM_BASE_SIM_GET_CLASS (self)->load_operator_name &&
+            MM_BASE_SIM_GET_CLASS (self)->load_operator_name_finish) {
+            MM_BASE_SIM_GET_CLASS (self)->load_operator_name (
+                self,
+                (GAsyncReadyCallback)init_load_operator_name_ready,
+                task);
             return;
         }
         /* Fall down to next step */
@@ -1508,12 +1529,10 @@ interface_initialization_step (InitAsyncContext *ctx)
 
     case INITIALIZATION_STEP_LAST:
         /* We are done without errors! */
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        g_simple_async_result_complete_in_idle (ctx->result);
-        init_async_context_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
-
 
     g_assert_not_reached ();
 }
@@ -1525,21 +1544,20 @@ common_init_async (GAsyncInitable *initable,
                    gpointer user_data)
 
 {
+    MMBaseSim *self;
     InitAsyncContext *ctx;
+    GTask *task;
+
+    self = MM_BASE_SIM (initable);
 
     ctx = g_new (InitAsyncContext, 1);
-    ctx->self = g_object_ref (initable);
-    ctx->result = g_simple_async_result_new (G_OBJECT (initable),
-                                             callback,
-                                             user_data,
-                                             common_init_async);
-    ctx->cancellable = (cancellable ?
-                        g_object_ref (cancellable) :
-                        NULL);
     ctx->step = INITIALIZATION_STEP_FIRST;
     ctx->sim_identifier_tries = 0;
 
-    interface_initialization_step (ctx);
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, g_free);
+
+    interface_initialization_step (task);
 }
 
 static void

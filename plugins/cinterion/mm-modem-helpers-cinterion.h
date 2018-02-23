@@ -10,7 +10,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details:
  *
+ * Copyright (C) 2016 Trimble Navigation Limited
  * Copyright (C) 2014 Aleksander Morgado <aleksander@aleksander.es>
+ * Contributor: Matthew Stanger <matthew_stanger@trimble.com>
  */
 
 #ifndef MM_MODEM_HELPERS_CINTERION_H
@@ -19,6 +21,7 @@
 #include <glib.h>
 
 #include <ModemManager.h>
+#include <mm-base-bearer.h>
 
 /*****************************************************************************/
 /* ^SCFG test parser */
@@ -66,10 +69,22 @@ gboolean mm_cinterion_parse_sind_response (const gchar *response,
                                            GError **error);
 
 /*****************************************************************************/
+/* ^SWWAN response parser */
+
+MMBearerConnectionStatus mm_cinterion_parse_swwan_response (const gchar  *response,
+                                                            guint         swwan_index,
+                                                            GError      **error);
+
+/*****************************************************************************/
 /* ^SMONG response parser */
 
 gboolean mm_cinterion_parse_smong_response (const gchar              *response,
                                             MMModemAccessTechnology  *access_tech,
                                             GError                  **error);
+
+/*****************************************************************************/
+/* ^SIND psinfo helper */
+
+MMModemAccessTechnology mm_cinterion_get_access_technology_from_sind_psinfo (guint val);
 
 #endif  /* MM_MODEM_HELPERS_CINTERION_H */

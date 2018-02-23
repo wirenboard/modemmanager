@@ -7,6 +7,7 @@
       </sub>
       <sub name="The Manager object" link="ch02.html">
         <sub name="MMManager" link="MMManager.html"/>
+        <sub name="MMKernelEventProperties" link="libmm-glib-MMKernelEventProperties.html"/>
       </sub>
       <sub name="The Modem object" link="ch03.html">
         <sub name="MMObject" link="MMObject.html"/>
@@ -151,6 +152,7 @@
     <keyword type="function" name="mm_modem_3gpp_facility_build_string_from_mask ()" link="libmm-glib-Flags-and-Enumerations.html#mm-modem-3gpp-facility-build-string-from-mask"/>
     <keyword type="function" name="mm_modem_3gpp_network_availability_get_string ()" link="libmm-glib-Flags-and-Enumerations.html#mm-modem-3gpp-network-availability-get-string"/>
     <keyword type="function" name="mm_modem_3gpp_ussd_session_state_get_string ()" link="libmm-glib-Flags-and-Enumerations.html#mm-modem-3gpp-ussd-session-state-get-string"/>
+    <keyword type="function" name="mm_modem_3gpp_eps_ue_mode_operation_get_string ()" link="libmm-glib-Flags-and-Enumerations.html#mm-modem-3gpp-eps-ue-mode-operation-get-string"/>
     <keyword type="function" name="mm_modem_cdma_registration_state_get_string ()" link="libmm-glib-Flags-and-Enumerations.html#mm-modem-cdma-registration-state-get-string"/>
     <keyword type="function" name="mm_modem_cdma_activation_state_get_string ()" link="libmm-glib-Flags-and-Enumerations.html#mm-modem-cdma-activation-state-get-string"/>
     <keyword type="function" name="mm_modem_cdma_rm_protocol_get_string ()" link="libmm-glib-Flags-and-Enumerations.html#mm-modem-cdma-rm-protocol-get-string"/>
@@ -182,7 +184,20 @@
     <keyword type="function" name="mm_manager_set_logging ()" link="MMManager.html#mm-manager-set-logging"/>
     <keyword type="function" name="mm_manager_set_logging_finish ()" link="MMManager.html#mm-manager-set-logging-finish"/>
     <keyword type="function" name="mm_manager_set_logging_sync ()" link="MMManager.html#mm-manager-set-logging-sync"/>
+    <keyword type="function" name="mm_manager_report_kernel_event ()" link="MMManager.html#mm-manager-report-kernel-event"/>
+    <keyword type="function" name="mm_manager_report_kernel_event_finish ()" link="MMManager.html#mm-manager-report-kernel-event-finish"/>
+    <keyword type="function" name="mm_manager_report_kernel_event_sync ()" link="MMManager.html#mm-manager-report-kernel-event-sync"/>
     <keyword type="struct" name="struct MMManager" link="MMManager.html#MMManager-struct"/>
+    <keyword type="function" name="mm_kernel_event_properties_new ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-new"/>
+    <keyword type="function" name="mm_kernel_event_properties_get_action ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-get-action"/>
+    <keyword type="function" name="mm_kernel_event_properties_set_action ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-set-action"/>
+    <keyword type="function" name="mm_kernel_event_properties_get_name ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-get-name"/>
+    <keyword type="function" name="mm_kernel_event_properties_set_name ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-set-name"/>
+    <keyword type="function" name="mm_kernel_event_properties_get_subsystem ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-get-subsystem"/>
+    <keyword type="function" name="mm_kernel_event_properties_set_subsystem ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-set-subsystem"/>
+    <keyword type="function" name="mm_kernel_event_properties_get_uid ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-get-uid"/>
+    <keyword type="function" name="mm_kernel_event_properties_set_uid ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-set-uid"/>
+    <keyword type="struct" name="struct MMKernelEventProperties" link="libmm-glib-MMKernelEventProperties.html#MMKernelEventProperties"/>
     <keyword type="function" name="mm_object_get_path ()" link="MMObject.html#mm-object-get-path"/>
     <keyword type="function" name="mm_object_dup_path ()" link="MMObject.html#mm-object-dup-path"/>
     <keyword type="function" name="mm_object_peek_modem ()" link="MMObject.html#mm-object-peek-modem"/>
@@ -224,6 +239,8 @@
     <keyword type="function" name="mm_modem_dup_model ()" link="MMModem.html#mm-modem-dup-model"/>
     <keyword type="function" name="mm_modem_get_revision ()" link="MMModem.html#mm-modem-get-revision"/>
     <keyword type="function" name="mm_modem_dup_revision ()" link="MMModem.html#mm-modem-dup-revision"/>
+    <keyword type="function" name="mm_modem_get_hardware_revision ()" link="MMModem.html#mm-modem-get-hardware-revision"/>
+    <keyword type="function" name="mm_modem_dup_hardware_revision ()" link="MMModem.html#mm-modem-dup-hardware-revision"/>
     <keyword type="function" name="mm_modem_get_drivers ()" link="MMModem.html#mm-modem-get-drivers"/>
     <keyword type="function" name="mm_modem_dup_drivers ()" link="MMModem.html#mm-modem-dup-drivers"/>
     <keyword type="function" name="mm_modem_get_plugin ()" link="MMModem.html#mm-modem-get-plugin"/>
@@ -325,6 +342,9 @@
     <keyword type="function" name="mm_modem_3gpp_scan ()" link="MMModem3gpp.html#mm-modem-3gpp-scan"/>
     <keyword type="function" name="mm_modem_3gpp_scan_finish ()" link="MMModem3gpp.html#mm-modem-3gpp-scan-finish"/>
     <keyword type="function" name="mm_modem_3gpp_scan_sync ()" link="MMModem3gpp.html#mm-modem-3gpp-scan-sync"/>
+    <keyword type="function" name="mm_modem_3gpp_set_eps_ue_mode_operation ()" link="MMModem3gpp.html#mm-modem-3gpp-set-eps-ue-mode-operation"/>
+    <keyword type="function" name="mm_modem_3gpp_set_eps_ue_mode_operation_finish ()" link="MMModem3gpp.html#mm-modem-3gpp-set-eps-ue-mode-operation-finish"/>
+    <keyword type="function" name="mm_modem_3gpp_set_eps_ue_mode_operation_sync ()" link="MMModem3gpp.html#mm-modem-3gpp-set-eps-ue-mode-operation-sync"/>
     <keyword type="struct" name="struct MMModem3gpp" link="MMModem3gpp.html#MMModem3gpp-struct"/>
     <keyword type="struct" name="MMModem3gppNetwork" link="MMModem3gpp.html#MMModem3gppNetwork"/>
     <keyword type="function" name="mm_modem_3gpp_ussd_get_path ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-get-path"/>
@@ -772,8 +792,12 @@
     <keyword type="function" name="mm_gdbus_org_freedesktop_modem_manager1_call_set_logging ()" link="MmGdbusOrgFreedesktopModemManager1.html#mm-gdbus-org-freedesktop-modem-manager1-call-set-logging"/>
     <keyword type="function" name="mm_gdbus_org_freedesktop_modem_manager1_call_set_logging_finish ()" link="MmGdbusOrgFreedesktopModemManager1.html#mm-gdbus-org-freedesktop-modem-manager1-call-set-logging-finish"/>
     <keyword type="function" name="mm_gdbus_org_freedesktop_modem_manager1_call_set_logging_sync ()" link="MmGdbusOrgFreedesktopModemManager1.html#mm-gdbus-org-freedesktop-modem-manager1-call-set-logging-sync"/>
+    <keyword type="function" name="mm_gdbus_org_freedesktop_modem_manager1_call_report_kernel_event ()" link="MmGdbusOrgFreedesktopModemManager1.html#mm-gdbus-org-freedesktop-modem-manager1-call-report-kernel-event"/>
+    <keyword type="function" name="mm_gdbus_org_freedesktop_modem_manager1_call_report_kernel_event_finish ()" link="MmGdbusOrgFreedesktopModemManager1.html#mm-gdbus-org-freedesktop-modem-manager1-call-report-kernel-event-finish"/>
+    <keyword type="function" name="mm_gdbus_org_freedesktop_modem_manager1_call_report_kernel_event_sync ()" link="MmGdbusOrgFreedesktopModemManager1.html#mm-gdbus-org-freedesktop-modem-manager1-call-report-kernel-event-sync"/>
     <keyword type="struct" name="MmGdbusOrgFreedesktopModemManager1" link="MmGdbusOrgFreedesktopModemManager1.html#MmGdbusOrgFreedesktopModemManager1-struct"/>
     <keyword type="struct" name="struct MmGdbusOrgFreedesktopModemManager1Iface" link="MmGdbusOrgFreedesktopModemManager1.html#MmGdbusOrgFreedesktopModemManager1Iface"/>
+    <keyword type="signal" name="The “handle-report-kernel-event” signal" link="MmGdbusOrgFreedesktopModemManager1.html#MmGdbusOrgFreedesktopModemManager1-handle-report-kernel-event"/>
     <keyword type="signal" name="The “handle-scan-devices” signal" link="MmGdbusOrgFreedesktopModemManager1.html#MmGdbusOrgFreedesktopModemManager1-handle-scan-devices"/>
     <keyword type="signal" name="The “handle-set-logging” signal" link="MmGdbusOrgFreedesktopModemManager1.html#MmGdbusOrgFreedesktopModemManager1-handle-set-logging"/>
     <keyword type="function" name="mm_gdbus_org_freedesktop_modem_manager1_proxy_new ()" link="MmGdbusOrgFreedesktopModemManager1Proxy.html#mm-gdbus-org-freedesktop-modem-manager1-proxy-new"/>
@@ -880,6 +904,8 @@
     <keyword type="function" name="mm_gdbus_modem_dup_ports ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-ports"/>
     <keyword type="function" name="mm_gdbus_modem_get_revision ()" link="MmGdbusModem.html#mm-gdbus-modem-get-revision"/>
     <keyword type="function" name="mm_gdbus_modem_dup_revision ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-revision"/>
+    <keyword type="function" name="mm_gdbus_modem_get_hardware_revision ()" link="MmGdbusModem.html#mm-gdbus-modem-get-hardware-revision"/>
+    <keyword type="function" name="mm_gdbus_modem_dup_hardware_revision ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-hardware-revision"/>
     <keyword type="function" name="mm_gdbus_modem_get_signal_quality ()" link="MmGdbusModem.html#mm-gdbus-modem-get-signal-quality"/>
     <keyword type="function" name="mm_gdbus_modem_dup_signal_quality ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-signal-quality"/>
     <keyword type="function" name="mm_gdbus_modem_get_sim ()" link="MmGdbusModem.html#mm-gdbus-modem-get-sim"/>
@@ -940,6 +966,7 @@
     <keyword type="property" name="The “device-identifier” property" link="MmGdbusModem.html#MmGdbusModem--device-identifier"/>
     <keyword type="property" name="The “drivers” property" link="MmGdbusModem.html#MmGdbusModem--drivers"/>
     <keyword type="property" name="The “equipment-identifier” property" link="MmGdbusModem.html#MmGdbusModem--equipment-identifier"/>
+    <keyword type="property" name="The “hardware-revision” property" link="MmGdbusModem.html#MmGdbusModem--hardware-revision"/>
     <keyword type="property" name="The “manufacturer” property" link="MmGdbusModem.html#MmGdbusModem--manufacturer"/>
     <keyword type="property" name="The “max-active-bearers” property" link="MmGdbusModem.html#MmGdbusModem--max-active-bearers"/>
     <keyword type="property" name="The “max-bearers” property" link="MmGdbusModem.html#MmGdbusModem--max-bearers"/>
@@ -990,15 +1017,20 @@
     <keyword type="function" name="mm_gdbus_modem3gpp_dup_operator_name ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-dup-operator-name"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_get_enabled_facility_locks ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-get-enabled-facility-locks"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_get_subscription_state ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-get-subscription-state"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_get_eps_ue_mode_operation ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-get-eps-ue-mode-operation"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_call_register ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-register"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_call_register_finish ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-register-finish"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_call_register_sync ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-register-sync"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_call_scan ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-scan"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_call_scan_finish ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-scan-finish"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_call_scan_sync ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-scan-sync"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_call_set_eps_ue_mode_operation ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-set-eps-ue-mode-operation"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_call_set_eps_ue_mode_operation_finish ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-set-eps-ue-mode-operation-finish"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_call_set_eps_ue_mode_operation_sync ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-set-eps-ue-mode-operation-sync"/>
     <keyword type="struct" name="MmGdbusModem3gpp" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp-struct"/>
     <keyword type="struct" name="struct MmGdbusModem3gppIface" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface"/>
     <keyword type="property" name="The “enabled-facility-locks” property" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp--enabled-facility-locks"/>
+    <keyword type="property" name="The “eps-ue-mode-operation” property" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp--eps-ue-mode-operation"/>
     <keyword type="property" name="The “imei” property" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp--imei"/>
     <keyword type="property" name="The “operator-code” property" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp--operator-code"/>
     <keyword type="property" name="The “operator-name” property" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp--operator-name"/>
@@ -1006,6 +1038,7 @@
     <keyword type="property" name="The “subscription-state” property" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp--subscription-state"/>
     <keyword type="signal" name="The “handle-register” signal" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp-handle-register"/>
     <keyword type="signal" name="The “handle-scan” signal" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp-handle-scan"/>
+    <keyword type="signal" name="The “handle-set-eps-ue-mode-operation” signal" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp-handle-set-eps-ue-mode-operation"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_proxy_new ()" link="MmGdbusModem3gppProxy.html#mm-gdbus-modem3gpp-proxy-new"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_proxy_new_finish ()" link="MmGdbusModem3gppProxy.html#mm-gdbus-modem3gpp-proxy-new-finish"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_proxy_new_for_bus ()" link="MmGdbusModem3gppProxy.html#mm-gdbus-modem3gpp-proxy-new-for-bus"/>
@@ -1498,6 +1531,7 @@
     <keyword type="member" name="MMOmaPendingNetworkInitiatedSession.session-type" link="MMModemOma.html#MMOmaPendingNetworkInitiatedSession.session-type"/>
     <keyword type="member" name="MMOmaPendingNetworkInitiatedSession.session-id" link="MMModemOma.html#MMOmaPendingNetworkInitiatedSession.session-id"/>
     <keyword type="member" name="MmGdbusOrgFreedesktopModemManager1Iface.parent-iface" link="MmGdbusOrgFreedesktopModemManager1.html#MmGdbusOrgFreedesktopModemManager1Iface.parent-iface"/>
+    <keyword type="member" name="MmGdbusOrgFreedesktopModemManager1Iface.handle-report-kernel-event" link="MmGdbusOrgFreedesktopModemManager1.html#MmGdbusOrgFreedesktopModemManager1Iface.handle-report-kernel-event"/>
     <keyword type="member" name="MmGdbusOrgFreedesktopModemManager1Iface.handle-scan-devices" link="MmGdbusOrgFreedesktopModemManager1.html#MmGdbusOrgFreedesktopModemManager1Iface.handle-scan-devices"/>
     <keyword type="member" name="MmGdbusOrgFreedesktopModemManager1Iface.handle-set-logging" link="MmGdbusOrgFreedesktopModemManager1.html#MmGdbusOrgFreedesktopModemManager1Iface.handle-set-logging"/>
     <keyword type="member" name="MmGdbusObjectIface.parent-iface" link="MmGdbusObject.html#MmGdbusObjectIface.parent-iface"/>
@@ -1522,6 +1556,7 @@
     <keyword type="member" name="MmGdbusModemIface.get-device-identifier" link="MmGdbusModem.html#MmGdbusModemIface.get-device-identifier"/>
     <keyword type="member" name="MmGdbusModemIface.get-drivers" link="MmGdbusModem.html#MmGdbusModemIface.get-drivers"/>
     <keyword type="member" name="MmGdbusModemIface.get-equipment-identifier" link="MmGdbusModem.html#MmGdbusModemIface.get-equipment-identifier"/>
+    <keyword type="member" name="MmGdbusModemIface.get-hardware-revision" link="MmGdbusModem.html#MmGdbusModemIface.get-hardware-revision"/>
     <keyword type="member" name="MmGdbusModemIface.get-manufacturer" link="MmGdbusModem.html#MmGdbusModemIface.get-manufacturer"/>
     <keyword type="member" name="MmGdbusModemIface.get-max-active-bearers" link="MmGdbusModem.html#MmGdbusModemIface.get-max-active-bearers"/>
     <keyword type="member" name="MmGdbusModemIface.get-max-bearers" link="MmGdbusModem.html#MmGdbusModemIface.get-max-bearers"/>
@@ -1546,7 +1581,9 @@
     <keyword type="member" name="MmGdbusModem3gppIface.parent-iface" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.parent-iface"/>
     <keyword type="member" name="MmGdbusModem3gppIface.handle-register" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.handle-register"/>
     <keyword type="member" name="MmGdbusModem3gppIface.handle-scan" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.handle-scan"/>
+    <keyword type="member" name="MmGdbusModem3gppIface.handle-set-eps-ue-mode-operation" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.handle-set-eps-ue-mode-operation"/>
     <keyword type="member" name="MmGdbusModem3gppIface.get-enabled-facility-locks" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.get-enabled-facility-locks"/>
+    <keyword type="member" name="MmGdbusModem3gppIface.get-eps-ue-mode-operation" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.get-eps-ue-mode-operation"/>
     <keyword type="member" name="MmGdbusModem3gppIface.get-imei" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.get-imei"/>
     <keyword type="member" name="MmGdbusModem3gppIface.get-operator-code" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.get-operator-code"/>
     <keyword type="member" name="MmGdbusModem3gppIface.get-operator-name" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.get-operator-name"/>

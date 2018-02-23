@@ -69,8 +69,6 @@ typedef struct {
 } ReloadStatsResult;
 
 typedef struct {
-    MMBearerQmi *self;
-    GSimpleAsyncResult *result;
     QmiMessageWdsGetPacketStatisticsInput *input;
     ReloadStatsContextStep step;
     ReloadStatsResult stats;
@@ -85,52 +83,54 @@ reload_stats_finish (MMBaseBearer *bearer,
 {
     ReloadStatsResult *stats;
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+    stats = g_task_propagate_pointer (G_TASK (res), error);
+    if (!stats)
         return FALSE;
 
-    stats = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
     if (rx_bytes)
         *rx_bytes = stats->rx_bytes;
     if (tx_bytes)
         *tx_bytes = stats->tx_bytes;
+
+    g_free (stats);
     return TRUE;
 }
 
 static void
-reload_stats_context_complete_and_free (ReloadStatsContext *ctx)
+reload_stats_context_free (ReloadStatsContext *ctx)
 {
-    g_simple_async_result_complete (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->self);
     qmi_message_wds_get_packet_statistics_input_unref (ctx->input);
     g_slice_free (ReloadStatsContext, ctx);
 }
 
-static void reload_stats_context_step (ReloadStatsContext *ctx);
+static void reload_stats_context_step (GTask *task);
 
 static void
 get_packet_statistics_ready (QmiClientWds *client,
                              GAsyncResult *res,
-                             ReloadStatsContext *ctx)
+                             GTask *task)
 {
+    ReloadStatsContext *ctx;
     GError *error = NULL;
     QmiMessageWdsGetPacketStatisticsOutput *output;
     guint64 tx_bytes_ok = 0;
     guint64 rx_bytes_ok = 0;
 
+    ctx = g_task_get_task_data (task);
+
     output = qmi_client_wds_get_packet_statistics_finish (client, res, &error);
     if (!output) {
         g_prefix_error (&error, "QMI operation failed: ");
-        g_simple_async_result_take_error (ctx->result, error);
-        reload_stats_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     if (!qmi_message_wds_get_packet_statistics_output_get_result (output, &error)) {
         g_prefix_error (&error, "Couldn't get packet statistics: ");
-        g_simple_async_result_take_error (ctx->result, error);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         qmi_message_wds_get_packet_statistics_output_unref (output);
-        reload_stats_context_complete_and_free (ctx);
         return;
     }
 
@@ -143,43 +143,51 @@ get_packet_statistics_ready (QmiClientWds *client,
 
     /* Go on */
     ctx->step++;
-    reload_stats_context_step (ctx);
+    reload_stats_context_step (task);
 }
 
 static void
-reload_stats_context_step (ReloadStatsContext *ctx)
+reload_stats_context_step (GTask *task)
 {
+    MMBearerQmi *self;
+    ReloadStatsContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     switch (ctx->step) {
     case RELOAD_STATS_CONTEXT_STEP_FIRST:
         /* Fall through */
         ctx->step++;
     case RELOAD_STATS_CONTEXT_STEP_IPV4:
-        if (ctx->self->priv->client_ipv4) {
-            qmi_client_wds_get_packet_statistics (QMI_CLIENT_WDS (ctx->self->priv->client_ipv4),
+        if (self->priv->client_ipv4) {
+            qmi_client_wds_get_packet_statistics (QMI_CLIENT_WDS (self->priv->client_ipv4),
                                                   ctx->input,
                                                   10,
                                                   NULL,
                                                   (GAsyncReadyCallback)get_packet_statistics_ready,
-                                                  ctx);
+                                                  task);
             return;
         }
         ctx->step++;
         /* Fall through */
     case RELOAD_STATS_CONTEXT_STEP_IPV6:
-        if (ctx->self->priv->client_ipv6) {
-            qmi_client_wds_get_packet_statistics (QMI_CLIENT_WDS (ctx->self->priv->client_ipv6),
+        if (self->priv->client_ipv6) {
+            qmi_client_wds_get_packet_statistics (QMI_CLIENT_WDS (self->priv->client_ipv6),
                                                   ctx->input,
                                                   10,
                                                   NULL,
                                                   (GAsyncReadyCallback)get_packet_statistics_ready,
-                                                  ctx);
+                                                  task);
             return;
         }
         ctx->step++;
         /* Fall through */
     case RELOAD_STATS_CONTEXT_STEP_LAST:
-        g_simple_async_result_set_op_res_gpointer (ctx->result, &ctx->stats, NULL);
-        reload_stats_context_complete_and_free (ctx);
+        g_task_return_pointer (task,
+                               g_memdup (&ctx->stats, sizeof (ctx->stats)),
+                               g_free);
+        g_object_unref (task);
         return;
     }
 }
@@ -190,13 +198,9 @@ reload_stats (MMBaseBearer *self,
               gpointer user_data)
 {
     ReloadStatsContext *ctx;
+    GTask *task;
 
     ctx = g_slice_new0 (ReloadStatsContext);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             reload_stats);
     ctx->input = qmi_message_wds_get_packet_statistics_input_new ();
     qmi_message_wds_get_packet_statistics_input_set_mask (
         ctx->input,
@@ -205,7 +209,167 @@ reload_stats (MMBaseBearer *self,
         NULL);
     ctx->step = RELOAD_STATS_CONTEXT_STEP_FIRST;
 
-    reload_stats_context_step (ctx);
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)reload_stats_context_free);
+
+    reload_stats_context_step (task);
+}
+
+/*****************************************************************************/
+/* Connection status polling */
+
+typedef enum {
+    CONNECTION_STATUS_CONTEXT_STEP_FIRST,
+    CONNECTION_STATUS_CONTEXT_STEP_IPV4,
+    CONNECTION_STATUS_CONTEXT_STEP_IPV6,
+    CONNECTION_STATUS_CONTEXT_STEP_LAST,
+} ConnectionStatusContextStep;
+
+typedef struct {
+    ConnectionStatusContextStep step;
+} ConnectionStatusContext;
+
+static MMBearerConnectionStatus
+load_connection_status_finish (MMBaseBearer  *self,
+                               GAsyncResult  *res,
+                               GError       **error)
+{
+    gint val;
+
+    val = g_task_propagate_int (G_TASK (res), error);
+    if (val < 0)
+        return MM_BEARER_CONNECTION_STATUS_UNKNOWN;
+
+    return (MMBearerConnectionStatus) val;
+}
+
+static void connection_status_context_step (GTask *task);
+
+static void
+get_packet_service_status_ready (QmiClientWds *client,
+                                 GAsyncResult *res,
+                                 GTask        *task)
+{
+    GError                                    *error = NULL;
+    QmiMessageWdsGetPacketServiceStatusOutput *output;
+    QmiWdsConnectionStatus                     status = QMI_WDS_CONNECTION_STATUS_UNKNOWN;
+    ConnectionStatusContext                   *ctx;
+
+    output = qmi_client_wds_get_packet_service_status_finish (client, res, &error);
+    if (!output)
+        goto out;
+
+    if (!qmi_message_wds_get_packet_service_status_output_get_result (output, &error))
+        goto out;
+
+    qmi_message_wds_get_packet_service_status_output_get_connection_status (
+        output,
+        &status,
+        NULL);
+
+ out:
+    if (output)
+        qmi_message_wds_get_packet_service_status_output_unref (output);
+
+    /* An error checking status is reported right away */
+    if (error) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    /* Report disconnection right away */
+    if (status != QMI_WDS_CONNECTION_STATUS_CONNECTED) {
+        g_task_return_int (task, MM_BEARER_CONNECTION_STATUS_DISCONNECTED);
+        g_object_unref (task);
+        return;
+    }
+
+    /* we're reported as connected, go on to next check if any */
+    ctx = g_task_get_task_data (task);
+    ctx->step++;
+    connection_status_context_step (task);
+}
+
+static void
+connection_status_context_step (GTask *task)
+{
+    MMBearerQmi             *self;
+    ConnectionStatusContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
+    switch (ctx->step) {
+        case CONNECTION_STATUS_CONTEXT_STEP_FIRST:
+            /* Connection status polling is an optional feature that must be
+             * enabled explicitly via udev tags. If not set, out as unsupported */
+            if (self->priv->data &&
+                !mm_kernel_device_get_global_property_as_boolean (mm_port_peek_kernel_device (self->priv->data),
+                                                                  "ID_MM_QMI_CONNECTION_STATUS_POLLING_ENABLE")) {
+                g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                         "Connection status polling not required");
+                g_object_unref (task);
+                return;
+            }
+            /* If no clients ready on start, assume disconnected */
+            if (!self->priv->client_ipv4 && !self->priv->client_ipv6) {
+                g_task_return_int (task, MM_BEARER_CONNECTION_STATUS_DISCONNECTED);
+                g_object_unref (task);
+                return;
+            }
+            ctx->step++;
+            /* fall down to next step */
+
+        case CONNECTION_STATUS_CONTEXT_STEP_IPV4:
+            if (self->priv->client_ipv4) {
+                qmi_client_wds_get_packet_service_status (self->priv->client_ipv4,
+                                                          NULL,
+                                                          10,
+                                                          NULL,
+                                                          (GAsyncReadyCallback)get_packet_service_status_ready,
+                                                          task);
+                return;
+            }
+            ctx->step++;
+            /* fall down to next step */
+
+        case CONNECTION_STATUS_CONTEXT_STEP_IPV6:
+            if (self->priv->client_ipv6) {
+                qmi_client_wds_get_packet_service_status (self->priv->client_ipv6,
+                                                          NULL,
+                                                          10,
+                                                          NULL,
+                                                          (GAsyncReadyCallback)get_packet_service_status_ready,
+                                                          task);
+                return;
+            }
+            ctx->step++;
+            /* fall down to next step */
+
+        case CONNECTION_STATUS_CONTEXT_STEP_LAST:
+            /* All available clients are connected */
+            g_task_return_int (task, MM_BEARER_CONNECTION_STATUS_CONNECTED);
+            g_object_unref (task);
+            return;
+    }
+}
+
+static void
+load_connection_status (MMBaseBearer        *self,
+                        GAsyncReadyCallback  callback,
+                        gpointer             user_data)
+{
+    GTask *task;
+    ConnectionStatusContext *ctx;
+
+    ctx = g_new (ConnectionStatusContext, 1);
+    ctx->step = CONNECTION_STATUS_CONTEXT_STEP_FIRST;
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, g_free);
+
+    connection_status_context_step (task);
 }
 
 /*****************************************************************************/
@@ -216,11 +380,15 @@ static void common_setup_cleanup_packet_service_status_unsolicited_events (MMBea
                                                                            gboolean enable,
                                                                            guint *indication_id);
 
-#if QMI_CHECK_VERSION (1,18,0)
+static void setup_event_report_unsolicited_events (MMBearerQmi *self,
+                                                   QmiClientWds *client,
+                                                   GCancellable *cancellable,
+                                                   GAsyncReadyCallback callback,
+                                                   gpointer user_data);
+
 static void cleanup_event_report_unsolicited_events (MMBearerQmi *self,
                                                      QmiClientWds *client,
                                                      guint *indication_id);
-#endif
 
 typedef enum {
     CONNECT_STEP_FIRST,
@@ -243,8 +411,6 @@ typedef enum {
 
 typedef struct {
     MMBearerQmi *self;
-    GSimpleAsyncResult *result;
-    GCancellable *cancellable;
     ConnectStep step;
     MMPort *data;
     MMPortQmi *qmi;
@@ -277,10 +443,8 @@ typedef struct {
 } ConnectContext;
 
 static void
-connect_context_complete_and_free (ConnectContext *ctx)
+connect_context_free (ConnectContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
     g_free (ctx->apn);
     g_free (ctx->user);
     g_free (ctx->password);
@@ -291,29 +455,22 @@ connect_context_complete_and_free (ConnectContext *ctx)
                                                                        FALSE,
                                                                        &ctx->packet_service_status_ipv4_indication_id);
     }
-
-#if QMI_CHECK_VERSION (1,18,0)
     if (ctx->event_report_ipv4_indication_id) {
         cleanup_event_report_unsolicited_events (ctx->self,
                                                  ctx->client_ipv4,
                                                  &ctx->event_report_ipv4_indication_id);
     }
-#endif
-
     if (ctx->packet_service_status_ipv6_indication_id) {
         common_setup_cleanup_packet_service_status_unsolicited_events (ctx->self,
                                                                        ctx->client_ipv6,
                                                                        FALSE,
                                                                        &ctx->packet_service_status_ipv6_indication_id);
     }
-
-#if QMI_CHECK_VERSION (1,18,0)
     if (ctx->event_report_ipv6_indication_id) {
         cleanup_event_report_unsolicited_events (ctx->self,
                                                  ctx->client_ipv6,
                                                  &ctx->event_report_ipv6_indication_id);
     }
-#endif
 
     g_clear_error (&ctx->error_ipv4);
     g_clear_error (&ctx->error_ipv6);
@@ -323,7 +480,6 @@ connect_context_complete_and_free (ConnectContext *ctx)
     g_clear_object (&ctx->ipv6_config);
     g_object_unref (ctx->data);
     g_object_unref (ctx->qmi);
-    g_object_unref (ctx->cancellable);
     g_object_unref (ctx->self);
     g_slice_free (ConnectContext, ctx);
 }
@@ -333,22 +489,21 @@ connect_finish (MMBaseBearer *self,
                 GAsyncResult *res,
                 GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    return mm_bearer_connect_result_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
-static void connect_context_step (ConnectContext *ctx);
+static void connect_context_step (GTask *task);
 
 static void
 start_network_ready (QmiClientWds *client,
                      GAsyncResult *res,
-                     ConnectContext *ctx)
+                     GTask *task)
 {
+    ConnectContext *ctx;
     GError *error = NULL;
     QmiMessageWdsStartNetworkOutput *output;
 
+    ctx = g_task_get_task_data (task);
     g_assert (ctx->running_ipv4 || ctx->running_ipv6);
     g_assert (!(ctx->running_ipv4 && ctx->running_ipv6));
 
@@ -419,7 +574,7 @@ start_network_ready (QmiClientWds *client,
 
     /* Keep on */
     ctx->step++;
-    connect_context_step (ctx);
+    connect_context_step (task);
 }
 
 static QmiMessageWdsStartNetworkInput *
@@ -663,11 +818,13 @@ get_ipv6_config (MMBearerQmi *self,
 static void
 get_current_settings_ready (QmiClientWds *client,
                             GAsyncResult *res,
-                            ConnectContext *ctx)
+                            GTask *task)
 {
+    ConnectContext *ctx;
     GError *error = NULL;
     QmiMessageWdsGetCurrentSettingsOutput *output;
 
+    ctx = g_task_get_task_data (task);
     g_assert (ctx->running_ipv4 || ctx->running_ipv6);
 
     output = qmi_client_wds_get_current_settings_finish (client, res, &error);
@@ -724,15 +881,17 @@ get_current_settings_ready (QmiClientWds *client,
 
     /* Keep on */
     ctx->step++;
-    connect_context_step (ctx);
+    connect_context_step (task);
 }
 
 static void
-get_current_settings (ConnectContext *ctx, QmiClientWds *client)
+get_current_settings (GTask *task, QmiClientWds *client)
 {
+    ConnectContext *ctx;
     QmiMessageWdsGetCurrentSettingsInput *input;
     QmiWdsGetCurrentSettingsRequestedSettings requested;
 
+    ctx = g_task_get_task_data (task);
     g_assert (ctx->running_ipv4 || ctx->running_ipv6);
 
     requested = QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DNS_ADDRESS |
@@ -748,20 +907,22 @@ get_current_settings (ConnectContext *ctx, QmiClientWds *client)
     qmi_client_wds_get_current_settings (client,
                                          input,
                                          10,
-                                         ctx->cancellable,
+                                         g_task_get_cancellable (task),
                                          (GAsyncReadyCallback)get_current_settings_ready,
-                                         ctx);
+                                         task);
     qmi_message_wds_get_current_settings_input_unref (input);
 }
 
 static void
 set_ip_family_ready (QmiClientWds *client,
                      GAsyncResult *res,
-                     ConnectContext *ctx)
+                     GTask *task)
 {
+    ConnectContext *ctx;
     GError *error = NULL;
     QmiMessageWdsSetIpFamilyOutput *output;
 
+    ctx = g_task_get_task_data (task);
     g_assert (ctx->running_ipv4 || ctx->running_ipv6);
     g_assert (!(ctx->running_ipv4 && ctx->running_ipv6));
 
@@ -783,7 +944,7 @@ set_ip_family_ready (QmiClientWds *client,
 
     /* Keep on */
     ctx->step++;
-    connect_context_step (ctx);
+    connect_context_step (task);
 }
 
 static void
@@ -854,8 +1015,6 @@ common_setup_cleanup_packet_service_status_unsolicited_events (MMBearerQmi *self
     }
 }
 
-#if QMI_CHECK_VERSION (1,18,0)
-
 static void
 event_report_indication_cb (QmiClientWds *client,
                             QmiIndicationWdsEventReportOutput *output,
@@ -890,37 +1049,43 @@ connect_enable_indications_ready (QmiClientWds *client,
 static void
 connect_enable_indications_ipv4_ready (QmiClientWds *client,
                                        GAsyncResult *res,
-                                       ConnectContext *ctx)
+                                       GTask *task)
 {
+    ConnectContext *ctx;
+
+    ctx = g_task_get_task_data (task);
     g_assert (ctx->event_report_ipv4_indication_id == 0);
 
     ctx->event_report_ipv4_indication_id =
         connect_enable_indications_ready (client, res, ctx->self, &ctx->error_ipv4);
-    if (!ctx->event_report_ipv4_indication_id) {
-        ctx->step = CONNECT_STEP_LAST;
-        return;
-    }
 
-    ctx->step++;
-    connect_context_step (ctx);
+    if (!ctx->event_report_ipv4_indication_id)
+        ctx->step = CONNECT_STEP_LAST;
+    else
+        ctx->step++;
+
+    connect_context_step (task);
 }
 
 static void
 connect_enable_indications_ipv6_ready (QmiClientWds *client,
                                        GAsyncResult *res,
-                                       ConnectContext *ctx)
+                                       GTask *task)
 {
+    ConnectContext *ctx;
+
+    ctx = g_task_get_task_data (task);
     g_assert (ctx->event_report_ipv6_indication_id == 0);
 
     ctx->event_report_ipv6_indication_id =
         connect_enable_indications_ready (client, res, ctx->self, &ctx->error_ipv6);
-    if (!ctx->event_report_ipv6_indication_id) {
-        ctx->step = CONNECT_STEP_LAST;
-        return;
-    }
 
-    ctx->step++;
-    connect_context_step (ctx);
+    if (!ctx->event_report_ipv6_indication_id)
+        ctx->step = CONNECT_STEP_LAST;
+    else
+        ctx->step++;
+
+    connect_context_step (task);
 }
 
 static QmiMessageWdsSetEventReportInput *
@@ -984,21 +1149,21 @@ cleanup_event_report_unsolicited_events (MMBearerQmi *self,
     qmi_message_wds_set_event_report_input_unref (input);
 }
 
-#endif /* QMI_CHECK_VERSION (1,18,0) */
-
 static void
 qmi_port_allocate_client_ready (MMPortQmi *qmi,
                                 GAsyncResult *res,
-                                ConnectContext *ctx)
+                                GTask *task)
 {
+    ConnectContext *ctx;
     GError *error = NULL;
 
+    ctx = g_task_get_task_data (task);
     g_assert (ctx->running_ipv4 || ctx->running_ipv6);
     g_assert (!(ctx->running_ipv4 && ctx->running_ipv6));
 
     if (!mm_port_qmi_allocate_client_finish (qmi, res, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        connect_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -1013,39 +1178,43 @@ qmi_port_allocate_client_ready (MMPortQmi *qmi,
 
     /* Keep on */
     ctx->step++;
-    connect_context_step (ctx);
+    connect_context_step (task);
 }
 
 static void
 qmi_port_open_ready (MMPortQmi *qmi,
                      GAsyncResult *res,
-                     ConnectContext *ctx)
+                     GTask *task)
 {
+    ConnectContext *ctx;
     GError *error = NULL;
 
     if (!mm_port_qmi_open_finish (qmi, res, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        connect_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Keep on */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    connect_context_step (ctx);
+    connect_context_step (task);
 }
 
 static void
-connect_context_step (ConnectContext *ctx)
+connect_context_step (GTask *task)
 {
+    ConnectContext *ctx;
+    GCancellable *cancellable;
+
     /* If cancelled, complete */
-    if (g_cancellable_is_cancelled (ctx->cancellable)) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_CANCELLED,
-                                         "Connection setup operation has been cancelled");
-        connect_context_complete_and_free (ctx);
+    if (g_task_return_error_if_cancelled (task)) {
+        g_object_unref (task);
         return;
     }
+
+    ctx = g_task_get_task_data (task);
+    cancellable = g_task_get_cancellable (task);
 
     switch (ctx->step) {
     case CONNECT_STEP_FIRST:
@@ -1059,9 +1228,9 @@ connect_context_step (ConnectContext *ctx)
         if (!mm_port_qmi_is_open (ctx->qmi)) {
             mm_port_qmi_open (ctx->qmi,
                               TRUE,
-                              ctx->cancellable,
+                              cancellable,
                               (GAsyncReadyCallback)qmi_port_open_ready,
-                              ctx);
+                              task);
             return;
         }
 
@@ -1087,7 +1256,7 @@ connect_context_step (ConnectContext *ctx)
         /* If no IPv4 setup needed, jump to IPv6 */
         if (!ctx->ipv4) {
             ctx->step = CONNECT_STEP_IPV6;
-            connect_context_step (ctx);
+            connect_context_step (task);
             return;
         }
 
@@ -1109,9 +1278,9 @@ connect_context_step (ConnectContext *ctx)
             mm_port_qmi_allocate_client (ctx->qmi,
                                          QMI_SERVICE_WDS,
                                          MM_PORT_QMI_FLAG_WDS_IPV4,
-                                         ctx->cancellable,
+                                         cancellable,
                                          (GAsyncReadyCallback)qmi_port_allocate_client_ready,
-                                         ctx);
+                                         task);
             return;
         }
 
@@ -1132,9 +1301,9 @@ connect_context_step (ConnectContext *ctx)
             qmi_client_wds_set_ip_family (ctx->client_ipv4,
                                           input,
                                           10,
-                                          ctx->cancellable,
+                                          cancellable,
                                           (GAsyncReadyCallback)set_ip_family_ready,
-                                          ctx);
+                                          task);
             qmi_message_wds_set_ip_family_input_unref (input);
             return;
         }
@@ -1149,14 +1318,11 @@ connect_context_step (ConnectContext *ctx)
                                                                        ctx->client_ipv4,
                                                                        TRUE,
                                                                        &ctx->packet_service_status_ipv4_indication_id);
-
-#if QMI_CHECK_VERSION (1,18,0)
         setup_event_report_unsolicited_events (ctx->self,
                                                ctx->client_ipv4,
-                                               ctx->cancellable,
+                                               cancellable,
                                                (GAsyncReadyCallback) connect_enable_indications_ipv4_ready,
-                                               ctx);
-#endif
+                                               task);
         return;
 
     case CONNECT_STEP_START_NETWORK_IPV4: {
@@ -1167,9 +1333,9 @@ connect_context_step (ConnectContext *ctx)
         qmi_client_wds_start_network (ctx->client_ipv4,
                                       input,
                                       45,
-                                      ctx->cancellable,
+                                      cancellable,
                                       (GAsyncReadyCallback)start_network_ready,
-                                      ctx);
+                                      task);
         qmi_message_wds_start_network_input_unref (input);
         return;
     }
@@ -1178,7 +1344,7 @@ connect_context_step (ConnectContext *ctx)
         /* Retrieve and print IP configuration */
         if (ctx->packet_data_handle_ipv4) {
             mm_dbg ("Getting IPv4 configuration...");
-            get_current_settings (ctx, ctx->client_ipv4);
+            get_current_settings (task, ctx->client_ipv4);
             return;
         }
         /* Fall through */
@@ -1189,7 +1355,7 @@ connect_context_step (ConnectContext *ctx)
         /* If no IPv6 setup needed, jump to last */
         if (!ctx->ipv6) {
             ctx->step = CONNECT_STEP_LAST;
-            connect_context_step (ctx);
+            connect_context_step (task);
             return;
         }
 
@@ -1211,9 +1377,9 @@ connect_context_step (ConnectContext *ctx)
             mm_port_qmi_allocate_client (ctx->qmi,
                                          QMI_SERVICE_WDS,
                                          MM_PORT_QMI_FLAG_WDS_IPV6,
-                                         ctx->cancellable,
+                                         cancellable,
                                          (GAsyncReadyCallback)qmi_port_allocate_client_ready,
-                                         ctx);
+                                         task);
             return;
         }
 
@@ -1236,9 +1402,9 @@ connect_context_step (ConnectContext *ctx)
             qmi_client_wds_set_ip_family (ctx->client_ipv6,
                                           input,
                                           10,
-                                          ctx->cancellable,
+                                          cancellable,
                                           (GAsyncReadyCallback)set_ip_family_ready,
-                                          ctx);
+                                          task);
             qmi_message_wds_set_ip_family_input_unref (input);
             return;
         }
@@ -1253,13 +1419,11 @@ connect_context_step (ConnectContext *ctx)
                                                                        ctx->client_ipv6,
                                                                        TRUE,
                                                                        &ctx->packet_service_status_ipv6_indication_id);
-#if QMI_CHECK_VERSION (1,18,0)
         setup_event_report_unsolicited_events (ctx->self,
                                                ctx->client_ipv6,
-                                               ctx->cancellable,
+                                               cancellable,
                                                (GAsyncReadyCallback) connect_enable_indications_ipv6_ready,
-                                               ctx);
-#endif
+                                               task);
         return;
 
     case CONNECT_STEP_START_NETWORK_IPV6: {
@@ -1270,9 +1434,9 @@ connect_context_step (ConnectContext *ctx)
         qmi_client_wds_start_network (ctx->client_ipv6,
                                       input,
                                       45,
-                                      ctx->cancellable,
+                                      cancellable,
                                       (GAsyncReadyCallback)start_network_ready,
-                                      ctx);
+                                      task);
         qmi_message_wds_start_network_input_unref (input);
         return;
     }
@@ -1281,7 +1445,7 @@ connect_context_step (ConnectContext *ctx)
         /* Retrieve and print IP configuration */
         if (ctx->packet_data_handle_ipv6) {
             mm_dbg ("Getting IPv6 configuration...");
-            get_current_settings (ctx, ctx->client_ipv6);
+            get_current_settings (task, ctx->client_ipv6);
             return;
         }
         /* Fall through */
@@ -1321,8 +1485,8 @@ connect_context_step (ConnectContext *ctx)
             }
 
             /* Set operation result */
-            g_simple_async_result_set_op_res_gpointer (
-                ctx->result,
+            g_task_return_pointer (
+                task,
                 mm_bearer_connect_result_new (ctx->data, ctx->ipv4_config, ctx->ipv6_config),
                 (GDestroyNotify)mm_bearer_connect_result_unref);
         } else {
@@ -1337,10 +1501,10 @@ connect_context_step (ConnectContext *ctx)
                 ctx->error_ipv6 = NULL;
             }
 
-            g_simple_async_result_take_error (ctx->result, error);
+            g_task_return_error (task, error);
         }
 
-        connect_context_complete_and_free (ctx);
+        g_object_unref (task);
         return;
     }
 }
@@ -1358,6 +1522,7 @@ _connect (MMBaseBearer *self,
     MMPortQmi *qmi;
     GError *error = NULL;
     const gchar *apn;
+    GTask *task;
 
     g_object_get (self,
                   MM_BASE_BEARER_MODEM, &modem,
@@ -1367,10 +1532,11 @@ _connect (MMBaseBearer *self,
     /* Grab a data port */
     data = mm_base_modem_get_best_data_port (modem, MM_PORT_TYPE_NET);
     if (!data) {
-        g_simple_async_report_error_in_idle (
-            G_OBJECT (self),
+        g_task_report_new_error (
+            self,
             callback,
             user_data,
+            _connect,
             MM_CORE_ERROR,
             MM_CORE_ERROR_NOT_FOUND,
             "No valid data port found to launch connection");
@@ -1381,10 +1547,11 @@ _connect (MMBaseBearer *self,
     /* Each data port has a single QMI port associated */
     qmi = mm_base_modem_get_port_qmi_for_data (modem, data, &error);
     if (!qmi) {
-        g_simple_async_report_take_gerror_in_idle (
-            G_OBJECT (self),
+        g_task_report_error (
+            self,
             callback,
             user_data,
+            _connect,
             error);
         g_object_unref (data);
         g_object_unref (modem);
@@ -1396,10 +1563,11 @@ _connect (MMBaseBearer *self,
 
     /* Is this a 3GPP only modem and no APN was given? If so, error */
     if (mm_iface_modem_is_3gpp_only (MM_IFACE_MODEM (modem)) && !apn) {
-        g_simple_async_report_error_in_idle (
-            G_OBJECT (self),
+        g_task_report_new_error (
+            self,
             callback,
             user_data,
+            _connect,
             MM_CORE_ERROR,
             MM_CORE_ERROR_INVALID_ARGS,
             "3GPP connection logic requires APN setting");
@@ -1409,10 +1577,11 @@ _connect (MMBaseBearer *self,
 
     /* Is this a 3GPP2 only modem and APN was given? If so, error */
     if (mm_iface_modem_is_cdma_only (MM_IFACE_MODEM (modem)) && apn) {
-        g_simple_async_report_error_in_idle (
-            G_OBJECT (self),
+        g_task_report_new_error (
+            self,
             callback,
             user_data,
+            _connect,
             MM_CORE_ERROR,
             MM_CORE_ERROR_INVALID_ARGS,
             "3GPP2 doesn't support APN setting");
@@ -1432,17 +1601,15 @@ _connect (MMBaseBearer *self,
     ctx->self = g_object_ref (self);
     ctx->qmi = qmi;
     ctx->data = data;
-    ctx->cancellable = g_object_ref (cancellable);
     ctx->step = CONNECT_STEP_FIRST;
     ctx->ip_method = MM_BEARER_IP_METHOD_UNKNOWN;
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             connect);
 
     g_object_get (self,
                   MM_BASE_BEARER_CONFIG, &properties,
                   NULL);
+
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)connect_context_free);
 
     if (properties) {
         MMBearerAllowedAuth auth;
@@ -1478,14 +1645,14 @@ _connect (MMBaseBearer *self,
             gchar *str;
 
             str = mm_bearer_ip_family_build_string_from_mask (ip_family);
-            g_simple_async_result_set_error (
-                ctx->result,
+            g_task_return_new_error (
+                task,
                 MM_CORE_ERROR,
                 MM_CORE_ERROR_UNSUPPORTED,
                 "Unsupported IP type requested: '%s'",
                 str);
+            g_object_unref (task);
             g_free (str);
-            connect_context_complete_and_free (ctx);
             return;
         }
 
@@ -1504,20 +1671,20 @@ _connect (MMBaseBearer *self,
             gchar *str;
 
             str = mm_bearer_allowed_auth_build_string_from_mask (auth);
-            g_simple_async_result_set_error (
-                ctx->result,
+            g_task_return_new_error (
+                task,
                 MM_CORE_ERROR,
                 MM_CORE_ERROR_UNSUPPORTED,
                 "Cannot use any of the specified authentication methods (%s)",
                 str);
+            g_object_unref (task);
             g_free (str);
-            connect_context_complete_and_free (ctx);
             return;
         }
     }
 
     /* Run! */
-    connect_context_step (ctx);
+    connect_context_step (task);
 }
 
 /*****************************************************************************/
@@ -1531,8 +1698,6 @@ typedef enum {
 } DisconnectStep;
 
 typedef struct {
-    MMBearerQmi *self;
-    GSimpleAsyncResult *result;
     MMPort *data;
     DisconnectStep step;
 
@@ -1548,10 +1713,8 @@ typedef struct {
 } DisconnectContext;
 
 static void
-disconnect_context_complete_and_free (DisconnectContext *ctx)
+disconnect_context_free (DisconnectContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
     if (ctx->error_ipv4)
         g_error_free (ctx->error_ipv4);
     if (ctx->error_ipv6)
@@ -1561,7 +1724,6 @@ disconnect_context_complete_and_free (DisconnectContext *ctx)
     if (ctx->client_ipv6)
         g_object_unref (ctx->client_ipv6);
     g_object_unref (ctx->data);
-    g_object_unref (ctx->self);
     g_slice_free (DisconnectContext, ctx);
 }
 
@@ -1570,7 +1732,7 @@ disconnect_finish (MMBaseBearer *self,
                    GAsyncResult *res,
                    GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
@@ -1579,11 +1741,33 @@ reset_bearer_connection (MMBearerQmi *self,
                          gboolean reset_ipv6)
 {
     if (reset_ipv4) {
+        if (self->priv->client_ipv4) {
+            if (self->priv->packet_service_status_ipv4_indication_id)
+                common_setup_cleanup_packet_service_status_unsolicited_events (self,
+                                                                               self->priv->client_ipv4,
+                                                                               FALSE,
+                                                                               &self->priv->packet_service_status_ipv4_indication_id);
+            if (self->priv->event_report_ipv4_indication_id)
+                cleanup_event_report_unsolicited_events (self,
+                                                         self->priv->client_ipv4,
+                                                         &self->priv->event_report_ipv4_indication_id);
+        }
         self->priv->packet_data_handle_ipv4 = 0;
         g_clear_object (&self->priv->client_ipv4);
     }
 
     if (reset_ipv6) {
+        if (self->priv->client_ipv6) {
+            if (self->priv->packet_service_status_ipv6_indication_id)
+                common_setup_cleanup_packet_service_status_unsolicited_events (self,
+                                                                               self->priv->client_ipv6,
+                                                                               FALSE,
+                                                                               &self->priv->packet_service_status_ipv6_indication_id);
+            if (self->priv->event_report_ipv6_indication_id)
+                cleanup_event_report_unsolicited_events (self,
+                                                         self->priv->client_ipv6,
+                                                         &self->priv->event_report_ipv6_indication_id);
+        }
         self->priv->packet_data_handle_ipv6 = 0;
         g_clear_object (&self->priv->client_ipv6);
     }
@@ -1598,15 +1782,20 @@ reset_bearer_connection (MMBearerQmi *self,
     }
 }
 
-static void disconnect_context_step (DisconnectContext *ctx);
+static void disconnect_context_step (GTask *task);
 
 static void
 stop_network_ready (QmiClientWds *client,
                     GAsyncResult *res,
-                    DisconnectContext *ctx)
+                    GTask *task)
 {
+    MMBearerQmi *self;
+    DisconnectContext *ctx;
     GError *error = NULL;
     QmiMessageWdsStopNetworkOutput *output;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     output = qmi_client_wds_stop_network_finish (client, res, &error);
     if (output &&
@@ -1627,7 +1816,7 @@ stop_network_ready (QmiClientWds *client,
             ctx->error_ipv6 = error;
     } else {
         /* Clear internal status */
-        reset_bearer_connection (ctx->self,
+        reset_bearer_connection (self,
                                  ctx->running_ipv4,
                                  ctx->running_ipv6);
     }
@@ -1637,12 +1826,18 @@ stop_network_ready (QmiClientWds *client,
 
     /* Keep on */
     ctx->step++;
-    disconnect_context_step (ctx);
+    disconnect_context_step (task);
 }
 
 static void
-disconnect_context_step (DisconnectContext *ctx)
+disconnect_context_step (GTask *task)
 {
+    MMBearerQmi *self;
+    DisconnectContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     switch (ctx->step) {
     case DISCONNECT_STEP_FIRST:
         /* Fall down */
@@ -1652,16 +1847,13 @@ disconnect_context_step (DisconnectContext *ctx)
         if (ctx->packet_data_handle_ipv4) {
             QmiMessageWdsStopNetworkInput *input;
 
-            common_setup_cleanup_packet_service_status_unsolicited_events (ctx->self,
+            common_setup_cleanup_packet_service_status_unsolicited_events (self,
                                                                            ctx->client_ipv4,
                                                                            FALSE,
-                                                                           &ctx->self->priv->packet_service_status_ipv4_indication_id);
-
-#if QMI_CHECK_VERSION (1,18,0)
-            cleanup_event_report_unsolicited_events (ctx->self,
+                                                                           &self->priv->packet_service_status_ipv4_indication_id);
+            cleanup_event_report_unsolicited_events (self,
                                                      ctx->client_ipv4,
-                                                     &ctx->self->priv->event_report_ipv4_indication_id);
-#endif
+                                                     &self->priv->event_report_ipv4_indication_id);
 
             input = qmi_message_wds_stop_network_input_new ();
             qmi_message_wds_stop_network_input_set_packet_data_handle (input, ctx->packet_data_handle_ipv4, NULL);
@@ -1673,7 +1865,7 @@ disconnect_context_step (DisconnectContext *ctx)
                                          30,
                                          NULL,
                                          (GAsyncReadyCallback)stop_network_ready,
-                                         ctx);
+                                         task);
             return;
         }
 
@@ -1684,16 +1876,13 @@ disconnect_context_step (DisconnectContext *ctx)
         if (ctx->packet_data_handle_ipv6) {
             QmiMessageWdsStopNetworkInput *input;
 
-            common_setup_cleanup_packet_service_status_unsolicited_events (ctx->self,
+            common_setup_cleanup_packet_service_status_unsolicited_events (self,
                                                                            ctx->client_ipv6,
                                                                            FALSE,
-                                                                           &ctx->self->priv->packet_service_status_ipv6_indication_id);
-
-#if QMI_CHECK_VERSION (1,18,0)
-            cleanup_event_report_unsolicited_events (ctx->self,
+                                                                           &self->priv->packet_service_status_ipv6_indication_id);
+            cleanup_event_report_unsolicited_events (self,
                                                      ctx->client_ipv6,
-                                                     &ctx->self->priv->event_report_ipv6_indication_id);
-#endif
+                                                     &self->priv->event_report_ipv6_indication_id);
 
             input = qmi_message_wds_stop_network_input_new ();
             qmi_message_wds_stop_network_input_set_packet_data_handle (input, ctx->packet_data_handle_ipv6, NULL);
@@ -1705,7 +1894,7 @@ disconnect_context_step (DisconnectContext *ctx)
                                          30,
                                          NULL,
                                          (GAsyncReadyCallback)stop_network_ready,
-                                         ctx);
+                                         task);
             return;
         }
 
@@ -1714,7 +1903,7 @@ disconnect_context_step (DisconnectContext *ctx)
 
     case DISCONNECT_STEP_LAST:
         if (!ctx->error_ipv4 && !ctx->error_ipv6)
-            g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+            g_task_return_boolean (task, TRUE);
         else {
             GError *error;
 
@@ -1727,10 +1916,10 @@ disconnect_context_step (DisconnectContext *ctx)
                 ctx->error_ipv6 = NULL;
             }
 
-            g_simple_async_result_take_error (ctx->result, error);
+            g_task_return_error (task, error);
         }
 
-        disconnect_context_complete_and_free (ctx);
+        g_object_unref (task);
         return;
     }
 }
@@ -1742,14 +1931,16 @@ disconnect (MMBaseBearer *_self,
 {
     MMBearerQmi *self = MM_BEARER_QMI (_self);
     DisconnectContext *ctx;
+    GTask *task;
 
     if ((!self->priv->packet_data_handle_ipv4 && !self->priv->packet_data_handle_ipv6) ||
         (!self->priv->client_ipv4 && !self->priv->client_ipv6) ||
         !self->priv->data) {
-        g_simple_async_report_error_in_idle (
-            G_OBJECT (self),
+        g_task_report_new_error (
+            self,
             callback,
             user_data,
+            disconnect,
             MM_CORE_ERROR,
             MM_CORE_ERROR_FAILED,
             "Couldn't disconnect QMI bearer: this bearer is not connected");
@@ -1757,20 +1948,18 @@ disconnect (MMBaseBearer *_self,
     }
 
     ctx = g_slice_new0 (DisconnectContext);
-    ctx->self = g_object_ref (self);
     ctx->data = g_object_ref (self->priv->data);
     ctx->client_ipv4 = self->priv->client_ipv4 ? g_object_ref (self->priv->client_ipv4) : NULL;
     ctx->packet_data_handle_ipv4 = self->priv->packet_data_handle_ipv4;
     ctx->client_ipv6 = self->priv->client_ipv6 ? g_object_ref (self->priv->client_ipv6) : NULL;
     ctx->packet_data_handle_ipv6 = self->priv->packet_data_handle_ipv6;
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             disconnect);
     ctx->step = DISCONNECT_STEP_FIRST;
 
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)disconnect_context_free);
+
     /* Run! */
-    disconnect_context_step (ctx);
+    disconnect_context_step (task);
 }
 
 /*****************************************************************************/
@@ -1829,26 +2018,22 @@ dispose (GObject *object)
                                                                        FALSE,
                                                                        &self->priv->packet_service_status_ipv4_indication_id);
     }
-#if QMI_CHECK_VERSION (1,18,0)
     if (self->priv->event_report_ipv4_indication_id) {
         cleanup_event_report_unsolicited_events (self,
                                                  self->priv->client_ipv4,
                                                  &self->priv->event_report_ipv4_indication_id);
     }
-#endif
     if (self->priv->packet_service_status_ipv6_indication_id) {
         common_setup_cleanup_packet_service_status_unsolicited_events (self,
                                                                        self->priv->client_ipv6,
                                                                        FALSE,
                                                                        &self->priv->packet_service_status_ipv6_indication_id);
     }
-#if QMI_CHECK_VERSION (1,18,0)
     if (self->priv->event_report_ipv6_indication_id) {
         cleanup_event_report_unsolicited_events (self,
                                                  self->priv->client_ipv6,
                                                  &self->priv->event_report_ipv6_indication_id);
     }
-#endif
 
     g_clear_object (&self->priv->data);
     g_clear_object (&self->priv->client_ipv4);
@@ -1875,4 +2060,6 @@ mm_bearer_qmi_class_init (MMBearerQmiClass *klass)
     base_bearer_class->report_connection_status = report_connection_status;
     base_bearer_class->reload_stats = reload_stats;
     base_bearer_class->reload_stats_finish = reload_stats_finish;
+    base_bearer_class->load_connection_status = load_connection_status;
+    base_bearer_class->load_connection_status_finish = load_connection_status_finish;
 }

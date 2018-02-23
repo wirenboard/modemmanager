@@ -32,10 +32,12 @@
 #define MM_IS_IFACE_MODEM(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), MM_TYPE_IFACE_MODEM))
 #define MM_IFACE_MODEM_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), MM_TYPE_IFACE_MODEM, MMIfaceModem))
 
-#define MM_IFACE_MODEM_DBUS_SKELETON "iface-modem-dbus-skeleton"
-#define MM_IFACE_MODEM_STATE         "iface-modem-state"
-#define MM_IFACE_MODEM_SIM           "iface-modem-sim"
-#define MM_IFACE_MODEM_BEARER_LIST   "iface-modem-bearer-list"
+#define MM_IFACE_MODEM_DBUS_SKELETON           "iface-modem-dbus-skeleton"
+#define MM_IFACE_MODEM_STATE                   "iface-modem-state"
+#define MM_IFACE_MODEM_SIM                     "iface-modem-sim"
+#define MM_IFACE_MODEM_BEARER_LIST             "iface-modem-bearer-list"
+#define MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED  "iface-modem-sim-hot-swap-supported"
+#define MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED "iface-modem-sim-hot-swap-configured"
 
 typedef struct _MMIfaceModem MMIfaceModem;
 
@@ -81,6 +83,14 @@ struct _MMIfaceModem {
     gchar * (*load_revision_finish) (MMIfaceModem *self,
                                      GAsyncResult *res,
                                      GError **error);
+
+    /* Loading of the HardwareRevision property */
+    void (*load_hardware_revision) (MMIfaceModem *self,
+                                    GAsyncReadyCallback callback,
+                                    gpointer user_data);
+    gchar * (*load_hardware_revision_finish) (MMIfaceModem *self,
+                                              GAsyncResult *res,
+                                              GError **error);
 
     /* Loading of the EquipmentIdentifier property */
     void (*load_equipment_identifier) (MMIfaceModem *self,
@@ -271,6 +281,16 @@ struct _MMIfaceModem {
                                              GAsyncResult *res,
                                              GError **error);
 
+    /* Asynchronous check to see if the SIM was swapped.
+     * Useful for when the modem changes power states since we might
+     * not get the relevant notifications from the modem. */
+    void (*check_for_sim_swap) (MMIfaceModem *self,
+                                GAsyncReadyCallback callback,
+                                gpointer user_data);
+    gboolean (*check_for_sim_swap_finish) (MMIfaceModem *self,
+                                           GAsyncResult *res,
+                                           GError **error);
+
     /* Asynchronous flow control setup */
     void (*setup_flow_control) (MMIfaceModem *self,
                                 GAsyncReadyCallback callback,
@@ -325,6 +345,14 @@ struct _MMIfaceModem {
                            GAsyncReadyCallback callback,
                            gpointer user_data);
     MMBaseBearer * (*create_bearer_finish) (MMIfaceModem *self,
+                                            GAsyncResult *res,
+                                            GError **error);
+    /* Setup SIM hot swap */
+    void (*setup_sim_hot_swap) (MMIfaceModem *self,
+                                GAsyncReadyCallback callback,
+                                gpointer user_data);
+
+    gboolean (*setup_sim_hot_swap_finish) (MMIfaceModem *self,
                                             GAsyncResult *res,
                                             GError **error);
 };
@@ -404,6 +432,11 @@ MMModemLock mm_iface_modem_update_lock_info_finish (MMIfaceModem *self,
                                                     GAsyncResult *res,
                                                     GError **error);
 
+MMUnlockRetries *mm_iface_modem_get_unlock_retries (MMIfaceModem *self);
+
+void mm_iface_modem_update_unlock_retries (MMIfaceModem *self,
+                                           MMUnlockRetries *unlock_retries);
+
 /* Request signal quality check update.
  * It will not only return the signal quality status, but also set the property
  * values in the DBus interface. */
@@ -435,12 +468,12 @@ void mm_iface_modem_update_access_technologies (MMIfaceModem *self,
                                                 MMModemAccessTechnology access_tech,
                                                 guint32 mask);
 
-/* Allow requesting to refresh access tech */
-void mm_iface_modem_refresh_access_technologies (MMIfaceModem *self);
-
 /* Allow updating signal quality */
 void mm_iface_modem_update_signal_quality (MMIfaceModem *self,
                                            guint signal_quality);
+
+/* Allow requesting to refresh signal via polling */
+void mm_iface_modem_refresh_signal (MMIfaceModem *self);
 
 /* Allow setting allowed modes */
 void     mm_iface_modem_set_current_modes        (MMIfaceModem *self,

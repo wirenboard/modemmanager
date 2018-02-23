@@ -3,12 +3,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>org.freedesktop.ModemManager1: ModemManager Reference Manual</title>
-<meta name="generator" content="DocBook XSL Stylesheets V1.79.1">
+<meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
 <link rel="home" href="index.html" title="ModemManager Reference Manual">
 <link rel="up" href="ref-dbus-object-manager.html" title="The /org/freedesktop/ModemManager1 object">
 <link rel="prev" href="ref-dbus-object-manager.html" title="The /org/freedesktop/ModemManager1 object">
 <link rel="next" href="ref-dbus-object-modem.html" title="The /org/freedesktop/ModemManager/Modems objects">
-<meta name="generator" content="GTK-Doc V1.25.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -34,8 +34,9 @@
 <div class="refsynopsisdiv">
 <h2>Methods</h2>
 <pre class="synopsis">
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.ScanDevices" title="The ScanDevices() method">ScanDevices</a> ();
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.SetLogging" title="The SetLogging() method">SetLogging</a>  (IN  s level);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.ScanDevices" title="The ScanDevices() method">ScanDevices</a>       ();
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.SetLogging" title="The SetLogging() method">SetLogging</a>        (IN  s     level);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.ReportKernelEvent" title="The ReportKernelEvent() method">ReportKernelEvent</a> (IN  a{sv} properties);
 </pre>
 </div>
 <div class="refsect1">
@@ -73,9 +74,101 @@ SetLogging (IN  s level);
 </tr></tbody>
 </table></div>
 </div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-method-org-freedesktop-ModemManager1.ReportKernelEvent"></a><h3>The ReportKernelEvent() method</h3>
+<pre class="programlisting">
+ReportKernelEvent (IN  a{sv} properties);
+</pre>
+<p>        Reports a kernel event to ModemManager.
+</p>
+<p>        This method is only available if udev is not being used to report kernel
+        events.
+</p>
+<p>        The <em class="parameter"><code>properties</code></em> dictionary is composed of key/value string pairs. The
+        possible keys are:
+</p>
+<p>        </p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><code class="literal">action</code></span></p></td>
+<td>
+<p>
+                The type of action, given as a string value (signature
+                <code class="literal">"s"</code>).
+                This parameter is MANDATORY.
+              </p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><code class="literal">add</code></span></p></td>
+<td>
+                    A new kernel device has been added.
+                  </td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">remove</code></span></p></td>
+<td>
+                    An existing kernel device has been removed.
+                  </td>
+</tr>
+</tbody>
+</table></div>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">name</code></span></p></td>
+<td><p>
+                The device name, given as a string value (signature
+                <code class="literal">"s"</code>).
+                This parameter is MANDATORY.
+              </p></td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">subsystem</code></span></p></td>
+<td><p>
+                The device subsystem, given as a string value (signature
+                <code class="literal">"s"</code>).
+                This parameter is MANDATORY.
+              </p></td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">uid</code></span></p></td>
+<td><p>
+                The unique ID of the physical device, given as a string value
+                (signature <code class="literal">"s"</code>).
+                This parameter is OPTIONAL, if not given the sysfs path of the
+                physical device will be used. This parameter must be the same
+                for all devices exposed by the same physical device.
+              </p></td>
+</tr>
+</tbody>
+</table></div>
+<p>
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><code class="literal">IN a{sv} <em class="parameter"><code>properties</code></em></code>:</span></p></td>
+<td><p>event properties.</p></td>
+</tr></tbody>
+</table></div>
+</div>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.25.1</div>
+<hr>Generated by GTK-Doc V1.27</div>
 </body>
 </html>

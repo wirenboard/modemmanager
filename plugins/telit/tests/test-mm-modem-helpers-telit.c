@@ -25,72 +25,6 @@
 #include "mm-modem-helpers.h"
 #include "mm-modem-helpers-telit.h"
 
-typedef struct {
-    gchar *response;
-    gint result;
-} CSIMResponseTest;
-
-static CSIMResponseTest valid_csim_response_test_list [] = {
-    /* The parser expects that 2nd arg contains
-     * substring "63Cx" where x is an HEX string
-     * representing the retry value */
-    {"+CSIM:8,\"xxxx63C1\"", 1},
-    {"+CSIM:8,\"xxxx63CA\"", 10},
-    {"+CSIM:8,\"xxxx63CF\"", 15},
-    /* The parser accepts spaces */
-    {"+CSIM:8,\"xxxx63C1\"", 1},
-    {"+CSIM:8, \"xxxx63C1\"", 1},
-    {"+CSIM: 8, \"xxxx63C1\"", 1},
-    {"+CSIM:  8, \"xxxx63C1\"", 1},
-    /* the parser expects an int as first argument (2nd arg's length),
-     * but does not check if it is correct */
-    {"+CSIM: 10, \"63CF\"", 15},
-    /* the parser expect a quotation mark at the end
-     * of the response, but not at the begin */
-    {"+CSIM: 10, 63CF\"", 15},
-    { NULL, -1}
-};
-
-static CSIMResponseTest invalid_csim_response_test_list [] = {
-    /* Test missing final quotation mark */
-    {"+CSIM: 8, xxxx63CF", -1},
-    /* Negative test for substring "63Cx" */
-    {"+CSIM: 4, xxxx73CF\"", -1},
-    /* Test missing first argument */
-    {"+CSIM:xxxx63CF\"", -1},
-    { NULL, -1}
-};
-
-static void
-test_mm_telit_parse_csim_response (void)
-{
-    const gint step = 1;
-    guint i;
-    gint res;
-    GError* error = NULL;
-
-    /* Test valid responses */
-    for (i = 0; valid_csim_response_test_list[i].response != NULL; i++) {
-        res = mm_telit_parse_csim_response (step, valid_csim_response_test_list[i].response, &error);
-
-        g_assert_no_error (error);
-        g_assert_cmpint (res, ==, valid_csim_response_test_list[i].result);
-    }
-
-    /* Test invalid responses */
-    for (i = 0; invalid_csim_response_test_list[i].response != NULL; i++) {
-        res = mm_telit_parse_csim_response (step, invalid_csim_response_test_list[i].response, &error);
-
-        g_assert_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED);
-        g_assert_cmpint (res, ==, invalid_csim_response_test_list[i].result);
-
-        if (NULL != error) {
-            g_error_free (error);
-            error = NULL;
-        }
-    }
-}
-
 static void
 test_mm_bands_contains (void) {
     GArray* mm_bands;
@@ -168,44 +102,44 @@ static BNDResponseTest supported_band_mapping_tests [] = {
                                                       MM_MODEM_BAND_DCS,
                                                       MM_MODEM_BAND_PCS,
                                                       MM_MODEM_BAND_G850,
-                                                      MM_MODEM_BAND_U2100,
-                                                      MM_MODEM_BAND_U850,
-                                                      MM_MODEM_BAND_U900} },
+                                                      MM_MODEM_BAND_UTRAN_1,
+                                                      MM_MODEM_BAND_UTRAN_5,
+                                                      MM_MODEM_BAND_UTRAN_8 } },
     { "#BND: (0,3),(0,2,5,6)", TRUE, TRUE, FALSE, 7, { MM_MODEM_BAND_EGSM,
                                                        MM_MODEM_BAND_DCS,
                                                        MM_MODEM_BAND_PCS,
                                                        MM_MODEM_BAND_G850,
-                                                       MM_MODEM_BAND_U2100,
-                                                       MM_MODEM_BAND_U850,
-                                                       MM_MODEM_BAND_U900} },
+                                                       MM_MODEM_BAND_UTRAN_1,
+                                                       MM_MODEM_BAND_UTRAN_5,
+                                                       MM_MODEM_BAND_UTRAN_8} },
     { "#BND: (0,2),(0,2,5,6)", TRUE, TRUE, FALSE, 6, { MM_MODEM_BAND_EGSM,
                                                        MM_MODEM_BAND_DCS,
                                                        MM_MODEM_BAND_G850,
-                                                       MM_MODEM_BAND_U2100,
-                                                       MM_MODEM_BAND_U850,
-                                                       MM_MODEM_BAND_U900} },
+                                                       MM_MODEM_BAND_UTRAN_1,
+                                                       MM_MODEM_BAND_UTRAN_5,
+                                                       MM_MODEM_BAND_UTRAN_8} },
     { "#BND: (0,2),(0-4,5,6)", TRUE, TRUE, FALSE, 7, { MM_MODEM_BAND_EGSM,
                                                        MM_MODEM_BAND_DCS,
                                                        MM_MODEM_BAND_G850,
-                                                       MM_MODEM_BAND_U2100,
-                                                       MM_MODEM_BAND_U1900,
-                                                       MM_MODEM_BAND_U850,
-                                                       MM_MODEM_BAND_U900} },
+                                                       MM_MODEM_BAND_UTRAN_1,
+                                                       MM_MODEM_BAND_UTRAN_2,
+                                                       MM_MODEM_BAND_UTRAN_5,
+                                                       MM_MODEM_BAND_UTRAN_8} },
     { "#BND: (0-3),(0,2,5,6),(1-1)", TRUE, TRUE, TRUE, 8, { MM_MODEM_BAND_EGSM,
                                                          MM_MODEM_BAND_DCS,
                                                          MM_MODEM_BAND_PCS,
                                                          MM_MODEM_BAND_G850,
-                                                         MM_MODEM_BAND_U2100,
-                                                         MM_MODEM_BAND_U850,
-                                                         MM_MODEM_BAND_U900,
-                                                         MM_MODEM_BAND_EUTRAN_I} },
+                                                         MM_MODEM_BAND_UTRAN_1,
+                                                         MM_MODEM_BAND_UTRAN_5,
+                                                         MM_MODEM_BAND_UTRAN_8,
+                                                         MM_MODEM_BAND_EUTRAN_1} },
     { "#BND: (0),(0),(1-3)", TRUE, TRUE, TRUE, 5, { MM_MODEM_BAND_EGSM,
                                                     MM_MODEM_BAND_DCS,
-                                                    MM_MODEM_BAND_U2100,
-                                                    MM_MODEM_BAND_EUTRAN_I,
-                                                    MM_MODEM_BAND_EUTRAN_II} },
-    { "#BND: (0),(0),(1-3)", FALSE, FALSE, TRUE, 2, { MM_MODEM_BAND_EUTRAN_I,
-                                                      MM_MODEM_BAND_EUTRAN_II} },
+                                                    MM_MODEM_BAND_UTRAN_1,
+                                                    MM_MODEM_BAND_EUTRAN_1,
+                                                    MM_MODEM_BAND_EUTRAN_2} },
+    { "#BND: (0),(0),(1-3)", FALSE, FALSE, TRUE, 2, { MM_MODEM_BAND_EUTRAN_1,
+                                                      MM_MODEM_BAND_EUTRAN_2} },
     { NULL, FALSE, FALSE, FALSE, 0, {}},
 };
 
@@ -239,7 +173,7 @@ test_parse_supported_bands_response (void) {
 
         g_assert_cmpint (bands->len, ==, supported_band_mapping_tests[i].mm_bands_len);
 
-        g_array_free (bands, FALSE);
+        g_array_free (bands, TRUE);
         bands = NULL;
     }
 }
@@ -252,35 +186,35 @@ static BNDResponseTest current_band_mapping_tests [] = {
     },
     { "#BND: 0,5", TRUE, TRUE, FALSE, 3, { MM_MODEM_BAND_EGSM,
                                            MM_MODEM_BAND_DCS,
-                                           MM_MODEM_BAND_U900
+                                           MM_MODEM_BAND_UTRAN_8
                                          }
     },
     { "#BND: 1,3", TRUE, TRUE, FALSE, 5, { MM_MODEM_BAND_EGSM,
                                            MM_MODEM_BAND_PCS,
-                                           MM_MODEM_BAND_U2100,
-                                           MM_MODEM_BAND_U1900,
-                                           MM_MODEM_BAND_U850,
+                                           MM_MODEM_BAND_UTRAN_1,
+                                           MM_MODEM_BAND_UTRAN_2,
+                                           MM_MODEM_BAND_UTRAN_5,
                                          }
     },
     { "#BND: 2,7", TRUE, TRUE, FALSE, 3, { MM_MODEM_BAND_DCS,
                                            MM_MODEM_BAND_G850,
-                                           MM_MODEM_BAND_U17IV
-                                         },
+                                           MM_MODEM_BAND_UTRAN_4
+                                         }
     },
     { "#BND: 3,0,1", TRUE, TRUE, TRUE, 4, { MM_MODEM_BAND_PCS,
                                             MM_MODEM_BAND_G850,
-                                            MM_MODEM_BAND_U2100,
-                                            MM_MODEM_BAND_EUTRAN_I
+                                            MM_MODEM_BAND_UTRAN_1,
+                                            MM_MODEM_BAND_EUTRAN_1
                                           }
     },
     { "#BND: 0,0,3", TRUE, FALSE, TRUE, 4, { MM_MODEM_BAND_EGSM,
-                                            MM_MODEM_BAND_DCS,
-                                            MM_MODEM_BAND_EUTRAN_I,
-                                            MM_MODEM_BAND_EUTRAN_II
-                                          }
+                                             MM_MODEM_BAND_DCS,
+                                             MM_MODEM_BAND_EUTRAN_1,
+                                             MM_MODEM_BAND_EUTRAN_2
+                                           }
     },
-    { "#BND: 0,0,3", FALSE, FALSE, TRUE, 2, { MM_MODEM_BAND_EUTRAN_I,
-                                              MM_MODEM_BAND_EUTRAN_II
+    { "#BND: 0,0,3", FALSE, FALSE, TRUE, 2, { MM_MODEM_BAND_EUTRAN_1,
+                                              MM_MODEM_BAND_EUTRAN_2
                                             }
     },
     { NULL, FALSE, FALSE, FALSE, 0, {}},
@@ -316,7 +250,7 @@ test_parse_current_bands_response (void) {
 
         g_assert_cmpint (bands->len, ==, current_band_mapping_tests[i].mm_bands_len);
 
-        g_array_free (bands, FALSE);
+        g_array_free (bands, TRUE);
         bands = NULL;
     }
 }
@@ -382,12 +316,12 @@ static void
 test_telit_get_3g_bnd_flag (void)
 {
     GArray *bands_array;
-    MMModemBand u2100 = MM_MODEM_BAND_U2100;
-    MMModemBand u1900 = MM_MODEM_BAND_U1900;
-    MMModemBand u850 = MM_MODEM_BAND_U850;
-    MMModemBand u900 = MM_MODEM_BAND_U900;
-    MMModemBand u17iv = MM_MODEM_BAND_U17IV;
-    MMModemBand u17ix = MM_MODEM_BAND_U17IX;
+    MMModemBand u2100 = MM_MODEM_BAND_UTRAN_1;
+    MMModemBand u1900 = MM_MODEM_BAND_UTRAN_2;
+    MMModemBand u850 = MM_MODEM_BAND_UTRAN_5;
+    MMModemBand u900 = MM_MODEM_BAND_UTRAN_8;
+    MMModemBand u17iv = MM_MODEM_BAND_UTRAN_4;
+    MMModemBand u17ix = MM_MODEM_BAND_UTRAN_9;
     gint flag;
 
     /* Test flag 0 */
@@ -480,8 +414,8 @@ static void
 test_telit_get_4g_bnd_flag (void)
 {
     GArray *bands_array;
-    MMModemBand eutran_i = MM_MODEM_BAND_EUTRAN_I;
-    MMModemBand eutran_ii = MM_MODEM_BAND_EUTRAN_II;
+    MMModemBand eutran_i = MM_MODEM_BAND_EUTRAN_1;
+    MMModemBand eutran_ii = MM_MODEM_BAND_EUTRAN_2;
     MMModemBand egsm = MM_MODEM_BAND_EGSM;
     gint flag = -1;
 
@@ -511,14 +445,50 @@ test_telit_get_4g_bnd_flag (void)
     g_array_free (bands_array, TRUE);
 }
 
+typedef struct {
+    const char* response;
+    MMTelitQssStatus expected_qss;
+    const char *error_message;
+} QssParseTest;
+
+static QssParseTest qss_parse_tests [] = {
+    {"#QSS: 0,0", QSS_STATUS_SIM_REMOVED, NULL},
+    {"#QSS: 1,0", QSS_STATUS_SIM_REMOVED, NULL},
+    {"#QSS: 0,1", QSS_STATUS_SIM_INSERTED, NULL},
+    {"#QSS: 0,2", QSS_STATUS_SIM_INSERTED_AND_UNLOCKED, NULL},
+    {"#QSS: 0,3", QSS_STATUS_SIM_INSERTED_AND_READY, NULL},
+    {"#QSS:0,3", QSS_STATUS_SIM_INSERTED_AND_READY, NULL},
+    {"#QSS: 0, 3", QSS_STATUS_SIM_INSERTED_AND_READY, NULL},
+    {"#QSS: 0", QSS_STATUS_UNKNOWN, "Could not parse \"#QSS?\" response: #QSS: 0"},
+    {"QSS:0,1", QSS_STATUS_UNKNOWN, "Could not parse \"#QSS?\" response: QSS:0,1"},
+    {"#QSS: 0,5", QSS_STATUS_UNKNOWN, "Unknown QSS status value given: 5"},
+};
+
+static void
+test_telit_parse_qss_query (void)
+{
+    MMTelitQssStatus actual_qss_status;
+    GError *error = NULL;
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (qss_parse_tests); i++) {
+        actual_qss_status = mm_telit_parse_qss_query (qss_parse_tests[i].response, &error);
+
+        g_assert_cmpint (actual_qss_status, ==, qss_parse_tests[i].expected_qss);
+        if (qss_parse_tests[i].error_message) {
+            g_assert_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED);
+            g_assert_cmpstr (error->message, ==, qss_parse_tests[i].error_message);
+            g_clear_error (&error);
+        }
+    }
+}
+
 int main (int argc, char **argv)
 {
     setlocale (LC_ALL, "");
 
-    g_type_init ();
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add_func ("/MM/telit/csim", test_mm_telit_parse_csim_response);
     g_test_add_func ("/MM/telit/bands/supported/bands_contains", test_mm_bands_contains);
     g_test_add_func ("/MM/telit/bands/supported/parse_band_flag", test_parse_band_flag_str);
     g_test_add_func ("/MM/telit/bands/supported/parse_bands_response", test_parse_supported_bands_response);
@@ -526,5 +496,6 @@ int main (int argc, char **argv)
     g_test_add_func ("/MM/telit/bands/current/set_bands/2g", test_telit_get_2g_bnd_flag);
     g_test_add_func ("/MM/telit/bands/current/set_bands/3g", test_telit_get_3g_bnd_flag);
     g_test_add_func ("/MM/telit/bands/current/set_bands/4g", test_telit_get_4g_bnd_flag);
+    g_test_add_func ("/MM/telit/qss/query", test_telit_parse_qss_query);
     return g_test_run ();
 }

@@ -58,16 +58,13 @@ load_supported_modes_finish (MMIfaceModem *self,
                              GAsyncResult *res,
                              GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    return g_array_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 parent_load_supported_modes_ready (MMIfaceModem *self,
                                    GAsyncResult *res,
-                                   GSimpleAsyncResult *simple)
+                                   GTask *task)
 {
     GError *error = NULL;
     GArray *all;
@@ -77,9 +74,8 @@ parent_load_supported_modes_ready (MMIfaceModem *self,
 
     all = iface_modem_parent->load_supported_modes_finish (self, res, &error);
     if (!all) {
-        g_simple_async_result_take_error (simple, error);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -112,9 +108,8 @@ parent_load_supported_modes_ready (MMIfaceModem *self,
     g_array_unref (all);
     g_array_unref (combinations);
 
-    g_simple_async_result_set_op_res_gpointer (simple, filtered, (GDestroyNotify) g_array_unref);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+    g_task_return_pointer (task, filtered, (GDestroyNotify) g_array_unref);
+    g_object_unref (task);
 }
 
 static void
@@ -126,10 +121,7 @@ load_supported_modes (MMIfaceModem *self,
     iface_modem_parent->load_supported_modes (
         MM_IFACE_MODEM (self),
         (GAsyncReadyCallback)parent_load_supported_modes_ready,
-        g_simple_async_result_new (G_OBJECT (self),
-                                   callback,
-                                   user_data,
-                                   load_supported_modes));
+        g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
@@ -149,22 +141,23 @@ load_current_modes_finish (MMIfaceModem *self,
 {
     LoadCurrentModesResult *result;
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+    result = g_task_propagate_pointer (G_TASK (res), error);
+    if (!result)
         return FALSE;
 
-    /* When a valid result is given, we never complete in idle */
-    result = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
     *allowed = result->allowed;
     *preferred = result->preferred;
+    g_free (result);
+
     return TRUE;
 }
 
 static void
 nwrat_query_ready (MMBaseModem *self,
                    GAsyncResult *res,
-                   GSimpleAsyncResult *simple)
+                   GTask *task)
 {
-    LoadCurrentModesResult result;
+    LoadCurrentModesResult *result;
     GError *error = NULL;
     const gchar *response;
     GRegex *r;
@@ -174,9 +167,8 @@ nwrat_query_ready (MMBaseModem *self,
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
-        g_simple_async_result_take_error (simple, error);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -186,15 +178,14 @@ nwrat_query_ready (MMBaseModem *self,
 
     if (!g_regex_match_full (r, response, strlen (response), 0, 0, &match_info, &error)) {
         if (error)
-            g_simple_async_result_take_error (simple, error);
+            g_task_return_error (task, error);
         else
-            g_simple_async_result_set_error (simple,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_FAILED,
-                                             "Couldn't match NWRAT reply: %s",
-                                             response);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
+            g_task_return_new_error (task,
+                                     MM_CORE_ERROR,
+                                     MM_CORE_ERROR_FAILED,
+                                     "Couldn't match NWRAT reply: %s",
+                                     response);
+        g_object_unref (task);
         g_match_info_free (match_info);
         g_regex_unref (r);
         return;
@@ -204,40 +195,41 @@ nwrat_query_ready (MMBaseModem *self,
         !mm_get_int_from_match_info (match_info, 2, &b) ||
         a < 0 || a > 2 ||
         b < 1 || b > 2) {
-        g_simple_async_result_set_error (
-            simple,
+        g_task_return_new_error (
+            task,
             MM_CORE_ERROR,
             MM_CORE_ERROR_FAILED,
             "Failed to parse mode/tech response '%s': invalid modes reported",
             response);
+        g_object_unref (task);
         g_match_info_free (match_info);
         g_regex_unref (r);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
         return;
     }
 
+    result = g_new0 (LoadCurrentModesResult, 1);
+
     switch (a) {
     case 0:
-        result.allowed = (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G);
-        result.preferred = MM_MODEM_MODE_NONE;
+        result->allowed = (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G);
+        result->preferred = MM_MODEM_MODE_NONE;
         break;
     case 1:
         if (b == 1) {
-            result.allowed = MM_MODEM_MODE_2G;
-            result.preferred = MM_MODEM_MODE_NONE;
+            result->allowed = MM_MODEM_MODE_2G;
+            result->preferred = MM_MODEM_MODE_NONE;
         } else /* b == 2 */ {
-            result.allowed = (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G);
-            result.preferred = MM_MODEM_MODE_2G;
+            result->allowed = (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G);
+            result->preferred = MM_MODEM_MODE_2G;
         }
         break;
     case 2:
         if (b == 1) {
-            result.allowed = MM_MODEM_MODE_3G;
-            result.preferred = MM_MODEM_MODE_NONE;
+            result->allowed = MM_MODEM_MODE_3G;
+            result->preferred = MM_MODEM_MODE_NONE;
         } else /* b == 2 */ {
-            result.allowed = (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G);
-            result.preferred = MM_MODEM_MODE_3G;
+            result->allowed = (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G);
+            result->preferred = MM_MODEM_MODE_3G;
         }
         break;
     default:
@@ -249,10 +241,8 @@ nwrat_query_ready (MMBaseModem *self,
     g_match_info_free (match_info);
     g_regex_unref (r);
 
-    /* When a valid result is given, we never complete in idle */
-    g_simple_async_result_set_op_res_gpointer (simple, &result, NULL);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+    g_task_return_pointer (task, result, g_free);
+    g_object_unref (task);
 }
 
 static void
@@ -260,22 +250,18 @@ load_current_modes (MMIfaceModem *self,
                     GAsyncReadyCallback callback,
                     gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        load_current_modes);
+    task = g_task_new (self, NULL, callback, user_data);
 
     /* Load allowed modes only in 3GPP modems */
     if (!mm_iface_modem_is_3gpp (self)) {
-        g_simple_async_result_set_error (
-            result,
+        g_task_return_new_error (
+            task,
             MM_CORE_ERROR,
             MM_CORE_ERROR_UNSUPPORTED,
             "Loading allowed modes not supported in CDMA-only modems");
-        g_simple_async_result_complete_in_idle (result);
-        g_object_unref (result);
+        g_object_unref (task);
         return;
     }
 
@@ -284,7 +270,7 @@ load_current_modes (MMIfaceModem *self,
                               3,
                               FALSE,
                               (GAsyncReadyCallback)nwrat_query_ready,
-                              result);
+                              task);
 }
 
 /*****************************************************************************/
@@ -295,24 +281,23 @@ set_current_modes_finish (MMIfaceModem *self,
                           GAsyncResult *res,
                           GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 allowed_mode_update_ready (MMBroadbandModemNovatel *self,
                            GAsyncResult *res,
-                           GSimpleAsyncResult *operation_result)
+                           GTask *task)
 {
     GError *error = NULL;
 
     mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (error)
         /* Let the error be critical. */
-        g_simple_async_result_take_error (operation_result, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (operation_result, TRUE);
-    g_simple_async_result_complete (operation_result);
-    g_object_unref (operation_result);
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
@@ -322,25 +307,21 @@ set_current_modes (MMIfaceModem *self,
                    GAsyncReadyCallback callback,
                    gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
     gchar *command;
     gint a = -1;
     gint b = -1;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        set_current_modes);
+    task = g_task_new (self, NULL, callback, user_data);
 
     /* Setting allowed modes only in 3GPP modems */
     if (!mm_iface_modem_is_3gpp (self)) {
-        g_simple_async_result_set_error (
-            result,
+        g_task_return_new_error (
+            task,
             MM_CORE_ERROR,
             MM_CORE_ERROR_UNSUPPORTED,
             "Setting allowed modes not supported in CDMA-only modems");
-        g_simple_async_result_complete_in_idle (result);
-        g_object_unref (result);
+        g_object_unref (task);
         return;
     }
 
@@ -370,18 +351,16 @@ set_current_modes (MMIfaceModem *self,
 
         allowed_str = mm_modem_mode_build_string_from_mask (allowed);
         preferred_str = mm_modem_mode_build_string_from_mask (preferred);
-        g_simple_async_result_set_error (result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_FAILED,
-                                         "Requested mode (allowed: '%s', preferred: '%s') not "
-                                         "supported by the modem.",
-                                         allowed_str,
-                                         preferred_str);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Requested mode (allowed: '%s', preferred: '%s') not "
+                                 "supported by the modem.",
+                                 allowed_str,
+                                 preferred_str);
+        g_object_unref (task);
         g_free (allowed_str);
         g_free (preferred_str);
-
-        g_simple_async_result_complete_in_idle (result);
-        g_object_unref (result);
         return;
     }
 
@@ -392,112 +371,88 @@ set_current_modes (MMIfaceModem *self,
         3,
         FALSE,
         (GAsyncReadyCallback)allowed_mode_update_ready,
-        result);
+        task);
     g_free (command);
 }
 
 /*****************************************************************************/
-/* Load access technologies (Modem interface) */
-
-typedef struct {
-    guint hdr_revision;    /* QCDM_HDR_REV_x */
-    MMModemAccessTechnology generic_act;
-    guint mask;
-} SnapshotResult;
-
-typedef struct {
-    MMBaseModem *self;
-    MMPortSerialQcdm *port;
-    GSimpleAsyncResult *simple;
-    MMModemAccessTechnology generic_act;
-    guint mask;
-} SnapshotContext;
 
 static void
-snapshot_result_complete (GSimpleAsyncResult *simple,
-                          guint hdr_revision,
-                          MMModemAccessTechnology generic_act,
-                          guint mask)
+close_and_unref_port (MMPortSerialQcdm *port)
 {
-    SnapshotResult *r;
+    mm_port_serial_close (MM_PORT_SERIAL (port));
+    g_object_unref (port);
+}
 
-    r = g_new0 (SnapshotResult, 1);
-    r->hdr_revision = hdr_revision;
-    r->generic_act = generic_act;
-    r->mask = mask;
+static gboolean
+get_evdo_version_finish (MMBaseModem *self,
+                         GAsyncResult *res,
+                         guint *hdr_revision,  /* QCDM_HDR_REV_* */
+                         GError **error)
+{
+    gssize result;
 
-    g_simple_async_result_set_op_res_gpointer (simple, r, g_free);
-    g_simple_async_result_complete (simple);
+    result = g_task_propagate_int (G_TASK (res), error);
+    if (result < 0)
+        return FALSE;
+
+    *hdr_revision = (guint8) result;
+    return TRUE;
 }
 
 static void
-snapshot_result_complete_simple (GSimpleAsyncResult *simple,
-                                 MMModemAccessTechnology generic_act,
-                                 guint mask)
-{
-    snapshot_result_complete (simple, QCDM_HDR_REV_UNKNOWN, generic_act, mask);
-}
-
-static void
-snapshot_context_complete_and_free (SnapshotContext *ctx, guint hdr_revision)
-{
-    snapshot_result_complete (ctx->simple,
-                              hdr_revision,
-                              ctx->generic_act,
-                              ctx->mask);
-    g_object_unref (ctx->simple);
-    g_object_unref (ctx->self);
-    g_object_unref (ctx->port);
-    g_free (ctx);
-}
-
-static void
-nw_snapshot_old_cb (MMPortSerialQcdm *port,
-                    GAsyncResult *res,
-                    SnapshotContext *ctx)
+nw_snapshot_old_ready (MMPortSerialQcdm *port,
+                       GAsyncResult *res,
+                       GTask *task)
 {
     QcdmResult *result;
-    guint8 hdr_revision = QCDM_HDR_REV_UNKNOWN;
     GError *error = NULL;
     GByteArray *response;
+    guint8 hdr_revision = QCDM_HDR_REV_UNKNOWN;
 
     response = mm_port_serial_qcdm_command_finish (port, res, &error);
     if (error) {
         /* Just ignore the error and complete with the input info */
         mm_dbg ("Couldn't run QCDM Novatel Modem MSM6500 snapshot: '%s'", error->message);
-        g_error_free (error);
-        snapshot_context_complete_and_free (ctx, QCDM_HDR_REV_UNKNOWN);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Parse the response */
     result = qcdm_cmd_nw_subsys_modem_snapshot_cdma_result ((const gchar *) response->data, response->len, NULL);
     g_byte_array_unref (response);
-    if (result) {
-        qcdm_result_get_u8 (result, QCDM_CMD_NW_SUBSYS_MODEM_SNAPSHOT_CDMA_ITEM_HDR_REV, &hdr_revision);
-        qcdm_result_unref (result);
-    } else
-        mm_dbg ("Failed to get QCDM Novatel Modem MSM6500 snapshot.");
+    if (!result) {
+        mm_dbg ("Failed to get QCDM Novatel Modem MSM6500 snapshot: %s", error->message);
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
 
-    snapshot_context_complete_and_free (ctx, hdr_revision);
+    /* Success */
+    qcdm_result_get_u8 (result, QCDM_CMD_NW_SUBSYS_MODEM_SNAPSHOT_CDMA_ITEM_HDR_REV, &hdr_revision);
+    qcdm_result_unref (result);
+
+    g_task_return_int (task, (gint) hdr_revision);
+    g_object_unref (task);
 }
 
 static void
-nw_snapshot_new_cb (MMPortSerialQcdm *port,
-                    GAsyncResult *res,
-                    SnapshotContext *ctx)
+nw_snapshot_new_ready (MMPortSerialQcdm *port,
+                       GAsyncResult *res,
+                       GTask *task)
 {
     QcdmResult *result;
     GByteArray *nwsnap;
-    guint8 hdr_revision = QCDM_HDR_REV_UNKNOWN;
     GError *error = NULL;
     GByteArray *response;
+    guint8 hdr_revision = QCDM_HDR_REV_UNKNOWN;
 
     response = mm_port_serial_qcdm_command_finish (port, res, &error);
     if (error) {
         mm_dbg ("Couldn't run QCDM Novatel Modem MSM6800 snapshot: '%s'", error->message);
-        g_error_free (error);
-        snapshot_context_complete_and_free (ctx, QCDM_HDR_REV_UNKNOWN);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -505,9 +460,12 @@ nw_snapshot_new_cb (MMPortSerialQcdm *port,
     result = qcdm_cmd_nw_subsys_modem_snapshot_cdma_result ((const gchar *) response->data, response->len, NULL);
     g_byte_array_unref (response);
     if (result) {
+        /* Success */
         qcdm_result_get_u8 (result, QCDM_CMD_NW_SUBSYS_MODEM_SNAPSHOT_CDMA_ITEM_HDR_REV, &hdr_revision);
         qcdm_result_unref (result);
-        snapshot_context_complete_and_free (ctx, hdr_revision);
+
+        g_task_return_int (task, (gint) hdr_revision);
+        g_object_unref (task);
         return;
     }
 
@@ -521,32 +479,40 @@ nw_snapshot_new_cb (MMPortSerialQcdm *port,
                                  nwsnap,
                                  3,
                                  NULL,
-                                 (GAsyncReadyCallback)nw_snapshot_old_cb,
-                                 ctx);
+                                 (GAsyncReadyCallback)nw_snapshot_old_ready,
+                                 task);
     g_byte_array_unref (nwsnap);
 }
 
-static gboolean
-get_nw_modem_snapshot (MMBaseModem *self,
-                       GSimpleAsyncResult *simple,
-                       MMModemAccessTechnology generic_act,
-                       guint mask)
+static void
+get_evdo_version (MMBaseModem *self,
+                  GAsyncReadyCallback callback,
+                  gpointer user_data)
 {
-    SnapshotContext *ctx;
+    GError *error = NULL;
     GByteArray *nwsnap;
+    GTask *task;
     MMPortSerialQcdm *port;
 
-    port = mm_base_modem_peek_port_qcdm (self);
-    if (!port)
-        return FALSE;
+    task = g_task_new (self, NULL, callback, user_data);
 
-    /* Setup context */
-    ctx = g_new0 (SnapshotContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->port = g_object_ref (port);
-    ctx->simple = simple;
-    ctx->generic_act = generic_act;
-    ctx->mask = mask;
+    port = mm_base_modem_get_port_qcdm (self);
+    if (!port) {
+        error = g_error_new (MM_CORE_ERROR,
+                             MM_CORE_ERROR_FAILED,
+                             "No available QCDM port.");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+    g_task_set_task_data (task, port, (GDestroyNotify) close_and_unref_port);
+
+    if (!mm_port_serial_open (MM_PORT_SERIAL (port), &error)) {
+        g_prefix_error (&error, "Couldn't open QCDM port: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
 
     /* Try MSM6800 first since newer cards use that */
     nwsnap = g_byte_array_sized_new (25);
@@ -556,11 +522,19 @@ get_nw_modem_snapshot (MMBaseModem *self,
                                  nwsnap,
                                  3,
                                  NULL,
-                                 (GAsyncReadyCallback)nw_snapshot_new_cb,
-                                 ctx);
+                                 (GAsyncReadyCallback)nw_snapshot_new_ready,
+                                 task);
     g_byte_array_unref (nwsnap);
-    return TRUE;
 }
+
+/*****************************************************************************/
+/* Load access technologies (Modem interface) */
+
+typedef struct {
+    MMModemAccessTechnology act;
+    guint mask;
+    guint hdr_revision;  /* QCDM_HDR_REV_* */
+} AccessTechContext;
 
 static gboolean
 modem_load_access_technologies_finish (MMIfaceModem *self,
@@ -569,48 +543,45 @@ modem_load_access_technologies_finish (MMIfaceModem *self,
                                        guint *mask,
                                        GError **error)
 {
-    SnapshotResult *r;
-    MMModemAccessTechnology act;
+    GTask *task = G_TASK (res);
+    AccessTechContext *ctx = g_task_get_task_data (task);
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+    if (!g_task_propagate_boolean (task, error))
         return FALSE;
 
-    r = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
-
-    act = r->generic_act;
-    if (act & MM_IFACE_MODEM_CDMA_ALL_EVDO_ACCESS_TECHNOLOGIES_MASK) {
-        /* Update access technology with specific EVDO revision from QCDM */
-        if (r->hdr_revision == QCDM_HDR_REV_0) {
+    /* Update access technology with specific EVDO revision from QCDM if we have them */
+    if (ctx->act & MM_IFACE_MODEM_CDMA_ALL_EVDO_ACCESS_TECHNOLOGIES_MASK) {
+        if (ctx->hdr_revision == QCDM_HDR_REV_0) {
             mm_dbg ("Novatel Modem Snapshot EVDO revision: 0");
-            act &= ~MM_IFACE_MODEM_CDMA_ALL_EVDO_ACCESS_TECHNOLOGIES_MASK;
-            act |= MM_MODEM_ACCESS_TECHNOLOGY_EVDO0;
-        } else if (r->hdr_revision == QCDM_HDR_REV_A) {
+            ctx->act &= ~MM_IFACE_MODEM_CDMA_ALL_EVDO_ACCESS_TECHNOLOGIES_MASK;
+            ctx->act |= MM_MODEM_ACCESS_TECHNOLOGY_EVDO0;
+        } else if (ctx->hdr_revision == QCDM_HDR_REV_A) {
             mm_dbg ("Novatel Modem Snapshot EVDO revision: A");
-            act &= ~MM_IFACE_MODEM_CDMA_ALL_EVDO_ACCESS_TECHNOLOGIES_MASK;
-            act |= MM_MODEM_ACCESS_TECHNOLOGY_EVDOA;
+            ctx->act &= ~MM_IFACE_MODEM_CDMA_ALL_EVDO_ACCESS_TECHNOLOGIES_MASK;
+            ctx->act |= MM_MODEM_ACCESS_TECHNOLOGY_EVDOA;
         } else
-            mm_dbg ("Novatel Modem Snapshot EVDO revision: %d (unknown)", r->hdr_revision);
+            mm_dbg ("Novatel Modem Snapshot EVDO revision: %d (unknown)", ctx->hdr_revision);
     }
 
-    *access_technologies = act;
-    *mask = r->mask;
+    *access_technologies = ctx->act;
+    *mask = ctx->mask;
     return TRUE;
 }
 
 static void
 cnti_set_ready (MMBaseModem *self,
                 GAsyncResult *res,
-                GSimpleAsyncResult *simple)
+                GTask *task)
 {
+    AccessTechContext *ctx = g_task_get_task_data (task);
     GError *error = NULL;
     const gchar *response;
     const gchar *p;
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
-        g_simple_async_result_take_error (simple, error);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -621,55 +592,64 @@ cnti_set_ready (MMBaseModem *self,
                              MM_CORE_ERROR_FAILED,
                              "Couldn't parse $CNTI result '%s'",
                              response);
-        g_simple_async_result_take_error (simple, error);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
-    snapshot_result_complete_simple (simple,
-                                     mm_string_to_access_tech (p),
-                                     MM_IFACE_MODEM_3GPP_ALL_ACCESS_TECHNOLOGIES_MASK);
-    g_object_unref (simple);
+    ctx->act = mm_string_to_access_tech (p);
+    ctx->mask = MM_IFACE_MODEM_3GPP_ALL_ACCESS_TECHNOLOGIES_MASK;
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+evdo_version_ready (MMBaseModem *self,
+                    GAsyncResult *res,
+                    GTask *task)
+{
+    GError *error = NULL;
+    AccessTechContext *ctx = g_task_get_task_data (task);
+
+    if (!get_evdo_version_finish (self, res, &ctx->hdr_revision, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
 parent_load_access_technologies_ready (MMIfaceModem *self,
                                        GAsyncResult *res,
-                                       GSimpleAsyncResult *simple)
+                                       GTask *task)
 {
-    MMModemAccessTechnology act = MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN;
-    guint mask = 0;
     GError *error = NULL;
+    AccessTechContext *ctx = g_task_get_task_data (task);
 
     if (!iface_modem_parent->load_access_technologies_finish (self,
                                                               res,
-                                                              &act,
-                                                              &mask,
+                                                              &ctx->act,
+                                                              &ctx->mask,
                                                               &error)) {
-        g_simple_async_result_take_error (simple, error);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
-    /* No point in checking EVDO revision if EVDO isn't being used or if for
-     * some reason we don't have a QCDM port.
-     */
-    if (!(act & MM_IFACE_MODEM_CDMA_ALL_EVDO_ACCESS_TECHNOLOGIES_MASK)) {
-        snapshot_result_complete (simple, QCDM_HDR_REV_UNKNOWN, act, mask);
-        g_object_unref (simple);
+    /* No point in checking EVDO revision if EVDO isn't being used */
+    if (!(ctx->act & MM_IFACE_MODEM_CDMA_ALL_EVDO_ACCESS_TECHNOLOGIES_MASK)) {
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
-    /* Pass along the access tech & mask that the parent determined so we
-     * can specialize it based on the EVDO revision from QCDM.
-     */
-    if (!get_nw_modem_snapshot (MM_BASE_MODEM (self), simple, act, mask)) {
-        /* If there's any error, use the access tech that the parent interface determined */
-        snapshot_result_complete (simple, QCDM_HDR_REV_UNKNOWN, act, mask);
-        g_object_unref (simple);
-    }
+    /* Get the EVDO revision from QCDM */
+    get_evdo_version (MM_BASE_MODEM (self),
+                       (GAsyncReadyCallback) evdo_version_ready,
+                       task);
 }
 
 static void
@@ -677,12 +657,14 @@ modem_load_access_technologies (MMIfaceModem *self,
                                 GAsyncReadyCallback callback,
                                 gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    AccessTechContext *ctx;
+    GTask *task;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        modem_load_access_technologies);
+    /* Setup context */
+    task = g_task_new (self, NULL, callback, user_data);
+
+    ctx = g_new0 (AccessTechContext, 1);
+    g_task_set_task_data (task, ctx, g_free);
 
     /* CDMA-only modems defer to parent for generic access technology
      * checking, but can determine EVDOr0 vs. EVDOrA through proprietary
@@ -692,7 +674,7 @@ modem_load_access_technologies (MMIfaceModem *self,
         iface_modem_parent->load_access_technologies (
             self,
             (GAsyncReadyCallback)parent_load_access_technologies_ready,
-            result);
+            task);
         return;
     }
 
@@ -702,7 +684,7 @@ modem_load_access_technologies (MMIfaceModem *self,
         3,
         FALSE,
         (GAsyncReadyCallback)cnti_set_ready,
-        result);
+        task);
 }
 
 /*****************************************************************************/
@@ -713,30 +695,31 @@ modem_load_signal_quality_finish (MMIfaceModem *self,
                                   GAsyncResult *res,
                                   GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return 0;
+    GError *inner_error = NULL;
+    gssize value;
 
-    return GPOINTER_TO_UINT (g_simple_async_result_get_op_res_gpointer (
-                                 G_SIMPLE_ASYNC_RESULT (res)));
+    value = g_task_propagate_int (G_TASK (res), &inner_error);
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return 0;
+    }
+    return (guint)value;
 }
 
 static void
 parent_load_signal_quality_ready (MMIfaceModem *self,
                                   GAsyncResult *res,
-                                  GSimpleAsyncResult *simple)
+                                  GTask *task)
 {
     GError *error = NULL;
     guint signal_quality;
 
     signal_quality = iface_modem_parent->load_signal_quality_finish (self, res, &error);
     if (error)
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gpointer (simple,
-                                                   GUINT_TO_POINTER (signal_quality),
-                                                   NULL);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+        g_task_return_int (task, signal_quality);
+    g_object_unref (task);
 }
 
 static gint
@@ -776,7 +759,7 @@ get_one_quality (const gchar *reply,
             /* Some cards appear to use RX0/RX1 and output RSSI in negative dBm */
             if (dbm < 0)
                 success = TRUE;
-        } else if (isdigit (*temp) && (dbm > 0) && (dbm < 115)) {
+        } else if (isdigit (*temp) && (dbm > 0) && (dbm <= 125)) {
             /* S720 appears to use "1x RSSI" and print RSSI in dBm without '-' */
             dbm *= -1;
             success = TRUE;
@@ -795,7 +778,7 @@ get_one_quality (const gchar *reply,
 static void
 nwrssi_ready (MMBaseModem *self,
               GAsyncResult *res,
-              GSimpleAsyncResult *simple)
+              GTask *task)
 {
     const gchar *response;
     gint quality;
@@ -806,7 +789,7 @@ nwrssi_ready (MMBaseModem *self,
         iface_modem_parent->load_signal_quality (
             MM_IFACE_MODEM (self),
             (GAsyncReadyCallback)parent_load_signal_quality_ready,
-            simple);
+            task);
         return;
     }
 
@@ -820,17 +803,14 @@ nwrssi_ready (MMBaseModem *self,
         quality = get_one_quality (response, "HDR RSSI=");
 
     if (quality >= 0)
-        g_simple_async_result_set_op_res_gpointer (simple,
-                                                   GUINT_TO_POINTER ((guint)quality),
-                                                   NULL);
+        g_task_return_int (task, quality);
     else
-        g_simple_async_result_set_error (simple,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_FAILED,
-                                         "Couldn't parse $NWRSSI response: '%s'",
-                                         response);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Couldn't parse $NWRSSI response: '%s'",
+                                 response);
+    g_object_unref (task);
 }
 
 static void
@@ -838,20 +818,17 @@ modem_load_signal_quality (MMIfaceModem *self,
                            GAsyncReadyCallback callback,
                            gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
 
     mm_dbg ("loading signal quality...");
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        modem_load_signal_quality);
+    task = g_task_new (self, NULL, callback, user_data);
 
     /* 3GPP modems can just run parent's signal quality loading */
     if (mm_iface_modem_is_3gpp (self)) {
         iface_modem_parent->load_signal_quality (
             self,
             (GAsyncReadyCallback)parent_load_signal_quality_ready,
-            result);
+            task);
         return;
     }
 
@@ -862,7 +839,7 @@ modem_load_signal_quality (MMIfaceModem *self,
         3,
         FALSE,
         (GAsyncReadyCallback)nwrssi_ready,
-        result);
+        task);
 }
 
 /*****************************************************************************/
@@ -894,23 +871,25 @@ messaging_enable_unsolicited_events (MMIfaceModemMessaging *self,
 /* Detailed registration state (CDMA interface) */
 
 typedef struct {
-    MMModemCdmaRegistrationState detailed_cdma1x_state;
-    MMModemCdmaRegistrationState detailed_evdo_state;
-} DetailedRegistrationStateResults;
+    MMModemCdmaRegistrationState cdma1x_state;
+    MMModemCdmaRegistrationState evdo_state;
+} DetailedRegistrationStateResult;
 
 typedef struct {
-    MMBroadbandModem *self;
-    GSimpleAsyncResult *result;
-    DetailedRegistrationStateResults state;
+    MMPortSerialQcdm *port;
+    gboolean close_port;
+    MMModemCdmaRegistrationState cdma1x_state;
+    MMModemCdmaRegistrationState evdo_state;
 } DetailedRegistrationStateContext;
 
 static void
-detailed_registration_state_context_complete_and_free (DetailedRegistrationStateContext *ctx)
+detailed_registration_state_context_free (DetailedRegistrationStateContext *ctx)
 {
-    /* Always not in idle! we're passing a struct in stack as result */
-    g_simple_async_result_complete (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->self);
+    if (ctx->port) {
+        if (ctx->close_port)
+            mm_port_serial_close (MM_PORT_SERIAL (ctx->port));
+        g_object_unref (ctx->port);
+    }
     g_free (ctx);
 }
 
@@ -921,14 +900,14 @@ modem_cdma_get_detailed_registration_state_finish (MMIfaceModemCdma *self,
                                                    MMModemCdmaRegistrationState *detailed_evdo_state,
                                                    GError **error)
 {
-    DetailedRegistrationStateResults *results;
+    GTask *task = G_TASK (res);
+    DetailedRegistrationStateContext *ctx = g_task_get_task_data (task);;
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+    if (!g_task_propagate_boolean (task, error))
         return FALSE;
 
-    results = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
-    *detailed_cdma1x_state = results->detailed_cdma1x_state;
-    *detailed_evdo_state = results->detailed_evdo_state;
+    *detailed_cdma1x_state = ctx->cdma1x_state;
+    *detailed_evdo_state = ctx->evdo_state;
     return TRUE;
 }
 
@@ -980,84 +959,86 @@ parse_modem_eri (DetailedRegistrationStateContext *ctx, QcdmResult *result)
     else
         new_state = MM_MODEM_CDMA_REGISTRATION_STATE_ROAMING;
 
-    if (ctx->state.detailed_cdma1x_state != MM_MODEM_CDMA_REGISTRATION_STATE_UNKNOWN)
-        ctx->state.detailed_cdma1x_state = new_state;
-    if (ctx->state.detailed_evdo_state != MM_MODEM_CDMA_REGISTRATION_STATE_UNKNOWN)
-        ctx->state.detailed_evdo_state = new_state;
+    if (ctx->cdma1x_state != MM_MODEM_CDMA_REGISTRATION_STATE_UNKNOWN)
+        ctx->cdma1x_state = new_state;
+    if (ctx->evdo_state != MM_MODEM_CDMA_REGISTRATION_STATE_UNKNOWN)
+        ctx->evdo_state = new_state;
 }
 
 static void
 reg_eri_6500_cb (MMPortSerialQcdm *port,
                  GAsyncResult *res,
-                 DetailedRegistrationStateContext *ctx)
+                 GTask *task)
 {
+    DetailedRegistrationStateContext *ctx = g_task_get_task_data (task);
     GError *error = NULL;
     GByteArray *response;
+    QcdmResult *result;
 
     response = mm_port_serial_qcdm_command_finish (port, res, &error);
     if (error) {
         /* Just ignore the error and complete with the input info */
         mm_dbg ("Couldn't run QCDM MSM6500 ERI: '%s'", error->message);
         g_error_free (error);
-    } else {
-        QcdmResult *result;
-
-        result = qcdm_cmd_nw_subsys_eri_result ((const gchar *) response->data, response->len, NULL);
-        g_byte_array_unref (response);
-        if (result) {
-            parse_modem_eri (ctx, result);
-            qcdm_result_unref (result);
-        }
+        goto done;
     }
 
-    /* NOTE: always complete NOT in idle here */
-    g_simple_async_result_set_op_res_gpointer (ctx->result, &ctx->state, NULL);
-    detailed_registration_state_context_complete_and_free (ctx);
+    result = qcdm_cmd_nw_subsys_eri_result ((const gchar *) response->data, response->len, NULL);
+    g_byte_array_unref (response);
+    if (result) {
+        parse_modem_eri (ctx, result);
+        qcdm_result_unref (result);
+    }
+
+done:
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
 reg_eri_6800_cb (MMPortSerialQcdm *port,
                  GAsyncResult *res,
-                 DetailedRegistrationStateContext *ctx)
+                 GTask *task)
 {
+    DetailedRegistrationStateContext *ctx = g_task_get_task_data (task);
     GError *error = NULL;
     GByteArray *response;
+    GByteArray *nweri;
+    QcdmResult *result;
 
     response = mm_port_serial_qcdm_command_finish (port, res, &error);
     if (error) {
         /* Just ignore the error and complete with the input info */
         mm_dbg ("Couldn't run QCDM MSM6800 ERI: '%s'", error->message);
         g_error_free (error);
-    } else {
-        QcdmResult *result;
-
-        /* Parse the response */
-        result = qcdm_cmd_nw_subsys_eri_result ((const gchar *) response->data, response->len, NULL);
-        g_byte_array_unref (response);
-        if (result) {
-            parse_modem_eri (ctx, result);
-            qcdm_result_unref (result);
-        } else {
-            GByteArray *nweri;
-
-            /* Try for MSM6500 */
-            nweri = g_byte_array_sized_new (25);
-            nweri->len = qcdm_cmd_nw_subsys_eri_new ((char *) nweri->data, 25, QCDM_NW_CHIPSET_6500);
-            g_assert (nweri->len);
-            mm_port_serial_qcdm_command (port,
-                                         nweri,
-                                         3,
-                                         NULL,
-                                         (GAsyncReadyCallback)reg_eri_6500_cb,
-                                         ctx);
-            g_byte_array_unref (nweri);
-            return;
-        }
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
     }
 
-    /* NOTE: always complete NOT in idle here */
-    g_simple_async_result_set_op_res_gpointer (ctx->result, &ctx->state, NULL);
-    detailed_registration_state_context_complete_and_free (ctx);
+    /* Parse the response */
+    result = qcdm_cmd_nw_subsys_eri_result ((const gchar *) response->data, response->len, NULL);
+    g_byte_array_unref (response);
+    if (result) {
+        /* Success */
+        parse_modem_eri (ctx, result);
+        qcdm_result_unref (result);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    /* Try for MSM6500 */
+    nweri = g_byte_array_sized_new (25);
+    nweri->len = qcdm_cmd_nw_subsys_eri_new ((char *) nweri->data, 25, QCDM_NW_CHIPSET_6500);
+    g_assert (nweri->len);
+    mm_port_serial_qcdm_command (port,
+                                 nweri,
+                                 3,
+                                 NULL,
+                                 (GAsyncReadyCallback)reg_eri_6500_cb,
+                                 task);
+    g_byte_array_unref (nweri);
 }
 
 static void
@@ -1068,31 +1049,48 @@ modem_cdma_get_detailed_registration_state (MMIfaceModemCdma *self,
                                             gpointer user_data)
 {
     DetailedRegistrationStateContext *ctx;
+    GTask *task;
     GByteArray *nweri;
-    MMPortSerialQcdm *port;
+    GError *error = NULL;
 
     /* Setup context */
+    task = g_task_new (self, NULL, callback, user_data);
     ctx = g_new0 (DetailedRegistrationStateContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             modem_cdma_get_detailed_registration_state);
-    ctx->state.detailed_cdma1x_state = cdma1x_state;
-    ctx->state.detailed_evdo_state = evdo_state;
+    g_task_set_task_data (task, ctx, (GDestroyNotify) detailed_registration_state_context_free);
 
-    port = mm_base_modem_peek_port_qcdm (MM_BASE_MODEM (self));
+    ctx->cdma1x_state = cdma1x_state;
+    ctx->evdo_state = evdo_state;
+
+    ctx->port = mm_base_modem_get_port_qcdm (MM_BASE_MODEM (self));
+    if (!ctx->port) {
+        /* Ignore errors and use non-detailed registration state */
+        mm_dbg ("No available QCDM port.");
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    if (!mm_port_serial_open (MM_PORT_SERIAL (ctx->port), &error)) {
+        /* Ignore errors and use non-detailed registration state */
+        mm_dbg ("Couldn't open QCDM port: %s", error->message);
+        g_error_free (error);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    ctx->close_port = TRUE;
 
     /* Try MSM6800 first since newer cards use that */
     nweri = g_byte_array_sized_new (25);
     nweri->len = qcdm_cmd_nw_subsys_eri_new ((char *) nweri->data, 25, QCDM_NW_CHIPSET_6800);
     g_assert (nweri->len);
-    mm_port_serial_qcdm_command (port,
+    mm_port_serial_qcdm_command (ctx->port,
                                  nweri,
                                  3,
                                  NULL,
                                  (GAsyncReadyCallback)reg_eri_6800_cb,
-                                 ctx);
+                                 task);
     g_byte_array_unref (nweri);
 }
 

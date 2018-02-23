@@ -3,12 +3,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>org.freedesktop.ModemManager1.Modem.Modem3gpp: ModemManager Reference Manual</title>
-<meta name="generator" content="DocBook XSL Stylesheets V1.79.1">
+<meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
 <link rel="home" href="index.html" title="ModemManager Reference Manual">
 <link rel="up" href="ref-dbus-object-modem.html" title="The /org/freedesktop/ModemManager/Modems objects">
 <link rel="prev" href="gdbus-org.freedesktop.ModemManager1.Modem.Simple.html" title="org.freedesktop.ModemManager1.Modem.Simple">
 <link rel="next" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html" title="org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd">
-<meta name="generator" content="GTK-Doc V1.25.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -35,8 +35,9 @@
 <div class="refsynopsisdiv">
 <h2>Methods</h2>
 <pre class="synopsis">
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Register" title="The Register() method">Register</a> (IN  s      operator_id);
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Scan" title="The Scan() method">Scan</a>     (OUT aa{sv} results);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Register" title="The Register() method">Register</a>              (IN  s      operator_id);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Scan" title="The Scan() method">Scan</a>                  (OUT aa{sv} results);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetEpsUeModeOperation" title="The SetEpsUeModeOperation() method">SetEpsUeModeOperation</a> (IN  u      mode);
 </pre>
 </div>
 <div class="refsect1">
@@ -48,6 +49,7 @@
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.OperatorName" title='The "OperatorName" property'>OperatorName</a>          readable   s
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EnabledFacilityLocks" title='The "EnabledFacilityLocks" property'>EnabledFacilityLocks</a>  readable   u
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.SubscriptionState" title='The "SubscriptionState" property'>SubscriptionState</a>     readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EpsUeModeOperation" title='The "EpsUeModeOperation" property'>EpsUeModeOperation</a>    readable   u
 </pre>
 </div>
 <div class="refsect1">
@@ -153,6 +155,25 @@ Scan (OUT aa{sv} results);
 </tr></tbody>
 </table></div>
 </div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetEpsUeModeOperation"></a><h3>The SetEpsUeModeOperation() method</h3>
+<pre class="programlisting">
+SetEpsUeModeOperation (IN  u mode);
+</pre>
+<p>        Sets the UE mode of operation for EPS.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><code class="literal">IN u <em class="parameter"><code>mode</code></em></code>:</span></p></td>
+<td><p>a <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppEpsUeModeOperation" title="enum MMModem3gppEpsUeModeOperation">MMModem3gppEpsUeModeOperation</a>.</p></td>
+</tr></tbody>
+</table></div>
+</div>
 </div>
 <div class="refsect1">
 <a name="gdbus-properties-org.freedesktop.ModemManager1.Modem.Modem3gpp"></a><h2>Property Details</h2>
@@ -227,9 +248,20 @@ SubscriptionState  readable   u
         is any data remaining, given as an unsigned integer (signature <code class="literal">"u"</code>).
 </p>
 </div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EpsUeModeOperation"></a><h3>The "EpsUeModeOperation" property</h3>
+<pre class="programlisting">
+EpsUeModeOperation  readable   u
+</pre>
+<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppEpsUeModeOperation" title="enum MMModem3gppEpsUeModeOperation">MMModem3gppEpsUeModeOperation</a>
+        value representing the UE mode of operation for EPS, given as an unsigned integer
+        (signature <code class="literal">"u"</code>).
+</p>
+</div>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.25.1</div>
+<hr>Generated by GTK-Doc V1.27</div>
 </body>
 </html>

@@ -662,6 +662,12 @@ mm_common_bands_garray_cmp (GArray *a, GArray *b)
     return !different;
 }
 
+void
+mm_common_bands_garray_sort (GArray *array)
+{
+    g_array_sort (array, (GCompareFunc) cmp_band);
+}
+
 GArray *
 mm_common_mode_combinations_variant_to_garray (GVariant *variant)
 {
@@ -750,6 +756,28 @@ mm_common_build_mode_combinations_default (void)
                                                 MM_MODEM_MODE_ANY,
                                                 MM_MODEM_MODE_NONE));
     return g_variant_builder_end (&builder);
+}
+
+MMModem3gppEpsUeModeOperation
+mm_common_get_eps_ue_mode_operation_from_string (const gchar  *str,
+                                                 GError      **error)
+{
+    GEnumClass *enum_class;
+    guint       i;
+
+    enum_class = G_ENUM_CLASS (g_type_class_ref (MM_TYPE_MODEM_3GPP_EPS_UE_MODE_OPERATION));
+
+    for (i = 0; enum_class->values[i].value_nick; i++) {
+        if (!g_ascii_strcasecmp (str, enum_class->values[i].value_nick))
+            return enum_class->values[i].value;
+    }
+
+    g_set_error (error,
+                 MM_CORE_ERROR,
+                 MM_CORE_ERROR_INVALID_ARGS,
+                 "Couldn't match '%s' with a valid MMModem3gppEpsUeModeOperation value",
+                 str);
+    return MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_UNKNOWN;
 }
 
 GArray *
@@ -1386,6 +1414,49 @@ mm_get_uint_from_str (const gchar *str,
 
     errno = 0;
     num = strtoul (str, NULL, 10);
+    if (!errno && num <= G_MAXUINT) {
+        *out = (guint)num;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/**
+ * mm_get_uint_from_hex_str:
+ * @str: the hex string to convert to an unsigned int
+ * @out: on success, the number
+ *
+ * Converts a string to an unsigned number.  All characters in the string
+ * MUST be valid hexadecimal digits (0-9, A-F, a-f), otherwise FALSE is
+ * returned.
+ *
+ * An optional "0x" prefix may be given in @str.
+ *
+ * Returns: %TRUE if the string was converted, %FALSE if it was not or if it
+ * did not contain only digits.
+ */
+gboolean
+mm_get_uint_from_hex_str (const gchar *str,
+                          guint       *out)
+{
+    gulong num;
+
+    if (!str)
+        return FALSE;
+
+    if (g_str_has_prefix (str, "0x"))
+        str = &str[2];
+
+    if (!str[0])
+        return FALSE;
+
+    for (num = 0; str[num]; num++) {
+        if (!g_ascii_isxdigit (str[num]))
+            return FALSE;
+    }
+
+    errno = 0;
+    num = strtoul (str, NULL, 16);
     if (!errno && num <= G_MAXUINT) {
         *out = (guint)num;
         return TRUE;

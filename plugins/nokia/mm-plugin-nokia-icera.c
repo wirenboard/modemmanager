@@ -43,14 +43,14 @@ static const MMPortProbeAtCommand custom_at_probe[] = {
 
 static MMBaseModem *
 create_modem (MMPlugin *self,
-              const gchar *sysfs_path,
+              const gchar *uid,
               const gchar **drivers,
               guint16 vendor,
               guint16 product,
               GList *probes,
               GError **error)
 {
-    return MM_BASE_MODEM (mm_broadband_modem_icera_new (sysfs_path,
+    return MM_BASE_MODEM (mm_broadband_modem_icera_new (uid,
                                                         drivers,
                                                         mm_plugin_get_name (self),
                                                         vendor,
@@ -63,19 +63,19 @@ grab_port (MMPlugin *self,
            MMPortProbe *probe,
            GError **error)
 {
-    GUdevDevice *port;
+    MMKernelDevice *port;
     MMPortSerialAtFlag pflags = MM_PORT_SERIAL_AT_FLAG_NONE;
 
     port = mm_port_probe_peek_port (probe);
 
     /* Look for port type hints */
     if (mm_port_probe_is_at (probe)) {
-        if (g_udev_device_get_property_as_boolean (port, "ID_MM_NOKIA_PORT_TYPE_MODEM")) {
+        if (mm_kernel_device_get_property_as_boolean (port, "ID_MM_NOKIA_PORT_TYPE_MODEM")) {
             mm_dbg ("Nokia: AT port '%s/%s' flagged as primary",
                     mm_port_probe_get_port_subsys (probe),
                     mm_port_probe_get_port_name (probe));
             pflags = MM_PORT_SERIAL_AT_FLAG_PRIMARY;
-        } else if (g_udev_device_get_property_as_boolean (port, "ID_MM_NOKIA_PORT_TYPE_AUX")) {
+        } else if (mm_kernel_device_get_property_as_boolean (port, "ID_MM_NOKIA_PORT_TYPE_AUX")) {
             mm_dbg ("Nokia: AT port '%s/%s' flagged as secondary",
                     mm_port_probe_get_port_subsys (probe),
                     mm_port_probe_get_port_name (probe));
@@ -84,9 +84,7 @@ grab_port (MMPlugin *self,
     }
 
     return mm_base_modem_grab_port (modem,
-                                    mm_port_probe_get_port_subsys (probe),
-                                    mm_port_probe_get_port_name (probe),
-                                    mm_port_probe_get_parent_path (probe),
+                                    port,
                                     mm_port_probe_get_port_type (probe),
                                     pflags,
                                     error);

@@ -61,7 +61,7 @@ static const MMPortProbeAtCommand custom_at_probe[] = {
 
 static MMBaseModem *
 create_modem (MMPlugin *self,
-              const gchar *sysfs_path,
+              const gchar *uid,
               const gchar **drivers,
               guint16 vendor,
               guint16 product,
@@ -71,7 +71,7 @@ create_modem (MMPlugin *self,
 #if defined WITH_QMI
     if (mm_port_probe_list_has_qmi_port (probes)) {
         mm_dbg ("QMI-powered ZTE modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_qmi_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_qmi_new (uid,
                                                           drivers,
                                                           mm_plugin_get_name (self),
                                                           vendor,
@@ -82,7 +82,7 @@ create_modem (MMPlugin *self,
 #if defined WITH_MBIM
     if (mm_port_probe_list_has_mbim_port (probes)) {
         mm_dbg ("MBIM-powered ZTE modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_mbim_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_mbim_new (uid,
                                                            drivers,
                                                            mm_plugin_get_name (self),
                                                            vendor,
@@ -91,13 +91,13 @@ create_modem (MMPlugin *self,
 #endif
 
     if (mm_port_probe_list_is_icera (probes))
-        return MM_BASE_MODEM (mm_broadband_modem_zte_icera_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_zte_icera_new (uid,
                                                                 drivers,
                                                                 mm_plugin_get_name (self),
                                                                 vendor,
                                                                 product));
 
-    return MM_BASE_MODEM (mm_broadband_modem_zte_new (sysfs_path,
+    return MM_BASE_MODEM (mm_broadband_modem_zte_new (uid,
                                                       drivers,
                                                       mm_plugin_get_name (self),
                                                       vendor,
@@ -110,7 +110,7 @@ grab_port (MMPlugin *self,
            MMPortProbe *probe,
            GError **error)
 {
-    GUdevDevice *port;
+    MMKernelDevice *port;
     MMPortSerialAtFlag pflags = MM_PORT_SERIAL_AT_FLAG_NONE;
     MMPortType ptype;
 
@@ -128,12 +128,12 @@ grab_port (MMPlugin *self,
 
     if (mm_port_probe_is_at (probe)) {
         /* Look for port type hints */
-        if (g_udev_device_get_property_as_boolean (port, "ID_MM_ZTE_PORT_TYPE_MODEM")) {
+        if (mm_kernel_device_get_property_as_boolean (port, "ID_MM_ZTE_PORT_TYPE_MODEM")) {
             mm_dbg ("ZTE: AT port '%s/%s' flagged as primary",
                     mm_port_probe_get_port_subsys (probe),
                     mm_port_probe_get_port_name (probe));
             pflags = MM_PORT_SERIAL_AT_FLAG_PRIMARY;
-        } else if (g_udev_device_get_property_as_boolean (port, "ID_MM_ZTE_PORT_TYPE_AUX")) {
+        } else if (mm_kernel_device_get_property_as_boolean (port, "ID_MM_ZTE_PORT_TYPE_AUX")) {
             mm_dbg ("ZTE: AT port '%s/%s' flagged as secondary",
                     mm_port_probe_get_port_subsys (probe),
                     mm_port_probe_get_port_name (probe));
@@ -141,7 +141,7 @@ grab_port (MMPlugin *self,
         }
     }
 
-    if (g_udev_device_get_property_as_boolean (port, "ID_MM_ZTE_ICERA_DHCP")) {
+    if (mm_kernel_device_get_global_property_as_boolean (port, "ID_MM_ZTE_ICERA_DHCP")) {
         mm_dbg ("ZTE: Icera-based modem will use DHCP");
         g_object_set (modem,
                       MM_BROADBAND_MODEM_ICERA_DEFAULT_IP_METHOD, MM_BEARER_IP_METHOD_DHCP,
@@ -149,9 +149,7 @@ grab_port (MMPlugin *self,
     }
 
     return mm_base_modem_grab_port (modem,
-                                    mm_port_probe_get_port_subsys (probe),
-                                    mm_port_probe_get_port_name (probe),
-                                    mm_port_probe_get_parent_path (probe),
+                                    port,
                                     ptype,
                                     pflags,
                                     error);

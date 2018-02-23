@@ -514,7 +514,7 @@ call_deleted (MMCallList *list,
 /*****************************************************************************/
 
 typedef struct _DisablingContext DisablingContext;
-static void interface_disabling_step (DisablingContext *ctx);
+static void interface_disabling_step (GTask *task);
 
 typedef enum {
     DISABLING_STEP_FIRST,
@@ -524,18 +524,13 @@ typedef enum {
 } DisablingStep;
 
 struct _DisablingContext {
-    MMIfaceModemVoice *self;
     DisablingStep step;
-    GSimpleAsyncResult *result;
     MmGdbusModemVoice *skeleton;
 };
 
 static void
-disabling_context_complete_and_free (DisablingContext *ctx)
+disabling_context_free (DisablingContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->self);
-    g_object_unref (ctx->result);
     if (ctx->skeleton)
         g_object_unref (ctx->skeleton);
     g_free (ctx);
@@ -546,50 +541,60 @@ mm_iface_modem_voice_disable_finish (MMIfaceModemVoice *self,
                                      GAsyncResult *res,
                                      GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 disable_unsolicited_events_ready (MMIfaceModemVoice *self,
                                   GAsyncResult *res,
-                                  DisablingContext *ctx)
+                                  GTask *task)
 {
+    DisablingContext *ctx;
     GError *error = NULL;
 
     MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->disable_unsolicited_events_finish (self, res, &error);
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        disabling_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Go on to next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    interface_disabling_step (ctx);
+    interface_disabling_step (task);
 }
 
 static void
 cleanup_unsolicited_events_ready (MMIfaceModemVoice *self,
                                   GAsyncResult *res,
-                                  DisablingContext *ctx)
+                                  GTask *task)
 {
+    DisablingContext *ctx;
     GError *error = NULL;
 
     MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->cleanup_unsolicited_events_finish (self, res, &error);
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        disabling_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Go on to next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    interface_disabling_step (ctx);
+    interface_disabling_step (task);
 }
 
 static void
-interface_disabling_step (DisablingContext *ctx)
+interface_disabling_step (GTask *task)
 {
+    MMIfaceModemVoice *self;
+    DisablingContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     switch (ctx->step) {
     case DISABLING_STEP_FIRST:
         /* Fall down to next step */
@@ -597,12 +602,12 @@ interface_disabling_step (DisablingContext *ctx)
 
     case DISABLING_STEP_DISABLE_UNSOLICITED_EVENTS:
         /* Allow cleaning up unsolicited events */
-        if (MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->disable_unsolicited_events &&
-            MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->disable_unsolicited_events_finish) {
-            MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->disable_unsolicited_events (
-                ctx->self,
+        if (MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->disable_unsolicited_events &&
+            MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->disable_unsolicited_events_finish) {
+            MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->disable_unsolicited_events (
+                self,
                 (GAsyncReadyCallback)disable_unsolicited_events_ready,
-                ctx);
+                task);
             return;
         }
         /* Fall down to next step */
@@ -610,12 +615,12 @@ interface_disabling_step (DisablingContext *ctx)
 
     case DISABLING_STEP_CLEANUP_UNSOLICITED_EVENTS:
         /* Allow cleaning up unsolicited events */
-        if (MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->cleanup_unsolicited_events &&
-            MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->cleanup_unsolicited_events_finish) {
-            MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->cleanup_unsolicited_events (
-                ctx->self,
+        if (MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->cleanup_unsolicited_events &&
+            MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->cleanup_unsolicited_events_finish) {
+            MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->cleanup_unsolicited_events (
+                self,
                 (GAsyncReadyCallback)cleanup_unsolicited_events_ready,
-                ctx);
+                task);
             return;
         }
         /* Fall down to next step */
@@ -623,13 +628,13 @@ interface_disabling_step (DisablingContext *ctx)
 
     case DISABLING_STEP_LAST:
         /* Clear CALL list */
-        g_object_set (ctx->self,
+        g_object_set (self,
                       MM_IFACE_MODEM_VOICE_CALL_LIST, NULL,
                       NULL);
 
         /* We are done without errors! */
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        disabling_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -642,33 +647,33 @@ mm_iface_modem_voice_disable (MMIfaceModemVoice *self,
                               gpointer user_data)
 {
     DisablingContext *ctx;
+    GTask *task;
 
     ctx = g_new0 (DisablingContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_iface_modem_voice_disable);
     ctx->step = DISABLING_STEP_FIRST;
-    g_object_get (ctx->self,
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)disabling_context_free);
+
+    g_object_get (self,
                   MM_IFACE_MODEM_VOICE_DBUS_SKELETON, &ctx->skeleton,
                   NULL);
     if (!ctx->skeleton) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_FAILED,
-                                         "Couldn't get interface skeleton");
-        disabling_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Couldn't get interface skeleton");
+        g_object_unref (task);
         return;
     }
 
-    interface_disabling_step (ctx);
+    interface_disabling_step (task);
 }
 
 /*****************************************************************************/
 
 typedef struct _EnablingContext EnablingContext;
-static void interface_enabling_step (EnablingContext *ctx);
+static void interface_enabling_step (GTask *task);
 
 typedef enum {
     ENABLING_STEP_FIRST,
@@ -678,38 +683,17 @@ typedef enum {
 } EnablingStep;
 
 struct _EnablingContext {
-    MMIfaceModemVoice *self;
     EnablingStep step;
-    GSimpleAsyncResult *result;
-    GCancellable *cancellable;
     MmGdbusModemVoice *skeleton;
     guint mem1_storage_index;
 };
 
 static void
-enabling_context_complete_and_free (EnablingContext *ctx)
+enabling_context_free (EnablingContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->self);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->cancellable);
     if (ctx->skeleton)
         g_object_unref (ctx->skeleton);
     g_free (ctx);
-}
-
-static gboolean
-enabling_context_complete_and_free_if_cancelled (EnablingContext *ctx)
-{
-    if (!g_cancellable_is_cancelled (ctx->cancellable))
-        return FALSE;
-
-    g_simple_async_result_set_error (ctx->result,
-                                     MM_CORE_ERROR,
-                                     MM_CORE_ERROR_CANCELLED,
-                                     "Interface enabling cancelled");
-    enabling_context_complete_and_free (ctx);
-    return TRUE;
 }
 
 gboolean
@@ -717,33 +701,36 @@ mm_iface_modem_voice_enable_finish (MMIfaceModemVoice *self,
                                     GAsyncResult *res,
                                     GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 setup_unsolicited_events_ready (MMIfaceModemVoice *self,
                                 GAsyncResult *res,
-                                EnablingContext *ctx)
+                                GTask *task)
 {
+    EnablingContext *ctx;
     GError *error = NULL;
 
     MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->setup_unsolicited_events_finish (self, res, &error);
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        enabling_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Go on to next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    interface_enabling_step (ctx);
+    interface_enabling_step (task);
 }
 
 static void
 enable_unsolicited_events_ready (MMIfaceModemVoice *self,
                                  GAsyncResult *res,
-                                 EnablingContext *ctx)
+                                 GTask *task)
 {
+    EnablingContext *ctx;
     GError *error = NULL;
 
     /* Not critical! */
@@ -753,23 +740,32 @@ enable_unsolicited_events_ready (MMIfaceModemVoice *self,
     }
 
     /* Go on with next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    interface_enabling_step (ctx);
+    interface_enabling_step (task);
 }
 
 static void
-interface_enabling_step (EnablingContext *ctx)
+interface_enabling_step (GTask *task)
 {
+    MMIfaceModemVoice *self;
+    EnablingContext *ctx;
+
     /* Don't run new steps if we're cancelled */
-    if (enabling_context_complete_and_free_if_cancelled (ctx))
+    if (g_task_return_error_if_cancelled (task)) {
+        g_object_unref (task);
         return;
+    }
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     switch (ctx->step) {
     case ENABLING_STEP_FIRST: {
         MMCallList *list;
 
-        list = mm_call_list_new (MM_BASE_MODEM (ctx->self));
-        g_object_set (ctx->self,
+        list = mm_call_list_new (MM_BASE_MODEM (self));
+        g_object_set (self,
                       MM_IFACE_MODEM_VOICE_CALL_LIST, list,
                       NULL);
 
@@ -791,12 +787,12 @@ interface_enabling_step (EnablingContext *ctx)
 
     case ENABLING_STEP_SETUP_UNSOLICITED_EVENTS:
         /* Allow setting up unsolicited events */
-        if (MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->setup_unsolicited_events &&
-            MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->setup_unsolicited_events_finish) {
-            MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->setup_unsolicited_events (
-                ctx->self,
+        if (MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->setup_unsolicited_events &&
+            MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->setup_unsolicited_events_finish) {
+            MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->setup_unsolicited_events (
+                self,
                 (GAsyncReadyCallback)setup_unsolicited_events_ready,
-                ctx);
+                task);
             return;
         }
         /* Fall down to next step */
@@ -804,12 +800,12 @@ interface_enabling_step (EnablingContext *ctx)
 
     case ENABLING_STEP_ENABLE_UNSOLICITED_EVENTS:
         /* Allow setting up unsolicited events */
-        if (MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->enable_unsolicited_events &&
-            MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->enable_unsolicited_events_finish) {
-            MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->enable_unsolicited_events (
-                ctx->self,
+        if (MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->enable_unsolicited_events &&
+            MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->enable_unsolicited_events_finish) {
+            MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->enable_unsolicited_events (
+                self,
                 (GAsyncReadyCallback)enable_unsolicited_events_ready,
-                ctx);
+                task);
             return;
         }
         /* Fall down to next step */
@@ -817,8 +813,8 @@ interface_enabling_step (EnablingContext *ctx)
 
     case ENABLING_STEP_LAST:
         /* We are done without errors! */
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        enabling_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -832,34 +828,33 @@ mm_iface_modem_voice_enable (MMIfaceModemVoice *self,
                              gpointer user_data)
 {
     EnablingContext *ctx;
+    GTask *task;
 
     ctx = g_new0 (EnablingContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->cancellable = g_object_ref (cancellable);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_iface_modem_voice_enable);
     ctx->step = ENABLING_STEP_FIRST;
-    g_object_get (ctx->self,
+
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)enabling_context_free);
+
+    g_object_get (self,
                   MM_IFACE_MODEM_VOICE_DBUS_SKELETON, &ctx->skeleton,
                   NULL);
     if (!ctx->skeleton) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_FAILED,
-                                         "Couldn't get interface skeleton");
-        enabling_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Couldn't get interface skeleton");
+        g_object_unref (task);
         return;
     }
 
-    interface_enabling_step (ctx);
+    interface_enabling_step (task);
 }
 
 /*****************************************************************************/
 
 typedef struct _InitializationContext InitializationContext;
-static void interface_initialization_step (InitializationContext *ctx);
+static void interface_initialization_step (GTask *task);
 
 typedef enum {
     INITIALIZATION_STEP_FIRST,
@@ -869,43 +864,23 @@ typedef enum {
 } InitializationStep;
 
 struct _InitializationContext {
-    MMIfaceModemVoice *self;
     MmGdbusModemVoice *skeleton;
-    GCancellable *cancellable;
-    GSimpleAsyncResult *result;
     InitializationStep step;
 };
 
 static void
-initialization_context_complete_and_free (InitializationContext *ctx)
+initialization_context_free (InitializationContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->self);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->cancellable);
     g_object_unref (ctx->skeleton);
     g_free (ctx);
-}
-
-static gboolean
-initialization_context_complete_and_free_if_cancelled (InitializationContext *ctx)
-{
-    if (!g_cancellable_is_cancelled (ctx->cancellable))
-        return FALSE;
-
-    g_simple_async_result_set_error (ctx->result,
-                                     MM_CORE_ERROR,
-                                     MM_CORE_ERROR_CANCELLED,
-                                     "Interface initialization cancelled");
-    initialization_context_complete_and_free (ctx);
-    return TRUE;
 }
 
 static void
 check_support_ready (MMIfaceModemVoice *self,
                      GAsyncResult *res,
-                     InitializationContext *ctx)
+                     GTask *task)
 {
+    InitializationContext *ctx;
     GError *error = NULL;
 
     if (!MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->check_support_finish (self,
@@ -924,16 +899,25 @@ check_support_ready (MMIfaceModemVoice *self,
     }
 
     /* Go on to next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    interface_initialization_step (ctx);
+    interface_initialization_step (task);
 }
 
 static void
-interface_initialization_step (InitializationContext *ctx)
+interface_initialization_step (GTask *task)
 {
+    MMIfaceModemVoice *self;
+    InitializationContext *ctx;
+
     /* Don't run new steps if we're cancelled */
-    if (initialization_context_complete_and_free_if_cancelled (ctx))
+    if (g_task_return_error_if_cancelled (task)) {
+        g_object_unref (task);
         return;
+    }
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     switch (ctx->step) {
     case INITIALIZATION_STEP_FIRST:
@@ -949,23 +933,23 @@ interface_initialization_step (InitializationContext *ctx)
         ctx->step++;
 
     case INITIALIZATION_STEP_CHECK_SUPPORT:
-        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (ctx->self),
+        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
                                                    support_checked_quark))) {
             /* Set the checked flag so that we don't run it again */
-            g_object_set_qdata (G_OBJECT (ctx->self),
+            g_object_set_qdata (G_OBJECT (self),
                                 support_checked_quark,
                                 GUINT_TO_POINTER (TRUE));
             /* Initially, assume we don't support it */
-            g_object_set_qdata (G_OBJECT (ctx->self),
+            g_object_set_qdata (G_OBJECT (self),
                                 supported_quark,
                                 GUINT_TO_POINTER (FALSE));
 
-            if (MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->check_support &&
-                MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->check_support_finish) {
-                MM_IFACE_MODEM_VOICE_GET_INTERFACE (ctx->self)->check_support (
-                    ctx->self,
+            if (MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->check_support &&
+                MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->check_support_finish) {
+                MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->check_support (
+                    self,
                     (GAsyncReadyCallback)check_support_ready,
-                    ctx);
+                    task);
                 return;
             }
 
@@ -976,13 +960,13 @@ interface_initialization_step (InitializationContext *ctx)
         ctx->step++;
 
     case INITIALIZATION_STEP_FAIL_IF_UNSUPPORTED:
-        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (ctx->self),
+        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
                                                    supported_quark))) {
-            g_simple_async_result_set_error (ctx->result,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_UNSUPPORTED,
-                                             "Voice not supported");
-            initialization_context_complete_and_free (ctx);
+            g_task_return_new_error (task,
+                                     MM_CORE_ERROR,
+                                     MM_CORE_ERROR_UNSUPPORTED,
+                                     "Voice not supported");
+            g_object_unref (task);
             return;
         }
         /* Fall down to next step */
@@ -995,22 +979,22 @@ interface_initialization_step (InitializationContext *ctx)
         g_signal_connect (ctx->skeleton,
                           "handle-create-call",
                           G_CALLBACK (handle_create),
-                          ctx->self);
+                          self);
         g_signal_connect (ctx->skeleton,
                           "handle-delete-call",
                           G_CALLBACK (handle_delete),
-                          ctx->self);
+                          self);
         g_signal_connect (ctx->skeleton,
                           "handle-list-calls",
                           G_CALLBACK (handle_list),
-                          ctx->self);
+                          self);
 
         /* Finally, export the new interface */
-        mm_gdbus_object_skeleton_set_modem_voice (MM_GDBUS_OBJECT_SKELETON (ctx->self),
+        mm_gdbus_object_skeleton_set_modem_voice (MM_GDBUS_OBJECT_SKELETON (self),
                                                   MM_GDBUS_MODEM_VOICE (ctx->skeleton));
 
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        initialization_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -1022,7 +1006,7 @@ mm_iface_modem_voice_initialize_finish (MMIfaceModemVoice *self,
                                         GAsyncResult *res,
                                         GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 void
@@ -1033,6 +1017,7 @@ mm_iface_modem_voice_initialize (MMIfaceModemVoice *self,
 {
     InitializationContext *ctx;
     MmGdbusModemVoice *skeleton = NULL;
+    GTask *task;
 
     /* Did we already create it? */
     g_object_get (self,
@@ -1049,16 +1034,13 @@ mm_iface_modem_voice_initialize (MMIfaceModemVoice *self,
     /* Perform async initialization here */
 
     ctx = g_new0 (InitializationContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->cancellable = g_object_ref (cancellable);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_iface_modem_voice_initialize);
     ctx->step = INITIALIZATION_STEP_FIRST;
     ctx->skeleton = skeleton;
 
-    interface_initialization_step (ctx);
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)initialization_context_free);
+
+    interface_initialization_step (task);
 }
 
 void

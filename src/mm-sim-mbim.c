@@ -25,7 +25,9 @@
 #include <libmm-glib.h>
 
 #include "mm-error-helpers.h"
+#include "mm-iface-modem.h"
 #include "mm-log.h"
+#include "mm-modem-helpers-mbim.h"
 #include "mm-sim-mbim.h"
 
 G_DEFINE_TYPE (MMSimMbim, mm_sim_mbim, MM_TYPE_BASE_SIM)
@@ -50,17 +52,41 @@ peek_device (gpointer self,
     g_object_unref (modem);
 
     if (!port) {
-        g_simple_async_report_error_in_idle (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_FAILED,
-                                             "Couldn't peek MBIM port");
+        g_task_report_new_error (self,
+                                 callback,
+                                 user_data,
+                                 peek_device,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Couldn't peek MBIM port");
         return FALSE;
     }
 
     *o_device = mm_port_mbim_peek_device (port);
     return TRUE;
+}
+
+static void
+update_modem_unlock_retries (MMSimMbim *self,
+                             MbimPinType pin_type,
+                             guint32 remaining_attempts)
+{
+    MMBaseModem *modem = NULL;
+    MMUnlockRetries *unlock_retries;
+
+    g_object_get (G_OBJECT (self),
+                  MM_BASE_SIM_MODEM, &modem,
+                  NULL);
+    g_assert (MM_IS_BASE_MODEM (modem));
+
+    unlock_retries = mm_unlock_retries_new ();
+    mm_unlock_retries_set (unlock_retries,
+                           mm_modem_lock_from_mbim_pin_type (pin_type),
+                           remaining_attempts);
+    mm_iface_modem_update_unlock_retries (MM_IFACE_MODEM (modem),
+                                          unlock_retries);
+    g_object_unref (unlock_retries);
+    g_object_unref (modem);
 }
 
 /*****************************************************************************/
@@ -71,15 +97,13 @@ load_sim_identifier_finish (MMBaseSim *self,
                             GAsyncResult *res,
                             GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-    return g_strdup ((gchar *)g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 simid_subscriber_ready_state_ready (MbimDevice *device,
                                     GAsyncResult *res,
-                                    GSimpleAsyncResult *simple)
+                                    GTask *task)
 {
     MbimMessage *response;
     GError *error = NULL;
@@ -97,14 +121,13 @@ simid_subscriber_ready_state_ready (MbimDevice *device,
             NULL, /* telephone_numbers_count */
             NULL, /* telephone_numbers */
             &error))
-        g_simple_async_result_set_op_res_gpointer (simple, sim_iccid, (GDestroyNotify)g_free);
+        g_task_return_pointer (task, sim_iccid, g_free);
     else
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
+    g_object_unref (task);
 
     if (response)
         mbim_message_unref (response);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
 }
 
 static void
@@ -114,12 +137,12 @@ load_sim_identifier (MMBaseSim *self,
 {
     MbimDevice *device;
     MbimMessage *message;
-    GSimpleAsyncResult *result;
+    GTask *task;
 
     if (!peek_device (self, &device, callback, user_data))
         return;
 
-    result = g_simple_async_result_new (G_OBJECT (self), callback, user_data, load_sim_identifier);
+    task = g_task_new (self, NULL, callback, user_data);
 
     message = mbim_message_subscriber_ready_status_query_new (NULL);
     mbim_device_command (device,
@@ -127,7 +150,7 @@ load_sim_identifier (MMBaseSim *self,
                          10,
                          NULL,
                          (GAsyncReadyCallback)simid_subscriber_ready_state_ready,
-                         result);
+                         task);
     mbim_message_unref (message);
 }
 
@@ -136,18 +159,16 @@ load_sim_identifier (MMBaseSim *self,
 
 static gchar *
 load_imsi_finish (MMBaseSim *self,
-                            GAsyncResult *res,
-                            GError **error)
+                  GAsyncResult *res,
+                  GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-    return g_strdup ((gchar *)g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 imsi_subscriber_ready_state_ready (MbimDevice *device,
                                    GAsyncResult *res,
-                                   GSimpleAsyncResult *simple)
+                                   GTask *task)
 {
     MbimMessage *response;
     GError *error = NULL;
@@ -165,14 +186,13 @@ imsi_subscriber_ready_state_ready (MbimDevice *device,
             NULL, /* telephone_numbers_count */
             NULL, /* telephone_numbers */
             &error))
-        g_simple_async_result_set_op_res_gpointer (simple, subscriber_id, (GDestroyNotify)g_free);
+        g_task_return_pointer (task, subscriber_id, g_free);
     else
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
+    g_object_unref (task);
 
     if (response)
         mbim_message_unref (response);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
 }
 
 static void
@@ -182,12 +202,12 @@ load_imsi (MMBaseSim *self,
 {
     MbimDevice *device;
     MbimMessage *message;
-    GSimpleAsyncResult *result;
+    GTask *task;
 
     if (!peek_device (self, &device, callback, user_data))
         return;
 
-    result = g_simple_async_result_new (G_OBJECT (self), callback, user_data, load_imsi);
+    task = g_task_new (self, NULL, callback, user_data);
 
     message = mbim_message_subscriber_ready_status_query_new (NULL);
     mbim_device_command (device,
@@ -195,7 +215,7 @@ load_imsi (MMBaseSim *self,
                          10,
                          NULL,
                          (GAsyncReadyCallback)imsi_subscriber_ready_state_ready,
-                         result);
+                         task);
     mbim_message_unref (message);
 }
 
@@ -207,19 +227,13 @@ load_operator_identifier_finish (MMBaseSim *self,
                                  GAsyncResult *res,
                                  GError **error)
 {
-    MbimProvider *provider;
-
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    provider = (MbimProvider *)g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
-    return g_strdup (provider->provider_id);
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 load_operator_identifier_ready (MbimDevice *device,
                                 GAsyncResult *res,
-                                GSimpleAsyncResult *simple)
+                                GTask *task)
 {
     MbimMessage *response;
     GError *error = NULL;
@@ -231,15 +245,15 @@ load_operator_identifier_ready (MbimDevice *device,
         mbim_message_home_provider_response_parse (
             response,
             &provider,
-            &error))
-        g_simple_async_result_set_op_res_gpointer (simple, provider, (GDestroyNotify)mbim_provider_free);
-    else
-        g_simple_async_result_take_error (simple, error);
+            &error)) {
+        g_task_return_pointer (task, g_strdup (provider->provider_id), g_free);
+        mbim_provider_free (provider);
+    } else
+        g_task_return_error (task, error);
+    g_object_unref (task);
 
     if (response)
         mbim_message_unref (response);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
 }
 
 static void
@@ -249,12 +263,12 @@ load_operator_identifier (MMBaseSim *self,
 {
     MbimDevice *device;
     MbimMessage *message;
-    GSimpleAsyncResult *result;
+    GTask *task;
 
     if (!peek_device (self, &device, callback, user_data))
         return;
 
-    result = g_simple_async_result_new (G_OBJECT (self), callback, user_data, load_operator_identifier);
+    task = g_task_new (self, NULL, callback, user_data);
 
     message = mbim_message_home_provider_query_new (NULL);
     mbim_device_command (device,
@@ -262,7 +276,7 @@ load_operator_identifier (MMBaseSim *self,
                          10,
                          NULL,
                          (GAsyncReadyCallback)load_operator_identifier_ready,
-                         result);
+                         task);
     mbim_message_unref (message);
 }
 
@@ -274,19 +288,13 @@ load_operator_name_finish (MMBaseSim *self,
                            GAsyncResult *res,
                            GError **error)
 {
-    MbimProvider *provider;
-
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    provider = (MbimProvider *)g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
-    return g_strdup (provider->provider_name);
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 load_operator_name_ready (MbimDevice *device,
                           GAsyncResult *res,
-                          GSimpleAsyncResult *simple)
+                          GTask *task)
 {
     MbimMessage *response;
     GError *error = NULL;
@@ -298,15 +306,15 @@ load_operator_name_ready (MbimDevice *device,
         mbim_message_home_provider_response_parse (
             response,
             &provider,
-            &error))
-        g_simple_async_result_set_op_res_gpointer (simple, provider, (GDestroyNotify)mbim_provider_free);
-    else
-        g_simple_async_result_take_error (simple, error);
+            &error)) {
+        g_task_return_pointer (task, g_strdup (provider->provider_name), g_free);
+        mbim_provider_free (provider);
+    } else
+        g_task_return_error (task, error);
+    g_object_unref (task);
 
     if (response)
         mbim_message_unref (response);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
 }
 
 static void
@@ -316,12 +324,12 @@ load_operator_name (MMBaseSim *self,
 {
     MbimDevice *device;
     MbimMessage *message;
-    GSimpleAsyncResult *result;
+    GTask *task;
 
     if (!peek_device (self, &device, callback, user_data))
         return;
 
-    result = g_simple_async_result_new (G_OBJECT (self), callback, user_data, load_operator_name);
+    task = g_task_new (self, NULL, callback, user_data);
 
     message = mbim_message_home_provider_query_new (NULL);
     mbim_device_command (device,
@@ -329,7 +337,7 @@ load_operator_name (MMBaseSim *self,
                          10,
                          NULL,
                          (GAsyncReadyCallback)load_operator_name_ready,
-                         result);
+                         task);
     mbim_message_unref (message);
 }
 
@@ -341,48 +349,55 @@ send_pin_finish (MMBaseSim *self,
                  GAsyncResult *res,
                  GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 pin_set_enter_ready (MbimDevice *device,
                      GAsyncResult *res,
-                     GSimpleAsyncResult *simple)
+                     GTask *task)
 {
+    MMSimMbim *self;
     GError *error = NULL;
     MbimMessage *response;
+    gboolean success;
     MbimPinType pin_type;
     MbimPinState pin_state;
+    guint32 remaining_attempts;
+
+    self = g_task_get_source_object (task);
 
     response = mbim_device_command_finish (device, res, &error);
-    if (response &&
-        !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
-        /* Sending PIN failed, build a better error to report */
-        if (mbim_message_pin_response_parse (
-                response,
-                &pin_type,
-                &pin_state,
-                NULL,
-                NULL)) {
-            /* Create the errors ourselves */
-            if (pin_type == MBIM_PIN_TYPE_PIN1 && pin_state == MBIM_PIN_STATE_LOCKED) {
-                g_error_free (error);
-                error = mm_mobile_equipment_error_for_code (MM_MOBILE_EQUIPMENT_ERROR_INCORRECT_PASSWORD);
-            } else if (pin_type == MBIM_PIN_TYPE_PUK1 && pin_state == MBIM_PIN_STATE_LOCKED) {
-                g_error_free (error);
-                error = mm_mobile_equipment_error_for_code (MM_MOBILE_EQUIPMENT_ERROR_SIM_PUK);
+    if (response) {
+        success = mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error);
+
+        if (mbim_message_pin_response_parse (response,
+                                             &pin_type,
+                                             &pin_state,
+                                             &remaining_attempts,
+                                             NULL)) {
+            update_modem_unlock_retries (self, pin_type, remaining_attempts);
+
+            if (!success) {
+                /* Sending PIN failed, build a better error to report */
+                if (pin_type == MBIM_PIN_TYPE_PIN1 && pin_state == MBIM_PIN_STATE_LOCKED) {
+                    g_error_free (error);
+                    error = mm_mobile_equipment_error_for_code (MM_MOBILE_EQUIPMENT_ERROR_INCORRECT_PASSWORD);
+                } else if (pin_type == MBIM_PIN_TYPE_PUK1 && pin_state == MBIM_PIN_STATE_LOCKED) {
+                    g_error_free (error);
+                    error = mm_mobile_equipment_error_for_code (MM_MOBILE_EQUIPMENT_ERROR_SIM_PUK);
+                }
             }
         }
+
+        mbim_message_unref (response);
     }
 
     if (error)
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
-    if (response)
-        mbim_message_unref (response);
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
@@ -393,13 +408,13 @@ send_pin (MMBaseSim *self,
 {
     MbimDevice *device;
     MbimMessage *message;
-    GSimpleAsyncResult *result;
+    GTask *task;
     GError *error = NULL;
 
     if (!peek_device (self, &device, callback, user_data))
         return;
 
-    result = g_simple_async_result_new (G_OBJECT (self), callback, user_data, send_pin);
+    task = g_task_new (self, NULL, callback, user_data);
 
     mm_dbg ("Sending PIN...");
     message = (mbim_message_pin_set_new (
@@ -409,9 +424,8 @@ send_pin (MMBaseSim *self,
                    "",
                    &error));
     if (!message) {
-        g_simple_async_result_take_error (result, error);
-        g_simple_async_result_complete_in_idle (result);
-        g_object_unref (result);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -420,7 +434,7 @@ send_pin (MMBaseSim *self,
                          10,
                          NULL,
                          (GAsyncReadyCallback)pin_set_enter_ready,
-                         result);
+                         task);
     mbim_message_unref (message);
 }
 
@@ -432,49 +446,55 @@ send_puk_finish (MMBaseSim *self,
                  GAsyncResult *res,
                  GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 puk_set_enter_ready (MbimDevice *device,
                      GAsyncResult *res,
-                     GSimpleAsyncResult *simple)
+                     GTask *task)
 {
+    MMSimMbim *self;
     GError *error = NULL;
     MbimMessage *response;
+    gboolean success;
     MbimPinType pin_type;
     MbimPinState pin_state;
     guint32 remaining_attempts;
 
+    self = g_task_get_source_object (task);
+
     response = mbim_device_command_finish (device, res, &error);
-    if (response &&
-        !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
-        /* Sending PUK failed, build a better error to report */
-        if (mbim_message_pin_response_parse (
-                response,
-                &pin_type,
-                &pin_state,
-                &remaining_attempts,
-                NULL)) {
-            /* Create the errors ourselves */
-            if (pin_type == MBIM_PIN_TYPE_PUK1 && pin_state == MBIM_PIN_STATE_LOCKED) {
-                g_error_free (error);
-                if (remaining_attempts == 0)
-                    error = mm_mobile_equipment_error_for_code (MM_MOBILE_EQUIPMENT_ERROR_SIM_WRONG);
-                else
-                    error = mm_mobile_equipment_error_for_code (MM_MOBILE_EQUIPMENT_ERROR_INCORRECT_PASSWORD);
+    if (response) {
+        success = mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error);
+
+        if (mbim_message_pin_response_parse (response,
+                                             &pin_type,
+                                             &pin_state,
+                                             &remaining_attempts,
+                                             NULL)) {
+            update_modem_unlock_retries (self, pin_type, remaining_attempts);
+
+            if (!success) {
+                /* Sending PUK failed, build a better error to report */
+                if (pin_type == MBIM_PIN_TYPE_PUK1 && pin_state == MBIM_PIN_STATE_LOCKED) {
+                    g_error_free (error);
+                    if (remaining_attempts == 0)
+                        error = mm_mobile_equipment_error_for_code (MM_MOBILE_EQUIPMENT_ERROR_SIM_WRONG);
+                    else
+                        error = mm_mobile_equipment_error_for_code (MM_MOBILE_EQUIPMENT_ERROR_INCORRECT_PASSWORD);
+                }
             }
         }
+
+        mbim_message_unref (response);
     }
 
     if (error)
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
-    if (response)
-        mbim_message_unref (response);
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
@@ -486,13 +506,13 @@ send_puk (MMBaseSim *self,
 {
     MbimDevice *device;
     MbimMessage *message;
-    GSimpleAsyncResult *result;
+    GTask *task;
     GError *error = NULL;
 
     if (!peek_device (self, &device, callback, user_data))
         return;
 
-    result = g_simple_async_result_new (G_OBJECT (self), callback, user_data, send_puk);
+    task = g_task_new (self, NULL, callback, user_data);
 
     mm_dbg ("Sending PUK...");
     message = (mbim_message_pin_set_new (
@@ -502,9 +522,8 @@ send_puk (MMBaseSim *self,
                    new_pin,
                    &error));
     if (!message) {
-        g_simple_async_result_take_error (result, error);
-        g_simple_async_result_complete_in_idle (result);
-        g_object_unref (result);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -513,7 +532,7 @@ send_puk (MMBaseSim *self,
                          10,
                          NULL,
                          (GAsyncReadyCallback)puk_set_enter_ready,
-                         result);
+                         task);
     mbim_message_unref (message);
 }
 
@@ -525,20 +544,33 @@ enable_pin_finish (MMBaseSim *self,
                    GAsyncResult *res,
                    GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 pin_set_enable_ready (MbimDevice *device,
                       GAsyncResult *res,
-                      GSimpleAsyncResult *simple)
+                      GTask *task)
 {
+    MMSimMbim *self;
     GError *error = NULL;
     MbimMessage *response;
+    MbimPinType pin_type;
+    guint32 remaining_attempts;
+
+    self = g_task_get_source_object (task);
 
     response = mbim_device_command_finish (device, res, &error);
     if (response) {
         mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error);
+
+        if (mbim_message_pin_response_parse (response,
+                                             &pin_type,
+                                             NULL,
+                                             &remaining_attempts,
+                                             NULL))
+            update_modem_unlock_retries (self, pin_type, remaining_attempts);
+
         mbim_message_unref (response);
     }
 
@@ -550,11 +582,10 @@ pin_set_enable_ready (MbimDevice *device,
                                  "Need to be unlocked to allow enabling/disabling PIN");
         }
 
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     } else
-        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
@@ -566,13 +597,13 @@ enable_pin (MMBaseSim *self,
 {
     MbimDevice *device;
     MbimMessage *message;
-    GSimpleAsyncResult *result;
+    GTask *task;
     GError *error = NULL;
 
     if (!peek_device (self, &device, callback, user_data))
         return;
 
-    result = g_simple_async_result_new (G_OBJECT (self), callback, user_data, send_puk);
+    task = g_task_new (self, NULL, callback, user_data);
 
     mm_dbg ("%s PIN ...", enabled ? "Enabling" : "Disabling");
     message = (mbim_message_pin_set_new (
@@ -582,9 +613,8 @@ enable_pin (MMBaseSim *self,
                    "",
                    &error));
     if (!message) {
-        g_simple_async_result_take_error (result, error);
-        g_simple_async_result_complete_in_idle (result);
-        g_object_unref (result);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -593,7 +623,7 @@ enable_pin (MMBaseSim *self,
                          10,
                          NULL,
                          (GAsyncReadyCallback)pin_set_enable_ready,
-                         result);
+                         task);
     mbim_message_unref (message);
 }
 
@@ -605,20 +635,33 @@ change_pin_finish (MMBaseSim *self,
                    GAsyncResult *res,
                    GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 pin_set_change_ready (MbimDevice *device,
                       GAsyncResult *res,
-                      GSimpleAsyncResult *simple)
+                      GTask *task)
 {
+    MMSimMbim *self;
     GError *error = NULL;
     MbimMessage *response;
+    MbimPinType pin_type;
+    guint32 remaining_attempts;
+
+    self = g_task_get_source_object (task);
 
     response = mbim_device_command_finish (device, res, &error);
     if (response) {
         mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error);
+
+        if (mbim_message_pin_response_parse (response,
+                                             &pin_type,
+                                             NULL,
+                                             &remaining_attempts,
+                                             NULL))
+            update_modem_unlock_retries (self, pin_type, remaining_attempts);
+
         mbim_message_unref (response);
     }
 
@@ -630,11 +673,10 @@ pin_set_change_ready (MbimDevice *device,
                                  "Need to be unlocked to allow changing PIN");
         }
 
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     } else
-        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
@@ -646,13 +688,13 @@ change_pin (MMBaseSim *self,
 {
     MbimDevice *device;
     MbimMessage *message;
-    GSimpleAsyncResult *result;
+    GTask *task;
     GError *error = NULL;
 
     if (!peek_device (self, &device, callback, user_data))
         return;
 
-    result = g_simple_async_result_new (G_OBJECT (self), callback, user_data, send_puk);
+    task = g_task_new (self, NULL, callback, user_data);
 
     mm_dbg ("Changing PIN");
     message = (mbim_message_pin_set_new (
@@ -662,9 +704,8 @@ change_pin (MMBaseSim *self,
                    new_pin,
                    &error));
     if (!message) {
-        g_simple_async_result_take_error (result, error);
-        g_simple_async_result_complete_in_idle (result);
-        g_object_unref (result);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -673,7 +714,7 @@ change_pin (MMBaseSim *self,
                          10,
                          NULL,
                          (GAsyncReadyCallback)pin_set_change_ready,
-                         result);
+                         task);
     mbim_message_unref (message);
 }
 

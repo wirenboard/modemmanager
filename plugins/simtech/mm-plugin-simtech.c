@@ -38,7 +38,7 @@ MM_PLUGIN_DEFINE_MINOR_VERSION
 
 static MMBaseModem *
 create_modem (MMPlugin *self,
-              const gchar *sysfs_path,
+              const gchar *uid,
               const gchar **drivers,
               guint16 vendor,
               guint16 product,
@@ -48,7 +48,7 @@ create_modem (MMPlugin *self,
 #if defined WITH_QMI
     if (mm_port_probe_list_has_qmi_port (probes)) {
         mm_dbg ("QMI-powered SimTech modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_qmi_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_qmi_new (uid,
                                                           drivers,
                                                           mm_plugin_get_name (self),
                                                           vendor,
@@ -56,7 +56,7 @@ create_modem (MMPlugin *self,
     }
 #endif
 
-    return MM_BASE_MODEM (mm_broadband_modem_simtech_new (sysfs_path,
+    return MM_BASE_MODEM (mm_broadband_modem_simtech_new (uid,
                                                           drivers,
                                                           mm_plugin_get_name (self),
                                                           vendor,
@@ -69,7 +69,7 @@ grab_port (MMPlugin *self,
            MMPortProbe *probe,
            GError **error)
 {
-    GUdevDevice *port;
+    MMKernelDevice *port;
     MMPortType ptype;
     MMPortSerialAtFlag pflags = MM_PORT_SERIAL_AT_FLAG_NONE;
 
@@ -81,12 +81,12 @@ grab_port (MMPlugin *self,
          * be the data/primary port on these devices.  We have to tag them based on
          * what the Windows .INF files say the port layout should be.
          */
-        if (g_udev_device_get_property_as_boolean (port, "ID_MM_SIMTECH_PORT_TYPE_MODEM")) {
+        if (mm_kernel_device_get_property_as_boolean (port, "ID_MM_SIMTECH_PORT_TYPE_MODEM")) {
             mm_dbg ("Simtech: AT port '%s/%s' flagged as primary",
                     mm_port_probe_get_port_subsys (probe),
                     mm_port_probe_get_port_name (probe));
             pflags = MM_PORT_SERIAL_AT_FLAG_PRIMARY;
-        } else if (g_udev_device_get_property_as_boolean (port, "ID_MM_SIMTECH_PORT_TYPE_AUX")) {
+        } else if (mm_kernel_device_get_property_as_boolean (port, "ID_MM_SIMTECH_PORT_TYPE_AUX")) {
             mm_dbg ("Simtech: AT port '%s/%s' flagged as secondary",
                     mm_port_probe_get_port_subsys (probe),
                     mm_port_probe_get_port_name (probe));
@@ -98,14 +98,12 @@ grab_port (MMPlugin *self,
          * to show up with more than two AT-capable ports.
          */
         if (pflags == MM_PORT_SERIAL_AT_FLAG_NONE &&
-            g_udev_device_get_property_as_boolean (port, "ID_MM_SIMTECH_TAGGED"))
+            mm_kernel_device_get_global_property_as_boolean (port, "ID_MM_SIMTECH_TAGGED"))
             ptype = MM_PORT_TYPE_IGNORED;
     }
 
     return mm_base_modem_grab_port (modem,
-                                    mm_port_probe_get_port_subsys (probe),
-                                    mm_port_probe_get_port_name (probe),
-                                    mm_port_probe_get_parent_path (probe),
+                                    port,
                                     ptype,
                                     pflags,
                                     error);

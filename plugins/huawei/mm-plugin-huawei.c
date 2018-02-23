@@ -75,8 +75,6 @@ first_interface_context_free (FirstInterfaceContext *ctx)
 typedef struct {
     MMPortProbe *probe;
     MMPortSerialAt *port;
-    GCancellable *cancellable;
-    GSimpleAsyncResult *result;
     gboolean curc_done;
     guint curc_retries;
     gboolean getportmode_done;
@@ -84,15 +82,10 @@ typedef struct {
 } HuaweiCustomInitContext;
 
 static void
-huawei_custom_init_context_complete_and_free (HuaweiCustomInitContext *ctx)
+huawei_custom_init_context_free (HuaweiCustomInitContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
     g_object_unref (ctx->port);
     g_object_unref (ctx->probe);
-    g_object_unref (ctx->result);
     g_slice_free (HuaweiCustomInitContext, ctx);
 }
 
@@ -101,10 +94,10 @@ huawei_custom_init_finish (MMPortProbe *probe,
                           GAsyncResult *result,
                           GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (result), error);
+    return g_task_propagate_boolean (G_TASK (result), error);
 }
 
-static void huawei_custom_init_step (HuaweiCustomInitContext *ctx);
+static void huawei_custom_init_step (GTask *task);
 
 static void
 cache_port_mode (MMDevice *device,
@@ -129,10 +122,13 @@ cache_port_mode (MMDevice *device,
 static void
 getportmode_ready (MMPortSerialAt *port,
                    GAsyncResult *res,
-                   HuaweiCustomInitContext *ctx)
+                   GTask *task)
 {
+    HuaweiCustomInitContext *ctx;
     const gchar *response;
     GError *error = NULL;
+
+    ctx = g_task_get_task_data (task);
 
     response = mm_port_serial_at_command_finish (port, res, &error);
     if (error) {
@@ -175,16 +171,19 @@ out:
     if (error)
         g_error_free (error);
 
-    huawei_custom_init_step (ctx);
+    huawei_custom_init_step (task);
 }
 
 static void
 curc_ready (MMPortSerialAt *port,
             GAsyncResult *res,
-            HuaweiCustomInitContext *ctx)
+            GTask *task)
 {
+    HuaweiCustomInitContext *ctx;
     const gchar *response;
     GError *error = NULL;
+
+    ctx = g_task_get_task_data (task);
 
     response = mm_port_serial_at_command_finish (port, res, &error);
     if (error) {
@@ -206,7 +205,7 @@ out:
     if (error)
         g_error_free (error);
 
-    huawei_custom_init_step (ctx);
+    huawei_custom_init_step (task);
 }
 
 static void
@@ -227,9 +226,9 @@ try_next_usbif (MMDevice *device)
 
         /* Only expect ttys for next probing attempt */
         if (g_str_equal (mm_port_probe_get_port_subsys (probe), "tty")) {
-            gint usbif;
+            guint usbif;
 
-            usbif = g_udev_device_get_property_as_int (mm_port_probe_peek_port (probe), "ID_USB_INTERFACE_NUM");
+            usbif = mm_kernel_device_get_property_as_int_hex (mm_port_probe_peek_port (probe), "ID_USB_INTERFACE_NUM");
             if (usbif == fi_ctx->first_usbif) {
                 /* This is the one we just probed, which wasn't yet removed, so just skip it */
             } else if (usbif > fi_ctx->first_usbif &&
@@ -251,17 +250,20 @@ try_next_usbif (MMDevice *device)
 }
 
 static void
-huawei_custom_init_step (HuaweiCustomInitContext *ctx)
+huawei_custom_init_step (GTask *task)
 {
+    HuaweiCustomInitContext *ctx;
     FirstInterfaceContext *fi_ctx;
-    GUdevDevice *port;
+    MMKernelDevice *port;
+
+    ctx = g_task_get_task_data (task);
 
     /* If cancelled, end */
-    if (g_cancellable_is_cancelled (ctx->cancellable)) {
+    if (g_task_return_error_if_cancelled (task)) {
         mm_dbg ("(Huawei) no need to keep on running custom init in (%s)",
                 mm_port_get_device (MM_PORT (ctx->port)));
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        huawei_custom_init_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -269,10 +271,10 @@ huawei_custom_init_step (HuaweiCustomInitContext *ctx)
         if (ctx->curc_retries == 0) {
             /* All retries consumed, probably not an AT port */
             mm_port_probe_set_result_at (ctx->probe, FALSE);
-            g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
             /* Try with next */
             try_next_usbif (mm_port_probe_peek_device (ctx->probe));
-            huawei_custom_init_context_complete_and_free (ctx);
+            g_task_return_boolean (task, TRUE);
+            g_object_unref (task);
             return;
         }
 
@@ -284,18 +286,18 @@ huawei_custom_init_step (HuaweiCustomInitContext *ctx)
             3,
             FALSE, /* raw */
             FALSE, /* allow_cached */
-            ctx->cancellable,
+            g_task_get_cancellable (task),
             (GAsyncReadyCallback)curc_ready,
-            ctx);
+            task);
         return;
     }
 
     /* Try to get a port map from the modem */
     port = mm_port_probe_peek_port (ctx->probe);
-    if (!ctx->getportmode_done && !g_udev_device_get_property_as_boolean (port, "ID_MM_HUAWEI_DISABLE_GETPORTMODE")) {
+    if (!ctx->getportmode_done && !mm_kernel_device_get_global_property_as_boolean (port, "ID_MM_HUAWEI_DISABLE_GETPORTMODE")) {
         if (ctx->getportmode_retries == 0) {
-            g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-            huawei_custom_init_context_complete_and_free (ctx);
+            g_task_return_boolean (task, TRUE);
+            g_object_unref (task);
             return;
         }
 
@@ -306,9 +308,9 @@ huawei_custom_init_step (HuaweiCustomInitContext *ctx)
             3,
             FALSE, /* raw */
             FALSE, /* allow_cached */
-            ctx->cancellable,
+            g_task_get_cancellable (task),
             (GAsyncReadyCallback)getportmode_ready,
-            ctx);
+            task);
         return;
     }
 
@@ -317,8 +319,8 @@ huawei_custom_init_step (HuaweiCustomInitContext *ctx)
     g_assert (fi_ctx != NULL);
     fi_ctx->custom_init_run = TRUE;
 
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    huawei_custom_init_context_complete_and_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static gboolean
@@ -341,6 +343,7 @@ huawei_custom_init (MMPortProbe *probe,
     MMDevice *device;
     FirstInterfaceContext *fi_ctx;
     HuaweiCustomInitContext *ctx;
+    GTask *task;
 
     device = mm_port_probe_peek_device (probe);
 
@@ -377,33 +380,31 @@ huawei_custom_init (MMPortProbe *probe,
     }
 
     ctx = g_slice_new (HuaweiCustomInitContext);
-    ctx->result = g_simple_async_result_new (G_OBJECT (probe),
-                                             callback,
-                                             user_data,
-                                             huawei_custom_init);
     ctx->probe = g_object_ref (probe);
     ctx->port = g_object_ref (port);
-    ctx->cancellable = cancellable ? g_object_ref (cancellable) : NULL;
     ctx->curc_done = FALSE;
     ctx->curc_retries = 3;
     ctx->getportmode_done = FALSE;
     ctx->getportmode_retries = 3;
 
+    task = g_task_new (probe, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)huawei_custom_init_context_free);
+
     /* Custom init only to be run in the first interface */
-    if (g_udev_device_get_property_as_int (mm_port_probe_peek_port (probe),
-                                           "ID_USB_INTERFACE_NUM") != fi_ctx->first_usbif) {
+    if (mm_kernel_device_get_property_as_int_hex (mm_port_probe_peek_port (probe),
+                                                  "ID_USB_INTERFACE_NUM") != fi_ctx->first_usbif) {
 
         if (fi_ctx->custom_init_run)
             /* If custom init was run already, we can consider this as successfully run */
-            g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+            g_task_return_boolean (task, TRUE);
         else
             /* Otherwise, we'll need to defer the probing a bit more */
-            g_simple_async_result_set_error (ctx->result,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_RETRY,
-                                             "Defer needed");
+            g_task_return_new_error (task,
+                                     MM_CORE_ERROR,
+                                     MM_CORE_ERROR_RETRY,
+                                     "Defer needed");
 
-        huawei_custom_init_context_complete_and_free (ctx);
+        g_object_unref (task);
         return;
     }
 
@@ -413,7 +414,7 @@ huawei_custom_init (MMPortProbe *probe,
         fi_ctx->timeout_id = 0;
     }
 
-    huawei_custom_init_step (ctx);
+    huawei_custom_init_step (task);
 }
 
 /*****************************************************************************/
@@ -431,9 +432,9 @@ propagate_port_mode_results (GList *probes)
     /* Now we propagate the tags to the specific port probes */
     for (l = probes; l; l = g_list_next (l)) {
         MMPortSerialAtFlag at_port_flags = MM_PORT_SERIAL_AT_FLAG_NONE;
-        gint usbif;
+        guint usbif;
 
-        usbif = g_udev_device_get_property_as_int (mm_port_probe_peek_port (MM_PORT_PROBE (l->data)), "ID_USB_INTERFACE_NUM");
+        usbif = mm_kernel_device_get_property_as_int_hex (mm_port_probe_peek_port (MM_PORT_PROBE (l->data)), "ID_USB_INTERFACE_NUM");
 
         if (GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (device), TAG_GETPORTMODE_SUPPORTED))) {
             if (usbif + 1 == GPOINTER_TO_INT (g_object_get_data (G_OBJECT (device), TAG_HUAWEI_PCUI_PORT))) {
@@ -481,7 +482,7 @@ propagate_port_mode_results (GList *probes)
 
 static MMBaseModem *
 create_modem (MMPlugin *self,
-              const gchar *sysfs_path,
+              const gchar *uid,
               const gchar **drivers,
               guint16 vendor,
               guint16 product,
@@ -493,7 +494,7 @@ create_modem (MMPlugin *self,
 #if defined WITH_QMI
     if (mm_port_probe_list_has_qmi_port (probes)) {
         mm_dbg ("QMI-powered Huawei modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_qmi_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_qmi_new (uid,
                                                           drivers,
                                                           mm_plugin_get_name (self),
                                                           vendor,
@@ -504,7 +505,7 @@ create_modem (MMPlugin *self,
 #if defined WITH_MBIM
     if (mm_port_probe_list_has_mbim_port (probes)) {
         mm_dbg ("MBIM-powered Huawei modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_mbim_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_mbim_new (uid,
                                                            drivers,
                                                            mm_plugin_get_name (self),
                                                            vendor,
@@ -512,7 +513,7 @@ create_modem (MMPlugin *self,
     }
 #endif
 
-    return MM_BASE_MODEM (mm_broadband_modem_huawei_new (sysfs_path,
+    return MM_BASE_MODEM (mm_broadband_modem_huawei_new (uid,
                                                          drivers,
                                                          mm_plugin_get_name (self),
                                                          vendor,
@@ -526,23 +527,23 @@ grab_port (MMPlugin *self,
            GError **error)
 {
     MMPortSerialAtFlag pflags = MM_PORT_SERIAL_AT_FLAG_NONE;
-    GUdevDevice *port;
+    MMKernelDevice *port;
     MMPortType port_type;
 
     port_type = mm_port_probe_get_port_type (probe);
     port = mm_port_probe_peek_port (probe);
 
-    if (g_udev_device_get_property_as_boolean (port, "ID_MM_HUAWEI_AT_PORT")) {
+    if (mm_kernel_device_get_property_as_boolean (port, "ID_MM_HUAWEI_AT_PORT")) {
         mm_dbg ("(%s/%s)' Port flagged as primary",
                 mm_port_probe_get_port_subsys (probe),
                 mm_port_probe_get_port_name (probe));
         pflags = MM_PORT_SERIAL_AT_FLAG_PRIMARY;
-    } else if (g_udev_device_get_property_as_boolean (port, "ID_MM_HUAWEI_MODEM_PORT")) {
+    } else if (mm_kernel_device_get_property_as_boolean (port, "ID_MM_HUAWEI_MODEM_PORT")) {
         mm_dbg ("(%s/%s) Port flagged as PPP",
                 mm_port_probe_get_port_subsys (probe),
                 mm_port_probe_get_port_name (probe));
         pflags = MM_PORT_SERIAL_AT_FLAG_PPP;
-    } else if (g_udev_device_get_property_as_boolean (port, "ID_MM_HUAWEI_GPS_PORT")) {
+    } else if (mm_kernel_device_get_property_as_boolean (port, "ID_MM_HUAWEI_GPS_PORT")) {
         mm_dbg ("(%s/%s) Port flagged as GPS",
                 mm_port_probe_get_port_subsys (probe),
                 mm_port_probe_get_port_name (probe));
@@ -560,9 +561,7 @@ grab_port (MMPlugin *self,
     }
 
     return mm_base_modem_grab_port (modem,
-                                    mm_port_probe_get_port_subsys (probe),
-                                    mm_port_probe_get_port_name (probe),
-                                    mm_port_probe_get_parent_path (probe),
+                                    port,
                                     port_type,
                                     pflags,
                                     error);

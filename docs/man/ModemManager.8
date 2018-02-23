@@ -19,25 +19,27 @@ actual device (Generic AT, vendor-specific AT, QCDM, QMI, MBIM...).
 ModemManager is a DBus-based system daemon and is not meant to be used directly
 from the command line.
 
-.SH HELP OPTIONS
+.SH APPLICATION OPTIONS
+.TP
+.B \-\-no\-auto\-scan
+Fully disable udev-based auto-scan looking for devices.
+.TP
+.B \-\-initial\-kernel\-events=<filename>
+Specify location of the file where the list of initial kernel events is
+available. The ModemManager daemon will process this file on startup.
+.TP
+.B \-\-debug
+Runs ModemManager with "DEBUG" log level and without daemonizing. This is useful
+for debugging, as it directs log output to the controlling terminal in addition to
+syslog.
 .TP
 .B \-V, \-\-version
 Print the ModemManager software version and exit.
 .TP
 .B \-h, \-\-help
 Show application options.
-.TP
-.B \-\-help\-all
-Show application and test options.
-.TP
-.B \-\-help\-test
-Show test options.
 
-.SH APPLICATION OPTIONS
-.B \-\-debug
-Runs ModemManager with "DEBUG" log level and without daemonizing. This is useful
-for debugging, as it directs log output to the controlling terminal in addition to
-syslog.
+.SH LOGGING OPTIONS
 .TP
 .B \-\-log\-level=<level>
 Sets how much information ModemManager sends to the log destination (usually
@@ -48,19 +50,19 @@ messages are logged. Given level must be one of "ERR", "WARN", "INFO" or "DEBUG"
 Specify location of the file where ModemManager will dump its log messages,
 instead of syslog.
 .TP
-.B \-\-timestamps
+.B \-\-log\-journal
+Output log message to the systemd journal.
+.TP
+.B \-\-log\-timestamps
 Include absolute timestamps in the log output.
 .TP
-.B \-\-relative-timestamps
+.B \-\-log\-relative\-timestamps
 Include timestamps, relative to the start time of the daemon, in the log output.
 
 .SH TEST OPTIONS
 .TP
 .B \-\-test\-session
 Run the ModemManager daemon in the Session bus instead of the System bus.
-.TP
-.B \-\-test\-no\-auto\-scan
-Fully disable udev-based auto-scan looking for devices.
 .TP
 .B \-\-test\-enable
 Enable the Test DBus interface in the daemon.

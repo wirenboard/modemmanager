@@ -2,7 +2,6 @@
 
 ACTION!="add|change|move", GOTO="mm_usb_device_blacklist_end"
 SUBSYSTEM!="usb", GOTO="mm_usb_device_blacklist_end"
-ENV{DEVTYPE}!="usb_device",  GOTO="mm_usb_device_blacklist_end"
 
 # APC UPS devices
 ATTRS{idVendor}=="051d", ENV{ID_MM_DEVICE_IGNORE}="1"
@@ -68,9 +67,6 @@ ATTRS{idVendor}=="9e88", ATTRS{idProduct}=="9e8f", ENV{ID_MM_DEVICE_IGNORE}="1"
 # Atmel Corp at91sam SAMBA bootloader
 ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="6124", ENV{ID_MM_DEVICE_IGNORE}="1"
 
-# Dangerous Prototypes Bus Pirate v4
-ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="fb00", ENV{ID_MM_DEVICE_IGNORE}="1"
-
 # All devices from the Swiss Federal Institute of Technology
 ATTRS{idVendor}=="0617", ENV{ID_MM_DEVICE_IGNORE}="1"
 
@@ -118,6 +114,9 @@ ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a7", ENV{ID_MM_DEVICE_IGNORE}="1"
 # Garmin GPS devices
 DRIVERS=="garmin_gps", ENV{ID_MM_DEVICE_IGNORE}="1"
 
+# Garmin ANT+ stick
+ATTRS{idVendor}=="0fcf", ATTRS{idProduct}=="1009", ENV{ID_MM_DEVICE_IGNORE}="1"
+
 # Cypress M8-based GPS devices, UPSes, and serial converters
 DRIVERS=="cypress_m8", ENV{ID_MM_DEVICE_IGNORE}="1"
 
@@ -133,6 +132,9 @@ ATTRS{idVendor}=="0425", ATTRS{idProduct}=="0408", ENV{ID_MM_DEVICE_IGNORE}="1"
 # Infineon Flashloader used by Intel XMM modem bootloader
 ATTRS{idVendor}=="8087", ATTRS{idProduct}=="0716", ENV{ID_MM_DEVICE_IGNORE}="1"
 ATTRS{idVendor}=="8087", ATTRS{idProduct}=="0801", ENV{ID_MM_DEVICE_IGNORE}="1"
+
+# Intel coredump downloader device
+ATTRS{idVendor}=="1519", ATTRS{idProduct}=="f000", ENV{ID_MM_DEVICE_IGNORE}="1"
 
 # GW Instek AFG-2225 arbitrary function generator
 ATTRS{idVendor}=="2184", ATTRS{idProduct}=="001c", ENV{ID_MM_DEVICE_IGNORE}="1"
@@ -191,5 +193,16 @@ ATTRS{idVendor}=="1209", ATTRS{idProduct}=="2301", ENV{ID_MM_DEVICE_IGNORE}="1"
 
 # Netchip Technology, Inc. Linux-USB Serial Gadget (CDC ACM mode)
 ATTRS{idVendor}=="0525", ATTRS{idProduct}=="a4a7", ENV{ID_MM_DEVICE_IGNORE}="1"
+
+# Silicon Labs Telegesis ETRX USB Zigbee dongle
+ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="000f", ENV{ID_MM_DEVICE_IGNORE}="1"
+
+# Devices using Microchip's VID
+# Dangerous Prototypes Bus Pirate v4
+ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="fb00", ENV{ID_MM_DEVICE_IGNORE}="1"
+# Pycom Pysense
+ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="f012", ENV{ID_MM_DEVICE_IGNORE}="1"
+# Pycom Pytrack
+ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="f013", ENV{ID_MM_DEVICE_IGNORE}="1"
 
 LABEL="mm_usb_device_blacklist_end"

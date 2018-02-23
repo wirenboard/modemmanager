@@ -119,8 +119,14 @@
 /* Define if you want QMI support */
 #undef WITH_QMI
 
-/* Define if you have suspend-resume support */
-#undef WITH_SUSPEND_RESUME
+/* Define if you want systemd journal support */
+#undef WITH_SYSTEMD_JOURNAL
+
+/* Define if you have systemd suspend-resume support */
+#undef WITH_SYSTEMD_SUSPEND_RESUME
+
+/* Define if you want udev support */
+#undef WITH_UDEV
 
 /* Define to 1 if on MINIX. */
 #undef _MINIX
