@@ -1,3 +1,10 @@
+modemmanager (1.7.997-1) UNRELEASED; urgency=medium
+
+  * debian/control: Bump libqmi-glib-dev and libmbim-glib-dev Depends to new
+    required versions (libmbim > 1.16, libqmi > 1.20) for this release.
+
+ -- Mathieu Trudel-Lapierre <cyphermox@ubuntu.com>  Fri, 23 Feb 2018 09:48:39 -0500
+
 modemmanager (1.6.8-2) unstable; urgency=medium
 
   * Remove myself from Uploaders and re-instate Mathieu Trudel-Lapierre as
