@@ -17,6 +17,7 @@
 #define MM_MODEM_HELPERS_TELIT_H
 
 #include <glib.h>
+#include "ModemManager.h"
 
 #define MAX_BANDS_LIST_LEN 20
 
@@ -60,11 +61,6 @@ typedef struct {
     MMModemBand mm_bands[MAX_BANDS_LIST_LEN];
 } TelitToMMBandMap;
 
-/* +CSIM response parser */
-gint mm_telit_parse_csim_response (const guint step,
-                                   const gchar *response,
-                                   GError **error);
-
 typedef enum {
     LOAD_SUPPORTED_BANDS,
     LOAD_CURRENT_BANDS
@@ -98,5 +94,25 @@ gboolean mm_telit_update_3g_bands(gchar *band_list, GMatchInfo **match_info, GAr
 gboolean mm_telit_update_4g_bands(GArray** bands, GMatchInfo *match_info, GError **error);
 
 void mm_telit_get_band_flag (GArray *bands_array, gint *flag_2g, gint *flag_3g, gint *flag_4g);
+
+/* #QSS? response parser */
+typedef enum { /*< underscore_name=mm_telit_qss_status >*/
+    QSS_STATUS_UNKNOWN = -1,
+    QSS_STATUS_SIM_REMOVED,
+    QSS_STATUS_SIM_INSERTED,
+    QSS_STATUS_SIM_INSERTED_AND_UNLOCKED,
+    QSS_STATUS_SIM_INSERTED_AND_READY,
+} MMTelitQssStatus;
+
+MMTelitQssStatus mm_telit_parse_qss_query (const gchar *response, GError **error);
+
+/* CSIM lock state */
+typedef enum { /*< underscore_name=mm_telit_csim_lock_state >*/
+    CSIM_LOCK_STATE_UNKNOWN,
+    CSIM_LOCK_STATE_UNLOCKED,
+    CSIM_LOCK_STATE_LOCK_REQUESTED,
+    CSIM_LOCK_STATE_LOCKED,
+} MMTelitCsimLockState;
+
 
 #endif  /* MM_MODEM_HELPERS_TELIT_H */

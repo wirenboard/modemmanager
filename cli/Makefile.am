@@ -38,6 +38,11 @@ mmcli_LDADD = \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
 	$(NULL)
 
+if WITH_UDEV
+mmcli_CPPFLAGS += $(GUDEV_CFLAGS)
+mmcli_LDADD    += $(GUDEV_LIBS)
+endif
+
 completiondir = $(datadir)/bash-completion/completions
 
 install-data-hook:

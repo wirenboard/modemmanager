@@ -2,81 +2,155 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Enabling: ModemManager Reference Manual</title>
-<meta name="generator" content="DocBook XSL Stylesheets V1.79.1">
+<title>Filter policies: ModemManager Reference Manual</title>
+<meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
 <link rel="home" href="index.html" title="ModemManager Reference Manual">
-<link rel="up" href="ref-overview-modem-state-machine.html" title="Modem state machine">
-<link rel="prev" href="ref-overview-modem-state-machine.html" title="Modem state machine">
-<link rel="next" href="ch03s03.html" title="Connection &amp; disconnection">
-<meta name="generator" content="GTK-Doc V1.25.1 (XML mode)">
+<link rel="up" href="ref-overview-modem-filter.html" title="Modem filter">
+<link rel="prev" href="ref-overview-modem-filter.html" title="Modem filter">
+<link rel="next" href="ref-overview-modem-port-probing.html" title="Port probing">
+<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
 <table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="5"><tr valign="middle">
 <td width="100%" align="left" class="shortcuts"></td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
-<td><a accesskey="u" href="ref-overview-modem-state-machine.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
-<td><a accesskey="p" href="ref-overview-modem-state-machine.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
-<td><a accesskey="n" href="ch03s03.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+<td><a accesskey="u" href="ref-overview-modem-filter.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="p" href="ref-overview-modem-filter.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="n" href="ref-overview-modem-port-probing.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
 </tr></table>
 <div class="section">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="id-1.2.4.6"></a>Enabling</h2></div></div></div>
+<a name="id-1.2.4.5"></a>Filter policies</h2></div></div></div>
 <p>
-        Modem enabling is the user-requested sequence with the sole purpose of bringing
-        the modem to a state where it can get connected.
-      </p>
-<p>
-        As with the initialization sequence, the global enabling sequence is itself
-        splitted into N per-interface enabling steps (being N the number of interfaces
-        exported by the modem). Those interfaces implemented by the object but not
-        supported by the modem will not be enabled.
-      </p>
+        The predefined filter policies are:
+        </p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem">
-<p><span class="emphasis"><em>Modem interface enabling</em></span></p>
+<p><span class="emphasis"><em>Whitelist only</em></span></p>
 <p>
-            The sequence to enable the
-            <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html" title="org.freedesktop.ModemManager1.Modem">Modem interface</a>
-            takes care of different important steps, such as <span class="emphasis"><em>powering up the
-            radio interface</em></span> or <span class="emphasis"><em>configuring</em></span> the best charset
-            to use.
-          </p>
+              This is a policy where only the MM_FILTER_RULE_EXPLICIT_WHITELIST rule is enabled.
+            </p>
+<pre class="programlisting"># /usr/sbin/ModemManager --filter-policy=WHITELIST-ONLY</pre>
 </li>
 <li class="listitem">
-<p><span class="emphasis"><em>3GPP interface enabling</em></span></p>
+<p><span class="emphasis"><em>Default</em></span></p>
 <p>
-            Modems with 3GPP capabilities will enable the
-            <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html" title="org.freedesktop.ModemManager1.Modem.Modem3gpp">3GPP interface</a>
-            as part of the global enabling sequence. This sequence involves setting up the
-            <span class="emphasis"><em>automatic registration</em></span> of the device in the network, as well
-            as configuring 3GPP specific <span class="emphasis"><em>indicators and unsolicited message
-            handlers</em></span>.
-          </p>
+              This is a policy where the following rules are enabled:
+              </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">MM_FILTER_RULE_EXPLICIT_WHITELIST</li>
+<li class="listitem">MM_FILTER_RULE_VIRTUAL</li>
+<li class="listitem">MM_FILTER_RULE_NET</li>
+<li class="listitem">MM_FILTER_RULE_CDC_WDM</li>
+<li class="listitem">MM_FILTER_RULE_TTY</li>
+<li class="listitem">MM_FILTER_RULE_TTY_BLACKLIST</li>
+<li class="listitem">MM_FILTER_RULE_TTY_MANUAL_SCAN_ONLY</li>
+<li class="listitem">MM_FILTER_RULE_TTY_PLATFORM_DRIVER</li>
+<li class="listitem">MM_FILTER_RULE_TTY_DEFAULT_ALLOWED</li>
+</ul></div>
+<p>
+            </p>
+<p>
+              This policy is the default one when a different one not explicitly
+              selected, and is equivalent to the way ModemManager has worked in previous
+              releases. This policy is the least restrictive one, and will end up
+              allowing port probing of all TTYs not explicitly blacklisted in one way
+              or another.
+            </p>
+<pre class="programlisting"># /usr/sbin/ModemManager --filter-policy=DEFAULT</pre>
 </li>
 <li class="listitem">
-<p><span class="emphasis"><em>CDMA interface enabling</em></span></p>
+<p><span class="emphasis"><em>Strict</em></span></p>
 <p>
-            Modems with CDMA capabilities will enable the
-            <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html" title="org.freedesktop.ModemManager1.Modem.ModemCdma">CDMA interface</a>
-            as part of the global enabling sequence. This sequence involves setting up the
-            <span class="emphasis"><em>periodic checks of registration</em></span> in the CDMA network.
-          </p>
+              This is a policy where the following rules are enabled:
+              </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">MM_FILTER_RULE_EXPLICIT_WHITELIST</li>
+<li class="listitem">MM_FILTER_RULE_VIRTUAL</li>
+<li class="listitem">MM_FILTER_RULE_NET</li>
+<li class="listitem">MM_FILTER_RULE_CDC_WDM</li>
+<li class="listitem">MM_FILTER_RULE_TTY</li>
+<li class="listitem">MM_FILTER_RULE_TTY_PLATFORM_DRIVER</li>
+<li class="listitem">MM_FILTER_RULE_TTY_DRIVER</li>
+<li class="listitem">MM_FILTER_RULE_TTY_ACM_INTERFACE</li>
+<li class="listitem">MM_FILTER_RULE_TTY_WITH_NET</li>
+<li class="listitem">MM_FILTER_RULE_TTY_DEFAULT_FORBIDDEN</li>
+</ul></div>
+<p>
+            </p>
+<p>
+              This policy is stricter than the default one, as by default all TTYs are
+              forbidden except for the ones explicitly allowed by one of the TTY-specific
+              rules. Distributions or users should use this policy if they don't want
+              ModemManager to mess around with TTY ports that may not be exposed by
+              actual modems.
+            </p>
+<pre class="programlisting"># /usr/sbin/ModemManager --filter-policy=STRICT</pre>
 </li>
 <li class="listitem">
-<p><span class="emphasis"><em>Additional feature-specific interface enablings</em></span></p>
+<p><span class="emphasis"><em>Paranoid</em></span></p>
 <p>
-            Each feature-specific interface will have its own enabling sequence, with operations
-            which are directly related to the purpose of the interface. For example, enabling the
-            <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html" title="org.freedesktop.ModemManager1.Modem.Location">Location</a>
-            interface will involve setting up the initial location information; and enabling the
-            <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html" title="org.freedesktop.ModemManager1.Modem.Messaging">Messaging</a>
-            interface will involve loading the initial list of SMS available in the SIM or Modem.
-          </p>
+              This policy is a mix of the Default and Strict ones:
+              </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">MM_FILTER_RULE_EXPLICIT_WHITELIST</li>
+<li class="listitem">MM_FILTER_RULE_VIRTUAL</li>
+<li class="listitem">MM_FILTER_RULE_NET</li>
+<li class="listitem">MM_FILTER_RULE_CDC_WDM</li>
+<li class="listitem">MM_FILTER_RULE_TTY</li>
+<li class="listitem">MM_FILTER_RULE_TTY_BLACKLIST</li>
+<li class="listitem">MM_FILTER_RULE_TTY_MANUAL_SCAN_ONLY</li>
+<li class="listitem">MM_FILTER_RULE_TTY_PLATFORM_DRIVER</li>
+<li class="listitem">MM_FILTER_RULE_TTY_DRIVER</li>
+<li class="listitem">MM_FILTER_RULE_TTY_ACM_INTERFACE</li>
+<li class="listitem">MM_FILTER_RULE_TTY_WITH_NET</li>
+<li class="listitem">MM_FILTER_RULE_TTY_DEFAULT_FORBIDDEN</li>
+</ul></div>
+<p>
+            </p>
+<p>
+              This policy is equivalent to the Strict policy, but where the ModemManager
+              provided blacklist and manual scan only greylist are also used. It is not
+              recommended to use this option in normal setups as the blacklists may be
+              obsoleted in future ModemManager versions (in favor of using the Strict
+              policy as default).
+            </p>
+<pre class="programlisting"># /usr/sbin/ModemManager --filter-policy=PARANOID</pre>
+</li>
+<li class="listitem">
+<p><span class="emphasis"><em>Custom</em></span></p>
+<p>
+              Any of the previously defined predefined policies may be modified rule per rule
+              by explicitly enabling or disabling rules via environment variables.
+            </p>
+<p>
+              E.g. this would launch ModemManager with the Default filter policy but with all
+              net and cdc-wdm ports forbidden completely:
+              </p>
+<pre class="programlisting">
+# MM_FILTER_RULE_NET=0 \
+  MM_FILTER_RULE_CDC_WDM=0 \
+  /usr/sbin/ModemManager --filter-policy=DEFAULT</pre>
+<p>
+            </p>
+<p>
+              E.g. this would launch ModemManager with the Whitelist-only filter policy but also
+              explicitly allowing all net and cdc-wdm ports. Note that in this case, all virtual
+              net ports (e.g. 'lo') are also being allowed.
+              </p>
+<pre class="programlisting">
+# MM_FILTER_RULE_NET=1 \
+  MM_FILTER_RULE_CDC_WDM=1 \
+  /usr/sbin/ModemManager --filter-policy=WHITELIST-ONLY</pre>
+<p>
+            </p>
 </li>
 </ul></div>
+<p>
+      </p>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.25.1</div>
+<hr>Generated by GTK-Doc V1.27</div>
 </body>
 </html>

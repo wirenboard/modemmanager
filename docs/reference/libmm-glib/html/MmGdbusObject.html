@@ -3,12 +3,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>MmGdbusObject: libmm-glib Reference Manual</title>
-<meta name="generator" content="DocBook XSL Stylesheets V1.79.1">
+<meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
 <link rel="home" href="index.html" title="libmm-glib Reference Manual">
 <link rel="up" href="pt02.html" title="Part II. Low level API">
 <link rel="prev" href="MmGdbusObjectManagerClient.html" title="MmGdbusObjectManagerClient">
 <link rel="next" href="MmGdbusObjectProxy.html" title="MmGdbusObjectProxy">
-<meta name="generator" content="GTK-Doc V1.25.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -343,7 +343,7 @@
 </div>
 <div class="refsect1">
 <a name="MmGdbusObject.object-hierarchy"></a><h2>Object Hierarchy</h2>
-<pre class="screen">    <a href="https://developer.gnome.org/gobject/unstable/GTypeModule.html">GInterface</a>
+<pre class="screen">    <a href="/usr/share/gtk-doc/html/gobject/GTypeModule.html">GInterface</a>
     <span class="lineart">╰──</span> MmGdbusObject
 </pre>
 </div>
@@ -351,7 +351,7 @@
 <a name="MmGdbusObject.prerequisites"></a><h2>Prerequisites</h2>
 <p>
 MmGdbusObject requires
- <a href="https://developer.gnome.org/gio/unstable/GDBusObject.html#GDBusObject-struct">GDBusObject</a> and  <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct">GObject</a>.</p>
+ <a href="../gio/GDBusObject.html#GDBusObject-struct">GDBusObject</a> and  <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-struct">GObject</a>.</p>
 </div>
 <div class="refsect1">
 <a name="MmGdbusObject.implementations"></a><h2>Known Implementations</h2>
@@ -370,7 +370,7 @@ MmGdbusObject is implemented by
 <pre class="programlisting"><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="returnvalue">MmGdbusModem</span></a> *
 mm_gdbus_object_peek_modem (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem" title="mm_gdbus_object_get_modem ()"><code class="function">mm_gdbus_object_get_modem()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="../gio/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="../gio/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem.parameters"></a><h4>Parameters</h4>
@@ -389,7 +389,7 @@ mm_gdbus_object_peek_modem (<em class="parameter"><code><a class="link" href="Mm
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. Do not free the returned object, it is owned by <em class="parameter"><code>object</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -419,7 +419,7 @@ mm_gdbus_object_get_modem (<em class="parameter"><code><a class="link" href="MmG
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-get-modem.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> that must be freed with <a href="../gobject/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
@@ -430,7 +430,7 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModem3gpp.html" title="MmGdbusModem3gpp"><span class="returnvalue">MmGdbusModem3gpp</span></a> *
 mm_gdbus_object_peek_modem3gpp (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem3gpp" title="mm_gdbus_object_get_modem3gpp ()"><code class="function">mm_gdbus_object_get_modem3gpp()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="../gio/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="../gio/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem3gpp.parameters"></a><h4>Parameters</h4>
@@ -449,7 +449,7 @@ mm_gdbus_object_peek_modem3gpp (<em class="parameter"><code><a class="link" href
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem3gpp.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModem3gpp.html" title="MmGdbusModem3gpp"><span class="type">MmGdbusModem3gpp</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModem3gpp.html" title="MmGdbusModem3gpp"><span class="type">MmGdbusModem3gpp</span></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. Do not free the returned object, it is owned by <em class="parameter"><code>object</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -479,7 +479,7 @@ mm_gdbus_object_get_modem3gpp (<em class="parameter"><code><a class="link" href=
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-get-modem3gpp.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModem3gpp.html" title="MmGdbusModem3gpp"><span class="type">MmGdbusModem3gpp</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModem3gpp.html" title="MmGdbusModem3gpp"><span class="type">MmGdbusModem3gpp</span></a> that must be freed with <a href="../gobject/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
@@ -490,7 +490,7 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd"><span class="returnvalue">MmGdbusModem3gppUssd</span></a> *
 mm_gdbus_object_peek_modem3gpp_ussd (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem3gpp-ussd" title="mm_gdbus_object_get_modem3gpp_ussd ()"><code class="function">mm_gdbus_object_get_modem3gpp_ussd()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="../gio/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="../gio/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem3gpp-ussd.parameters"></a><h4>Parameters</h4>
@@ -509,7 +509,7 @@ mm_gdbus_object_peek_modem3gpp_ussd (<em class="parameter"><code><a class="link"
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem3gpp-ussd.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd"><span class="type">MmGdbusModem3gppUssd</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd"><span class="type">MmGdbusModem3gppUssd</span></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. Do not free the returned object, it is owned by <em class="parameter"><code>object</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -539,7 +539,7 @@ mm_gdbus_object_get_modem3gpp_ussd (<em class="parameter"><code><a class="link" 
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-get-modem3gpp-ussd.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd"><span class="type">MmGdbusModem3gppUssd</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd"><span class="type">MmGdbusModem3gppUssd</span></a> that must be freed with <a href="../gobject/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
@@ -550,7 +550,7 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemCdma"><span class="returnvalue">MmGdbusModemCdma</span></a> *
 mm_gdbus_object_peek_modem_cdma (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-cdma" title="mm_gdbus_object_get_modem_cdma ()"><code class="function">mm_gdbus_object_get_modem_cdma()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="../gio/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="../gio/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-cdma.parameters"></a><h4>Parameters</h4>
@@ -569,7 +569,7 @@ mm_gdbus_object_peek_modem_cdma (<em class="parameter"><code><a class="link" hre
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-cdma.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemCdma"><span class="type">MmGdbusModemCdma</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemCdma"><span class="type">MmGdbusModemCdma</span></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. Do not free the returned object, it is owned by <em class="parameter"><code>object</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -599,7 +599,7 @@ mm_gdbus_object_get_modem_cdma (<em class="parameter"><code><a class="link" href
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-get-modem-cdma.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemCdma"><span class="type">MmGdbusModemCdma</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemCdma"><span class="type">MmGdbusModemCdma</span></a> that must be freed with <a href="../gobject/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
@@ -610,7 +610,7 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemLocation.html" title="MmGdbusModemLocation"><span class="returnvalue">MmGdbusModemLocation</span></a> *
 mm_gdbus_object_peek_modem_location (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-location" title="mm_gdbus_object_get_modem_location ()"><code class="function">mm_gdbus_object_get_modem_location()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="../gio/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="../gio/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-location.parameters"></a><h4>Parameters</h4>
@@ -629,7 +629,7 @@ mm_gdbus_object_peek_modem_location (<em class="parameter"><code><a class="link"
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-location.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemLocation.html" title="MmGdbusModemLocation"><span class="type">MmGdbusModemLocation</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemLocation.html" title="MmGdbusModemLocation"><span class="type">MmGdbusModemLocation</span></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. Do not free the returned object, it is owned by <em class="parameter"><code>object</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -659,7 +659,7 @@ mm_gdbus_object_get_modem_location (<em class="parameter"><code><a class="link" 
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-get-modem-location.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemLocation.html" title="MmGdbusModemLocation"><span class="type">MmGdbusModemLocation</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemLocation.html" title="MmGdbusModemLocation"><span class="type">MmGdbusModemLocation</span></a> that must be freed with <a href="../gobject/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
@@ -670,7 +670,7 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemMessaging.html" title="MmGdbusModemMessaging"><span class="returnvalue">MmGdbusModemMessaging</span></a> *
 mm_gdbus_object_peek_modem_messaging (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-messaging" title="mm_gdbus_object_get_modem_messaging ()"><code class="function">mm_gdbus_object_get_modem_messaging()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="../gio/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="../gio/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-messaging.parameters"></a><h4>Parameters</h4>
@@ -689,7 +689,7 @@ mm_gdbus_object_peek_modem_messaging (<em class="parameter"><code><a class="link
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-messaging.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemMessaging.html" title="MmGdbusModemMessaging"><span class="type">MmGdbusModemMessaging</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemMessaging.html" title="MmGdbusModemMessaging"><span class="type">MmGdbusModemMessaging</span></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. Do not free the returned object, it is owned by <em class="parameter"><code>object</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -719,7 +719,7 @@ mm_gdbus_object_get_modem_messaging (<em class="parameter"><code><a class="link"
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-get-modem-messaging.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemMessaging.html" title="MmGdbusModemMessaging"><span class="type">MmGdbusModemMessaging</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemMessaging.html" title="MmGdbusModemMessaging"><span class="type">MmGdbusModemMessaging</span></a> that must be freed with <a href="../gobject/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
@@ -730,7 +730,7 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemTime.html" title="MmGdbusModemTime"><span class="returnvalue">MmGdbusModemTime</span></a> *
 mm_gdbus_object_peek_modem_time (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-time" title="mm_gdbus_object_get_modem_time ()"><code class="function">mm_gdbus_object_get_modem_time()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="../gio/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="../gio/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-time.parameters"></a><h4>Parameters</h4>
@@ -749,7 +749,7 @@ mm_gdbus_object_peek_modem_time (<em class="parameter"><code><a class="link" hre
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-time.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemTime.html" title="MmGdbusModemTime"><span class="type">MmGdbusModemTime</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemTime.html" title="MmGdbusModemTime"><span class="type">MmGdbusModemTime</span></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. Do not free the returned object, it is owned by <em class="parameter"><code>object</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -779,7 +779,7 @@ mm_gdbus_object_get_modem_time (<em class="parameter"><code><a class="link" href
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-get-modem-time.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemTime.html" title="MmGdbusModemTime"><span class="type">MmGdbusModemTime</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemTime.html" title="MmGdbusModemTime"><span class="type">MmGdbusModemTime</span></a> that must be freed with <a href="../gobject/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
@@ -790,7 +790,7 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="returnvalue">MmGdbusModemFirmware</span></a> *
 mm_gdbus_object_peek_modem_firmware (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-firmware" title="mm_gdbus_object_get_modem_firmware ()"><code class="function">mm_gdbus_object_get_modem_firmware()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="../gio/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="../gio/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-firmware.parameters"></a><h4>Parameters</h4>
@@ -809,7 +809,7 @@ mm_gdbus_object_peek_modem_firmware (<em class="parameter"><code><a class="link"
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-firmware.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="type">MmGdbusModemFirmware</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="type">MmGdbusModemFirmware</span></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. Do not free the returned object, it is owned by <em class="parameter"><code>object</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -839,7 +839,7 @@ mm_gdbus_object_get_modem_firmware (<em class="parameter"><code><a class="link" 
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-get-modem-firmware.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="type">MmGdbusModemFirmware</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="type">MmGdbusModemFirmware</span></a> that must be freed with <a href="../gobject/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
@@ -850,7 +850,7 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemOma.html" title="MmGdbusModemOma"><span class="returnvalue">MmGdbusModemOma</span></a> *
 mm_gdbus_object_peek_modem_oma (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-oma" title="mm_gdbus_object_get_modem_oma ()"><code class="function">mm_gdbus_object_get_modem_oma()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="../gio/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="../gio/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-oma.parameters"></a><h4>Parameters</h4>
@@ -869,7 +869,7 @@ mm_gdbus_object_peek_modem_oma (<em class="parameter"><code><a class="link" href
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-oma.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemOma.html" title="MmGdbusModemOma"><span class="type">MmGdbusModemOma</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemOma.html" title="MmGdbusModemOma"><span class="type">MmGdbusModemOma</span></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. Do not free the returned object, it is owned by <em class="parameter"><code>object</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -899,7 +899,7 @@ mm_gdbus_object_get_modem_oma (<em class="parameter"><code><a class="link" href=
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-get-modem-oma.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemOma.html" title="MmGdbusModemOma"><span class="type">MmGdbusModemOma</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemOma.html" title="MmGdbusModemOma"><span class="type">MmGdbusModemOma</span></a> that must be freed with <a href="../gobject/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
@@ -910,7 +910,7 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemSimple.html" title="MmGdbusModemSimple"><span class="returnvalue">MmGdbusModemSimple</span></a> *
 mm_gdbus_object_peek_modem_simple (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-simple" title="mm_gdbus_object_get_modem_simple ()"><code class="function">mm_gdbus_object_get_modem_simple()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="../gio/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="../gio/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-simple.parameters"></a><h4>Parameters</h4>
@@ -929,7 +929,7 @@ mm_gdbus_object_peek_modem_simple (<em class="parameter"><code><a class="link" h
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-simple.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemSimple.html" title="MmGdbusModemSimple"><span class="type">MmGdbusModemSimple</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemSimple.html" title="MmGdbusModemSimple"><span class="type">MmGdbusModemSimple</span></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. Do not free the returned object, it is owned by <em class="parameter"><code>object</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -959,7 +959,7 @@ mm_gdbus_object_get_modem_simple (<em class="parameter"><code><a class="link" hr
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-get-modem-simple.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemSimple.html" title="MmGdbusModemSimple"><span class="type">MmGdbusModemSimple</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemSimple.html" title="MmGdbusModemSimple"><span class="type">MmGdbusModemSimple</span></a> that must be freed with <a href="../gobject/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
@@ -970,7 +970,7 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="returnvalue">MmGdbusModemSignal</span></a> *
 mm_gdbus_object_peek_modem_signal (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-signal" title="mm_gdbus_object_get_modem_signal ()"><code class="function">mm_gdbus_object_get_modem_signal()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="../gio/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="../gio/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-signal.parameters"></a><h4>Parameters</h4>
@@ -989,7 +989,7 @@ mm_gdbus_object_peek_modem_signal (<em class="parameter"><code><a class="link" h
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-signal.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. Do not free the returned object, it is owned by <em class="parameter"><code>object</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -1019,7 +1019,7 @@ mm_gdbus_object_get_modem_signal (<em class="parameter"><code><a class="link" hr
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-get-modem-signal.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> that must be freed with <a href="../gobject/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
@@ -1030,7 +1030,7 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemVoice.html" title="MmGdbusModemVoice"><span class="returnvalue">MmGdbusModemVoice</span></a> *
 mm_gdbus_object_peek_modem_voice (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-voice" title="mm_gdbus_object_get_modem_voice ()"><code class="function">mm_gdbus_object_get_modem_voice()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="../gio/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="../gio/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-voice.parameters"></a><h4>Parameters</h4>
@@ -1049,7 +1049,7 @@ mm_gdbus_object_peek_modem_voice (<em class="parameter"><code><a class="link" hr
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-voice.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemVoice.html" title="MmGdbusModemVoice"><span class="type">MmGdbusModemVoice</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemVoice.html" title="MmGdbusModemVoice"><span class="type">MmGdbusModemVoice</span></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. Do not free the returned object, it is owned by <em class="parameter"><code>object</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -1079,7 +1079,7 @@ mm_gdbus_object_get_modem_voice (<em class="parameter"><code><a class="link" hre
 </div>
 <div class="refsect3">
 <a name="mm-gdbus-object-get-modem-voice.returns"></a><h4>Returns</h4>
-<p> A <a class="link" href="MmGdbusModemVoice.html" title="MmGdbusModemVoice"><span class="type">MmGdbusModemVoice</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
+<p>A <a class="link" href="MmGdbusModemVoice.html" title="MmGdbusModemVoice"><span class="type">MmGdbusModemVoice</span></a> that must be freed with <a href="../gobject/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>object</code></em>
 does not implement the interface. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
@@ -1109,7 +1109,7 @@ does not implement the interface. </p>
 <col width="200px" class="struct_members_annotations">
 </colgroup>
 <tbody><tr>
-<td class="struct_member_name"><p><a href="https://developer.gnome.org/gobject/unstable/gobject-Type-Information.html#GTypeInterface"><span class="type">GTypeInterface</span></a> <em class="structfield"><code><a name="MmGdbusObjectIface.parent-iface"></a>parent_iface</code></em>;</p></td>
+<td class="struct_member_name"><p><a href="../gobject/gobject-Type-Information.html#GTypeInterface"><span class="type">GTypeInterface</span></a> <em class="structfield"><code><a name="MmGdbusObjectIface.parent-iface"></a>parent_iface</code></em>;</p></td>
 <td class="struct_member_description"><p>The parent interface.</p></td>
 <td class="struct_member_annotations"> </td>
 </tr></tbody>
@@ -1123,7 +1123,7 @@ does not implement the interface. </p>
 <a name="MmGdbusObject--modem"></a><h3>The <code class="literal">“modem”</code> property</h3>
 <pre class="programlisting">  “modem”                    <a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *</pre>
 <p>The <a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> instance corresponding to the D-Bus interface org.freedesktop.ModemManager1.Modem, if any.</p>
-<p>Connect to the <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
+<p>Connect to the <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -1131,7 +1131,7 @@ does not implement the interface. </p>
 <a name="MmGdbusObject--modem-cdma"></a><h3>The <code class="literal">“modem-cdma”</code> property</h3>
 <pre class="programlisting">  “modem-cdma”               <a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemCdma"><span class="type">MmGdbusModemCdma</span></a> *</pre>
 <p>The <a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemCdma"><span class="type">MmGdbusModemCdma</span></a> instance corresponding to the D-Bus interface org.freedesktop.ModemManager1.Modem.ModemCdma, if any.</p>
-<p>Connect to the <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
+<p>Connect to the <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -1139,7 +1139,7 @@ does not implement the interface. </p>
 <a name="MmGdbusObject--modem-firmware"></a><h3>The <code class="literal">“modem-firmware”</code> property</h3>
 <pre class="programlisting">  “modem-firmware”           <a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="type">MmGdbusModemFirmware</span></a> *</pre>
 <p>The <a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="type">MmGdbusModemFirmware</span></a> instance corresponding to the D-Bus interface org.freedesktop.ModemManager1.Modem.Firmware, if any.</p>
-<p>Connect to the <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
+<p>Connect to the <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -1147,7 +1147,7 @@ does not implement the interface. </p>
 <a name="MmGdbusObject--modem-location"></a><h3>The <code class="literal">“modem-location”</code> property</h3>
 <pre class="programlisting">  “modem-location”           <a class="link" href="MmGdbusModemLocation.html" title="MmGdbusModemLocation"><span class="type">MmGdbusModemLocation</span></a> *</pre>
 <p>The <a class="link" href="MmGdbusModemLocation.html" title="MmGdbusModemLocation"><span class="type">MmGdbusModemLocation</span></a> instance corresponding to the D-Bus interface org.freedesktop.ModemManager1.Modem.Location, if any.</p>
-<p>Connect to the <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
+<p>Connect to the <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -1155,7 +1155,7 @@ does not implement the interface. </p>
 <a name="MmGdbusObject--modem-messaging"></a><h3>The <code class="literal">“modem-messaging”</code> property</h3>
 <pre class="programlisting">  “modem-messaging”          <a class="link" href="MmGdbusModemMessaging.html" title="MmGdbusModemMessaging"><span class="type">MmGdbusModemMessaging</span></a> *</pre>
 <p>The <a class="link" href="MmGdbusModemMessaging.html" title="MmGdbusModemMessaging"><span class="type">MmGdbusModemMessaging</span></a> instance corresponding to the D-Bus interface org.freedesktop.ModemManager1.Modem.Messaging, if any.</p>
-<p>Connect to the <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
+<p>Connect to the <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -1163,7 +1163,7 @@ does not implement the interface. </p>
 <a name="MmGdbusObject--modem-oma"></a><h3>The <code class="literal">“modem-oma”</code> property</h3>
 <pre class="programlisting">  “modem-oma”                <a class="link" href="MmGdbusModemOma.html" title="MmGdbusModemOma"><span class="type">MmGdbusModemOma</span></a> *</pre>
 <p>The <a class="link" href="MmGdbusModemOma.html" title="MmGdbusModemOma"><span class="type">MmGdbusModemOma</span></a> instance corresponding to the D-Bus interface org.freedesktop.ModemManager1.Modem.Oma, if any.</p>
-<p>Connect to the <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
+<p>Connect to the <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -1171,7 +1171,7 @@ does not implement the interface. </p>
 <a name="MmGdbusObject--modem-signal"></a><h3>The <code class="literal">“modem-signal”</code> property</h3>
 <pre class="programlisting">  “modem-signal”             <a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *</pre>
 <p>The <a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> instance corresponding to the D-Bus interface org.freedesktop.ModemManager1.Modem.Signal, if any.</p>
-<p>Connect to the <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
+<p>Connect to the <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -1179,7 +1179,7 @@ does not implement the interface. </p>
 <a name="MmGdbusObject--modem-simple"></a><h3>The <code class="literal">“modem-simple”</code> property</h3>
 <pre class="programlisting">  “modem-simple”             <a class="link" href="MmGdbusModemSimple.html" title="MmGdbusModemSimple"><span class="type">MmGdbusModemSimple</span></a> *</pre>
 <p>The <a class="link" href="MmGdbusModemSimple.html" title="MmGdbusModemSimple"><span class="type">MmGdbusModemSimple</span></a> instance corresponding to the D-Bus interface org.freedesktop.ModemManager1.Modem.Simple, if any.</p>
-<p>Connect to the <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
+<p>Connect to the <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -1187,7 +1187,7 @@ does not implement the interface. </p>
 <a name="MmGdbusObject--modem-time"></a><h3>The <code class="literal">“modem-time”</code> property</h3>
 <pre class="programlisting">  “modem-time”               <a class="link" href="MmGdbusModemTime.html" title="MmGdbusModemTime"><span class="type">MmGdbusModemTime</span></a> *</pre>
 <p>The <a class="link" href="MmGdbusModemTime.html" title="MmGdbusModemTime"><span class="type">MmGdbusModemTime</span></a> instance corresponding to the D-Bus interface org.freedesktop.ModemManager1.Modem.Time, if any.</p>
-<p>Connect to the <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
+<p>Connect to the <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -1195,7 +1195,7 @@ does not implement the interface. </p>
 <a name="MmGdbusObject--modem-voice"></a><h3>The <code class="literal">“modem-voice”</code> property</h3>
 <pre class="programlisting">  “modem-voice”              <a class="link" href="MmGdbusModemVoice.html" title="MmGdbusModemVoice"><span class="type">MmGdbusModemVoice</span></a> *</pre>
 <p>The <a class="link" href="MmGdbusModemVoice.html" title="MmGdbusModemVoice"><span class="type">MmGdbusModemVoice</span></a> instance corresponding to the D-Bus interface org.freedesktop.ModemManager1.Modem.Voice, if any.</p>
-<p>Connect to the <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
+<p>Connect to the <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -1203,7 +1203,7 @@ does not implement the interface. </p>
 <a name="MmGdbusObject--modem3gpp"></a><h3>The <code class="literal">“modem3gpp”</code> property</h3>
 <pre class="programlisting">  “modem3gpp”                <a class="link" href="MmGdbusModem3gpp.html" title="MmGdbusModem3gpp"><span class="type">MmGdbusModem3gpp</span></a> *</pre>
 <p>The <a class="link" href="MmGdbusModem3gpp.html" title="MmGdbusModem3gpp"><span class="type">MmGdbusModem3gpp</span></a> instance corresponding to the D-Bus interface org.freedesktop.ModemManager1.Modem.Modem3gpp, if any.</p>
-<p>Connect to the <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
+<p>Connect to the <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
 <p>Flags: Read / Write</p>
 </div>
 <hr>
@@ -1211,12 +1211,12 @@ does not implement the interface. </p>
 <a name="MmGdbusObject--modem3gpp-ussd"></a><h3>The <code class="literal">“modem3gpp-ussd”</code> property</h3>
 <pre class="programlisting">  “modem3gpp-ussd”           <a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd"><span class="type">MmGdbusModem3gppUssd</span></a> *</pre>
 <p>The <a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd"><span class="type">MmGdbusModem3gppUssd</span></a> instance corresponding to the D-Bus interface org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd, if any.</p>
-<p>Connect to the <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
+<p>Connect to the <a href="../gobject/gobject-The-Base-Object-Type.html#GObject-notify"><span class="type">“notify”</span></a> signal to get informed of property changes.</p>
 <p>Flags: Read / Write</p>
 </div>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.25.1</div>
+<hr>Generated by GTK-Doc V1.27</div>
 </body>
 </html>

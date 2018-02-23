@@ -276,13 +276,13 @@ mm_manager_set_logging_finish (MMManager     *manager,
                                GAsyncResult  *res,
                                GError       **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 set_logging_ready (MmGdbusOrgFreedesktopModemManager1 *manager_iface_proxy,
                    GAsyncResult                       *res,
-                   GSimpleAsyncResult                 *simple)
+                   GTask                              *task)
 {
     GError *error = NULL;
 
@@ -290,12 +290,11 @@ set_logging_ready (MmGdbusOrgFreedesktopModemManager1 *manager_iface_proxy,
             manager_iface_proxy,
             res,
             &error))
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
+        g_task_return_boolean (task, TRUE);
 
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+    g_object_unref (task);
 }
 
 /**
@@ -322,20 +321,16 @@ mm_manager_set_logging (MMManager           *manager,
                         GAsyncReadyCallback  callback,
                         gpointer             user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
     GError *inner_error = NULL;
 
     g_return_if_fail (MM_IS_MANAGER (manager));
 
-    result = g_simple_async_result_new (G_OBJECT (manager),
-                                        callback,
-                                        user_data,
-                                        mm_manager_set_logging);
+    task = g_task_new (manager, cancellable, callback, user_data);
 
     if (!ensure_modem_manager1_proxy (manager, &inner_error)) {
-        g_simple_async_result_take_error (result, inner_error);
-        g_simple_async_result_complete_in_idle (result);
-        g_object_unref (result);
+        g_task_return_error (task, inner_error);
+        g_object_unref (task);
         return;
     }
 
@@ -344,7 +339,7 @@ mm_manager_set_logging (MMManager           *manager,
         level,
         cancellable,
         (GAsyncReadyCallback)set_logging_ready,
-        result);
+        task);
 }
 
 /**
@@ -397,13 +392,13 @@ mm_manager_scan_devices_finish (MMManager     *manager,
                                 GAsyncResult  *res,
                                 GError       **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 scan_devices_ready (MmGdbusOrgFreedesktopModemManager1 *manager_iface_proxy,
                     GAsyncResult                       *res,
-                    GSimpleAsyncResult                 *simple)
+                    GTask                              *task)
 {
     GError *error = NULL;
 
@@ -411,12 +406,11 @@ scan_devices_ready (MmGdbusOrgFreedesktopModemManager1 *manager_iface_proxy,
             manager_iface_proxy,
             res,
             &error))
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
+        g_task_return_boolean (task, TRUE);
 
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+    g_object_unref (task);
 }
 
 /**
@@ -441,20 +435,16 @@ mm_manager_scan_devices (MMManager           *manager,
                          GAsyncReadyCallback  callback,
                          gpointer             user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
     GError *inner_error = NULL;
 
     g_return_if_fail (MM_IS_MANAGER (manager));
 
-    result = g_simple_async_result_new (G_OBJECT (manager),
-                                        callback,
-                                        user_data,
-                                        mm_manager_scan_devices);
+    task = g_task_new (manager, cancellable, callback, user_data);
 
     if (!ensure_modem_manager1_proxy (manager, &inner_error)) {
-        g_simple_async_result_take_error (result, inner_error);
-        g_simple_async_result_complete_in_idle (result);
-        g_object_unref (result);
+        g_task_return_error (task, inner_error);
+        g_object_unref (task);
         return;
     }
 
@@ -462,7 +452,7 @@ mm_manager_scan_devices (MMManager           *manager,
         manager->priv->manager_iface_proxy,
         cancellable,
         (GAsyncReadyCallback)scan_devices_ready,
-        result);
+        task);
 }
 
 /**
@@ -493,6 +483,130 @@ mm_manager_scan_devices_sync (MMManager     *manager,
                 manager->priv->manager_iface_proxy,
                 cancellable,
                 error));
+}
+
+/*****************************************************************************/
+
+/**
+ * mm_manager_report_kernel_event_finish:
+ * @manager: A #MMManager.
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to mm_manager_report_kernel_event().
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with mm_manager_report_kernel_event().
+ *
+ * Returns: %TRUE if the operation succeded, %FALSE if @error is set.
+ */
+gboolean
+mm_manager_report_kernel_event_finish (MMManager     *manager,
+                                       GAsyncResult  *res,
+                                       GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+report_kernel_event_ready (MmGdbusOrgFreedesktopModemManager1 *manager_iface_proxy,
+                           GAsyncResult                       *res,
+                           GTask                              *task)
+{
+    GError *error = NULL;
+
+    if (!mm_gdbus_org_freedesktop_modem_manager1_call_report_kernel_event_finish (
+            manager_iface_proxy,
+            res,
+            &error))
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+/**
+ * mm_manager_report_kernel_event:
+ * @manager: A #MMManager.
+ * @properties: the properties of the kernel event.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
+ * @user_data: User data to pass to @callback.
+ *
+ * Asynchronously report kernel event.
+ *
+ * When the operation is finished, @callback will be invoked in the
+ * <link linkend="g-main-context-push-thread-default">thread-default main loop</link>
+ * of the thread you are calling this method from. You can then call
+ * mm_manager_report_kernel_event_finish() to get the result of the operation.
+ *
+ * See mm_manager_report_kernel_event_sync() for the synchronous, blocking version of this method.
+ */
+void
+mm_manager_report_kernel_event (MMManager                *manager,
+                                MMKernelEventProperties  *properties,
+                                GCancellable             *cancellable,
+                                GAsyncReadyCallback       callback,
+                                gpointer                  user_data)
+{
+    GTask    *task;
+    GError   *inner_error = NULL;
+    GVariant *dictionary;
+
+    g_return_if_fail (MM_IS_MANAGER (manager));
+
+    task = g_task_new (manager, cancellable, callback, user_data);
+
+    if (!ensure_modem_manager1_proxy (manager, &inner_error)) {
+        g_task_return_error (task, inner_error);
+        g_object_unref (task);
+        return;
+    }
+
+    dictionary = mm_kernel_event_properties_get_dictionary (properties);
+    mm_gdbus_org_freedesktop_modem_manager1_call_report_kernel_event (
+        manager->priv->manager_iface_proxy,
+        dictionary,
+        cancellable,
+        (GAsyncReadyCallback)report_kernel_event_ready,
+        task);
+    g_variant_unref (dictionary);
+}
+
+/**
+ * mm_manager_report_kernel_event_sync:
+ * @manager: A #MMManager.
+ * @properties: the properties of the kernel event.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Synchronously report kernel event.
+ *
+ * The calling thread is blocked until a reply is received.
+ *
+ * See mm_manager_report_kernel_event() for the asynchronous version of this method.
+ *
+ * Returns: %TRUE if the operation succeded, %FALSE if @error is set.
+ */
+gboolean
+mm_manager_report_kernel_event_sync (MMManager                *manager,
+                                     MMKernelEventProperties  *properties,
+                                     GCancellable             *cancellable,
+                                     GError                  **error)
+{
+    GVariant *dictionary;
+    gboolean  result;
+
+    g_return_val_if_fail (MM_IS_MANAGER (manager), FALSE);
+
+    if (!ensure_modem_manager1_proxy (manager, error))
+        return FALSE;
+
+    dictionary = mm_kernel_event_properties_get_dictionary (properties);
+    result = (mm_gdbus_org_freedesktop_modem_manager1_call_report_kernel_event_sync (
+                  manager->priv->manager_iface_proxy,
+                  dictionary,
+                  cancellable,
+                  error));
+    g_variant_unref (dictionary);
+    return result;
 }
 
 /*****************************************************************************/

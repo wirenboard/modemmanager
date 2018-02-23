@@ -250,6 +250,7 @@ print_modem_info (void)
 {
     gchar *drivers_string;
     gchar *prefixed_revision;
+    gchar *prefixed_hardware_revision;
     gchar *supported_capabilities_string;
     MMModemCapability *capabilities = NULL;
     guint n_capabilities = 0;
@@ -340,6 +341,12 @@ print_modem_info (void)
     else
         prefixed_revision = NULL;
 
+    if (mm_modem_get_hardware_revision (ctx->modem))
+        prefixed_hardware_revision = mmcli_prefix_newlines ("           |                  ",
+                                                            mm_modem_get_hardware_revision (ctx->modem));
+    else
+        prefixed_hardware_revision = NULL;
+
     if (supported_modes_string) {
         gchar *prefixed;
 
@@ -381,12 +388,14 @@ print_modem_info (void)
              "  Hardware |   manufacturer: '%s'\n"
              "           |          model: '%s'\n"
              "           |       revision: '%s'\n"
+             "           |   H/W revision: '%s'\n"
              "           |      supported: '%s'\n"
              "           |        current: '%s'\n"
              "           |   equipment id: '%s'\n",
              VALIDATE_UNKNOWN (mm_modem_get_manufacturer (ctx->modem)),
              VALIDATE_UNKNOWN (mm_modem_get_model (ctx->modem)),
              VALIDATE_UNKNOWN (prefixed_revision),
+             VALIDATE_UNKNOWN (prefixed_hardware_revision),
              VALIDATE_UNKNOWN (supported_capabilities_string),
              VALIDATE_UNKNOWN (current_capabilities_string),
              VALIDATE_UNKNOWN (mm_modem_get_equipment_identifier (ctx->modem)));
@@ -461,15 +470,18 @@ print_modem_info (void)
                  "           |    operator id: '%s'\n"
                  "           |  operator name: '%s'\n"
                  "           |   subscription: '%s'\n"
-                 "           |   registration: '%s'\n",
+                 "           |   registration: '%s'\n"
+                 "           |    EPS UE mode: '%s'\n",
                  VALIDATE_UNKNOWN (mm_modem_3gpp_get_imei (ctx->modem_3gpp)),
                  facility_locks,
                  VALIDATE_UNKNOWN (mm_modem_3gpp_get_operator_code (ctx->modem_3gpp)),
                  VALIDATE_UNKNOWN (mm_modem_3gpp_get_operator_name (ctx->modem_3gpp)),
                  mm_modem_3gpp_subscription_state_get_string (
-                     mm_modem_3gpp_get_subscription_state ((ctx->modem_3gpp))),
+                     mm_modem_3gpp_get_subscription_state (ctx->modem_3gpp)),
                  mm_modem_3gpp_registration_state_get_string (
-                     mm_modem_3gpp_get_registration_state ((ctx->modem_3gpp))));
+                     mm_modem_3gpp_get_registration_state (ctx->modem_3gpp)),
+                 mm_modem_3gpp_eps_ue_mode_operation_get_string (
+                     mm_modem_3gpp_get_eps_ue_mode_operation (ctx->modem_3gpp)));
 
         g_free (facility_locks);
     }
@@ -533,6 +545,7 @@ print_modem_info (void)
     g_free (supported_capabilities_string);
     g_free (current_capabilities_string);
     g_free (prefixed_revision);
+    g_free (prefixed_hardware_revision);
     g_free (allowed_modes_string);
     g_free (preferred_mode_string);
     g_free (supported_modes_string);

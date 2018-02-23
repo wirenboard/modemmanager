@@ -76,6 +76,9 @@ MMOmaFeature          mm_common_get_oma_features_from_string (const gchar *str,
 MMOmaSessionType      mm_common_get_oma_session_type_from_string (const gchar *str,
                                                                   GError **error);
 
+MMModem3gppEpsUeModeOperation mm_common_get_eps_ue_mode_operation_from_string (const gchar  *str,
+                                                                               GError      **error);
+
 GArray          *mm_common_ports_variant_to_garray (GVariant *variant);
 MMModemPortInfo *mm_common_ports_variant_to_array  (GVariant *variant,
                                                  guint *n_ports);
@@ -100,7 +103,8 @@ GVariant    *mm_common_bands_garray_to_variant (GArray *array);
 GVariant    *mm_common_build_bands_any     (void);
 GVariant    *mm_common_build_bands_unknown (void);
 
-gboolean     mm_common_bands_garray_cmp (GArray *a, GArray *b);
+gboolean     mm_common_bands_garray_cmp  (GArray *a, GArray *b);
+void         mm_common_bands_garray_sort (GArray *array);
 
 GArray                 *mm_common_mode_combinations_variant_to_garray (GVariant *variant);
 MMModemModeCombination *mm_common_mode_combinations_variant_to_array  (GVariant *variant,
@@ -143,6 +147,8 @@ gboolean  mm_get_int_from_match_info             (GMatchInfo *match_info,
                                                   gint *out);
 gboolean  mm_get_uint_from_str                   (const gchar *str,
                                                   guint *out);
+gboolean  mm_get_uint_from_hex_str               (const gchar *str,
+                                                  guint       *out);
 gboolean  mm_get_uint_from_match_info            (GMatchInfo *match_info,
                                                   guint32 match_index,
                                                   guint *out);

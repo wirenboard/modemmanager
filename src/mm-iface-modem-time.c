@@ -125,53 +125,46 @@ handle_get_network_time (MmGdbusModemTime *skeleton,
 /*****************************************************************************/
 
 typedef struct {
-    MMIfaceModemTime *self;
-    GSimpleAsyncResult *result;
-    GCancellable *cancellable;
     gulong cancelled_id;
     gulong state_changed_id;
     guint network_timezone_poll_id;
     guint network_timezone_poll_retries;
 } UpdateNetworkTimezoneContext;
 
-static gboolean timezone_poll_cb (UpdateNetworkTimezoneContext *ctx);
-
-static void
-update_network_timezone_context_complete_and_free (UpdateNetworkTimezoneContext *ctx)
-{
-    g_simple_async_result_complete (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->cancellable);
-    g_object_unref (ctx->self);
-    g_free (ctx);
-}
+static gboolean timezone_poll_cb (GTask *task);
 
 static gboolean
 update_network_timezone_finish (MMIfaceModemTime *self,
                                 GAsyncResult *res,
                                 GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 cancelled (GCancellable *cancellable,
-           UpdateNetworkTimezoneContext *ctx)
+           GTask *task)
 {
+    MMIfaceModemTime *self;
+    UpdateNetworkTimezoneContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     /* If waiting to get registered, disconnect signal */
     if (ctx->state_changed_id)
-        g_signal_handler_disconnect (ctx->self,
+        g_signal_handler_disconnect (self,
                                      ctx->state_changed_id);
 
     /* If waiting in the timeout loop, remove the timeout */
     else if (ctx->network_timezone_poll_id)
         g_source_remove (ctx->network_timezone_poll_id);
 
-    g_simple_async_result_set_error (ctx->result,
-                                     MM_CORE_ERROR,
-                                     MM_CORE_ERROR_CANCELLED,
-                                     "Network timezone loading cancelled");
-    update_network_timezone_context_complete_and_free (ctx);
+    g_task_return_new_error (task,
+                             MM_CORE_ERROR,
+                             MM_CORE_ERROR_CANCELLED,
+                             "Network timezone loading cancelled");
+    g_object_unref (task);
 }
 
 static void
@@ -198,20 +191,18 @@ update_network_timezone_dictionary (MMIfaceModemTime *self,
 static void
 load_network_timezone_ready (MMIfaceModemTime *self,
                              GAsyncResult *res,
-                             UpdateNetworkTimezoneContext *ctx)
+                             GTask *task)
 {
+    UpdateNetworkTimezoneContext *ctx;
     GError *error = NULL;
     MMNetworkTimezone *tz;
 
-    if (g_cancellable_is_cancelled (ctx->cancellable)) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_CANCELLED,
-                                         "Finished network timezone loading, "
-                                         "but cancelled meanwhile");
-        update_network_timezone_context_complete_and_free (ctx);
+    if (g_task_return_error_if_cancelled (task)) {
+        g_object_unref (task);
         return;
     }
+
+    ctx = g_task_get_task_data (task);
 
     /* Finish the async operation */
     tz = MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->load_network_timezone_finish (self,
@@ -226,69 +217,80 @@ load_network_timezone_ready (MMIfaceModemTime *self,
             !g_error_matches (error,
                               MM_CORE_ERROR,
                               MM_CORE_ERROR_RETRY)) {
-            g_simple_async_result_take_error (ctx->result, error);
-            update_network_timezone_context_complete_and_free (ctx);
+            g_task_return_error (task, error);
+            g_object_unref (task);
             return;
         }
 
         /* Otherwise, reconnect cancellable and relaunch timeout to query a bit
          * later */
-        ctx->cancelled_id = g_cancellable_connect (ctx->cancellable,
+        ctx->cancelled_id = g_cancellable_connect (g_task_get_cancellable (task),
                                                    G_CALLBACK (cancelled),
-                                                   ctx,
+                                                   task,
                                                    NULL);
         ctx->network_timezone_poll_id = g_timeout_add_seconds (TIMEZONE_POLL_INTERVAL_SEC,
                                                                (GSourceFunc)timezone_poll_cb,
-                                                               ctx);
+                                                               task);
 
         g_error_free (error);
         return;
     }
 
     /* Got final result properly, update the property in the skeleton */
-    update_network_timezone_dictionary (ctx->self, tz);
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    update_network_timezone_context_complete_and_free (ctx);
+    update_network_timezone_dictionary (self, tz);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
     g_object_unref (tz);
 }
 
 static gboolean
-timezone_poll_cb (UpdateNetworkTimezoneContext *ctx)
+timezone_poll_cb (GTask *task)
 {
+    MMIfaceModemTime *self;
+    UpdateNetworkTimezoneContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     ctx->network_timezone_poll_id = 0;
 
     /* Before we launch the async loading of the network timezone,
      * we disconnect the cancellable signal. We don't want to get
      * signaled while waiting to finish this async method, we'll
      * check the cancellable afterwards instead. */
-    g_cancellable_disconnect (ctx->cancellable,
+    g_cancellable_disconnect (g_task_get_cancellable (task),
                               ctx->cancelled_id);
     ctx->cancelled_id = 0;
 
-    MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->load_network_timezone (
-        ctx->self,
+    MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->load_network_timezone (
+        self,
         (GAsyncReadyCallback)load_network_timezone_ready,
-        ctx);
+        task);
 
     return G_SOURCE_REMOVE;
 }
 
 static void
-start_timezone_poll (UpdateNetworkTimezoneContext *ctx)
+start_timezone_poll (GTask *task)
 {
+    UpdateNetworkTimezoneContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+
     /* Setup loop to query current timezone, don't do it right away.
      * Note that we're passing the context reference to the loop. */
     ctx->network_timezone_poll_retries = TIMEZONE_POLL_RETRIES;
     ctx->network_timezone_poll_id = g_timeout_add_seconds (TIMEZONE_POLL_INTERVAL_SEC,
                                                            (GSourceFunc)timezone_poll_cb,
-                                                           ctx);
+                                                           task);
 }
 
 static void
 state_changed (MMIfaceModemTime *self,
                GParamSpec *spec,
-               UpdateNetworkTimezoneContext *ctx)
+               GTask *task)
 {
+    UpdateNetworkTimezoneContext *ctx;
     MMModemState state = MM_MODEM_STATE_UNKNOWN;
 
     g_object_get (self,
@@ -299,6 +301,8 @@ state_changed (MMIfaceModemTime *self,
     if (state < MM_MODEM_STATE_REGISTERED)
         return;
 
+    ctx = g_task_get_task_data (task);
+
     /* Got registered, disconnect signal */
     if (ctx->state_changed_id) {
         g_signal_handler_disconnect (self,
@@ -307,7 +311,7 @@ state_changed (MMIfaceModemTime *self,
     }
 
     /* Once we know we're registered, start timezone poll */
-    start_timezone_poll (ctx);
+    start_timezone_poll (task);
 }
 
 static void
@@ -316,35 +320,34 @@ update_network_timezone (MMIfaceModemTime *self,
                          GAsyncReadyCallback callback,
                          gpointer user_data)
 {
-    UpdateNetworkTimezoneContext *ctx;
     MMModemState state = MM_MODEM_STATE_UNKNOWN;
+    UpdateNetworkTimezoneContext *ctx;
+    GTask *task;
 
     /* If loading network timezone not supported, just finish here */
     if (!MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->load_network_timezone ||
         !MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->load_network_timezone_finish) {
-        g_simple_async_report_error_in_idle (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_UNSUPPORTED,
-                                             "Loading network timezone is not supported");
+        g_task_report_new_error (self,
+                                 callback,
+                                 user_data,
+                                 update_network_timezone,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_UNSUPPORTED,
+                                 "Loading network timezone is not supported");
         return;
     }
 
     ctx = g_new0 (UpdateNetworkTimezoneContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->cancellable = g_object_ref (cancellable);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             update_network_timezone);
+
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, g_free);
 
     /* Note: we don't expect to get cancelled by any other thread, so no
      * need to check if we're cancelled just after connecting to the
      * cancelled signal */
-    ctx->cancelled_id = g_cancellable_connect (ctx->cancellable,
+    ctx->cancelled_id = g_cancellable_connect (cancellable,
                                                G_CALLBACK (cancelled),
-                                               ctx,
+                                               task,
                                                NULL);
 
     g_object_get (self,
@@ -354,13 +357,13 @@ update_network_timezone (MMIfaceModemTime *self,
     /* Already registered? */
     if (state >= MM_MODEM_STATE_REGISTERED) {
         /* Once we know we're registered, start timezone poll */
-        start_timezone_poll (ctx);
+        start_timezone_poll (task);
     } else {
         /* Want to get notified when modem state changes */
-        ctx->state_changed_id = g_signal_connect (ctx->self,
+        ctx->state_changed_id = g_signal_connect (self,
                                                   "notify::" MM_IFACE_MODEM_STATE,
                                                   G_CALLBACK (state_changed),
-                                                  ctx);
+                                                  task);
     }
 }
 
@@ -387,7 +390,7 @@ mm_iface_modem_time_update_network_time (MMIfaceModemTime *self,
 /*****************************************************************************/
 
 typedef struct _DisablingContext DisablingContext;
-static void interface_disabling_step (DisablingContext *ctx);
+static void interface_disabling_step (GTask *task);
 
 typedef enum {
     DISABLING_STEP_FIRST,
@@ -398,18 +401,13 @@ typedef enum {
 } DisablingStep;
 
 struct _DisablingContext {
-    MMIfaceModemTime *self;
     DisablingStep step;
-    GSimpleAsyncResult *result;
     MmGdbusModemTime *skeleton;
 };
 
 static void
-disabling_context_complete_and_free (DisablingContext *ctx)
+disabling_context_free (DisablingContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->self);
-    g_object_unref (ctx->result);
     if (ctx->skeleton)
         g_object_unref (ctx->skeleton);
     g_free (ctx);
@@ -420,50 +418,60 @@ mm_iface_modem_time_disable_finish (MMIfaceModemTime *self,
                                     GAsyncResult *res,
                                     GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 disable_unsolicited_events_ready (MMIfaceModemTime *self,
                                   GAsyncResult *res,
-                                  DisablingContext *ctx)
+                                  GTask *task)
 {
+    DisablingContext *ctx;
     GError *error = NULL;
 
     MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->disable_unsolicited_events_finish (self, res, &error);
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        disabling_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Go on to next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    interface_disabling_step (ctx);
+    interface_disabling_step (task);
 }
 
 static void
 cleanup_unsolicited_events_ready (MMIfaceModemTime *self,
                                   GAsyncResult *res,
-                                  DisablingContext *ctx)
+                                  GTask *task)
 {
+    DisablingContext *ctx;
     GError *error = NULL;
 
     MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->cleanup_unsolicited_events_finish (self, res, &error);
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        disabling_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Go on to next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    interface_disabling_step (ctx);
+    interface_disabling_step (task);
 }
 
 static void
-interface_disabling_step (DisablingContext *ctx)
+interface_disabling_step (GTask *task)
 {
+    MMIfaceModemTime *self;
+    DisablingContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     switch (ctx->step) {
     case DISABLING_STEP_FIRST:
         /* Fall down to next step */
@@ -473,13 +481,13 @@ interface_disabling_step (DisablingContext *ctx)
         if (G_LIKELY (network_timezone_cancellable_quark)) {
             GCancellable *cancellable = NULL;
 
-            cancellable = g_object_get_qdata (G_OBJECT (ctx->self),
+            cancellable = g_object_get_qdata (G_OBJECT (self),
                                               network_timezone_cancellable_quark);
 
             /* If network timezone loading is currently running, abort it */
             if (cancellable) {
                 g_cancellable_cancel (cancellable);
-                g_object_set_qdata (G_OBJECT (ctx->self),
+                g_object_set_qdata (G_OBJECT (self),
                                     network_timezone_cancellable_quark,
                                     NULL);
             }
@@ -491,12 +499,12 @@ interface_disabling_step (DisablingContext *ctx)
 
     case DISABLING_STEP_DISABLE_UNSOLICITED_EVENTS:
         /* Allow cleaning up unsolicited events */
-        if (MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->disable_unsolicited_events &&
-            MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->disable_unsolicited_events_finish) {
-            MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->disable_unsolicited_events (
-                ctx->self,
+        if (MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->disable_unsolicited_events &&
+            MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->disable_unsolicited_events_finish) {
+            MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->disable_unsolicited_events (
+                self,
                 (GAsyncReadyCallback)disable_unsolicited_events_ready,
-                ctx);
+                task);
             return;
         }
         /* Fall down to next step */
@@ -504,12 +512,12 @@ interface_disabling_step (DisablingContext *ctx)
 
     case DISABLING_STEP_CLEANUP_UNSOLICITED_EVENTS:
         /* Allow cleaning up unsolicited events */
-        if (MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->cleanup_unsolicited_events &&
-            MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->cleanup_unsolicited_events_finish) {
-            MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->cleanup_unsolicited_events (
-                ctx->self,
+        if (MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->cleanup_unsolicited_events &&
+            MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->cleanup_unsolicited_events_finish) {
+            MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->cleanup_unsolicited_events (
+                self,
                 (GAsyncReadyCallback)cleanup_unsolicited_events_ready,
-                ctx);
+                task);
             return;
         }
         /* Fall down to next step */
@@ -517,8 +525,8 @@ interface_disabling_step (DisablingContext *ctx)
 
     case DISABLING_STEP_LAST:
         /* We are done without errors! */
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        disabling_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -531,33 +539,33 @@ mm_iface_modem_time_disable (MMIfaceModemTime *self,
                              gpointer user_data)
 {
     DisablingContext *ctx;
+    GTask *task;
 
     ctx = g_new0 (DisablingContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_iface_modem_time_disable);
     ctx->step = DISABLING_STEP_FIRST;
-    g_object_get (ctx->self,
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)disabling_context_free);
+
+    g_object_get (self,
                   MM_IFACE_MODEM_TIME_DBUS_SKELETON, &ctx->skeleton,
                   NULL);
     if (!ctx->skeleton) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_FAILED,
-                                         "Couldn't get interface skeleton");
-        disabling_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Couldn't get interface skeleton");
+        g_object_unref (task);
         return;
     }
 
-    interface_disabling_step (ctx);
+    interface_disabling_step (task);
 }
 
 /*****************************************************************************/
 
 typedef struct _EnablingContext EnablingContext;
-static void interface_enabling_step (EnablingContext *ctx);
+static void interface_enabling_step (GTask *task);
 
 typedef enum {
     ENABLING_STEP_FIRST,
@@ -568,37 +576,16 @@ typedef enum {
 } EnablingStep;
 
 struct _EnablingContext {
-    MMIfaceModemTime *self;
     EnablingStep step;
-    GSimpleAsyncResult *result;
-    GCancellable *cancellable;
     MmGdbusModemTime *skeleton;
 };
 
 static void
-enabling_context_complete_and_free (EnablingContext *ctx)
+enabling_context_free (EnablingContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->self);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->cancellable);
     if (ctx->skeleton)
         g_object_unref (ctx->skeleton);
     g_free (ctx);
-}
-
-static gboolean
-enabling_context_complete_and_free_if_cancelled (EnablingContext *ctx)
-{
-    if (!g_cancellable_is_cancelled (ctx->cancellable))
-        return FALSE;
-
-    g_simple_async_result_set_error (ctx->result,
-                                     MM_CORE_ERROR,
-                                     MM_CORE_ERROR_CANCELLED,
-                                     "Interface enabling cancelled");
-    enabling_context_complete_and_free (ctx);
-    return TRUE;
 }
 
 gboolean
@@ -606,7 +593,7 @@ mm_iface_modem_time_enable_finish (MMIfaceModemTime *self,
                                    GAsyncResult *res,
                                    GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
@@ -632,27 +619,30 @@ update_network_timezone_ready (MMIfaceModemTime *self,
 static void
 setup_unsolicited_events_ready (MMIfaceModemTime *self,
                                 GAsyncResult *res,
-                                EnablingContext *ctx)
+                                GTask *task)
 {
+    EnablingContext *ctx;
     GError *error = NULL;
 
     MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->setup_unsolicited_events_finish (self, res, &error);
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        enabling_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Go on to next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    interface_enabling_step (ctx);
+    interface_enabling_step (task);
 }
 
 static void
 enable_unsolicited_events_ready (MMIfaceModemTime *self,
                                  GAsyncResult *res,
-                                 EnablingContext *ctx)
+                                 GTask *task)
 {
+    EnablingContext *ctx;
     GError *error = NULL;
 
     /* Not critical! */
@@ -662,16 +652,25 @@ enable_unsolicited_events_ready (MMIfaceModemTime *self,
     }
 
     /* Go on with next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    interface_enabling_step (ctx);
+    interface_enabling_step (task);
 }
 
 static void
-interface_enabling_step (EnablingContext *ctx)
+interface_enabling_step (GTask *task)
 {
+    MMIfaceModemTime *self;
+    EnablingContext *ctx;
+
     /* Don't run new steps if we're cancelled */
-    if (enabling_context_complete_and_free_if_cancelled (ctx))
+    if (g_task_return_error_if_cancelled (task)) {
+        g_object_unref (task);
         return;
+    }
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     switch (ctx->step) {
     case ENABLING_STEP_FIRST:
@@ -687,12 +686,12 @@ interface_enabling_step (EnablingContext *ctx)
         if (G_UNLIKELY (!network_timezone_cancellable_quark))
             network_timezone_cancellable_quark = (g_quark_from_static_string (
                                                       NETWORK_TIMEZONE_CANCELLABLE_TAG));
-        g_object_set_qdata_full (G_OBJECT (ctx->self),
+        g_object_set_qdata_full (G_OBJECT (self),
                                  network_timezone_cancellable_quark,
                                  cancellable,
-                                 (GDestroyNotify)g_object_unref);
+                                 g_object_unref);
 
-        update_network_timezone (ctx->self,
+        update_network_timezone (self,
                                  cancellable,
                                  (GAsyncReadyCallback)update_network_timezone_ready,
                                  NULL);
@@ -706,12 +705,12 @@ interface_enabling_step (EnablingContext *ctx)
 
     case ENABLING_STEP_SETUP_UNSOLICITED_EVENTS:
         /* Allow setting up unsolicited events */
-        if (MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->setup_unsolicited_events &&
-            MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->setup_unsolicited_events_finish) {
-            MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->setup_unsolicited_events (
-                ctx->self,
+        if (MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->setup_unsolicited_events &&
+            MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->setup_unsolicited_events_finish) {
+            MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->setup_unsolicited_events (
+                self,
                 (GAsyncReadyCallback)setup_unsolicited_events_ready,
-                ctx);
+                task);
             return;
         }
         /* Fall down to next step */
@@ -719,12 +718,12 @@ interface_enabling_step (EnablingContext *ctx)
 
     case ENABLING_STEP_ENABLE_UNSOLICITED_EVENTS:
         /* Allow setting up unsolicited events */
-        if (MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->enable_unsolicited_events &&
-            MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->enable_unsolicited_events_finish) {
-            MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->enable_unsolicited_events (
-                ctx->self,
+        if (MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->enable_unsolicited_events &&
+            MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->enable_unsolicited_events_finish) {
+            MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->enable_unsolicited_events (
+                self,
                 (GAsyncReadyCallback)enable_unsolicited_events_ready,
-                ctx);
+                task);
             return;
         }
         /* Fall down to next step */
@@ -732,8 +731,8 @@ interface_enabling_step (EnablingContext *ctx)
 
     case ENABLING_STEP_LAST:
         /* We are done without errors! */
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        enabling_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -747,34 +746,33 @@ mm_iface_modem_time_enable (MMIfaceModemTime *self,
                             gpointer user_data)
 {
     EnablingContext *ctx;
+    GTask *task;
 
     ctx = g_new0 (EnablingContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->cancellable = g_object_ref (cancellable);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_iface_modem_time_enable);
     ctx->step = ENABLING_STEP_FIRST;
-    g_object_get (ctx->self,
+
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)enabling_context_free);
+
+    g_object_get (self,
                   MM_IFACE_MODEM_TIME_DBUS_SKELETON, &ctx->skeleton,
                   NULL);
     if (!ctx->skeleton) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_FAILED,
-                                         "Couldn't get interface skeleton");
-        enabling_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Couldn't get interface skeleton");
+        g_object_unref (task);
         return;
     }
 
-    interface_enabling_step (ctx);
+    interface_enabling_step (task);
 }
 
 /*****************************************************************************/
 
 typedef struct _InitializationContext InitializationContext;
-static void interface_initialization_step (InitializationContext *ctx);
+static void interface_initialization_step (GTask *task);
 
 typedef enum {
     INITIALIZATION_STEP_FIRST,
@@ -784,43 +782,23 @@ typedef enum {
 } InitializationStep;
 
 struct _InitializationContext {
-    MMIfaceModemTime *self;
     MmGdbusModemTime *skeleton;
-    GSimpleAsyncResult *result;
-    GCancellable *cancellable;
     InitializationStep step;
 };
 
 static void
-initialization_context_complete_and_free (InitializationContext *ctx)
+initialization_context_free (InitializationContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->self);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->cancellable);
     g_object_unref (ctx->skeleton);
     g_free (ctx);
-}
-
-static gboolean
-initialization_context_complete_and_free_if_cancelled (InitializationContext *ctx)
-{
-    if (!g_cancellable_is_cancelled (ctx->cancellable))
-        return FALSE;
-
-    g_simple_async_result_set_error (ctx->result,
-                                     MM_CORE_ERROR,
-                                     MM_CORE_ERROR_CANCELLED,
-                                     "Interface initialization cancelled");
-    initialization_context_complete_and_free (ctx);
-    return TRUE;
 }
 
 static void
 check_support_ready (MMIfaceModemTime *self,
                      GAsyncResult *res,
-                     InitializationContext *ctx)
+                     GTask *task)
 {
+    InitializationContext *ctx;
     GError *error = NULL;
 
     if (!MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->check_support_finish (self,
@@ -839,16 +817,25 @@ check_support_ready (MMIfaceModemTime *self,
     }
 
     /* Go on to next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    interface_initialization_step (ctx);
+    interface_initialization_step (task);
 }
 
 static void
-interface_initialization_step (InitializationContext *ctx)
+interface_initialization_step (GTask *task)
 {
+    MMIfaceModemTime *self;
+    InitializationContext *ctx;
+
     /* Don't run new steps if we're cancelled */
-    if (initialization_context_complete_and_free_if_cancelled (ctx))
+    if (g_task_return_error_if_cancelled (task)) {
+        g_object_unref (task);
         return;
+    }
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     switch (ctx->step) {
     case INITIALIZATION_STEP_FIRST:
@@ -864,23 +851,23 @@ interface_initialization_step (InitializationContext *ctx)
         ctx->step++;
 
     case INITIALIZATION_STEP_CHECK_SUPPORT:
-        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (ctx->self),
+        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
                                                    support_checked_quark))) {
             /* Set the checked flag so that we don't run it again */
-            g_object_set_qdata (G_OBJECT (ctx->self),
+            g_object_set_qdata (G_OBJECT (self),
                                 support_checked_quark,
                                 GUINT_TO_POINTER (TRUE));
             /* Initially, assume we don't support it */
-            g_object_set_qdata (G_OBJECT (ctx->self),
+            g_object_set_qdata (G_OBJECT (self),
                                 supported_quark,
                                 GUINT_TO_POINTER (FALSE));
 
-            if (MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->check_support &&
-                MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->check_support_finish) {
-                MM_IFACE_MODEM_TIME_GET_INTERFACE (ctx->self)->check_support (
-                    ctx->self,
+            if (MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->check_support &&
+                MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->check_support_finish) {
+                MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->check_support (
+                    self,
                     (GAsyncReadyCallback)check_support_ready,
-                    ctx);
+                    task);
                 return;
             }
 
@@ -891,13 +878,13 @@ interface_initialization_step (InitializationContext *ctx)
         ctx->step++;
 
     case INITIALIZATION_STEP_FAIL_IF_UNSUPPORTED:
-        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (ctx->self),
+        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
                                                    supported_quark))) {
-            g_simple_async_result_set_error (ctx->result,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_UNSUPPORTED,
-                                             "Time not supported");
-            initialization_context_complete_and_free (ctx);
+            g_task_return_new_error (task,
+                                     MM_CORE_ERROR,
+                                     MM_CORE_ERROR_UNSUPPORTED,
+                                     "Time not supported");
+            g_object_unref (task);
             return;
         }
         /* Fall down to next step */
@@ -910,14 +897,14 @@ interface_initialization_step (InitializationContext *ctx)
         g_signal_connect (ctx->skeleton,
                           "handle-get-network-time",
                           G_CALLBACK (handle_get_network_time),
-                          ctx->self);
+                          self);
 
         /* Finally, export the new interface */
-        mm_gdbus_object_skeleton_set_modem_time (MM_GDBUS_OBJECT_SKELETON (ctx->self),
+        mm_gdbus_object_skeleton_set_modem_time (MM_GDBUS_OBJECT_SKELETON (self),
                                                  MM_GDBUS_MODEM_TIME (ctx->skeleton));
 
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        initialization_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -929,7 +916,7 @@ mm_iface_modem_time_initialize_finish (MMIfaceModemTime *self,
                                        GAsyncResult *res,
                                        GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 void
@@ -940,6 +927,7 @@ mm_iface_modem_time_initialize (MMIfaceModemTime *self,
 {
     InitializationContext *ctx;
     MmGdbusModemTime *skeleton = NULL;
+    GTask *task;
 
     /* Did we already create it? */
     g_object_get (self,
@@ -955,16 +943,13 @@ mm_iface_modem_time_initialize (MMIfaceModemTime *self,
     /* Perform async initialization here */
 
     ctx = g_new0 (InitializationContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->cancellable = g_object_ref (cancellable);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_iface_modem_time_initialize);
     ctx->step = INITIALIZATION_STEP_FIRST;
     ctx->skeleton = skeleton;
 
-    interface_initialization_step (ctx);
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)initialization_context_free);
+
+    interface_initialization_step (task);
 }
 
 void

@@ -62,52 +62,41 @@ modem_create_bearer_finish (MMIfaceModem *self,
                             GAsyncResult *res,
                             GError **error)
 {
-    MMBaseBearer *bearer;
-
-    bearer = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
-    mm_dbg ("New %s bearer created at DBus path '%s'",
-            MM_IS_BROADBAND_BEARER_HSO (bearer) ? "HSO" : "Generic",
-            mm_base_bearer_get_path (bearer));
-
-    return g_object_ref (bearer);
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 broadband_bearer_new_ready (GObject *source,
                             GAsyncResult *res,
-                            GSimpleAsyncResult *simple)
+                            GTask *task)
 {
     MMBaseBearer *bearer = NULL;
     GError *error = NULL;
 
     bearer = mm_broadband_bearer_new_finish (res, &error);
     if (!bearer)
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gpointer (simple,
-                                                   bearer,
-                                                   (GDestroyNotify)g_object_unref);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+        g_task_return_pointer (task, bearer, g_object_unref);
+
+    g_object_unref (task);
 }
 
 static void
 broadband_bearer_hso_new_ready (GObject *source,
                                 GAsyncResult *res,
-                                GSimpleAsyncResult *simple)
+                                GTask *task)
 {
     MMBaseBearer *bearer = NULL;
     GError *error = NULL;
 
     bearer = mm_broadband_bearer_hso_new_finish (res, &error);
     if (!bearer)
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gpointer (simple,
-                                                   bearer,
-                                                   (GDestroyNotify)g_object_unref);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+        g_task_return_pointer (task, bearer, g_object_unref);
+
+    g_object_unref (task);
 }
 
 static void
@@ -116,12 +105,9 @@ modem_create_bearer (MMIfaceModem *self,
                      GAsyncReadyCallback callback,
                      gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        modem_create_bearer);
+    task = g_task_new (self, NULL, callback, user_data);
 
     if (mm_bearer_properties_get_ip_type (properties) &
         (MM_BEARER_IP_FAMILY_IPV6 | MM_BEARER_IP_FAMILY_IPV4V6)) {
@@ -130,7 +116,7 @@ modem_create_bearer (MMIfaceModem *self,
                                  properties,
                                  NULL, /* cancellable */
                                  (GAsyncReadyCallback)broadband_bearer_new_ready,
-                                 result);
+                                 task);
         return;
     }
 
@@ -139,7 +125,7 @@ modem_create_bearer (MMIfaceModem *self,
                                  properties,
                                  NULL, /* cancellable */
                                  (GAsyncReadyCallback)broadband_bearer_hso_new_ready,
-                                 result);
+                                 task);
 }
 
 /*****************************************************************************/
@@ -150,16 +136,13 @@ load_unlock_retries_finish (MMIfaceModem *self,
                             GAsyncResult *res,
                             GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-    return (MMUnlockRetries *) g_object_ref (g_simple_async_result_get_op_res_gpointer (
-                                                 G_SIMPLE_ASYNC_RESULT (res)));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 load_unlock_retries_ready (MMBaseModem *self,
                            GAsyncResult *res,
-                           GSimpleAsyncResult *operation_result)
+                           GTask *task)
 {
     const gchar *response;
     GError *error = NULL;
@@ -168,9 +151,8 @@ load_unlock_retries_ready (MMBaseModem *self,
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
         mm_dbg ("Couldn't query unlock retries: '%s'", error->message);
-        g_simple_async_result_take_error (operation_result, error);
-        g_simple_async_result_complete (operation_result);
-        g_object_unref (operation_result);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -180,18 +162,15 @@ load_unlock_retries_ready (MMBaseModem *self,
         retries = mm_unlock_retries_new ();
         mm_unlock_retries_set (retries, MM_MODEM_LOCK_SIM_PIN, pin1);
         mm_unlock_retries_set (retries, MM_MODEM_LOCK_SIM_PUK, puk1);
-        g_simple_async_result_set_op_res_gpointer (operation_result,
-                                                   retries,
-                                                   (GDestroyNotify)g_object_unref);
+        g_task_return_pointer (task, retries, g_object_unref);
     } else {
-        g_simple_async_result_set_error (operation_result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_FAILED,
-                                         "Invalid unlock retries response: '%s'",
-                                         response);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Invalid unlock retries response: '%s'",
+                                 response);
     }
-    g_simple_async_result_complete (operation_result);
-    g_object_unref (operation_result);
+    g_object_unref (task);
 }
 
 static void
@@ -205,10 +184,7 @@ load_unlock_retries (MMIfaceModem *self,
         3,
         FALSE,
         (GAsyncReadyCallback)load_unlock_retries_ready,
-        g_simple_async_result_new (G_OBJECT (self),
-                                   callback,
-                                   user_data,
-                                   load_unlock_retries));
+        g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
@@ -285,18 +261,18 @@ modem_3gpp_setup_cleanup_unsolicited_events_finish (MMIfaceModem3gpp *self,
                                                     GAsyncResult *res,
                                                     GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 parent_setup_unsolicited_events_ready (MMIfaceModem3gpp *self,
                                        GAsyncResult *res,
-                                       GSimpleAsyncResult *simple)
+                                       GTask *task)
 {
     GError *error = NULL;
 
     if (!iface_modem_3gpp_parent->setup_unsolicited_events_finish (self, res, &error))
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else {
         /* Our own setup now */
         mm_port_serial_at_add_unsolicited_msg_handler (
@@ -306,11 +282,9 @@ parent_setup_unsolicited_events_ready (MMIfaceModem3gpp *self,
             self,
             NULL);
 
-        g_simple_async_result_set_op_res_gboolean (G_SIMPLE_ASYNC_RESULT (res), TRUE);
+        g_task_return_boolean (task, TRUE);
     }
-
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+    g_object_unref (task);
 }
 
 static void
@@ -318,33 +292,26 @@ modem_3gpp_setup_unsolicited_events (MMIfaceModem3gpp *self,
                                      GAsyncReadyCallback callback,
                                      gpointer user_data)
 {
-    GSimpleAsyncResult *result;
-
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        modem_3gpp_setup_unsolicited_events);
-
     /* Chain up parent's setup */
     iface_modem_3gpp_parent->setup_unsolicited_events (
         self,
         (GAsyncReadyCallback)parent_setup_unsolicited_events_ready,
-        result);
+        g_task_new (self, NULL, callback, user_data));
 }
 
 static void
 parent_cleanup_unsolicited_events_ready (MMIfaceModem3gpp *self,
                                          GAsyncResult *res,
-                                         GSimpleAsyncResult *simple)
+                                         GTask *task)
 {
     GError *error = NULL;
 
     if (!iface_modem_3gpp_parent->cleanup_unsolicited_events_finish (self, res, &error))
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (G_SIMPLE_ASYNC_RESULT (res), TRUE);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+        g_task_return_boolean (task, TRUE);
+
+    g_object_unref (task);
 }
 
 static void
@@ -352,13 +319,6 @@ modem_3gpp_cleanup_unsolicited_events (MMIfaceModem3gpp *self,
                                        GAsyncReadyCallback callback,
                                        gpointer user_data)
 {
-    GSimpleAsyncResult *result;
-
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        modem_3gpp_cleanup_unsolicited_events);
-
     /* Our own cleanup first */
     mm_port_serial_at_add_unsolicited_msg_handler (
         mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
@@ -369,7 +329,7 @@ modem_3gpp_cleanup_unsolicited_events (MMIfaceModem3gpp *self,
     iface_modem_3gpp_parent->cleanup_unsolicited_events (
         self,
         (GAsyncReadyCallback)parent_cleanup_unsolicited_events_ready,
-        result);
+        g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
@@ -380,26 +340,29 @@ location_load_capabilities_finish (MMIfaceModemLocation *self,
                                    GAsyncResult *res,
                                    GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return MM_MODEM_LOCATION_SOURCE_NONE;
+    GError *inner_error = NULL;
+    gssize value;
 
-    return (MMModemLocationSource) GPOINTER_TO_UINT (g_simple_async_result_get_op_res_gpointer (
-                                                         G_SIMPLE_ASYNC_RESULT (res)));
+    value = g_task_propagate_int (G_TASK (res), &inner_error);
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return MM_MODEM_LOCATION_SOURCE_NONE;
+    }
+    return (MMModemLocationSource)value;
 }
 
 static void
 parent_load_capabilities_ready (MMIfaceModemLocation *self,
                                 GAsyncResult *res,
-                                GSimpleAsyncResult *simple)
+                                GTask *task)
 {
     MMModemLocationSource sources;
     GError *error = NULL;
 
     sources = iface_modem_location_parent->load_capabilities_finish (self, res, &error);
     if (error) {
-        g_simple_async_result_take_error (simple, error);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -423,11 +386,8 @@ parent_load_capabilities_ready (MMIfaceModemLocation *self,
                     MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED);
 
     /* So we're done, complete */
-    g_simple_async_result_set_op_res_gpointer (simple,
-                                               GUINT_TO_POINTER (sources),
-                                               NULL);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+    g_task_return_int (task, sources);
+    g_object_unref (task);
 }
 
 static void
@@ -435,37 +395,19 @@ location_load_capabilities (MMIfaceModemLocation *self,
                             GAsyncReadyCallback callback,
                             gpointer user_data)
 {
-    GSimpleAsyncResult *result;
-
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        location_load_capabilities);
-
     /* Chain up parent's setup */
     iface_modem_location_parent->load_capabilities (
         self,
         (GAsyncReadyCallback)parent_load_capabilities_ready,
-        result);
+        g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
 /* Enable/Disable location gathering (Location interface) */
 
 typedef struct {
-    MMBroadbandModemHso *self;
-    GSimpleAsyncResult *result;
     MMModemLocationSource source;
 } LocationGatheringContext;
-
-static void
-location_gathering_context_complete_and_free (LocationGatheringContext *ctx)
-{
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->self);
-    g_slice_free (LocationGatheringContext, ctx);
-}
 
 /******************************/
 /* Disable location gathering */
@@ -475,21 +417,21 @@ disable_location_gathering_finish (MMIfaceModemLocation *self,
                                    GAsyncResult *res,
                                    GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 gps_disabled_ready (MMBaseModem *self,
                     GAsyncResult *res,
-                    LocationGatheringContext *ctx)
+                    GTask *task)
 {
+    LocationGatheringContext *ctx;
     MMPortSerialGps *gps_port;
     GError *error = NULL;
 
-    if (!mm_base_modem_at_command_full_finish (self, res, &error))
-        g_simple_async_result_take_error (ctx->result, error);
-    else
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+    mm_base_modem_at_command_full_finish (self, res, &error);
+
+    ctx = g_task_get_task_data (task);
 
     /* Only use the GPS port in NMEA/RAW setups */
     if (ctx->source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
@@ -500,7 +442,12 @@ gps_disabled_ready (MMBaseModem *self,
             mm_port_serial_close (MM_PORT_SERIAL (gps_port));
     }
 
-    location_gathering_context_complete_and_free (ctx);
+    if (error)
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+
+    g_object_unref (task);
 }
 
 static void
@@ -512,14 +459,13 @@ disable_location_gathering (MMIfaceModemLocation *self,
     MMBroadbandModemHso *hso = MM_BROADBAND_MODEM_HSO (self);
     gboolean stop_gps = FALSE;
     LocationGatheringContext *ctx;
+    GTask *task;
 
-    ctx = g_slice_new (LocationGatheringContext);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             disable_location_gathering);
+    ctx = g_new (LocationGatheringContext, 1);
     ctx->source = source;
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, g_free);
 
     /* Only stop GPS engine if no GPS-related sources enabled */
     if (source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
@@ -543,13 +489,13 @@ disable_location_gathering (MMIfaceModemLocation *self,
                                        FALSE, /* raw */
                                        NULL, /* cancellable */
                                        (GAsyncReadyCallback)gps_disabled_ready,
-                                       ctx);
+                                       task);
         return;
     }
 
     /* For any other location (e.g. 3GPP), or if still some GPS needed, just return */
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    location_gathering_context_complete_and_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 /*****************************/
@@ -560,21 +506,24 @@ enable_location_gathering_finish (MMIfaceModemLocation *self,
                                   GAsyncResult *res,
                                   GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 gps_enabled_ready (MMBaseModem *self,
                    GAsyncResult *res,
-                   LocationGatheringContext *ctx)
+                   GTask *task)
 {
+    LocationGatheringContext *ctx;
     GError *error = NULL;
 
     if (!mm_base_modem_at_command_full_finish (self, res, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        location_gathering_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
+
+    ctx = g_task_get_task_data (task);
 
     /* Only use the GPS port in NMEA/RAW setups */
     if (ctx->source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
@@ -585,36 +534,40 @@ gps_enabled_ready (MMBaseModem *self,
         if (!gps_port ||
             !mm_port_serial_open (MM_PORT_SERIAL (gps_port), &error)) {
             if (error)
-                g_simple_async_result_take_error (ctx->result, error);
+                g_task_return_error (task, error);
             else
-                g_simple_async_result_set_error (ctx->result,
-                                                 MM_CORE_ERROR,
-                                                 MM_CORE_ERROR_FAILED,
-                                                 "Couldn't open raw GPS serial port");
+                g_task_return_new_error (task,
+                                         MM_CORE_ERROR,
+                                         MM_CORE_ERROR_FAILED,
+                                         "Couldn't open raw GPS serial port");
         } else
-            g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+            g_task_return_boolean (task, TRUE);
     }
     else
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+        g_task_return_boolean (task, TRUE);
 
-    location_gathering_context_complete_and_free (ctx);
+    g_object_unref (task);
 }
 
 static void
-parent_enable_location_gathering_ready (MMIfaceModemLocation *self,
+parent_enable_location_gathering_ready (MMIfaceModemLocation *_self,
                                         GAsyncResult *res,
-                                        LocationGatheringContext *ctx)
+                                        GTask *task)
 {
+    MMBroadbandModemHso *self = MM_BROADBAND_MODEM_HSO (_self);
+    LocationGatheringContext *ctx;
     gboolean start_gps = FALSE;
     GError *error = NULL;
 
-    if (!iface_modem_location_parent->enable_location_gathering_finish (self, res, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        location_gathering_context_complete_and_free (ctx);
+    if (!iface_modem_location_parent->enable_location_gathering_finish (_self, res, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Now our own enabling */
+
+    ctx = g_task_get_task_data (task);
 
     /* NMEA, RAW and UNMANAGED are all enabled in the same way */
     if (ctx->source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
@@ -623,11 +576,11 @@ parent_enable_location_gathering_ready (MMIfaceModemLocation *self,
         /* Only start GPS engine if not done already.
          * NOTE: interface already takes care of making sure that raw/nmea and
          * unmanaged are not enabled at the same time */
-        if (!(ctx->self->priv->enabled_sources & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
-                                                  MM_MODEM_LOCATION_SOURCE_GPS_RAW |
-                                                  MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED)))
+        if (!(self->priv->enabled_sources & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
+                                             MM_MODEM_LOCATION_SOURCE_GPS_RAW |
+                                             MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED)))
             start_gps = TRUE;
-        ctx->self->priv->enabled_sources |= ctx->source;
+        self->priv->enabled_sources |= ctx->source;
     }
 
     if (start_gps) {
@@ -640,13 +593,13 @@ parent_enable_location_gathering_ready (MMIfaceModemLocation *self,
                                        FALSE, /* raw */
                                        NULL, /* cancellable */
                                        (GAsyncReadyCallback)gps_enabled_ready,
-                                       ctx);
+                                       task);
         return;
     }
 
     /* For any other location (e.g. 3GPP), or if GPS already running just return */
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    location_gathering_context_complete_and_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
@@ -656,21 +609,20 @@ enable_location_gathering (MMIfaceModemLocation *self,
                            gpointer user_data)
 {
     LocationGatheringContext *ctx;
+    GTask *task;
 
-    ctx = g_slice_new (LocationGatheringContext);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             enable_location_gathering);
+    ctx = g_new (LocationGatheringContext, 1);
     ctx->source = source;
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, g_free);
 
     /* Chain up parent's gathering enable */
     iface_modem_location_parent->enable_location_gathering (
         self,
         source,
         (GAsyncReadyCallback)parent_enable_location_gathering_ready,
-        ctx);
+        task);
 }
 
 /*****************************************************************************/

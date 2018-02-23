@@ -34,14 +34,14 @@ MM_PLUGIN_DEFINE_MINOR_VERSION
 
 static MMBaseModem *
 create_modem (MMPlugin *self,
-              const gchar *sysfs_path,
+              const gchar *uid,
               const gchar **drivers,
               guint16 vendor,
               guint16 product,
               GList *probes,
               GError **error)
 {
-    return MM_BASE_MODEM (mm_broadband_modem_option_new (sysfs_path,
+    return MM_BASE_MODEM (mm_broadband_modem_option_new (uid,
                                                          drivers,
                                                          mm_plugin_get_name (self),
                                                          vendor,
@@ -55,8 +55,8 @@ grab_port (MMPlugin *self,
            GError **error)
 {
     MMPortSerialAtFlag pflags = MM_PORT_SERIAL_AT_FLAG_NONE;
-    GUdevDevice *port;
-    gint usbif;
+    MMKernelDevice *port;
+    guint usbif;
 
     /* The Option plugin cannot do anything with non-AT ports */
     if (!mm_port_probe_is_at (probe)) {
@@ -73,14 +73,12 @@ grab_port (MMPlugin *self,
      * the modem/data port, per mail with Option engineers.  Only this port
      * will emit responses to dialing commands.
      */
-    usbif = g_udev_device_get_property_as_int (port, "ID_USB_INTERFACE_NUM");
+    usbif = mm_kernel_device_get_property_as_int_hex (port, "ID_USB_INTERFACE_NUM");
     if (usbif == 0)
         pflags = MM_PORT_SERIAL_AT_FLAG_PRIMARY | MM_PORT_SERIAL_AT_FLAG_PPP;
 
     return mm_base_modem_grab_port (modem,
-                                    mm_port_probe_get_port_subsys (probe),
-                                    mm_port_probe_get_port_name (probe),
-                                    mm_port_probe_get_parent_path (probe),
+                                    port,
                                     MM_PORT_TYPE_AT, /* we only allow AT ports here */
                                     pflags,
                                     error);

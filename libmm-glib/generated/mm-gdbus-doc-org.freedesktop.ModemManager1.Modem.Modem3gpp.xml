@@ -8,8 +8,9 @@
   </refmeta>  <refnamediv>    <refname>org.freedesktop.ModemManager1.Modem.Modem3gpp</refname>    <refpurpose>The ModemManager 3GPP interface.</refpurpose>  </refnamediv>  <refsynopsisdiv role="synopsis">
     <title role="synopsis.title">Methods</title>
     <synopsis>
-<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Register">Register</link> (IN  s      operator_id);
-<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Scan">Scan</link>     (OUT aa{sv} results);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Register">Register</link>              (IN  s      operator_id);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Scan">Scan</link>                  (OUT aa{sv} results);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetEpsUeModeOperation">SetEpsUeModeOperation</link> (IN  u      mode);
 </synopsis>
   </refsynopsisdiv>
   <refsect1 role="properties">
@@ -21,6 +22,7 @@
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.OperatorName">OperatorName</link>          readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EnabledFacilityLocks">EnabledFacilityLocks</link>  readable   u
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.SubscriptionState">SubscriptionState</link>     readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EpsUeModeOperation">EpsUeModeOperation</link>    readable   u
 </synopsis>
   </refsect1>
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Modem-Modem3gpp">
@@ -105,6 +107,21 @@ Scan (OUT aa{sv} results);
 </varlistentry>
 </variablelist>
 </refsect2>
+<refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetEpsUeModeOperation">
+  <title>The SetEpsUeModeOperation() method</title>
+  <indexterm zone="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetEpsUeModeOperation"><primary sortas="Modem3gpp.SetEpsUeModeOperation">org.freedesktop.ModemManager1.Modem.Modem3gpp.SetEpsUeModeOperation()</primary></indexterm>
+<programlisting>
+SetEpsUeModeOperation (IN  u mode);
+</programlisting>
+<para>        Sets the UE mode of operation for EPS.
+</para>
+<variablelist role="params">
+<varlistentry>
+  <term><literal>IN u <parameter>mode</parameter></literal>:</term>
+  <listitem><para>a <link linkend="MMModem3gppEpsUeModeOperation">MMModem3gppEpsUeModeOperation</link>.</para></listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
 </refsect1>
 <refsect1 role="details" id="gdbus-properties-org.freedesktop.ModemManager1.Modem.Modem3gpp">
   <title role="details.title">Property Details</title>
@@ -175,6 +192,17 @@ SubscriptionState  readable   u
 <para>        A <link linkend="MMModem3gppSubscriptionState">MMModem3gppSubscriptionState</link>
         value representing the subscription status of the account and whether there
         is any data remaining, given as an unsigned integer (signature <literal>"u"</literal>).
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EpsUeModeOperation">
+  <title>The "EpsUeModeOperation" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EpsUeModeOperation"><primary sortas="Modem3gpp:EpsUeModeOperation">org.freedesktop.ModemManager1.Modem.Modem3gpp:EpsUeModeOperation</primary></indexterm>
+<programlisting>
+EpsUeModeOperation  readable   u
+</programlisting>
+<para>        A <link linkend="MMModem3gppEpsUeModeOperation">MMModem3gppEpsUeModeOperation</link>
+        value representing the UE mode of operation for EPS, given as an unsigned integer
+        (signature <literal>"u"</literal>).
 </para>
 </refsect2>
 </refsect1>

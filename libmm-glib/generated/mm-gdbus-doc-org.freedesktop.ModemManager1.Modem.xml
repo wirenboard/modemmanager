@@ -44,6 +44,7 @@
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Manufacturer">Manufacturer</link>           readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Model">Model</link>                  readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Revision">Revision</link>               readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.HardwareRevision">HardwareRevision</link>       readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.DeviceIdentifier">DeviceIdentifier</link>       readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Device">Device</link>                 readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Drivers">Drivers</link>                readable   as
@@ -418,6 +419,15 @@ Revision  readable   s
 <para>        The revision identification of the software, as reported by the modem.
 </para>
 </refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.HardwareRevision">
+  <title>The "HardwareRevision" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem.HardwareRevision"><primary sortas="Modem:HardwareRevision">org.freedesktop.ModemManager1.Modem:HardwareRevision</primary></indexterm>
+<programlisting>
+HardwareRevision  readable   s
+</programlisting>
+<para>        The revision identification of the hardware, as reported by the modem.
+</para>
+</refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.DeviceIdentifier">
   <title>The "DeviceIdentifier" property</title>
   <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem.DeviceIdentifier"><primary sortas="Modem:DeviceIdentifier">org.freedesktop.ModemManager1.Modem:DeviceIdentifier</primary></indexterm>
@@ -444,6 +454,8 @@ Device  readable   s
         may be dependent upon the operating system.
 </para><para>        In Linux for example, this points to a sysfs path of the usb_device
         object.
+</para><para>        This value may also be set by the user using the MM_ID_PHYSDEV_UID udev
+        tag (e.g. binding the tag to a specific sysfs path).
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.Drivers">

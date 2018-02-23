@@ -8,8 +8,9 @@
   </refmeta>  <refnamediv>    <refname>org.freedesktop.ModemManager1</refname>    <refpurpose>The ModemManager Manager interface.</refpurpose>  </refnamediv>  <refsynopsisdiv role="synopsis">
     <title role="synopsis.title">Methods</title>
     <synopsis>
-<link linkend="gdbus-method-org-freedesktop-ModemManager1.ScanDevices">ScanDevices</link> ();
-<link linkend="gdbus-method-org-freedesktop-ModemManager1.SetLogging">SetLogging</link>  (IN  s level);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1.ScanDevices">ScanDevices</link>       ();
+<link linkend="gdbus-method-org-freedesktop-ModemManager1.SetLogging">SetLogging</link>        (IN  s     level);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1.ReportKernelEvent">ReportKernelEvent</link> (IN  a{sv} properties);
 </synopsis>
   </refsynopsisdiv>
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1">
@@ -41,6 +42,77 @@ SetLogging (IN  s level);
 <varlistentry>
   <term><literal>IN s <parameter>level</parameter></literal>:</term>
   <listitem><para>One of <literal>"ERR"</literal>, <literal>"WARN"</literal>, <literal>"INFO"</literal>, <literal>"DEBUG"</literal>.</para></listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
+<refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1.ReportKernelEvent">
+  <title>The ReportKernelEvent() method</title>
+  <indexterm zone="gdbus-method-org-freedesktop-ModemManager1.ReportKernelEvent"><primary sortas="org.freedesktop.ModemManager1.ReportKernelEvent">org.freedesktop.ModemManager1.ReportKernelEvent()</primary></indexterm>
+<programlisting>
+ReportKernelEvent (IN  a{sv} properties);
+</programlisting>
+<para>        Reports a kernel event to ModemManager.
+</para><para>        This method is only available if udev is not being used to report kernel
+        events.
+</para><para>        The <parameter>properties</parameter> dictionary is composed of key/value string pairs. The
+        possible keys are:
+</para><para>        <variablelist>
+          <varlistentry><term><literal>action</literal></term>
+            <listitem>
+              <para>
+                The type of action, given as a string value (signature
+                <literal>"s"</literal>).
+                This parameter is MANDATORY.
+              </para>
+              <variablelist>
+                <varlistentry><term><literal>add</literal></term>
+                  <listitem>
+                    A new kernel device has been added.
+                  </listitem>
+                </varlistentry>
+                <varlistentry><term><literal>remove</literal></term>
+                  <listitem>
+                    An existing kernel device has been removed.
+                  </listitem>
+                </varlistentry>
+              </variablelist>
+            </listitem>
+          </varlistentry>
+          <varlistentry><term><literal>name</literal></term>
+            <listitem>
+              <para>
+                The device name, given as a string value (signature
+                <literal>"s"</literal>).
+                This parameter is MANDATORY.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry><term><literal>subsystem</literal></term>
+            <listitem>
+              <para>
+                The device subsystem, given as a string value (signature
+                <literal>"s"</literal>).
+                This parameter is MANDATORY.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry><term><literal>uid</literal></term>
+            <listitem>
+              <para>
+                The unique ID of the physical device, given as a string value
+                (signature <literal>"s"</literal>).
+                This parameter is OPTIONAL, if not given the sysfs path of the
+                physical device will be used. This parameter must be the same
+                for all devices exposed by the same physical device.
+              </para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+</para>
+<variablelist role="params">
+<varlistentry>
+  <term><literal>IN a{sv} <parameter>properties</parameter></literal>:</term>
+  <listitem><para>event properties.</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>

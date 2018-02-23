@@ -35,6 +35,11 @@
 #include <libmbim-glib.h>
 #endif
 
+#if defined WITH_SYSTEMD_JOURNAL
+#define SD_JOURNAL_SUPPRESS_LOCATION
+#include <systemd/sd-journal.h>
+#endif
+
 #include "mm-log.h"
 
 enum {
@@ -44,10 +49,16 @@ enum {
 };
 
 static gboolean ts_flags = TS_FLAG_NONE;
-static guint32 log_level = LOGL_INFO | LOGL_WARN | LOGL_ERR;
+static guint32 log_level = MM_LOG_LEVEL_INFO | MM_LOG_LEVEL_WARN | MM_LOG_LEVEL_ERR;
 static GTimeVal rel_start = { 0, 0 };
 static int logfd = -1;
-static gboolean func_loc = FALSE;
+static gboolean append_log_level_text = TRUE;
+
+static void (*log_backend) (const char *loc,
+                            const char *func,
+                            int syslog_level,
+                            const char *message,
+                            size_t length);
 
 typedef struct {
     guint32 num;
@@ -55,27 +66,139 @@ typedef struct {
 } LogDesc;
 
 static const LogDesc level_descs[] = {
-    { LOGL_ERR, "ERR" },
-    { LOGL_WARN | LOGL_ERR, "WARN" },
-    { LOGL_INFO | LOGL_WARN | LOGL_ERR, "INFO" },
-    { LOGL_DEBUG | LOGL_INFO | LOGL_WARN | LOGL_ERR, "DEBUG" },
+    { MM_LOG_LEVEL_ERR, "ERR" },
+    { MM_LOG_LEVEL_WARN | MM_LOG_LEVEL_ERR, "WARN" },
+    { MM_LOG_LEVEL_INFO | MM_LOG_LEVEL_WARN | MM_LOG_LEVEL_ERR, "INFO" },
+    { MM_LOG_LEVEL_DEBUG | MM_LOG_LEVEL_INFO | MM_LOG_LEVEL_WARN | MM_LOG_LEVEL_ERR, "DEBUG" },
     { 0, NULL }
 };
 
 static GString *msgbuf = NULL;
 static volatile gsize msgbuf_once = 0;
 
+static int
+mm_to_syslog_priority (MMLogLevel level)
+{
+    switch (level) {
+    case MM_LOG_LEVEL_DEBUG:
+        return LOG_DEBUG;
+    case MM_LOG_LEVEL_WARN:
+        return LOG_WARNING;
+    case MM_LOG_LEVEL_INFO:
+        return LOG_INFO;
+    case MM_LOG_LEVEL_ERR:
+        return LOG_ERR;
+    }
+    g_assert_not_reached ();
+    return 0;
+}
+
+static int
+glib_to_syslog_priority (GLogLevelFlags level)
+{
+    switch (level) {
+    case G_LOG_LEVEL_ERROR:
+        return LOG_CRIT;
+    case G_LOG_LEVEL_CRITICAL:
+        return LOG_ERR;
+    case G_LOG_LEVEL_WARNING:
+        return LOG_WARNING;
+    case G_LOG_LEVEL_MESSAGE:
+        return LOG_NOTICE;
+    case G_LOG_LEVEL_DEBUG:
+        return LOG_DEBUG;
+    default:
+        return LOG_INFO;
+    }
+}
+
+static const char *
+log_level_description (MMLogLevel level)
+{
+    switch (level) {
+    case MM_LOG_LEVEL_DEBUG:
+        return "<debug>";
+    case MM_LOG_LEVEL_WARN:
+        return "<warn> ";
+    case MM_LOG_LEVEL_INFO:
+        return "<info> ";
+    case MM_LOG_LEVEL_ERR:
+        return "<error>";
+    }
+    g_assert_not_reached ();
+    return NULL;
+}
+
+static void
+log_backend_file (const char *loc,
+                  const char *func,
+                  int syslog_level,
+                  const char *message,
+                  size_t length)
+{
+    ssize_t ign;
+    ign = write (logfd, message, length);
+    if (ign) {} /* whatever; really shut up about unused result */
+
+    fsync (logfd);  /* Make sure output is dumped to disk immediately  */
+}
+
+static void
+log_backend_syslog (const char *loc,
+                    const char *func,
+                    int syslog_level,
+                    const char *message,
+                    size_t length)
+{
+    syslog (syslog_level, "%s", message);
+}
+
+#if defined WITH_SYSTEMD_JOURNAL
+static void
+log_backend_systemd_journal (const char *loc,
+                             const char *func,
+                             int syslog_level,
+                             const char *message,
+                             size_t length)
+{
+    const char *line;
+    size_t file_length;
+
+    if (loc == NULL) {
+        sd_journal_send ("MESSAGE=%s", message,
+                         "PRIORITY=%d", syslog_level,
+                         NULL);
+        return;
+    }
+
+    line = strstr (loc, ":");
+    if (line) {
+        file_length = line - loc;
+        line++;
+    } else {
+        /* This is not supposed to happen but we must be prepared for this */
+        line = loc;
+        file_length = 0;
+    }
+
+    sd_journal_send ("MESSAGE=%s", message,
+                     "PRIORITY=%d", syslog_level,
+                     "CODE_FUNC=%s", func,
+                     "CODE_FILE=%.*s", file_length, loc,
+                     "CODE_LINE=%s", line,
+                     NULL);
+}
+#endif
+
 void
 _mm_log (const char *loc,
          const char *func,
-         guint32 level,
+         MMLogLevel level,
          const char *fmt,
          ...)
 {
     va_list args;
     GTimeVal tv;
-    int syslog_priority = LOG_INFO;
-    ssize_t ign;
 
     if (!(log_level & level))
         return;
@@ -86,18 +209,8 @@ _mm_log (const char *loc,
     } else
         g_string_truncate (msgbuf, 0);
 
-    if ((log_level & LOGL_DEBUG) && (level == LOGL_DEBUG))
-        g_string_append (msgbuf, "<debug> ");
-    else if ((log_level & LOGL_INFO) && (level == LOGL_INFO))
-        g_string_append (msgbuf, "<info>  ");
-    else if ((log_level & LOGL_WARN) && (level == LOGL_WARN)) {
-        g_string_append (msgbuf, "<warn>  ");
-        syslog_priority = LOG_WARNING;
-    } else if ((log_level & LOGL_ERR) && (level == LOGL_ERR)) {
-        g_string_append (msgbuf, "<error> ");
-        syslog_priority = LOG_ERR;
-    } else
-        return;
+    if (append_log_level_text)
+        g_string_append_printf (msgbuf, "%s ", log_level_description (level));
 
     if (ts_flags == TS_FLAG_WALL) {
         g_get_current_time (&tv);
@@ -117,8 +230,9 @@ _mm_log (const char *loc,
         g_string_append_printf (msgbuf, "[%06ld.%06ld] ", secs, usecs);
     }
 
-    if (func_loc && log_level & LOGL_DEBUG)
-        g_string_append_printf (msgbuf, "[%s] %s(): ", loc, func);
+#if defined MM_LOG_FUNC_LOC
+    g_string_append_printf (msgbuf, "[%s] %s(): ", loc, func);
+#endif
 
     va_start (args, fmt);
     g_string_append_vprintf (msgbuf, fmt, args);
@@ -126,14 +240,7 @@ _mm_log (const char *loc,
 
     g_string_append_c (msgbuf, '\n');
 
-    if (logfd < 0)
-        syslog (syslog_priority, "%s", msgbuf->str);
-    else {
-        ign = write (logfd, msgbuf->str, msgbuf->len);
-        if (ign) {} /* whatever; really shut up about unused result */
-
-        fsync (logfd);  /* Make sure output is dumped to disk immediately */
-    }
+    log_backend (loc, func, mm_to_syslog_priority (level), msgbuf->str, msgbuf->len);
 }
 
 static void
@@ -142,37 +249,7 @@ log_handler (const gchar *log_domain,
              const gchar *message,
              gpointer ignored)
 {
-    int syslog_priority;
-    ssize_t ign;
-
-    switch (level) {
-    case G_LOG_LEVEL_ERROR:
-        syslog_priority = LOG_CRIT;
-        break;
-    case G_LOG_LEVEL_CRITICAL:
-        syslog_priority = LOG_ERR;
-        break;
-    case G_LOG_LEVEL_WARNING:
-        syslog_priority = LOG_WARNING;
-        break;
-    case G_LOG_LEVEL_MESSAGE:
-        syslog_priority = LOG_NOTICE;
-        break;
-    case G_LOG_LEVEL_DEBUG:
-        syslog_priority = LOG_DEBUG;
-        break;
-    case G_LOG_LEVEL_INFO:
-    default:
-        syslog_priority = LOG_INFO;
-        break;
-    }
-
-    if (logfd < 0)
-        syslog (syslog_priority, "%s", message);
-    else {
-        ign = write (logfd, message, strlen (message));
-        if (ign) {} /* whatever; really shut up about unused result */
-    }
+    log_backend (NULL, NULL, glib_to_syslog_priority (level), message, strlen (message));
 }
 
 gboolean
@@ -194,11 +271,11 @@ mm_log_set_level (const char *level, GError **error)
                      "Unknown log level '%s'", level);
 
 #if defined WITH_QMI
-    qmi_utils_set_traces_enabled (log_level & LOGL_DEBUG ? TRUE : FALSE);
+    qmi_utils_set_traces_enabled (log_level & MM_LOG_LEVEL_DEBUG ? TRUE : FALSE);
 #endif
 
 #if defined WITH_MBIM
-    mbim_utils_set_traces_enabled (log_level & LOGL_DEBUG ? TRUE : FALSE);
+    mbim_utils_set_traces_enabled (log_level & MM_LOG_LEVEL_DEBUG ? TRUE : FALSE);
 #endif
 
     return found;
@@ -207,16 +284,14 @@ mm_log_set_level (const char *level, GError **error)
 gboolean
 mm_log_setup (const char *level,
               const char *log_file,
+              gboolean log_journal,
               gboolean show_timestamps,
               gboolean rel_timestamps,
-              gboolean debug_func_loc,
               GError **error)
 {
     /* levels */
     if (level && strlen (level) && !mm_log_set_level (level, error))
         return FALSE;
-
-    func_loc = debug_func_loc;
 
     if (show_timestamps)
         ts_flags = TS_FLAG_WALL;
@@ -226,9 +301,16 @@ mm_log_setup (const char *level,
     /* Grab start time for relative timestamps */
     g_get_current_time (&rel_start);
 
-    if (log_file == NULL)
+#if defined WITH_SYSTEMD_JOURNAL
+    if (log_journal) {
+        log_backend = log_backend_systemd_journal;
+        append_log_level_text = FALSE;
+    } else
+#endif
+    if (log_file == NULL) {
         openlog (G_LOG_DOMAIN, LOG_CONS | LOG_PID | LOG_PERROR, LOG_DAEMON);
-    else {
+        log_backend = log_backend_syslog;
+    } else {
         logfd = open (log_file,
                       O_CREAT | O_APPEND | O_WRONLY,
                       S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
@@ -238,6 +320,7 @@ mm_log_setup (const char *level,
                          errno, strerror (errno));
             return FALSE;
         }
+        log_backend = log_backend_file;
     }
 
     g_log_set_handler (G_LOG_DOMAIN,

@@ -74,33 +74,23 @@ modem_create_bearer_finish (MMIfaceModem *self,
                             GAsyncResult *res,
                             GError **error)
 {
-    MMBaseBearer *bearer;
-
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    bearer = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
-
-    return g_object_ref (bearer);
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 broadband_bearer_new_ready (GObject *source,
                             GAsyncResult *res,
-                            GSimpleAsyncResult *simple)
+                            GTask *task)
 {
     MMBaseBearer *bearer = NULL;
     GError *error = NULL;
 
     bearer = mm_broadband_bearer_novatel_lte_new_finish (res, &error);
     if (!bearer)
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gpointer (simple,
-                                                   bearer,
-                                                   (GDestroyNotify)g_object_unref);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+        g_task_return_pointer (task, bearer, g_object_unref);
+    g_object_unref (task);
 }
 
 static void
@@ -109,20 +99,12 @@ modem_create_bearer (MMIfaceModem *self,
                      GAsyncReadyCallback callback,
                      gpointer user_data)
 {
-    GSimpleAsyncResult *result;
-
-    /* Set a new ref to the bearer object as result */
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        modem_create_bearer);
-
     /* We just create a MMBroadbandBearer */
     mm_broadband_bearer_novatel_lte_new (MM_BROADBAND_MODEM_NOVATEL_LTE (self),
                                      properties,
                                      NULL, /* cancellable */
                                      (GAsyncReadyCallback)broadband_bearer_new_ready,
-                                     result);
+                                     g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
@@ -156,14 +138,14 @@ modem_after_sim_unlock_finish (MMIfaceModem *self,
                                GAsyncResult *res,
                                GError **error)
 {
-    return TRUE;
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static gboolean
-after_sim_unlock_wait_cb (GSimpleAsyncResult *result)
+after_sim_unlock_wait_cb (GTask *task)
 {
-    g_simple_async_result_complete (result);
-    g_object_unref (result);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
     return G_SOURCE_REMOVE;
 }
 
@@ -172,16 +154,13 @@ modem_after_sim_unlock (MMIfaceModem *self,
                         GAsyncReadyCallback callback,
                         gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        modem_after_sim_unlock);
+    task = g_task_new (self, NULL, callback, user_data);
 
     /* A 3-second wait is necessary for SIM to become ready.
      * Otherwise, a subsequent AT+CRSM command will likely fail. */
-    g_timeout_add_seconds (3, (GSourceFunc)after_sim_unlock_wait_cb, result);
+    g_timeout_add_seconds (3, (GSourceFunc)after_sim_unlock_wait_cb, task);
 }
 
 /*****************************************************************************/
@@ -223,7 +202,7 @@ response_processor_cnum_ignore_at_errors (MMBaseModem *self,
         return FALSE;
     }
 
-    own_numbers = mm_3gpp_parse_cnum_exec_response (response, result_error);
+    own_numbers = mm_3gpp_parse_cnum_exec_response (response);
     if (!own_numbers)
         return FALSE;
 
@@ -293,38 +272,38 @@ load_own_numbers (MMIfaceModem *self,
  * The bit positions and band names on the right come from the response to $NWBAND=?
  */
 static MMModemBand bandbits[] = {
-    MM_MODEM_BAND_CDMA_BC0_CELLULAR_800,   /* "00 CDMA2000 Band Class 0, A-System" */
-    MM_MODEM_BAND_CDMA_BC0_CELLULAR_800,   /* "01 CDMA2000 Band Class 0, B-System" */
-    MM_MODEM_BAND_CDMA_BC1_PCS_1900,       /* "02 CDMA2000 Band Class 1, all blocks" */
-    MM_MODEM_BAND_CDMA_BC2_TACS,           /* "03 CDMA2000 Band Class 2, place holder" */
-    MM_MODEM_BAND_CDMA_BC3_JTACS,          /* "04 CDMA2000 Band Class 3, A-System" */
-    MM_MODEM_BAND_CDMA_BC4_KOREAN_PCS,     /* "05 CDMA2000 Band Class 4, all blocks" */
-    MM_MODEM_BAND_CDMA_BC5_NMT450,         /* "06 CDMA2000 Band Class 5, all blocks" */
-    MM_MODEM_BAND_DCS,                     /* "07 GSM DCS band" */
-    MM_MODEM_BAND_EGSM,                    /* "08 GSM Extended GSM (E-GSM) band" */
-    MM_MODEM_BAND_UNKNOWN,                 /* "09 GSM Primary GSM (P-GSM) band" */
-    MM_MODEM_BAND_CDMA_BC6_IMT2000,        /* "10 CDMA2000 Band Class 6" */
-    MM_MODEM_BAND_CDMA_BC7_CELLULAR_700,   /* "11 CDMA2000 Band Class 7" */
-    MM_MODEM_BAND_CDMA_BC8_1800,           /* "12 CDMA2000 Band Class 8" */
-    MM_MODEM_BAND_CDMA_BC9_900,            /* "13 CDMA2000 Band Class 9" */
-    MM_MODEM_BAND_CDMA_BC10_SECONDARY_800, /* "14 CDMA2000 Band Class 10 */
-    MM_MODEM_BAND_CDMA_BC11_PAMR_400,      /* "15 CDMA2000 Band Class 11 */
-    MM_MODEM_BAND_UNKNOWN,                 /* "16 GSM 450 band" */
-    MM_MODEM_BAND_UNKNOWN,                 /* "17 GSM 480 band" */
-    MM_MODEM_BAND_UNKNOWN,                 /* "18 GSM 750 band" */
-    MM_MODEM_BAND_G850,                    /* "19 GSM 850 band" */
-    MM_MODEM_BAND_UNKNOWN,                 /* "20 GSM band" */
-    MM_MODEM_BAND_PCS,                     /* "21 GSM PCS band" */
-    MM_MODEM_BAND_U2100,                   /* "22 WCDMA I IMT 2000 band" */
-    MM_MODEM_BAND_U1900,                   /* "23 WCDMA II PCS band" */
-    MM_MODEM_BAND_U1800,                   /* "24 WCDMA III 1700 band" */
-    MM_MODEM_BAND_U17IV,                   /* "25 WCDMA IV 1700 band" */
-    MM_MODEM_BAND_U850,                    /* "26 WCDMA V US850 band" */
-    MM_MODEM_BAND_U800,                    /* "27 WCDMA VI JAPAN 800 band" */
-    MM_MODEM_BAND_UNKNOWN,                 /* "28 Reserved for BC12/BC14 */
-    MM_MODEM_BAND_UNKNOWN,                 /* "29 Reserved for BC12/BC14 */
-    MM_MODEM_BAND_UNKNOWN,                 /* "30 Reserved" */
-    MM_MODEM_BAND_UNKNOWN,                 /* "31 Reserved" */
+    MM_MODEM_BAND_CDMA_BC0,  /* "00 CDMA2000 Band Class 0, A-System" */
+    MM_MODEM_BAND_CDMA_BC0,  /* "01 CDMA2000 Band Class 0, B-System" */
+    MM_MODEM_BAND_CDMA_BC1,  /* "02 CDMA2000 Band Class 1, all blocks" */
+    MM_MODEM_BAND_CDMA_BC2,  /* "03 CDMA2000 Band Class 2, place holder" */
+    MM_MODEM_BAND_CDMA_BC3,  /* "04 CDMA2000 Band Class 3, A-System" */
+    MM_MODEM_BAND_CDMA_BC4,  /* "05 CDMA2000 Band Class 4, all blocks" */
+    MM_MODEM_BAND_CDMA_BC5,  /* "06 CDMA2000 Band Class 5, all blocks" */
+    MM_MODEM_BAND_DCS,       /* "07 GSM DCS band" */
+    MM_MODEM_BAND_EGSM,      /* "08 GSM Extended GSM (E-GSM) band" */
+    MM_MODEM_BAND_UNKNOWN,   /* "09 GSM Primary GSM (P-GSM) band" */
+    MM_MODEM_BAND_CDMA_BC6,  /* "10 CDMA2000 Band Class 6" */
+    MM_MODEM_BAND_CDMA_BC7,  /* "11 CDMA2000 Band Class 7" */
+    MM_MODEM_BAND_CDMA_BC8,  /* "12 CDMA2000 Band Class 8" */
+    MM_MODEM_BAND_CDMA_BC9,  /* "13 CDMA2000 Band Class 9" */
+    MM_MODEM_BAND_CDMA_BC10, /* "14 CDMA2000 Band Class 10 */
+    MM_MODEM_BAND_CDMA_BC11, /* "15 CDMA2000 Band Class 11 */
+    MM_MODEM_BAND_G450,      /* "16 GSM 450 band" */
+    MM_MODEM_BAND_G480,      /* "17 GSM 480 band" */
+    MM_MODEM_BAND_G750,      /* "18 GSM 750 band" */
+    MM_MODEM_BAND_G850,      /* "19 GSM 850 band" */
+    MM_MODEM_BAND_UNKNOWN,   /* "20 GSM 900 Railways band" */
+    MM_MODEM_BAND_PCS,       /* "21 GSM PCS band" */
+    MM_MODEM_BAND_UTRAN_1,   /* "22 WCDMA I IMT 2000 band" */
+    MM_MODEM_BAND_UTRAN_2,   /* "23 WCDMA II PCS band" */
+    MM_MODEM_BAND_UTRAN_3,   /* "24 WCDMA III 1700 band" */
+    MM_MODEM_BAND_UTRAN_4,   /* "25 WCDMA IV 1700 band" */
+    MM_MODEM_BAND_UTRAN_5,   /* "26 WCDMA V US850 band" */
+    MM_MODEM_BAND_UTRAN_6,   /* "27 WCDMA VI JAPAN 800 band" */
+    MM_MODEM_BAND_UNKNOWN,   /* "28 Reserved for BC12/BC14 */
+    MM_MODEM_BAND_UNKNOWN,   /* "29 Reserved for BC12/BC14 */
+    MM_MODEM_BAND_UNKNOWN,   /* "30 Reserved" */
+    MM_MODEM_BAND_UNKNOWN,   /* "31 Reserved" */
 };
 
 static GArray *
@@ -332,9 +311,7 @@ load_supported_bands_finish (MMIfaceModem *self,
                              GAsyncResult *res,
                              GError **error)
 {
-    /* Never fails */
-    return (GArray *) g_array_ref (g_simple_async_result_get_op_res_gpointer (
-                                       G_SIMPLE_ASYNC_RESULT (res)));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
@@ -342,14 +319,11 @@ load_supported_bands (MMIfaceModem *self,
                       GAsyncReadyCallback callback,
                       gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
     GArray *bands;
     guint i;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        load_supported_bands);
+    task = g_task_new (self, NULL, callback, user_data);
 
     /*
      * The modem doesn't support telling us what bands are supported;
@@ -361,11 +335,8 @@ load_supported_bands (MMIfaceModem *self,
             g_array_append_val(bands, bandbits[i]);
     }
 
-    g_simple_async_result_set_op_res_gpointer (result,
-                                               bands,
-                                               (GDestroyNotify)g_array_unref);
-    g_simple_async_result_complete_in_idle (result);
-    g_object_unref (result);
+    g_task_return_pointer (task, bands, (GDestroyNotify)g_array_unref);
+    g_object_unref (task);
 }
 
 /*****************************************************************************/
@@ -376,17 +347,13 @@ load_current_bands_finish (MMIfaceModem *self,
                            GAsyncResult *res,
                            GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    return (GArray *) g_array_ref (g_simple_async_result_get_op_res_gpointer (
-                                       G_SIMPLE_ASYNC_RESULT (res)));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 load_current_bands_done (MMIfaceModem *self,
                          GAsyncResult *res,
-                         GSimpleAsyncResult *operation_result)
+                         GTask *task)
 {
     GArray *bands;
     const gchar *response;
@@ -397,9 +364,8 @@ load_current_bands_done (MMIfaceModem *self,
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
         mm_dbg ("Couldn't query supported bands: '%s'", error->message);
-        g_simple_async_result_take_error (operation_result, error);
-        g_simple_async_result_complete_in_idle (operation_result);
-        g_object_unref (operation_result);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -415,11 +381,8 @@ load_current_bands_done (MMIfaceModem *self,
             g_array_append_val(bands, bandbits[i]);
     }
 
-    g_simple_async_result_set_op_res_gpointer (operation_result,
-                                               bands,
-                                               (GDestroyNotify)g_array_unref);
-    g_simple_async_result_complete_in_idle (operation_result);
-    g_object_unref (operation_result);
+    g_task_return_pointer (task, bands, (GDestroyNotify)g_array_unref);
+    g_object_unref (task);
 }
 
 static void
@@ -427,20 +390,76 @@ load_current_bands (MMIfaceModem *self,
                       GAsyncReadyCallback callback,
                       gpointer user_data)
 {
-    GSimpleAsyncResult *result;
-
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        load_current_bands);
-
     mm_base_modem_at_command (
         MM_BASE_MODEM (self),
         "$NWBAND?",
         3,
         FALSE,
         (GAsyncReadyCallback)load_current_bands_done,
-        result);
+        g_task_new (self, NULL, callback, user_data));
+}
+
+/*****************************************************************************/
+/* Load unlock retries (Modem interface) */
+
+static MMUnlockRetries *
+load_unlock_retries_finish (MMIfaceModem *self,
+                            GAsyncResult *res,
+                            GError **error)
+{
+    return g_task_propagate_pointer (G_TASK (res), error);
+}
+
+static void
+load_unlock_retries_ready (MMBaseModem *self,
+                           GAsyncResult *res,
+                           GTask *task)
+{
+    const gchar *response;
+    GError *error = NULL;
+    gint pin_num, pin_value;
+    int scan_count;
+
+    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
+    if (!response) {
+        mm_dbg ("Couldn't query unlock retries: '%s'", error->message);
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    response = mm_strip_tag (response, "$NWPINR:");
+
+    scan_count = sscanf (response, "PIN%d, %d", &pin_num, &pin_value);
+    if (scan_count != 2 || (pin_num != 1 && pin_num != 2)) {
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Invalid unlock retries response: '%s'",
+                                 response);
+    } else {
+        MMUnlockRetries *retries;
+
+        retries = mm_unlock_retries_new ();
+        mm_unlock_retries_set (retries,
+                               pin_num == 1 ? MM_MODEM_LOCK_SIM_PIN : MM_MODEM_LOCK_SIM_PIN2,
+                               pin_value);
+        g_task_return_pointer (task, retries, g_object_unref);
+    }
+    g_object_unref (task);
+}
+
+static void
+load_unlock_retries (MMIfaceModem *self,
+                     GAsyncReadyCallback callback,
+                     gpointer user_data)
+{
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "$NWPINR?",
+                              20,
+                              FALSE,
+                              (GAsyncReadyCallback)load_unlock_retries_ready,
+                              g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
@@ -453,12 +472,16 @@ load_access_technologies_finish (MMIfaceModem *self,
                                  guint *mask,
                                  GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return FALSE;
+    GError *inner_error = NULL;
+    gssize value;
 
-    *access_technologies = (MMModemAccessTechnology) GPOINTER_TO_UINT (
-        g_simple_async_result_get_op_res_gpointer (
-            G_SIMPLE_ASYNC_RESULT (res)));
+    value = g_task_propagate_int (G_TASK (res), &inner_error);
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return FALSE;
+    }
+
+    *access_technologies = (MMModemAccessTechnology) value;
     *mask = MM_MODEM_ACCESS_TECHNOLOGY_ANY;
     return TRUE;
 }
@@ -466,7 +489,7 @@ load_access_technologies_finish (MMIfaceModem *self,
 static void
 load_access_technologies_ready (MMIfaceModem *self,
                                 GAsyncResult *res,
-                                GSimpleAsyncResult *operation_result)
+                                GTask *task)
 {
     const gchar *response;
     MMModemAccessTechnology act;
@@ -475,9 +498,8 @@ load_access_technologies_ready (MMIfaceModem *self,
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
         mm_dbg ("Couldn't query access technology: '%s'", error->message);
-        g_simple_async_result_take_error (operation_result, error);
-        g_simple_async_result_complete (operation_result);
-        g_object_unref (operation_result);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -495,11 +517,8 @@ load_access_technologies_ready (MMIfaceModem *self,
     if (strstr (response, "GSM"))
         act |= MM_MODEM_ACCESS_TECHNOLOGY_GSM;
 
-    g_simple_async_result_set_op_res_gpointer (operation_result,
-                                               GUINT_TO_POINTER (act),
-                                               NULL);
-    g_simple_async_result_complete_in_idle (operation_result);
-    g_object_unref (operation_result);
+    g_task_return_int (task, act);
+    g_object_unref (task);
 }
 
 static void
@@ -507,20 +526,13 @@ load_access_technologies (MMIfaceModem *self,
                           GAsyncReadyCallback callback,
                           gpointer user_data)
 {
-    GSimpleAsyncResult *result;
-
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        load_access_technologies);
-
     mm_base_modem_at_command (
         MM_BASE_MODEM (self),
         "$NWSYSMODE",
         3,
         FALSE,
         (GAsyncReadyCallback)load_access_technologies_ready,
-        result);
+        g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
@@ -555,16 +567,13 @@ scan_networks_finish (MMIfaceModem3gpp *self,
                       GAsyncResult *res,
                       GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    return g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 cops_query_ready (MMBroadbandModemNovatelLte *self,
                   GAsyncResult *res,
-                  GSimpleAsyncResult *operation_result)
+                  GTask *task)
 {
     const gchar *response;
     GError *error = NULL;
@@ -572,25 +581,22 @@ cops_query_ready (MMBroadbandModemNovatelLte *self,
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (error) {
-        g_simple_async_result_take_error (operation_result, error);
-        g_simple_async_result_complete (operation_result);
-        g_object_unref (operation_result);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     scan_result = mm_3gpp_parse_cops_test_response (response, &error);
     if (error) {
-        g_simple_async_result_take_error (operation_result, error);
-        g_simple_async_result_complete (operation_result);
-        g_object_unref (operation_result);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
-    g_simple_async_result_set_op_res_gpointer (operation_result,
-                                               scan_result,
-                                               NULL);
-    g_simple_async_result_complete (operation_result);
-    g_object_unref (operation_result);
+    g_task_return_pointer (task,
+                           scan_result,
+                           (GDestroyNotify)mm_3gpp_network_info_list_free);
+    g_object_unref (task);
 }
 
 static void
@@ -598,15 +604,12 @@ scan_networks (MMIfaceModem3gpp *self,
                GAsyncReadyCallback callback,
                gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
     MMModemAccessTechnology access_tech;
 
     mm_dbg ("scanning for networks (Novatel LTE)...");
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        scan_networks);
+    task = g_task_new (self, NULL, callback, user_data);
 
     access_tech = mm_iface_modem_get_access_technologies (MM_IFACE_MODEM (self));
     /* The Novatel LTE modem does not properly support AT+COPS=? in LTE mode.
@@ -618,13 +621,12 @@ scan_networks (MMIfaceModem3gpp *self,
 
         access_tech_string = mm_modem_access_technology_build_string_from_mask (access_tech);
         mm_warn ("Couldn't scan for networks with access technologies: %s", access_tech_string);
-        g_simple_async_result_set_error (result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_UNSUPPORTED,
-                                         "Couldn't scan for networks with access technologies: %s",
-                                         access_tech_string);
-        g_simple_async_result_complete_in_idle (result);
-        g_object_unref (result);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_UNSUPPORTED,
+                                 "Couldn't scan for networks with access technologies: %s",
+                                 access_tech_string);
+        g_object_unref (task);
         g_free (access_tech_string);
         return;
     }
@@ -634,7 +636,7 @@ scan_networks (MMIfaceModem3gpp *self,
                               300,
                               FALSE,
                               (GAsyncReadyCallback)cops_query_ready,
-                              result);
+                              task);
 }
 
 /*****************************************************************************/
@@ -677,6 +679,8 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_supported_bands_finish = load_supported_bands_finish;
     iface->load_current_bands = load_current_bands;
     iface->load_current_bands_finish = load_current_bands_finish;
+    iface->load_unlock_retries = load_unlock_retries;
+    iface->load_unlock_retries_finish = load_unlock_retries_finish;
     /* No support for setting bands, as it destabilizes the modem. */
     iface->load_access_technologies = load_access_technologies;
     iface->load_access_technologies_finish = load_access_technologies_finish;

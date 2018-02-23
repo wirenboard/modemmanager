@@ -273,8 +273,10 @@ cause_code_to_delivery_state (guint8 error_class,
         return MM_SMS_DELIVERY_STATE_COMPLETED_RECEIVED;
     case ERROR_CLASS_TEMPORARY:
         delivery_state += 0x300;
+        break;
     case ERROR_CLASS_PERMANENT:
         delivery_state += 0x200;
+        break;
     default:
         return MM_SMS_DELIVERY_STATE_UNKNOWN;
     }
@@ -296,7 +298,7 @@ cause_code_to_delivery_state (guint8 error_class,
     else if (cause_code == 101)
         /* 101 reserved */
         delivery_state += CAUSE_CODE_GENERAL_PROBLEM_OTHER;
-    else if (cause_code >= 108 && cause_code <= 255)
+    else if (cause_code >= 108) /* cause_code <= 255 is always true */
         /* 108 to 223 reserved, treat as CAUSE_CODE_GENERAL_PROBLEM_OTHER
          * 224 to 255 reserved for TIA/EIA-41 extension, otherwise treat as CAUSE_CODE_GENERAL_PROBLEM_OTHER */
         delivery_state += CAUSE_CODE_GENERAL_PROBLEM_OTHER;
@@ -1363,7 +1365,6 @@ decide_best_encoding (const gchar *text,
                       guint *num_bits_per_field,
                       Encoding *encoding)
 {
-    guint latin_unsupported = 0;
     guint ascii_unsupported = 0;
     guint i;
     guint len;
@@ -1389,10 +1390,7 @@ decide_best_encoding (const gchar *text,
     }
 
     /* Check if we can do Latin encoding */
-    mm_charset_get_encoded_len (text,
-                                MM_MODEM_CHARSET_8859_1,
-                                &latin_unsupported);
-    if (!latin_unsupported) {
+    if (mm_charset_can_convert_to (text, MM_MODEM_CHARSET_8859_1)) {
         *out = g_byte_array_sized_new (len);
         mm_modem_charset_byte_array_append (*out,
                                             text,

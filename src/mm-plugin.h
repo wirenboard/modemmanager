@@ -20,12 +20,12 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <gudev/gudev.h>
 
 #include "mm-base-modem.h"
 #include "mm-port.h"
 #include "mm-port-probe.h"
 #include "mm-device.h"
+#include "mm-kernel-device.h"
 
 #define MM_PLUGIN_GENERIC_NAME "Generic"
 #define MM_PLUGIN_MAJOR_VERSION 4
@@ -104,7 +104,7 @@ struct _MMPluginClass {
     /* Plugins need to provide a method to create a modem object given
      * a list of port probes (Mandatory) */
     MMBaseModem *(*create_modem) (MMPlugin *plugin,
-                                  const gchar *sysfs_path,
+                                  const gchar *uid,
                                   const gchar **drivers,
                                   guint16 vendor,
                                   guint16 product,
@@ -125,13 +125,13 @@ const gchar *mm_plugin_get_name (MMPlugin *plugin);
 
 /* This method will run all pre-probing filters, to see if we can discard this
  * plugin from the probing logic as soon as possible. */
-MMPluginSupportsHint mm_plugin_discard_port_early (MMPlugin *plugin,
-                                                   MMDevice *device,
-                                                   GUdevDevice *port);
+MMPluginSupportsHint mm_plugin_discard_port_early (MMPlugin       *plugin,
+                                                   MMDevice       *device,
+                                                   MMKernelDevice *port);
 
 void                   mm_plugin_supports_port        (MMPlugin             *plugin,
                                                        MMDevice             *device,
-                                                       GUdevDevice          *port,
+                                                       MMKernelDevice       *port,
                                                        GCancellable         *cancellable,
                                                        GAsyncReadyCallback   callback,
                                                        gpointer              user_data);

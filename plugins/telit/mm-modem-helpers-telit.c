@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 
 #include <ModemManager.h>
 #define _LIBMM_INSIDE_MMCLI
@@ -43,21 +44,42 @@ mm_telit_get_band_flag (GArray *bands_array,
     guint i;
 
     for (i = 0; i < bands_array->len; i++) {
-        MMModemBand band = g_array_index(bands_array, MMModemBand, i);
+        MMModemBand band = g_array_index (bands_array, MMModemBand, i);
 
-        if (flag2g != NULL &&
-            band > MM_MODEM_BAND_UNKNOWN && band <= MM_MODEM_BAND_G850) {
-            mask2g += 1 << band;
+        if (flag2g != NULL) {
+            switch (band) {
+                case MM_MODEM_BAND_EGSM:
+                case MM_MODEM_BAND_DCS:
+                case MM_MODEM_BAND_PCS:
+                case MM_MODEM_BAND_G850:
+                    mask2g += 1 << band;
+                    break;
+                default:
+                    break;
+            }
         }
 
-        if (flag3g != NULL &&
-            band >= MM_MODEM_BAND_U2100 && band <= MM_MODEM_BAND_U2600) {
-            mask3g += 1 << band;
+        if (flag3g != NULL) {
+            switch (band) {
+                case MM_MODEM_BAND_UTRAN_1:
+                case MM_MODEM_BAND_UTRAN_2:
+                case MM_MODEM_BAND_UTRAN_3:
+                case MM_MODEM_BAND_UTRAN_4:
+                case MM_MODEM_BAND_UTRAN_5:
+                case MM_MODEM_BAND_UTRAN_6:
+                case MM_MODEM_BAND_UTRAN_7:
+                case MM_MODEM_BAND_UTRAN_8:
+                case MM_MODEM_BAND_UTRAN_9:
+                    mask3g += 1 << band;
+                    break;
+                default:
+                    break;
+            }
         }
 
          if (flag4g != NULL &&
-             band >= MM_MODEM_BAND_EUTRAN_I && band <= MM_MODEM_BAND_EUTRAN_XLIV) {
-             mask4g += 1 << (band - MM_MODEM_BAND_EUTRAN_I);
+             band >= MM_MODEM_BAND_EUTRAN_1 && band <= MM_MODEM_BAND_EUTRAN_44) {
+             mask4g += 1 << (band - MM_MODEM_BAND_EUTRAN_1);
              found4g = TRUE;
         }
     }
@@ -78,25 +100,25 @@ mm_telit_get_band_flag (GArray *bands_array,
 
     /* Get 3G flag */
     if (flag3g != NULL) {
-        if (mask3g == (1 << MM_MODEM_BAND_U2100))
+        if (mask3g == (1 << MM_MODEM_BAND_UTRAN_1))
             *flag3g = 0;
-        else if (mask3g == (1 << MM_MODEM_BAND_U1900))
+        else if (mask3g == (1 << MM_MODEM_BAND_UTRAN_2))
             *flag3g = 1;
-        else if (mask3g == (1 << MM_MODEM_BAND_U850))
+        else if (mask3g == (1 << MM_MODEM_BAND_UTRAN_5))
             *flag3g = 2;
-        else if (mask3g == ((1 << MM_MODEM_BAND_U2100) +
-                            (1 << MM_MODEM_BAND_U1900) +
-                            (1 << MM_MODEM_BAND_U850)))
+        else if (mask3g == ((1 << MM_MODEM_BAND_UTRAN_1) +
+                            (1 << MM_MODEM_BAND_UTRAN_2) +
+                            (1 << MM_MODEM_BAND_UTRAN_5)))
             *flag3g = 3;
-        else if (mask3g == ((1 << MM_MODEM_BAND_U1900) +
-                            (1 << MM_MODEM_BAND_U850)))
+        else if (mask3g == ((1 << MM_MODEM_BAND_UTRAN_2) +
+                            (1 << MM_MODEM_BAND_UTRAN_5)))
             *flag3g = 4;
-        else if (mask3g == (1 << MM_MODEM_BAND_U900))
+        else if (mask3g == (1 << MM_MODEM_BAND_UTRAN_8))
             *flag3g = 5;
-        else if (mask3g == ((1 << MM_MODEM_BAND_U2100) +
-                            (1 << MM_MODEM_BAND_U900)))
+        else if (mask3g == ((1 << MM_MODEM_BAND_UTRAN_1) +
+                            (1 << MM_MODEM_BAND_UTRAN_8)))
             *flag3g = 6;
-        else if (mask3g == (1 << MM_MODEM_BAND_U17IV))
+        else if (mask3g == (1 << MM_MODEM_BAND_UTRAN_4))
             *flag3g = 7;
         else
             *flag3g = -1;
@@ -111,56 +133,6 @@ mm_telit_get_band_flag (GArray *bands_array,
     }
 }
 
-/*****************************************************************************/
-/* +CSIM response parser */
-
-gint
-mm_telit_parse_csim_response (const guint step,
-                              const gchar *response,
-                              GError **error)
-{
-    GRegex *r = NULL;
-    GMatchInfo *match_info = NULL;
-    gchar *retries_hex_str;
-    guint retries;
-
-    r = g_regex_new ("\\+CSIM:\\s*[0-9]+,\\s*.*63C(.*)\"", G_REGEX_RAW, 0, NULL);
-
-    if (!g_regex_match (r, response, 0, &match_info)) {
-        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                     "Could not parse reponse '%s'", response);
-        g_match_info_free (match_info);
-        g_regex_unref (r);
-        return -1;
-    }
-
-    if (!g_match_info_matches (match_info)) {
-        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                     "Could not find matches in response '%s'", response);
-        g_match_info_free (match_info);
-        g_regex_unref (r);
-        return -1;
-    }
-
-    retries_hex_str = mm_get_string_unquoted_from_match_info (match_info, 1);
-    g_assert (NULL != retries_hex_str);
-
-    /* convert hex value to uint */
-    if (sscanf (retries_hex_str, "%x", &retries) != 1) {
-         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                     "Could not get retry value from match '%s'",
-                     retries_hex_str);
-        g_match_info_free (match_info);
-        g_regex_unref (r);
-        return -1;
-    }
-
-    g_free (retries_hex_str);
-    g_match_info_free (match_info);
-    g_regex_unref (r);
-
-    return retries;
-}
 #define SUPP_BAND_RESPONSE_REGEX          "#BND:\\s*\\((?P<Bands2G>[0-9\\-,]*)\\)(,\\s*\\((?P<Bands3G>[0-9\\-,]*)\\))?(,\\s*\\((?P<Bands4G>[0-9\\-,]*)\\))?"
 #define CURR_BAND_RESPONSE_REGEX          "#BND:\\s*(?P<Bands2G>\\d+)(,\\s*(?P<Bands3G>\\d+))?(,\\s*(?P<Bands4G>\\d+))?"
 
@@ -248,7 +220,7 @@ mm_telit_parse_bnd_response (const gchar *response,
         goto end;
     }
 
-    if (!g_match_info_matches(match_info)) {
+    if (!g_match_info_matches (match_info)) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
                      "Could not find matches in response '%s'", response);
         goto end;
@@ -262,7 +234,7 @@ mm_telit_parse_bnd_response (const gchar *response,
     if (modem_is_3g && !mm_telit_get_3g_mm_bands (match_info, &bands, error))
         goto end;
 
-    if(modem_is_4g && !mm_telit_get_4g_mm_bands (match_info, &bands, error))
+    if (modem_is_4g && !mm_telit_get_4g_mm_bands (match_info, &bands, error))
         goto end;
 
     *supported_bands = bands;
@@ -272,9 +244,7 @@ end:
     if (!ret && bands != NULL)
         g_array_free (bands, TRUE);
 
-    if(match_info)
-        g_match_info_free (match_info);
-
+    g_match_info_free (match_info);
     g_regex_unref (r);
 
     return ret;
@@ -325,8 +295,7 @@ mm_telit_get_2g_mm_bands (GMatchInfo *match_info,
     }
 
 end:
-    if (match_str != NULL)
-        g_free (match_str);
+    g_free (match_str);
 
     if (flags != NULL)
         g_array_free (flags, TRUE);
@@ -345,27 +314,27 @@ mm_telit_get_3g_mm_bands (GMatchInfo *match_info,
     gboolean ret = TRUE;
 
     TelitToMMBandMap map [] = {
-        { BND_FLAG_0, { MM_MODEM_BAND_U2100, MM_MODEM_BAND_UNKNOWN} },
-        { BND_FLAG_1, { MM_MODEM_BAND_U1900, MM_MODEM_BAND_UNKNOWN} },
-        { BND_FLAG_2, { MM_MODEM_BAND_U850, MM_MODEM_BAND_UNKNOWN} },
-        { BND_FLAG_3, { MM_MODEM_BAND_U2100, MM_MODEM_BAND_U1900, MM_MODEM_BAND_U850, MM_MODEM_BAND_UNKNOWN} },
-        { BND_FLAG_4, { MM_MODEM_BAND_U1900, MM_MODEM_BAND_U850, MM_MODEM_BAND_UNKNOWN} },
-        { BND_FLAG_5, { MM_MODEM_BAND_U900, MM_MODEM_BAND_UNKNOWN} },
-        { BND_FLAG_6, { MM_MODEM_BAND_U2100, MM_MODEM_BAND_U900, MM_MODEM_BAND_UNKNOWN} },
-        { BND_FLAG_7, { MM_MODEM_BAND_U17IV, MM_MODEM_BAND_UNKNOWN} },
-        { BND_FLAG_8, { MM_MODEM_BAND_U2100, MM_MODEM_BAND_U850, MM_MODEM_BAND_UNKNOWN }},
-        { BND_FLAG_9, { MM_MODEM_BAND_U2100, MM_MODEM_BAND_U900, MM_MODEM_BAND_U850, MM_MODEM_BAND_UNKNOWN }},
-        { BND_FLAG_10, { MM_MODEM_BAND_U1900, MM_MODEM_BAND_U17IV, MM_MODEM_BAND_U850, MM_MODEM_BAND_UNKNOWN }},
-        { BND_FLAG_12, { MM_MODEM_BAND_U800, MM_MODEM_BAND_UNKNOWN}},
+        { BND_FLAG_0, { MM_MODEM_BAND_UTRAN_1, MM_MODEM_BAND_UNKNOWN} },
+        { BND_FLAG_1, { MM_MODEM_BAND_UTRAN_2, MM_MODEM_BAND_UNKNOWN} },
+        { BND_FLAG_2, { MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_UNKNOWN} },
+        { BND_FLAG_3, { MM_MODEM_BAND_UTRAN_1, MM_MODEM_BAND_UTRAN_2, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_UNKNOWN} },
+        { BND_FLAG_4, { MM_MODEM_BAND_UTRAN_2, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_UNKNOWN} },
+        { BND_FLAG_5, { MM_MODEM_BAND_UTRAN_8, MM_MODEM_BAND_UNKNOWN} },
+        { BND_FLAG_6, { MM_MODEM_BAND_UTRAN_1, MM_MODEM_BAND_UTRAN_8, MM_MODEM_BAND_UNKNOWN} },
+        { BND_FLAG_7, { MM_MODEM_BAND_UTRAN_4, MM_MODEM_BAND_UNKNOWN} },
+        { BND_FLAG_8, { MM_MODEM_BAND_UTRAN_1, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_UNKNOWN }},
+        { BND_FLAG_9, { MM_MODEM_BAND_UTRAN_1, MM_MODEM_BAND_UTRAN_8, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_UNKNOWN }},
+        { BND_FLAG_10, { MM_MODEM_BAND_UTRAN_2, MM_MODEM_BAND_UTRAN_4, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_UNKNOWN }},
+        { BND_FLAG_12, { MM_MODEM_BAND_UTRAN_6, MM_MODEM_BAND_UNKNOWN}},
         { BND_FLAG_13, { MM_MODEM_BAND_U1800, MM_MODEM_BAND_UNKNOWN }},
-        { BND_FLAG_14, { MM_MODEM_BAND_U2100, MM_MODEM_BAND_U900, MM_MODEM_BAND_U17IV, MM_MODEM_BAND_U850, MM_MODEM_BAND_U800, MM_MODEM_BAND_UNKNOWN }},
-        { BND_FLAG_15, { MM_MODEM_BAND_U2100, MM_MODEM_BAND_U900, MM_MODEM_BAND_U1800, MM_MODEM_BAND_UNKNOWN }},
-        { BND_FLAG_16, { MM_MODEM_BAND_U900, MM_MODEM_BAND_U850, MM_MODEM_BAND_UNKNOWN }},
-        { BND_FLAG_17, { MM_MODEM_BAND_U1900, MM_MODEM_BAND_U17IV, MM_MODEM_BAND_U850, MM_MODEM_BAND_U800, MM_MODEM_BAND_UNKNOWN }},
-        { BND_FLAG_18, { MM_MODEM_BAND_U2100, MM_MODEM_BAND_U1900, MM_MODEM_BAND_U850, MM_MODEM_BAND_U800, MM_MODEM_BAND_UNKNOWN}},
-        { BND_FLAG_19, { MM_MODEM_BAND_U1900, MM_MODEM_BAND_U800, MM_MODEM_BAND_UNKNOWN }},
-        { BND_FLAG_20, { MM_MODEM_BAND_U850, MM_MODEM_BAND_U800, MM_MODEM_BAND_UNKNOWN}},
-        { BND_FLAG_21, { MM_MODEM_BAND_U1900, MM_MODEM_BAND_U850, MM_MODEM_BAND_U800, MM_MODEM_BAND_UNKNOWN}},
+        { BND_FLAG_14, { MM_MODEM_BAND_UTRAN_1, MM_MODEM_BAND_UTRAN_8, MM_MODEM_BAND_UTRAN_4, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_UTRAN_6, MM_MODEM_BAND_UNKNOWN }},
+        { BND_FLAG_15, { MM_MODEM_BAND_UTRAN_1, MM_MODEM_BAND_UTRAN_8, MM_MODEM_BAND_U1800, MM_MODEM_BAND_UNKNOWN }},
+        { BND_FLAG_16, { MM_MODEM_BAND_UTRAN_8, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_UNKNOWN }},
+        { BND_FLAG_17, { MM_MODEM_BAND_UTRAN_2, MM_MODEM_BAND_UTRAN_4, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_UTRAN_6, MM_MODEM_BAND_UNKNOWN }},
+        { BND_FLAG_18, { MM_MODEM_BAND_UTRAN_1, MM_MODEM_BAND_UTRAN_2, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_UTRAN_6, MM_MODEM_BAND_UNKNOWN}},
+        { BND_FLAG_19, { MM_MODEM_BAND_UTRAN_2, MM_MODEM_BAND_UTRAN_6, MM_MODEM_BAND_UNKNOWN }},
+        { BND_FLAG_20, { MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_UTRAN_6, MM_MODEM_BAND_UNKNOWN}},
+        { BND_FLAG_21, { MM_MODEM_BAND_UTRAN_2, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_UTRAN_6, MM_MODEM_BAND_UNKNOWN}},
         { BND_FLAG_UNKNOWN, {}},
     };
 
@@ -396,8 +365,7 @@ mm_telit_get_3g_mm_bands (GMatchInfo *match_info,
     }
 
 end:
-    if (match_str != NULL)
-        g_free (match_str);
+    g_free (match_str);
 
     if (flags != NULL)
         g_array_free (flags, TRUE);
@@ -406,11 +374,10 @@ end:
 }
 
 gboolean
-mm_telit_get_4g_mm_bands(GMatchInfo *match_info,
-                         GArray **bands,
-                         GError **error)
+mm_telit_get_4g_mm_bands (GMatchInfo *match_info,
+                          GArray **bands,
+                          GError **error)
 {
-    GArray *flags = NULL;
     MMModemBand band;
     gboolean ret = TRUE;
     gchar *match_str = NULL;
@@ -427,7 +394,7 @@ mm_telit_get_4g_mm_bands(GMatchInfo *match_info,
         goto end;
     }
 
-    if (strstr(match_str, "-")) {
+    if (strstr (match_str, "-")) {
         tokens = g_strsplit (match_str, "-", -1);
         if (tokens == NULL) {
             g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
@@ -437,24 +404,21 @@ mm_telit_get_4g_mm_bands(GMatchInfo *match_info,
             goto end;
         }
         sscanf (tokens[1], "%d", &value);
+        g_strfreev (tokens);
     } else {
         sscanf (match_str, "%d", &value);
     }
 
-
     for (i = 0; value > 0; i++) {
         if (value % 2 != 0) {
-            band = MM_MODEM_BAND_EUTRAN_I + i;
+            band = MM_MODEM_BAND_EUTRAN_1 + i;
             g_array_append_val (*bands, band);
         }
         value = value >> 1;
     }
-end:
-    if (match_str != NULL)
-        g_free (match_str);
 
-    if (flags != NULL)
-        g_array_free (flags, TRUE);
+end:
+    g_free (match_str);
 
     return ret;
 }
@@ -527,19 +491,19 @@ mm_telit_get_band_flags_from_string (const gchar *flag_str,
     for (i = 0; tokens[i]; i++) {
         /* check whether tokens[i] defines a
          * single band value or a range of bands */
-        if (!strstr(tokens[i], "-")) {
-            sscanf(tokens[i], "%d", &flag);
+        if (!strstr (tokens[i], "-")) {
+            sscanf (tokens[i], "%d", &flag);
             g_array_append_val (*band_flags, flag);
         } else {
             gint range_start;
             gint range_end;
 
-            range = g_strsplit(tokens[i], "-", 2);
+            range = g_strsplit (tokens[i], "-", 2);
 
-            sscanf(range[0], "%d", &range_start);
-            sscanf(range[1], "%d", &range_end);
+            sscanf (range[0], "%d", &range_start);
+            sscanf (range[1], "%d", &range_end);
 
-            for (flag=range_start; flag <= range_end; flag++) {
+            for (flag = range_start; flag <= range_end; flag++) {
                 g_array_append_val (*band_flags, flag);
             }
 
@@ -550,4 +514,34 @@ mm_telit_get_band_flags_from_string (const gchar *flag_str,
     g_strfreev (tokens);
 
     return TRUE;
+}
+
+/*****************************************************************************/
+/* #QSS? response parser */
+
+MMTelitQssStatus
+mm_telit_parse_qss_query (const gchar *response,
+                          GError **error)
+{
+    gint qss_status;
+    gint qss_mode;
+
+    qss_status = QSS_STATUS_UNKNOWN;
+    if (sscanf (response, "#QSS: %d,%d", &qss_mode, &qss_status) != 2) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "Could not parse \"#QSS?\" response: %s", response);
+        return QSS_STATUS_UNKNOWN;
+    }
+
+    switch (qss_status) {
+    case QSS_STATUS_SIM_REMOVED:
+    case QSS_STATUS_SIM_INSERTED:
+    case QSS_STATUS_SIM_INSERTED_AND_UNLOCKED:
+    case QSS_STATUS_SIM_INSERTED_AND_READY:
+        return (MMTelitQssStatus) qss_status;
+    default:
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "Unknown QSS status value given: %d", qss_status);
+        return QSS_STATUS_UNKNOWN;
+    }
 }

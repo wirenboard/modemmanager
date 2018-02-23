@@ -45,6 +45,8 @@
 #include "mm-broadband-modem-mbim.h"
 #endif
 
+#define MAX_PORT_PROBE_TIMEOUTS 3
+
 G_DEFINE_TYPE (MMPluginDell, mm_plugin_dell, MM_TYPE_PLUGIN)
 
 MM_PLUGIN_DEFINE_MAJOR_VERSION
@@ -63,101 +65,103 @@ typedef enum {
 /* Custom init */
 
 typedef struct {
-    MMPortProbe *probe;
     MMPortSerialAt *port;
-    GCancellable *cancellable;
-    GSimpleAsyncResult *result;
-    guint gmi_retries;
-    guint cgmi_retries;
-    guint ati_retries;
+    guint           gmi_retries;
+    guint           cgmi_retries;
+    guint           ati_retries;
+    guint           timeouts;
 } CustomInitContext;
 
 static void
-custom_init_context_complete_and_free (CustomInitContext *ctx)
+custom_init_context_free (CustomInitContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
     g_object_unref (ctx->port);
-    g_object_unref (ctx->probe);
-    g_object_unref (ctx->result);
     g_slice_free (CustomInitContext, ctx);
 }
 
 static gboolean
-dell_custom_init_finish (MMPortProbe *probe,
-                         GAsyncResult *result,
-                         GError **error)
+dell_custom_init_finish (MMPortProbe   *probe,
+                         GAsyncResult  *res,
+                         GError       **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (result), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
-novatel_custom_init_ready (MMPortProbe       *probe,
-                           GAsyncResult      *res,
-                           CustomInitContext *ctx)
+novatel_custom_init_ready (MMPortProbe  *probe,
+                           GAsyncResult *res,
+                           GTask        *task)
 {
     GError *error = NULL;
 
     if (!mm_common_novatel_custom_init_finish (probe, res, &error))
-        g_simple_async_result_take_error (ctx->result, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    custom_init_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
-sierra_custom_init_ready (MMPortProbe       *probe,
-                          GAsyncResult      *res,
-                          CustomInitContext *ctx)
+sierra_custom_init_ready (MMPortProbe  *probe,
+                          GAsyncResult *res,
+                          GTask        *task)
 {
     GError *error = NULL;
 
     if (!mm_common_sierra_custom_init_finish (probe, res, &error))
-        g_simple_async_result_take_error (ctx->result, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    custom_init_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
-telit_custom_init_ready (MMPortProbe       *probe,
-                         GAsyncResult      *res,
-                         CustomInitContext *ctx)
+telit_custom_init_ready (MMPortProbe  *probe,
+                         GAsyncResult *res,
+                         GTask        *task)
 {
     GError *error = NULL;
 
     if (!telit_custom_init_finish (probe, res, &error))
-        g_simple_async_result_take_error (ctx->result, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    custom_init_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
-static void custom_init_step (CustomInitContext *ctx);
+static void custom_init_step (GTask *task);
 
 static void
-custom_init_step_next_command (CustomInitContext *ctx)
+custom_init_step_next_command (GTask *task)
 {
+    CustomInitContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    ctx->timeouts = 0;
     if (ctx->gmi_retries > 0)
         ctx->gmi_retries = 0;
     else if (ctx->cgmi_retries > 0)
         ctx->cgmi_retries = 0;
     else if (ctx->ati_retries > 0)
         ctx->ati_retries = 0;
-    custom_init_step (ctx);
+    custom_init_step (task);
 }
 
 static void
 response_ready (MMPortSerialAt *port,
-                GAsyncResult *res,
-                CustomInitContext *ctx)
+                GAsyncResult   *res,
+                GTask          *task)
 {
-    const gchar *response;
-    GError *error = NULL;
-    gchar *lower;
-    DellManufacturer manufacturer;
+    CustomInitContext *ctx;
+    MMPortProbe       *probe;
+    const gchar       *response;
+    GError            *error = NULL;
+    gchar             *lower;
+    DellManufacturer   manufacturer;
+
+    probe = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     response = mm_port_serial_at_command_finish (port, res, &error);
     if (error) {
@@ -165,11 +169,12 @@ response_ready (MMPortSerialAt *port,
         if (!g_error_matches (error, MM_SERIAL_ERROR, MM_SERIAL_ERROR_RESPONSE_TIMEOUT)) {
             mm_dbg ("(Dell) Error probing AT port: %s", error->message);
             g_error_free (error);
-            custom_init_step_next_command (ctx);
+            custom_init_step_next_command (task);
             return;
         }
         /* Directly retry same command on timeout */
-        custom_init_step (ctx);
+        ctx->timeouts++;
+        custom_init_step (task);
         g_error_free (error);
         return;
     }
@@ -190,84 +195,97 @@ response_ready (MMPortSerialAt *port,
 
     /* Tag based on manufacturer */
     if (manufacturer != DELL_MANUFACTURER_UNKNOWN) {
-        g_object_set_data (G_OBJECT (ctx->probe), TAG_DELL_MANUFACTURER, GUINT_TO_POINTER (manufacturer));
+        g_object_set_data (G_OBJECT (probe), TAG_DELL_MANUFACTURER, GUINT_TO_POINTER (manufacturer));
 
         /* Run additional custom init, if needed */
 
         if (manufacturer == DELL_MANUFACTURER_NOVATEL) {
-            mm_common_novatel_custom_init (ctx->probe,
+            mm_common_novatel_custom_init (probe,
                                            ctx->port,
-                                           ctx->cancellable,
+                                           g_task_get_cancellable (task),
                                            (GAsyncReadyCallback) novatel_custom_init_ready,
-                                           ctx);
+                                           task);
             return;
         }
 
         if (manufacturer == DELL_MANUFACTURER_SIERRA) {
-            mm_common_sierra_custom_init (ctx->probe,
+            mm_common_sierra_custom_init (probe,
                                           ctx->port,
-                                          ctx->cancellable,
+                                          g_task_get_cancellable (task),
                                           (GAsyncReadyCallback) sierra_custom_init_ready,
-                                          ctx);
+                                          task);
             return;
         }
 
         if (manufacturer == DELL_MANUFACTURER_TELIT) {
-            telit_custom_init (ctx->probe,
+            telit_custom_init (probe,
                                ctx->port,
-                               ctx->cancellable,
+                               g_task_get_cancellable (task),
                                (GAsyncReadyCallback) telit_custom_init_ready,
-                               ctx);
+                               task);
             return;
         }
 
         /* Finish custom_init */
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        custom_init_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
     /* If we got a response, but we didn't get an expected string, try with next command */
-    custom_init_step_next_command (ctx);
+    custom_init_step_next_command (task);
 }
 
 static void
-custom_init_step (CustomInitContext *ctx)
+custom_init_step (GTask *task)
 {
-    /* If cancelled, end */
-    if (g_cancellable_is_cancelled (ctx->cancellable)) {
+    CustomInitContext *ctx;
+    MMPortProbe       *probe;
+
+    probe = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
+    /* If cancelled, end without error right away */
+    if (g_cancellable_is_cancelled (g_task_get_cancellable (task))) {
         mm_dbg ("(Dell) no need to keep on running custom init in (%s)",
                 mm_port_get_device (MM_PORT (ctx->port)));
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        custom_init_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
 #if defined WITH_QMI
     /* If device has a QMI port, don't run anything else, as we don't care */
-    if (mm_port_probe_list_has_qmi_port (mm_device_peek_port_probe_list (mm_port_probe_peek_device (ctx->probe)))) {
+    if (mm_port_probe_list_has_qmi_port (mm_device_peek_port_probe_list (mm_port_probe_peek_device (probe)))) {
         mm_dbg ("(Dell) no need to run custom init in (%s): device has QMI port",
                 mm_port_get_device (MM_PORT (ctx->port)));
-        mm_port_probe_set_result_at (ctx->probe, FALSE);
-        mm_port_probe_set_result_qcdm (ctx->probe, FALSE);
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        custom_init_context_complete_and_free (ctx);
+        mm_port_probe_set_result_at (probe, FALSE);
+        mm_port_probe_set_result_qcdm (probe, FALSE);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 #endif
 
 #if defined WITH_MBIM
     /* If device has a MBIM port, don't run anything else, as we don't care */
-    if (mm_port_probe_list_has_mbim_port (mm_device_peek_port_probe_list (mm_port_probe_peek_device (ctx->probe)))) {
+    if (mm_port_probe_list_has_mbim_port (mm_device_peek_port_probe_list (mm_port_probe_peek_device (probe)))) {
         mm_dbg ("(Dell) no need to run custom init in (%s): device has MBIM port",
                 mm_port_get_device (MM_PORT (ctx->port)));
-        mm_port_probe_set_result_at (ctx->probe, FALSE);
-        mm_port_probe_set_result_qcdm (ctx->probe, FALSE);
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        custom_init_context_complete_and_free (ctx);
+        mm_port_probe_set_result_at (probe, FALSE);
+        mm_port_probe_set_result_qcdm (probe, FALSE);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 #endif
+
+    if (ctx->timeouts >= MAX_PORT_PROBE_TIMEOUTS) {
+        mm_dbg ("(Dell) couldn't detect real manufacturer in (%s): too many timeouts",
+                mm_port_get_device (MM_PORT (ctx->port)));
+        mm_port_probe_set_result_at (probe, FALSE);
+        goto out;
+    }
 
     if (ctx->gmi_retries > 0) {
         ctx->gmi_retries--;
@@ -276,9 +294,9 @@ custom_init_step (CustomInitContext *ctx)
                                    3,
                                    FALSE, /* raw */
                                    FALSE, /* allow_cached */
-                                   ctx->cancellable,
+                                   g_task_get_cancellable (task),
                                    (GAsyncReadyCallback)response_ready,
-                                   ctx);
+                                   task);
         return;
     }
 
@@ -289,9 +307,9 @@ custom_init_step (CustomInitContext *ctx)
                                    3,
                                    FALSE, /* raw */
                                    FALSE, /* allow_cached */
-                                   ctx->cancellable,
+                                   g_task_get_cancellable (task),
                                    (GAsyncReadyCallback)response_ready,
-                                   ctx);
+                                   task);
         return;
     }
 
@@ -303,51 +321,41 @@ custom_init_step (CustomInitContext *ctx)
                                    3,
                                    FALSE, /* raw */
                                    FALSE, /* allow_cached */
-                                   ctx->cancellable,
+                                   g_task_get_cancellable (task),
                                    (GAsyncReadyCallback)response_ready,
-                                   ctx);
+                                   task);
         return;
     }
 
-    /* Finish custom_init */
-    mm_dbg ("(Dell) couldn't flip secondary port to AT in (%s): all retries consumed",
+    mm_dbg ("(Dell) couldn't detect real manufacturer in (%s): all retries consumed",
             mm_port_get_device (MM_PORT (ctx->port)));
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    custom_init_context_complete_and_free (ctx);
+out:
+    /* Finish custom_init */
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
-dell_custom_init (MMPortProbe *probe,
-                  MMPortSerialAt *port,
-                  GCancellable *cancellable,
-                  GAsyncReadyCallback callback,
-                  gpointer user_data)
+dell_custom_init (MMPortProbe         *probe,
+                  MMPortSerialAt      *port,
+                  GCancellable        *cancellable,
+                  GAsyncReadyCallback  callback,
+                  gpointer             user_data)
 {
+    GTask             *task;
     CustomInitContext *ctx;
-    GUdevDevice *udevDevice;
-
-    udevDevice = mm_port_probe_peek_port (probe);
 
     ctx = g_slice_new0 (CustomInitContext);
-    ctx->result = g_simple_async_result_new (G_OBJECT (probe),
-                                             callback,
-                                             user_data,
-                                             dell_custom_init);
-    ctx->probe = g_object_ref (probe);
     ctx->port = g_object_ref (port);
-    ctx->cancellable = cancellable ? g_object_ref (cancellable) : NULL;
     ctx->gmi_retries = 3;
-    ctx->cgmi_retries = 3;
-    ctx->ati_retries = 3;
+    ctx->cgmi_retries = 1;
+    ctx->ati_retries = 1;
 
-    /* Dell-branded Telit modems always answer to +GMI
-     * Avoid +CGMI and ATI sending for minimizing port probing time */
-    if (g_udev_device_get_property_as_boolean (udevDevice, "ID_MM_TELIT_PORTS_TAGGED")) {
-        ctx->cgmi_retries = 0;
-        ctx->ati_retries = 0;
-    }
+    task = g_task_new (probe, cancellable, callback, user_data);
+    g_task_set_check_cancellable (task, FALSE);
+    g_task_set_task_data (task, ctx, (GDestroyNotify) custom_init_context_free);
 
-    custom_init_step (ctx);
+    custom_init_step (task);
 }
 
 /*****************************************************************************/
@@ -367,7 +375,7 @@ port_probe_list_has_manufacturer_port (GList *probes,
 
 static MMBaseModem *
 create_modem (MMPlugin *self,
-              const gchar *sysfs_path,
+              const gchar *uid,
               const gchar **drivers,
               guint16 vendor,
               guint16 product,
@@ -381,7 +389,7 @@ create_modem (MMPlugin *self,
 #if defined WITH_QMI
     if (mm_port_probe_list_has_qmi_port (probes)) {
         mm_dbg ("QMI-powered Dell-branded modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_qmi_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_qmi_new (uid,
                                                           drivers,
                                                           mm_plugin_get_name (self),
                                                           vendor,
@@ -392,7 +400,7 @@ create_modem (MMPlugin *self,
 #if defined WITH_MBIM
     if (mm_port_probe_list_has_mbim_port (probes)) {
         mm_dbg ("MBIM-powered Dell-branded modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_mbim_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_mbim_new (uid,
                                                            drivers,
                                                            mm_plugin_get_name (self),
                                                            vendor,
@@ -402,7 +410,7 @@ create_modem (MMPlugin *self,
 
     if (port_probe_list_has_manufacturer_port (probes, DELL_MANUFACTURER_NOVATEL)) {
         mm_dbg ("Novatel-powered Dell-branded modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_novatel_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_novatel_new (uid,
                                                               drivers,
                                                               mm_plugin_get_name (self),
                                                               vendor,
@@ -411,7 +419,7 @@ create_modem (MMPlugin *self,
 
     if (port_probe_list_has_manufacturer_port (probes, DELL_MANUFACTURER_SIERRA)) {
         mm_dbg ("Sierra-powered Dell-branded modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_sierra_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_sierra_new (uid,
                                                              drivers,
                                                              mm_plugin_get_name (self),
                                                              vendor,
@@ -420,7 +428,7 @@ create_modem (MMPlugin *self,
 
     if (port_probe_list_has_manufacturer_port (probes, DELL_MANUFACTURER_TELIT)) {
         mm_dbg ("Telit-powered Dell-branded modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_telit_new (sysfs_path,
+        return MM_BASE_MODEM (mm_broadband_modem_telit_new (uid,
                                                             drivers,
                                                             mm_plugin_get_name (self),
                                                             vendor,
@@ -428,7 +436,7 @@ create_modem (MMPlugin *self,
     }
 
     mm_dbg ("Dell-branded generic modem found...");
-    return MM_BASE_MODEM (mm_broadband_modem_new (sysfs_path,
+    return MM_BASE_MODEM (mm_broadband_modem_new (uid,
                                                   drivers,
                                                   mm_plugin_get_name (self),
                                                   vendor,
@@ -450,9 +458,7 @@ grab_port (MMPlugin *self,
         return telit_grab_port (self, modem, probe, error);
 
     return mm_base_modem_grab_port (modem,
-                                    mm_port_probe_get_port_subsys (probe),
-                                    mm_port_probe_get_port_name (probe),
-                                    mm_port_probe_get_parent_path (probe),
+                                    mm_port_probe_peek_port (probe),
                                     mm_port_probe_get_port_type (probe),
                                     MM_PORT_SERIAL_AT_FLAG_NONE,
                                     error);

@@ -830,9 +830,7 @@ sms_get_store_or_send_command (MMSmsPart *part,
 /* Store the SMS */
 
 typedef struct {
-    MMBaseSms *self;
     MMBaseModem *modem;
-    GSimpleAsyncResult *result;
     MMSmsStorage storage;
     gboolean need_unlock;
     gboolean use_pdu_mode;
@@ -841,15 +839,12 @@ typedef struct {
 } SmsStoreContext;
 
 static void
-sms_store_context_complete_and_free (SmsStoreContext *ctx)
+sms_store_context_free (SmsStoreContext *ctx)
 {
-    g_simple_async_result_complete (ctx->result);
-    g_object_unref (ctx->result);
     /* Unlock mem2 storage if we had the lock */
     if (ctx->need_unlock)
         mm_broadband_modem_unlock_sms_storages (MM_BROADBAND_MODEM (ctx->modem), FALSE, TRUE);
     g_object_unref (ctx->modem);
-    g_object_unref (ctx->self);
     g_free (ctx->msg_data);
     g_free (ctx);
 }
@@ -859,16 +854,17 @@ sms_store_finish (MMBaseSms *self,
                   GAsyncResult *res,
                   GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
-static void sms_store_next_part (SmsStoreContext *ctx);
+static void sms_store_next_part (GTask *task);
 
 static void
 store_msg_data_ready (MMBaseModem *modem,
                       GAsyncResult *res,
-                      SmsStoreContext *ctx)
+                      GTask *task)
 {
+    SmsStoreContext *ctx;
     const gchar *response;
     GError *error = NULL;
     gint rv;
@@ -876,45 +872,50 @@ store_msg_data_ready (MMBaseModem *modem,
 
     response = mm_base_modem_at_command_finish (modem, res, &error);
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        sms_store_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Read the new part index from the reply */
     rv = sscanf (response, "+CMGW: %d", &idx);
     if (rv != 1 || idx < 0) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_FAILED,
-                                         "Couldn't read index of already stored part: "
-                                         "%d fields parsed",
-                                         rv);
-        sms_store_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Couldn't read index of already stored part: "
+                                 "%d fields parsed",
+                                 rv);
+        g_object_unref (task);
         return;
     }
+
+    ctx = g_task_get_task_data (task);
 
     /* Set the index in the part we hold */
     mm_sms_part_set_index ((MMSmsPart *)ctx->current->data, (guint)idx);
 
     ctx->current = g_list_next (ctx->current);
-    sms_store_next_part (ctx);
+    sms_store_next_part (task);
 }
 
 static void
 store_ready (MMBaseModem *modem,
              GAsyncResult *res,
-             SmsStoreContext *ctx)
+             GTask *task)
 {
+    SmsStoreContext *ctx;
     const gchar *response;
     GError *error = NULL;
 
     response = mm_base_modem_at_command_finish (modem, res, &error);
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        sms_store_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
+
+    ctx = g_task_get_task_data (task);
 
     /* Send the actual message data */
     mm_base_modem_at_command_raw (ctx->modem,
@@ -922,19 +923,22 @@ store_ready (MMBaseModem *modem,
                                   10,
                                   FALSE,
                                   (GAsyncReadyCallback)store_msg_data_ready,
-                                  ctx);
+                                  task);
 }
 
 static void
-sms_store_next_part (SmsStoreContext *ctx)
+sms_store_next_part (GTask *task)
 {
+    SmsStoreContext *ctx;
     gchar *cmd;
     GError *error = NULL;
 
+    ctx = g_task_get_task_data (task);
+
     if (!ctx->current) {
         /* Done we are */
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        sms_store_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -949,8 +953,8 @@ sms_store_next_part (SmsStoreContext *ctx)
                                         &cmd,
                                         &ctx->msg_data,
                                         &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        sms_store_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -962,30 +966,35 @@ sms_store_next_part (SmsStoreContext *ctx)
                               10,
                               FALSE,
                               (GAsyncReadyCallback)store_ready,
-                              ctx);
+                              task);
     g_free (cmd);
 }
 
 static void
 store_lock_sms_storages_ready (MMBroadbandModem *modem,
                                GAsyncResult *res,
-                               SmsStoreContext *ctx)
+                               GTask *task)
 {
+    MMBaseSms *self;
+    SmsStoreContext *ctx;
     GError *error = NULL;
 
     if (!mm_broadband_modem_lock_sms_storages_finish (modem, res, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        sms_store_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     /* We are now locked. Whatever result we have here, we need to make sure
      * we unlock the storages before finishing. */
     ctx->need_unlock = TRUE;
 
     /* Go on to store the parts */
-    ctx->current = ctx->self->priv->parts;
-    sms_store_next_part (ctx);
+    ctx->current = self->priv->parts;
+    sms_store_next_part (task);
 }
 
 static void
@@ -995,14 +1004,10 @@ sms_store (MMBaseSms *self,
            gpointer user_data)
 {
     SmsStoreContext *ctx;
+    GTask *task;
 
     /* Setup the context */
     ctx = g_new0 (SmsStoreContext, 1);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             sms_store);
-    ctx->self = g_object_ref (self);
     ctx->modem = g_object_ref (self->priv->modem);
     ctx->storage = storage;
 
@@ -1011,6 +1016,9 @@ sms_store (MMBaseSms *self,
                   MM_IFACE_MODEM_MESSAGING_SMS_PDU_MODE, &ctx->use_pdu_mode,
                   NULL);
 
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)sms_store_context_free);
+
     /* First, lock storage to use */
     g_assert (MM_IS_BROADBAND_MODEM (self->priv->modem));
     mm_broadband_modem_lock_sms_storages (
@@ -1018,16 +1026,14 @@ sms_store (MMBaseSms *self,
         MM_SMS_STORAGE_UNKNOWN, /* none required for mem1 */
         ctx->storage,
         (GAsyncReadyCallback)store_lock_sms_storages_ready,
-        ctx);
+        task);
 }
 
 /*****************************************************************************/
 /* Send the SMS */
 
 typedef struct {
-    MMBaseSms *self;
     MMBaseModem *modem;
-    GSimpleAsyncResult *result;
     gboolean need_unlock;
     gboolean from_storage;
     gboolean use_pdu_mode;
@@ -1036,15 +1042,12 @@ typedef struct {
 } SmsSendContext;
 
 static void
-sms_send_context_complete_and_free (SmsSendContext *ctx)
+sms_send_context_free (SmsSendContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
     /* Unlock mem2 storage if we had the lock */
     if (ctx->need_unlock)
         mm_broadband_modem_unlock_sms_storages (MM_BROADBAND_MODEM (ctx->modem), FALSE, TRUE);
     g_object_unref (ctx->modem);
-    g_object_unref (ctx->self);
     g_free (ctx->msg_data);
     g_free (ctx);
 }
@@ -1054,10 +1057,10 @@ sms_send_finish (MMBaseSms *self,
                  GAsyncResult *res,
                  GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
-static void sms_send_next_part (SmsSendContext *ctx);
+static void sms_send_next_part (GTask *task);
 
 static gint
 read_message_reference_from_reply (const gchar *response,
@@ -1087,46 +1090,52 @@ read_message_reference_from_reply (const gchar *response,
 static void
 send_generic_msg_data_ready (MMBaseModem *modem,
                              GAsyncResult *res,
-                             SmsSendContext *ctx)
+                             GTask *task)
 {
+    SmsSendContext *ctx;
     GError *error = NULL;
     const gchar *response;
     gint message_reference;
 
     response = mm_base_modem_at_command_finish (modem, res, &error);
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        sms_send_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     message_reference = read_message_reference_from_reply (response, &error);
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        sms_send_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
+
+    ctx = g_task_get_task_data (task);
 
     mm_sms_part_set_message_reference ((MMSmsPart *)ctx->current->data,
                                        (guint)message_reference);
 
     ctx->current = g_list_next (ctx->current);
-    sms_send_next_part (ctx);
+    sms_send_next_part (task);
 }
 
 static void
 send_generic_ready (MMBaseModem *modem,
                     GAsyncResult *res,
-                    SmsSendContext *ctx)
+                    GTask *task)
 {
+    SmsSendContext *ctx;
     GError *error = NULL;
 
     mm_base_modem_at_command_finish (modem, res, &error);
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        sms_send_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
+
+    ctx = g_task_get_task_data (task);
 
     /* Send the actual message data */
     mm_base_modem_at_command_raw (ctx->modem,
@@ -1134,23 +1143,26 @@ send_generic_ready (MMBaseModem *modem,
                                   10,
                                   FALSE,
                                   (GAsyncReadyCallback)send_generic_msg_data_ready,
-                                  ctx);
+                                  task);
 }
 
 static void
 send_from_storage_ready (MMBaseModem *modem,
                          GAsyncResult *res,
-                         SmsSendContext *ctx)
+                         GTask *task)
 {
+    SmsSendContext *ctx;
     GError *error = NULL;
     const gchar *response;
     gint message_reference;
 
+    ctx = g_task_get_task_data (task);
+
     response = mm_base_modem_at_command_finish (modem, res, &error);
     if (error) {
         if (g_error_matches (error, MM_SERIAL_ERROR, MM_SERIAL_ERROR_RESPONSE_TIMEOUT)) {
-            g_simple_async_result_take_error (ctx->result, error);
-            sms_send_context_complete_and_free (ctx);
+            g_task_return_error (task, error);
+            g_object_unref (task);
             return;
         }
 
@@ -1159,14 +1171,14 @@ send_from_storage_ready (MMBaseModem *modem,
         g_error_free (error);
 
         ctx->from_storage = FALSE;
-        sms_send_next_part (ctx);
+        sms_send_next_part (task);
         return;
     }
 
     message_reference = read_message_reference_from_reply (response, &error);
     if (error) {
-        g_simple_async_result_take_error (ctx->result, error);
-        sms_send_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -1174,19 +1186,22 @@ send_from_storage_ready (MMBaseModem *modem,
                                        (guint)message_reference);
 
     ctx->current = g_list_next (ctx->current);
-    sms_send_next_part (ctx);
+    sms_send_next_part (task);
 }
 
 static void
-sms_send_next_part (SmsSendContext *ctx)
+sms_send_next_part (GTask *task)
 {
+    SmsSendContext *ctx;
     GError *error = NULL;
     gchar *cmd;
 
+    ctx = g_task_get_task_data (task);
+
     if (!ctx->current) {
         /* Done we are */
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        sms_send_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -1199,7 +1214,7 @@ sms_send_next_part (SmsSendContext *ctx)
                                   30,
                                   FALSE,
                                   (GAsyncReadyCallback)send_from_storage_ready,
-                                  ctx);
+                                  task);
         g_free (cmd);
         return;
     }
@@ -1217,8 +1232,8 @@ sms_send_next_part (SmsSendContext *ctx)
                                         &cmd,
                                         &ctx->msg_data,
                                         &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        sms_send_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -1229,30 +1244,35 @@ sms_send_next_part (SmsSendContext *ctx)
                               30,
                               FALSE,
                               (GAsyncReadyCallback)send_generic_ready,
-                              ctx);
+                              task);
     g_free (cmd);
 }
 
 static void
 send_lock_sms_storages_ready (MMBroadbandModem *modem,
                               GAsyncResult *res,
-                              SmsSendContext *ctx)
+                              GTask *task)
 {
+    MMBaseSms *self;
+    SmsSendContext *ctx;
     GError *error = NULL;
 
     if (!mm_broadband_modem_lock_sms_storages_finish (modem, res, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        sms_send_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     /* We are now locked. Whatever result we have here, we need to make sure
      * we unlock the storages before finishing. */
     ctx->need_unlock = TRUE;
 
     /* Go on to send the parts */
-    ctx->current = ctx->self->priv->parts;
-    sms_send_next_part (ctx);
+    ctx->current = self->priv->parts;
+    sms_send_next_part (task);
 }
 
 static void
@@ -1261,15 +1281,14 @@ sms_send (MMBaseSms *self,
           gpointer user_data)
 {
     SmsSendContext *ctx;
+    GTask *task;
 
     /* Setup the context */
     ctx = g_new0 (SmsSendContext, 1);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             sms_send);
-    ctx->self = g_object_ref (self);
     ctx->modem = g_object_ref (self->priv->modem);
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)sms_send_context_free);
 
     /* If the SMS is STORED, try to send from storage */
     ctx->from_storage = (mm_base_sms_get_storage (self) != MM_SMS_STORAGE_UNKNOWN);
@@ -1281,7 +1300,7 @@ sms_send (MMBaseSms *self,
             MM_SMS_STORAGE_UNKNOWN, /* none required for mem1 */
             mm_base_sms_get_storage (self),
             (GAsyncReadyCallback)send_lock_sms_storages_ready,
-            ctx);
+            task);
         return;
     }
 
@@ -1290,30 +1309,25 @@ sms_send (MMBaseSms *self,
                   MM_IFACE_MODEM_MESSAGING_SMS_PDU_MODE, &ctx->use_pdu_mode,
                   NULL);
     ctx->current = self->priv->parts;
-    sms_send_next_part (ctx);
+    sms_send_next_part (task);
 }
 
 /*****************************************************************************/
 
 typedef struct {
-    MMBaseSms *self;
     MMBaseModem *modem;
-    GSimpleAsyncResult *result;
     gboolean need_unlock;
     GList *current;
     guint n_failed;
 } SmsDeletePartsContext;
 
 static void
-sms_delete_parts_context_complete_and_free (SmsDeletePartsContext *ctx)
+sms_delete_parts_context_free (SmsDeletePartsContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
     /* Unlock mem1 storage if we had the lock */
     if (ctx->need_unlock)
         mm_broadband_modem_unlock_sms_storages (MM_BROADBAND_MODEM (ctx->modem), TRUE, FALSE);
     g_object_unref (ctx->modem);
-    g_object_unref (ctx->self);
     g_free (ctx);
 }
 
@@ -1322,17 +1336,20 @@ sms_delete_finish (MMBaseSms *self,
                    GAsyncResult *res,
                    GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
-static void delete_next_part (SmsDeletePartsContext *ctx);
+static void delete_next_part (GTask *task);
 
 static void
 delete_part_ready (MMBaseModem *modem,
                    GAsyncResult *res,
-                   SmsDeletePartsContext *ctx)
+                   GTask *task)
 {
+    SmsDeletePartsContext *ctx;
     GError *error = NULL;
+
+    ctx = g_task_get_task_data (task);
 
     mm_base_modem_at_command_finish (modem, res, &error);
     if (error) {
@@ -1347,13 +1364,16 @@ delete_part_ready (MMBaseModem *modem,
     mm_sms_part_set_index ((MMSmsPart *)ctx->current->data, SMS_PART_INVALID_INDEX);
 
     ctx->current = g_list_next (ctx->current);
-    delete_next_part (ctx);
+    delete_next_part (task);
 }
 
 static void
-delete_next_part (SmsDeletePartsContext *ctx)
+delete_next_part (GTask *task)
 {
+    SmsDeletePartsContext *ctx;
     gchar *cmd;
+
+    ctx = g_task_get_task_data (task);
 
     /* Skip non-stored parts */
     while (ctx->current &&
@@ -1363,15 +1383,15 @@ delete_next_part (SmsDeletePartsContext *ctx)
     /* If all removed, we're done */
     if (!ctx->current) {
         if (ctx->n_failed > 0)
-            g_simple_async_result_set_error (ctx->result,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_FAILED,
-                                             "Couldn't delete %u parts from this SMS",
-                                             ctx->n_failed);
+            g_task_return_new_error (task,
+                                     MM_CORE_ERROR,
+                                     MM_CORE_ERROR_FAILED,
+                                     "Couldn't delete %u parts from this SMS",
+                                     ctx->n_failed);
         else
-            g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+            g_task_return_boolean (task, TRUE);
 
-        sms_delete_parts_context_complete_and_free (ctx);
+        g_object_unref (task);
         return;
     }
 
@@ -1382,30 +1402,35 @@ delete_next_part (SmsDeletePartsContext *ctx)
                               10,
                               FALSE,
                               (GAsyncReadyCallback)delete_part_ready,
-                              ctx);
+                              task);
     g_free (cmd);
 }
 
 static void
 delete_lock_sms_storages_ready (MMBroadbandModem *modem,
                                 GAsyncResult *res,
-                                SmsDeletePartsContext *ctx)
+                                GTask *task)
 {
+    MMBaseSms *self;
+    SmsDeletePartsContext *ctx;
     GError *error = NULL;
 
     if (!mm_broadband_modem_lock_sms_storages_finish (modem, res, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        sms_delete_parts_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     /* We are now locked. Whatever result we have here, we need to make sure
      * we unlock the storages before finishing. */
     ctx->need_unlock = TRUE;
 
     /* Go on deleting parts */
-    ctx->current = ctx->self->priv->parts;
-    delete_next_part (ctx);
+    ctx->current = self->priv->parts;
+    delete_next_part (task);
 }
 
 static void
@@ -1414,19 +1439,18 @@ sms_delete (MMBaseSms *self,
             gpointer user_data)
 {
     SmsDeletePartsContext *ctx;
+    GTask *task;
 
     ctx = g_new0 (SmsDeletePartsContext, 1);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             sms_delete);
-    ctx->self = g_object_ref (self);
     ctx->modem = g_object_ref (self->priv->modem);
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)sms_delete_parts_context_free);
 
     if (mm_base_sms_get_storage (self) == MM_SMS_STORAGE_UNKNOWN) {
         mm_dbg ("Not removing parts from non-stored SMS");
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        sms_delete_parts_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -1436,7 +1460,7 @@ sms_delete (MMBaseSms *self,
         mm_base_sms_get_storage (self),
         MM_SMS_STORAGE_UNKNOWN, /* none required for mem2 */
         (GAsyncReadyCallback)delete_lock_sms_storages_ready,
-        ctx);
+        task);
 }
 
 /*****************************************************************************/
@@ -1458,13 +1482,13 @@ mm_base_sms_delete_finish (MMBaseSms *self,
         return deleted;
     }
 
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 void
 mm_base_sms_delete (MMBaseSms *self,
-               GAsyncReadyCallback callback,
-               gpointer user_data)
+                    GAsyncReadyCallback callback,
+                    gpointer user_data)
 {
     if (MM_BASE_SMS_GET_CLASS (self)->delete &&
         MM_BASE_SMS_GET_CLASS (self)->delete_finish) {
@@ -1472,12 +1496,13 @@ mm_base_sms_delete (MMBaseSms *self,
         return;
     }
 
-    g_simple_async_report_error_in_idle (G_OBJECT (self),
-                                         callback,
-                                         user_data,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_UNSUPPORTED,
-                                         "Deleting SMS is not supported by this modem");
+    g_task_report_new_error (self,
+                             callback,
+                             user_data,
+                             mm_base_sms_delete,
+                             MM_CORE_ERROR,
+                             MM_CORE_ERROR_UNSUPPORTED,
+                             "Deleting SMS is not supported by this modem");
 }
 
 /*****************************************************************************/

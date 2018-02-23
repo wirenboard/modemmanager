@@ -56,7 +56,6 @@ enum {
     PROP_SEND_DELAY,
     PROP_FD,
     PROP_SPEW_CONTROL,
-    PROP_RTS_CTS,
     PROP_FLASH_OK,
 
     LAST_PROP
@@ -97,7 +96,6 @@ struct _MMPortSerialPrivate {
     guint stopbits;
     guint64 send_delay;
     gboolean spew_control;
-    gboolean rts_cts;
     gboolean flash_ok;
 
     guint queue_id;
@@ -210,95 +208,13 @@ mm_port_serial_command (MMPortSerial *self,
 
 /*****************************************************************************/
 
-#if 0
-static const char *
-baud_to_string (int baud)
+static gboolean
+parse_baudrate (guint  baudrate_num,
+                guint *out_baudrate_speed)
 {
-    const char *speed = NULL;
+    guint speed;
 
-    switch (baud) {
-    case B0:
-        speed = "0";
-        break;
-    case B50:
-        speed = "50";
-        break;
-    case B75:
-        speed = "75";
-        break;
-    case B110:
-        speed = "110";
-        break;
-    case B150:
-        speed = "150";
-        break;
-    case B300:
-        speed = "300";
-        break;
-    case B600:
-        speed = "600";
-        break;
-    case B1200:
-        speed = "1200";
-        break;
-    case B2400:
-        speed = "2400";
-        break;
-    case B4800:
-        speed = "4800";
-        break;
-    case B9600:
-        speed = "9600";
-        break;
-    case B19200:
-        speed = "19200";
-        break;
-    case B38400:
-        speed = "38400";
-        break;
-    case B57600:
-        speed = "57600";
-        break;
-    case B115200:
-        speed = "115200";
-        break;
-    case B460800:
-        speed = "460800";
-        break;
-    default:
-        break;
-    }
-
-    return speed;
-}
-
-void
-mm_port_serial_print_config (MMPortSerial *port,
-                             const char *detail)
-{
-    struct termios stbuf;
-    int err;
-
-    err = tcgetattr (self->priv->fd, &stbuf);
-    if (err) {
-        mm_warn ("*** %s (%s): (%s) tcgetattr() error %d",
-                 __func__, detail, mm_port_get_device (MM_PORT (port)), errno);
-        return;
-    }
-
-    mm_info ("(%s): (%s) baud rate: %d (%s)",
-             detail, mm_port_get_device (MM_PORT (port)),
-             stbuf.c_cflag & CBAUD,
-             baud_to_string (stbuf.c_cflag & CBAUD));
-}
-#endif
-
-static int
-parse_baudrate (guint i)
-{
-    int speed;
-
-    switch (i) {
+    switch (baudrate_num) {
     case 0:
         speed = B0;
         break;
@@ -344,15 +260,22 @@ parse_baudrate (guint i)
     case 115200:
         speed = B115200;
         break;
+    case 230400:
+        speed = B230400;
+        break;
     case 460800:
         speed = B460800;
         break;
+    case 921600:
+        speed = B921600;
+        break;
     default:
-        mm_warn ("Invalid baudrate '%d'", i);
-        speed = B9600;
+        return FALSE;
     }
 
-    return speed;
+    if (out_baudrate_speed)
+        *out_baudrate_speed = speed;
+    return TRUE;
 }
 
 static int
@@ -428,19 +351,81 @@ parse_stopbits (guint i)
 }
 
 static gboolean
+internal_tcsetattr (MMPortSerial          *self,
+                    gint                   fd,
+                    const struct termios  *options,
+                    GError               **error)
+{
+    guint          count;
+    struct termios other;
+
+#define MAX_TCSETATTR_RETRIES 4
+
+    for (count = 0; count < MAX_TCSETATTR_RETRIES; count++) {
+        /* try to set the new port attributes */
+        errno = 0;
+        if (tcsetattr (fd, TCSANOW, options) == 0)
+            break;
+
+        /* hard error if not EAGAIN */
+        if (errno != EAGAIN) {
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                         "couldn't set serial port attributes: %s", g_strerror (errno));
+            return FALSE;
+        }
+
+        /* try a few times if EAGAIN */
+        g_usleep (100000);
+    }
+
+    /* too many retries? */
+    if (count == MAX_TCSETATTR_RETRIES) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "couldn't set serial port attributes: too many retries (%u)", count);
+        return FALSE;
+    }
+
+    /* tcsetattr() returns 0 if any of the requested attributes could be set,
+     * so we should double-check that all were set and log if not. Just with
+     * debug level, as we're ignoring this issue all together anyway.
+     */
+    memset (&other, 0, sizeof (struct termios));
+    errno = 0;
+    if (tcgetattr (fd, &other) != 0)
+        mm_dbg ("(%s): couldn't get serial port attributes after setting them: %s",
+                mm_port_get_device (MM_PORT (self)), g_strerror (errno));
+    else if (memcmp (options, &other, sizeof (struct termios)) != 0)
+        mm_dbg ("(%s): port attributes not fully set",
+                mm_port_get_device (MM_PORT (self)));
+
+#undef MAX_TCSETATTR_RETRIES
+
+    return TRUE;
+}
+
+static gboolean
 real_config_fd (MMPortSerial *self, int fd, GError **error)
 {
-    struct termios stbuf, other;
-    int speed;
-    int bits;
-    int parity;
-    int stopbits;
+    struct termios stbuf;
+    guint speed;
+    gint bits;
+    gint parity;
+    gint stopbits;
 
     /* No setup if not a tty */
     if (mm_port_get_subsys (MM_PORT (self)) != MM_PORT_SUBSYS_TTY)
         return TRUE;
 
-    speed = parse_baudrate (self->priv->baud);
+    mm_dbg ("(%s): setting up baudrate: %u",
+            mm_port_get_device (MM_PORT (self)),
+            self->priv->baud);
+    if (!parse_baudrate (self->priv->baud, &speed) || speed == B0) {
+        mm_warn ("(%s): baudrate invalid: %u; defaulting to 57600",
+                 mm_port_get_device (MM_PORT (self)),
+                 self->priv->baud);
+        speed = B57600;
+    }
+
     bits = parse_bits (self->priv->bits);
     parity = parse_parity (self->priv->parity);
     stopbits = parse_stopbits (self->priv->stopbits);
@@ -452,21 +437,19 @@ real_config_fd (MMPortSerial *self, int fd, GError **error)
                  errno);
     }
 
-    stbuf.c_iflag &= ~(IGNCR | ICRNL | IUCLC | INPCK | IXON | IXANY );
+    stbuf.c_cflag &= ~(CBAUD | CSIZE | CSTOPB | PARENB | PARODD | CRTSCTS);
+    stbuf.c_iflag &= ~(IGNCR | ICRNL | IUCLC | INPCK | IXON | IXOFF | IXANY );
     stbuf.c_oflag &= ~(OPOST | OLCUC | OCRNL | ONLCR | ONLRET);
     stbuf.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHONL);
     stbuf.c_cc[VMIN] = 1;
     stbuf.c_cc[VTIME] = 0;
     stbuf.c_cc[VEOF] = 1;
 
-    /* Use software handshaking and ignore parity/framing errors */
-    stbuf.c_iflag |= (IXON | IXOFF | IXANY | IGNPAR);
+    /* Ignore parity/framing errors */
+    stbuf.c_iflag |= IGNPAR;
 
-    /* Set up port speed and serial attributes; also ignore modem control
-     * lines since most drivers don't implement RTS/CTS anyway.
-     */
-    stbuf.c_cflag &= ~(CBAUD | CSIZE | CSTOPB | PARENB | CRTSCTS);
-    stbuf.c_cflag |= (bits | CREAD | 0 | parity | stopbits | CLOCAL);
+    /* Set up port speed and serial attributes and enable receiver in local mode */
+    stbuf.c_cflag |= (bits | parity | stopbits | CLOCAL | CREAD);
 
     errno = 0;
     if (cfsetispeed (&stbuf, speed) != 0) {
@@ -488,32 +471,7 @@ real_config_fd (MMPortSerial *self, int fd, GError **error)
         return FALSE;
     }
 
-    if (tcsetattr (fd, TCSANOW, &stbuf) < 0) {
-        g_set_error (error,
-                     MM_CORE_ERROR,
-                     MM_CORE_ERROR_FAILED,
-                     "%s: failed to set serial port attributes; errno %d",
-                     __func__, errno);
-        return FALSE;
-    }
-
-    /* tcsetattr() returns 0 if any of the requested attributes could be set,
-     * so we should double-check that all were set and log a warning if not.
-     */
-    memset (&other, 0, sizeof (struct termios));
-    errno = 0;
-    if (tcgetattr (fd, &other) != 0) {
-        mm_warn ("(%s): tcgetattr() error: %d",
-                 mm_port_get_device (MM_PORT (self)),
-                 errno);
-    }
-
-    if (memcmp (&stbuf, &other, sizeof (other)) != 0) {
-        mm_warn ("(%s): port attributes not fully set",
-                 mm_port_get_device (MM_PORT (self)));
-    }
-
-    return TRUE;
+    return internal_tcsetattr (self, fd, &stbuf, error);
 }
 
 static void
@@ -634,7 +592,7 @@ port_serial_process_command (MMPortSerial *self,
             /* Just keep on, will retry... */
             written = 0;
         } else
-          written = bytes_sent;
+            written = bytes_sent;
 
         ctx->idx += written;
     } else
@@ -850,21 +808,25 @@ port_serial_queue_process (gpointer data)
 
     /* Setup the cancellable so that we can stop waiting for a response */
     if (ctx->cancellable) {
+        gulong cancellable_id;
+
         self->priv->cancellable = g_object_ref (ctx->cancellable);
-        self->priv->cancellable_id = (g_cancellable_connect (
-                                          ctx->cancellable,
-                                          (GCallback)port_serial_response_wait_cancelled,
-                                          self,
-                                          NULL));
-        if (!self->priv->cancellable_id) {
-            error = g_error_new (MM_CORE_ERROR,
-                                 MM_CORE_ERROR_CANCELLED,
-                                 "Won't wait for the reply");
-            /* Note: may complete last operation and unref the MMPortSerial */
-            port_serial_got_response (self, NULL, error);
-            g_error_free (error);
+
+        /* If the GCancellable is already cancelled here, the callback will be
+         * called right away, and a GError will be propagated as response. In
+         * this case we need to completely avoid doing anything else with the
+         * MMPortSerial, as it may already be disposed.
+         * So, use an intermediate variable to store the cancellable id, and
+         * just return without further processing if we're already cancelled.
+         */
+        cancellable_id = g_cancellable_connect (ctx->cancellable,
+                                                (GCallback)port_serial_response_wait_cancelled,
+                                                self,
+                                                NULL);
+        if (!cancellable_id)
             return G_SOURCE_REMOVE;
-        }
+
+        self->priv->cancellable_id = cancellable_id;
     }
 
     /* If the command is finished being sent, schedule the timeout */
@@ -1648,15 +1610,11 @@ static gboolean
 set_speed (MMPortSerial *self, speed_t speed, GError **error)
 {
     struct termios options;
-    int fd, count = 4;
-    gboolean success = FALSE;
 
     g_assert (self->priv->fd >= 0);
 
-    fd = self->priv->fd;
-
     memset (&options, 0, sizeof (struct termios));
-    if (tcgetattr (fd, &options) != 0) {
+    if (tcgetattr (self->priv->fd, &options) != 0) {
         g_set_error (error,
                      MM_CORE_ERROR,
                      MM_CORE_ERROR_FAILED,
@@ -1669,40 +1627,7 @@ set_speed (MMPortSerial *self, speed_t speed, GError **error)
     cfsetospeed (&options, speed);
     options.c_cflag |= (CLOCAL | CREAD);
 
-    /* Configure flow control as well here */
-    if (self->priv->rts_cts)
-        options.c_cflag |= (CRTSCTS);
-
-    while (count-- > 0) {
-        if (tcsetattr (fd, TCSANOW, &options) == 0) {
-            success = TRUE;
-            break;  /* Operation successful */
-        }
-
-        /* Try a few times if EAGAIN */
-        if (errno == EAGAIN)
-            g_usleep (100000);
-        else {
-            /* If not EAGAIN, hard error */
-            g_set_error (error,
-                            MM_CORE_ERROR,
-                            MM_CORE_ERROR_FAILED,
-                            "%s: tcsetattr() error %d",
-                            __func__, errno);
-            return FALSE;
-        }
-    }
-
-    if (!success) {
-        g_set_error (error,
-                        MM_CORE_ERROR,
-                        MM_CORE_ERROR_FAILED,
-                        "%s: tcsetattr() retry timeout",
-                        __func__);
-        return FALSE;
-    }
-
-    return TRUE;
+    return internal_tcsetattr (self, self->priv->fd, &options, error);
 }
 
 /*****************************************************************************/
@@ -1855,6 +1780,56 @@ mm_port_serial_flash (MMPortSerial *self,
 
 /*****************************************************************************/
 
+gboolean
+mm_port_serial_set_flow_control (MMPortSerial   *self,
+                                 MMFlowControl   flow_control,
+                                 GError        **error)
+{
+    struct termios options;
+    gboolean       had_xon_xoff;
+    gboolean       had_rts_cts;
+
+    /* retrieve current settings */
+    memset (&options, 0, sizeof (struct termios));
+    if (tcgetattr (self->priv->fd, &options) != 0) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "couldn't get serial port attributes: %s", g_strerror (errno));
+        return FALSE;
+    }
+
+    /* clear all flow control flags */
+
+    had_xon_xoff = !!(options.c_iflag & (IXON | IXOFF));
+    options.c_iflag &= ~(IXON | IXOFF | IXANY);
+
+    had_rts_cts  = !!(options.c_cflag & (CRTSCTS));
+    options.c_cflag &= ~(CRTSCTS);
+
+    /* setup the requested flags */
+    switch (flow_control) {
+        case MM_FLOW_CONTROL_XON_XOFF:
+            mm_dbg ("(%s): enabling XON/XOFF flow control", mm_port_get_device (MM_PORT (self)));
+            options.c_iflag |= (IXON | IXOFF | IXANY);
+            break;
+        case MM_FLOW_CONTROL_RTS_CTS:
+            mm_dbg ("(%s): enabling RTS/CTS flow control", mm_port_get_device (MM_PORT (self)));
+            options.c_cflag |= (CRTSCTS);
+            break;
+        case MM_FLOW_CONTROL_NONE:
+            if (had_xon_xoff)
+                mm_dbg ("(%s): disabling XON/XOFF flow control", mm_port_get_device (MM_PORT (self)));
+            if (had_rts_cts)
+                mm_dbg ("(%s): disabling RTS/CTS flow control", mm_port_get_device (MM_PORT (self)));
+            break;
+        default:
+            g_assert_not_reached ();
+    }
+
+    return internal_tcsetattr (self, self->priv->fd, &options, error);
+}
+
+/*****************************************************************************/
+
 MMPortSerial *
 mm_port_serial_new (const char *name, MMPortType ptype)
 {
@@ -1955,9 +1930,6 @@ set_property (GObject *object,
     case PROP_SPEW_CONTROL:
         self->priv->spew_control = g_value_get_boolean (value);
         break;
-    case PROP_RTS_CTS:
-        self->priv->rts_cts = g_value_get_boolean (value);
-        break;
     case PROP_FLASH_OK:
         self->priv->flash_ok = g_value_get_boolean (value);
         break;
@@ -1996,9 +1968,6 @@ get_property (GObject *object,
         break;
     case PROP_SPEW_CONTROL:
         g_value_set_boolean (value, self->priv->spew_control);
-        break;
-    case PROP_RTS_CTS:
-        g_value_set_boolean (value, self->priv->rts_cts);
         break;
     case PROP_FLASH_OK:
         g_value_set_boolean (value, self->priv->flash_ok);
@@ -2104,14 +2073,6 @@ mm_port_serial_class_init (MMPortSerialClass *klass)
          g_param_spec_boolean (MM_PORT_SERIAL_SPEW_CONTROL,
                                "SpewControl",
                                "Spew control",
-                               FALSE,
-                               G_PARAM_READWRITE));
-
-    g_object_class_install_property
-        (object_class, PROP_RTS_CTS,
-         g_param_spec_boolean (MM_PORT_SERIAL_RTS_CTS,
-                               "RTSCTS",
-                               "Enable RTS/CTS flow control",
                                FALSE,
                                G_PARAM_READWRITE));
 

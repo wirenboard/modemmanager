@@ -75,20 +75,6 @@ typedef struct {
     guint mask;
 } AccessTechInfo;
 
-static void
-access_tech_set_result (GSimpleAsyncResult *simple,
-                        MMModemAccessTechnology act,
-                        guint mask)
-{
-    AccessTechInfo *info;
-
-    info = g_new (AccessTechInfo, 1);
-    info->act = act;
-    info->mask = mask;
-
-    g_simple_async_result_set_op_res_gpointer (simple, info, g_free);
-}
-
 static gboolean
 load_access_technologies_finish (MMIfaceModem *self,
                                  GAsyncResult *res,
@@ -96,40 +82,41 @@ load_access_technologies_finish (MMIfaceModem *self,
                                  guint *mask,
                                  GError **error)
 {
-    AccessTechInfo *info;
+    GError *inner_error = NULL;
+    gssize value;
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+    value = g_task_propagate_int (G_TASK (res), &inner_error);
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
         return FALSE;
+    }
 
-    info = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
-    g_assert (info);
-    *access_technologies = info->act;
-    *mask = info->mask;
+    *access_technologies = (MMModemAccessTechnology)value;
+    *mask = MM_IFACE_MODEM_3GPP_ALL_ACCESS_TECHNOLOGIES_MASK;
     return TRUE;
 }
 
 static void
 parent_load_access_technologies_ready (MMIfaceModem *self,
                                        GAsyncResult *res,
-                                       GSimpleAsyncResult *simple)
+                                       GTask *task)
 {
    MMModemAccessTechnology act = MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN;
    guint mask = 0;
    GError *error = NULL;
 
     if (!iface_modem_parent->load_access_technologies_finish (self, res, &act, &mask, &error))
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else
-        access_tech_set_result (simple, act, MM_IFACE_MODEM_3GPP_ALL_ACCESS_TECHNOLOGIES_MASK);
+        g_task_return_int (task, act);
 
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+    g_object_unref (task);
 }
 
 static void
 access_tech_ready (MMBaseModem *self,
                    GAsyncResult *res,
-                   GSimpleAsyncResult *simple)
+                   GTask *task)
 {
     MMModemAccessTechnology act = MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN;
     const gchar *response, *p;
@@ -140,7 +127,7 @@ access_tech_ready (MMBaseModem *self,
         iface_modem_parent->load_access_technologies (
                                     MM_IFACE_MODEM (self),
                                     (GAsyncReadyCallback)parent_load_access_technologies_ready,
-                                    simple);
+                                    task);
         return;
     }
 
@@ -150,17 +137,16 @@ access_tech_ready (MMBaseModem *self,
         act = mm_string_to_access_tech (p + 1);
 
     if (act == MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN)
-        g_simple_async_result_set_error (
-            simple,
+        g_task_return_new_error (
+            task,
             MM_CORE_ERROR,
             MM_CORE_ERROR_FAILED,
             "Couldn't parse access technologies result: '%s'",
             response);
     else
-        access_tech_set_result (simple, act, MM_IFACE_MODEM_3GPP_ALL_ACCESS_TECHNOLOGIES_MASK);
+        g_task_return_int (task, act);
 
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+    g_object_unref (task);
 }
 
 static void
@@ -168,19 +154,12 @@ load_access_technologies (MMIfaceModem *self,
                           GAsyncReadyCallback callback,
                           gpointer user_data)
 {
-    GSimpleAsyncResult *result;
-
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        load_access_technologies);
-
     mm_base_modem_at_command (MM_BASE_MODEM (self),
                               "*CNTI=0",
                               3,
                               FALSE,
                               (GAsyncReadyCallback)access_tech_ready,
-                              result);
+                              g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
@@ -224,19 +203,8 @@ load_supported_charsets (MMIfaceModem *self,
 /* Initializing the modem (during first enabling) */
 
 typedef struct {
-    GSimpleAsyncResult *result;
-    MMBroadbandModemNokia *self;
     guint retries;
 } EnablingModemInitContext;
-
-static void
-enabling_modem_init_context_complete_and_free (EnablingModemInitContext *ctx)
-{
-    g_simple_async_result_complete (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->self);
-    g_slice_free (EnablingModemInitContext, ctx);
-}
 
 static gboolean
 enabling_modem_init_finish (MMBroadbandModem *self,
@@ -244,17 +212,20 @@ enabling_modem_init_finish (MMBroadbandModem *self,
                             GError **error)
 
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
-static void retry_atz (EnablingModemInitContext *ctx);
+static void retry_atz (GTask *task);
 
 static void
 atz_ready (MMBaseModem *self,
            GAsyncResult *res,
-           EnablingModemInitContext *ctx)
+           GTask *task)
 {
+    EnablingModemInitContext *ctx;
     GError *error = NULL;
+
+    ctx = g_task_get_task_data (task);
 
     /* One retry less */
     ctx->retries--;
@@ -262,34 +233,38 @@ atz_ready (MMBaseModem *self,
     if (!mm_base_modem_at_command_full_finish (self, res, &error)) {
         /* Consumed all retries... */
         if (ctx->retries == 0) {
-            g_simple_async_result_take_error (ctx->result, error);
-            enabling_modem_init_context_complete_and_free (ctx);
+            g_task_return_error (task, error);
+            g_object_unref (task);
             return;
         }
 
         /* Retry... */
         g_error_free (error);
-        retry_atz (ctx);
+        retry_atz (task);
         return;
     }
 
     /* Good! */
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    enabling_modem_init_context_complete_and_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
-retry_atz (EnablingModemInitContext *ctx)
+retry_atz (GTask *task)
 {
-    mm_base_modem_at_command_full (MM_BASE_MODEM (ctx->self),
-                                   mm_base_modem_peek_port_primary (MM_BASE_MODEM (ctx->self)),
+    MMBaseModem *self;
+
+    self = g_task_get_source_object (task);
+
+    mm_base_modem_at_command_full (self,
+                                   mm_base_modem_peek_port_primary (self),
                                    "Z",
                                    6,
                                    FALSE,
                                    FALSE,
                                    NULL, /* cancellable */
                                    (GAsyncReadyCallback)atz_ready,
-                                   ctx);
+                                   task);
 }
 
 static void
@@ -298,20 +273,20 @@ enabling_modem_init (MMBroadbandModem *self,
                      gpointer user_data)
 {
     EnablingModemInitContext *ctx;
+    GTask *task;
 
-    ctx = g_slice_new0 (EnablingModemInitContext);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             enabling_modem_init);
-    ctx->self = g_object_ref (self);
+    ctx = g_new (EnablingModemInitContext, 1);
 
     /* Send the init command twice; some devices (Nokia N900) appear to take a
      * few commands before responding correctly.  Instead of penalizing them for
      * being stupid the first time by failing to enable the device, just
      * try again. */
     ctx->retries = 2;
-    retry_atz (ctx);
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, g_free);
+
+    retry_atz (task);
 }
 
 /*****************************************************************************/

@@ -306,7 +306,7 @@ mm_iface_modem_signal_disable_finish (MMIfaceModemSignal *self,
                                       GAsyncResult *res,
                                       GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 void
@@ -314,18 +314,13 @@ mm_iface_modem_signal_disable (MMIfaceModemSignal *self,
                                GAsyncReadyCallback callback,
                                gpointer user_data)
 {
-    GSimpleAsyncResult *result;
-
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        mm_iface_modem_signal_disable);
+    GTask *task;
 
     teardown_refresh_context (self);
 
-    g_simple_async_result_set_op_res_gboolean (result, TRUE);
-    g_simple_async_result_complete_in_idle (result);
-    g_object_unref (result);
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 /*****************************************************************************/
@@ -335,7 +330,7 @@ mm_iface_modem_signal_enable_finish (MMIfaceModemSignal *self,
                                      GAsyncResult *res,
                                      GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 void
@@ -344,27 +339,23 @@ mm_iface_modem_signal_enable (MMIfaceModemSignal *self,
                               GAsyncReadyCallback callback,
                               gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
     GError *error = NULL;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        mm_iface_modem_signal_enable);
+    task = g_task_new (self, cancellable, callback, user_data);
 
     if (!setup_refresh_context (self, FALSE, 0, &error))
-        g_simple_async_result_take_error (result, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (result, TRUE);
+        g_task_return_boolean (task, TRUE);
 
-    g_simple_async_result_complete_in_idle (result);
-    g_object_unref (result);
+    g_object_unref (task);
 }
 
 /*****************************************************************************/
 
 typedef struct _InitializationContext InitializationContext;
-static void interface_initialization_step (InitializationContext *ctx);
+static void interface_initialization_step (GTask *task);
 
 typedef enum {
     INITIALIZATION_STEP_FIRST,
@@ -374,52 +365,31 @@ typedef enum {
 } InitializationStep;
 
 struct _InitializationContext {
-    MMIfaceModemSignal *self;
     MmGdbusModemSignal *skeleton;
-    GCancellable *cancellable;
-    GSimpleAsyncResult *result;
     InitializationStep step;
 };
 
 static void
-initialization_context_complete_and_free (InitializationContext *ctx)
+initialization_context_free (InitializationContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->self);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->cancellable);
     g_object_unref (ctx->skeleton);
     g_slice_free (InitializationContext, ctx);
 }
-
 
 gboolean
 mm_iface_modem_signal_initialize_finish (MMIfaceModemSignal *self,
                                          GAsyncResult *res,
                                          GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
-}
-
-static gboolean
-initialization_context_complete_and_free_if_cancelled (InitializationContext *ctx)
-{
-    if (!g_cancellable_is_cancelled (ctx->cancellable))
-        return FALSE;
-
-    g_simple_async_result_set_error (ctx->result,
-                                     MM_CORE_ERROR,
-                                     MM_CORE_ERROR_CANCELLED,
-                                     "Interface initialization cancelled");
-    initialization_context_complete_and_free (ctx);
-    return TRUE;
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 check_support_ready (MMIfaceModemSignal *self,
                      GAsyncResult *res,
-                     InitializationContext *ctx)
+                     GTask *task)
 {
+    InitializationContext *ctx;
     GError *error = NULL;
 
     if (!MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (self)->check_support_finish (self, res, &error)) {
@@ -436,16 +406,25 @@ check_support_ready (MMIfaceModemSignal *self,
     }
 
     /* Go on to next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    interface_initialization_step (ctx);
+    interface_initialization_step (task);
 }
 
 static void
-interface_initialization_step (InitializationContext *ctx)
+interface_initialization_step (GTask *task)
 {
+    MMIfaceModemSignal *self;
+    InitializationContext *ctx;
+
     /* Don't run new steps if we're cancelled */
-    if (initialization_context_complete_and_free_if_cancelled (ctx))
+    if (g_task_return_error_if_cancelled (task)) {
+        g_object_unref (task);
         return;
+    }
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     switch (ctx->step) {
     case INITIALIZATION_STEP_FIRST:
@@ -461,23 +440,23 @@ interface_initialization_step (InitializationContext *ctx)
         ctx->step++;
 
     case INITIALIZATION_STEP_CHECK_SUPPORT:
-        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (ctx->self),
+        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
                                                    support_checked_quark))) {
             /* Set the checked flag so that we don't run it again */
-            g_object_set_qdata (G_OBJECT (ctx->self),
+            g_object_set_qdata (G_OBJECT (self),
                                 support_checked_quark,
                                 GUINT_TO_POINTER (TRUE));
             /* Initially, assume we don't support it */
-            g_object_set_qdata (G_OBJECT (ctx->self),
+            g_object_set_qdata (G_OBJECT (self),
                                 supported_quark,
                                 GUINT_TO_POINTER (FALSE));
 
-            if (MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (ctx->self)->check_support &&
-                MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (ctx->self)->check_support_finish) {
-                MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (ctx->self)->check_support (
-                    ctx->self,
+            if (MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (self)->check_support &&
+                MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (self)->check_support_finish) {
+                MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (self)->check_support (
+                    self,
                     (GAsyncReadyCallback)check_support_ready,
-                    ctx);
+                    task);
                 return;
             }
 
@@ -488,13 +467,13 @@ interface_initialization_step (InitializationContext *ctx)
         ctx->step++;
 
     case INITIALIZATION_STEP_FAIL_IF_UNSUPPORTED:
-        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (ctx->self),
+        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
                                                    supported_quark))) {
-            g_simple_async_result_set_error (ctx->result,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_UNSUPPORTED,
-                                             "Extended Signal information not supported");
-            initialization_context_complete_and_free (ctx);
+            g_task_return_new_error (task,
+                                     MM_CORE_ERROR,
+                                     MM_CORE_ERROR_UNSUPPORTED,
+                                     "Extended Signal information not supported");
+            g_object_unref (task);
             return;
         }
         /* Fall down to next step */
@@ -507,13 +486,13 @@ interface_initialization_step (InitializationContext *ctx)
         g_signal_connect (ctx->skeleton,
                           "handle-setup",
                           G_CALLBACK (handle_setup),
-                          ctx->self);
+                          self);
         /* Finally, export the new interface */
-        mm_gdbus_object_skeleton_set_modem_signal (MM_GDBUS_OBJECT_SKELETON (ctx->self),
+        mm_gdbus_object_skeleton_set_modem_signal (MM_GDBUS_OBJECT_SKELETON (self),
                                                    MM_GDBUS_MODEM_SIGNAL (ctx->skeleton));
 
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        initialization_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -528,6 +507,7 @@ mm_iface_modem_signal_initialize (MMIfaceModemSignal *self,
 {
     InitializationContext *ctx;
     MmGdbusModemSignal *skeleton = NULL;
+    GTask *task;
 
     /* Did we already create it? */
     g_object_get (self,
@@ -544,16 +524,13 @@ mm_iface_modem_signal_initialize (MMIfaceModemSignal *self,
     /* Perform async initialization here */
 
     ctx = g_slice_new0 (InitializationContext);
-    ctx->self = g_object_ref (self);
-    ctx->cancellable = g_object_ref (cancellable);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_iface_modem_signal_initialize);
     ctx->step = INITIALIZATION_STEP_FIRST;
     ctx->skeleton = skeleton;
 
-    interface_initialization_step (ctx);
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)initialization_context_free);
+
+    interface_initialization_step (task);
 }
 
 void

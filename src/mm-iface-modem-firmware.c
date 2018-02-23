@@ -50,7 +50,7 @@ static void
 handle_list_context_free (HandleListContext *ctx)
 {
     if (ctx->list)
-        g_list_free_full (ctx->list, (GDestroyNotify)g_object_unref);
+        g_list_free_full (ctx->list, g_object_unref);
     if (ctx->current)
         g_object_unref (ctx->current);
     g_object_unref (ctx->skeleton);
@@ -68,12 +68,16 @@ load_current_ready (MMIfaceModemFirmware *self,
     GList *l;
     GError *error = NULL;
 
-    /* reported current may be NULL and we don't treat it as error */
     ctx->current = MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_current_finish (self, res, &error);
-    if (error) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
-        handle_list_context_free (ctx);
-        return;
+    if (!ctx->current) {
+        /* Not found isn't fatal */
+        if (!g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND)) {
+            g_dbus_method_invocation_take_error (ctx->invocation, error);
+            handle_list_context_free (ctx);
+            return;
+        }
+        mm_dbg ("Couldn't load current firmware image: %s", error->message);
+        g_clear_error (&error);
     }
 
     /* Build array of dicts */
@@ -99,10 +103,15 @@ load_list_ready (MMIfaceModemFirmware *self,
     GError *error = NULL;
 
     ctx->list = MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_list_finish (self, res, &error);
-    if (error) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
-        handle_list_context_free (ctx);
-        return;
+    if (!ctx->list) {
+        /* Not found isn't fatal */
+        if (!g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND)) {
+            g_dbus_method_invocation_take_error (ctx->invocation, error);
+            handle_list_context_free (ctx);
+            return;
+        }
+        mm_dbg ("Couldn't load firmware image list: %s", error->message);
+        g_clear_error (&error);
     }
 
     MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_current (MM_IFACE_MODEM_FIRMWARE (self),
@@ -236,7 +245,7 @@ handle_select (MmGdbusModemFirmware *skeleton,
 /*****************************************************************************/
 
 typedef struct _InitializationContext InitializationContext;
-static void interface_initialization_step (InitializationContext *ctx);
+static void interface_initialization_step (GTask *task);
 
 typedef enum {
     INITIALIZATION_STEP_FIRST,
@@ -246,43 +255,23 @@ typedef enum {
 } InitializationStep;
 
 struct _InitializationContext {
-    MMIfaceModemFirmware *self;
     MmGdbusModemFirmware *skeleton;
-    GCancellable *cancellable;
-    GSimpleAsyncResult *result;
     InitializationStep step;
 };
 
 static void
-initialization_context_complete_and_free (InitializationContext *ctx)
+initialization_context_free (InitializationContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->self);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->cancellable);
     g_object_unref (ctx->skeleton);
     g_free (ctx);
-}
-
-static gboolean
-initialization_context_complete_and_free_if_cancelled (InitializationContext *ctx)
-{
-    if (!g_cancellable_is_cancelled (ctx->cancellable))
-        return FALSE;
-
-    g_simple_async_result_set_error (ctx->result,
-                                     MM_CORE_ERROR,
-                                     MM_CORE_ERROR_CANCELLED,
-                                     "Interface initialization cancelled");
-    initialization_context_complete_and_free (ctx);
-    return TRUE;
 }
 
 static void
 check_support_ready (MMIfaceModemFirmware *self,
                      GAsyncResult *res,
-                     InitializationContext *ctx)
+                     GTask *task)
 {
+    InitializationContext *ctx;
     GError *error = NULL;
 
     if (!MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->check_support_finish (self,
@@ -301,16 +290,25 @@ check_support_ready (MMIfaceModemFirmware *self,
     }
 
     /* Go on to next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    interface_initialization_step (ctx);
+    interface_initialization_step (task);
 }
 
 static void
-interface_initialization_step (InitializationContext *ctx)
+interface_initialization_step (GTask *task)
 {
+    MMIfaceModemFirmware *self;
+    InitializationContext *ctx;
+
     /* Don't run new steps if we're cancelled */
-    if (initialization_context_complete_and_free_if_cancelled (ctx))
+    if (g_task_return_error_if_cancelled (task)) {
+        g_object_unref (task);
         return;
+    }
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     switch (ctx->step) {
     case INITIALIZATION_STEP_FIRST:
@@ -326,23 +324,23 @@ interface_initialization_step (InitializationContext *ctx)
         ctx->step++;
 
     case INITIALIZATION_STEP_CHECK_SUPPORT:
-        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (ctx->self),
+        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
                                                    support_checked_quark))) {
             /* Set the checked flag so that we don't run it again */
-            g_object_set_qdata (G_OBJECT (ctx->self),
+            g_object_set_qdata (G_OBJECT (self),
                                 support_checked_quark,
                                 GUINT_TO_POINTER (TRUE));
             /* Initially, assume we don't support it */
-            g_object_set_qdata (G_OBJECT (ctx->self),
+            g_object_set_qdata (G_OBJECT (self),
                                 supported_quark,
                                 GUINT_TO_POINTER (FALSE));
 
-            if (MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (ctx->self)->check_support &&
-                MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (ctx->self)->check_support_finish) {
-                MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (ctx->self)->check_support (
-                    ctx->self,
+            if (MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->check_support &&
+                MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->check_support_finish) {
+                MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->check_support (
+                    self,
                     (GAsyncReadyCallback)check_support_ready,
-                    ctx);
+                    task);
                 return;
             }
 
@@ -353,13 +351,13 @@ interface_initialization_step (InitializationContext *ctx)
         ctx->step++;
 
     case INITIALIZATION_STEP_FAIL_IF_UNSUPPORTED:
-        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (ctx->self),
+        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
                                                    supported_quark))) {
-            g_simple_async_result_set_error (ctx->result,
-                                             MM_CORE_ERROR,
-                                             MM_CORE_ERROR_UNSUPPORTED,
-                                             "Firmware interface not available");
-            initialization_context_complete_and_free (ctx);
+            g_task_return_new_error (task,
+                                     MM_CORE_ERROR,
+                                     MM_CORE_ERROR_UNSUPPORTED,
+                                     "Firmware interface not available");
+            g_object_unref (task);
             return;
         }
         /* Fall down to next step */
@@ -372,18 +370,18 @@ interface_initialization_step (InitializationContext *ctx)
         g_signal_connect (ctx->skeleton,
                           "handle-list",
                           G_CALLBACK (handle_list),
-                          ctx->self);
+                          self);
         g_signal_connect (ctx->skeleton,
                           "handle-select",
                           G_CALLBACK (handle_select),
-                          ctx->self);
+                          self);
 
         /* Finally, export the new interface */
-        mm_gdbus_object_skeleton_set_modem_firmware (MM_GDBUS_OBJECT_SKELETON (ctx->self),
+        mm_gdbus_object_skeleton_set_modem_firmware (MM_GDBUS_OBJECT_SKELETON (self),
                                                      MM_GDBUS_MODEM_FIRMWARE (ctx->skeleton));
 
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        initialization_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -395,7 +393,7 @@ mm_iface_modem_firmware_initialize_finish (MMIfaceModemFirmware *self,
                                            GAsyncResult *res,
                                            GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 void
@@ -406,6 +404,7 @@ mm_iface_modem_firmware_initialize (MMIfaceModemFirmware *self,
 {
     InitializationContext *ctx;
     MmGdbusModemFirmware *skeleton = NULL;
+    GTask *task;
 
     /* Did we already create it? */
     g_object_get (self,
@@ -421,16 +420,13 @@ mm_iface_modem_firmware_initialize (MMIfaceModemFirmware *self,
     /* Perform async initialization here */
 
     ctx = g_new0 (InitializationContext, 1);
-    ctx->self = g_object_ref (self);
-    ctx->cancellable = g_object_ref (cancellable);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_iface_modem_firmware_initialize);
     ctx->step = INITIALIZATION_STEP_FIRST;
     ctx->skeleton = skeleton;
 
-    interface_initialization_step (ctx);
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)initialization_context_free);
+
+    interface_initialization_step (task);
 }
 
 void

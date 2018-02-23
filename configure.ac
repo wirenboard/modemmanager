@@ -5,8 +5,8 @@ dnl Package and library versioning support
 dnl
 
 m4_define([mm_major_version], [1])
-m4_define([mm_minor_version], [6])
-m4_define([mm_micro_version], [8])
+m4_define([mm_minor_version], [7])
+m4_define([mm_micro_version], [990])
 m4_define([mm_version],
           [mm_major_version.mm_minor_version.mm_micro_version])
 
@@ -26,7 +26,7 @@ dnl-----------------------------------------------------------------------------
 dnl autoconf, automake, libtool initialization
 dnl
 AC_INIT([ModemManager],[mm_version],[modemmanager-devel@lists.freedesktop.org],[ModemManager])
-AM_INIT_AUTOMAKE([1.11 subdir-objects tar-ustar no-dist-gzip dist-xz -Wno-portability])
+AM_INIT_AUTOMAKE([1.11.2 subdir-objects tar-ustar no-dist-gzip dist-xz -Wno-portability])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AM_MAINTAINER_MODE([enable])
@@ -44,6 +44,7 @@ dnl Required programs
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
+AC_PROG_MKDIR_P
 
 dnl Initialize libtool
 LT_PREREQ([2.2])
@@ -81,10 +82,8 @@ dnl-----------------------------------------------------------------------------
 dnl i18n
 dnl
 
-IT_PROG_INTLTOOL([0.40.0])
-
 AM_GNU_GETTEXT([external])
-AM_GNU_GETTEXT_VERSION([0.19.3])
+AM_GNU_GETTEXT_VERSION([0.19.8])
 
 GETTEXT_PACKAGE=ModemManager
 AC_SUBST(GETTEXT_PACKAGE)
@@ -95,7 +94,7 @@ dnl Build dependencies
 dnl
 
 GLIB_MIN_VERSION=2.36.0
-GUDEV_MIN_VERSION=147
+GLIB_BUILD_SYMBOLS="-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_36 -DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_36 -DGLIB_DISABLE_DEPRECATION_WARNINGS"
 
 PKG_CHECK_MODULES(MM,
                   glib-2.0 >= $GLIB_MIN_VERSION
@@ -103,7 +102,7 @@ PKG_CHECK_MODULES(MM,
                   gobject-2.0
                   gio-2.0
                   gio-unix-2.0)
-MM_FLAGS="$MM_CFLAGS -DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_36 -DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_36"
+MM_CFLAGS="$MM_CFLAGS $GLIB_BUILD_SYMBOLS"
 AC_SUBST(MM_CFLAGS)
 AC_SUBST(MM_LIBS)
 
@@ -112,7 +111,7 @@ PKG_CHECK_MODULES(LIBMM_GLIB,
                   gobject-2.0
                   gio-2.0
                   gio-unix-2.0)
-LIBMM_GLIB_CFLAGS="$LIBMM_GLIB_CFLAGS -DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_36 -DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_36"
+LIBMM_GLIB_CFLAGS="$LIBMM_GLIB_CFLAGS $GLIB_BUILD_SYMBOLS"
 AC_SUBST(LIBMM_GLIB_CFLAGS)
 AC_SUBST(LIBMM_GLIB_LIBS)
 
@@ -120,13 +119,9 @@ PKG_CHECK_MODULES(MMCLI,
                   glib-2.0 >= $GLIB_MIN_VERSION
                   gobject-2.0
                   gio-2.0)
-MMCLI_CFLAGS="$MMCLI_CFLAGS -DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_36 -DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_36"
+MMCLI_CFLAGS="$MMCLI_CFLAGS $GLIB_BUILD_SYMBOLS"
 AC_SUBST(MMCLI_CFLAGS)
 AC_SUBST(MMCLI_LIBS)
-
-PKG_CHECK_MODULES(GUDEV, gudev-1.0 >= $GUDEV_MIN_VERSION)
-AC_SUBST(GUDEV_CFLAGS)
-AC_SUBST(GUDEV_LIBS)
 
 dnl Some required utilities
 GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
@@ -186,40 +181,92 @@ fi
 AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$SYSTEMD_UNIT_DIR" -a "$SYSTEMD_UNIT_DIR" != xno ])
 
 dnl-----------------------------------------------------------------------------
+dnl udev support (enabled by default)
+dnl
+
+GUDEV_VERSION=147
+
+AC_ARG_WITH(udev, AS_HELP_STRING([--without-udev], [Build without udev support]), [], [with_udev=yes])
+AM_CONDITIONAL(WITH_UDEV, test "x$with_udev" = "xyes")
+case $with_udev in
+    yes)
+        PKG_CHECK_MODULES(GUDEV, [gudev-1.0 >= $GUDEV_VERSION], [have_gudev=yes],[have_gudev=no])
+        if test "x$have_gudev" = "xno"; then
+            AC_MSG_ERROR([Couldn't find gudev >= $GUDEV_VERSION. Install it, or otherwise configure using --without-udev to disable udev support.])
+        else
+            AC_DEFINE(WITH_UDEV, 1, [Define if you want udev support])
+            AC_SUBST(GUDEV_CFLAGS)
+            AC_SUBST(GUDEV_LIBS)
+        fi
+        ;;
+    *)
+        with_udev=no
+        ;;
+esac
+
+dnl-----------------------------------------------------------------------------
 dnl Suspend/resume support
 dnl
 
 PKG_CHECK_MODULES(LIBSYSTEMD, [libsystemd >= 209],[have_libsystemd=yes],[have_libsystemd=no])
 PKG_CHECK_MODULES(LIBSYSTEMD_LOGIN, [libsystemd-login >= 183],[have_libsystemd_login=yes],[have_libsystemd_login=no])
-AC_ARG_WITH(suspend-resume,
-            AS_HELP_STRING([--with-suspend-resume=no|systemd],
-                           [Enable suspend/resume support [[default=auto]]]),,
-            [with_suspend_resume=auto])
+AC_ARG_WITH(systemd-suspend-resume,
+            AS_HELP_STRING([--with-systemd-suspend-resume=no|yes],
+                           [Enable systemd suspend/resume support [[default=auto]]]),,
+            [with_systemd_suspend_resume=auto])
 
-if test "x$with_suspend_resume" = "xauto"; then
+if test "x$with_systemd_suspend_resume" = "xauto"; then
     if test "x$have_libsystemd" = "xyes" || test "x$have_libsystemd_login" = "xyes"; then
-        with_suspend_resume=systemd
+        with_systemd_suspend_resume=yes
     else
-        with_suspend_resume=no
+        with_systemd_suspend_resume=no
     fi
 fi
 
-case $with_suspend_resume in
-    no)
-        AC_DEFINE(WITH_SUSPEND_RESUME, 0, [Define if you have suspend-resume support])
-        ;;
-    systemd)
+case $with_systemd_suspend_resume in
+    yes)
         if test "x$have_libsystemd" = "xno" && test "x$have_libsystemd_login" = "xno"; then
 		    AC_MSG_ERROR(libsystemd or libsystemd-login development headers are required)
 	    fi
-        AC_DEFINE(WITH_SUSPEND_RESUME, 1, [Define if you have suspend-resume support])
+        AC_DEFINE(WITH_SYSTEMD_SUSPEND_RESUME, 1, [Define if you have systemd suspend-resume support])
         ;;
     *)
-        AC_MSG_ERROR([Wrong value for --with-suspend-resume: $with_suspend_resume])
+        with_systemd_suspend_resume=no
         ;;
 esac
 
-AM_CONDITIONAL(SUSPEND_RESUME_SYSTEMD, test "x$with_suspend_resume" = "xsystemd")
+AM_CONDITIONAL(WITH_SYSTEMD_SUSPEND_RESUME, test "x$with_systemd_suspend_resume" = "xyes")
+
+dnl-----------------------------------------------------------------------------
+dnl systemd journal support
+dnl
+
+AC_ARG_WITH(systemd-journal,
+            AS_HELP_STRING([--with-systemd-journal=no|yes|auto],
+                           [Enable systemd journal support [[default=auto]]]),,
+            [with_systemd_journal=auto])
+
+if test "x$with_systemd_journal" = "xauto"; then
+    if test "x$have_libsystemd" = "xyes"; then
+        with_systemd_journal=yes
+    else
+        with_systemd_journal=no
+    fi
+fi
+
+case $with_systemd_journal in
+    yes)
+        if test "x$have_libsystemd" = "xno"; then
+            AC_MSG_ERROR(libsystemd development headers are required)
+        fi
+        AC_DEFINE(WITH_SYSTEMD_JOURNAL, 1, [Define if you want systemd journal support])
+        ;;
+    *)
+        with_systemd_journal=no
+        ;;
+esac
+
+AM_CONDITIONAL(WITH_SYSTEMD_JOURNAL, test "x$with_systemd_journal" = "xyes")
 
 dnl-----------------------------------------------------------------------------
 dnl PolicyKit
@@ -241,9 +288,7 @@ elif test "x$with_polkit" = "xyes"; then
     with_polkit=strict
 fi
 
-if test "x$with_polkit" = "xno"; then
-    AC_DEFINE(WITH_POLKIT, 0, [Define if you have PolicyKit support])
-else
+if test "x$with_polkit" != "xno"; then
 	if test "x$have_polkit" = "xno"; then
 		AC_MSG_ERROR(PolicyKit development headers are required)
 	fi
@@ -272,7 +317,7 @@ dnl-----------------------------------------------------------------------------
 dnl MBIM support (enabled by default)
 dnl
 
-LIBMBIM_VERSION=1.14.0
+LIBMBIM_VERSION=1.16.0
 
 AC_ARG_WITH(mbim, AS_HELP_STRING([--without-mbim], [Build without MBIM support]), [], [with_mbim=yes])
 AM_CONDITIONAL(WITH_MBIM, test "x$with_mbim" = "xyes")
@@ -296,7 +341,7 @@ dnl-----------------------------------------------------------------------------
 dnl QMI support (enabled by default)
 dnl
 
-LIBQMI_VERSION=1.16.0
+LIBQMI_VERSION=1.20.0
 
 AC_ARG_WITH(qmi, AS_HELP_STRING([--without-qmi], [Build without QMI support]), [], [with_qmi=yes])
 AM_CONDITIONAL(WITH_QMI, test "x$with_qmi" = "xyes")
@@ -342,7 +387,6 @@ Makefile
 data/Makefile
 data/ModemManager.pc
 data/mm-glib.pc
-data/org.freedesktop.ModemManager1.policy.in
 data/tests/Makefile
 data/tests/org.freedesktop.ModemManager1.service
 include/Makefile
@@ -399,10 +443,12 @@ echo "
       systemd unit directory:  ${with_systemdsystemunitdir}
 
     Features:
-      policykit support:       ${with_polkit}
-      mbim support:            ${with_mbim}
-      qmi support:             ${with_qmi}
-      suspend/resume support:  ${with_suspend_resume}
+      udev:                    ${with_udev}
+      policykit:               ${with_polkit}
+      mbim:                    ${with_mbim}
+      qmi:                     ${with_qmi}
+      systemd suspend/resume:  ${with_systemd_suspend_resume}
+      systemd journal:         ${with_systemd_journal}
 
     Miscellaneous:
       gobject introspection:   ${found_introspection}

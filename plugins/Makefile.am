@@ -12,6 +12,7 @@ AM_CFLAGS = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/src \
+	-I$(top_srcdir)/src/kerneldevice \
 	-I$(top_srcdir)/include \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/libmm-glib \
@@ -56,6 +57,12 @@ noinst_LTLIBRARIES =
 
 # Plugins
 pkglib_LTLIBRARIES =
+
+# Built sources
+BUILT_SOURCES =
+
+# Clean files
+CLEANFILES =
 
 ################################################################################
 # common service test support
@@ -218,45 +225,6 @@ NOVATEL_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/novatel
 NOVATEL_COMMON_LIBADD_FLAGS   = $(builddir)/libmm-utils-novatel.la
 
 ################################################################################
-# common telit support
-################################################################################
-
-# Common telit helpers library
-noinst_LTLIBRARIES += libhelpers-telit.la
-libhelpers_telit_la_SOURCES = \
-	telit/mm-modem-helpers-telit.c \
-	telit/mm-modem-helpers-telit.h \
-	$(NULL)
-
-noinst_PROGRAMS += test-modem-helpers-telit
-test_modem_helpers_telit_SOURCES = \
-	telit/tests/test-mm-modem-helpers-telit.c \
-	$(NULL)
-test_modem_helpers_telit_CPPFLAGS = \
-	-I$(top_srcdir)/plugins/telit \
-	$(NULL)
-test_modem_helpers_telit_LDADD = \
-	$(builddir)/libhelpers-telit.la \
-	$(top_builddir)/src/libhelpers.la \
-	$(top_builddir)/libmm-glib/libmm-glib.la \
-	$(NULL)
-
-# Common telit modem support library
-noinst_LTLIBRARIES += libmm-utils-telit.la
-libmm_utils_telit_la_SOURCES = \
-	telit/mm-common-telit.c \
-	telit/mm-common-telit.h \
-	telit/mm-broadband-modem-telit.c \
-	telit/mm-broadband-modem-telit.h \
-	$(NULL)
-
-TELIT_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/telit
-TELIT_COMMON_LIBADD_FLAGS   = \
-	$(builddir)/libhelpers-telit.la \
-	$(builddir)/libmm-utils-telit.la \
-	$(NULL)
-
-################################################################################
 # plugin: generic
 ################################################################################
 
@@ -329,6 +297,8 @@ libmm_plugin_huawei_la_LIBADD   = $(builddir)/libhelpers-huawei.la
 
 dist_udevrules_DATA += huawei/77-mm-huawei-net-port-types.rules
 
+AM_CFLAGS += -DTESTUDEVRULESDIR_HUAWEI=\"${srcdir}/huawei\"
+
 ################################################################################
 # plugin: ericsson mbm
 ################################################################################
@@ -343,6 +313,8 @@ libmm_plugin_ericsson_mbm_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_ericsson_mbm_la_LIBADD   = $(MBM_COMMON_LIBADD_FLAGS)
 
 dist_udevrules_DATA += mbm/77-mm-ericsson-mbm.rules
+
+AM_CFLAGS += -DTESTUDEVRULESDIR_MBM=\"${srcdir}/mbm\"
 
 ################################################################################
 # plugin: option
@@ -377,6 +349,8 @@ libmm_plugin_option_hso_la_LIBADD   = $(OPTION_COMMON_LIBADD_FLAGS)
 ################################################################################
 # plugin: sierra (new QMI or MBIM modems)
 ################################################################################
+
+dist_udevrules_DATA += sierra/77-mm-sierra.rules
 
 pkglib_LTLIBRARIES += libmm-plugin-sierra.la
 libmm_plugin_sierra_la_SOURCES = \
@@ -446,6 +420,8 @@ libmm_plugin_nokia_icera_la_LIBADD   = $(ICERA_COMMON_LIBADD_FLAGS)
 
 dist_udevrules_DATA += nokia/77-mm-nokia-port-types.rules
 
+AM_CFLAGS += -DTESTUDEVRULESDIR_NOKIA=\"${srcdir}/nokia\"
+
 ################################################################################
 # plugin: zte
 ################################################################################
@@ -467,6 +443,8 @@ libmm_plugin_zte_la_LIBADD   = $(ICERA_COMMON_LIBADD_FLAGS)
 
 dist_udevrules_DATA += zte/77-mm-zte-port-types.rules
 
+AM_CFLAGS += -DTESTUDEVRULESDIR_ZTE=\"${srcdir}/zte\"
+
 ################################################################################
 # plugin: longcheer (and rebranded dongles)
 ################################################################################
@@ -482,6 +460,8 @@ libmm_plugin_longcheer_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_longcheer_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 
 dist_udevrules_DATA += longcheer/77-mm-longcheer-port-types.rules
+
+AM_CFLAGS += -DTESTUDEVRULESDIR_LONGCHEER=\"${srcdir}/longcheer\"
 
 ################################################################################
 # plugin: anydata cdma
@@ -501,6 +481,25 @@ libmm_plugin_anydata_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 # plugin: linktop cdma
 ################################################################################
 
+noinst_LTLIBRARIES += libhelpers-linktop.la
+libhelpers_linktop_la_SOURCES = \
+	linktop/mm-modem-helpers-linktop.c \
+	linktop/mm-modem-helpers-linktop.h \
+	$(NULL)
+
+noinst_PROGRAMS += test-modem-helpers-linktop
+test_modem_helpers_linktop_SOURCES = \
+	linktop/tests/test-modem-helpers-linktop.c \
+	$(NULL)
+test_modem_helpers_linktop_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/linktop \
+	$(NULL)
+test_modem_helpers_linktop_LDADD = \
+	$(builddir)/libhelpers-linktop.la \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
 pkglib_LTLIBRARIES += libmm-plugin-linktop.la
 libmm_plugin_linktop_la_SOURCES = \
 	linktop/mm-plugin-linktop.c \
@@ -510,6 +509,7 @@ libmm_plugin_linktop_la_SOURCES = \
 	$(NULL)
 libmm_plugin_linktop_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_linktop_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
+libmm_plugin_linktop_la_LIBADD   = $(builddir)/libhelpers-linktop.la
 
 ################################################################################
 # plugin: simtech
@@ -527,6 +527,8 @@ libmm_plugin_simtech_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 
 dist_udevrules_DATA += simtech/77-mm-simtech-port-types.rules
 
+AM_CFLAGS += -DTESTUDEVRULESDIR_SIMTECH=\"${srcdir}/simtech\"
+
 ################################################################################
 # plugin: alcatel/TCT/JRD x220D and possibly others
 ################################################################################
@@ -542,6 +544,8 @@ libmm_plugin_x22x_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_x22x_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 
 dist_udevrules_DATA += x22x/77-mm-x22x-port-types.rules
+
+AM_CFLAGS += -DTESTUDEVRULESDIR_X22X=\"${srcdir}/x22x\"
 
 ################################################################################
 # plugin: pantech
@@ -605,6 +609,8 @@ libmm_plugin_cinterion_la_SOURCES = \
 	cinterion/mm-common-cinterion.h \
 	cinterion/mm-broadband-modem-cinterion.c \
 	cinterion/mm-broadband-modem-cinterion.h \
+	cinterion/mm-broadband-bearer-cinterion.c \
+	cinterion/mm-broadband-bearer-cinterion.h \
 	$(NULL)
 if WITH_QMI
 libmm_plugin_cinterion_la_SOURCES += \
@@ -617,6 +623,8 @@ libmm_plugin_cinterion_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_cinterion_la_LIBADD   = $(builddir)/libhelpers-cinterion.la
 
 dist_udevrules_DATA += cinterion/77-mm-cinterion-port-types.rules
+
+AM_CFLAGS += -DTESTUDEVRULESDIR_CINTERION=\"${srcdir}/cinterion\"
 
 ################################################################################
 # plugin: iridium
@@ -675,7 +683,7 @@ libmm_plugin_thuraya_la_LIBADD   = $(builddir)/libhelpers-thuraya.la
 # plugin: novatel lte
 ################################################################################
 
-pkglib_LTLIBRARIES += libmm-plugin-novatel_lte.la
+pkglib_LTLIBRARIES += libmm-plugin-novatel-lte.la
 libmm_plugin_novatel_lte_la_SOURCES = \
 	novatel/mm-plugin-novatel-lte.c \
 	novatel/mm-plugin-novatel-lte.h \
@@ -701,21 +709,6 @@ libmm_plugin_novatel_la_SOURCES = \
 libmm_plugin_novatel_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(NOVATEL_COMMON_COMPILER_FLAGS)
 libmm_plugin_novatel_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_novatel_la_LIBADD   = $(NOVATEL_COMMON_LIBADD_FLAGS)
-
-################################################################################
-# plugin: dell (novatel, sierra or telit)
-################################################################################
-
-pkglib_LTLIBRARIES += libmm-plugin-dell.la
-libmm_plugin_dell_la_SOURCES = \
-	dell/mm-plugin-dell.c \
-	dell/mm-plugin-dell.h \
-	$(NULL)
-libmm_plugin_dell_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(NOVATEL_COMMON_COMPILER_FLAGS) $(SIERRA_COMMON_COMPILER_FLAGS) $(TELIT_COMMON_COMPILER_FLAGS) $(MBM_COMMON_COMPILER_FLAGS)
-libmm_plugin_dell_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_dell_la_LIBADD   = $(NOVATEL_COMMON_LIBADD_FLAGS) $(SIERRA_COMMON_LIBADD_FLAGS) $(TELIT_COMMON_LIBADD_FLAGS) $(MBM_COMMON_LIBADD_FLAGS)
-
-dist_udevrules_DATA += dell/77-mm-dell-port-types.rules
 
 ################################################################################
 # plugin: altair lte
@@ -771,16 +764,90 @@ libmm_plugin_via_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 # plugin: telit
 ################################################################################
 
+PLUGIN_TELIT_COMPILER_FLAGS = \
+	-I$(top_srcdir)/plugins/telit \
+	-I$(top_builddir)/plugins/telit \
+	$(NULL)
+
+noinst_LTLIBRARIES += libhelpers-telit.la
+
+TELIT_ENUMS_INPUTS = \
+	$(top_srcdir)/plugins/telit/mm-modem-helpers-telit.h \
+	$(NULL)
+
+TELIT_ENUMS_GENERATED = \
+	telit/mm-telit-enums-types.h \
+	telit/mm-telit-enums-types.c \
+	$(NULL)
+
+telit/mm-telit-enums-types.h: Makefile.am $(TELIT_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-template.h
+	$(AM_V_GEN) \
+		$(MKDIR_P) telit; \
+		$(GLIB_MKENUMS) \
+			--fhead "#include \"mm-modem-helpers-telit.h\"\n#ifndef __MM_TELIT_ENUMS_TYPES_H__\n#define __MM_TELIT_ENUMS_TYPES_H__\n" \
+			--template $(top_srcdir)/build-aux/mm-enums-template.h \
+			--ftail "#endif /* __MM_TELIT_ENUMS_TYPES_H__ */\n" \
+			$(TELIT_ENUMS_INPUTS) > $@
+
+telit/mm-telit-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-template.c telit/mm-telit-enums-types.h
+	$(AM_V_GEN) \
+		$(MKDIR_P) telit; \
+		$(GLIB_MKENUMS) \
+			--fhead "#include \"mm-telit-enums-types.h\"" \
+			--template $(top_srcdir)/build-aux/mm-enums-template.c \
+			$(TELIT_ENUMS_INPUTS) > $@
+
+libhelpers_telit_la_SOURCES = \
+	telit/mm-modem-helpers-telit.c \
+	telit/mm-modem-helpers-telit.h \
+	$(NULL)
+
+nodist_libhelpers_telit_la_SOURCES = $(TELIT_ENUMS_GENERATED)
+
+libhelpers_telit_la_CPPFLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
+
+BUILT_SOURCES += $(TELIT_ENUMS_GENERATED)
+CLEANFILES    += $(TELIT_ENUMS_GENERATED)
+
 pkglib_LTLIBRARIES += libmm-plugin-telit.la
 libmm_plugin_telit_la_SOURCES = \
 	telit/mm-plugin-telit.c \
 	telit/mm-plugin-telit.h \
 	$(NULL)
-libmm_plugin_telit_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
+libmm_plugin_telit_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(PLUGIN_TELIT_COMPILER_FLAGS)
 libmm_plugin_telit_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_telit_la_LIBADD   = $(TELIT_COMMON_LIBADD_FLAGS)
 
 dist_udevrules_DATA += telit/77-mm-telit-port-types.rules
+
+AM_CFLAGS += -DTESTUDEVRULESDIR_TELIT=\"${srcdir}/telit\"
+
+noinst_PROGRAMS += test-modem-helpers-telit
+test_modem_helpers_telit_SOURCES = \
+	telit/tests/test-mm-modem-helpers-telit.c \
+	$(NULL)
+test_modem_helpers_telit_CPPFLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
+test_modem_helpers_telit_LDADD = \
+	$(builddir)/libhelpers-telit.la \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+# Common telit modem support library
+noinst_LTLIBRARIES += libmm-utils-telit.la
+libmm_utils_telit_la_SOURCES = \
+	telit/mm-common-telit.c \
+	telit/mm-common-telit.h \
+	telit/mm-broadband-modem-telit.c \
+	telit/mm-broadband-modem-telit.h \
+	$(NULL)
+libmm_utils_telit_la_CPPFLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
+
+TELIT_COMMON_COMPILER_FLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
+TELIT_COMMON_LIBADD_FLAGS   = \
+	$(builddir)/libhelpers-telit.la \
+	$(builddir)/libmm-utils-telit.la \
+	$(NULL)
 
 ################################################################################
 # plugin: mtk
@@ -798,6 +865,8 @@ libmm_plugin_mtk_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 
 dist_udevrules_DATA += mtk/77-mm-mtk-port-types.rules
 
+AM_CFLAGS += -DTESTUDEVRULESDIR_MTK=\"${srcdir}/mtk\"
+
 ################################################################################
 # plugin: haier
 ################################################################################
@@ -811,6 +880,125 @@ libmm_plugin_haier_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_haier_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 
 dist_udevrules_DATA += haier/77-mm-haier-port-types.rules
+
+AM_CFLAGS += -DTESTUDEVRULESDIR_HAIER=\"${srcdir}/haier\"
+
+################################################################################
+# plugin: u-blox
+################################################################################
+
+dist_udevrules_DATA += ublox/77-mm-ublox-port-types.rules
+
+PLUGIN_UBLOX_COMPILER_FLAGS = \
+	-I$(top_srcdir)/plugins/ublox \
+	-I$(top_builddir)/plugins/ublox \
+	$(NULL)
+
+noinst_LTLIBRARIES += libhelpers-ublox.la
+
+UBLOX_ENUMS_INPUTS = \
+	$(top_srcdir)/plugins/ublox/mm-modem-helpers-ublox.h \
+	$(NULL)
+
+UBLOX_ENUMS_GENERATED = \
+	ublox/mm-ublox-enums-types.h \
+	ublox/mm-ublox-enums-types.c \
+	$(NULL)
+
+ublox/mm-ublox-enums-types.h: Makefile.am $(UBLOX_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-template.h
+	$(AM_V_GEN) \
+		$(MKDIR_P) ublox; \
+		$(GLIB_MKENUMS) \
+			--fhead "#include \"mm-modem-helpers-ublox.h\"\n#ifndef __MM_UBLOX_ENUMS_TYPES_H__\n#define __MM_UBLOX_ENUMS_TYPES_H__\n" \
+			--template $(top_srcdir)/build-aux/mm-enums-template.h \
+			--ftail "#endif /* __MM_UBLOX_ENUMS_TYPES_H__ */\n" \
+			$(UBLOX_ENUMS_INPUTS) > $@
+
+ublox/mm-ublox-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-template.c ublox/mm-ublox-enums-types.h
+	$(AM_V_GEN) \
+		$(MKDIR_P) ublox; \
+		$(GLIB_MKENUMS) \
+			--fhead "#include \"mm-ublox-enums-types.h\"" \
+			--template $(top_srcdir)/build-aux/mm-enums-template.c \
+			$(UBLOX_ENUMS_INPUTS) > $@
+
+libhelpers_ublox_la_SOURCES = \
+	ublox/mm-modem-helpers-ublox.c \
+	ublox/mm-modem-helpers-ublox.h \
+	$(NULL)
+
+nodist_libhelpers_ublox_la_SOURCES = $(UBLOX_ENUMS_GENERATED)
+
+libhelpers_ublox_la_CPPFLAGS = $(PLUGIN_UBLOX_COMPILER_FLAGS)
+
+BUILT_SOURCES += $(UBLOX_ENUMS_GENERATED)
+CLEANFILES    += $(UBLOX_ENUMS_GENERATED)
+
+noinst_PROGRAMS += test-modem-helpers-ublox
+test_modem_helpers_ublox_SOURCES = \
+	ublox/tests/test-modem-helpers-ublox.c \
+	$(NULL)
+test_modem_helpers_ublox_CPPFLAGS = $(PLUGIN_UBLOX_COMPILER_FLAGS)
+test_modem_helpers_ublox_LDADD = \
+	$(builddir)/libhelpers-ublox.la \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+pkglib_LTLIBRARIES += libmm-plugin-ublox.la
+libmm_plugin_ublox_la_SOURCES = \
+	ublox/mm-plugin-ublox.c \
+	ublox/mm-plugin-ublox.h \
+	ublox/mm-broadband-bearer-ublox.h \
+	ublox/mm-broadband-bearer-ublox.c \
+	ublox/mm-broadband-modem-ublox.h \
+	ublox/mm-broadband-modem-ublox.c \
+	$(NULL)
+libmm_plugin_ublox_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(PLUGIN_UBLOX_COMPILER_FLAGS)
+libmm_plugin_ublox_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
+libmm_plugin_ublox_la_LIBADD   = $(builddir)/libhelpers-ublox.la
+
+################################################################################
+# plugin: dell (novatel, sierra or telit)
+################################################################################
+
+pkglib_LTLIBRARIES += libmm-plugin-dell.la
+libmm_plugin_dell_la_SOURCES = \
+	dell/mm-plugin-dell.c \
+	dell/mm-plugin-dell.h \
+	$(NULL)
+libmm_plugin_dell_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(NOVATEL_COMMON_COMPILER_FLAGS) $(SIERRA_COMMON_COMPILER_FLAGS) $(TELIT_COMMON_COMPILER_FLAGS) $(MBM_COMMON_COMPILER_FLAGS)
+libmm_plugin_dell_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
+libmm_plugin_dell_la_LIBADD   = $(NOVATEL_COMMON_LIBADD_FLAGS) $(SIERRA_COMMON_LIBADD_FLAGS) $(TELIT_COMMON_LIBADD_FLAGS) $(MBM_COMMON_LIBADD_FLAGS)
+
+dist_udevrules_DATA += dell/77-mm-dell-port-types.rules
+
+AM_CFLAGS += -DTESTUDEVRULESDIR_DELL=\"${srcdir}/dell\"
+
+################################################################################
+# plugin: quectel
+################################################################################
+
+pkglib_LTLIBRARIES += libmm-plugin-quectel.la
+libmm_plugin_quectel_la_SOURCES = \
+	quectel/mm-plugin-quectel.c \
+	quectel/mm-plugin-quectel.h \
+	$(NULL)
+libmm_plugin_quectel_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
+libmm_plugin_quectel_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
+
+################################################################################
+# udev rules tester
+################################################################################
+
+noinst_PROGRAMS += test-udev-rules
+test_udev_rules_SOURCES = \
+	tests/test-udev-rules.c \
+	$(NULL)
+test_udev_rules_LDADD = \
+	$(top_builddir)/src/libkerneldevice.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
 
 ################################################################################
 

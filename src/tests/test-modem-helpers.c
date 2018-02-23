@@ -33,6 +33,93 @@
     g_assert_cmpfloat (fabs (val1 - val2), <, tolerance)
 
 /*****************************************************************************/
+/* Test IFC=? responses */
+
+static void
+test_ifc_response (const gchar         *str,
+                   const MMFlowControl  expected)
+{
+    MMFlowControl  mask;
+    GError        *error = NULL;
+
+    mask = mm_parse_ifc_test_response (str, &error);
+    g_assert_no_error (error);
+    g_assert_cmpuint (mask, ==, expected);
+}
+
+static void
+test_ifc_response_all_simple (void)
+{
+    test_ifc_response ("+IFC (0,1,2),(0,1,2)", (MM_FLOW_CONTROL_NONE | MM_FLOW_CONTROL_XON_XOFF | MM_FLOW_CONTROL_RTS_CTS));
+}
+
+static void
+test_ifc_response_all_groups (void)
+{
+    test_ifc_response ("+IFC (0-2),(0-2)", (MM_FLOW_CONTROL_NONE | MM_FLOW_CONTROL_XON_XOFF | MM_FLOW_CONTROL_RTS_CTS));
+}
+
+static void
+test_ifc_response_none_only (void)
+{
+    test_ifc_response ("+IFC (0),(0)", MM_FLOW_CONTROL_NONE);
+}
+
+static void
+test_ifc_response_xon_xoff_only (void)
+{
+    test_ifc_response ("+IFC (1),(1)", MM_FLOW_CONTROL_XON_XOFF);
+}
+
+static void
+test_ifc_response_rts_cts_only (void)
+{
+    test_ifc_response ("+IFC (2),(2)", MM_FLOW_CONTROL_RTS_CTS);
+}
+
+static void
+test_ifc_response_no_xon_xoff (void)
+{
+    test_ifc_response ("+IFC (0,2),(0,2)", (MM_FLOW_CONTROL_NONE | MM_FLOW_CONTROL_RTS_CTS));
+}
+
+static void
+test_ifc_response_no_xon_xoff_in_ta (void)
+{
+    test_ifc_response ("+IFC (0,1,2),(0,2)", (MM_FLOW_CONTROL_NONE | MM_FLOW_CONTROL_RTS_CTS));
+}
+
+static void
+test_ifc_response_no_xon_xoff_in_te (void)
+{
+    test_ifc_response ("+IFC (0,2),(0,1,2)", (MM_FLOW_CONTROL_NONE | MM_FLOW_CONTROL_RTS_CTS));
+}
+
+static void
+test_ifc_response_no_rts_cts_simple (void)
+{
+    test_ifc_response ("+IFC (0,1),(0,1)", (MM_FLOW_CONTROL_NONE | MM_FLOW_CONTROL_XON_XOFF));
+}
+
+static void
+test_ifc_response_no_rts_cts_groups (void)
+{
+    test_ifc_response ("+IFC (0-1),(0-1)", (MM_FLOW_CONTROL_NONE | MM_FLOW_CONTROL_XON_XOFF));
+}
+
+static void
+test_ifc_response_all_simple_and_unknown (void)
+{
+    test_ifc_response ("+IFC (0,1,2,3),(0,1,2)", (MM_FLOW_CONTROL_NONE | MM_FLOW_CONTROL_XON_XOFF | MM_FLOW_CONTROL_RTS_CTS));
+}
+
+static void
+test_ifc_response_all_groups_and_unknown (void)
+{
+    test_ifc_response ("+IFC (0-3),(0-2)", (MM_FLOW_CONTROL_NONE | MM_FLOW_CONTROL_XON_XOFF | MM_FLOW_CONTROL_RTS_CTS));
+}
+
+/*****************************************************************************/
 /* Test WS46=? responses */
 
 static void
@@ -819,6 +906,131 @@ test_cops_response_umts_invalid (void *f, gpointer d)
 }
 
 /*****************************************************************************/
+/* Test COPS? responses */
+
+typedef struct {
+    const gchar             *str;
+    guint                    mode;
+    guint                    format;
+    const gchar             *operator;
+    MMModemAccessTechnology  act;
+} CopsQueryData;
+
+static void
+test_cops_query_data (const CopsQueryData *item)
+{
+    gboolean                 result;
+    GError                  *error = NULL;
+    guint                    mode = G_MAXUINT;
+    guint                    format = G_MAXUINT;
+    gchar                   *operator = NULL;
+    MMModemAccessTechnology  act = MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN;
+
+    result = mm_3gpp_parse_cops_read_response (item->str,
+                                               &mode,
+                                               &format,
+                                               &operator,
+                                               &act,
+                                               &error);
+    g_assert_no_error (error);
+    g_assert (result);
+    g_assert_cmpuint (mode,     ==, item->mode);
+    g_assert_cmpuint (format,   ==, item->format);
+    g_assert_cmpstr  (operator, ==, item->operator);
+    g_assert_cmpuint (act,      ==, item->act);
+
+    g_free (operator);
+}
+
+static const CopsQueryData cops_query_data[] = {
+    {
+        .str = "+COPS: 1,0,\"CHINA MOBILE\"",
+        .mode = 1,
+        .format = 0,
+        .operator = "CHINA MOBILE",
+        .act = MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN
+    },
+    {
+        .str = "+COPS: 1,0,\"CHINA MOBILE\",7",
+        .mode = 1,
+        .format = 0,
+        .operator = "CHINA MOBILE",
+        .act = MM_MODEM_ACCESS_TECHNOLOGY_LTE
+    },
+    {
+        .str = "+COPS: 1,2,\"46000\"",
+        .mode = 1,
+        .format = 2,
+        .operator = "46000",
+        .act = MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN
+    },
+    {
+        .str = "+COPS: 1,2,\"46000\",7",
+        .mode = 1,
+        .format = 2,
+        .operator = "46000",
+        .act = MM_MODEM_ACCESS_TECHNOLOGY_LTE
+    },
+};
+
+static void
+test_cops_query (void)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (cops_query_data); i++)
+        test_cops_query_data (&cops_query_data[i]);
+}
+
+/*****************************************************************************/
+
+typedef struct {
+    const gchar    *input;
+    MMModemCharset  charset;
+    const gchar    *normalized;
+} NormalizeOperatorTest;
+
+static const NormalizeOperatorTest normalize_operator_tests[] = {
+    /* charset unknown */
+    { "Verizon", MM_MODEM_CHARSET_UNKNOWN, "Verizon" },
+    { "311480",  MM_MODEM_CHARSET_UNKNOWN, "311480"  },
+    /* charset configured as IRA (ASCII) */
+    { "Verizon", MM_MODEM_CHARSET_IRA, "Verizon" },
+    { "311480",  MM_MODEM_CHARSET_IRA, "311480"  },
+    /* charset configured as GSM7 */
+    { "Verizon", MM_MODEM_CHARSET_GSM, "Verizon" },
+    { "311480",  MM_MODEM_CHARSET_GSM, "311480"  },
+    /* charset configured as UCS2 */
+    { "0056006500720069007A006F006E", MM_MODEM_CHARSET_UCS2, "Verizon" },
+    { "003300310031003400380030",     MM_MODEM_CHARSET_UCS2, "311480"  },
+    { "Verizon",                      MM_MODEM_CHARSET_UCS2, "Verizon" },
+    { "311480",                       MM_MODEM_CHARSET_UCS2, "311480"  },
+};
+
+static void
+common_test_normalize_operator (const NormalizeOperatorTest *t)
+{
+    gchar *str;
+
+    str = g_strdup (t->input);
+    mm_3gpp_normalize_operator (&str, t->charset);
+    if (!t->normalized)
+        g_assert (!str);
+    else
+        g_assert_cmpstr (str, ==, t->normalized);
+    g_free (str);
+}
+
+static void
+test_normalize_operator (void)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (normalize_operator_tests); i++)
+        common_test_normalize_operator (&normalize_operator_tests[i]);
+}
+
+/*****************************************************************************/
 /* Test CREG/CGREG responses and unsolicited messages */
 
 typedef struct {
@@ -1077,6 +1289,28 @@ test_creg2_leading_zeros_unsolicited (void *f, gpointer d)
     const CregResult result = { 1, 0x0001, 0x0010, MM_MODEM_ACCESS_TECHNOLOGY_GSM, 7, FALSE, FALSE };
 
     test_creg_match ("unsolicited CREG=2 with leading zeros in integer fields", FALSE, reply, data, &result);
+}
+
+static void
+test_creg2_ublox_solicited (void *f, gpointer d)
+{
+    RegTestData *data = (RegTestData *) d;
+    const gchar *reply = "\r\n+CREG: 2,6,\"8B37\",\"0A265185\",7\r\n";
+    /* NOTE: '6' means registered for "SMS only", home network; we just assume UNKNOWN in this case */
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME_SMS_ONLY, 0x8B37, 0x0A265185, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 8, FALSE, FALSE };
+
+    test_creg_match ("Ublox Toby-L2 solicited while on LTE", TRUE, reply, data, &result);
+}
+
+static void
+test_creg2_ublox_unsolicited (void *f, gpointer d)
+{
+    RegTestData *data = (RegTestData *) d;
+    const gchar *reply = "\r\n+CREG: 6,\"8B37\",\"0A265185\",7\r\n";
+    /* NOTE: '6' means registered for "SMS only", home network; we just assume UNKNOWN in this case */
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME_SMS_ONLY, 0x8B37, 0x0A265185, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 6, FALSE, FALSE };
+
+    test_creg_match ("Ublox Toby-L2 unsolicited while on LTE", FALSE, reply, data, &result);
 }
 
 static void
@@ -1663,6 +1897,80 @@ test_devid_item (void *f, gpointer d)
 }
 
 /*****************************************************************************/
+/* Test CMER test responses */
+
+static void
+test_cmer_response (const gchar    *str,
+                    MM3gppCmerMode  expected_modes,
+                    MM3gppCmerInd   expected_inds)
+{
+    gboolean        ret;
+    MM3gppCmerMode  modes = MM_3GPP_CMER_MODE_NONE;
+    MM3gppCmerInd   inds = MM_3GPP_CMER_IND_NONE;
+    GError         *error = NULL;
+
+    ret = mm_3gpp_parse_cmer_test_response (str, &modes, &inds, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+
+    g_assert_cmpuint (modes, ==, expected_modes);
+    g_assert_cmpuint (inds,  ==, expected_inds);
+}
+
+static void
+test_cmer_response_cinterion_pls8 (void)
+{
+    static const gchar *str = "+CMER: (0-3),(0),(0),(0-1),(0-1)";
+    static const MM3gppCmerMode expected_modes = (        \
+        MM_3GPP_CMER_MODE_DISCARD_URCS |                  \
+        MM_3GPP_CMER_MODE_DISCARD_URCS_IF_LINK_RESERVED | \
+        MM_3GPP_CMER_MODE_BUFFER_URCS_IF_LINK_RESERVED |  \
+        MM_3GPP_CMER_MODE_FORWARD_URCS);
+    static const MM3gppCmerInd expected_inds = (        \
+        MM_3GPP_CMER_IND_DISABLE |                      \
+        MM_3GPP_CMER_IND_ENABLE_NOT_CAUSED_BY_CIND);
+
+    test_cmer_response (str, expected_modes, expected_inds);
+}
+
+static void
+test_cmer_response_sierra_em7345 (void)
+{
+    static const gchar *str = "+CMER: 1,0,0,(0-1),0";
+    static const MM3gppCmerMode expected_modes = (          \
+        MM_3GPP_CMER_MODE_DISCARD_URCS_IF_LINK_RESERVED);
+    static const MM3gppCmerInd expected_inds = (        \
+        MM_3GPP_CMER_IND_DISABLE |                      \
+        MM_3GPP_CMER_IND_ENABLE_NOT_CAUSED_BY_CIND);
+
+    test_cmer_response (str, expected_modes, expected_inds);
+}
+
+static void
+test_cmer_response_cinterion_ehs5 (void)
+{
+    static const gchar *str = "+CMER: (1,2),0,0,(0-1),0";
+    static const MM3gppCmerMode expected_modes = (        \
+        MM_3GPP_CMER_MODE_DISCARD_URCS_IF_LINK_RESERVED | \
+        MM_3GPP_CMER_MODE_BUFFER_URCS_IF_LINK_RESERVED);
+    static const MM3gppCmerInd expected_inds = (        \
+        MM_3GPP_CMER_IND_DISABLE |                      \
+        MM_3GPP_CMER_IND_ENABLE_NOT_CAUSED_BY_CIND);
+
+    test_cmer_response (str, expected_modes, expected_inds);
+}
+
+static void
+test_cmer_request_cinterion_ehs5 (void)
+{
+    gchar *str;
+
+    str = mm_3gpp_build_cmer_set_request (MM_3GPP_CMER_MODE_BUFFER_URCS_IF_LINK_RESERVED, MM_3GPP_CMER_IND_ENABLE_NOT_CAUSED_BY_CIND);
+    g_assert_cmpstr (str, ==, "+CMER=2,0,0,1");
+    g_free (str);
+}
+
+/*****************************************************************************/
 /* Test CIND responses */
 
 typedef struct {
@@ -1846,6 +2154,43 @@ test_iccid_parse_unquoted_invalid_mii (void *f, gpointer d)
     g_assert (parsed == NULL);
     g_assert_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED);
     g_error_free (error);
+}
+
+/*****************************************************************************/
+/* Test APN cmp */
+
+typedef struct {
+    const gchar *existing;
+    const gchar *requested;
+    gboolean     match_expected;
+} TestApnCmp;
+
+static const TestApnCmp test_apn_cmp[] = {
+    { "m2m.com.attz",                      "m2m.com.attz",                      TRUE  },
+    { "m2m.com.attz",                      "M2M.COM.ATTZ",                      TRUE  },
+    { "M2M.COM.ATTZ",                      "m2m.com.attz",                      TRUE  },
+    { "m2m.com.attz.mnc170.mcc310.gprs",   "m2m.com.attz",                      TRUE  },
+    { "ac.vodafone.es.MNC001.MCC214.GPRS", "ac.vodafone.es",                    TRUE  },
+    { "m2m.com.attz",                      "m2m.com.attz.mnc170.mcc310.gprs",   FALSE },
+    { "ac.vodafone.es",                    "ac.vodafone.es.MNC001.MCC214.GPRS", FALSE },
+    { "internet.test",                     "internet",                          FALSE },
+    { "internet.test",                     "INTERNET",                          FALSE },
+    { "internet.test",                     "internet.tes",                      FALSE },
+    { "",                                  "",                                  FALSE },
+};
+
+static void
+test_cmp_apn_name (void)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (test_apn_cmp); i++) {
+        g_debug ("Comparing requested '%s' vs existing '%s': %s match",
+                 test_apn_cmp[i].requested,
+                 test_apn_cmp[i].existing,
+                 test_apn_cmp[i].match_expected ? "should" : "shouldn't");
+        g_assert (mm_3gpp_cmp_apn_name (test_apn_cmp[i].requested, test_apn_cmp[i].existing) == test_apn_cmp[i].match_expected);
+    }
 }
 
 /*****************************************************************************/
@@ -2047,6 +2392,93 @@ test_cgdcont_read_response_samsung (void *f, gpointer d)
 }
 
 /*****************************************************************************/
+/* Test CGDCONT read responses */
+
+static void
+test_cgact_read_results (const gchar *desc,
+                         const gchar *reply,
+                         MM3gppPdpContextActive *expected_results,
+                         guint32 expected_results_len)
+{
+    GList *l;
+    GError *error = NULL;
+    GList *results;
+
+    trace ("\nTesting %s +CGACT response...\n", desc);
+
+    results = mm_3gpp_parse_cgact_read_response (reply, &error);
+    g_assert_no_error (error);
+    if (expected_results_len) {
+        g_assert (results);
+        g_assert_cmpuint (g_list_length (results), ==, expected_results_len);
+    }
+
+    for (l = results; l; l = g_list_next (l)) {
+        MM3gppPdpContextActive *pdp = l->data;
+        gboolean found = FALSE;
+        guint i;
+
+        for (i = 0; !found && i < expected_results_len; i++) {
+            MM3gppPdpContextActive *expected;
+
+            expected = &expected_results[i];
+            if (pdp->cid == expected->cid) {
+                found = TRUE;
+                g_assert_cmpuint (pdp->active, ==, expected->active);
+            }
+        }
+
+        g_assert (found == TRUE);
+    }
+
+    mm_3gpp_pdp_context_active_list_free (results);
+}
+
+static void
+test_cgact_read_response_none (void)
+{
+    test_cgact_read_results ("none", "", NULL, 0);
+}
+
+static void
+test_cgact_read_response_single_inactive (void)
+{
+    const gchar *reply = "+CGACT: 1,0\r\n";
+    static MM3gppPdpContextActive expected[] = {
+        { 1, FALSE },
+    };
+
+    test_cgact_read_results ("single inactive", reply, &expected[0], G_N_ELEMENTS (expected));
+}
+
+static void
+test_cgact_read_response_single_active (void)
+{
+    const gchar *reply = "+CGACT: 1,1\r\n";
+    static MM3gppPdpContextActive expected[] = {
+        { 1, TRUE },
+    };
+
+    test_cgact_read_results ("single active", reply, &expected[0], G_N_ELEMENTS (expected));
+}
+
+static void
+test_cgact_read_response_multiple (void)
+{
+    const gchar *reply =
+        "+CGACT: 1,0\r\n"
+        "+CGACT: 4,1\r\n"
+        "+CGACT: 5,0\r\n";
+    static MM3gppPdpContextActive expected[] = {
+        { 1, FALSE },
+        { 4, TRUE },
+        { 5, FALSE },
+    };
+
+    test_cgact_read_results ("multiple", reply, &expected[0], G_N_ELEMENTS (expected));
+}
+
+/*****************************************************************************/
 /* Test CPMS responses */
 
 static gboolean
@@ -2242,7 +2674,7 @@ test_cpms_query_response (void *f, gpointer d) {
                                                  &mem1,
                                                  &mem2,
                                                  &error);
-        g_assert(ret);
+        g_assert (ret);
         g_assert_no_error (error);
         g_assert_cmpuint (cpms_query_test[i].mem1_want, ==, mem1);
         g_assert_cmpuint (cpms_query_test[i].mem2_want, ==, mem2);
@@ -2258,14 +2690,12 @@ test_cnum_results (const gchar *desc,
                    const GStrv expected)
 {
     GStrv results;
-    GError *error = NULL;
     guint i;
 
     trace ("\nTesting +CNUM response (%s)...\n", desc);
 
-    results = mm_3gpp_parse_cnum_exec_response (reply, &error);
+    results = mm_3gpp_parse_cnum_exec_response (reply);
     g_assert (results);
-    g_assert_no_error (error);
     g_assert_cmpuint (g_strv_length (results), ==, g_strv_length (expected));
 
     for (i = 0; results[i]; i++) {
@@ -2752,6 +3182,13 @@ typedef struct {
 } CclkTest;
 
 static const CclkTest cclk_tests[] = {
+    { "+CCLK: \"14/08/05,04:00:21\"", TRUE, TRUE, FALSE,
+        "2014-08-05T04:00:21+00:00", 0 },
+    { "+CCLK: \"14/08/05,04:00:21\"", TRUE, FALSE, TRUE,
+        "2014-08-05T04:00:21+00:00", 0 },
+    { "+CCLK: \"14/08/05,04:00:21\"", TRUE, TRUE, TRUE,
+        "2014-08-05T04:00:21+00:00", 0 },
+
     { "+CCLK: \"14/08/05,04:00:21+40\"", TRUE, TRUE, FALSE,
         "2014-08-05T04:00:21+10:00", 600 },
     { "+CCLK: \"14/08/05,04:00:21+40\"", TRUE, FALSE, TRUE,
@@ -2765,6 +3202,27 @@ static const CclkTest cclk_tests[] = {
         "2015-02-28T20:30:40-08:00", -480 },
     { "+CCLK: \"15/02/28,20:30:40-32\"", TRUE, TRUE, TRUE,
         "2015-02-28T20:30:40-08:00", -480 },
+
+    { "+CCLK: 17/07/26,11:42:15+01", TRUE, TRUE, FALSE,
+      "2017-07-26T11:42:15+00:15", 15 },
+    { "+CCLK: 17/07/26,11:42:15+01", TRUE, FALSE, TRUE,
+      "2017-07-26T11:42:15+00:15", 15 },
+    { "+CCLK: 17/07/26,11:42:15+01", TRUE, TRUE, TRUE,
+      "2017-07-26T11:42:15+00:15", 15 },
+
+    { "+CCLK:   \"15/02/28,20:30:40-32\"", TRUE, TRUE, FALSE,
+        "2015-02-28T20:30:40-08:00", -480 },
+    { "+CCLK:   \"15/02/28,20:30:40-32\"", TRUE, FALSE, TRUE,
+        "2015-02-28T20:30:40-08:00", -480 },
+    { "+CCLK:   \"15/02/28,20:30:40-32\"", TRUE, TRUE, TRUE,
+        "2015-02-28T20:30:40-08:00", -480 },
+
+    { "+CCLK:   17/07/26,11:42:15+01", TRUE, TRUE, FALSE,
+      "2017-07-26T11:42:15+00:15", 15 },
+    { "+CCLK:   17/07/26,11:42:15+01", TRUE, FALSE, TRUE,
+      "2017-07-26T11:42:15+00:15", 15 },
+    { "+CCLK:   17/07/26,11:42:15+01", TRUE, TRUE, TRUE,
+      "2017-07-26T11:42:15+00:15", 15 },
 
     { "+CCLK: \"XX/XX/XX,XX:XX:XX+XX\"", FALSE, TRUE, FALSE,
         NULL, MM_NETWORK_TIMEZONE_OFFSET_UNKNOWN },
@@ -2858,7 +3316,203 @@ test_crsm_response (void)
 
         g_assert_cmpstr (crsm_tests[i].hex, ==, hex);
 
-        g_free(hex);
+        g_free (hex);
+    }
+}
+
+/*****************************************************************************/
+/* Test CGCONTRDP=N responses */
+
+typedef struct {
+    const gchar *str;
+    guint        cid;
+    guint        bearer_id;
+    const gchar *apn;
+    const gchar *local_address;
+    const gchar *subnet;
+    const gchar *gateway_address;
+    const gchar *dns_primary_address;
+    const gchar *dns_secondary_address;
+} CgcontrdpResponseTest;
+
+static const CgcontrdpResponseTest cgcontrdp_response_tests[] = {
+    /* Post TS 27.007 v9.4.0 format */
+    {
+        .str = "+CGCONTRDP: 4,5,\"ibox.tim.it.mnc001.mcc222.gprs\",\"2.197.17.49.255.255.255.255\",\"2.197.17.49\",\"10.207.43.46\",\"10.206.56.132\",\"0.0.0.0\",\"0.0.0.0\",0",
+        .cid = 4,
+        .bearer_id = 5,
+        .apn = "ibox.tim.it.mnc001.mcc222.gprs",
+        .local_address = "2.197.17.49",
+        .subnet = "255.255.255.255",
+        .gateway_address = "2.197.17.49",
+        .dns_primary_address = "10.207.43.46",
+        .dns_secondary_address = "10.206.56.132",
+    },
+    {
+        .str = "+CGCONTRDP: 4,5,\"ibox.tim.it.mnc001.mcc222.gprs\",\"2.197.17.49.255.255.255.255\",\"2.197.17.49\",\"10.207.43.46\"",
+        .cid = 4,
+        .bearer_id = 5,
+        .apn = "ibox.tim.it.mnc001.mcc222.gprs",
+        .local_address = "2.197.17.49",
+        .subnet = "255.255.255.255",
+        .gateway_address = "2.197.17.49",
+        .dns_primary_address = "10.207.43.46",
+    },
+    {
+        .str = "+CGCONTRDP: 4,5,\"ibox.tim.it.mnc001.mcc222.gprs\",\"2.197.17.49.255.255.255.255\",\"2.197.17.49\"",
+        .cid = 4,
+        .bearer_id = 5,
+        .apn = "ibox.tim.it.mnc001.mcc222.gprs",
+        .local_address = "2.197.17.49",
+        .subnet = "255.255.255.255",
+        .gateway_address = "2.197.17.49",
+    },
+    {
+        .str = "+CGCONTRDP: 4,5,\"ibox.tim.it.mnc001.mcc222.gprs\",\"2.197.17.49.255.255.255.255\"",
+        .cid = 4,
+        .bearer_id = 5,
+        .apn = "ibox.tim.it.mnc001.mcc222.gprs",
+        .local_address = "2.197.17.49",
+        .subnet = "255.255.255.255",
+    },
+    /* Pre TS 27.007 v9.4.0 format */
+    {
+        .str = "+CGCONTRDP: 4,5,\"ibox.tim.it.mnc001.mcc222.gprs\",\"2.197.17.49\",\"255.255.255.255\",\"2.197.17.49\",\"10.207.43.46\",\"10.206.56.132\",\"0.0.0.0\",\"0.0.0.0\"",
+        .cid = 4,
+        .bearer_id = 5,
+        .apn = "ibox.tim.it.mnc001.mcc222.gprs",
+        .local_address = "2.197.17.49",
+        .subnet = "255.255.255.255",
+        .gateway_address = "2.197.17.49",
+        .dns_primary_address = "10.207.43.46",
+        .dns_secondary_address = "10.206.56.132",
+    },
+    {
+        .str = "+CGCONTRDP: 4,5,\"ibox.tim.it.mnc001.mcc222.gprs\",\"2.197.17.49\",\"255.255.255.255\",\"2.197.17.49\",\"10.207.43.46\"",
+        .cid = 4,
+        .bearer_id = 5,
+        .apn = "ibox.tim.it.mnc001.mcc222.gprs",
+        .local_address = "2.197.17.49",
+        .subnet = "255.255.255.255",
+        .gateway_address = "2.197.17.49",
+        .dns_primary_address = "10.207.43.46",
+    },
+    {
+        .str = "+CGCONTRDP: 4,5,\"ibox.tim.it.mnc001.mcc222.gprs\",\"2.197.17.49\",\"255.255.255.255\",\"2.197.17.49\"",
+        .cid = 4,
+        .bearer_id = 5,
+        .apn = "ibox.tim.it.mnc001.mcc222.gprs",
+        .local_address = "2.197.17.49",
+        .subnet = "255.255.255.255",
+        .gateway_address = "2.197.17.49",
+    },
+    {
+        .str = "+CGCONTRDP: 4,5,\"ibox.tim.it.mnc001.mcc222.gprs\",\"2.197.17.49\",\"255.255.255.255\"",
+        .cid = 4,
+        .bearer_id = 5,
+        .apn = "ibox.tim.it.mnc001.mcc222.gprs",
+        .local_address = "2.197.17.49",
+        .subnet = "255.255.255.255",
+    },
+    {
+        .str = "+CGCONTRDP: 4,5,\"ibox.tim.it.mnc001.mcc222.gprs\",\"2.197.17.49\"",
+        .cid = 4,
+        .bearer_id = 5,
+        .apn = "ibox.tim.it.mnc001.mcc222.gprs",
+        .local_address = "2.197.17.49",
+    },
+    /* Common */
+    {
+        .str = "+CGCONTRDP: 4,5,\"ibox.tim.it.mnc001.mcc222.gprs\"",
+        .cid = 4,
+        .bearer_id = 5,
+        .apn = "ibox.tim.it.mnc001.mcc222.gprs",
+    },
+    {
+        .str = "+CGCONTRDP: 4,5,\"\"",
+        .cid = 4,
+        .bearer_id = 5,
+    },
+};
+
+static void
+test_cgcontrdp_response (void)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (cgcontrdp_response_tests); i++) {
+        GError   *error = NULL;
+        gboolean  success;
+        guint     cid = G_MAXUINT;
+        guint     bearer_id = G_MAXUINT;
+        gchar    *apn = NULL;
+        gchar    *local_address = NULL;
+        gchar    *subnet = NULL;
+        gchar    *gateway_address = NULL;
+        gchar    *dns_primary_address = NULL;
+        gchar    *dns_secondary_address = NULL;
+
+        success = mm_3gpp_parse_cgcontrdp_response (cgcontrdp_response_tests[i].str,
+                                                    &cid,
+                                                    &bearer_id,
+                                                    &apn,
+                                                    &local_address,
+                                                    &subnet,
+                                                    &gateway_address,
+                                                    &dns_primary_address,
+                                                    &dns_secondary_address,
+                                                    &error);
+        g_assert_no_error (error);
+        g_assert (success);
+        g_assert_cmpuint (cgcontrdp_response_tests[i].cid,                   ==, cid);
+        g_assert_cmpuint (cgcontrdp_response_tests[i].bearer_id,             ==, bearer_id);
+        g_assert_cmpstr  (cgcontrdp_response_tests[i].apn,                   ==, apn);
+        g_assert_cmpstr  (cgcontrdp_response_tests[i].local_address,         ==, local_address);
+        g_assert_cmpstr  (cgcontrdp_response_tests[i].subnet,                ==, subnet);
+        g_assert_cmpstr  (cgcontrdp_response_tests[i].gateway_address,       ==, gateway_address);
+        g_assert_cmpstr  (cgcontrdp_response_tests[i].dns_primary_address,   ==, dns_primary_address);
+        g_assert_cmpstr  (cgcontrdp_response_tests[i].dns_secondary_address, ==, dns_secondary_address);
+
+        g_free (apn);
+        g_free (local_address);
+        g_free (subnet);
+        g_free (gateway_address);
+        g_free (dns_primary_address);
+        g_free (dns_secondary_address);
+    }
+}
+
+/*****************************************************************************/
+/* Test CFUN? response */
+
+typedef struct {
+    const gchar *str;
+    guint        state;
+} CfunQueryTest;
+
+static const CfunQueryTest cfun_query_tests[] = {
+    { "+CFUN: 1",     1 },
+    { "+CFUN: 1,0",   1 },
+    { "+CFUN: 0",     0 },
+    { "+CFUN: 0,0",   0 },
+    { "+CFUN: 19",   19 },
+    { "+CFUN: 19,0", 19 },
+};
+
+static void
+test_cfun_response (void)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (cfun_query_tests); i++) {
+        GError   *error = NULL;
+        gboolean  success;
+        guint     state = G_MAXUINT;
+
+        success = mm_3gpp_parse_cfun_query_response (cfun_query_tests[i].str, &state, &error);
+        g_assert_no_error (error);
+        g_assert (success);
+        g_assert_cmpuint (cfun_query_tests[i].state, ==, state);
     }
 }
 
@@ -2982,6 +3636,94 @@ test_cesq_response_to_signal (void)
     }
 }
 
+typedef struct {
+    const gchar       *str;
+    MMModemPowerState  state;
+} CfunQueryGenericTest;
+
+static const CfunQueryGenericTest cfun_query_generic_tests[] = {
+    { "+CFUN: 1",     MM_MODEM_POWER_STATE_ON  },
+    { "+CFUN: 1,0",   MM_MODEM_POWER_STATE_ON  },
+    { "+CFUN: 0",     MM_MODEM_POWER_STATE_OFF },
+    { "+CFUN: 0,0",   MM_MODEM_POWER_STATE_OFF },
+    { "+CFUN: 4",     MM_MODEM_POWER_STATE_LOW },
+    { "+CFUN: 4,0",   MM_MODEM_POWER_STATE_LOW },
+};
+
+static void
+test_cfun_generic_response (void)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (cfun_query_generic_tests); i++) {
+        GError   *error = NULL;
+        gboolean  success;
+        MMModemPowerState state = MM_MODEM_POWER_STATE_UNKNOWN;
+
+        success = mm_3gpp_parse_cfun_query_generic_response (cfun_query_generic_tests[i].str, &state, &error);
+        g_assert_no_error (error);
+        g_assert (success);
+        g_assert_cmpuint (cfun_query_generic_tests[i].state, ==, state);
+    }
+}
+
+typedef struct {
+    gchar *response;
+    gint result;
+    gchar *error_message;
+} CSIMResponseTest;
+
+static CSIMResponseTest csim_response_test_list [] = {
+    /* The parser expects that 2nd arg contains
+     * substring "63Cx" where x is an HEX string
+     * representing the retry value */
+    {"+CSIM:8,\"000063C1\"", 1, NULL},
+    {"+CSIM:8,\"000063CA\"", 10, NULL},
+    {"+CSIM:8,\"000063CF\"", 15, NULL},
+    /* The parser accepts spaces */
+    {"+CSIM:8, \"000063C1\"", 1, NULL},
+    {"+CSIM: 8, \"000063C1\"", 1, NULL},
+    {"+CSIM:  8, \"000063C1\"", 1, NULL},
+    /* the parser expects an int as first argument (2nd arg's length),
+     * but does not check if it is correct */
+    {"+CSIM: 10, \"63CF\"", 15, NULL},
+    /* Valid +CSIM Error codes */
+    {"+CSIM: 4, \"6300\"", -1, "SIM verification failed"},
+    {"+CSIM: 4, \"6983\"", -1, "SIM authentication method blocked"},
+    {"+CSIM: 4, \"6984\"", -1, "SIM reference data invalidated"},
+    {"+CSIM: 4, \"6A86\"", -1, "Incorrect parameters in SIM request"},
+    {"+CSIM: 4, \"6A88\"", -1, "SIM reference data not found"},
+    /* Test error: missing first argument */
+    {"+CSIM:000063CF\"", -1, "Could not recognize +CSIM response '+CSIM:000063CF\"'"},
+    /* Test error: missing quotation mark */
+    {"+CSIM: 8, 000063CF", -1, "Could not recognize +CSIM response '+CSIM: 8, 000063CF'"},
+    /* Test generic error */
+    {"+CSIM: 4, \"63BF\"", -1, "Unknown error returned '0x63bf'"},
+    {"+CSIM: 4, \"63D0\"", -1, "Unknown error returned '0x63d0'"}
+};
+
+static void
+test_csim_response (void)
+{
+    guint i;
+    gint res;
+    GError* error = NULL;
+
+    for (i = 0; i < G_N_ELEMENTS (csim_response_test_list); i++) {
+        res = mm_parse_csim_response (csim_response_test_list[i].response, &error);
+
+        if (csim_response_test_list[i].error_message == NULL) {
+            g_assert_no_error (error);
+        } else {
+            g_assert_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED);
+            g_assert_cmpstr (error->message, ==, csim_response_test_list[i].error_message);
+            g_clear_error (&error);
+        }
+
+        g_assert_cmpint (res, ==, csim_response_test_list[i].result);
+    }
+}
+
 /*****************************************************************************/
 
 typedef struct {
@@ -3056,11 +3798,23 @@ int main (int argc, char **argv)
     gint result;
     DevidItem *item = &devids[0];
 
-    g_type_init ();
     g_test_init (&argc, &argv, NULL);
 
     suite = g_test_get_root ();
     reg_data = reg_test_data_new ();
+
+    g_test_suite_add (suite, TESTCASE (test_ifc_response_all_simple, NULL));
+    g_test_suite_add (suite, TESTCASE (test_ifc_response_all_groups, NULL));
+    g_test_suite_add (suite, TESTCASE (test_ifc_response_none_only, NULL));
+    g_test_suite_add (suite, TESTCASE (test_ifc_response_xon_xoff_only, NULL));
+    g_test_suite_add (suite, TESTCASE (test_ifc_response_rts_cts_only, NULL));
+    g_test_suite_add (suite, TESTCASE (test_ifc_response_no_xon_xoff, NULL));
+    g_test_suite_add (suite, TESTCASE (test_ifc_response_no_xon_xoff_in_ta, NULL));
+    g_test_suite_add (suite, TESTCASE (test_ifc_response_no_xon_xoff_in_te, NULL));
+    g_test_suite_add (suite, TESTCASE (test_ifc_response_no_rts_cts_simple, NULL));
+    g_test_suite_add (suite, TESTCASE (test_ifc_response_no_rts_cts_groups, NULL));
+    g_test_suite_add (suite, TESTCASE (test_ifc_response_all_simple_and_unknown, NULL));
+    g_test_suite_add (suite, TESTCASE (test_ifc_response_all_groups_and_unknown, NULL));
 
     g_test_suite_add (suite, TESTCASE (test_ws46_response_generic_2g3g4g, NULL));
     g_test_suite_add (suite, TESTCASE (test_ws46_response_generic_2g3g, NULL));
@@ -3101,6 +3855,10 @@ int main (int argc, char **argv)
     g_test_suite_add (suite, TESTCASE (test_cops_response_gsm_invalid, NULL));
     g_test_suite_add (suite, TESTCASE (test_cops_response_umts_invalid, NULL));
 
+    g_test_suite_add (suite, TESTCASE (test_cops_query, NULL));
+
+    g_test_suite_add (suite, TESTCASE (test_normalize_operator, NULL));
+
     g_test_suite_add (suite, TESTCASE (test_creg1_solicited, reg_data));
     g_test_suite_add (suite, TESTCASE (test_creg1_unsolicited, reg_data));
     g_test_suite_add (suite, TESTCASE (test_creg2_mercury_solicited, reg_data));
@@ -3120,6 +3878,8 @@ int main (int argc, char **argv)
     g_test_suite_add (suite, TESTCASE (test_creg2_leading_zeros_solicited, reg_data));
     g_test_suite_add (suite, TESTCASE (test_creg2_no_leading_zeros_unsolicited, reg_data));
     g_test_suite_add (suite, TESTCASE (test_creg2_leading_zeros_unsolicited, reg_data));
+    g_test_suite_add (suite, TESTCASE (test_creg2_ublox_solicited, reg_data));
+    g_test_suite_add (suite, TESTCASE (test_creg2_ublox_unsolicited, reg_data));
 
     g_test_suite_add (suite, TESTCASE (test_cgreg1_solicited, reg_data));
     g_test_suite_add (suite, TESTCASE (test_cgreg1_unsolicited, reg_data));
@@ -3148,6 +3908,12 @@ int main (int argc, char **argv)
     g_test_suite_add (suite, TESTCASE (test_cscs_buslink_support_response, NULL));
     g_test_suite_add (suite, TESTCASE (test_cscs_blackberry_support_response, NULL));
 
+    g_test_suite_add (suite, TESTCASE (test_cmer_response_cinterion_pls8, NULL));
+    g_test_suite_add (suite, TESTCASE (test_cmer_response_sierra_em7345, NULL));
+    g_test_suite_add (suite, TESTCASE (test_cmer_response_cinterion_ehs5, NULL));
+
+    g_test_suite_add (suite, TESTCASE (test_cmer_request_cinterion_ehs5, NULL));
+
     g_test_suite_add (suite, TESTCASE (test_cind_response_linktop_lw273, NULL));
     g_test_suite_add (suite, TESTCASE (test_cind_response_moto_v3m, NULL));
 
@@ -3173,6 +3939,8 @@ int main (int argc, char **argv)
     g_test_suite_add (suite, TESTCASE (test_cpms_response_empty_fields, NULL));
     g_test_suite_add (suite, TESTCASE (test_cpms_query_response,        NULL));
 
+    g_test_suite_add (suite, TESTCASE (test_cmp_apn_name, NULL));
+
     g_test_suite_add (suite, TESTCASE (test_cgdcont_test_response_single, NULL));
     g_test_suite_add (suite, TESTCASE (test_cgdcont_test_response_multiple, NULL));
     g_test_suite_add (suite, TESTCASE (test_cgdcont_test_response_multiple_and_ignore, NULL));
@@ -3182,6 +3950,11 @@ int main (int argc, char **argv)
 
     g_test_suite_add (suite, TESTCASE (test_cgdcont_read_response_nokia, NULL));
     g_test_suite_add (suite, TESTCASE (test_cgdcont_read_response_samsung, NULL));
+
+    g_test_suite_add (suite, TESTCASE (test_cgact_read_response_none, NULL));
+    g_test_suite_add (suite, TESTCASE (test_cgact_read_response_single_inactive, NULL));
+    g_test_suite_add (suite, TESTCASE (test_cgact_read_response_single_active, NULL));
+    g_test_suite_add (suite, TESTCASE (test_cgact_read_response_multiple, NULL));
 
     g_test_suite_add (suite, TESTCASE (test_cnum_response_generic, NULL));
     g_test_suite_add (suite, TESTCASE (test_cnum_response_generic_without_detail, NULL));
@@ -3210,6 +3983,13 @@ int main (int argc, char **argv)
     g_test_suite_add (suite, TESTCASE (test_cclk_response, NULL));
 
     g_test_suite_add (suite, TESTCASE (test_crsm_response, NULL));
+
+    g_test_suite_add (suite, TESTCASE (test_cgcontrdp_response, NULL));
+
+    g_test_suite_add (suite, TESTCASE (test_cfun_response, NULL));
+    g_test_suite_add (suite, TESTCASE (test_cfun_generic_response, NULL));
+
+    g_test_suite_add (suite, TESTCASE (test_csim_response, NULL));
 
     g_test_suite_add (suite, TESTCASE (test_cesq_response, NULL));
     g_test_suite_add (suite, TESTCASE (test_cesq_response_to_signal, NULL));

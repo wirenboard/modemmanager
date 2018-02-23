@@ -21,6 +21,7 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include "mm-modem-helpers.h"
 #include "mm-port.h"
 
 #define MM_TYPE_PORT_SERIAL            (mm_port_serial_get_type ())
@@ -35,7 +36,6 @@
 #define MM_PORT_SERIAL_PARITY       "parity"
 #define MM_PORT_SERIAL_STOPBITS     "stopbits"
 #define MM_PORT_SERIAL_SEND_DELAY   "send-delay"
-#define MM_PORT_SERIAL_RTS_CTS      "rts-cts"
 #define MM_PORT_SERIAL_FD           "fd" /* Construct-only */
 #define MM_PORT_SERIAL_SPEW_CONTROL "spew-control" /* Construct-only */
 #define MM_PORT_SERIAL_FLASH_OK     "flash-ok" /* Construct-only */
@@ -149,5 +149,9 @@ void        mm_port_serial_command        (MMPortSerial *self,
 GByteArray *mm_port_serial_command_finish (MMPortSerial *self,
                                            GAsyncResult *res,
                                            GError **error);
+
+gboolean mm_port_serial_set_flow_control (MMPortSerial   *self,
+                                          MMFlowControl   flow_control,
+                                          GError        **error);
 
 #endif /* MM_PORT_SERIAL_H */

@@ -30,6 +30,7 @@
 
 #include "mm-auth.h"
 #include "mm-port.h"
+#include "mm-kernel-device.h"
 #include "mm-port-serial-at.h"
 #include "mm-port-serial-qcdm.h"
 #include "mm-port-serial-gps.h"
@@ -61,6 +62,7 @@ typedef struct _MMBaseModemPrivate MMBaseModemPrivate;
 #define MM_BASE_MODEM_PLUGIN         "base-modem-plugin"
 #define MM_BASE_MODEM_VENDOR_ID      "base-modem-vendor-id"
 #define MM_BASE_MODEM_PRODUCT_ID     "base-modem-product-id"
+#define MM_BASE_MODEM_REPROBE        "base-modem-reprobe"
 
 struct _MMBaseModem {
     MmGdbusObjectSkeleton parent;
@@ -103,13 +105,11 @@ struct _MMBaseModemClass {
 
 GType mm_base_modem_get_type (void);
 
-gboolean  mm_base_modem_grab_port    (MMBaseModem *self,
-                                      const gchar *subsys,
-                                      const gchar *name,
-                                      const gchar *parent_path,
-                                      MMPortType ptype,
-                                      MMPortSerialAtFlag at_pflags,
-                                      GError **error);
+gboolean  mm_base_modem_grab_port    (MMBaseModem         *self,
+                                      MMKernelDevice      *kernel_device,
+                                      MMPortType           ptype,
+                                      MMPortSerialAtFlag   at_pflags,
+                                      GError             **error);
 
 gboolean  mm_base_modem_has_at_port  (MMBaseModem *self);
 
@@ -165,6 +165,10 @@ gboolean mm_base_modem_get_hotplugged (MMBaseModem *self);
 void     mm_base_modem_set_valid    (MMBaseModem *self,
                                      gboolean valid);
 gboolean mm_base_modem_get_valid    (MMBaseModem *self);
+
+void     mm_base_modem_set_reprobe (MMBaseModem *self,
+                                    gboolean reprobe);
+gboolean mm_base_modem_get_reprobe (MMBaseModem *self);
 
 const gchar  *mm_base_modem_get_device  (MMBaseModem *self);
 const gchar **mm_base_modem_get_drivers (MMBaseModem *self);

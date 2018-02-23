@@ -74,8 +74,7 @@ static GParamSpec *properties[PROP_LAST];
 struct _MMPortProbePrivate {
     /* Properties */
     MMDevice *device;
-    GUdevDevice *port;
-    GUdevDevice *parent;
+    MMKernelDevice *port;
 
     /* Probing results */
     guint32 flags;
@@ -151,8 +150,8 @@ mm_port_probe_set_result_at (MMPortProbe *self,
 
     if (self->priv->is_at) {
         mm_dbg ("(%s/%s) port is AT-capable",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
 
         /* Also set as not a QCDM/QMI/MBIM port */
         self->priv->is_qcdm = FALSE;
@@ -161,8 +160,8 @@ mm_port_probe_set_result_at (MMPortProbe *self,
         self->priv->flags |= (MM_PORT_PROBE_QCDM | MM_PORT_PROBE_QMI | MM_PORT_PROBE_MBIM);
     } else {
         mm_dbg ("(%s/%s) port is not AT-capable",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
         self->priv->vendor = NULL;
         self->priv->product = NULL;
         self->priv->is_icera = FALSE;
@@ -178,14 +177,14 @@ mm_port_probe_set_result_at_vendor (MMPortProbe *self,
 {
     if (at_vendor) {
         mm_dbg ("(%s/%s) vendor probing finished",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
         self->priv->vendor = g_utf8_casefold (at_vendor, -1);
         self->priv->flags |= MM_PORT_PROBE_AT_VENDOR;
     } else {
         mm_dbg ("(%s/%s) couldn't probe for vendor string",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
         self->priv->vendor = NULL;
         self->priv->product = NULL;
         self->priv->flags |= (MM_PORT_PROBE_AT_VENDOR | MM_PORT_PROBE_AT_PRODUCT);
@@ -198,14 +197,14 @@ mm_port_probe_set_result_at_product (MMPortProbe *self,
 {
     if (at_product) {
         mm_dbg ("(%s/%s) product probing finished",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
         self->priv->product = g_utf8_casefold (at_product, -1);
         self->priv->flags |= MM_PORT_PROBE_AT_PRODUCT;
     } else {
         mm_dbg ("(%s/%s) couldn't probe for product string",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
         self->priv->product = NULL;
         self->priv->flags |= MM_PORT_PROBE_AT_PRODUCT;
     }
@@ -217,14 +216,14 @@ mm_port_probe_set_result_at_icera (MMPortProbe *self,
 {
     if (is_icera) {
         mm_dbg ("(%s/%s) Modem is Icera-based",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
         self->priv->is_icera = TRUE;
         self->priv->flags |= MM_PORT_PROBE_AT_ICERA;
     } else {
         mm_dbg ("(%s/%s) Modem is probably not Icera-based",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
         self->priv->is_icera = FALSE;
         self->priv->flags |= MM_PORT_PROBE_AT_ICERA;
     }
@@ -239,8 +238,8 @@ mm_port_probe_set_result_qcdm (MMPortProbe *self,
 
     if (self->priv->is_qcdm) {
         mm_dbg ("(%s/%s) port is QCDM-capable",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
 
         /* Also set as not an AT/QMI/MBIM port */
         self->priv->is_at = FALSE;
@@ -257,8 +256,8 @@ mm_port_probe_set_result_qcdm (MMPortProbe *self,
                               MM_PORT_PROBE_MBIM);
     } else
         mm_dbg ("(%s/%s) port is not QCDM-capable",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
 }
 
 void
@@ -270,8 +269,8 @@ mm_port_probe_set_result_qmi (MMPortProbe *self,
 
     if (self->priv->is_qmi) {
         mm_dbg ("(%s/%s) port is QMI-capable",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
 
         /* Also set as not an AT/QCDM/MBIM port */
         self->priv->is_at = FALSE;
@@ -287,8 +286,8 @@ mm_port_probe_set_result_qmi (MMPortProbe *self,
                               MM_PORT_PROBE_MBIM);
     } else
         mm_dbg ("(%s/%s) port is not QMI-capable",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
 }
 
 void
@@ -300,8 +299,8 @@ mm_port_probe_set_result_mbim (MMPortProbe *self,
 
     if (self->priv->is_mbim) {
         mm_dbg ("(%s/%s) port is MBIM-capable",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
 
         /* Also set as not an AT/QCDM/QMI port */
         self->priv->is_at = FALSE;
@@ -317,8 +316,8 @@ mm_port_probe_set_result_mbim (MMPortProbe *self,
                               MM_PORT_PROBE_QMI);
     } else
         mm_dbg ("(%s/%s) port is not MBIM-capable",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
 }
 
 /*****************************************************************************/
@@ -445,8 +444,8 @@ port_qmi_open_ready (MMPortQmi    *port_qmi,
     is_qmi = mm_port_qmi_open_finish (port_qmi, res, &error);
     if (!is_qmi) {
         mm_dbg ("(%s/%s) error checking QMI support: '%s'",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port),
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port),
                 error ? error->message : "unknown error");
         g_clear_error (&error);
     }
@@ -471,11 +470,11 @@ wdm_probe_qmi (MMPortProbe *self)
 
 #if defined WITH_QMI
     mm_dbg ("(%s/%s) probing QMI...",
-            g_udev_device_get_subsystem (self->priv->port),
-            g_udev_device_get_name (self->priv->port));
+            mm_kernel_device_get_subsystem (self->priv->port),
+            mm_kernel_device_get_name (self->priv->port));
 
     /* Create a port and try to open it */
-    ctx->port_qmi = mm_port_qmi_new (g_udev_device_get_name (self->priv->port));
+    ctx->port_qmi = mm_port_qmi_new (mm_kernel_device_get_name (self->priv->port));
     mm_port_qmi_open (ctx->port_qmi,
                       FALSE,
                       NULL,
@@ -521,8 +520,8 @@ mbim_port_open_ready (MMPortMbim   *mbim_port,
     is_mbim = mm_port_mbim_open_finish (mbim_port, res, &error);
     if (!is_mbim) {
         mm_dbg ("(%s/%s) error checking MBIM support: '%s'",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port),
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port),
                 error ? error->message : "unknown error");
         g_clear_error (&error);
     }
@@ -547,11 +546,11 @@ wdm_probe_mbim (MMPortProbe *self)
 
 #if defined WITH_MBIM
     mm_dbg ("(%s/%s) probing MBIM...",
-            g_udev_device_get_subsystem (self->priv->port),
-            g_udev_device_get_name (self->priv->port));
+            mm_kernel_device_get_subsystem (self->priv->port),
+            mm_kernel_device_get_name (self->priv->port));
 
     /* Create a port and try to open it */
-    ctx->mbim_port = mm_port_mbim_new (g_udev_device_get_name (self->priv->port));
+    ctx->mbim_port = mm_port_mbim_new (mm_kernel_device_get_name (self->priv->port));
     mm_port_mbim_open (ctx->mbim_port,
                        NULL,
                        (GAsyncReadyCallback) mbim_port_open_ready,
@@ -623,8 +622,8 @@ serial_probe_qcdm_parse_response (MMPortSerialQcdm *port,
         result = qcdm_cmd_version_info_result ((const gchar *) response->data, response->len, &err);
         if (!result) {
             mm_warn ("(%s/%s) failed to parse QCDM version info command result: %d",
-                     g_udev_device_get_subsystem (self->priv->port),
-                     g_udev_device_get_name (self->priv->port),
+                     mm_kernel_device_get_subsystem (self->priv->port),
+                     mm_kernel_device_get_name (self->priv->port),
                      err);
             retry = TRUE;
         } else {
@@ -687,8 +686,8 @@ serial_probe_qcdm (MMPortProbe *self)
         return G_SOURCE_REMOVE;
 
     mm_dbg ("(%s/%s) probing QCDM...",
-            g_udev_device_get_subsystem (self->priv->port),
-            g_udev_device_get_name (self->priv->port));
+            mm_kernel_device_get_subsystem (self->priv->port),
+            mm_kernel_device_get_name (self->priv->port));
 
     /* If open, close the AT port */
     if (ctx->serial) {
@@ -702,16 +701,21 @@ serial_probe_qcdm (MMPortProbe *self)
     }
 
     /* Open the QCDM port */
-    ctx->serial = MM_PORT_SERIAL (mm_port_serial_qcdm_new (g_udev_device_get_name (self->priv->port)));
+    ctx->serial = MM_PORT_SERIAL (mm_port_serial_qcdm_new (mm_kernel_device_get_name (self->priv->port)));
     if (!ctx->serial) {
         port_probe_task_return_error (self,
                                       g_error_new (MM_CORE_ERROR,
                                                    MM_CORE_ERROR_FAILED,
                                                    "(%s/%s) Couldn't create QCDM port",
-                                                   g_udev_device_get_subsystem (self->priv->port),
-                                                   g_udev_device_get_name (self->priv->port)));
+                                                   mm_kernel_device_get_subsystem (self->priv->port),
+                                                   mm_kernel_device_get_name (self->priv->port)));
         return G_SOURCE_REMOVE;
     }
+
+    if (mm_kernel_device_has_property (self->priv->port, "ID_MM_TTY_BAUDRATE"))
+        g_object_set (ctx->serial,
+                      MM_PORT_SERIAL_BAUD, mm_kernel_device_get_property_as_int (self->priv->port, "ID_MM_TTY_BAUDRATE"),
+                      NULL);
 
     /* Try to open the port */
     if (!mm_port_serial_open (ctx->serial, &error)) {
@@ -719,8 +723,8 @@ serial_probe_qcdm (MMPortProbe *self)
                                       g_error_new (MM_SERIAL_ERROR,
                                                    MM_SERIAL_ERROR_OPEN_FAILED,
                                                    "(%s/%s) Failed to open QCDM port: %s",
-                                                   g_udev_device_get_subsystem (self->priv->port),
-                                                   g_udev_device_get_name (self->priv->port),
+                                                   mm_kernel_device_get_subsystem (self->priv->port),
+                                                   mm_kernel_device_get_name (self->priv->port),
                                                    (error ? error->message : "unknown error")));
         g_clear_error (&error);
         return G_SOURCE_REMOVE;
@@ -739,9 +743,9 @@ serial_probe_qcdm (MMPortProbe *self)
         port_probe_task_return_error (self,
                                       g_error_new (MM_SERIAL_ERROR,
                                                    MM_SERIAL_ERROR_OPEN_FAILED,
-                                                   "(%s/%s) Failed to create QCDM versin info command",
-                                                   g_udev_device_get_subsystem (self->priv->port),
-                                                   g_udev_device_get_name (self->priv->port)));
+                                                   "(%s/%s) Failed to create QCDM version info command",
+                                                   mm_kernel_device_get_subsystem (self->priv->port),
+                                                   mm_kernel_device_get_name (self->priv->port)));
         return G_SOURCE_REMOVE;
     }
     verinfo->len = len + 1;
@@ -899,8 +903,8 @@ serial_probe_at_parse_response (MMPortSerialAt *port,
     /* If AT probing cancelled, end this partial probing */
     if (g_cancellable_is_cancelled (ctx->at_probing_cancellable)) {
         mm_dbg ("(%s/%s) no need to keep on probing the port for AT support",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
         ctx->at_result_processor (self, NULL);
         serial_probe_schedule (self);
         return;
@@ -920,8 +924,8 @@ serial_probe_at_parse_response (MMPortSerialAt *port,
                                           g_error_new (MM_CORE_ERROR,
                                                        MM_CORE_ERROR_UNSUPPORTED,
                                                        "(%s/%s) error while probing AT features: %s",
-                                                       g_udev_device_get_subsystem (self->priv->port),
-                                                       g_udev_device_get_name (self->priv->port),
+                                                       mm_kernel_device_get_subsystem (self->priv->port),
+                                                       mm_kernel_device_get_name (self->priv->port),
                                                        result_error->message));
             goto out;
         }
@@ -942,8 +946,8 @@ serial_probe_at_parse_response (MMPortSerialAt *port,
             ctx->source_id = g_idle_add ((GSourceFunc) serial_probe_at, self);
         else {
             mm_dbg ("(%s/%s) re-scheduling next command in probing group in %u seconds...",
-                    g_udev_device_get_subsystem (self->priv->port),
-                    g_udev_device_get_name (self->priv->port),
+                    mm_kernel_device_get_subsystem (self->priv->port),
+                    mm_kernel_device_get_name (self->priv->port),
                     ctx->at_commands_wait_secs);
             ctx->source_id = g_timeout_add_seconds (ctx->at_commands_wait_secs, (GSourceFunc) serial_probe_at, self);
         }
@@ -979,8 +983,8 @@ serial_probe_at (MMPortProbe *self)
     /* If AT probing cancelled, end this partial probing */
     if (g_cancellable_is_cancelled (ctx->at_probing_cancellable)) {
         mm_dbg ("(%s/%s) no need to launch probing for AT support",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
         ctx->at_result_processor (self, NULL);
         serial_probe_schedule (self);
         return G_SOURCE_REMOVE;
@@ -1156,8 +1160,8 @@ serial_buffer_full (MMPortSerial *serial,
     ctx = g_task_get_task_data (self->priv->task);
 
     mm_dbg ("(%s/%s) serial buffer full",
-            g_udev_device_get_subsystem (self->priv->port),
-            g_udev_device_get_name (self->priv->port));
+            mm_kernel_device_get_subsystem (self->priv->port),
+            mm_kernel_device_get_name (self->priv->port));
     /* Don't explicitly close the AT port, just end the AT probing
      * (or custom init probing) */
     mm_port_probe_set_result_at (self, FALSE);
@@ -1200,26 +1204,31 @@ serial_open_at (MMPortProbe *self)
         gpointer parser;
         MMPortSubsys subsys = MM_PORT_SUBSYS_TTY;
 
-        if (g_str_has_prefix (g_udev_device_get_subsystem (self->priv->port), "usb"))
+        if (g_str_has_prefix (mm_kernel_device_get_subsystem (self->priv->port), "usb"))
             subsys = MM_PORT_SUBSYS_USB;
 
-        ctx->serial = MM_PORT_SERIAL (mm_port_serial_at_new (g_udev_device_get_name (self->priv->port), subsys));
+        ctx->serial = MM_PORT_SERIAL (mm_port_serial_at_new (mm_kernel_device_get_name (self->priv->port), subsys));
         if (!ctx->serial) {
             port_probe_task_return_error (self,
                                           g_error_new (MM_CORE_ERROR,
                                                        MM_CORE_ERROR_FAILED,
                                                        "(%s/%s) couldn't create AT port",
-                                                       g_udev_device_get_subsystem (self->priv->port),
-                                                       g_udev_device_get_name (self->priv->port)));
+                                                       mm_kernel_device_get_subsystem (self->priv->port),
+                                                       mm_kernel_device_get_name (self->priv->port)));
             return G_SOURCE_REMOVE;
         }
 
         g_object_set (ctx->serial,
                       MM_PORT_SERIAL_SPEW_CONTROL,   TRUE,
-                      MM_PORT_SERIAL_SEND_DELAY,     (subsys == MM_PORT_SUBSYS_TTY ? ctx->at_send_delay : 0),
+                      MM_PORT_SERIAL_SEND_DELAY,     (guint64)(subsys == MM_PORT_SUBSYS_TTY ? ctx->at_send_delay : 0),
                       MM_PORT_SERIAL_AT_REMOVE_ECHO, ctx->at_remove_echo,
                       MM_PORT_SERIAL_AT_SEND_LF,     ctx->at_send_lf,
                       NULL);
+
+        if (mm_kernel_device_has_property (self->priv->port, "ID_MM_TTY_BAUDRATE"))
+            g_object_set (ctx->serial,
+                          MM_PORT_SERIAL_BAUD, mm_kernel_device_get_property_as_int (self->priv->port, "ID_MM_TTY_BAUDRATE"),
+                          NULL);
 
         parser = mm_serial_parser_v1_new ();
         mm_serial_parser_v1_add_filter (parser,
@@ -1240,8 +1249,8 @@ serial_open_at (MMPortProbe *self)
                                           g_error_new (MM_CORE_ERROR,
                                                        MM_CORE_ERROR_FAILED,
                                                        "(%s/%s) failed to open port after 4 tries",
-                                                       g_udev_device_get_subsystem (self->priv->port),
-                                                       g_udev_device_get_name (self->priv->port)));
+                                                       mm_kernel_device_get_subsystem (self->priv->port),
+                                                       mm_kernel_device_get_name (self->priv->port)));
             g_clear_error (&error);
             return G_SOURCE_REMOVE;
         }
@@ -1257,8 +1266,8 @@ serial_open_at (MMPortProbe *self)
                                       g_error_new (MM_SERIAL_ERROR,
                                                    MM_SERIAL_ERROR_OPEN_FAILED,
                                                    "(%s/%s) failed to open port: %s",
-                                                   g_udev_device_get_subsystem (self->priv->port),
-                                                   g_udev_device_get_name (self->priv->port),
+                                                   mm_kernel_device_get_subsystem (self->priv->port),
+                                                   mm_kernel_device_get_name (self->priv->port),
                                                    (error ? error->message : "unknown error")));
         g_clear_error (&error);
         return G_SOURCE_REMOVE;
@@ -1276,10 +1285,12 @@ serial_open_at (MMPortProbe *self)
 }
 
 static void
-at_cancellable_cancel (GCancellable *main_cancellable,
-                       GCancellable *at_cancellable)
+at_cancellable_cancel (GCancellable        *cancellable,
+                       PortProbeRunContext *ctx)
 {
-    g_cancellable_cancel (at_cancellable);
+    /* Avoid trying to disconnect cancellable on the handler, or we'll deadlock */
+    ctx->at_probing_cancellable_linked = 0;
+    g_cancellable_cancel (ctx->at_probing_cancellable);
 }
 
 gboolean
@@ -1297,8 +1308,8 @@ mm_port_probe_run_cancel_at_probing (MMPortProbe *self)
         return FALSE;
 
     mm_dbg ("(%s/%s) requested to cancel all AT probing",
-            g_udev_device_get_subsystem (self->priv->port),
-            g_udev_device_get_name (self->priv->port));
+            mm_kernel_device_get_subsystem (self->priv->port),
+            mm_kernel_device_get_name (self->priv->port));
     g_cancellable_cancel (ctx->at_probing_cancellable);
     return TRUE;
 }
@@ -1355,8 +1366,8 @@ mm_port_probe_run (MMPortProbe                *self,
     /* If we're told to completely ignore the port, don't do any probing */
     if (self->priv->is_ignored) {
         mm_dbg ("(%s/%s) port probing finished: skipping for blacklisted port",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
         port_probe_task_return_boolean (self, TRUE);
         return;
     }
@@ -1372,8 +1383,8 @@ mm_port_probe_run (MMPortProbe                *self,
     /* All requested probings already available? If so, we're done */
     if (!ctx->flags) {
         mm_dbg ("(%s/%s) port probing finished: no more probings needed",
-                g_udev_device_get_subsystem (self->priv->port),
-                g_udev_device_get_name (self->priv->port));
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
         port_probe_task_return_boolean (self, TRUE);
         return;
     }
@@ -1381,8 +1392,8 @@ mm_port_probe_run (MMPortProbe                *self,
     /* Log the probes scheduled to be run */
     probe_list_str = mm_port_probe_flag_build_string_from_mask (ctx->flags);
     mm_dbg ("(%s/%s) launching port probing: '%s'",
-            g_udev_device_get_subsystem (self->priv->port),
-            g_udev_device_get_name (self->priv->port),
+            mm_kernel_device_get_subsystem (self->priv->port),
+            mm_kernel_device_get_name (self->priv->port),
             probe_list_str);
     g_free (probe_list_str);
 
@@ -1396,8 +1407,8 @@ mm_port_probe_run (MMPortProbe                *self,
         if (cancellable)
             ctx->at_probing_cancellable_linked = g_cancellable_connect (cancellable,
                                                                         (GCallback) at_cancellable_cancel,
-                                                                        g_object_ref (ctx->at_probing_cancellable),
-                                                                        (GDestroyNotify) g_object_unref);
+                                                                        ctx,
+                                                                        NULL);
         ctx->source_id = g_idle_add ((GSourceFunc) serial_open_at, self);
         return;
     }
@@ -1422,12 +1433,10 @@ gboolean
 mm_port_probe_is_at (MMPortProbe *self)
 {
     const gchar *subsys;
-    const gchar *name;
 
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), FALSE);
 
-    subsys = g_udev_device_get_subsystem (self->priv->port);
-    name = g_udev_device_get_name (self->priv->port);
+    subsys = mm_kernel_device_get_subsystem (self->priv->port);
     if (g_str_equal (subsys, "net"))
         return FALSE;
 
@@ -1461,8 +1470,8 @@ mm_port_probe_is_qcdm (MMPortProbe *self)
 
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), FALSE);
 
-    subsys = g_udev_device_get_subsystem (self->priv->port);
-    name = g_udev_device_get_name (self->priv->port);
+    subsys = mm_kernel_device_get_subsystem (self->priv->port);
+    name = mm_kernel_device_get_name (self->priv->port);
     if (g_str_equal (subsys, "net") ||
         (g_str_has_prefix (subsys, "usb") &&
          g_str_has_prefix (name, "cdc-wdm")))
@@ -1481,8 +1490,8 @@ mm_port_probe_is_qmi (MMPortProbe *self)
 
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), FALSE);
 
-    subsys = g_udev_device_get_subsystem (self->priv->port);
-    name = g_udev_device_get_name (self->priv->port);
+    subsys = mm_kernel_device_get_subsystem (self->priv->port);
+    name = mm_kernel_device_get_name (self->priv->port);
     if (!g_str_has_prefix (subsys, "usb") ||
         !name ||
         !g_str_has_prefix (name, "cdc-wdm"))
@@ -1515,8 +1524,8 @@ mm_port_probe_is_mbim (MMPortProbe *self)
 
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), FALSE);
 
-    subsys = g_udev_device_get_subsystem (self->priv->port);
-    name = g_udev_device_get_name (self->priv->port);
+    subsys = mm_kernel_device_get_subsystem (self->priv->port);
+    name = mm_kernel_device_get_name (self->priv->port);
     if (!g_str_has_prefix (subsys, "usb") ||
         !name ||
         !g_str_has_prefix (name, "cdc-wdm"))
@@ -1549,8 +1558,8 @@ mm_port_probe_get_port_type (MMPortProbe *self)
 
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), FALSE);
 
-    subsys = g_udev_device_get_subsystem (self->priv->port);
-    name = g_udev_device_get_name (self->priv->port);
+    subsys = mm_kernel_device_get_subsystem (self->priv->port);
+    name = mm_kernel_device_get_name (self->priv->port);
 
     if (g_str_equal (subsys, "net"))
         return MM_PORT_TYPE_NET;
@@ -1596,7 +1605,7 @@ mm_port_probe_get_device (MMPortProbe *self)
     return MM_DEVICE (g_object_ref (self->priv->device));
 }
 
-GUdevDevice *
+MMKernelDevice *
 mm_port_probe_peek_port (MMPortProbe *self)
 {
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), NULL);
@@ -1604,12 +1613,12 @@ mm_port_probe_peek_port (MMPortProbe *self)
     return self->priv->port;
 };
 
-GUdevDevice *
+MMKernelDevice *
 mm_port_probe_get_port (MMPortProbe *self)
 {
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), NULL);
 
-    return G_UDEV_DEVICE (g_object_ref (self->priv->port));
+    return MM_KERNEL_DEVICE (g_object_ref (self->priv->port));
 };
 
 const gchar *
@@ -1620,8 +1629,8 @@ mm_port_probe_get_vendor (MMPortProbe *self)
 
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), FALSE);
 
-    subsys = g_udev_device_get_subsystem (self->priv->port);
-    name = g_udev_device_get_name (self->priv->port);
+    subsys = mm_kernel_device_get_subsystem (self->priv->port);
+    name = mm_kernel_device_get_name (self->priv->port);
     if (g_str_equal (subsys, "net") ||
         (g_str_has_prefix (subsys, "usb") &&
          g_str_has_prefix (name, "cdc-wdm")))
@@ -1640,8 +1649,8 @@ mm_port_probe_get_product (MMPortProbe *self)
 
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), FALSE);
 
-    subsys = g_udev_device_get_subsystem (self->priv->port);
-    name = g_udev_device_get_name (self->priv->port);
+    subsys = mm_kernel_device_get_subsystem (self->priv->port);
+    name = mm_kernel_device_get_name (self->priv->port);
     if (g_str_equal (subsys, "net") ||
         (g_str_has_prefix (subsys, "usb") &&
          g_str_has_prefix (name, "cdc-wdm")))
@@ -1657,7 +1666,7 @@ mm_port_probe_is_icera (MMPortProbe *self)
 {
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), FALSE);
 
-    if (g_str_equal (g_udev_device_get_subsystem (self->priv->port), "net"))
+    if (g_str_equal (mm_kernel_device_get_subsystem (self->priv->port), "net"))
         return FALSE;
 
     return (self->priv->flags & MM_PORT_PROBE_AT_ICERA ?
@@ -1691,7 +1700,7 @@ mm_port_probe_get_port_name (MMPortProbe *self)
 {
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), NULL);
 
-    return g_udev_device_get_name (self->priv->port);
+    return mm_kernel_device_get_name (self->priv->port);
 }
 
 const gchar *
@@ -1699,22 +1708,14 @@ mm_port_probe_get_port_subsys (MMPortProbe *self)
 {
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), NULL);
 
-    return g_udev_device_get_subsystem (self->priv->port);
-}
-
-const gchar *
-mm_port_probe_get_parent_path (MMPortProbe *self)
-{
-    g_return_val_if_fail (MM_IS_PORT_PROBE (self), NULL);
-
-    return (self->priv->parent ? g_udev_device_get_sysfs_path (self->priv->parent) : NULL);
+    return mm_kernel_device_get_subsystem (self->priv->port);
 }
 
 /*****************************************************************************/
 
 MMPortProbe *
-mm_port_probe_new (MMDevice *device,
-                   GUdevDevice *port)
+mm_port_probe_new (MMDevice       *device,
+                   MMKernelDevice *port)
 {
     return MM_PORT_PROBE (g_object_new (MM_TYPE_PORT_PROBE,
                                         MM_PORT_PROBE_DEVICE, device,
@@ -1746,8 +1747,7 @@ set_property (GObject *object,
     case PROP_PORT:
         /* construct only */
         self->priv->port = g_value_dup_object (value);
-        self->priv->parent = g_udev_device_get_parent (self->priv->port);
-        self->priv->is_ignored = g_udev_device_get_property_as_boolean (self->priv->port, "ID_MM_PORT_IGNORE");
+        self->priv->is_ignored = mm_kernel_device_get_property_as_boolean (self->priv->port, "ID_MM_PORT_IGNORE");
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1798,7 +1798,6 @@ dispose (GObject *object)
     /* We didn't get a reference to the device */
     self->priv->device = NULL;
 
-    g_clear_object (&self->priv->parent);
     g_clear_object (&self->priv->port);
 
     G_OBJECT_CLASS (mm_port_probe_parent_class)->dispose (object);
@@ -1828,8 +1827,8 @@ mm_port_probe_class_init (MMPortProbeClass *klass)
     properties[PROP_PORT] =
         g_param_spec_object (MM_PORT_PROBE_PORT,
                              "Port",
-                             "UDev device object of the port",
-                             G_UDEV_TYPE_DEVICE,
+                             "kernel device object of the port",
+                             MM_TYPE_KERNEL_DEVICE,
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_PORT, properties[PROP_PORT]);
 }
