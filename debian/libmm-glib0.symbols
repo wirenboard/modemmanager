@@ -145,6 +145,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_cdma_manual_activation_properties_set_spc@Base 1.2.0
  mm_common_bands_array_to_variant@Base 0.7.991
  mm_common_bands_garray_cmp@Base 0.7.991
+ mm_common_bands_garray_sort@Base 1.7.990
  mm_common_bands_garray_to_variant@Base 0.7.991
  mm_common_bands_variant_to_array@Base 0.7.991
  mm_common_bands_variant_to_garray@Base 0.7.991
@@ -170,6 +171,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_common_get_call_state_from_string@Base 1.5.993
  mm_common_get_call_state_reason_from_string@Base 1.5.993
  mm_common_get_capabilities_from_string@Base 0.7.991
+ mm_common_get_eps_ue_mode_operation_from_string@Base 1.7.990
  mm_common_get_ip_type_from_string@Base 0.7.991
  mm_common_get_modes_from_string@Base 0.7.991
  mm_common_get_oma_features_from_string@Base 1.2.0
@@ -303,12 +305,17 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem3gpp_call_scan@Base 0.7.991
  mm_gdbus_modem3gpp_call_scan_finish@Base 0.7.991
  mm_gdbus_modem3gpp_call_scan_sync@Base 0.7.991
+ mm_gdbus_modem3gpp_call_set_eps_ue_mode_operation@Base 1.7.990
+ mm_gdbus_modem3gpp_call_set_eps_ue_mode_operation_finish@Base 1.7.990
+ mm_gdbus_modem3gpp_call_set_eps_ue_mode_operation_sync@Base 1.7.990
  mm_gdbus_modem3gpp_complete_register@Base 0.7.991
  mm_gdbus_modem3gpp_complete_scan@Base 0.7.991
+ mm_gdbus_modem3gpp_complete_set_eps_ue_mode_operation@Base 1.7.990
  mm_gdbus_modem3gpp_dup_imei@Base 0.7.991
  mm_gdbus_modem3gpp_dup_operator_code@Base 0.7.991
  mm_gdbus_modem3gpp_dup_operator_name@Base 0.7.991
  mm_gdbus_modem3gpp_get_enabled_facility_locks@Base 0.7.991
+ mm_gdbus_modem3gpp_get_eps_ue_mode_operation@Base 1.7.990
  mm_gdbus_modem3gpp_get_imei@Base 0.7.991
  mm_gdbus_modem3gpp_get_operator_code@Base 0.7.991
  mm_gdbus_modem3gpp_get_operator_name@Base 0.7.991
@@ -325,6 +332,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem3gpp_proxy_new_for_bus_sync@Base 0.7.991
  mm_gdbus_modem3gpp_proxy_new_sync@Base 0.7.991
  mm_gdbus_modem3gpp_set_enabled_facility_locks@Base 0.7.991
+ mm_gdbus_modem3gpp_set_eps_ue_mode_operation@Base 1.7.990
  mm_gdbus_modem3gpp_set_imei@Base 0.7.991
  mm_gdbus_modem3gpp_set_operator_code@Base 0.7.991
  mm_gdbus_modem3gpp_set_operator_name@Base 0.7.991
@@ -452,6 +460,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_dup_device_identifier@Base 0.7.991
  mm_gdbus_modem_dup_drivers@Base 0.7.991
  mm_gdbus_modem_dup_equipment_identifier@Base 0.7.991
+ mm_gdbus_modem_dup_hardware_revision@Base 1.7.990
  mm_gdbus_modem_dup_manufacturer@Base 0.7.991
  mm_gdbus_modem_dup_model@Base 0.7.991
  mm_gdbus_modem_dup_own_numbers@Base 0.7.991
@@ -495,6 +504,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_get_device_identifier@Base 0.7.991
  mm_gdbus_modem_get_drivers@Base 0.7.991
  mm_gdbus_modem_get_equipment_identifier@Base 0.7.991
+ mm_gdbus_modem_get_hardware_revision@Base 1.7.990
  mm_gdbus_modem_get_manufacturer@Base 0.7.991
  mm_gdbus_modem_get_max_active_bearers@Base 0.7.991
  mm_gdbus_modem_get_max_bearers@Base 0.7.991
@@ -648,6 +658,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_set_device_identifier@Base 0.7.991
  mm_gdbus_modem_set_drivers@Base 0.7.991
  mm_gdbus_modem_set_equipment_identifier@Base 0.7.991
+ mm_gdbus_modem_set_hardware_revision@Base 1.7.990
  mm_gdbus_modem_set_manufacturer@Base 0.7.991
  mm_gdbus_modem_set_max_active_bearers@Base 0.7.991
  mm_gdbus_modem_set_max_bearers@Base 0.7.991
@@ -825,12 +836,16 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_object_skeleton_set_modem_simple@Base 0.7.991
  mm_gdbus_object_skeleton_set_modem_time@Base 0.7.991
  mm_gdbus_object_skeleton_set_modem_voice@Base 1.5.993
+ mm_gdbus_org_freedesktop_modem_manager1_call_report_kernel_event@Base 1.7.990
+ mm_gdbus_org_freedesktop_modem_manager1_call_report_kernel_event_finish@Base 1.7.990
+ mm_gdbus_org_freedesktop_modem_manager1_call_report_kernel_event_sync@Base 1.7.990
  mm_gdbus_org_freedesktop_modem_manager1_call_scan_devices@Base 0.7.991
  mm_gdbus_org_freedesktop_modem_manager1_call_scan_devices_finish@Base 0.7.991
  mm_gdbus_org_freedesktop_modem_manager1_call_scan_devices_sync@Base 0.7.991
  mm_gdbus_org_freedesktop_modem_manager1_call_set_logging@Base 0.7.991
  mm_gdbus_org_freedesktop_modem_manager1_call_set_logging_finish@Base 0.7.991
  mm_gdbus_org_freedesktop_modem_manager1_call_set_logging_sync@Base 0.7.991
+ mm_gdbus_org_freedesktop_modem_manager1_complete_report_kernel_event@Base 1.7.990
  mm_gdbus_org_freedesktop_modem_manager1_complete_scan_devices@Base 0.7.991
  mm_gdbus_org_freedesktop_modem_manager1_complete_set_logging@Base 0.7.991
  mm_gdbus_org_freedesktop_modem_manager1_get_type@Base 0.7.991
@@ -949,8 +964,23 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_get_int_from_match_info@Base 0.7.991
  mm_get_int_from_str@Base 0.7.991
  mm_get_string_unquoted_from_match_info@Base 0.7.991
+ mm_get_uint_from_hex_str@Base 1.7.990
  mm_get_uint_from_match_info@Base 0.7.991
  mm_get_uint_from_str@Base 0.7.991
+ mm_kernel_event_properties_dup@Base 1.7.990
+ mm_kernel_event_properties_get_action@Base 1.7.990
+ mm_kernel_event_properties_get_dictionary@Base 1.7.990
+ mm_kernel_event_properties_get_name@Base 1.7.990
+ mm_kernel_event_properties_get_subsystem@Base 1.7.990
+ mm_kernel_event_properties_get_type@Base 1.7.990
+ mm_kernel_event_properties_get_uid@Base 1.7.990
+ mm_kernel_event_properties_new@Base 1.7.990
+ mm_kernel_event_properties_new_from_dictionary@Base 1.7.990
+ mm_kernel_event_properties_new_from_string@Base 1.7.990
+ mm_kernel_event_properties_set_action@Base 1.7.990
+ mm_kernel_event_properties_set_name@Base 1.7.990
+ mm_kernel_event_properties_set_subsystem@Base 1.7.990
+ mm_kernel_event_properties_set_uid@Base 1.7.990
  mm_location_3gpp_get_cell_id@Base 0.7.991
  mm_location_3gpp_get_location_area_code@Base 0.7.991
  mm_location_3gpp_get_mobile_country_code@Base 0.7.991
@@ -992,6 +1022,9 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_manager_new_finish@Base 0.7.991
  mm_manager_new_sync@Base 0.7.991
  mm_manager_peek_proxy@Base 0.7.991
+ mm_manager_report_kernel_event@Base 1.7.990
+ mm_manager_report_kernel_event_finish@Base 1.7.990
+ mm_manager_report_kernel_event_sync@Base 1.7.990
  mm_manager_scan_devices@Base 0.7.991
  mm_manager_scan_devices_finish@Base 0.7.991
  mm_manager_scan_devices_sync@Base 0.7.991
@@ -1006,9 +1039,12 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_3gpp_dup_operator_code@Base 0.7.991
  mm_modem_3gpp_dup_operator_name@Base 0.7.991
  mm_modem_3gpp_dup_path@Base 0.7.991
+ mm_modem_3gpp_eps_ue_mode_operation_get_string@Base 1.7.990
+ mm_modem_3gpp_eps_ue_mode_operation_get_type@Base 1.7.990
  mm_modem_3gpp_facility_build_string_from_mask@Base 0.7.991
  mm_modem_3gpp_facility_get_type@Base 0.7.991
  mm_modem_3gpp_get_enabled_facility_locks@Base 0.7.991
+ mm_modem_3gpp_get_eps_ue_mode_operation@Base 1.7.990
  mm_modem_3gpp_get_imei@Base 0.7.991
  mm_modem_3gpp_get_operator_code@Base 0.7.991
  mm_modem_3gpp_get_operator_name@Base 0.7.991
@@ -1032,6 +1068,9 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_3gpp_scan@Base 0.7.991
  mm_modem_3gpp_scan_finish@Base 0.7.991
  mm_modem_3gpp_scan_sync@Base 0.7.991
+ mm_modem_3gpp_set_eps_ue_mode_operation@Base 1.7.990
+ mm_modem_3gpp_set_eps_ue_mode_operation_finish@Base 1.7.990
+ mm_modem_3gpp_set_eps_ue_mode_operation_sync@Base 1.7.990
  mm_modem_3gpp_subscription_state_get_string@Base 1.2.0
  mm_modem_3gpp_subscription_state_get_type@Base 1.2.0
  mm_modem_3gpp_ussd_cancel@Base 0.7.991
@@ -1102,6 +1141,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_dup_device_identifier@Base 0.7.991
  mm_modem_dup_drivers@Base 0.7.991
  mm_modem_dup_equipment_identifier@Base 0.7.991
+ mm_modem_dup_hardware_revision@Base 1.7.990
  mm_modem_dup_manufacturer@Base 0.7.991
  mm_modem_dup_model@Base 0.7.991
  mm_modem_dup_own_numbers@Base 0.7.991
@@ -1134,6 +1174,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_get_device_identifier@Base 0.7.991
  mm_modem_get_drivers@Base 0.7.991
  mm_modem_get_equipment_identifier@Base 0.7.991
+ mm_modem_get_hardware_revision@Base 1.7.990
  mm_modem_get_manufacturer@Base 0.7.991
  mm_modem_get_max_active_bearers@Base 0.7.991
  mm_modem_get_max_bearers@Base 0.7.991

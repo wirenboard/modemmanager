@@ -11,6 +11,7 @@ modemmanager (1.7.990-1) UNRELEASED; urgency=medium
     - Drop extra stanza for libwmc; it really is only GPL2, not GPL2+.
   * debian/rules: set DPKG_GENSYMBOLS_CHECK_LEVEL=4; more verbose when there
     are added/changed symbols.
+  * debian/libmm-glib0.symbols: update symbols for new release.
 
  -- Mathieu Trudel-Lapierre <cyphermox@ubuntu.com>  Fri, 23 Feb 2018 09:48:39 -0500
 
