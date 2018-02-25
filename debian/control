@@ -1,7 +1,7 @@
 Source: modemmanager
 Section: net
 Priority: optional
-Maintainer: Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>
+Maintainer: Mathieu Trudel-Lapierre <mathieu.tl@gmail.com>
 Build-Depends: debhelper (>= 10),
                automake,
                libtool,
