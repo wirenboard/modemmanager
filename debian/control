@@ -20,8 +20,8 @@ Build-Depends: debhelper (>= 10),
                valac (>= 0.22),
                dbus
 Standards-Version: 3.9.8
-Vcs-Git: https://anonscm.debian.org/git/collab-maint/modemmanager.git
-Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/modemmanager.git
+Vcs-Git: https://salsa.debian.org/cyphermox-guest/modemmanager.git
+Vcs-Browser: https://salsa.debian.org/cyphermox-guest/modemmanager.git
 Homepage: https://www.freedesktop.org/wiki/Software/ModemManager/
 
 Package: modemmanager
