@@ -1,4 +1,4 @@
-modemmanager (1.7.990-1) UNRELEASED; urgency=medium
+modemmanager (1.7.990-1) unstable; urgency=medium
 
   * New upstream version 1.7.990.
   * debian/control: Bump libqmi-glib-dev and libmbim-glib-dev Depends to new
@@ -17,7 +17,7 @@ modemmanager (1.7.990-1) UNRELEASED; urgency=medium
     that are not modems, and potentially interfering with RNGs, braille, etc.
     (Closes: #683839)
 
- -- Mathieu Trudel-Lapierre <cyphermox@ubuntu.com>  Fri, 23 Feb 2018 09:48:39 -0500
+ -- Mathieu Trudel-Lapierre <mathieu.tl@gmail.com>  Thu, 01 Mar 2018 09:20:02 -0500
 
 modemmanager (1.6.8-2) unstable; urgency=medium
 
