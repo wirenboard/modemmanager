@@ -12,6 +12,10 @@ modemmanager (1.7.990-1) UNRELEASED; urgency=medium
   * debian/rules: set DPKG_GENSYMBOLS_CHECK_LEVEL=4; more verbose when there
     are added/changed symbols.
   * debian/libmm-glib0.symbols: update symbols for new release.
+  * debian/patches/default_strict_probing_policy.patch: set the filtering
+    policy for probing to 'strict' by default: this will avoid probing devices
+    that are not modems, and potentially interfering with RNGs, braille, etc.
+    (Closes: #683839)
 
  -- Mathieu Trudel-Lapierre <cyphermox@ubuntu.com>  Fri, 23 Feb 2018 09:48:39 -0500
 
