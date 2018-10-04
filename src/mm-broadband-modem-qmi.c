@@ -3114,7 +3114,7 @@ dms_set_operating_mode_ready (QmiClientDms *client,
          * Some new devices, like the Dell DW5770, will return an internal error when
          * trying to bring the power mode to online.
          *
-         * Other devices, like some rebranded EM7455 modules, will return a "invalid
+         * Other devices, like some rebranded EM7455 modules, will return an "invalid
          * transition" instead when trying to bring the power mode to online.
          *
          * We can avoid this by sending the magic "DMS Set FCC Auth" message before
@@ -3139,6 +3139,8 @@ dms_set_operating_mode_ready (QmiClientDms *client,
         set_operating_mode_context_complete_and_free (ctx);
         return;
     }
+
+    qmi_message_dms_set_operating_mode_output_unref (output);
 
     /* Good! we're done, go to last step */
     ctx->step = SET_OPERATING_MODE_STEP_LAST;
@@ -3487,6 +3489,7 @@ modem_factory_reset (MMIfaceModem *self,
                                              NULL,
                                              (GAsyncReadyCallback)dms_restore_factory_defaults_ready,
                                              result);
+    qmi_message_dms_restore_factory_defaults_input_unref (input);
 }
 
 /*****************************************************************************/
@@ -4744,6 +4747,8 @@ common_process_serving_system_3gpp (MMBroadbandModemQmi *self,
     /* Report new registration states */
     mm_iface_modem_3gpp_update_cs_registration_state (MM_IFACE_MODEM_3GPP (self), mm_cs_registration_state);
     mm_iface_modem_3gpp_update_ps_registration_state (MM_IFACE_MODEM_3GPP (self), mm_ps_registration_state);
+    if (mm_access_technologies & MM_MODEM_ACCESS_TECHNOLOGY_LTE)
+        mm_iface_modem_3gpp_update_eps_registration_state (MM_IFACE_MODEM_3GPP (self), mm_ps_registration_state);
 
     /* Get 3GPP location LAC and CI */
     lac = 0;
@@ -5199,6 +5204,7 @@ common_process_system_info_3gpp (MMBroadbandModemQmi *self,
     guint16 lac;
     guint32 cid;
     gchar *operator_id;
+    gboolean has_lte_info;
 
     ps_registration_state = MM_MODEM_3GPP_REGISTRATION_STATE_UNKNOWN;
     cs_registration_state = MM_MODEM_3GPP_REGISTRATION_STATE_UNKNOWN;
@@ -5210,12 +5216,13 @@ common_process_system_info_3gpp (MMBroadbandModemQmi *self,
      *   LTE > WCDMA > GSM
      * The first one giving results will be the one reported.
      */
-    if (!process_lte_info (response_output, indication_output,
-                           &cs_registration_state,
-                           &ps_registration_state,
-                           &lac,
-                           &cid,
-                           &operator_id) &&
+    has_lte_info = process_lte_info (response_output, indication_output,
+                                     &cs_registration_state,
+                                     &ps_registration_state,
+                                     &lac,
+                                     &cid,
+                                     &operator_id);
+    if (!has_lte_info &&
         !process_wcdma_info (response_output, indication_output,
                              &cs_registration_state,
                              &ps_registration_state,
@@ -5240,6 +5247,8 @@ common_process_system_info_3gpp (MMBroadbandModemQmi *self,
     /* Report new registration states */
     mm_iface_modem_3gpp_update_cs_registration_state (MM_IFACE_MODEM_3GPP (self), cs_registration_state);
     mm_iface_modem_3gpp_update_ps_registration_state (MM_IFACE_MODEM_3GPP (self), ps_registration_state);
+    if (has_lte_info)
+        mm_iface_modem_3gpp_update_eps_registration_state (MM_IFACE_MODEM_3GPP (self), ps_registration_state);
     mm_iface_modem_3gpp_update_location (MM_IFACE_MODEM_3GPP (self), lac, cid);
 }
 

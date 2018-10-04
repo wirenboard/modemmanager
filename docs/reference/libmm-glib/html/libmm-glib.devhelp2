@@ -7,7 +7,7 @@
       </sub>
       <sub name="The Manager object" link="ch02.html">
         <sub name="MMManager" link="MMManager.html"/>
-        <sub name="MMKernelEventProperties" link="libmm-glib-MMKernelEventProperties.html"/>
+        <sub name="MMKernelEventProperties" link="MMKernelEventProperties.html"/>
       </sub>
       <sub name="The Modem object" link="ch03.html">
         <sub name="MMObject" link="MMObject.html"/>
@@ -57,7 +57,7 @@
         <sub name="MMBearer" link="MMBearer.html"/>
         <sub name="MMBearerProperties" link="MMBearerProperties.html"/>
         <sub name="MMBearerIpConfig" link="MMBearerIpConfig.html"/>
-        <sub name="MMBearerStats" link="libmm-glib-MMBearerStats.html"/>
+        <sub name="MMBearerStats" link="MMBearerStats.html"/>
       </sub>
       <sub name="The SIM object" link="ch05.html">
         <sub name="MMSim" link="MMSim.html"/>
@@ -188,16 +188,16 @@
     <keyword type="function" name="mm_manager_report_kernel_event_finish ()" link="MMManager.html#mm-manager-report-kernel-event-finish"/>
     <keyword type="function" name="mm_manager_report_kernel_event_sync ()" link="MMManager.html#mm-manager-report-kernel-event-sync"/>
     <keyword type="struct" name="struct MMManager" link="MMManager.html#MMManager-struct"/>
-    <keyword type="function" name="mm_kernel_event_properties_new ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-new"/>
-    <keyword type="function" name="mm_kernel_event_properties_get_action ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-get-action"/>
-    <keyword type="function" name="mm_kernel_event_properties_set_action ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-set-action"/>
-    <keyword type="function" name="mm_kernel_event_properties_get_name ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-get-name"/>
-    <keyword type="function" name="mm_kernel_event_properties_set_name ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-set-name"/>
-    <keyword type="function" name="mm_kernel_event_properties_get_subsystem ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-get-subsystem"/>
-    <keyword type="function" name="mm_kernel_event_properties_set_subsystem ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-set-subsystem"/>
-    <keyword type="function" name="mm_kernel_event_properties_get_uid ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-get-uid"/>
-    <keyword type="function" name="mm_kernel_event_properties_set_uid ()" link="libmm-glib-MMKernelEventProperties.html#mm-kernel-event-properties-set-uid"/>
-    <keyword type="struct" name="struct MMKernelEventProperties" link="libmm-glib-MMKernelEventProperties.html#MMKernelEventProperties"/>
+    <keyword type="function" name="mm_kernel_event_properties_new ()" link="MMKernelEventProperties.html#mm-kernel-event-properties-new"/>
+    <keyword type="function" name="mm_kernel_event_properties_get_action ()" link="MMKernelEventProperties.html#mm-kernel-event-properties-get-action"/>
+    <keyword type="function" name="mm_kernel_event_properties_set_action ()" link="MMKernelEventProperties.html#mm-kernel-event-properties-set-action"/>
+    <keyword type="function" name="mm_kernel_event_properties_get_name ()" link="MMKernelEventProperties.html#mm-kernel-event-properties-get-name"/>
+    <keyword type="function" name="mm_kernel_event_properties_set_name ()" link="MMKernelEventProperties.html#mm-kernel-event-properties-set-name"/>
+    <keyword type="function" name="mm_kernel_event_properties_get_subsystem ()" link="MMKernelEventProperties.html#mm-kernel-event-properties-get-subsystem"/>
+    <keyword type="function" name="mm_kernel_event_properties_set_subsystem ()" link="MMKernelEventProperties.html#mm-kernel-event-properties-set-subsystem"/>
+    <keyword type="function" name="mm_kernel_event_properties_get_uid ()" link="MMKernelEventProperties.html#mm-kernel-event-properties-get-uid"/>
+    <keyword type="function" name="mm_kernel_event_properties_set_uid ()" link="MMKernelEventProperties.html#mm-kernel-event-properties-set-uid"/>
+    <keyword type="struct" name="struct MMKernelEventProperties" link="MMKernelEventProperties.html#MMKernelEventProperties-struct"/>
     <keyword type="function" name="mm_object_get_path ()" link="MMObject.html#mm-object-get-path"/>
     <keyword type="function" name="mm_object_dup_path ()" link="MMObject.html#mm-object-dup-path"/>
     <keyword type="function" name="mm_object_peek_modem ()" link="MMObject.html#mm-object-peek-modem"/>
@@ -336,6 +336,7 @@
     <keyword type="function" name="mm_modem_3gpp_get_enabled_facility_locks ()" link="MMModem3gpp.html#mm-modem-3gpp-get-enabled-facility-locks"/>
     <keyword type="function" name="mm_modem_3gpp_get_registration_state ()" link="MMModem3gpp.html#mm-modem-3gpp-get-registration-state"/>
     <keyword type="function" name="mm_modem_3gpp_get_subscription_state ()" link="MMModem3gpp.html#mm-modem-3gpp-get-subscription-state"/>
+    <keyword type="function" name="mm_modem_3gpp_get_eps_ue_mode_operation ()" link="MMModem3gpp.html#mm-modem-3gpp-get-eps-ue-mode-operation"/>
     <keyword type="function" name="mm_modem_3gpp_register ()" link="MMModem3gpp.html#mm-modem-3gpp-register"/>
     <keyword type="function" name="mm_modem_3gpp_register_finish ()" link="MMModem3gpp.html#mm-modem-3gpp-register-finish"/>
     <keyword type="function" name="mm_modem_3gpp_register_sync ()" link="MMModem3gpp.html#mm-modem-3gpp-register-sync"/>
@@ -670,10 +671,10 @@
     <keyword type="function" name="mm_bearer_ip_config_get_gateway ()" link="MMBearerIpConfig.html#mm-bearer-ip-config-get-gateway"/>
     <keyword type="function" name="mm_bearer_ip_config_get_mtu ()" link="MMBearerIpConfig.html#mm-bearer-ip-config-get-mtu"/>
     <keyword type="struct" name="struct MMBearerIpConfig" link="MMBearerIpConfig.html#MMBearerIpConfig-struct"/>
-    <keyword type="function" name="mm_bearer_stats_get_duration ()" link="libmm-glib-MMBearerStats.html#mm-bearer-stats-get-duration"/>
-    <keyword type="function" name="mm_bearer_stats_get_rx_bytes ()" link="libmm-glib-MMBearerStats.html#mm-bearer-stats-get-rx-bytes"/>
-    <keyword type="function" name="mm_bearer_stats_get_tx_bytes ()" link="libmm-glib-MMBearerStats.html#mm-bearer-stats-get-tx-bytes"/>
-    <keyword type="struct" name="struct MMBearerStats" link="libmm-glib-MMBearerStats.html#MMBearerStats"/>
+    <keyword type="function" name="mm_bearer_stats_get_duration ()" link="MMBearerStats.html#mm-bearer-stats-get-duration"/>
+    <keyword type="function" name="mm_bearer_stats_get_rx_bytes ()" link="MMBearerStats.html#mm-bearer-stats-get-rx-bytes"/>
+    <keyword type="function" name="mm_bearer_stats_get_tx_bytes ()" link="MMBearerStats.html#mm-bearer-stats-get-tx-bytes"/>
+    <keyword type="struct" name="struct MMBearerStats" link="MMBearerStats.html#MMBearerStats-struct"/>
     <keyword type="function" name="mm_sim_get_path ()" link="MMSim.html#mm-sim-get-path"/>
     <keyword type="function" name="mm_sim_dup_path ()" link="MMSim.html#mm-sim-dup-path"/>
     <keyword type="function" name="mm_sim_get_identifier ()" link="MMSim.html#mm-sim-get-identifier"/>

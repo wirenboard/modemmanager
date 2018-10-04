@@ -120,7 +120,7 @@ preload_sysfs_path (MMKernelDeviceGeneric *self)
                            mm_kernel_event_properties_get_subsystem (self->priv->properties),
                            mm_kernel_event_properties_get_name      (self->priv->properties));
 
-    self->priv->sysfs_path = canonicalize_file_name (tmp);
+    self->priv->sysfs_path = realpath (tmp, NULL);
     if (!self->priv->sysfs_path || !g_file_test (self->priv->sysfs_path, G_FILE_TEST_EXISTS)) {
         mm_warn ("Invalid sysfs path read for %s/%s",
                  mm_kernel_event_properties_get_subsystem (self->priv->properties),
@@ -163,7 +163,7 @@ preload_interface_sysfs_path (MMKernelDeviceGeneric *self)
      * The correct parent dir we want to have is the first one with "usb" subsystem.
      */
     aux = g_strdup_printf ("%s/device", self->priv->sysfs_path);
-    dirpath = canonicalize_file_name (aux);
+    dirpath = realpath (aux, NULL);
     g_free (aux);
 
     while (dirpath) {
@@ -179,7 +179,7 @@ preload_interface_sysfs_path (MMKernelDeviceGeneric *self)
             gchar *canonicalized_subsystem;
             gchar *subsystem_name;
 
-            canonicalized_subsystem = canonicalize_file_name (subsystem_filepath);
+            canonicalized_subsystem = realpath (subsystem_filepath, NULL);
             g_free (subsystem_filepath);
 
             subsystem_name = g_path_get_basename (canonicalized_subsystem);
@@ -239,7 +239,7 @@ preload_driver (MMKernelDeviceGeneric *self)
         gchar *tmp2;
 
         tmp = g_strdup_printf ("%s/driver", self->priv->interface_sysfs_path);
-        tmp2 = canonicalize_file_name (tmp);
+        tmp2 = realpath (tmp, NULL);
         if (tmp2 && g_file_test (tmp2, G_FILE_TEST_EXISTS))
             self->priv->driver = g_path_get_basename (tmp2);
         g_free (tmp2);
@@ -308,7 +308,7 @@ preload_physdev_subsystem (MMKernelDeviceGeneric *self)
         gchar *subsyspath;
 
         aux = g_strdup_printf ("%s/subsystem", self->priv->physdev_sysfs_path);
-        subsyspath = canonicalize_file_name (aux);
+        subsyspath = realpath (aux, NULL);
         self->priv->physdev_subsystem = g_path_get_dirname (subsyspath);
         g_free (subsyspath);
         g_free (aux);
@@ -543,6 +543,14 @@ kernel_device_get_physdev_manufacturer (MMKernelDevice *self)
     g_return_val_if_fail (MM_IS_KERNEL_DEVICE_GENERIC (self), 0);
 
     return MM_KERNEL_DEVICE_GENERIC (self)->priv->physdev_manufacturer;
+}
+
+static const gchar *
+kernel_device_get_physdev_product (MMKernelDevice *self)
+{
+    g_return_val_if_fail (MM_IS_KERNEL_DEVICE_GENERIC (self), 0);
+
+    return MM_KERNEL_DEVICE_GENERIC (self)->priv->physdev_product;
 }
 
 static gboolean
@@ -1081,6 +1089,7 @@ mm_kernel_device_generic_class_init (MMKernelDeviceGenericClass *klass)
     kernel_device_class->get_physdev_sysfs_path   = kernel_device_get_physdev_sysfs_path;
     kernel_device_class->get_physdev_subsystem    = kernel_device_get_physdev_subsystem;
     kernel_device_class->get_physdev_manufacturer = kernel_device_get_physdev_manufacturer;
+    kernel_device_class->get_physdev_product      = kernel_device_get_physdev_product;
     kernel_device_class->get_interface_class      = kernel_device_get_interface_class;
     kernel_device_class->get_interface_subclass   = kernel_device_get_interface_subclass;
     kernel_device_class->get_interface_protocol   = kernel_device_get_interface_protocol;

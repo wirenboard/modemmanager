@@ -117,6 +117,7 @@ enum {
     PROP_MODEM_SIMPLE_STATUS,
     PROP_MODEM_SIM_HOT_SWAP_SUPPORTED,
     PROP_MODEM_SIM_HOT_SWAP_CONFIGURED,
+    PROP_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED,
     PROP_FLOW_CONTROL,
     PROP_LAST
 };
@@ -136,6 +137,7 @@ struct _MMBroadbandModemPrivate {
     gboolean modem_init_run;
     gboolean sim_hot_swap_supported;
     gboolean sim_hot_swap_configured;
+    gboolean periodic_signal_check_disabled;
 
     /*<--- Modem interface --->*/
     /* Properties */
@@ -2065,7 +2067,7 @@ signal_quality_cind (GTask *task)
     mm_base_modem_at_command_full (MM_BASE_MODEM (self),
                                    MM_PORT_SERIAL_AT (ctx->at_port),
                                    "+CIND?",
-                                   3,
+                                   5,
                                    FALSE,
                                    FALSE, /* raw */
                                    NULL, /* cancellable */
@@ -3853,12 +3855,8 @@ modem_3gpp_load_operator_code (MMIfaceModem3gpp *self,
                                gpointer user_data)
 {
     mm_dbg ("loading Operator Code...");
-    mm_base_modem_at_command (MM_BASE_MODEM (self),
-                              "+COPS=3,2;+COPS?",
-                              3,
-                              FALSE,
-                              callback,
-                              user_data);
+    mm_base_modem_at_command (MM_BASE_MODEM (self), "+COPS=3,2", 3, FALSE, NULL, NULL);
+    mm_base_modem_at_command (MM_BASE_MODEM (self), "+COPS?", 3, FALSE, callback, user_data);
 }
 
 /*****************************************************************************/
@@ -3896,12 +3894,8 @@ modem_3gpp_load_operator_name (MMIfaceModem3gpp *self,
                                gpointer user_data)
 {
     mm_dbg ("loading Operator Name...");
-    mm_base_modem_at_command (MM_BASE_MODEM (self),
-                              "+COPS=3,0;+COPS?",
-                              3,
-                              FALSE,
-                              callback,
-                              user_data);
+    mm_base_modem_at_command (MM_BASE_MODEM (self), "+COPS=3,0", 3, FALSE, NULL, NULL);
+    mm_base_modem_at_command (MM_BASE_MODEM (self), "+COPS?", 3, FALSE, callback, user_data);
 }
 
 /*****************************************************************************/
@@ -8146,7 +8140,6 @@ typedef struct {
 typedef struct {
     MMBroadbandModem *self;
     GSimpleAsyncResult *result;
-    GError *error;
     gboolean has_qcdm_port;
     gboolean has_sprint_commands;
 } SetupRegistrationChecksContext;
@@ -8154,44 +8147,39 @@ typedef struct {
 static void
 setup_registration_checks_context_complete_and_free (SetupRegistrationChecksContext *ctx)
 {
-    if (ctx->error)
-        g_simple_async_result_take_error (ctx->result, ctx->error);
-    else {
-        SetupRegistrationChecksResults *results;
+    SetupRegistrationChecksResults *results;
 
-        results = g_new0 (SetupRegistrationChecksResults, 1);
+    results = g_new0 (SetupRegistrationChecksResults, 1);
 
-        /* Skip QCDM steps if no QCDM port */
-        if (!ctx->has_qcdm_port) {
-            mm_dbg ("Will skip all QCDM-based registration checks");
-            results->skip_qcdm_call_manager_step = TRUE;
-            results->skip_qcdm_hdr_step = TRUE;
-        }
-
-        if (MM_IFACE_MODEM_CDMA_GET_INTERFACE (ctx->self)->get_detailed_registration_state ==
-            modem_cdma_get_detailed_registration_state) {
-            /* Skip CDMA1x Serving System check if we have Sprint specific
-             * commands AND if the default detailed registration checker
-             * is the generic one. Implementations knowing that their
-             * CSS response is undesired, should either setup NULL callbacks
-             * for the specific step, or subclass this setup and return
-             * FALSE themselves. */
-            if (ctx->has_sprint_commands) {
-                mm_dbg ("Will skip CDMA1x Serving System check, "
-                        "we do have Sprint commands");
-                results->skip_at_cdma1x_serving_system_step = TRUE;
-            } else {
-                /* If there aren't Sprint specific commands, and the detailed
-                 * registration state getter wasn't subclassed, skip the step */
-                mm_dbg ("Will skip generic detailed registration check, we "
-                        "don't have Sprint commands");
-                results->skip_detailed_registration_state = TRUE;
-            }
-        }
-
-        g_simple_async_result_set_op_res_gpointer (ctx->result, results, g_free);
+    /* Skip QCDM steps if no QCDM port */
+    if (!ctx->has_qcdm_port) {
+        mm_dbg ("Will skip all QCDM-based registration checks");
+        results->skip_qcdm_call_manager_step = TRUE;
+        results->skip_qcdm_hdr_step = TRUE;
     }
 
+    if (MM_IFACE_MODEM_CDMA_GET_INTERFACE (ctx->self)->get_detailed_registration_state ==
+        modem_cdma_get_detailed_registration_state) {
+        /* Skip CDMA1x Serving System check if we have Sprint specific
+         * commands AND if the default detailed registration checker
+         * is the generic one. Implementations knowing that their
+         * CSS response is undesired, should either setup NULL callbacks
+         * for the specific step, or subclass this setup and return
+         * FALSE themselves. */
+        if (ctx->has_sprint_commands) {
+            mm_dbg ("Will skip CDMA1x Serving System check, "
+                    "we do have Sprint commands");
+            results->skip_at_cdma1x_serving_system_step = TRUE;
+        } else {
+            /* If there aren't Sprint specific commands, and the detailed
+             * registration state getter wasn't subclassed, skip the step */
+            mm_dbg ("Will skip generic detailed registration check, we "
+                    "don't have Sprint commands");
+            results->skip_detailed_registration_state = TRUE;
+        }
+    }
+
+    g_simple_async_result_set_op_res_gpointer (ctx->result, results, g_free);
     g_simple_async_result_complete_in_idle (ctx->result);
     g_object_unref (ctx->result);
     g_object_unref (ctx->self);
@@ -8702,7 +8690,7 @@ modem_signal_load_values (MMIfaceModemSignal  *self,
     mm_base_modem_at_command (MM_BASE_MODEM (self),
                               "+CESQ",
                               3,
-                              TRUE,
+                              FALSE,
                               callback,
                               user_data);
 }
@@ -9981,12 +9969,10 @@ enable (MMBaseModem *self,
         break;
 
     case MM_MODEM_STATE_FAILED:
-    case MM_MODEM_STATE_INITIALIZING:
         g_task_return_new_error (task,
                                  MM_CORE_ERROR,
                                  MM_CORE_ERROR_WRONG_STATE,
-                                 "Cannot enable modem: "
-                                 "device not fully initialized yet");
+                                 "Cannot enable modem: initialization failed");
         break;
 
     case MM_MODEM_STATE_LOCKED:
@@ -9996,7 +9982,9 @@ enable (MMBaseModem *self,
                                  "Cannot enable modem: device locked");
         break;
 
-    case MM_MODEM_STATE_DISABLED: {
+    case MM_MODEM_STATE_INITIALIZING:
+    case MM_MODEM_STATE_DISABLED:
+    case MM_MODEM_STATE_DISABLING: {
         EnablingContext *ctx;
 
         ctx = g_new0 (EnablingContext, 1);
@@ -10009,20 +9997,8 @@ enable (MMBaseModem *self,
         return;
     }
 
-    case MM_MODEM_STATE_DISABLING:
-        g_task_return_new_error (task,
-                                 MM_CORE_ERROR,
-                                 MM_CORE_ERROR_WRONG_STATE,
-                                 "Cannot enable modem: "
-                                 "currently being disabled");
-        break;
-
     case MM_MODEM_STATE_ENABLING:
-        g_task_return_new_error (task,
-                                 MM_CORE_ERROR,
-                                 MM_CORE_ERROR_IN_PROGRESS,
-                                 "Cannot enable modem: "
-                                 "already being enabled");
+        g_assert_not_reached ();
         break;
 
     case MM_MODEM_STATE_ENABLED:
@@ -10494,6 +10470,7 @@ sim_hot_swap_enabled:
                 mm_iface_modem_3gpp_ussd_shutdown (MM_IFACE_MODEM_3GPP_USSD (ctx->self));
                 mm_iface_modem_cdma_shutdown (MM_IFACE_MODEM_CDMA (ctx->self));
                 mm_iface_modem_location_shutdown (MM_IFACE_MODEM_LOCATION (ctx->self));
+                mm_iface_modem_signal_shutdown (MM_IFACE_MODEM_SIGNAL (ctx->self));
                 mm_iface_modem_messaging_shutdown (MM_IFACE_MODEM_MESSAGING (ctx->self));
                 mm_iface_modem_voice_shutdown (MM_IFACE_MODEM_VOICE (ctx->self));
                 mm_iface_modem_time_shutdown (MM_IFACE_MODEM_TIME (ctx->self));
@@ -10815,6 +10792,9 @@ set_property (GObject *object,
     case PROP_MODEM_SIM_HOT_SWAP_CONFIGURED:
         self->priv->sim_hot_swap_configured = g_value_get_boolean (value);
         break;
+    case PROP_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED:
+        self->priv->periodic_signal_check_disabled = g_value_get_boolean (value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -10923,6 +10903,9 @@ get_property (GObject *object,
     case PROP_MODEM_SIM_HOT_SWAP_CONFIGURED:
         g_value_set_boolean (value, self->priv->sim_hot_swap_configured);
         break;
+    case PROP_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED:
+        g_value_set_boolean (value, self->priv->periodic_signal_check_disabled);
+        break;
     case PROP_FLOW_CONTROL:
         g_value_set_flags (value, self->priv->flow_control);
         break;
@@ -10955,6 +10938,7 @@ mm_broadband_modem_init (MMBroadbandModem *self)
     self->priv->current_sms_mem1_storage = MM_SMS_STORAGE_UNKNOWN;
     self->priv->current_sms_mem2_storage = MM_SMS_STORAGE_UNKNOWN;
     self->priv->sim_hot_swap_supported = FALSE;
+    self->priv->periodic_signal_check_disabled = FALSE;
     self->priv->modem_cmer_enable_mode = MM_3GPP_CMER_MODE_NONE;
     self->priv->modem_cmer_disable_mode = MM_3GPP_CMER_MODE_NONE;
     self->priv->modem_cmer_ind = MM_3GPP_CMER_IND_NONE;
@@ -11006,6 +10990,11 @@ dispose (GObject *object)
     if (self->priv->modem_location_dbus_skeleton) {
         mm_iface_modem_location_shutdown (MM_IFACE_MODEM_LOCATION (object));
         g_clear_object (&self->priv->modem_location_dbus_skeleton);
+    }
+
+    if (self->priv->modem_signal_dbus_skeleton) {
+        mm_iface_modem_signal_shutdown (MM_IFACE_MODEM_SIGNAL (object));
+        g_clear_object (&self->priv->modem_signal_dbus_skeleton);
     }
 
     if (self->priv->modem_messaging_dbus_skeleton) {
@@ -11436,6 +11425,11 @@ mm_broadband_modem_class_init (MMBroadbandModemClass *klass)
     g_object_class_override_property (object_class,
                                       PROP_MODEM_SIM_HOT_SWAP_CONFIGURED,
                                       MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED);
+
+    g_object_class_override_property (object_class,
+                                      PROP_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED,
+                                      MM_IFACE_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED);
+
     properties[PROP_FLOW_CONTROL] =
         g_param_spec_flags (MM_BROADBAND_MODEM_FLOW_CONTROL,
                             "Flow control",

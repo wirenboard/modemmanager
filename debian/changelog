@@ -1,3 +1,23 @@
+modemmanager (1.8.2-1) unstable; urgency=medium
+
+  * New upstream version 1.8.2. (Closes: #910013) (Closes: #900907)
+  * debian/modemmanager.postrm: don't unmask ModemManager on postrm; we were
+    unmasking because we're about to remove ModemManager anyway, and prerm did
+    its mask with --runtime which is supposed to not be persistent.
+    (Closes: #902260)
+  * debian/control: canonicalize Vcs-* URLs.
+  * debian/control: bump to Standard-Version: 4.2.1; no changes required.
+
+ -- Mathieu Trudel-Lapierre <mathieu.tl@gmail.com>  Thu, 04 Oct 2018 10:01:18 -0400
+
+modemmanager (1.7.990-1ubuntu1) cosmic; urgency=low
+
+  * Merge from Debian unstable.  Remaining changes:
+    - Pass --enable-more-warnings so we build without -Werror. Patch
+      m4/compiler_warnings.m4 to allow this.
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Wed, 06 Jun 2018 16:34:06 +0200
+
 modemmanager (1.7.990-1) unstable; urgency=medium
 
   * New upstream version 1.7.990.
@@ -18,6 +38,13 @@ modemmanager (1.7.990-1) unstable; urgency=medium
     (Closes: #683839)
 
  -- Mathieu Trudel-Lapierre <mathieu.tl@gmail.com>  Thu, 01 Mar 2018 09:20:02 -0500
+
+modemmanager (1.6.8-2ubuntu1) bionic; urgency=medium
+
+  * Pass --enable-more-warnings so we build without -Werror. Patch
+    m4/compiler_warnings.m4 to allow this.
+
+ -- Iain Lane <iain@orangesquash.org.uk>  Tue, 24 Apr 2018 12:06:03 +0100
 
 modemmanager (1.6.8-2) unstable; urgency=medium
 
@@ -948,3 +975,4 @@ modemmanager (0.2.git.20090806t105932.354a4cb-0ubuntu1) karmic; urgency=low
     - update debian/patches/series
 
  -- Tony Espy <espy@ubuntu.com>  Thu, 06 Aug 2009 12:50:45 +0100
+

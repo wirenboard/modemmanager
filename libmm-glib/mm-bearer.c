@@ -659,7 +659,7 @@ mm_bearer_peek_stats (MMBearer *self)
  *
  * Finishes an operation started with mm_bearer_connect().
  *
- * Returns: %TRUE if the operation succeded, %FALSE if @error is set.
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
  */
 gboolean
 mm_bearer_connect_finish (MMBearer *self,
@@ -709,7 +709,7 @@ mm_bearer_connect (MMBearer *self,
  * The calling thread is blocked until a reply is received.
  * See mm_bearer_connect() for the asynchronous version of this method.
  *
- * Returns: %TRUE if the operation succeded, %FALSE if @error is set.
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
  */
 gboolean
 mm_bearer_connect_sync (MMBearer *self,
@@ -756,7 +756,7 @@ mm_bearer_disconnect (MMBearer *self,
  *
  * Finishes an operation started with mm_bearer_disconnect().
  *
- * Returns: %TRUE if the operation succeded, %FALSE if @error is set.
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
  */
 gboolean
 mm_bearer_disconnect_finish (MMBearer *self,
@@ -779,7 +779,7 @@ mm_bearer_disconnect_finish (MMBearer *self,
  * The calling thread is blocked until a reply is received.
  * See mm_bearer_disconnect() for the asynchronous version of this method.
  *
- * Returns: %TRUE if the operation succeded, %FALSE if @error is set.
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
  */
 gboolean
 mm_bearer_disconnect_sync (MMBearer *self,
@@ -803,6 +803,7 @@ mm_bearer_init (MMBearer *self)
     g_mutex_init (&self->priv->ipv4_config_mutex);
     g_mutex_init (&self->priv->ipv6_config_mutex);
     g_mutex_init (&self->priv->properties_mutex);
+    g_mutex_init (&self->priv->stats_mutex);
 }
 
 static void
@@ -813,6 +814,7 @@ finalize (GObject *object)
     g_mutex_clear (&self->priv->ipv4_config_mutex);
     g_mutex_clear (&self->priv->ipv6_config_mutex);
     g_mutex_clear (&self->priv->properties_mutex);
+    g_mutex_clear (&self->priv->stats_mutex);
 
     G_OBJECT_CLASS (mm_bearer_parent_class)->finalize (object);
 }
@@ -825,6 +827,7 @@ dispose (GObject *object)
     g_clear_object (&self->priv->ipv4_config);
     g_clear_object (&self->priv->ipv6_config);
     g_clear_object (&self->priv->properties);
+    g_clear_object (&self->priv->stats);
 
     G_OBJECT_CLASS (mm_bearer_parent_class)->dispose (object);
 }

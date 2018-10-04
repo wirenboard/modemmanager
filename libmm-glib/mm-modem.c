@@ -906,7 +906,7 @@ mm_modem_get_ports (MMModem *self,
  *
  * <warning>The returned value is only valid until the property changes so
  * it is only safe to use this function on the thread where
- * @self was constructed. Use mm_modem_dup_plugin() if on another
+ * @self was constructed. Use mm_modem_dup_equipment_identifier() if on another
  * thread.</warning>
  *
  * Returns: (transfer none): The equipment identifier, or %NULL if none available. Do not free the returned value, it belongs to @self.
@@ -1820,7 +1820,7 @@ list_bearers_context_free (ListBearersContext *ctx)
  *
  * Finishes an operation started with mm_modem_list_bearers().
  *
- * Returns: (transfer full) (element-type ModemManager.Modem): The list of #MMBearer objects, or %NULL if either none found or if @error is set.
+ * Returns: (transfer full) (element-type ModemManager.Bearer): The list of #MMBearer objects, or %NULL if either none found or if @error is set.
  */
 GList *
 mm_modem_list_bearers_finish (MMModem *self,
@@ -1955,7 +1955,7 @@ mm_modem_list_bearers (MMModem *self,
  * The calling thread is blocked until a reply is received. See mm_modem_list_bearers()
  * for the asynchronous version of this method.
  *
- * Returns: (transfer full) (element-type ModemManager.Modem): The list of #MMBearer objects, or %NULL if either none found or if @error is set.
+ * Returns: (transfer full) (element-type ModemManager.Bearer): The list of #MMBearer objects, or %NULL if either none found or if @error is set.
  */
 GList *
 mm_modem_list_bearers_sync (MMModem *self,
@@ -2876,7 +2876,7 @@ modem_get_sim_ready (GDBusConnection *connection,
  * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
  * @user_data: User data to pass to @callback.
  *
- * Synchronously gets the #MMSim object managed by this #MMModem.
+ * Asynchronously gets the #MMSim object managed by this #MMModem.
  *
  * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
  * You can then call mm_modem_get_sim_finish() to get the result of the operation.

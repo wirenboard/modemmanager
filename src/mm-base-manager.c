@@ -220,18 +220,19 @@ device_removed (MMBaseManager  *self,
         /* Handle tty/net/wdm port removal */
         device = find_device_by_port (self, kernel_device);
         if (device) {
-            mm_info ("(%s/%s): released by device '%s'", subsys, name, mm_device_get_uid (device));
-            mm_device_release_port (device, kernel_device);
+            /* The callbacks triggered when the port is released or device support is
+             * cancelled may end up unreffing the device or removing it from the HT, and
+             * so in order to make sure the reference is still valid when we call
+             * support_check_cancel() and g_hash_table_remove(), we hold a full reference
+             * ourselves. */
+            g_object_ref (device);
+            {
+                mm_info ("(%s/%s): released by device '%s'", subsys, name, mm_device_get_uid (device));
+                mm_device_release_port (device, kernel_device);
 
-            /* If port probe list gets empty, remove the device object iself */
-            if (!mm_device_peek_port_probe_list (device)) {
-                /* The callback triggered when the device support is cancelled may end up
-                 * removing the device from the HT, and that was the last full reference
-                 * we kept. So, in order to make sure the reference is still valid after
-                 * support_check_cancel(), we hold a full reference ourselves. */
-                mm_dbg ("Removing empty device '%s'", mm_device_get_uid (device));
-                g_object_ref (device);
-                {
+                /* If port probe list gets empty, remove the device object iself */
+                if (!mm_device_peek_port_probe_list (device)) {
+                    mm_dbg ("Removing empty device '%s'", mm_device_get_uid (device));
                     if (mm_plugin_manager_device_support_check_cancel (self->priv->plugin_manager, device))
                         mm_dbg ("Device support check has been cancelled");
 
@@ -240,8 +241,8 @@ device_removed (MMBaseManager  *self,
                     mm_device_remove_modem (device);
                     g_hash_table_remove (self->priv->devices, mm_device_get_uid (device));
                 }
-                g_object_unref (device);
             }
+            g_object_unref (device);
         }
 
         return;
@@ -628,7 +629,7 @@ remove_disable_ready (MMBaseModem *modem,
     if (device) {
         g_cancellable_cancel (mm_base_modem_peek_cancellable (modem));
         mm_device_remove_modem (device);
-        g_hash_table_remove (self->priv->devices, device);
+        g_hash_table_remove (self->priv->devices, mm_device_get_uid (device));
     }
 }
 

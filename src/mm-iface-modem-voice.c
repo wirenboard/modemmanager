@@ -60,7 +60,7 @@ mm_iface_modem_voice_create_incoming_call (MMIfaceModemVoice *self)
         call = mm_call_list_get_new_incoming (list);
 
         if (!call) {
-            mm_dbg("Incoming call does not exist; create it");
+            mm_dbg ("Creating new incoming call...");
 
             call = mm_base_call_new (MM_BASE_MODEM (self));
             g_object_set (call,
@@ -71,10 +71,8 @@ mm_iface_modem_voice_create_incoming_call (MMIfaceModemVoice *self)
 
             /* Only export once properly created */
             mm_base_call_export (call);
-            mm_dbg ("New call exported to DBus");
-
             mm_call_list_add_call (list, call);
-            mm_dbg ("Call added to the list");
+            g_object_unref (call);
         }
 
         g_object_unref (list);
@@ -489,6 +487,8 @@ update_message_list (MmGdbusModemVoice *skeleton,
     paths = mm_call_list_get_paths (list);
     mm_gdbus_modem_voice_set_calls (skeleton, (const gchar *const *)paths);
     g_strfreev (paths);
+
+    g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (skeleton));
 }
 
 static void
