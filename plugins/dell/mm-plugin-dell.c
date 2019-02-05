@@ -34,6 +34,7 @@
 #include "mm-broadband-modem-sierra.h"
 #include "mm-common-sierra.h"
 #include "mm-broadband-modem-telit.h"
+#include "mm-broadband-modem-xmm.h"
 #include "mm-common-telit.h"
 #include "mm-log.h"
 
@@ -43,6 +44,8 @@
 
 #if defined WITH_MBIM
 #include "mm-broadband-modem-mbim.h"
+#include "mm-broadband-modem-mbim-xmm.h"
+#include "mm-broadband-modem-dell-dw5821e.h"
 #endif
 
 #define MAX_PORT_PROBE_TIMEOUTS 3
@@ -395,6 +398,25 @@ create_modem (MMPlugin *self,
 
 #if defined WITH_MBIM
     if (mm_port_probe_list_has_mbim_port (probes)) {
+        /* Specific implementation for the DW5821e */
+        if (vendor == 0x413c && product == 0x81d7) {
+            mm_dbg ("MBIM-powered DW5821e modem found...");
+            return MM_BASE_MODEM (mm_broadband_modem_dell_dw5821e_new (uid,
+                                                                       drivers,
+                                                                       mm_plugin_get_name (self),
+                                                                       vendor,
+                                                                       product));
+        }
+
+        if (mm_port_probe_list_is_xmm (probes)) {
+            mm_dbg ("MBIM-powered XMM-based modem found...");
+            return MM_BASE_MODEM (mm_broadband_modem_mbim_xmm_new (uid,
+                                                                   drivers,
+                                                                   mm_plugin_get_name (self),
+                                                                   vendor,
+                                                                   product));
+        }
+
         mm_dbg ("MBIM-powered Dell-branded modem found...");
         return MM_BASE_MODEM (mm_broadband_modem_mbim_new (uid,
                                                            drivers,
@@ -431,6 +453,15 @@ create_modem (MMPlugin *self,
                                                             product));
     }
 
+    if (mm_port_probe_list_is_xmm (probes)) {
+        mm_dbg ("XMM-based modem found...");
+        return MM_BASE_MODEM (mm_broadband_modem_xmm_new (uid,
+                                                          drivers,
+                                                          mm_plugin_get_name (self),
+                                                          vendor,
+                                                          product));
+    }
+
     mm_dbg ("Dell-branded generic modem found...");
     return MM_BASE_MODEM (mm_broadband_modem_new (uid,
                                                   drivers,
@@ -442,10 +473,10 @@ create_modem (MMPlugin *self,
 /*****************************************************************************/
 
 static gboolean
-grab_port (MMPlugin *self,
-           MMBaseModem *modem,
-           MMPortProbe *probe,
-           GError **error)
+grab_port (MMPlugin     *self,
+           MMBaseModem  *modem,
+           MMPortProbe  *probe,
+           GError      **error)
 {
     if (MM_IS_BROADBAND_MODEM_SIERRA (modem))
         return mm_common_sierra_grab_port (self, modem, probe, error);
@@ -474,14 +505,15 @@ mm_plugin_create (void)
 
     return MM_PLUGIN (
         g_object_new (MM_TYPE_PLUGIN_DELL,
-                      MM_PLUGIN_NAME,                  "Dell",
-                      MM_PLUGIN_ALLOWED_SUBSYSTEMS,    subsystems,
-                      MM_PLUGIN_ALLOWED_VENDOR_IDS,    vendors,
-                      MM_PLUGIN_ALLOWED_AT,            TRUE,
-                      MM_PLUGIN_CUSTOM_INIT,           &custom_init,
-                      MM_PLUGIN_ALLOWED_QCDM,          TRUE,
-                      MM_PLUGIN_ALLOWED_QMI,           TRUE,
-                      MM_PLUGIN_ALLOWED_MBIM,          TRUE,
+                      MM_PLUGIN_NAME,               "Dell",
+                      MM_PLUGIN_ALLOWED_SUBSYSTEMS, subsystems,
+                      MM_PLUGIN_ALLOWED_VENDOR_IDS, vendors,
+                      MM_PLUGIN_ALLOWED_AT,         TRUE,
+                      MM_PLUGIN_CUSTOM_INIT,        &custom_init,
+                      MM_PLUGIN_ALLOWED_QCDM,       TRUE,
+                      MM_PLUGIN_ALLOWED_QMI,        TRUE,
+                      MM_PLUGIN_ALLOWED_MBIM,       TRUE,
+                      MM_PLUGIN_XMM_PROBE,          TRUE,
                       NULL));
 }
 

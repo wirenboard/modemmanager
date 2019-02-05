@@ -36,6 +36,10 @@
   <title role="desc.title">Description</title>
   <para>      This interface provides access to specific actions that may be performed
       in modems with CDMA capabilities.
+</para><para>      This interface will only be available once the modem is ready to be
+      registered in the cellular network. Mixed 3GPP+3GPP2 devices will require
+      a valid unlocked SIM card before any of the features in the interface can
+      be used.
 </para>
 </refsect1>
 <refsect1 role="details" id="gdbus-methods-org.freedesktop.ModemManager1.Modem.ModemCdma">

@@ -34,6 +34,7 @@
 
 #include "mmcli.h"
 #include "mmcli-common.h"
+#include "mmcli-output.h"
 
 /* Context */
 typedef struct {
@@ -48,24 +49,21 @@ static Context *ctx;
 static gboolean status_flag;
 static gboolean enable_3gpp_flag;
 static gboolean disable_3gpp_flag;
-static gboolean get_3gpp_flag;
 static gboolean enable_agps_flag;
 static gboolean disable_agps_flag;
 static gboolean enable_gps_nmea_flag;
 static gboolean disable_gps_nmea_flag;
-static gboolean get_gps_nmea_flag;
 static gboolean enable_gps_raw_flag;
 static gboolean disable_gps_raw_flag;
-static gboolean get_gps_raw_flag;
 static gboolean enable_cdma_bs_flag;
 static gboolean disable_cdma_bs_flag;
-static gboolean get_cdma_bs_flag;
 static gboolean enable_gps_unmanaged_flag;
 static gboolean disable_gps_unmanaged_flag;
 static gboolean set_enable_signal_flag;
 static gboolean set_disable_signal_flag;
-static gboolean get_all_flag;
+static gboolean get_flag;
 static gchar *set_supl_server_str;
+static gchar *inject_assistance_data_str;
 static gchar *set_gps_refresh_rate_str;
 
 static GOptionEntry entries[] = {
@@ -73,7 +71,7 @@ static GOptionEntry entries[] = {
       "Show status of location gathering.",
       NULL
     },
-    { "location-get", 0, 0, G_OPTION_ARG_NONE, &get_all_flag,
+    { "location-get", 0, 0, G_OPTION_ARG_NONE, &get_flag,
       "Get all available location information.",
       NULL
     },
@@ -83,10 +81,6 @@ static GOptionEntry entries[] = {
     },
     { "location-disable-3gpp", 0, 0, G_OPTION_ARG_NONE, &disable_3gpp_flag,
       "Disable 3GPP location gathering.",
-      NULL
-    },
-    { "location-get-3gpp", 0, 0, G_OPTION_ARG_NONE, &get_3gpp_flag,
-      "Get 3GPP-based location.",
       NULL
     },
     { "location-enable-agps", 0, 0, G_OPTION_ARG_NONE, &enable_agps_flag,
@@ -105,10 +99,6 @@ static GOptionEntry entries[] = {
       "Disable NMEA-based GPS location gathering.",
       NULL
     },
-    { "location-get-gps-nmea", 0, 0, G_OPTION_ARG_NONE, &get_gps_nmea_flag,
-      "Get NMEA GPS traces.",
-      NULL
-    },
     { "location-enable-gps-raw", 0, 0, G_OPTION_ARG_NONE, &enable_gps_raw_flag,
       "Enable raw GPS location gathering.",
       NULL
@@ -117,20 +107,12 @@ static GOptionEntry entries[] = {
       "Disable raw GPS location gathering.",
       NULL
     },
-    { "location-get-gps-raw", 0, 0, G_OPTION_ARG_NONE, &get_gps_raw_flag,
-      "Get raw GPS location.",
-      NULL
-    },
     { "location-enable-cdma-bs", 0, 0, G_OPTION_ARG_NONE, &enable_cdma_bs_flag,
       "Enable CDMA base station location gathering.",
       NULL
     },
     { "location-disable-cdma-bs", 0, 0, G_OPTION_ARG_NONE, &disable_cdma_bs_flag,
       "Disable CDMA base station location gathering.",
-      NULL
-    },
-    { "location-get-cdma-bs", 0, 0, G_OPTION_ARG_NONE, &get_cdma_bs_flag,
-      "Get CDMA base station location.",
       NULL
     },
     { "location-enable-gps-unmanaged", 0, 0, G_OPTION_ARG_NONE, &enable_gps_unmanaged_flag,
@@ -143,7 +125,11 @@ static GOptionEntry entries[] = {
     },
     { "location-set-supl-server", 0, 0, G_OPTION_ARG_STRING, &set_supl_server_str,
       "Set SUPL server address",
-      "[IP:PORT] or [URL]"
+      "[IP:PORT] or [FQDN:PORT]"
+    },
+    { "location-inject-assistance-data", 0, 0, G_OPTION_ARG_FILENAME, &inject_assistance_data_str,
+      "Inject assistance data in the GNSS module",
+      "[PATH]"
     },
     { "location-set-gps-refresh-rate", 0, 0, G_OPTION_ARG_STRING, &set_gps_refresh_rate_str,
       "Set GPS refresh rate in seconds, or 0 disable the explicit rate.",
@@ -199,13 +185,6 @@ mmcli_modem_location_options_enabled (void)
         exit (EXIT_FAILURE);
     }
 
-    if (get_all_flag) {
-        get_3gpp_flag = TRUE;
-        get_gps_nmea_flag = TRUE;
-        get_gps_raw_flag = TRUE;
-        get_cdma_bs_flag = TRUE;
-    }
-
     n_actions = (status_flag +
                  !!(enable_3gpp_flag +
                     disable_3gpp_flag +
@@ -221,11 +200,9 @@ mmcli_modem_location_options_enabled (void)
                     disable_gps_unmanaged_flag +
                     set_enable_signal_flag +
                     set_disable_signal_flag) +
-                 !!(get_3gpp_flag +
-                    get_gps_nmea_flag +
-                    get_gps_raw_flag +
-                    get_cdma_bs_flag) +
+                 get_flag +
                  !!set_supl_server_str +
+                 !!inject_assistance_data_str +
                  !!set_gps_refresh_rate_str);
 
     if (n_actions > 1) {
@@ -282,49 +259,46 @@ mmcli_modem_location_shutdown (void)
 static void
 print_location_status (void)
 {
-    gchar *capabilities_str;
-    gchar *enabled_str;
+    gchar        *capabilities;
+    gchar        *enabled;
+    gchar        *gps_refresh_rate = NULL;
+    const gchar  *gps_supl_server = NULL;
+    gchar        *gps_assistance = NULL;
+    const gchar **gps_assistance_servers = NULL;
 
-    capabilities_str = (mm_modem_location_source_build_string_from_mask (
-                            mm_modem_location_get_capabilities (ctx->modem_location)));
-    enabled_str = (mm_modem_location_source_build_string_from_mask (
-                       mm_modem_location_get_enabled (ctx->modem_location)));
-    g_print ("\n"
-             "%s\n"
-             "  ----------------------------\n"
-             "  Location |   capabilities: '%s'\n"
-             "           |        enabled: '%s'\n"
-             "           |        signals: '%s'\n",
-             mm_modem_location_get_path (ctx->modem_location),
-             capabilities_str,
-             enabled_str,
-             mm_modem_location_signals_location (ctx->modem_location) ? "yes" : "no");
+    capabilities = (mm_modem_location_source_build_string_from_mask (
+                        mm_modem_location_get_capabilities (ctx->modem_location)));
+    enabled = (mm_modem_location_source_build_string_from_mask (
+                   mm_modem_location_get_enabled (ctx->modem_location)));
 
-    /* If A-GPS supported, show SUPL server setup */
-    if (mm_modem_location_get_capabilities (ctx->modem_location) & MM_MODEM_LOCATION_SOURCE_AGPS) {
-        const gchar *supl_server;
-
-        supl_server = mm_modem_location_get_supl_server (ctx->modem_location);
-        g_print ("  ----------------------------\n"
-                 "  A-GPS    |    SUPL server: '%s'\n",
-                 supl_server ? supl_server : "unset");
-    }
-
-    /* If GPS supported, show GPS refresh rate */
-    if (mm_modem_location_get_capabilities (ctx->modem_location) & (MM_MODEM_LOCATION_SOURCE_GPS_RAW |
-                                                                    MM_MODEM_LOCATION_SOURCE_GPS_NMEA)) {
-        guint rate;
+    /* If GPS supported, show GPS refresh rate and supported assistance data */
+    if (mm_modem_location_get_capabilities (ctx->modem_location) & (MM_MODEM_LOCATION_SOURCE_GPS_RAW | MM_MODEM_LOCATION_SOURCE_GPS_NMEA)) {
+        guint                             rate;
+        MMModemLocationAssistanceDataType mask;
 
         rate = mm_modem_location_get_gps_refresh_rate (ctx->modem_location);
-        g_print ("  ----------------------------\n");
-        if (rate > 0)
-            g_print ("  GPS      |  refresh rate: '%u'\n", rate);
-        else
-            g_print ("  GPS      |  refresh rate: disabled\n");
+        gps_refresh_rate = g_strdup_printf ("%u", rate);
+
+        /* If A-GPS supported, show SUPL server setup */
+        if (mm_modem_location_get_capabilities (ctx->modem_location) & MM_MODEM_LOCATION_SOURCE_AGPS)
+            gps_supl_server = mm_modem_location_get_supl_server (ctx->modem_location);
+
+        mask = mm_modem_location_get_supported_assistance_data (ctx->modem_location);
+        gps_assistance = mm_modem_location_assistance_data_type_build_string_from_mask (mask);
+
+        /* If any assistance data supported, show server list */
+        if (mask != MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_NONE)
+            gps_assistance_servers = mm_modem_location_get_assistance_data_servers (ctx->modem_location);
     }
 
-    g_free (capabilities_str);
-    g_free (enabled_str);
+    mmcli_output_string_list_take  (MMC_F_LOCATION_CAPABILITIES,           capabilities);
+    mmcli_output_string_list_take  (MMC_F_LOCATION_ENABLED,                enabled);
+    mmcli_output_string            (MMC_F_LOCATION_SIGNALS,                mm_modem_location_signals_location (ctx->modem_location) ? "yes" : "no");
+    mmcli_output_string_take_typed (MMC_F_LOCATION_GPS_REFRESH_RATE,       gps_refresh_rate, "seconds");
+    mmcli_output_string            (MMC_F_LOCATION_GPS_SUPL_SERVER,        gps_supl_server);
+    mmcli_output_string_list_take  (MMC_F_LOCATION_GPS_ASSISTANCE,         gps_assistance);
+    mmcli_output_string_array      (MMC_F_LOCATION_GPS_ASSISTANCE_SERVERS, gps_assistance_servers, TRUE);
+    mmcli_output_dump ();
 }
 
 static void
@@ -375,6 +349,65 @@ set_supl_server_ready (MMModemLocation *modem_location,
 
     operation_result = mm_modem_location_set_supl_server_finish (modem_location, result, &error);
     set_supl_server_process_reply (operation_result, error);
+
+    mmcli_async_operation_done ();
+}
+
+static gboolean
+parse_inject_assistance_data (guint8 **o_data,
+                              gsize   *o_data_size)
+{
+    gboolean  result = FALSE;
+    GFile    *file = NULL;
+    gchar    *data;
+    gsize     data_size;
+    GError   *error = NULL;
+
+    file = g_file_new_for_commandline_arg (inject_assistance_data_str);
+
+    if (!g_file_load_contents (file, NULL, &data, &data_size, NULL, &error)) {
+        g_printerr ("error: cannot load file contents: %s\n", error->message);
+        goto out;
+    }
+
+    if (data_size == 0) {
+        g_printerr ("error: file is empty\n");
+        goto out;
+    }
+
+    *o_data = (guint8 *)data;
+    *o_data_size = data_size;
+    result = TRUE;
+
+out:
+    if (error)
+        g_error_free (error);
+    g_object_unref (file);
+    return result;
+}
+
+static void
+inject_assistance_data_process_reply (gboolean result,
+                                      const GError *error)
+{
+    if (!result) {
+        g_printerr ("error: couldn't inject assistance data: '%s'\n",
+                    error ? error->message : "unknown error");
+        exit (EXIT_FAILURE);
+    }
+
+    g_print ("successfully injected assistance data\n");
+}
+
+static void
+inject_assistance_data_ready (MMModemLocation *modem_location,
+                              GAsyncResult    *result)
+{
+    gboolean operation_result;
+    GError *error = NULL;
+
+    operation_result = mm_modem_location_inject_assistance_data_finish (modem_location, result, &error);
+    inject_assistance_data_process_reply (operation_result, error);
 
     mmcli_async_operation_done ();
 }
@@ -463,123 +496,71 @@ get_location_process_reply (MMLocation3gpp *location_3gpp,
                             MMLocationCdmaBs *location_cdma_bs,
                             const GError *error)
 {
-    /* First, check for failures */
-    if (!get_all_flag) {
-        gboolean exit_error = FALSE;
+    gchar       *nmea = NULL;
+    gchar       *mcc = NULL;
+    gchar       *mnc = NULL;
+    gchar       *lac = NULL;
+    gchar       *tac = NULL;
+    gchar       *cid = NULL;
+    const gchar *gps_utc = NULL;
+    gchar       *gps_longitude = NULL;
+    gchar       *gps_latitude = NULL;
+    gchar       *gps_altitude = NULL;
+    gchar       *cdma_bs_longitude = NULL;
+    gchar       *cdma_bs_latitude = NULL;
 
-        if (get_3gpp_flag && !location_3gpp) {
-            g_printerr ("error: couldn't get 3GPP-based location from the modem: '%s'\n",
-                        error ? error->message : "not available");
-            exit_error = TRUE;
-        }
-
-        if (get_gps_nmea_flag && !location_gps_nmea) {
-            g_printerr ("error: couldn't get NMEA GPS traces from the modem: '%s'\n",
-                        error ? error->message : "not available");
-            exit_error = TRUE;
-        }
-
-        if (get_gps_raw_flag && !location_gps_raw) {
-            g_printerr ("error: couldn't get raw GPS location from the modem: '%s'\n",
-                        error ? error->message : "not available");
-            exit_error = TRUE;
-        }
-
-        if (get_cdma_bs_flag && !location_cdma_bs) {
-            g_printerr ("error: couldn't get CDMA base station location from the modem: '%s'\n",
-                        error ? error->message : "not available");
-            exit_error = TRUE;
-        }
-
-        if (exit_error)
-            exit (EXIT_FAILURE);
-    } else if (error) {
+    if (error) {
         g_printerr ("error: couldn't get location from the modem: '%s'\n",
                     error ? error->message : "unknown error");
         exit (EXIT_FAILURE);
     }
 
-    g_print ("\n"
-             "%s\n",
-             mm_modem_location_get_path (ctx->modem_location));
-
-    if (get_3gpp_flag) {
-        if (location_3gpp)
-            g_print ("  -------------------------\n"
-                     "  3GPP location   | Mobile country code: '%u'\n"
-                     "                  | Mobile network code: '%u'\n"
-                     "                  |  Location area code: '%lu'\n"
-                     "                  |             Cell ID: '%lu'\n",
-                     mm_location_3gpp_get_mobile_country_code (location_3gpp),
-                     mm_location_3gpp_get_mobile_network_code (location_3gpp),
-                     mm_location_3gpp_get_location_area_code (location_3gpp),
-                     mm_location_3gpp_get_cell_id (location_3gpp));
-        else
-            g_print ("  -------------------------\n"
-                     "  3GPP location   | Not available\n");
+    if (location_3gpp) {
+        mcc = g_strdup_printf ("%u", mm_location_3gpp_get_mobile_country_code (location_3gpp));
+        mnc = g_strdup_printf ("%u", mm_location_3gpp_get_mobile_network_code (location_3gpp));
+        lac = g_strdup_printf ("%04lX", mm_location_3gpp_get_location_area_code (location_3gpp));
+        tac = g_strdup_printf ("%04lX", mm_location_3gpp_get_tracking_area_code (location_3gpp));
+        cid = g_strdup_printf ("%08lX", mm_location_3gpp_get_cell_id (location_3gpp));
     }
 
-    if (get_gps_nmea_flag) {
-        gchar *full = NULL;
-
-        if (location_gps_nmea)
-            full = mm_location_gps_nmea_build_full (location_gps_nmea);
-
-        if (full) {
-            gchar *prefixed;
-
-            prefixed = mmcli_prefix_newlines ("                  | ", full);
-            g_print ("  -------------------------\n"
-                     "  GPS NMEA traces | %s\n",
-                     prefixed);
-            g_free (prefixed);
-            g_free (full);
-        } else
-            g_print ("  -------------------------\n"
-                     "  GPS NMEA traces | Not available\n");
-    }
-
-    if (get_gps_raw_flag) {
-        if (location_gps_raw)
-            g_print ("  -------------------------\n"
-                     "  Raw GPS         |  UTC time: '%s'\n"
-                     "                  | Longitude: '%lf'\n"
-                     "                  |  Latitude: '%lf'\n"
-                     "                  |  Altitude: '%lf'\n",
-                     mm_location_gps_raw_get_utc_time (location_gps_raw),
-                     mm_location_gps_raw_get_longitude (location_gps_raw),
-                     mm_location_gps_raw_get_latitude (location_gps_raw),
-                     mm_location_gps_raw_get_altitude (location_gps_raw));
-        else
-            g_print ("  -------------------------\n"
-                     "  Raw GPS         | Not available\n");
-    }
-
-    if (get_cdma_bs_flag) {
-        if (location_cdma_bs)
-            g_print ("  -------------------------\n"
-                     "  CDMA BS         | Longitude: '%lf'\n"
-                     "                  |  Latitude: '%lf'\n",
-                     mm_location_cdma_bs_get_longitude (location_cdma_bs),
-                     mm_location_cdma_bs_get_latitude (location_cdma_bs));
-        else
-            g_print ("  -------------------------\n"
-                     "  CDMA BS         | Not available\n");
-    }
-
-    if (location_3gpp)
-        g_object_unref (location_3gpp);
     if (location_gps_nmea)
-        g_object_unref (location_gps_nmea);
-    if (location_gps_raw)
-        g_object_unref (location_gps_raw);
-    if (location_cdma_bs)
-        g_object_unref (location_cdma_bs);
+        nmea = mm_location_gps_nmea_build_full (location_gps_nmea);
+
+    if (location_gps_raw) {
+        gps_utc = mm_location_gps_raw_get_utc_time (location_gps_raw);
+        gps_longitude = g_strdup_printf ("%lf", mm_location_gps_raw_get_longitude (location_gps_raw));
+        gps_latitude  = g_strdup_printf ("%lf", mm_location_gps_raw_get_latitude  (location_gps_raw));
+        gps_altitude  = g_strdup_printf ("%lf", mm_location_gps_raw_get_altitude  (location_gps_raw));
+    }
+
+    if (location_cdma_bs) {
+        cdma_bs_longitude = g_strdup_printf ("%lf", mm_location_cdma_bs_get_longitude (location_cdma_bs));
+        cdma_bs_latitude  = g_strdup_printf ("%lf", mm_location_cdma_bs_get_latitude  (location_cdma_bs));
+    }
+
+    mmcli_output_string_take           (MMC_F_LOCATION_3GPP_MCC,    mcc);
+    mmcli_output_string_take           (MMC_F_LOCATION_3GPP_MNC,    mnc);
+    mmcli_output_string_take           (MMC_F_LOCATION_3GPP_LAC,    lac);
+    mmcli_output_string_take           (MMC_F_LOCATION_3GPP_TAC,    tac);
+    mmcli_output_string_take           (MMC_F_LOCATION_3GPP_CID,    cid);
+    mmcli_output_string_multiline_take (MMC_F_LOCATION_GPS_NMEA,    nmea);
+    mmcli_output_string                (MMC_F_LOCATION_GPS_UTC,     gps_utc);
+    mmcli_output_string_take           (MMC_F_LOCATION_GPS_LONG,    gps_longitude);
+    mmcli_output_string_take           (MMC_F_LOCATION_GPS_LAT,     gps_latitude);
+    mmcli_output_string_take           (MMC_F_LOCATION_GPS_ALT,     gps_altitude);
+    mmcli_output_string_take           (MMC_F_LOCATION_CDMABS_LONG, cdma_bs_longitude);
+    mmcli_output_string_take           (MMC_F_LOCATION_CDMABS_LAT,  cdma_bs_latitude);
+    mmcli_output_dump ();
+
+    g_clear_object (&location_3gpp);
+    g_clear_object (&location_gps_nmea);
+    g_clear_object (&location_gps_raw);
+    g_clear_object (&location_cdma_bs);
 }
 
 static void
-get_location_ready (MMModemLocation  *modem_location,
-                    GAsyncResult *result)
+get_location_ready (MMModemLocation *modem_location,
+                    GAsyncResult    *result)
 {
     MMLocation3gpp *location_3gpp = NULL;
     MMLocationGpsNmea *location_gps_nmea = NULL;
@@ -589,13 +570,12 @@ get_location_ready (MMModemLocation  *modem_location,
 
     mm_modem_location_get_full_finish (modem_location,
                                        result,
-                                       get_3gpp_flag ? &location_3gpp : NULL,
-                                       get_gps_nmea_flag ? &location_gps_nmea : NULL,
-                                       get_gps_raw_flag ? &location_gps_raw : NULL,
-                                       get_cdma_bs_flag ? &location_cdma_bs : NULL,
+                                       &location_3gpp,
+                                       &location_gps_nmea,
+                                       &location_gps_raw,
+                                       &location_cdma_bs,
                                        &error);
     get_location_process_reply (location_3gpp, location_gps_nmea, location_gps_raw, location_cdma_bs, error);
-
     mmcli_async_operation_done ();
 }
 
@@ -642,10 +622,7 @@ get_modem_ready (GObject      *source,
     }
 
     /* Request to get location from the modem? */
-    if (get_3gpp_flag ||
-        get_gps_nmea_flag ||
-        get_gps_raw_flag ||
-        get_cdma_bs_flag) {
+    if (get_flag) {
         g_debug ("Asynchronously getting location from the modem...");
         mm_modem_location_get_full (ctx->modem_location,
                                     ctx->cancellable,
@@ -662,6 +639,27 @@ get_modem_ready (GObject      *source,
                                            ctx->cancellable,
                                            (GAsyncReadyCallback)set_supl_server_ready,
                                            NULL);
+        return;
+    }
+
+    /* Request to inject assistance data? */
+    if (inject_assistance_data_str) {
+        guint8 *data;
+        gsize   data_size;
+
+        if (!parse_inject_assistance_data (&data, &data_size)) {
+            g_printerr ("error: couldn't inject assistance data: invalid parameters given: '%s'\n",
+                        inject_assistance_data_str);
+            exit (EXIT_FAILURE);
+        }
+
+        g_debug ("Asynchronously injecting assistance data...");
+        mm_modem_location_inject_assistance_data (ctx->modem_location,
+                                                  data, data_size,
+                                                  ctx->cancellable,
+                                                  (GAsyncReadyCallback)inject_assistance_data_ready,
+                                                  NULL);
+        g_free (data);
         return;
     }
 
@@ -756,10 +754,7 @@ mmcli_modem_location_run_synchronous (GDBusConnection *connection)
     }
 
     /* Request to get location from the modem? */
-    if (get_3gpp_flag ||
-        get_gps_nmea_flag ||
-        get_gps_raw_flag ||
-        get_cdma_bs_flag) {
+    if (get_flag) {
         MMLocation3gpp *location_3gpp = NULL;
         MMLocationGpsNmea *location_gps_nmea = NULL;
         MMLocationGpsRaw *location_gps_raw = NULL;
@@ -767,10 +762,10 @@ mmcli_modem_location_run_synchronous (GDBusConnection *connection)
 
         g_debug ("Synchronously getting location from the modem...");
         mm_modem_location_get_full_sync (ctx->modem_location,
-                                         get_3gpp_flag ? &location_3gpp : NULL,
-                                         get_gps_nmea_flag ? &location_gps_nmea : NULL,
-                                         get_gps_raw_flag ? &location_gps_raw : NULL,
-                                         get_cdma_bs_flag ? &location_cdma_bs : NULL,
+                                         &location_3gpp,
+                                         &location_gps_nmea,
+                                         &location_gps_raw,
+                                         &location_cdma_bs,
                                          NULL,
                                          &error);
         get_location_process_reply (location_3gpp, location_gps_nmea, location_gps_raw, location_cdma_bs, error);
@@ -787,6 +782,28 @@ mmcli_modem_location_run_synchronous (GDBusConnection *connection)
                                                          NULL,
                                                          &error);
         set_supl_server_process_reply (result, error);
+        return;
+    }
+
+    /* Request to inject assistance data? */
+    if (inject_assistance_data_str) {
+        gboolean  result;
+        guint8   *data;
+        gsize     data_size;
+
+        if (!parse_inject_assistance_data (&data, &data_size)) {
+            g_printerr ("error: couldn't inject assistance data: invalid parameters given: '%s'\n",
+                        inject_assistance_data_str);
+            exit (EXIT_FAILURE);
+        }
+
+        g_debug ("Synchronously setting assistance data...");
+        result = mm_modem_location_inject_assistance_data_sync (ctx->modem_location,
+                                                                data, data_size,
+                                                                NULL,
+                                                                &error);
+        inject_assistance_data_process_reply (result, error);
+        g_free (data);
         return;
     }
 

@@ -261,34 +261,21 @@ dial_cdma_ready (MMBaseModem *modem,
 static void
 cdma_connect_context_dial (GTask *task)
 {
-    MMBroadbandBearer *self;
+    MMBroadbandBearer      *self;
     DetailedConnectContext *ctx;
-    gchar *command;
-    const gchar *number;
 
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
 
-    number = mm_bearer_properties_get_number (mm_base_bearer_peek_config (MM_BASE_BEARER (self)));
-
-    /* If a number was given when creating the bearer, use that one.
-     * Otherwise, use the default one, #777
-     */
-    if (number)
-        command = g_strconcat ("DT", number, NULL);
-    else
-        command = g_strdup ("DT#777");
-
     mm_base_modem_at_command_full (ctx->modem,
                                    MM_PORT_SERIAL_AT (ctx->data),
-                                   command,
+                                   "DT#777",
                                    90,
                                    FALSE,
                                    FALSE,
                                    NULL,
                                    (GAsyncReadyCallback)dial_cdma_ready,
                                    task);
-    g_free (command);
 }
 
 static void
@@ -1376,8 +1363,7 @@ detailed_disconnect_finish (MMBroadbandBearer *self,
 static void
 detailed_disconnect_context_free (DetailedDisconnectContext *ctx)
 {
-    if (ctx->cgact_command)
-        g_free (ctx->cgact_command);
+    g_free (ctx->cgact_command);
     g_object_unref (ctx->data);
     g_object_unref (ctx->primary);
     if (ctx->secondary)
@@ -1411,22 +1397,9 @@ data_flash_cdma_ready (MMPortSerial *data,
                        GAsyncResult *res,
                        GTask *task)
 {
-    MMBroadbandBearer *self;
     GError *error = NULL;
 
-    self = g_task_get_source_object (task);
-
     mm_port_serial_flash_finish (data, res, &error);
-
-    /* Cleanup flow control */
-    if (self->priv->flow_control != MM_FLOW_CONTROL_NONE) {
-        GError *flow_control_error = NULL;
-
-        if (!mm_port_serial_set_flow_control (MM_PORT_SERIAL (data), MM_FLOW_CONTROL_NONE, &flow_control_error)) {
-            mm_dbg ("Couldn't reset flow control settings: %s", flow_control_error->message);
-            g_clear_error (&flow_control_error);
-        }
-    }
 
     /* We kept the serial port open during connection, now we close that open
      * count */
@@ -1551,24 +1524,12 @@ data_flash_3gpp_ready (MMPortSerial *data,
                        GAsyncResult *res,
                        GTask *task)
 {
-    MMBroadbandBearer *self;
     DetailedDisconnectContext *ctx;
     GError *error = NULL;
 
-    self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
 
     mm_port_serial_flash_finish (data, res, &error);
-
-    /* Cleanup flow control */
-    if (self->priv->flow_control != MM_FLOW_CONTROL_NONE) {
-        GError *flow_control_error = NULL;
-
-        if (!mm_port_serial_set_flow_control (MM_PORT_SERIAL (data), MM_FLOW_CONTROL_NONE, &flow_control_error)) {
-            mm_dbg ("Couldn't reset flow control settings: %s", flow_control_error->message);
-            g_clear_error (&flow_control_error);
-        }
-    }
 
     /* We kept the serial port open during connection, now we close that open
      * count */

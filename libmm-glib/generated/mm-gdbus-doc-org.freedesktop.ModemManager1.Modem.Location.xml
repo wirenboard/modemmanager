@@ -8,22 +8,25 @@
   </refmeta>  <refnamediv>    <refname>org.freedesktop.ModemManager1.Modem.Location</refname>    <refpurpose>The ModemManager Location interface.</refpurpose>  </refnamediv>  <refsynopsisdiv role="synopsis">
     <title role="synopsis.title">Methods</title>
     <synopsis>
-<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.Setup">Setup</link>             (IN  u     sources,
-                   IN  b     signal_location);
-<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.GetLocation">GetLocation</link>       (OUT a{uv} Location);
-<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.SetSuplServer">SetSuplServer</link>     (IN  s     supl);
-<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.SetGpsRefreshRate">SetGpsRefreshRate</link> (IN  u     rate);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.Setup">Setup</link>                (IN  u     sources,
+                      IN  b     signal_location);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.GetLocation">GetLocation</link>          (OUT a{uv} Location);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.SetSuplServer">SetSuplServer</link>        (IN  s     supl);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.InjectAssistanceData">InjectAssistanceData</link> (IN  ay    data);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.SetGpsRefreshRate">SetGpsRefreshRate</link>    (IN  u     rate);
 </synopsis>
   </refsynopsisdiv>
   <refsect1 role="properties">
     <title role="properties.title">Properties</title>
     <synopsis>
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Capabilities">Capabilities</link>     readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Enabled">Enabled</link>          readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SignalsLocation">SignalsLocation</link>  readable   b
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Location">Location</link>         readable   a{uv}
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SuplServer">SuplServer</link>       readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.GpsRefreshRate">GpsRefreshRate</link>   readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Capabilities">Capabilities</link>             readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SupportedAssistanceData">SupportedAssistanceData</link>  readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Enabled">Enabled</link>                  readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SignalsLocation">SignalsLocation</link>          readable   b
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Location">Location</link>                 readable   a{uv}
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SuplServer">SuplServer</link>               readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.AssistanceDataServers">AssistanceDataServers</link>    readable   as
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.GpsRefreshRate">GpsRefreshRate</link>           readable   u
 </synopsis>
   </refsect1>
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Modem-Location">
@@ -32,6 +35,10 @@
       client applications. Not all devices can provide this information, or even
       if they do, they may not be able to provide it while a data session is
       active.
+</para><para>      This interface will only be available once the modem is ready to be
+      registered in the cellular network. 3GPP devices will require a valid
+      unlocked SIM card before any of the features in the interface can be
+      used (including GNSS module management).
 </para>
 </refsect1>
 <refsect1 role="details" id="gdbus-methods-org.freedesktop.ModemManager1.Modem.Location">
@@ -103,7 +110,26 @@ SetSuplServer (IN  s supl);
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN s <parameter>supl</parameter></literal>:</term>
-  <listitem><para>SUPL server configuration, given either as IP:PORT or with a full URL.</para></listitem>
+  <listitem><para>SUPL server configuration, given either as IP:PORT or as FQDN:PORT.</para></listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
+<refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.InjectAssistanceData">
+  <title>The InjectAssistanceData() method</title>
+  <indexterm zone="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.InjectAssistanceData"><primary sortas="Modem.Location.InjectAssistanceData">org.freedesktop.ModemManager1.Modem.Location.InjectAssistanceData()</primary></indexterm>
+<programlisting>
+InjectAssistanceData (IN  ay data);
+</programlisting>
+<para>        Inject assistance data to the GNSS module.
+        The data files should be downloaded using external means from the URLs specified in
+        the <link linkend="AssistanceDataServers">AssistanceDataServers</link> property.
+</para><para>        The user does not need to specify the assistance data type being given.
+</para><para>        There is no maximum <parameter>data</parameter> size limit specified, default DBus system bus limits apply.
+</para>
+<variablelist role="params">
+<varlistentry>
+  <term><literal>IN ay <parameter>data</parameter></literal>:</term>
+  <listitem><para>assistance data to be injected to the GNSS module.</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -136,6 +162,16 @@ Capabilities  readable   u
 </programlisting>
 <para>        Bitmask of <link linkend="MMModemLocationSource">MMModemLocationSource</link>
         values, specifying the supported location sources.
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SupportedAssistanceData">
+  <title>The "SupportedAssistanceData" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SupportedAssistanceData"><primary sortas="Modem.Location:SupportedAssistanceData">org.freedesktop.ModemManager1.Modem.Location:SupportedAssistanceData</primary></indexterm>
+<programlisting>
+SupportedAssistanceData  readable   u
+</programlisting>
+<para>        Bitmask of <link linkend="MMModemLocationAssistanceDataType">MMModemLocationAssistanceDataType</link>
+        values, specifying the supported types of assistance data.
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Enabled">
@@ -183,7 +219,7 @@ Location  readable   a{uv}
           <listitem>
             <para>
               Devices supporting this
-              capability return a string in the format <literal>"MCC,MNC,LAC,CI"</literal> (without the
+              capability return a string in the format <literal>"MCC,MNC,LAC,CI,TAC"</literal> (without the
               quotes of course) where the following applies:
             </para>
             <variablelist>
@@ -203,10 +239,10 @@ Location  readable   a{uv}
               </varlistentry>
               <varlistentry><term><literal>LAC</literal></term>
                 <listitem>
-                  This is the two-byte Location Area Code of the base station with
-                  which the mobile is registered, in upper-case hexadecimal format
-                  without leading zeros, as specified in 3GPP TS 27.007 section
-                  10.1.19. e.g. <literal>"84CD"</literal>.
+                  This is the two-byte Location Area Code of the GSM/UMTS base
+                  station with which the mobile is registered, in upper-case
+                  hexadecimal format without leading zeros, as specified in
+                  3GPP TS 27.007. E.g. <literal>"84CD"</literal>.
                 </listitem>
               </varlistentry>
               <varlistentry><term><literal>CI</literal></term>
@@ -215,6 +251,14 @@ Location  readable   a{uv}
                   is registered, in upper-case hexadecimal format without leading
                   zeros, as specified in 3GPP TS 27.007.
                   e.g. <literal>"2BAF"</literal> or <literal>"D30156"</literal>.
+                </listitem>
+              </varlistentry>
+              <varlistentry><term><literal>TAC</literal></term>
+                <listitem>
+                  This is the two-byte Location Area Code of the LTE base
+                  station with which the mobile is registered, in upper-case
+                  hexadecimal format without leading zeros, as specified in
+                  3GPP TS 27.007. E.g. <literal>"6FFE"</literal>.
                 </listitem>
               </varlistentry>
             </variablelist>
@@ -342,7 +386,17 @@ Location  readable   a{uv}
 <programlisting>
 SuplServer  readable   s
 </programlisting>
-<para>        SUPL server configuration for A-GPS, given either as IP:PORT or with a full URL.
+<para>        SUPL server configuration for A-GPS, given either as IP:PORT or FQDN:PORT.
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.AssistanceDataServers">
+  <title>The "AssistanceDataServers" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.AssistanceDataServers"><primary sortas="Modem.Location:AssistanceDataServers">org.freedesktop.ModemManager1.Modem.Location:AssistanceDataServers</primary></indexterm>
+<programlisting>
+AssistanceDataServers  readable   as
+</programlisting>
+<para>        URLs from where the user can download assistance data files to inject with
+        <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.InjectAssistanceData">InjectAssistanceData()</link>.
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.GpsRefreshRate">

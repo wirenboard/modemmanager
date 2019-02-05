@@ -122,8 +122,7 @@ load_unlock_retries_ready (MMBaseModem *self,
     }
     g_object_unref (task);
 
-    if (match_info)
-        g_match_info_free (match_info);
+    g_match_info_free (match_info);
     g_regex_unref (r);
 }
 
@@ -191,7 +190,7 @@ get_supported_modes_ready (MMBaseModem *self,
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
-        mm_dbg ("Fail to get response %s", response);
+        mm_dbg ("Fail to get response");
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -224,8 +223,7 @@ get_supported_modes_ready (MMBaseModem *self,
                      response);
 
         g_regex_unref (r);
-        if (match_info)
-            g_match_info_free (match_info);
+        g_match_info_free (match_info);
         return;
     }
 
@@ -280,9 +278,7 @@ get_supported_modes_ready (MMBaseModem *self,
     g_object_unref (task);
 
     g_regex_unref (r);
-    if (match_info)
-        g_match_info_free (match_info);
-    return;
+    g_match_info_free (match_info);
 }
 
 static void
@@ -412,8 +408,7 @@ load_current_modes_finish (MMIfaceModem *self,
 done:
     if (r)
         g_regex_unref (r);
-    if (match_info)
-        g_match_info_free (match_info);
+    g_match_info_free (match_info);
 
     return result;
 }

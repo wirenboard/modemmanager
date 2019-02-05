@@ -180,6 +180,25 @@ MBM_COMMON_LIBADD_FLAGS   = $(builddir)/libmm-utils-mbm.la
 # common sierra support
 ################################################################################
 
+noinst_LTLIBRARIES += libhelpers-sierra.la
+libhelpers_sierra_la_SOURCES = \
+	sierra/mm-modem-helpers-sierra.c \
+	sierra/mm-modem-helpers-sierra.h \
+	$(NULL)
+
+noinst_PROGRAMS += test-modem-helpers-sierra
+test_modem_helpers_sierra_SOURCES = \
+	sierra/tests/test-modem-helpers-sierra.c \
+	$(NULL)
+test_modem_helpers_sierra_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/sierra \
+	$(NULL)
+test_modem_helpers_sierra_LDADD = \
+	$(builddir)/libhelpers-sierra.la \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
 noinst_LTLIBRARIES += libmm-utils-sierra.la
 libmm_utils_sierra_la_SOURCES = \
 	sierra/mm-common-sierra.c \
@@ -190,6 +209,9 @@ libmm_utils_sierra_la_SOURCES = \
 	sierra/mm-broadband-bearer-sierra.h \
 	sierra/mm-broadband-modem-sierra.c  \
 	sierra/mm-broadband-modem-sierra.h  \
+	$(NULL)
+libmm_utils_sierra_la_LIBADD = \
+	$(builddir)/libhelpers-sierra.la \
 	$(NULL)
 
 SIERRA_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/sierra
@@ -223,6 +245,51 @@ libmm_utils_novatel_la_SOURCES = \
 
 NOVATEL_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/novatel
 NOVATEL_COMMON_LIBADD_FLAGS   = $(builddir)/libmm-utils-novatel.la
+
+################################################################################
+# common xmm support
+################################################################################
+
+noinst_LTLIBRARIES += libhelpers-xmm.la
+libhelpers_xmm_la_SOURCES = \
+	xmm/mm-modem-helpers-xmm.c \
+	xmm/mm-modem-helpers-xmm.h \
+	$(NULL)
+
+noinst_PROGRAMS += test-modem-helpers-xmm
+test_modem_helpers_xmm_SOURCES = \
+	xmm/tests/test-modem-helpers-xmm.c \
+	$(NULL)
+test_modem_helpers_xmm_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/xmm \
+	$(NULL)
+test_modem_helpers_xmm_LDADD = \
+	$(builddir)/libhelpers-xmm.la  \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+noinst_LTLIBRARIES += libmm-utils-xmm.la
+libmm_utils_xmm_la_SOURCES = \
+	xmm/mm-shared-xmm.h \
+	xmm/mm-shared-xmm.c \
+	xmm/mm-broadband-modem-xmm.h \
+	xmm/mm-broadband-modem-xmm.c \
+	$(NULL)
+
+if WITH_MBIM
+libmm_utils_xmm_la_SOURCES += \
+	xmm/mm-broadband-modem-mbim-xmm.h \
+	xmm/mm-broadband-modem-mbim-xmm.c \
+	$(NULL)
+endif
+
+libmm_utils_xmm_la_LIBADD = \
+	$(builddir)/libhelpers-xmm.la \
+	$(NULL)
+
+XMM_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/xmm
+XMM_COMMON_LIBADD_FLAGS   = $(builddir)/libmm-utils-xmm.la
 
 ################################################################################
 # plugin: generic
@@ -949,6 +1016,8 @@ pkglib_LTLIBRARIES += libmm-plugin-ublox.la
 libmm_plugin_ublox_la_SOURCES = \
 	ublox/mm-plugin-ublox.c \
 	ublox/mm-plugin-ublox.h \
+	ublox/mm-call-ublox.c \
+	ublox/mm-call-ublox.h \
 	ublox/mm-broadband-bearer-ublox.h \
 	ublox/mm-broadband-bearer-ublox.c \
 	ublox/mm-broadband-modem-ublox.h \
@@ -969,9 +1038,30 @@ libmm_plugin_dell_la_SOURCES = \
 	dell/mm-plugin-dell.c \
 	dell/mm-plugin-dell.h \
 	$(NULL)
-libmm_plugin_dell_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(NOVATEL_COMMON_COMPILER_FLAGS) $(SIERRA_COMMON_COMPILER_FLAGS) $(TELIT_COMMON_COMPILER_FLAGS) $(MBM_COMMON_COMPILER_FLAGS)
-libmm_plugin_dell_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_dell_la_LIBADD   = $(NOVATEL_COMMON_LIBADD_FLAGS) $(SIERRA_COMMON_LIBADD_FLAGS) $(TELIT_COMMON_LIBADD_FLAGS) $(MBM_COMMON_LIBADD_FLAGS)
+
+if WITH_MBIM
+libmm_plugin_dell_la_SOURCES += \
+	dell/mm-broadband-modem-dell-dw5821e.h \
+	dell/mm-broadband-modem-dell-dw5821e.c \
+	$(NULL)
+endif
+
+libmm_plugin_dell_la_CPPFLAGS = \
+	$(PLUGIN_COMMON_COMPILER_FLAGS) \
+	$(NOVATEL_COMMON_COMPILER_FLAGS) \
+	$(SIERRA_COMMON_COMPILER_FLAGS) \
+	$(TELIT_COMMON_COMPILER_FLAGS) \
+	$(XMM_COMMON_COMPILER_FLAGS) \
+	$(MBM_COMMON_COMPILER_FLAGS) \
+	$(NULL)
+libmm_plugin_dell_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
+libmm_plugin_dell_la_LIBADD = \
+	$(NOVATEL_COMMON_LIBADD_FLAGS) \
+	$(SIERRA_COMMON_LIBADD_FLAGS) \
+	$(TELIT_COMMON_LIBADD_FLAGS) \
+	$(XMM_COMMON_LIBADD_FLAGS) \
+	$(MBM_COMMON_LIBADD_FLAGS) \
+	$(NULL)
 
 dist_udevrules_DATA += dell/77-mm-dell-port-types.rules
 
@@ -985,9 +1075,36 @@ pkglib_LTLIBRARIES += libmm-plugin-quectel.la
 libmm_plugin_quectel_la_SOURCES = \
 	quectel/mm-plugin-quectel.c \
 	quectel/mm-plugin-quectel.h \
+	quectel/mm-shared-quectel.c \
+	quectel/mm-shared-quectel.h \
+	quectel/mm-broadband-modem-quectel.c \
+	quectel/mm-broadband-modem-quectel.h \
 	$(NULL)
+if WITH_QMI
+libmm_plugin_quectel_la_SOURCES += \
+	quectel/mm-broadband-modem-qmi-quectel.c \
+	quectel/mm-broadband-modem-qmi-quectel.h \
+	$(NULL)
+endif
 libmm_plugin_quectel_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_quectel_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
+
+################################################################################
+# plugin: fibocom
+################################################################################
+
+pkglib_LTLIBRARIES += libmm-plugin-fibocom.la
+libmm_plugin_fibocom_la_SOURCES = \
+	fibocom/mm-plugin-fibocom.c \
+	fibocom/mm-plugin-fibocom.h \
+	$(NULL)
+libmm_plugin_fibocom_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(XMM_COMMON_COMPILER_FLAGS)
+libmm_plugin_fibocom_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
+libmm_plugin_fibocom_la_LIBADD   = $(XMM_COMMON_LIBADD_FLAGS)
+
+dist_udevrules_DATA += fibocom/77-mm-fibocom-port-types.rules
+
+AM_CFLAGS += -DTESTUDEVRULESDIR_FIBOCOM=\"${srcdir}/fibocom\"
 
 ################################################################################
 # udev rules tester

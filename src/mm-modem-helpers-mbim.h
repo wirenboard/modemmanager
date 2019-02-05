@@ -24,6 +24,9 @@
 /*****************************************************************************/
 /* MBIM/BasicConnect to MM translations */
 
+MMModemCapability mm_modem_capability_from_mbim_device_caps (MbimCellularClass caps_cellular_class,
+                                                             MbimDataClass     caps_data_class);
+
 MMModemLock mm_modem_lock_from_mbim_pin_type (MbimPinType pin_type);
 
 MMModem3gppRegistrationState mm_modem_3gpp_registration_state_from_mbim_register_state (MbimRegisterState state);
@@ -35,6 +38,13 @@ MMModem3gppNetworkAvailability mm_modem_3gpp_network_availability_from_mbim_prov
 GList *mm_3gpp_network_info_list_from_mbim_providers (const MbimProvider *const *providers, guint n_providers);
 
 GError *mm_mobile_equipment_error_from_mbim_nw_error (MbimNwError nw_error);
+
+MMBearerAllowedAuth mm_bearer_allowed_auth_from_mbim_auth_protocol (MbimAuthProtocol      auth_protocol);
+MbimAuthProtocol    mm_bearer_allowed_auth_to_mbim_auth_protocol   (MMBearerAllowedAuth   bearer_auth,
+                                                                    GError              **error);
+MMBearerIpFamily    mm_bearer_ip_family_from_mbim_context_ip_type  (MbimContextIpType     ip_type);
+MbimContextIpType   mm_bearer_ip_family_to_mbim_context_ip_type    (MMBearerIpFamily      ip_family,
+                                                                    GError              **error);
 
 /*****************************************************************************/
 /* MBIM/SMS to MM translations */

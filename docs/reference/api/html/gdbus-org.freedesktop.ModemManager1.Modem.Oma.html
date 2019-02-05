@@ -44,7 +44,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.5.17.4"></a><h2>Signals</h2>
+<a name="id-1.5.5.17.4"></a><h2>Signals</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Oma.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Oma.SessionStateChanged" title='The "SessionStateChanged" signal'>SessionStateChanged</a> (i old_session_state,
                      i new_session_state,
@@ -52,7 +52,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.5.17.5"></a><h2>Properties</h2>
+<a name="id-1.5.5.17.5"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Oma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Oma.Features" title='The "Features" property'>Features</a>                         readable   u
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Oma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Oma.PendingNetworkInitiatedSessions" title='The "PendingNetworkInitiatedSessions" property'>PendingNetworkInitiatedSessions</a>  readable   a(uu)
@@ -67,6 +67,11 @@
 </p>
 <p>      Device management sessions are either on-demand (client-initiated), or
       automatically initiated by either the device itself or the network.
+</p>
+<p>      This interface will only be available once the modem is ready to be
+      registered in the cellular network. 3GPP devices will require a valid
+      unlocked SIM card before any of the features in the interface can be
+      used.
 </p>
 </div>
 <div class="refsect1">

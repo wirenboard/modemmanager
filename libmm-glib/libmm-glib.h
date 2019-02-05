@@ -75,9 +75,11 @@
 #include <mm-unlock-retries.h>
 #include <mm-network-timezone.h>
 #include <mm-firmware-properties.h>
+#include <mm-firmware-update-settings.h>
 #include <mm-cdma-manual-activation-properties.h>
 #include <mm-signal.h>
 #include <mm-kernel-event-properties.h>
+#include <mm-pco.h>
 
 /* generated */
 #include <mm-errors-types.h>

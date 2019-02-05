@@ -35,6 +35,7 @@
 
 #include "mm-port-serial.h"
 #include "mm-log.h"
+#include "mm-helper-enums-types.h"
 
 static gboolean port_serial_queue_process          (gpointer data);
 static void     port_serial_schedule_queue_process (MMPortSerial *self,
@@ -53,6 +54,7 @@ enum {
     PROP_BITS,
     PROP_PARITY,
     PROP_STOPBITS,
+    PROP_FLOW_CONTROL,
     PROP_SEND_DELAY,
     PROP_FD,
     PROP_SPEW_CONTROL,
@@ -94,6 +96,7 @@ struct _MMPortSerialPrivate {
     guint bits;
     char parity;
     guint stopbits;
+    MMFlowControl flow_control;
     guint64 send_delay;
     gboolean spew_control;
     gboolean flash_ok;
@@ -108,8 +111,8 @@ struct _MMPortSerialPrivate {
 
     guint connected_id;
 
-    gpointer flash_ctx;
-    gpointer reopen_ctx;
+    GTask *flash_task;
+    GTask *reopen_task;
 };
 
 /*****************************************************************************/
@@ -404,6 +407,48 @@ internal_tcsetattr (MMPortSerial          *self,
 }
 
 static gboolean
+set_flow_control_termios (MMPortSerial    *self,
+                          MMFlowControl    flow_control,
+                          struct termios  *options)
+{
+    gboolean had_xon_xoff;
+    gboolean had_rts_cts;
+    tcflag_t iflag_orig, cflag_orig;
+
+    iflag_orig = options->c_iflag;
+    cflag_orig = options->c_cflag;
+
+    had_xon_xoff = !!(options->c_iflag & (IXON | IXOFF));
+    options->c_iflag &= ~(IXON | IXOFF | IXANY);
+
+    had_rts_cts  = !!(options->c_cflag & (CRTSCTS));
+    options->c_cflag &= ~(CRTSCTS);
+
+    /* setup the requested flags */
+    switch (flow_control) {
+        case MM_FLOW_CONTROL_XON_XOFF:
+            mm_dbg ("(%s): enabling XON/XOFF flow control", mm_port_get_device (MM_PORT (self)));
+            options->c_iflag |= (IXON | IXOFF | IXANY);
+            break;
+        case MM_FLOW_CONTROL_RTS_CTS:
+            mm_dbg ("(%s): enabling RTS/CTS flow control", mm_port_get_device (MM_PORT (self)));
+            options->c_cflag |= (CRTSCTS);
+            break;
+        case MM_FLOW_CONTROL_NONE:
+        case MM_FLOW_CONTROL_UNKNOWN:
+            if (had_xon_xoff)
+                mm_dbg ("(%s): disabling XON/XOFF flow control", mm_port_get_device (MM_PORT (self)));
+            if (had_rts_cts)
+                mm_dbg ("(%s): disabling RTS/CTS flow control", mm_port_get_device (MM_PORT (self)));
+            break;
+        default:
+            g_assert_not_reached ();
+    }
+
+    return iflag_orig != options->c_iflag || cflag_orig != options->c_cflag;
+}
+
+static gboolean
 real_config_fd (MMPortSerial *self, int fd, GError **error)
 {
     struct termios stbuf;
@@ -470,6 +515,20 @@ real_config_fd (MMPortSerial *self, int fd, GError **error)
                      __func__, errno);
         return FALSE;
     }
+
+    if (self->priv->flow_control != MM_FLOW_CONTROL_UNKNOWN) {
+        gchar *str;
+
+        str = mm_flow_control_build_string_from_mask (self->priv->flow_control);
+        mm_dbg ("(%s): flow control explicitly requested for device is: %s",
+                mm_port_get_device (MM_PORT (self)),
+                str ? str : "unknown");
+        g_free (str);
+    } else
+        mm_dbg ("(%s): no flow control explicitly requested for device",
+                mm_port_get_device (MM_PORT (self)));
+
+    set_flow_control_termios (self, self->priv->flow_control, &stbuf);
 
     return internal_tcsetattr (self, fd, &stbuf, error);
 }
@@ -1107,11 +1166,20 @@ mm_port_serial_open (MMPortSerial *self, GError **error)
         return FALSE;
     }
 
-    if (self->priv->reopen_ctx) {
+    if (self->priv->reopen_task) {
         g_set_error (error,
                      MM_SERIAL_ERROR,
                      MM_SERIAL_ERROR_OPEN_FAILED,
                      "Could not open serial device %s: reopen operation in progress",
+                     device);
+        return FALSE;
+    }
+
+    if (mm_port_get_connected (MM_PORT (self))) {
+        g_set_error (error,
+                     MM_SERIAL_ERROR,
+                     MM_SERIAL_ERROR_OPEN_FAILED,
+                     "Could not open serial device %s: port is connected",
                      device);
         return FALSE;
     }
@@ -1457,20 +1525,15 @@ port_serial_close_force (MMPortSerial *self)
 /* Reopen */
 
 typedef struct {
-    MMPortSerial *self;
-    GSimpleAsyncResult *result;
     guint initial_open_count;
     guint reopen_id;
 } ReopenContext;
 
 static void
-reopen_context_complete_and_free (ReopenContext *ctx)
+reopen_context_free (ReopenContext *ctx)
 {
     if (ctx->reopen_id)
         g_source_remove (ctx->reopen_id);
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->self);
     g_slice_free (ReopenContext, ctx);
 }
 
@@ -1479,54 +1542,56 @@ mm_port_serial_reopen_finish (MMPortSerial *port,
                               GAsyncResult *res,
                               GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 port_serial_reopen_cancel (MMPortSerial *self)
 {
-    ReopenContext *ctx;
+    GTask *task;
 
-    if (!self->priv->reopen_ctx)
+    if (!self->priv->reopen_task)
         return;
 
-    /* Recover context */
-    ctx = (ReopenContext *)self->priv->reopen_ctx;
-    self->priv->reopen_ctx = NULL;
+    /* Recover task */
+    task = self->priv->reopen_task;
+    self->priv->reopen_task = NULL;
 
-    g_simple_async_result_set_error (ctx->result,
-                                     MM_CORE_ERROR,
-                                     MM_CORE_ERROR_CANCELLED,
-                                     "Reopen cancelled");
-    reopen_context_complete_and_free (ctx);
+    g_task_return_new_error (task,
+                             MM_CORE_ERROR,
+                             MM_CORE_ERROR_CANCELLED,
+                             "Reopen cancelled");
+    g_object_unref (task);
 }
 
 static gboolean
 reopen_do (MMPortSerial *self)
 {
+    GTask *task;
     ReopenContext *ctx;
     GError *error = NULL;
     guint i;
 
-    /* Recover context */
-    g_assert (self->priv->reopen_ctx != NULL);
-    ctx = (ReopenContext *)self->priv->reopen_ctx;
-    self->priv->reopen_ctx = NULL;
+    /* Recover task */
+    g_assert (self->priv->reopen_task != NULL);
+    task = self->priv->reopen_task;
+    self->priv->reopen_task = NULL;
 
+    ctx = g_task_get_task_data (task);
     ctx->reopen_id = 0;
 
     for (i = 0; i < ctx->initial_open_count; i++) {
-        if (!mm_port_serial_open (ctx->self, &error)) {
+        if (!mm_port_serial_open (self, &error)) {
             g_prefix_error (&error, "Couldn't reopen port (%u): ", i);
             break;
         }
     }
 
     if (error)
-        g_simple_async_result_take_error (ctx->result, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    reopen_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 
     return G_SOURCE_REMOVE;
 }
@@ -1538,35 +1603,34 @@ mm_port_serial_reopen (MMPortSerial *self,
                        gpointer user_data)
 {
     ReopenContext *ctx;
+    GTask *task;
     guint i;
 
     g_return_if_fail (MM_IS_PORT_SERIAL (self));
 
     /* Setup context */
     ctx = g_slice_new0 (ReopenContext);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_port_serial_reopen);
     ctx->initial_open_count = self->priv->open_count;
 
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)reopen_context_free);
+
     if (self->priv->forced_close) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_FAILED,
-                                         "Serial port has been forced close.");
-        reopen_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Serial port has been forced close.");
+        g_object_unref (task);
         return;
     }
 
     /* If already reopening, halt */
-    if (self->priv->reopen_ctx) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_IN_PROGRESS,
-                                         "Modem is already being reopened");
-        reopen_context_complete_and_free (ctx);
+    if (self->priv->reopen_task) {
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_IN_PROGRESS,
+                                 "Modem is already being reopened");
+        g_object_unref (task);
         return;
     }
 
@@ -1583,7 +1647,7 @@ mm_port_serial_reopen (MMPortSerial *self,
         ctx->reopen_id = g_idle_add ((GSourceFunc)reopen_do, self);
 
     /* Store context in private info */
-    self->priv->reopen_ctx = ctx;
+    self->priv->reopen_task = task;
 }
 
 static gboolean
@@ -1635,20 +1699,15 @@ set_speed (MMPortSerial *self, speed_t speed, GError **error)
 /* Flash */
 
 typedef struct {
-    GSimpleAsyncResult *result;
-    MMPortSerial *self;
     speed_t current_speed;
     guint flash_id;
 } FlashContext;
 
 static void
-flash_context_complete_and_free (FlashContext *ctx)
+flash_context_free (FlashContext *ctx)
 {
     if (ctx->flash_id)
         g_source_remove (ctx->flash_id);
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->self);
     g_slice_free (FlashContext, ctx);
 }
 
@@ -1657,44 +1716,46 @@ mm_port_serial_flash_finish (MMPortSerial *port,
                              GAsyncResult *res,
                              GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 void
 mm_port_serial_flash_cancel (MMPortSerial *self)
 {
-    FlashContext *ctx;
+    GTask *task;
 
-    if (!self->priv->flash_ctx)
+    if (!self->priv->flash_task)
         return;
 
-    /* Recover context */
-    ctx = (FlashContext *)self->priv->flash_ctx;
-    self->priv->flash_ctx = NULL;
+    /* Recover task */
+    task = self->priv->flash_task;
+    self->priv->flash_task = NULL;
 
-    g_simple_async_result_set_error (ctx->result,
-                                     MM_CORE_ERROR,
-                                     MM_CORE_ERROR_CANCELLED,
-                                     "Flash cancelled");
-    flash_context_complete_and_free (ctx);
+    g_task_return_new_error (task,
+                             MM_CORE_ERROR,
+                             MM_CORE_ERROR_CANCELLED,
+                             "Flash cancelled");
+    g_object_unref (task);
 }
 
 static gboolean
 flash_do (MMPortSerial *self)
 {
+    GTask *task;
     FlashContext *ctx;
     GError *error = NULL;
 
-    /* Recover context */
-    g_assert (self->priv->flash_ctx != NULL);
-    ctx = (FlashContext *)self->priv->flash_ctx;
-    self->priv->flash_ctx = NULL;
+    /* Recover task */
+    g_assert (self->priv->flash_task != NULL);
+    task = self->priv->flash_task;
+    self->priv->flash_task = NULL;
 
+    ctx = g_task_get_task_data (task);
     ctx->flash_id = 0;
 
     if (self->priv->flash_ok && mm_port_get_subsys (MM_PORT (self)) == MM_PORT_SUBSYS_TTY) {
         if (ctx->current_speed) {
-            if (!set_speed (ctx->self, ctx->current_speed, &error))
+            if (!set_speed (self, ctx->current_speed, &error))
                 g_assert (error);
         } else {
             error = g_error_new_literal (MM_SERIAL_ERROR,
@@ -1704,10 +1765,10 @@ flash_do (MMPortSerial *self)
     }
 
     if (error)
-        g_simple_async_result_take_error (ctx->result, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    flash_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 
     return G_SOURCE_REMOVE;
 }
@@ -1720,6 +1781,7 @@ mm_port_serial_flash (MMPortSerial *self,
                       gpointer user_data)
 {
     FlashContext *ctx;
+    GTask *task;
     GError *error = NULL;
     gboolean success;
 
@@ -1727,33 +1789,31 @@ mm_port_serial_flash (MMPortSerial *self,
 
     /* Setup context */
     ctx = g_slice_new0 (FlashContext);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mm_port_serial_flash);
+
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)flash_context_free);
 
     if (!mm_port_serial_is_open (self)) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_SERIAL_ERROR,
-                                         MM_SERIAL_ERROR_NOT_OPEN,
-                                         "The serial port is not open.");
-        flash_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 MM_SERIAL_ERROR,
+                                 MM_SERIAL_ERROR_NOT_OPEN,
+                                 "The serial port is not open.");
+        g_object_unref (task);
         return;
     }
 
-    if (self->priv->flash_ctx) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_IN_PROGRESS,
-                                         "Modem is already being flashed.");
-        flash_context_complete_and_free (ctx);
+    if (self->priv->flash_task) {
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_IN_PROGRESS,
+                                 "Modem is already being flashed.");
+        g_object_unref (task);
         return;
     }
 
     /* Flashing only in TTY */
     if (!self->priv->flash_ok || mm_port_get_subsys (MM_PORT (self)) != MM_PORT_SUBSYS_TTY) {
-        self->priv->flash_ctx = ctx;
+        self->priv->flash_task = task;
         ctx->flash_id = g_idle_add ((GSourceFunc)flash_do, self);
         return;
     }
@@ -1761,21 +1821,21 @@ mm_port_serial_flash (MMPortSerial *self,
     /* Grab current speed so we can reset it after flashing */
     success = get_speed (self, &ctx->current_speed, &error);
     if (!success && !ignore_errors) {
-        g_simple_async_result_take_error (ctx->result, error);
-        flash_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
     g_clear_error (&error);
 
     success = set_speed (self, B0, &error);
     if (!success && !ignore_errors) {
-        g_simple_async_result_take_error (ctx->result, error);
-        flash_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
     g_clear_error (&error);
 
-    self->priv->flash_ctx = ctx;
+    self->priv->flash_task = task;
     ctx->flash_id = g_timeout_add (flash_time, (GSourceFunc)flash_do, self);
 }
 
@@ -1787,46 +1847,46 @@ mm_port_serial_set_flow_control (MMPortSerial   *self,
                                  GError        **error)
 {
     struct termios options;
-    gboolean       had_xon_xoff;
-    gboolean       had_rts_cts;
+    gchar *flow_control_str = NULL;
+    GError *inner_error = NULL;
 
     /* retrieve current settings */
     memset (&options, 0, sizeof (struct termios));
     if (tcgetattr (self->priv->fd, &options) != 0) {
-        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                     "couldn't get serial port attributes: %s", g_strerror (errno));
+        inner_error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                   "couldn't get serial port attributes: %s", g_strerror (errno));
+        goto out;
+    }
+
+    flow_control_str = mm_flow_control_build_string_from_mask (flow_control);
+
+    /* Return if current settings are already what we want */
+    if (!set_flow_control_termios (self, flow_control, &options)) {
+        mm_dbg ("(%s): no need to change flow control settings: already %s",
+                mm_port_get_device (MM_PORT (self)), flow_control_str);
+        goto out;
+    }
+
+    if (!internal_tcsetattr (self, self->priv->fd, &options, &inner_error))
+        goto out;
+
+    mm_dbg ("(%s): flow control settings updated to %s",
+            mm_port_get_device (MM_PORT (self)), flow_control_str);
+
+ out:
+    g_free (flow_control_str);
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
         return FALSE;
     }
 
-    /* clear all flow control flags */
+    return TRUE;
+}
 
-    had_xon_xoff = !!(options.c_iflag & (IXON | IXOFF));
-    options.c_iflag &= ~(IXON | IXOFF | IXANY);
-
-    had_rts_cts  = !!(options.c_cflag & (CRTSCTS));
-    options.c_cflag &= ~(CRTSCTS);
-
-    /* setup the requested flags */
-    switch (flow_control) {
-        case MM_FLOW_CONTROL_XON_XOFF:
-            mm_dbg ("(%s): enabling XON/XOFF flow control", mm_port_get_device (MM_PORT (self)));
-            options.c_iflag |= (IXON | IXOFF | IXANY);
-            break;
-        case MM_FLOW_CONTROL_RTS_CTS:
-            mm_dbg ("(%s): enabling RTS/CTS flow control", mm_port_get_device (MM_PORT (self)));
-            options.c_cflag |= (CRTSCTS);
-            break;
-        case MM_FLOW_CONTROL_NONE:
-            if (had_xon_xoff)
-                mm_dbg ("(%s): disabling XON/XOFF flow control", mm_port_get_device (MM_PORT (self)));
-            if (had_rts_cts)
-                mm_dbg ("(%s): disabling RTS/CTS flow control", mm_port_get_device (MM_PORT (self)));
-            break;
-        default:
-            g_assert_not_reached ();
-    }
-
-    return internal_tcsetattr (self, self->priv->fd, &options, error);
+MMFlowControl
+mm_port_serial_get_flow_control (MMPortSerial *self)
+{
+    return self->priv->flow_control;
 }
 
 /*****************************************************************************/
@@ -1895,6 +1955,7 @@ mm_port_serial_init (MMPortSerial *self)
     self->priv->bits = 8;
     self->priv->parity = 'n';
     self->priv->stopbits = 1;
+    self->priv->flow_control = MM_FLOW_CONTROL_UNKNOWN;
     self->priv->send_delay = 1000;
 
     self->priv->queue = g_queue_new ();
@@ -1924,6 +1985,9 @@ set_property (GObject *object,
         break;
     case PROP_STOPBITS:
         self->priv->stopbits = g_value_get_uint (value);
+        break;
+    case PROP_FLOW_CONTROL:
+        self->priv->flow_control = g_value_get_flags (value);
         break;
     case PROP_SEND_DELAY:
         self->priv->send_delay = g_value_get_uint64 (value);
@@ -1963,6 +2027,9 @@ get_property (GObject *object,
         break;
     case PROP_STOPBITS:
         g_value_set_uint (value, self->priv->stopbits);
+        break;
+    case PROP_FLOW_CONTROL:
+        g_value_set_flags (value, self->priv->flow_control);
         break;
     case PROP_SEND_DELAY:
         g_value_set_uint64 (value, self->priv->send_delay);
@@ -2060,6 +2127,15 @@ mm_port_serial_class_init (MMPortSerialClass *klass)
                             "Stopbits",
                             1, 2, 1,
                             G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (object_class, PROP_FLOW_CONTROL,
+         g_param_spec_flags (MM_PORT_SERIAL_FLOW_CONTROL,
+                             "FlowControl",
+                             "Select flow control",
+                             MM_TYPE_FLOW_CONTROL,
+                             MM_FLOW_CONTROL_UNKNOWN,
+                             G_PARAM_READWRITE));
 
     g_object_class_install_property
         (object_class, PROP_SEND_DELAY,

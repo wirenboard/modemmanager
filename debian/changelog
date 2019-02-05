@@ -1,3 +1,12 @@
+modemmanager (1.10.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * debian/control: Update build dependencies as now libmbim >= 1.18.0 and
+    libqmi >= 1.22.0 are required.
+  * debian/libmm-glib0.symbols: update symbols for new release.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 05 Feb 2019 23:40:29 +0100
+
 modemmanager (1.8.2-1) unstable; urgency=medium
 
   * New upstream version 1.8.2. (Closes: #910013) (Closes: #900907)

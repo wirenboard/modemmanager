@@ -21,6 +21,7 @@
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-location.h"
 #include "mm-log.h"
+#include "mm-modem-helpers.h"
 
 #define MM_LOCATION_GPS_REFRESH_TIME_SECS 30
 
@@ -289,11 +290,12 @@ notify_3gpp_location_update (MMIfaceModemLocation *self,
 
     dbus_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (self));
     mm_dbg ("Modem %s: 3GPP location updated "
-            "(MCC: '%u', MNC: '%u', Location area code: '%lX', Cell ID: '%lX')",
+            "(MCC: '%u', MNC: '%u', Location area code: '%lX', Tracking area code: '%lX', Cell ID: '%lX')",
             dbus_path,
             mm_location_3gpp_get_mobile_country_code (location_3gpp),
             mm_location_3gpp_get_mobile_network_code (location_3gpp),
             mm_location_3gpp_get_location_area_code (location_3gpp),
+            mm_location_3gpp_get_tracking_area_code (location_3gpp),
             mm_location_3gpp_get_cell_id (location_3gpp));
 
     /* We only update the property if we are supposed to signal
@@ -338,9 +340,10 @@ mm_iface_modem_location_3gpp_update_mcc_mnc (MMIfaceModemLocation *self,
 }
 
 void
-mm_iface_modem_location_3gpp_update_lac_ci (MMIfaceModemLocation *self,
-                                            gulong location_area_code,
-                                            gulong cell_id)
+mm_iface_modem_location_3gpp_update_lac_tac_ci (MMIfaceModemLocation *self,
+                                                gulong location_area_code,
+                                                gulong tracking_area_code,
+                                                gulong cell_id)
 {
     MmGdbusModemLocation *skeleton;
     LocationContext *ctx;
@@ -356,10 +359,9 @@ mm_iface_modem_location_3gpp_update_lac_ci (MMIfaceModemLocation *self,
         guint changed = 0;
 
         g_assert (ctx->location_3gpp != NULL);
-        changed += mm_location_3gpp_set_location_area_code (ctx->location_3gpp,
-                                                            location_area_code);
-        changed += mm_location_3gpp_set_cell_id (ctx->location_3gpp,
-                                                 cell_id);
+        changed += mm_location_3gpp_set_location_area_code (ctx->location_3gpp, location_area_code);
+        changed += mm_location_3gpp_set_tracking_area_code (ctx->location_3gpp, tracking_area_code);
+        changed += mm_location_3gpp_set_cell_id            (ctx->location_3gpp, cell_id);
         if (changed)
             notify_3gpp_location_update (self, skeleton, ctx->location_3gpp);
     }
@@ -381,14 +383,8 @@ mm_iface_modem_location_3gpp_clear (MMIfaceModemLocation *self)
         return;
 
     if (mm_gdbus_modem_location_get_enabled (skeleton) & MM_MODEM_LOCATION_SOURCE_3GPP_LAC_CI) {
-        guint changed = 0;
-
         g_assert (ctx->location_3gpp != NULL);
-        changed += mm_location_3gpp_set_location_area_code (ctx->location_3gpp, 0);
-        changed += mm_location_3gpp_set_cell_id (ctx->location_3gpp, 0);
-        changed += mm_location_3gpp_set_mobile_country_code (ctx->location_3gpp, 0);
-        changed += mm_location_3gpp_set_mobile_network_code (ctx->location_3gpp, 0);
-        if (changed)
+        if (mm_location_3gpp_reset (ctx->location_3gpp))
             notify_3gpp_location_update (self, skeleton, ctx->location_3gpp);
     }
 
@@ -990,6 +986,13 @@ handle_set_supl_server_auth_ready (MMBaseModem *self,
         return;
     }
 
+    /* Validate SUPL address string: either FQDN:PORT or IP:PORT */
+    if (!mm_parse_supl_address (ctx->supl, NULL, NULL, NULL, &error)) {
+        g_dbus_method_invocation_return_gerror (ctx->invocation, error);
+        handle_set_supl_server_context_free (ctx);
+        return;
+    }
+
     /* Check if plugin implements it */
     if (!MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->set_supl_server ||
         !MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->set_supl_server_finish) {
@@ -1026,6 +1029,108 @@ handle_set_supl_server (MmGdbusModemLocation *skeleton,
                              invocation,
                              MM_AUTHORIZATION_DEVICE_CONTROL,
                              (GAsyncReadyCallback)handle_set_supl_server_auth_ready,
+                             ctx);
+    return TRUE;
+}
+
+/*****************************************************************************/
+
+typedef struct {
+    MmGdbusModemLocation  *skeleton;
+    GDBusMethodInvocation *invocation;
+    MMIfaceModemLocation  *self;
+    GVariant              *datav;
+} HandleInjectAssistanceDataContext;
+
+static void
+handle_inject_assistance_data_context_free (HandleInjectAssistanceDataContext *ctx)
+{
+    g_object_unref  (ctx->skeleton);
+    g_object_unref  (ctx->invocation);
+    g_object_unref  (ctx->self);
+    g_variant_unref (ctx->datav);
+    g_slice_free    (HandleInjectAssistanceDataContext, ctx);
+}
+
+static void
+inject_assistance_data_ready (MMIfaceModemLocation              *self,
+                              GAsyncResult                      *res,
+                              HandleInjectAssistanceDataContext *ctx)
+{
+    GError *error = NULL;
+
+    if (!MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->inject_assistance_data_finish (self, res, &error))
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+    else
+        mm_gdbus_modem_location_complete_inject_assistance_data (ctx->skeleton, ctx->invocation);
+
+    handle_inject_assistance_data_context_free (ctx);
+}
+
+static void
+handle_inject_assistance_data_auth_ready (MMBaseModem                       *self,
+                                          GAsyncResult                      *res,
+                                          HandleInjectAssistanceDataContext *ctx)
+{
+    GError       *error = NULL;
+    const guint8 *data;
+    gsize         data_size;
+
+    if (!mm_base_modem_authorize_finish (self, res, &error)) {
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        handle_inject_assistance_data_context_free (ctx);
+        return;
+    }
+
+    /* If the type is NOT supported, set error */
+    if (mm_gdbus_modem_location_get_supported_assistance_data (ctx->skeleton) == MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_NONE) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot inject assistance data: ununsupported");
+        handle_inject_assistance_data_context_free (ctx);
+        return;
+    }
+
+    /* Check if plugin implements it */
+    if (!MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->inject_assistance_data ||
+        !MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->inject_assistance_data_finish) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot inject assistance data: not implemented");
+        handle_inject_assistance_data_context_free (ctx);
+        return;
+    }
+
+    data = (const guint8 *) g_variant_get_fixed_array (ctx->datav, &data_size, sizeof (guint8));
+
+    /* Request to inject assistance data */
+    MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->inject_assistance_data (ctx->self,
+                                                                          data,
+                                                                          data_size,
+                                                                          (GAsyncReadyCallback)inject_assistance_data_ready,
+                                                                          ctx);
+}
+
+static gboolean
+handle_inject_assistance_data (MmGdbusModemLocation  *skeleton,
+                               GDBusMethodInvocation *invocation,
+                               GVariant              *datav,
+                               MMIfaceModemLocation  *self)
+{
+    HandleInjectAssistanceDataContext *ctx;
+
+    ctx = g_slice_new (HandleInjectAssistanceDataContext);
+    ctx->skeleton   = g_object_ref (skeleton);
+    ctx->invocation = g_object_ref (invocation);
+    ctx->self       = g_object_ref (self);
+    ctx->datav      = g_variant_ref (datav);
+
+    mm_base_modem_authorize (MM_BASE_MODEM (self),
+                             invocation,
+                             MM_AUTHORIZATION_DEVICE_CONTROL,
+                             (GAsyncReadyCallback)handle_inject_assistance_data_auth_ready,
                              ctx);
     return TRUE;
 }
@@ -1445,6 +1550,8 @@ typedef enum {
     INITIALIZATION_STEP_CAPABILITIES,
     INITIALIZATION_STEP_VALIDATE_CAPABILITIES,
     INITIALIZATION_STEP_SUPL_SERVER,
+    INITIALIZATION_STEP_SUPPORTED_ASSISTANCE_DATA,
+    INITIALIZATION_STEP_ASSISTANCE_DATA_SERVERS,
     INITIALIZATION_STEP_GPS_REFRESH_RATE,
     INITIALIZATION_STEP_LAST
 } InitializationStep;
@@ -1460,6 +1567,55 @@ initialization_context_free (InitializationContext *ctx)
 {
     g_object_unref (ctx->skeleton);
     g_free (ctx);
+}
+
+static void
+load_assistance_data_servers_ready (MMIfaceModemLocation *self,
+                                    GAsyncResult         *res,
+                                    GTask                *task)
+{
+    GError                 *error = NULL;
+    InitializationContext  *ctx;
+    gchar                 **servers;
+
+    ctx = g_task_get_task_data (task);
+
+    servers = MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_assistance_data_servers_finish (self, res, &error);
+    if (error) {
+        mm_warn ("couldn't load assistance data servers: '%s'", error->message);
+        g_error_free (error);
+    }
+
+    mm_gdbus_modem_location_set_assistance_data_servers (ctx->skeleton, (const gchar *const *)servers);
+    g_strfreev (servers);
+
+    /* Go on to next step */
+    ctx->step++;
+    interface_initialization_step (task);
+}
+
+static void
+load_supported_assistance_data_ready (MMIfaceModemLocation *self,
+                                      GAsyncResult         *res,
+                                      GTask                *task)
+{
+    GError                            *error = NULL;
+    MMModemLocationAssistanceDataType  mask;
+    InitializationContext             *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    mask = MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_supported_assistance_data_finish (self, res, &error);
+    if (error) {
+        mm_warn ("couldn't load supported assistance data types: '%s'", error->message);
+        g_error_free (error);
+    }
+
+    mm_gdbus_modem_location_set_supported_assistance_data (ctx->skeleton, (guint32) mask);
+
+    /* Go on to next step */
+    ctx->step++;
+    interface_initialization_step (task);
 }
 
 static void
@@ -1574,6 +1730,36 @@ interface_initialization_step (GTask *task)
         /* Fall down to next step */
         ctx->step++;
 
+    case INITIALIZATION_STEP_SUPPORTED_ASSISTANCE_DATA:
+        /* If the modem supports any GPS-related technology, check assistance data types supported */
+        if ((ctx->capabilities & (MM_MODEM_LOCATION_SOURCE_AGPS    |
+                                  MM_MODEM_LOCATION_SOURCE_GPS_RAW |
+                                  MM_MODEM_LOCATION_SOURCE_GPS_NMEA)) &&
+            MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_supported_assistance_data &&
+            MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_supported_assistance_data_finish) {
+            MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_supported_assistance_data (
+                self,
+                (GAsyncReadyCallback)load_supported_assistance_data_ready,
+                task);
+            return;
+        }
+        /* Fall down to next step */
+        ctx->step++;
+
+    case INITIALIZATION_STEP_ASSISTANCE_DATA_SERVERS:
+        /* If any assistance data supported, load servers */
+        if ((mm_gdbus_modem_location_get_supported_assistance_data (ctx->skeleton) != MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_NONE) &&
+            MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_assistance_data_servers &&
+            MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_assistance_data_servers_finish) {
+            MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_assistance_data_servers (
+                self,
+                (GAsyncReadyCallback)load_assistance_data_servers_ready,
+                task);
+            return;
+        }
+        /* Fall down to next step */
+        ctx->step++;
+
     case INITIALIZATION_STEP_GPS_REFRESH_RATE:
         /* If we have GPS capabilities, expose the GPS refresh rate */
         if (ctx->capabilities & ((MM_MODEM_LOCATION_SOURCE_GPS_RAW |
@@ -1595,6 +1781,10 @@ interface_initialization_step (GTask *task)
         g_signal_connect (ctx->skeleton,
                           "handle-set-supl-server",
                           G_CALLBACK (handle_set_supl_server),
+                          self);
+        g_signal_connect (ctx->skeleton,
+                          "handle-inject-assistance-data",
+                          G_CALLBACK (handle_inject_assistance_data),
                           self);
         g_signal_connect (ctx->skeleton,
                           "handle-set-gps-refresh-rate",
@@ -1644,6 +1834,7 @@ mm_iface_modem_location_initialize (MMIfaceModemLocation *self,
 
         /* Set all initial property defaults */
         mm_gdbus_modem_location_set_capabilities (skeleton, MM_MODEM_LOCATION_SOURCE_NONE);
+        mm_gdbus_modem_location_set_supported_assistance_data (skeleton, MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_NONE);
         mm_gdbus_modem_location_set_enabled (skeleton, MM_MODEM_LOCATION_SOURCE_NONE);
         mm_gdbus_modem_location_set_signals_location (skeleton, FALSE);
         mm_gdbus_modem_location_set_location (skeleton,

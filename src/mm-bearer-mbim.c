@@ -952,30 +952,12 @@ connect_context_step (GTask *task)
             auth = MBIM_AUTH_PROTOCOL_NONE;
         } else {
             MMBearerAllowedAuth bearer_auth;
-            bearer_auth = mm_bearer_properties_get_allowed_auth (ctx->properties);
-            if (bearer_auth == MM_BEARER_ALLOWED_AUTH_UNKNOWN) {
-                mm_dbg ("Using default (PAP) authentication method");
-                auth = MBIM_AUTH_PROTOCOL_PAP;
-            } else if (bearer_auth & MM_BEARER_ALLOWED_AUTH_PAP) {
-                auth = MBIM_AUTH_PROTOCOL_PAP;
-            } else if (bearer_auth & MM_BEARER_ALLOWED_AUTH_CHAP) {
-                auth = MBIM_AUTH_PROTOCOL_CHAP;
-            } else if (bearer_auth & MM_BEARER_ALLOWED_AUTH_MSCHAPV2) {
-                auth = MBIM_AUTH_PROTOCOL_MSCHAPV2;
-            } else if (bearer_auth & MM_BEARER_ALLOWED_AUTH_NONE) {
-                auth = MBIM_AUTH_PROTOCOL_NONE;
-            } else {
-                gchar *str;
 
-                str = mm_bearer_allowed_auth_build_string_from_mask (bearer_auth);
-                g_task_return_new_error (
-                    task,
-                    MM_CORE_ERROR,
-                    MM_CORE_ERROR_UNSUPPORTED,
-                    "Cannot use any of the specified authentication methods (%s)",
-                    str);
+            bearer_auth = mm_bearer_properties_get_allowed_auth (ctx->properties);
+            auth = mm_bearer_allowed_auth_to_mbim_auth_protocol (bearer_auth, &error);
+            if (error) {
+                g_task_return_error (task, error);
                 g_object_unref (task);
-                g_free (str);
                 return;
             }
         }
@@ -991,30 +973,10 @@ connect_context_step (GTask *task)
             g_free (str);
         }
 
-        if (ip_family == MM_BEARER_IP_FAMILY_IPV4)
-            ctx->ip_type = MBIM_CONTEXT_IP_TYPE_IPV4;
-        else if (ip_family == MM_BEARER_IP_FAMILY_IPV6)
-            ctx->ip_type = MBIM_CONTEXT_IP_TYPE_IPV6;
-        else if (ip_family == MM_BEARER_IP_FAMILY_IPV4V6)
-            ctx->ip_type = MBIM_CONTEXT_IP_TYPE_IPV4V6;
-        else if (ip_family == (MM_BEARER_IP_FAMILY_IPV4 | MM_BEARER_IP_FAMILY_IPV6))
-            ctx->ip_type = MBIM_CONTEXT_IP_TYPE_IPV4_AND_IPV6;
-        else if (ip_family == MM_BEARER_IP_FAMILY_NONE ||
-                 ip_family == MM_BEARER_IP_FAMILY_ANY)
-            /* A valid default IP family should have been specified */
-            g_assert_not_reached ();
-        else  {
-            gchar * str;
-
-            str = mm_bearer_ip_family_build_string_from_mask (ip_family);
-            g_task_return_new_error (
-                task,
-                MM_CORE_ERROR,
-                MM_CORE_ERROR_UNSUPPORTED,
-                "Unsupported IP type configuration: '%s'",
-                str);
+        ctx->ip_type = mm_bearer_ip_family_to_mbim_context_ip_type (ip_family, &error);
+        if (error) {
+            g_task_return_error (task, error);
             g_object_unref (task);
-            g_free (str);
             return;
         }
 

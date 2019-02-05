@@ -64,10 +64,6 @@ mm_iface_modem_3gpp_bind_simple_status (MMIfaceModem3gpp *self,
                             status, MM_SIMPLE_PROPERTY_3GPP_OPERATOR_NAME,
                             G_BINDING_DEFAULT | G_BINDING_SYNC_CREATE);
 
-    g_object_bind_property (skeleton, "subscription-state",
-                            status, MM_SIMPLE_PROPERTY_3GPP_SUBSCRIPTION_STATE,
-                            G_BINDING_DEFAULT | G_BINDING_SYNC_CREATE);
-
     g_object_unref (skeleton);
 }
 
@@ -252,7 +248,7 @@ register_in_network_context_complete_failed (GTask *task,
     mm_iface_modem_3gpp_update_ps_registration_state (ctx->self, MM_MODEM_3GPP_REGISTRATION_STATE_IDLE);
     mm_iface_modem_3gpp_update_eps_registration_state (ctx->self, MM_MODEM_3GPP_REGISTRATION_STATE_IDLE);
     mm_iface_modem_3gpp_update_access_technologies (ctx->self, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN);
-    mm_iface_modem_3gpp_update_location (ctx->self, 0, 0);
+    mm_iface_modem_3gpp_update_location (ctx->self, 0, 0, 0);
 
     g_task_return_error (task, error);
     g_object_unref (task);
@@ -917,6 +913,163 @@ handle_set_eps_ue_mode_operation (MmGdbusModem3gpp      *skeleton,
 
 /*****************************************************************************/
 
+typedef struct {
+    MmGdbusModem3gpp      *skeleton;
+    GDBusMethodInvocation *invocation;
+    MMIfaceModem3gpp      *self;
+    GVariant              *dictionary;
+    MMBearerProperties    *config;
+} HandleSetInitialEpsBearerSettingsContext;
+
+static void
+handle_set_initial_eps_bearer_settings_context_free (HandleSetInitialEpsBearerSettingsContext *ctx)
+{
+    g_clear_object (&ctx->config);
+    g_variant_unref (ctx->dictionary);
+    g_object_unref (ctx->skeleton);
+    g_object_unref (ctx->invocation);
+    g_object_unref (ctx->self);
+    g_slice_free (HandleSetInitialEpsBearerSettingsContext, ctx);
+}
+
+static void
+after_set_load_initial_eps_bearer_settings_ready (MMIfaceModem3gpp                         *self,
+                                                  GAsyncResult                             *res,
+                                                  HandleSetInitialEpsBearerSettingsContext *ctx)
+{
+    GError             *error = NULL;
+    MMBearerProperties *new_config;
+
+    new_config = MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer_settings_finish (self, res, &error);
+    if (error) {
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        handle_set_initial_eps_bearer_settings_context_free (ctx);
+        return;
+    }
+
+    if (!mm_bearer_properties_cmp (new_config, ctx->config)) {
+        g_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                       "Initial EPS bearer settings were not updated");
+    } else {
+        GVariant *dictionary;
+
+        dictionary = mm_bearer_properties_get_dictionary (new_config);
+        mm_gdbus_modem3gpp_set_initial_eps_bearer_settings (ctx->skeleton, dictionary);
+        if (dictionary)
+            g_variant_unref (dictionary);
+        mm_gdbus_modem3gpp_complete_set_initial_eps_bearer_settings (ctx->skeleton, ctx->invocation);
+    }
+
+    handle_set_initial_eps_bearer_settings_context_free (ctx);
+    g_object_unref (new_config);
+}
+
+static void
+set_initial_eps_bearer_settings_ready (MMIfaceModem3gpp                         *self,
+                                       GAsyncResult                             *res,
+                                       HandleSetInitialEpsBearerSettingsContext *ctx)
+{
+    GError *error = NULL;
+
+    if (!MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->set_initial_eps_bearer_settings_finish (self, res, &error)) {
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        handle_set_initial_eps_bearer_settings_context_free (ctx);
+        return;
+    }
+
+    if (MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer_settings &&
+        MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer_settings_finish) {
+        MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer_settings (
+            self,
+            (GAsyncReadyCallback)after_set_load_initial_eps_bearer_settings_ready,
+            ctx);
+        return;
+    }
+
+    /* Assume we're ok */
+    mm_gdbus_modem3gpp_complete_set_initial_eps_bearer_settings (ctx->skeleton, ctx->invocation);
+    handle_set_initial_eps_bearer_settings_context_free (ctx);
+}
+
+static void
+set_initial_eps_bearer_settings_auth_ready (MMBaseModem                              *self,
+                                            GAsyncResult                             *res,
+                                            HandleSetInitialEpsBearerSettingsContext *ctx)
+{
+    GError             *error = NULL;
+    MMBearerProperties *old_config = NULL;
+    GVariant           *old_dictionary;
+
+    if (!mm_base_modem_authorize_finish (self, res, &error)) {
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        handle_set_initial_eps_bearer_settings_context_free (ctx);
+        return;
+    }
+
+    /* If UE mode update is not implemented, report an error */
+    if (!MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->set_initial_eps_bearer_settings ||
+        !MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->set_initial_eps_bearer_settings_finish) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot set initial EPS bearer settings: operation not supported");
+        handle_set_initial_eps_bearer_settings_context_free (ctx);
+        return;
+    }
+
+    ctx->config = mm_bearer_properties_new_from_dictionary (ctx->dictionary, &error);
+    if (!ctx->config) {
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        handle_set_initial_eps_bearer_settings_context_free (ctx);
+        return;
+    }
+
+    /* If the user doesn't specify explicit auth settings, assume NONE as default */
+    if (mm_bearer_properties_get_allowed_auth (ctx->config) == MM_BEARER_ALLOWED_AUTH_UNKNOWN)
+        mm_bearer_properties_set_allowed_auth (ctx->config, MM_BEARER_ALLOWED_AUTH_NONE);
+
+    old_dictionary = mm_gdbus_modem3gpp_get_initial_eps_bearer_settings (ctx->skeleton);
+    if (old_dictionary)
+        old_config = mm_bearer_properties_new_from_dictionary (old_dictionary, NULL);
+
+    if (old_config && mm_bearer_properties_cmp (ctx->config, old_config)) {
+        mm_gdbus_modem3gpp_complete_set_initial_eps_bearer_settings (ctx->skeleton, ctx->invocation);
+        handle_set_initial_eps_bearer_settings_context_free (ctx);
+    } else {
+        MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->set_initial_eps_bearer_settings (
+            MM_IFACE_MODEM_3GPP (self),
+            ctx->config,
+            (GAsyncReadyCallback)set_initial_eps_bearer_settings_ready,
+            ctx);
+    }
+
+    g_clear_object (&old_config);
+}
+
+static gboolean
+handle_set_initial_eps_bearer_settings (MmGdbusModem3gpp      *skeleton,
+                                        GDBusMethodInvocation *invocation,
+                                        GVariant              *dictionary,
+                                        MMIfaceModem3gpp      *self)
+{
+    HandleSetInitialEpsBearerSettingsContext *ctx;
+
+    ctx = g_slice_new0 (HandleSetInitialEpsBearerSettingsContext);
+    ctx->skeleton   = g_object_ref (skeleton);
+    ctx->invocation = g_object_ref (invocation);
+    ctx->self       = g_object_ref (self);
+    ctx->dictionary = g_variant_ref (dictionary);
+
+    mm_base_modem_authorize (MM_BASE_MODEM (self),
+                             invocation,
+                             MM_AUTHORIZATION_DEVICE_CONTROL,
+                             (GAsyncReadyCallback)set_initial_eps_bearer_settings_auth_ready,
+                             ctx);
+    return TRUE;
+}
+
+/*****************************************************************************/
+
 gboolean
 mm_iface_modem_3gpp_run_registration_checks_finish (MMIfaceModem3gpp *self,
                                                     GAsyncResult *res,
@@ -962,7 +1115,6 @@ typedef struct {
     MmGdbusModem3gpp *skeleton;
     gboolean operator_code_loaded;
     gboolean operator_name_loaded;
-    gboolean subscription_state_loaded;
 } ReloadCurrentRegistrationInfoContext;
 
 static void
@@ -1044,31 +1196,6 @@ load_operator_code_ready (MMIfaceModem3gpp *self,
 }
 
 static void
-load_subscription_state_ready (MMIfaceModem3gpp *self,
-                               GAsyncResult *res,
-                               GTask *task)
-{
-    ReloadCurrentRegistrationInfoContext *ctx;
-    GError *error = NULL;
-    MMModem3gppSubscriptionState subscription_state = MM_MODEM_3GPP_SUBSCRIPTION_STATE_UNKNOWN;
-
-    ctx = g_task_get_task_data (task);
-
-    subscription_state = MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_subscription_state_finish (self, res, &error);
-    if (error) {
-        mm_warn ("Couldn't load Subscription State: '%s'", error->message);
-        g_error_free (error);
-    }
-
-    if (ctx->skeleton)
-        mm_gdbus_modem3gpp_set_subscription_state (ctx->skeleton, subscription_state);
-
-    ctx->subscription_state_loaded = TRUE;
-    reload_current_registration_info_context_step (task);
-}
-
-
-static void
 reload_current_registration_info_context_step (GTask *task)
 {
     MMIfaceModem3gpp *self;
@@ -1091,15 +1218,6 @@ reload_current_registration_info_context_step (GTask *task)
         MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_operator_name (
             self,
             (GAsyncReadyCallback)load_operator_name_ready,
-            task);
-        return;
-    }
-
-    if (!ctx->subscription_state_loaded) {
-        /* Launch subscription state update */
-        MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_subscription_state (
-            self,
-            (GAsyncReadyCallback)load_subscription_state_ready,
             task);
         return;
     }
@@ -1147,11 +1265,6 @@ mm_iface_modem_3gpp_reload_current_registration_info (MMIfaceModem3gpp *self,
     if (ctx->operator_name_loaded)
         mm_gdbus_modem3gpp_set_operator_name (ctx->skeleton, NULL);
 
-    ctx->subscription_state_loaded = !(MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_subscription_state &&
-                                       MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_subscription_state_finish);
-    if (ctx->subscription_state_loaded)
-        mm_gdbus_modem3gpp_set_subscription_state (ctx->skeleton, MM_MODEM_3GPP_SUBSCRIPTION_STATE_UNKNOWN);
-
     reload_current_registration_info_context_step (task);
 }
 
@@ -1170,19 +1283,6 @@ mm_iface_modem_3gpp_clear_current_operator (MMIfaceModem3gpp *self)
     mm_gdbus_modem3gpp_set_operator_name (skeleton, NULL);
     if (MM_IS_IFACE_MODEM_LOCATION (self))
         mm_iface_modem_location_3gpp_update_mcc_mnc (MM_IFACE_MODEM_LOCATION (self), 0, 0);
-}
-
-static void
-clear_subscription_state (MMIfaceModem3gpp *self)
-{
-    MmGdbusModem3gpp *skeleton = NULL;
-
-    g_object_get (self,
-                  MM_IFACE_MODEM_3GPP_DBUS_SKELETON, &skeleton,
-                  NULL);
-    if (!skeleton)
-        return;
-    mm_gdbus_modem3gpp_set_subscription_state (skeleton, MM_MODEM_3GPP_SUBSCRIPTION_STATE_UNKNOWN);
 }
 
 /*****************************************************************************/
@@ -1217,6 +1317,7 @@ mm_iface_modem_3gpp_update_access_technologies (MMIfaceModem3gpp *self,
 void
 mm_iface_modem_3gpp_update_location (MMIfaceModem3gpp *self,
                                      gulong location_area_code,
+                                     gulong tracking_area_code,
                                      gulong cell_id)
 {
     MMModem3gppRegistrationState state;
@@ -1237,10 +1338,11 @@ mm_iface_modem_3gpp_update_location (MMIfaceModem3gpp *self,
      * where we're registering (loading current registration info after a state
      * change to registered), we also allow LAC/CID updates. */
     if (reg_state_is_registered (state) || ctx->reloading_registration_info) {
-        if (location_area_code > 0 && cell_id > 0)
-            mm_iface_modem_location_3gpp_update_lac_ci (MM_IFACE_MODEM_LOCATION (self),
-                                                        location_area_code,
-                                                        cell_id);
+        if ((location_area_code > 0 || tracking_area_code > 0) && cell_id > 0)
+            mm_iface_modem_location_3gpp_update_lac_tac_ci (MM_IFACE_MODEM_LOCATION (self),
+                                                            location_area_code,
+                                                            tracking_area_code,
+                                                            cell_id);
     } else
         mm_iface_modem_location_3gpp_clear (MM_IFACE_MODEM_LOCATION (self));
 }
@@ -1283,13 +1385,6 @@ update_non_registered_state (MMIfaceModem3gpp *self,
 {
     /* Not registered neither in home nor roaming network */
     mm_iface_modem_3gpp_clear_current_operator (self);
-
-    /* The subscription state can be computed in two ways: a) via PCO which is
-     * sent by the carrier during registration or b) by looking at the
-     * registration reject error code.  If b), we want to make sure we
-     * preserve the subscription state */
-    if (reg_state_is_registered (old_state))
-        clear_subscription_state (self);
 
     /* The property in the interface is bound to the property
      * in the skeleton, so just updating here is enough */
@@ -1427,22 +1522,6 @@ mm_iface_modem_3gpp_update_eps_registration_state (MMIfaceModem3gpp *self,
     update_registration_state (self, get_consolidated_reg_state (ctx), TRUE);
 }
 
-void
-mm_iface_modem_3gpp_update_subscription_state (MMIfaceModem3gpp *self,
-                                               MMModem3gppSubscriptionState state)
-{
-    MmGdbusModem3gpp *skeleton = NULL;
-
-    g_object_get (self,
-                  MM_IFACE_MODEM_3GPP_DBUS_SKELETON, &skeleton,
-                  NULL);
-    if (skeleton) {
-        mm_dbg ("Setting subscription state to: %s", mm_modem_3gpp_subscription_state_get_string (state));
-        mm_gdbus_modem3gpp_set_subscription_state (skeleton, state);
-        g_object_unref (skeleton);
-    }
-}
-
 /*****************************************************************************/
 
 typedef struct {
@@ -1538,11 +1617,84 @@ periodic_registration_check_enable (MMIfaceModem3gpp *self)
 
 /*****************************************************************************/
 
+void
+mm_iface_modem_3gpp_update_pco_list (MMIfaceModem3gpp *self,
+                                     const GList *pco_list)
+{
+    MmGdbusModem3gpp *skeleton = NULL;
+    GVariantBuilder builder;
+    GVariant *variant;
+    const GList *iter;
+
+    g_object_get (self,
+                  MM_IFACE_MODEM_3GPP_DBUS_SKELETON, &skeleton,
+                  NULL);
+    if (!skeleton)
+        return;
+
+    g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(ubay)"));
+    for (iter = pco_list; iter; iter = g_list_next (iter)) {
+        g_variant_builder_add_value (&builder,
+                                     mm_pco_to_variant (MM_PCO (iter->data)));
+    }
+    variant = g_variant_ref_sink (g_variant_builder_end (&builder));
+    mm_gdbus_modem3gpp_set_pco (skeleton, variant);
+    g_variant_unref (variant);
+    g_object_unref (skeleton);
+}
+
+/*****************************************************************************/
+
+void
+mm_iface_modem_3gpp_update_initial_eps_bearer (MMIfaceModem3gpp   *self,
+                                               MMBearerProperties *properties)
+{
+    MmGdbusModem3gpp *skeleton = NULL;
+    MMBaseBearer     *old_bearer = NULL;
+
+    g_object_get (self,
+                  MM_IFACE_MODEM_3GPP_DBUS_SKELETON,      &skeleton,
+                  MM_IFACE_MODEM_3GPP_INITIAL_EPS_BEARER, &old_bearer,
+                  NULL);
+    g_assert (skeleton);
+
+    /* skip update? */
+    if ((!old_bearer && !properties) ||
+        (old_bearer && properties && mm_bearer_properties_cmp (properties, mm_base_bearer_peek_config (MM_BASE_BEARER (old_bearer)))))
+        goto out;
+
+    if (properties) {
+        MMBaseBearer *new_bearer;
+
+        mm_dbg ("updating initial EPS bearer...");
+        g_assert (MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->create_initial_eps_bearer);
+        new_bearer = MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->create_initial_eps_bearer (self, properties);
+        g_object_set (self,
+                      MM_IFACE_MODEM_3GPP_INITIAL_EPS_BEARER, new_bearer,
+                      NULL);
+        mm_gdbus_modem3gpp_set_initial_eps_bearer (skeleton, mm_base_bearer_get_path (new_bearer));
+        g_object_unref (new_bearer);
+    } else {
+        mm_dbg ("clearing initial EPS bearer...");
+        g_object_set (self,
+                      MM_IFACE_MODEM_3GPP_INITIAL_EPS_BEARER, NULL,
+                      NULL);
+        mm_gdbus_modem3gpp_set_initial_eps_bearer (skeleton, NULL);
+    }
+
+out:
+    g_clear_object (&old_bearer);
+    g_object_unref (skeleton);
+}
+
+/*****************************************************************************/
+
 typedef struct _DisablingContext DisablingContext;
 static void interface_disabling_step (GTask *task);
 
 typedef enum {
     DISABLING_STEP_FIRST,
+    DISABLING_STEP_INITIAL_EPS_BEARER,
     DISABLING_STEP_PERIODIC_REGISTRATION_CHECKS,
     DISABLING_STEP_DISABLE_UNSOLICITED_REGISTRATION_EVENTS,
     DISABLING_STEP_CLEANUP_UNSOLICITED_REGISTRATION_EVENTS,
@@ -1618,6 +1770,11 @@ interface_disabling_step (GTask *task)
         /* Fall down to next step */
         ctx->step++;
 
+    case DISABLING_STEP_INITIAL_EPS_BEARER:
+        mm_iface_modem_3gpp_update_initial_eps_bearer (self, NULL);
+        /* Fall down to next step */
+        ctx->step++;
+
     case DISABLING_STEP_PERIODIC_REGISTRATION_CHECKS:
         /* Disable periodic registration checks, if they were set */
         periodic_registration_check_disable (self);
@@ -1689,7 +1846,7 @@ interface_disabling_step (GTask *task)
     case DISABLING_STEP_REGISTRATION_STATE:
         update_registration_state (self, MM_MODEM_3GPP_REGISTRATION_STATE_UNKNOWN, FALSE);
         mm_iface_modem_3gpp_update_access_technologies (self, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN);
-        mm_iface_modem_3gpp_update_location (self, 0, 0);
+        mm_iface_modem_3gpp_update_location (self, 0, 0, 0);
         /* Fall down to next step */
         ctx->step++;
 
@@ -1743,6 +1900,7 @@ typedef enum {
     ENABLING_STEP_ENABLE_UNSOLICITED_EVENTS,
     ENABLING_STEP_SETUP_UNSOLICITED_REGISTRATION_EVENTS,
     ENABLING_STEP_ENABLE_UNSOLICITED_REGISTRATION_EVENTS,
+    ENABLING_STEP_INITIAL_EPS_BEARER,
     ENABLING_STEP_LAST
 } EnablingStep;
 
@@ -1870,6 +2028,33 @@ enable_unsolicited_registration_events_ready (MMIfaceModem3gpp *self,
 }
 
 static void
+load_initial_eps_bearer_ready (MMIfaceModem3gpp *self,
+                               GAsyncResult     *res,
+                               GTask            *task)
+{
+    MMBearerProperties *properties;
+    EnablingContext    *ctx;
+    GError             *error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    properties = MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer_finish (self, res, &error);
+    if (!properties) {
+        mm_dbg ("couldn't load initial default bearer properties: '%s'", error->message);
+        g_error_free (error);
+        goto out;
+    }
+
+    mm_iface_modem_3gpp_update_initial_eps_bearer (self, properties);
+    g_object_unref (properties);
+
+out:
+    /* Go on to next step */
+    ctx->step++;
+    interface_enabling_step (task);
+}
+
+static void
 interface_enabling_step (GTask *task)
 {
     MMIfaceModem3gpp *self;
@@ -1951,6 +2136,26 @@ interface_enabling_step (GTask *task)
         ctx->step++;
     }
 
+    case ENABLING_STEP_INITIAL_EPS_BEARER: {
+        gboolean eps_supported = FALSE;
+
+        g_object_get (self,
+                      MM_IFACE_MODEM_3GPP_EPS_NETWORK_SUPPORTED, &eps_supported,
+                      NULL);
+
+        if (eps_supported &&
+            MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer &&
+            MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer_finish) {
+            MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer (
+                self,
+                (GAsyncReadyCallback)load_initial_eps_bearer_ready,
+                task);
+            return;
+        }
+        /* Fall down to next step */
+        ctx->step++;
+    }
+
     case ENABLING_STEP_LAST:
         /* We are done without errors! */
         g_task_return_boolean (task, TRUE);
@@ -2001,6 +2206,7 @@ typedef enum {
     INITIALIZATION_STEP_IMEI,
     INITIALIZATION_STEP_ENABLED_FACILITY_LOCKS,
     INITIALIZATION_STEP_EPS_UE_MODE_OPERATION,
+    INITIALIZATION_STEP_EPS_INITIAL_BEARER_SETTINGS,
     INITIALIZATION_STEP_LAST
 } InitializationStep;
 
@@ -2030,6 +2236,36 @@ sim_pin_lock_enabled_cb (MMBaseSim *self,
         facilities &= ~MM_MODEM_3GPP_FACILITY_SIM;
 
     mm_gdbus_modem3gpp_set_enabled_facility_locks (skeleton, facilities);
+}
+
+static void
+load_initial_eps_bearer_settings_ready (MMIfaceModem3gpp *self,
+                                        GAsyncResult     *res,
+                                        GTask            *task)
+{
+    InitializationContext *ctx;
+    MMBearerProperties    *config;
+    GError                *error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    config = MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer_settings_finish (self, res, &error);
+    if (!config) {
+        mm_warn ("couldn't load initial EPS bearer settings: '%s'", error->message);
+        g_error_free (error);
+    } else {
+        GVariant *dictionary;
+
+        dictionary = mm_bearer_properties_get_dictionary (config);
+        mm_gdbus_modem3gpp_set_initial_eps_bearer_settings (ctx->skeleton, dictionary);
+        g_object_unref (config);
+        if (dictionary)
+            g_variant_unref (dictionary);
+    }
+
+    /* Go on to next step */
+    ctx->step++;
+    interface_initialization_step (task);
 }
 
 static void
@@ -2180,6 +2416,19 @@ interface_initialization_step (GTask *task)
         /* Fall down to next step */
         ctx->step++;
 
+    case INITIALIZATION_STEP_EPS_INITIAL_BEARER_SETTINGS:
+        if (MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer_settings &&
+            MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer_settings_finish) {
+            MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer_settings (
+                self,
+                (GAsyncReadyCallback)load_initial_eps_bearer_settings_ready,
+                task);
+            return;
+        }
+        /* Fall down to next step */
+        ctx->step++;
+
+
     case INITIALIZATION_STEP_LAST:
         /* We are done without errors! */
 
@@ -2195,6 +2444,10 @@ interface_initialization_step (GTask *task)
         g_signal_connect (ctx->skeleton,
                           "handle-set-eps-ue-mode-operation",
                           G_CALLBACK (handle_set_eps_ue_mode_operation),
+                          self);
+        g_signal_connect (ctx->skeleton,
+                          "handle-set-initial-eps-bearer-settings",
+                          G_CALLBACK (handle_set_initial_eps_bearer_settings),
                           self);
 
         /* Finally, export the new interface */
@@ -2240,6 +2493,8 @@ mm_iface_modem_3gpp_initialize (MMIfaceModem3gpp *self,
         mm_gdbus_modem3gpp_set_operator_name (skeleton, NULL);
         mm_gdbus_modem3gpp_set_enabled_facility_locks (skeleton, MM_MODEM_3GPP_FACILITY_NONE);
         mm_gdbus_modem3gpp_set_subscription_state (skeleton, MM_MODEM_3GPP_SUBSCRIPTION_STATE_UNKNOWN);
+        mm_gdbus_modem3gpp_set_pco (skeleton, NULL);
+        mm_gdbus_modem3gpp_set_initial_eps_bearer (skeleton, NULL);
 
         /* Bind our RegistrationState property */
         g_object_bind_property (self, MM_IFACE_MODEM_3GPP_REGISTRATION_STATE,
@@ -2349,6 +2604,14 @@ iface_modem_3gpp_init (gpointer g_iface)
                              MM_TYPE_MODEM_3GPP_FACILITY,
                              MM_MODEM_3GPP_FACILITY_NONE,
                              G_PARAM_READWRITE));
+
+    g_object_interface_install_property
+        (g_iface,
+         g_param_spec_object (MM_IFACE_MODEM_3GPP_INITIAL_EPS_BEARER,
+                              "Initial EPS bearer",
+                              "Initial EPS bearer setup during registration",
+                              MM_TYPE_BASE_BEARER,
+                              G_PARAM_READWRITE));
 
     initialized = TRUE;
 }

@@ -67,6 +67,10 @@ struct _MMManagerClass {
 
 GType mm_manager_get_type (void);
 
+#if GLIB_CHECK_VERSION(2, 44, 0)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MMManager, g_object_unref)
+#endif
+
 void mm_manager_new (
     GDBusConnection               *connection,
     GDBusObjectManagerClientFlags  flags,
@@ -84,6 +88,8 @@ MMManager *mm_manager_new_sync (
 
 GDBusProxy *mm_manager_peek_proxy (MMManager *manager);
 GDBusProxy *mm_manager_get_proxy  (MMManager *manager);
+
+const gchar *mm_manager_get_version (MMManager *manager);
 
 void mm_manager_set_logging (MMManager           *manager,
                              const gchar         *level,
@@ -121,6 +127,32 @@ gboolean mm_manager_report_kernel_event_sync   (MMManager                *manage
                                                 MMKernelEventProperties  *properties,
                                                 GCancellable             *cancellable,
                                                 GError                  **error);
+
+void     mm_manager_inhibit_device        (MMManager           *manager,
+                                           const gchar         *uid,
+                                           GCancellable        *cancellable,
+                                           GAsyncReadyCallback  callback,
+                                           gpointer             user_data);
+gboolean mm_manager_inhibit_device_finish (MMManager           *manager,
+                                           GAsyncResult        *res,
+                                           GError             **error);
+gboolean mm_manager_inhibit_device_sync   (MMManager           *manager,
+                                           const gchar         *uid,
+                                           GCancellable        *cancellable,
+                                           GError             **error);
+
+void     mm_manager_uninhibit_device        (MMManager           *manager,
+                                             const gchar         *uid,
+                                             GCancellable        *cancellable,
+                                             GAsyncReadyCallback  callback,
+                                             gpointer             user_data);
+gboolean mm_manager_uninhibit_device_finish (MMManager           *manager,
+                                             GAsyncResult        *res,
+                                             GError             **error);
+gboolean mm_manager_uninhibit_device_sync   (MMManager           *manager,
+                                             const gchar         *uid,
+                                             GCancellable        *cancellable,
+                                             GError             **error);
 
 G_END_DECLS
 

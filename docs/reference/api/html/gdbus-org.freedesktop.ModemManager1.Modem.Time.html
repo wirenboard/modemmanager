@@ -40,13 +40,13 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.5.13.4"></a><h2>Signals</h2>
+<a name="id-1.5.5.13.4"></a><h2>Signals</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Time.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Time.NetworkTimeChanged" title='The "NetworkTimeChanged" signal'>NetworkTimeChanged</a> (s time);
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.5.13.5"></a><h2>Properties</h2>
+<a name="id-1.5.5.13.5"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Time.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Time.NetworkTimezone" title='The "NetworkTimezone" property'>NetworkTimezone</a>  readable   a{sv}
 </pre>
@@ -55,6 +55,11 @@
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Modem-Time"></a><h2>Description</h2>
 <p>      This interface allows clients to receive network time and timezone
       updates broadcast by mobile networks.
+</p>
+<p>      This interface will only be available once the modem is ready to be
+      registered in the cellular network. 3GPP devices will require a valid
+      unlocked SIM card before any of the features in the interface can be
+      used.
 </p>
 </div>
 <div class="refsect1">

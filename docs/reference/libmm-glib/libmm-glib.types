@@ -5,6 +5,8 @@ mm_bearer_ip_family_get_type
 mm_bearer_ip_method_get_type
 mm_bearer_properties_get_type
 mm_bearer_stats_get_type
+mm_bearer_type_get_type
+mm_call_audio_format_get_type
 mm_call_direction_get_type
 mm_call_get_type
 mm_call_properties_get_type
@@ -16,6 +18,7 @@ mm_connection_error_get_type
 mm_core_error_get_type
 mm_firmware_image_type_get_type
 mm_firmware_properties_get_type
+mm_firmware_update_settings_get_type
 mm_gdbus_bearer_get_type
 mm_gdbus_bearer_proxy_get_type
 mm_gdbus_bearer_skeleton_get_type
@@ -96,7 +99,9 @@ mm_modem_cdma_registration_state_get_type
 mm_modem_cdma_rm_protocol_get_type
 mm_modem_contacts_storage_get_type
 mm_modem_firmware_get_type
+mm_modem_firmware_update_method_get_type
 mm_modem_get_type
+mm_modem_location_assistance_data_type_get_type
 mm_modem_location_get_type
 mm_modem_location_source_get_type
 mm_modem_lock_get_type
@@ -118,6 +123,7 @@ mm_oma_feature_get_type
 mm_oma_session_state_failed_reason_get_type
 mm_oma_session_state_get_type
 mm_oma_session_type_get_type
+mm_pco_get_type
 mm_serial_error_get_type
 mm_signal_get_type
 mm_sim_get_type

@@ -18,7 +18,8 @@
                   <a href="#MmGdbusModemFirmware.description" class="shortcut">Description</a></span><span id="nav_hierarchy">  <span class="dim">|</span> 
                   <a href="#MmGdbusModemFirmware.object-hierarchy" class="shortcut">Object Hierarchy</a></span><span id="nav_prerequisites">  <span class="dim">|</span> 
                   <a href="#MmGdbusModemFirmware.prerequisites" class="shortcut">Prerequisites</a></span><span id="nav_implementations">  <span class="dim">|</span> 
-                  <a href="#MmGdbusModemFirmware.implementations" class="shortcut">Known Implementations</a></span><span id="nav_signals">  <span class="dim">|</span> 
+                  <a href="#MmGdbusModemFirmware.implementations" class="shortcut">Known Implementations</a></span><span id="nav_properties">  <span class="dim">|</span> 
+                  <a href="#MmGdbusModemFirmware.properties" class="shortcut">Properties</a></span><span id="nav_signals">  <span class="dim">|</span> 
                   <a href="#MmGdbusModemFirmware.signals" class="shortcut">Signals</a></span>
 </td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
@@ -43,6 +44,22 @@
 <col class="functions_name">
 </colgroup>
 <tbody>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MmGdbusModemFirmware.html#mm-gdbus-modem-firmware-dup-update-settings" title="mm_gdbus_modem_firmware_dup_update_settings ()">mm_gdbus_modem_firmware_dup_update_settings</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MmGdbusModemFirmware.html#mm-gdbus-modem-firmware-get-update-settings" title="mm_gdbus_modem_firmware_get_update_settings ()">mm_gdbus_modem_firmware_get_update_settings</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
 <tr>
 <td class="function_type">
 <span class="returnvalue">void</span>
@@ -92,6 +109,22 @@
 </td>
 </tr>
 </tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="MmGdbusModemFirmware.properties"></a><h2>Properties</h2>
+<div class="informaltable"><table class="informaltable" border="0">
+<colgroup>
+<col width="150px" class="properties_type">
+<col width="300px" class="properties_name">
+<col width="200px" class="properties_flags">
+</colgroup>
+<tbody><tr>
+<td class="property_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *</td>
+<td class="property_name"><a class="link" href="MmGdbusModemFirmware.html#MmGdbusModemFirmware--update-settings" title="The “update-settings” property">update-settings</a></td>
+<td class="property_flags">Read / Write</td>
+</tr></tbody>
 </table></div>
 </div>
 <div class="refsect1">
@@ -159,6 +192,68 @@ MmGdbusModemFirmware is implemented by
 </div>
 <div class="refsect1">
 <a name="MmGdbusModemFirmware.functions_details"></a><h2>Functions</h2>
+<div class="refsect2">
+<a name="mm-gdbus-modem-firmware-dup-update-settings"></a><h3>mm_gdbus_modem_firmware_dup_update_settings ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
+mm_gdbus_modem_firmware_dup_update_settings
+                               (<em class="parameter"><code><a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="type">MmGdbusModemFirmware</span></a> *object</code></em>);</pre>
+<p>Gets a copy of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Firmware.UpdateSettings">"UpdateSettings"</a> D-Bus property.</p>
+<p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
+<div class="refsect3">
+<a name="mm-gdbus-modem-firmware-dup-update-settings.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>object</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="type">MmGdbusModemFirmware</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-gdbus-modem-firmware-dup-update-settings.returns"></a><h4>Returns</h4>
+<p>The property value or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if the property is not set. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#g-variant-unref"><code class="function">g_variant_unref()</code></a>. </p>
+<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-gdbus-modem-firmware-get-update-settings"></a><h3>mm_gdbus_modem_firmware_get_update_settings ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
+mm_gdbus_modem_firmware_get_update_settings
+                               (<em class="parameter"><code><a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="type">MmGdbusModemFirmware</span></a> *object</code></em>);</pre>
+<p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Firmware.UpdateSettings">"UpdateSettings"</a> D-Bus property.</p>
+<p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
+<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModemFirmware.html#mm-gdbus-modem-firmware-dup-update-settings" title="mm_gdbus_modem_firmware_dup_update_settings ()"><code class="function">mm_gdbus_modem_firmware_dup_update_settings()</code></a> if on another thread.</div>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
+<div class="refsect3">
+<a name="mm-gdbus-modem-firmware-get-update-settings.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>object</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="type">MmGdbusModemFirmware</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-gdbus-modem-firmware-get-update-settings.returns"></a><h4>Returns</h4>
+<p>The property value or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if the property is not set. Do not free the returned value, it belongs to <em class="parameter"><code>object</code></em>
+. </p>
+<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+</div>
+</div>
+<hr>
 <div class="refsect2">
 <a name="mm-gdbus-modem-firmware-call-list"></a><h3>mm_gdbus_modem_firmware_call_list ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
@@ -480,6 +575,7 @@ is set. </p>
 <pre class="programlisting">struct MmGdbusModemFirmwareIface {
   GTypeInterface parent_iface;
 
+
   gboolean (*handle_list) (
     MmGdbusModemFirmware *object,
     GDBusMethodInvocation *invocation);
@@ -488,6 +584,8 @@ is set. </p>
     MmGdbusModemFirmware *object,
     GDBusMethodInvocation *invocation,
     const gchar *arg_uniqueid);
+
+  GVariant * (*get_update_settings) (MmGdbusModemFirmware *object);
 };
 </pre>
 <p>Virtual table for the D-Bus interface org.freedesktop.ModemManager1.Modem.Firmware.</p>
@@ -515,9 +613,26 @@ is set. </p>
 <td class="struct_member_description"><p>Handler for the <a class="link" href="MmGdbusModemFirmware.html#MmGdbusModemFirmware-handle-select" title="The “handle-select” signal"><span class="type">“handle-select”</span></a> signal.</p></td>
 <td class="struct_member_annotations"> </td>
 </tr>
+<tr>
+<td class="struct_member_name"><p><em class="structfield"><code><a name="MmGdbusModemFirmwareIface.get-update-settings"></a>get_update_settings</code></em> ()</p></td>
+<td class="struct_member_description"><p>Getter for the <a class="link" href="MmGdbusModemFirmware.html#MmGdbusModemFirmware--update-settings" title="The “update-settings” property"><span class="type">“update-settings”</span></a> property.</p></td>
+<td class="struct_member_annotations"> </td>
+</tr>
 </tbody>
 </table></div>
 </div>
+</div>
+</div>
+<div class="refsect1">
+<a name="MmGdbusModemFirmware.property-details"></a><h2>Property Details</h2>
+<div class="refsect2">
+<a name="MmGdbusModemFirmware--update-settings"></a><h3>The <code class="literal">“update-settings”</code> property</h3>
+<pre class="programlisting">  “update-settings”          <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *</pre>
+<p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Firmware.UpdateSettings">"UpdateSettings"</a>.</p>
+<p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Flags: Read / Write</p>
+<p>Allowed values: GVariant&lt;(ua{sv})&gt;</p>
+<p>Default value: NULL</p>
 </div>
 </div>
 <div class="refsect1">

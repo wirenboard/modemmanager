@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2011 Aleksander Morgado <aleksander@gnu.org>
+ * Copyright (C) 2011-2018 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include "config.h"
@@ -32,6 +32,7 @@
 
 #include "mmcli.h"
 #include "mmcli-common.h"
+#include "mmcli-output.h"
 
 /* Context */
 typedef struct {
@@ -56,13 +57,13 @@ static gboolean set_power_state_off_flag;
 static gboolean reset_flag;
 static gchar *factory_reset_str;
 static gchar *command_str;
-static gboolean list_bearers_flag;
 static gchar *create_bearer_str;
 static gchar *delete_bearer_str;
 static gchar *set_current_capabilities_str;
 static gchar *set_allowed_modes_str;
 static gchar *set_preferred_mode_str;
 static gchar *set_current_bands_str;
+static gboolean inhibit_flag;
 
 static GOptionEntry entries[] = {
     { "monitor-state", 'w', 0, G_OPTION_ARG_NONE, &monitor_state_flag,
@@ -101,10 +102,6 @@ static GOptionEntry entries[] = {
       "Send an AT command to the modem",
       "[COMMAND]"
     },
-    { "list-bearers", 0, 0, G_OPTION_ARG_NONE, &list_bearers_flag,
-      "List packet data bearers available in a given modem",
-      NULL
-    },
     { "create-bearer", 0, 0, G_OPTION_ARG_STRING, &create_bearer_str,
       "Create a new packet data bearer in a given modem",
       "[\"key=value,...\"]"
@@ -128,6 +125,10 @@ static GOptionEntry entries[] = {
     { "set-current-bands", 0, 0, G_OPTION_ARG_STRING, &set_current_bands_str,
       "Set bands to be used by a given modem.",
       "[BAND1|BAND2...]"
+    },
+    { "inhibit", 0, 0, G_OPTION_ARG_NONE, &inhibit_flag,
+      "Inhibit the modem",
+      NULL
     },
     { NULL }
 };
@@ -164,7 +165,6 @@ mmcli_modem_options_enabled (void)
                  set_power_state_low_flag +
                  set_power_state_off_flag +
                  reset_flag +
-                 list_bearers_flag +
                  !!create_bearer_str +
                  !!delete_bearer_str +
                  !!factory_reset_str +
@@ -172,7 +172,8 @@ mmcli_modem_options_enabled (void)
                  !!set_current_capabilities_str +
                  !!set_allowed_modes_str +
                  !!set_preferred_mode_str +
-                 !!set_current_bands_str);
+                 !!set_current_bands_str +
+                 inhibit_flag);
 
     if (n_actions == 0 && mmcli_get_common_modem_string ()) {
         /* default to info */
@@ -193,7 +194,7 @@ mmcli_modem_options_enabled (void)
         exit (EXIT_FAILURE);
     }
 
-    if (monitor_state_flag)
+    if (monitor_state_flag || inhibit_flag)
         mmcli_force_async_operation ();
 
     if (info_flag)
@@ -233,6 +234,42 @@ mmcli_modem_shutdown (void)
 }
 
 static void
+inhibition_cancelled (GCancellable *cancellable,
+                      const gchar  *uid)
+{
+    GError *error = NULL;
+
+    if (!mm_manager_uninhibit_device_sync (ctx->manager, uid, NULL, &error)) {
+        g_printerr ("error: couldn't uninhibit device: '%s'\n",
+                    error ? error->message : "unknown error");
+    } else
+        g_print ("successfully uninhibited device with uid '%s'\n", uid);
+
+    mmcli_async_operation_done ();
+}
+
+static void
+inhibit_device_ready (MMManager    *manager,
+                      GAsyncResult *result,
+                      gchar        *uid)
+{
+    GError *error = NULL;
+
+    if (!mm_manager_inhibit_device_finish (manager, result, &error)) {
+        g_printerr ("error: couldn't inhibit device: '%s'\n",
+                    error ? error->message : "unknown error");
+        exit (EXIT_FAILURE);
+    }
+
+    g_print ("successfully inhibited device with uid '%s'\n", uid);
+    g_print ("type Ctrl+C to abort this program and remove the inhibition\n");
+
+    g_cancellable_connect (ctx->cancellable,
+                           G_CALLBACK (inhibition_cancelled),
+                           uid, g_free);
+}
+
+static void
 cancelled (GCancellable *cancellable)
 {
     mmcli_async_operation_done ();
@@ -248,9 +285,6 @@ print_bearer_short_info (MMBearer *bearer)
 static void
 print_modem_info (void)
 {
-    gchar *drivers_string;
-    gchar *prefixed_revision;
-    gchar *prefixed_hardware_revision;
     gchar *supported_capabilities_string;
     MMModemCapability *capabilities = NULL;
     guint n_capabilities = 0;
@@ -267,7 +301,6 @@ print_modem_info (void)
     gchar *current_bands_string;
     gchar *supported_ip_families_string;
     gchar *unlock_retries_string;
-    gchar *own_numbers_string;
     MMModemBand *bands = NULL;
     guint n_bands = 0;
     MMModemPortInfo *ports = NULL;
@@ -276,14 +309,8 @@ print_modem_info (void)
     MMUnlockRetries *unlock_retries;
     guint signal_quality = 0;
     gboolean signal_quality_recent = FALSE;
-    gchar *bearer_paths_string;
-
-    /* Not the best thing to do, as we may be doing _get() calls twice, but
-     * easiest to maintain */
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-#undef VALIDATE_PATH
-#define VALIDATE_PATH(str) ((str && !g_str_equal (str, "/")) ? str : "none")
+    const gchar *sim_path;
+    const gchar **bearer_paths;
 
     /* Strings in heap */
     mm_modem_get_supported_capabilities (ctx->modem, &capabilities, &n_capabilities);
@@ -316,226 +343,141 @@ print_modem_info (void)
     unlock_retries_string = mm_unlock_retries_build_string (unlock_retries);
     g_object_unref (unlock_retries);
 
-    if (mm_modem_get_own_numbers (ctx->modem)) {
-        own_numbers_string = g_strjoinv (", ", (gchar **)mm_modem_get_own_numbers (ctx->modem));
-        if (!own_numbers_string[0]) {
-            g_free (own_numbers_string);
-            own_numbers_string = NULL;
-        }
-    } else
-        own_numbers_string = NULL;
-
-    if (mm_modem_get_drivers (ctx->modem)) {
-        drivers_string = g_strjoinv (", ", (gchar **)mm_modem_get_drivers (ctx->modem));
-        if (!drivers_string[0]) {
-            g_free (drivers_string);
-            drivers_string = NULL;
-        }
-    } else
-        drivers_string = NULL;
-
-    /* Rework possible multiline strings */
-    if (mm_modem_get_revision (ctx->modem))
-        prefixed_revision = mmcli_prefix_newlines ("           |                  ",
-                                                   mm_modem_get_revision (ctx->modem));
-    else
-        prefixed_revision = NULL;
-
-    if (mm_modem_get_hardware_revision (ctx->modem))
-        prefixed_hardware_revision = mmcli_prefix_newlines ("           |                  ",
-                                                            mm_modem_get_hardware_revision (ctx->modem));
-    else
-        prefixed_hardware_revision = NULL;
-
-    if (supported_modes_string) {
-        gchar *prefixed;
-
-        prefixed = mmcli_prefix_newlines ("           |                  ",
-                                          supported_modes_string);
-        g_free (supported_modes_string);
-        supported_modes_string = prefixed;
-    }
-
-    if (supported_capabilities_string) {
-        gchar *prefixed;
-
-        prefixed = mmcli_prefix_newlines ("           |                  ",
-                                          supported_capabilities_string);
-        g_free (supported_capabilities_string);
-        supported_capabilities_string = prefixed;
-    }
-
-    /* Get signal quality info */
     signal_quality = mm_modem_get_signal_quality (ctx->modem, &signal_quality_recent);
 
-    if (mm_modem_get_bearer_paths (ctx->modem)) {
-        bearer_paths_string = g_strjoinv (", ", (gchar **)mm_modem_get_bearer_paths (ctx->modem));
-        if (!bearer_paths_string[0]) {
-            g_free (bearer_paths_string);
-            bearer_paths_string = NULL;
+    mmcli_output_string           (MMC_F_GENERAL_DBUS_PATH,               mm_modem_get_path (ctx->modem));
+    mmcli_output_string           (MMC_F_GENERAL_DEVICE_ID,               mm_modem_get_device_identifier (ctx->modem));
+
+    mmcli_output_string           (MMC_F_HARDWARE_MANUFACTURER,           mm_modem_get_manufacturer (ctx->modem));
+    mmcli_output_string           (MMC_F_HARDWARE_MODEL,                  mm_modem_get_model (ctx->modem));
+    mmcli_output_string           (MMC_F_HARDWARE_REVISION,               mm_modem_get_revision (ctx->modem));
+    mmcli_output_string           (MMC_F_HARDWARE_HW_REVISION,            mm_modem_get_hardware_revision (ctx->modem));
+    mmcli_output_string_multiline (MMC_F_HARDWARE_SUPPORTED_CAPABILITIES, supported_capabilities_string);
+    mmcli_output_string_multiline (MMC_F_HARDWARE_CURRENT_CAPABILITIES,   current_capabilities_string);
+    mmcli_output_string           (MMC_F_HARDWARE_EQUIPMENT_ID,           mm_modem_get_equipment_identifier (ctx->modem));
+
+    mmcli_output_string           (MMC_F_SYSTEM_DEVICE,                   mm_modem_get_device (ctx->modem));
+    mmcli_output_string_array     (MMC_F_SYSTEM_DRIVERS,                  (const gchar **) mm_modem_get_drivers (ctx->modem), FALSE);
+    mmcli_output_string           (MMC_F_SYSTEM_PLUGIN,                   mm_modem_get_plugin (ctx->modem));
+    mmcli_output_string           (MMC_F_SYSTEM_PRIMARY_PORT,             mm_modem_get_primary_port (ctx->modem));
+    mmcli_output_string_list      (MMC_F_SYSTEM_PORTS,                    ports_string);
+
+    mmcli_output_string_array     (MMC_F_NUMBERS_OWN,                     (const gchar **) mm_modem_get_own_numbers (ctx->modem), FALSE);
+
+    mmcli_output_string           (MMC_F_STATUS_LOCK,                     mm_modem_lock_get_string (mm_modem_get_unlock_required (ctx->modem)));
+    mmcli_output_string_list      (MMC_F_STATUS_UNLOCK_RETRIES,           unlock_retries_string);
+    mmcli_output_state            (mm_modem_get_state (ctx->modem), mm_modem_get_state_failed_reason (ctx->modem));
+    mmcli_output_string           (MMC_F_STATUS_POWER_STATE,              mm_modem_power_state_get_string (mm_modem_get_power_state (ctx->modem)));
+    mmcli_output_string_list      (MMC_F_STATUS_ACCESS_TECH,              access_technologies_string);
+    mmcli_output_signal_quality   (signal_quality, signal_quality_recent);
+
+    mmcli_output_string_multiline (MMC_F_MODES_SUPPORTED,                 supported_modes_string);
+    mmcli_output_string_take      (MMC_F_MODES_CURRENT,                   g_strdup_printf ("allowed: %s; preferred: %s",
+                                                                                           allowed_modes_string, preferred_mode_string));
+
+    mmcli_output_string_list      (MMC_F_BANDS_SUPPORTED,                 supported_bands_string);
+    mmcli_output_string_list      (MMC_F_BANDS_CURRENT,                   current_bands_string);
+
+    mmcli_output_string_list      (MMC_F_IP_SUPPORTED,                    supported_ip_families_string);
+
+    /* 3GPP */
+    {
+        const gchar *imei = NULL;
+        gchar       *facility_locks = NULL;
+        const gchar *operator_code = NULL;
+        const gchar *operator_name = NULL;
+        const gchar *registration = NULL;
+        const gchar *eps_ue_mode = NULL;
+        GList       *pco_list = NULL;
+        const gchar *initial_eps_bearer_path = NULL;
+        const gchar *initial_eps_bearer_apn = NULL;
+        gchar       *initial_eps_bearer_ip_family_str = NULL;
+        const gchar *initial_eps_bearer_user = NULL;
+        const gchar *initial_eps_bearer_password = NULL;
+
+        if (ctx->modem_3gpp) {
+            imei = mm_modem_3gpp_get_imei (ctx->modem_3gpp);
+            facility_locks = mm_modem_3gpp_facility_build_string_from_mask (mm_modem_3gpp_get_enabled_facility_locks (ctx->modem_3gpp));
+            operator_code = mm_modem_3gpp_get_operator_code (ctx->modem_3gpp);
+            operator_name = mm_modem_3gpp_get_operator_name (ctx->modem_3gpp);
+            registration = mm_modem_3gpp_registration_state_get_string (mm_modem_3gpp_get_registration_state (ctx->modem_3gpp));
+            eps_ue_mode = mm_modem_3gpp_eps_ue_mode_operation_get_string (mm_modem_3gpp_get_eps_ue_mode_operation (ctx->modem_3gpp));
+            pco_list = mm_modem_3gpp_get_pco (ctx->modem_3gpp);
+            initial_eps_bearer_path = mm_modem_3gpp_get_initial_eps_bearer_path (ctx->modem_3gpp);
+
+            if (mm_modem_get_current_capabilities (ctx->modem) & (MM_MODEM_CAPABILITY_LTE | MM_MODEM_CAPABILITY_LTE_ADVANCED)) {
+                MMBearerProperties *initial_eps_bearer_properties;
+
+                initial_eps_bearer_properties = mm_modem_3gpp_peek_initial_eps_bearer_settings (ctx->modem_3gpp);
+                if (initial_eps_bearer_properties) {
+                    initial_eps_bearer_apn           = mm_bearer_properties_get_apn (initial_eps_bearer_properties);
+                    initial_eps_bearer_ip_family_str = mm_bearer_ip_family_build_string_from_mask (mm_bearer_properties_get_ip_type (initial_eps_bearer_properties));
+                    initial_eps_bearer_user          = mm_bearer_properties_get_user (initial_eps_bearer_properties);
+                    initial_eps_bearer_password      = mm_bearer_properties_get_password (initial_eps_bearer_properties);
+                }
+            }
         }
-    } else
-        bearer_paths_string = NULL;
 
-    /* Global IDs */
-    g_print ("\n"
-             "%s (device id '%s')\n",
-             VALIDATE_UNKNOWN (mm_modem_get_path (ctx->modem)),
-             VALIDATE_UNKNOWN (mm_modem_get_device_identifier (ctx->modem)));
-
-    /* Hardware related stuff */
-    g_print ("  -------------------------\n"
-             "  Hardware |   manufacturer: '%s'\n"
-             "           |          model: '%s'\n"
-             "           |       revision: '%s'\n"
-             "           |   H/W revision: '%s'\n"
-             "           |      supported: '%s'\n"
-             "           |        current: '%s'\n"
-             "           |   equipment id: '%s'\n",
-             VALIDATE_UNKNOWN (mm_modem_get_manufacturer (ctx->modem)),
-             VALIDATE_UNKNOWN (mm_modem_get_model (ctx->modem)),
-             VALIDATE_UNKNOWN (prefixed_revision),
-             VALIDATE_UNKNOWN (prefixed_hardware_revision),
-             VALIDATE_UNKNOWN (supported_capabilities_string),
-             VALIDATE_UNKNOWN (current_capabilities_string),
-             VALIDATE_UNKNOWN (mm_modem_get_equipment_identifier (ctx->modem)));
-
-    /* System related stuff */
-    g_print ("  -------------------------\n"
-             "  System   |         device: '%s'\n"
-             "           |        drivers: '%s'\n"
-             "           |         plugin: '%s'\n"
-             "           |   primary port: '%s'\n"
-             "           |          ports: '%s'\n",
-             VALIDATE_UNKNOWN (mm_modem_get_device (ctx->modem)),
-             VALIDATE_UNKNOWN (drivers_string),
-             VALIDATE_UNKNOWN (mm_modem_get_plugin (ctx->modem)),
-             VALIDATE_UNKNOWN (mm_modem_get_primary_port (ctx->modem)),
-             VALIDATE_UNKNOWN (ports_string));
-
-    /* Numbers related stuff */
-    g_print ("  -------------------------\n"
-             "  Numbers  |           own : '%s'\n",
-             VALIDATE_UNKNOWN (own_numbers_string));
-
-    /* Status related stuff */
-    g_print ("  -------------------------\n"
-             "  Status   |           lock: '%s'\n"
-             "           | unlock retries: '%s'\n"
-             "           |          state: '%s'\n",
-             mm_modem_lock_get_string (mm_modem_get_unlock_required (ctx->modem)),
-             VALIDATE_UNKNOWN (unlock_retries_string),
-             VALIDATE_UNKNOWN (mm_modem_state_get_string (mm_modem_get_state (ctx->modem))));
-
-    if (mm_modem_get_state (ctx->modem) == MM_MODEM_STATE_FAILED)
-        g_print ("           |  failed reason: '%s'\n",
-                 VALIDATE_UNKNOWN (mm_modem_state_failed_reason_get_string (mm_modem_get_state_failed_reason (ctx->modem))));
-
-    g_print ("           |    power state: '%s'\n"
-             "           |    access tech: '%s'\n"
-             "           | signal quality: '%u' (%s)\n",
-             VALIDATE_UNKNOWN (mm_modem_power_state_get_string (mm_modem_get_power_state (ctx->modem))),
-             VALIDATE_UNKNOWN (access_technologies_string),
-             signal_quality, signal_quality_recent ? "recent" : "cached");
-
-    /* Modes */
-    g_print ("  -------------------------\n"
-             "  Modes    |      supported: '%s'\n"
-             "           |        current: 'allowed: %s; preferred: %s'\n",
-             VALIDATE_UNKNOWN (supported_modes_string),
-             VALIDATE_UNKNOWN (allowed_modes_string),
-             VALIDATE_UNKNOWN (preferred_mode_string));
-
-    /* Band related stuff */
-    g_print ("  -------------------------\n"
-             "  Bands    |      supported: '%s'\n"
-             "           |        current: '%s'\n",
-             VALIDATE_UNKNOWN (supported_bands_string),
-             VALIDATE_UNKNOWN (current_bands_string));
-
-    /* IP families */
-    g_print ("  -------------------------\n"
-             "  IP       |      supported: '%s'\n",
-             VALIDATE_UNKNOWN (supported_ip_families_string));
-
-    /* If available, 3GPP related stuff */
-    if (ctx->modem_3gpp) {
-        gchar *facility_locks;
-
-        facility_locks = (mm_modem_3gpp_facility_build_string_from_mask (
-                              mm_modem_3gpp_get_enabled_facility_locks (ctx->modem_3gpp)));
-        g_print ("  -------------------------\n"
-                 "  3GPP     |           imei: '%s'\n"
-                 "           |  enabled locks: '%s'\n"
-                 "           |    operator id: '%s'\n"
-                 "           |  operator name: '%s'\n"
-                 "           |   subscription: '%s'\n"
-                 "           |   registration: '%s'\n"
-                 "           |    EPS UE mode: '%s'\n",
-                 VALIDATE_UNKNOWN (mm_modem_3gpp_get_imei (ctx->modem_3gpp)),
-                 facility_locks,
-                 VALIDATE_UNKNOWN (mm_modem_3gpp_get_operator_code (ctx->modem_3gpp)),
-                 VALIDATE_UNKNOWN (mm_modem_3gpp_get_operator_name (ctx->modem_3gpp)),
-                 mm_modem_3gpp_subscription_state_get_string (
-                     mm_modem_3gpp_get_subscription_state (ctx->modem_3gpp)),
-                 mm_modem_3gpp_registration_state_get_string (
-                     mm_modem_3gpp_get_registration_state (ctx->modem_3gpp)),
-                 mm_modem_3gpp_eps_ue_mode_operation_get_string (
-                     mm_modem_3gpp_get_eps_ue_mode_operation (ctx->modem_3gpp)));
+        mmcli_output_string      (MMC_F_3GPP_IMEI,          imei);
+        mmcli_output_string_list (MMC_F_3GPP_ENABLED_LOCKS, facility_locks);
+        mmcli_output_string      (MMC_F_3GPP_OPERATOR_ID,   operator_code);
+        mmcli_output_string      (MMC_F_3GPP_OPERATOR_NAME, operator_name);
+        mmcli_output_string      (MMC_F_3GPP_REGISTRATION,  registration);
+        mmcli_output_string      (MMC_F_3GPP_EPS_UE_MODE,   eps_ue_mode);
+        mmcli_output_string      (MMC_F_3GPP_EPS_INITIAL_BEARER_PATH,      g_strcmp0 (initial_eps_bearer_path, "/") != 0 ? initial_eps_bearer_path : NULL);
+        mmcli_output_string      (MMC_F_3GPP_EPS_BEARER_SETTINGS_APN,      initial_eps_bearer_apn);
+        mmcli_output_string_take (MMC_F_3GPP_EPS_BEARER_SETTINGS_IP_TYPE,  initial_eps_bearer_ip_family_str);
+        mmcli_output_string      (MMC_F_3GPP_EPS_BEARER_SETTINGS_USER,     initial_eps_bearer_user);
+        mmcli_output_string      (MMC_F_3GPP_EPS_BEARER_SETTINGS_PASSWORD, initial_eps_bearer_password);
+        mmcli_output_pco_list    (pco_list);
 
         g_free (facility_locks);
+        mm_pco_list_free (pco_list);
     }
 
-    /* If available, CDMA related stuff */
-    if (ctx->modem_cdma) {
-        guint sid;
-        guint nid;
-        gchar *sid_str;
-        gchar *nid_str;
+    /* CDMA */
+    {
+        const gchar *meid = NULL;
+        const gchar *esn = NULL;
+        gchar       *sid = NULL;
+        gchar       *nid = NULL;
+        const gchar *registration_cdma1x = NULL;
+        const gchar *registration_evdo = NULL;
+        const gchar *activation = NULL;
 
-        sid = mm_modem_cdma_get_sid (ctx->modem_cdma);
-        sid_str = (sid != MM_MODEM_CDMA_SID_UNKNOWN ?
-                   g_strdup_printf ("%u", sid) :
-                   NULL);
-        nid = mm_modem_cdma_get_nid (ctx->modem_cdma);
-        nid_str = (nid != MM_MODEM_CDMA_NID_UNKNOWN ?
-                   g_strdup_printf ("%u", nid) :
-                   NULL);
+        if (ctx->modem_cdma) {
+            guint sid_n;
+            guint nid_n;
 
-        g_print ("  -------------------------\n"
-                 "  CDMA     |           meid: '%s'\n"
-                 "           |            esn: '%s'\n"
-                 "           |            sid: '%s'\n"
-                 "           |            nid: '%s'\n"
-                 "           |   registration: CDMA1x '%s'\n"
-                 "           |                 EV-DO  '%s'\n"
-                 "           |     activation: '%s'\n",
-                 VALIDATE_UNKNOWN (mm_modem_cdma_get_meid (ctx->modem_cdma)),
-                 VALIDATE_UNKNOWN (mm_modem_cdma_get_esn (ctx->modem_cdma)),
-                 VALIDATE_UNKNOWN (sid_str),
-                 VALIDATE_UNKNOWN (nid_str),
-                 mm_modem_cdma_registration_state_get_string (
-                     mm_modem_cdma_get_cdma1x_registration_state (ctx->modem_cdma)),
-                 mm_modem_cdma_registration_state_get_string (
-                     mm_modem_cdma_get_evdo_registration_state (ctx->modem_cdma)),
-                 mm_modem_cdma_activation_state_get_string (
-                     mm_modem_cdma_get_activation_state (ctx->modem_cdma)));
+            meid = mm_modem_cdma_get_meid (ctx->modem_cdma);
+            esn  = mm_modem_cdma_get_esn (ctx->modem_cdma);
+            sid_n = mm_modem_cdma_get_sid (ctx->modem_cdma);
+            if (sid_n != MM_MODEM_CDMA_SID_UNKNOWN)
+                sid = g_strdup_printf ("%u", sid_n);
+            nid_n = mm_modem_cdma_get_nid (ctx->modem_cdma);
+            if (nid_n != MM_MODEM_CDMA_NID_UNKNOWN)
+                nid = g_strdup_printf ("%u", nid_n);
+            registration_cdma1x = mm_modem_cdma_registration_state_get_string (mm_modem_cdma_get_cdma1x_registration_state (ctx->modem_cdma));
+            registration_evdo = mm_modem_cdma_registration_state_get_string (mm_modem_cdma_get_evdo_registration_state (ctx->modem_cdma));
+            activation = mm_modem_cdma_activation_state_get_string (mm_modem_cdma_get_activation_state (ctx->modem_cdma));
+        }
 
-        g_free (sid_str);
-        g_free (nid_str);
+        mmcli_output_string      (MMC_F_CDMA_MEID,                meid);
+        mmcli_output_string      (MMC_F_CDMA_ESN,                 esn);
+        mmcli_output_string_take (MMC_F_CDMA_SID,                 sid);
+        mmcli_output_string_take (MMC_F_CDMA_NID,                 nid);
+        mmcli_output_string      (MMC_F_CDMA_REGISTRATION_CDMA1X, registration_cdma1x);
+        mmcli_output_string      (MMC_F_CDMA_REGISTRATION_EVDO,   registration_evdo);
+        mmcli_output_string      (MMC_F_CDMA_ACTIVATION,          activation);
     }
 
-    /* SIM */
-    g_print ("  -------------------------\n"
-             "  SIM      |           path: '%s'\n",
-             VALIDATE_PATH (mm_modem_get_sim_path (ctx->modem)));
-    g_print ("\n");
+    sim_path = mm_modem_get_sim_path (ctx->modem);
+    mmcli_output_string (MMC_F_SIM_PATH, g_strcmp0 (sim_path, "/") != 0 ? sim_path : NULL);
 
-    /* Bearers */
-    g_print ("  -------------------------\n"
-             "  Bearers  |          paths: '%s'\n",
-             VALIDATE_PATH (bearer_paths_string));
-    g_print ("\n");
+    bearer_paths = (const gchar **) mm_modem_get_bearer_paths (ctx->modem);
+    mmcli_output_string_array (MMC_F_BEARER_PATHS, (bearer_paths && bearer_paths[0]) ? bearer_paths : NULL, TRUE);
+
+    mmcli_output_dump ();
 
     g_free (ports_string);
     g_free (supported_ip_families_string);
@@ -544,15 +486,10 @@ print_modem_info (void)
     g_free (access_technologies_string);
     g_free (supported_capabilities_string);
     g_free (current_capabilities_string);
-    g_free (prefixed_revision);
-    g_free (prefixed_hardware_revision);
     g_free (allowed_modes_string);
     g_free (preferred_mode_string);
     g_free (supported_modes_string);
     g_free (unlock_retries_string);
-    g_free (own_numbers_string);
-    g_free (drivers_string);
-    g_free (bearer_paths_string);
 }
 
 static void
@@ -732,48 +669,6 @@ command_get_timeout (MMModem *modem)
     }
 
     return (guint)timeout;
-}
-
-static void
-list_bearers_process_reply (GList        *result,
-                            const GError *error)
-{
-    if (error) {
-        g_printerr ("error: couldn't list bearers: '%s'\n",
-                    error->message);
-        exit (EXIT_FAILURE);
-    }
-
-    g_print ("\n");
-    if (!result) {
-        g_print ("No bearers were found\n");
-    } else {
-        GList *l;
-
-        g_print ("Found %u bearers:\n", g_list_length (result));
-        for (l = result; l; l = g_list_next (l)) {
-            MMBearer *bearer = MM_BEARER (l->data);
-
-            g_print ("\n");
-            print_bearer_short_info (bearer);
-            g_object_unref (bearer);
-        }
-        g_list_free (result);
-    }
-}
-
-static void
-list_bearers_ready (MMModem      *modem,
-                    GAsyncResult *result,
-                    gpointer      nothing)
-{
-    GList *operation_result;
-    GError *error = NULL;
-
-    operation_result = mm_modem_list_bearers_finish (modem, result, &error);
-    list_bearers_process_reply (operation_result, error);
-
-    mmcli_async_operation_done ();
 }
 
 static void
@@ -1140,16 +1035,6 @@ get_modem_ready (GObject      *source,
         return;
     }
 
-    /* Request to list bearers? */
-    if (list_bearers_flag) {
-        g_debug ("Asynchronously listing bearers in modem...");
-        mm_modem_list_bearers (ctx->modem,
-                               ctx->cancellable,
-                               (GAsyncReadyCallback)list_bearers_ready,
-                               NULL);
-        return;
-    }
-
     /* Request to create a new bearer? */
     if (create_bearer_str) {
         GError *error = NULL;
@@ -1225,6 +1110,21 @@ get_modem_ready (GObject      *source,
         return;
     }
 
+    /* Request to inhibit the modem? */
+    if (inhibit_flag) {
+        gchar *uid;
+
+        g_debug ("Asynchronously inhibiting modem...");
+        uid = mm_modem_dup_device (ctx->modem);
+
+        mm_manager_inhibit_device (ctx->manager,
+                                   uid,
+                                   ctx->cancellable,
+                                   (GAsyncReadyCallback)inhibit_device_ready,
+                                   uid);
+        return;
+    }
+
     g_warn_if_reached ();
 }
 
@@ -1251,7 +1151,7 @@ mmcli_modem_run_synchronous (GDBusConnection *connection)
 {
     GError *error = NULL;
 
-    if (monitor_state_flag)
+    if (monitor_state_flag || inhibit_flag)
         g_assert_not_reached ();
 
     /* Initialize context */
@@ -1368,16 +1268,6 @@ mmcli_modem_run_synchronous (GDBusConnection *connection)
                                         NULL,
                                         &error);
         command_process_reply (result, error);
-        return;
-    }
-
-    /* Request to list the bearers? */
-    if (list_bearers_flag) {
-        GList *result;
-
-        g_debug ("Synchronously listing bearers...");
-        result = mm_modem_list_bearers_sync (ctx->modem, NULL, &error);
-        list_bearers_process_reply (result, error);
         return;
     }
 
