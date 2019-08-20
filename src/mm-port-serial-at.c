@@ -427,6 +427,7 @@ mm_port_serial_at_command (MMPortSerialAt *self,
                             buf,
                             timeout_seconds,
                             allow_cached,
+                            is_raw, /* raw commands always run next, never queued last */
                             cancellable,
                             (GAsyncReadyCallback)serial_command_ready,
                             simple);

@@ -177,6 +177,8 @@
     <keyword type="property" name="The &quot;Manufacturer&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Manufacturer"/>
     <keyword type="property" name="The &quot;Model&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Model"/>
     <keyword type="property" name="The &quot;Revision&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Revision"/>
+    <keyword type="property" name="The &quot;CarrierConfiguration&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfiguration"/>
+    <keyword type="property" name="The &quot;CarrierConfigurationRevision&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfigurationRevision"/>
     <keyword type="property" name="The &quot;HardwareRevision&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.HardwareRevision"/>
     <keyword type="property" name="The &quot;DeviceIdentifier&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.DeviceIdentifier"/>
     <keyword type="property" name="The &quot;Device&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Device"/>

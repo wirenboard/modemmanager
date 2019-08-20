@@ -35,6 +35,9 @@
 /* Default session id to use in LOC operations */
 #define DEFAULT_LOC_SESSION_ID 0x10
 
+/* Default description for the default configuration of the firmware */
+#define DEFAULT_CONFIG_DESCRIPTION "default"
+
 /*****************************************************************************/
 /* Private data context */
 
@@ -46,6 +49,22 @@ typedef enum {
     FEATURE_UNSUPPORTED,
     FEATURE_SUPPORTED,
 } Feature;
+
+typedef struct {
+    GArray                  *id;
+    QmiPdcConfigurationType  config_type;
+    guint32                  token;
+    guint32                  version;
+    gchar                   *description;
+    guint32                  total_size;
+} ConfigInfo;
+
+static void
+config_info_clear (ConfigInfo *config_info)
+{
+    g_array_unref (config_info->id);
+    g_free (config_info->description);
+}
 
 typedef struct {
     /* Capabilities & modes helpers */
@@ -67,11 +86,18 @@ typedef struct {
     gchar                 **loc_assistance_data_servers;
     guint32                 loc_assistance_data_max_file_size;
     guint32                 loc_assistance_data_max_part_size;
+
+    /* Carrier config helpers */
+    gboolean  config_active_default;
+    GArray   *config_list;
+    gint      config_active_i;
 } Private;
 
 static void
 private_free (Private *priv)
 {
+    if (priv->config_list)
+        g_array_unref (priv->config_list);
     if (priv->supported_bands)
         g_array_unref (priv->supported_bands);
     if (priv->supported_radio_interfaces)
@@ -102,6 +128,7 @@ get_private (MMSharedQmi *self)
 
         priv->feature_nas_technology_preference = FEATURE_UNKNOWN;
         priv->feature_nas_system_selection_preference = FEATURE_UNKNOWN;
+        priv->config_active_i = -1;
 
         /* Setup parent class' MMIfaceModemLocation */
         g_assert (MM_SHARED_QMI_GET_INTERFACE (self)->peek_parent_location_interface);
@@ -1931,6 +1958,979 @@ mm_shared_qmi_factory_reset (MMIfaceModem        *self,
                                              NULL,
                                              (GAsyncReadyCallback)dms_restore_factory_defaults_ready,
                                              task);
+}
+
+/*****************************************************************************/
+/* Setup carrier config (Modem interface) */
+
+#define SETUP_CARRIER_CONFIG_STEP_TIMEOUT_SECS 10
+#define GENERIC_CONFIG_FALLBACK "generic"
+
+typedef enum {
+    SETUP_CARRIER_CONFIG_STEP_FIRST,
+    SETUP_CARRIER_CONFIG_STEP_FIND_REQUESTED,
+    SETUP_CARRIER_CONFIG_STEP_CHECK_CHANGE_NEEDED,
+    SETUP_CARRIER_CONFIG_STEP_UPDATE_CURRENT,
+    SETUP_CARRIER_CONFIG_STEP_ACTIVATE_CURRENT,
+    SETUP_CARRIER_CONFIG_STEP_LAST,
+} SetupCarrierConfigStep;
+
+
+typedef struct {
+    SetupCarrierConfigStep  step;
+    QmiClientPdc           *client;
+    GKeyFile               *keyfile;
+    gchar                  *imsi;
+
+    gint                    config_requested_i;
+    gchar                  *config_requested;
+
+    guint                   token;
+    guint                   timeout_id;
+    gulong                  set_selected_config_indication_id;
+    gulong                  activate_config_indication_id;
+} SetupCarrierConfigContext;
+
+/* Allow to cleanup action setup right away, without being tied
+ * to the lifecycle of the GTask */
+static void
+setup_carrier_config_context_cleanup_action (SetupCarrierConfigContext *ctx)
+{
+    if (ctx->activate_config_indication_id) {
+        g_signal_handler_disconnect (ctx->client, ctx->activate_config_indication_id);
+        ctx->activate_config_indication_id = 0;
+    }
+    if (ctx->set_selected_config_indication_id) {
+        g_signal_handler_disconnect (ctx->client, ctx->set_selected_config_indication_id);
+        ctx->set_selected_config_indication_id = 0;
+    }
+    if (ctx->timeout_id) {
+        g_source_remove (ctx->timeout_id);
+        ctx->timeout_id = 0;
+    }
+}
+
+static void
+setup_carrier_config_context_free (SetupCarrierConfigContext *ctx)
+{
+    setup_carrier_config_context_cleanup_action (ctx);
+
+    g_free (ctx->config_requested);
+    g_free (ctx->imsi);
+    g_key_file_unref (ctx->keyfile);
+    g_clear_object (&ctx->client);
+    g_slice_free (SetupCarrierConfigContext, ctx);
+}
+
+gboolean
+mm_shared_qmi_setup_carrier_config_finish (MMIfaceModem  *self,
+                                           GAsyncResult  *res,
+                                           GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void setup_carrier_config_step (GTask *task);
+
+static void
+setup_carrier_config_abort (GTask  *task,
+                            GError *error)
+{
+    SetupCarrierConfigContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+    setup_carrier_config_context_cleanup_action (ctx);
+    g_task_return_error (task, error);
+    g_object_unref (task);
+}
+
+static gboolean
+setup_carrier_config_timeout_no_error (GTask *task)
+{
+    SetupCarrierConfigContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+    g_assert (ctx->timeout_id);
+    ctx->timeout_id = 0;
+
+    setup_carrier_config_context_cleanup_action (ctx);
+    ctx->step++;
+    setup_carrier_config_step (task);
+
+    return G_SOURCE_REMOVE;
+}
+
+static gboolean
+setup_carrier_config_timeout (GTask *task)
+{
+    SetupCarrierConfigContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+    g_assert (ctx->timeout_id);
+    ctx->timeout_id = 0;
+
+    setup_carrier_config_abort (task, g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_ABORTED,
+                                                   "Operation timed out"));
+
+    return G_SOURCE_REMOVE;
+}
+
+static void
+activate_config_indication (QmiClientPdc                         *client,
+                            QmiIndicationPdcActivateConfigOutput *output,
+                            GTask                                *task)
+{
+    SetupCarrierConfigContext *ctx;
+    GError                    *error = NULL;
+    guint16                    error_code = 0;
+
+    ctx = g_task_get_task_data (task);
+
+    if (!qmi_indication_pdc_activate_config_output_get_indication_result (output, &error_code, &error)) {
+        setup_carrier_config_abort (task, error);
+        return;
+    }
+
+    if (error_code != 0) {
+        setup_carrier_config_abort (task, g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                       "couldn't activate config: %s",
+                                                       qmi_protocol_error_get_string ((QmiProtocolError) error_code)));
+        return;
+    }
+
+    /* Go on */
+    setup_carrier_config_context_cleanup_action (ctx);
+    ctx->step++;
+    setup_carrier_config_step (task);
+}
+
+static void
+activate_config_ready (QmiClientPdc *client,
+                       GAsyncResult *res,
+                       GTask        *task)
+{
+    QmiMessagePdcActivateConfigOutput *output;
+    SetupCarrierConfigContext         *ctx;
+    GError                            *error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    output = qmi_client_pdc_activate_config_finish (client, res, &error);
+    if (!output || !qmi_message_pdc_activate_config_output_get_result (output, &error)) {
+        setup_carrier_config_abort (task, error);
+        goto out;
+    }
+
+    /* When we activate the config, if the operation is successful, we'll just
+     * see the modem going away completely. So, do not consider an error the timeout
+     * waiting for the Activate Config indication, as that is actually a good
+     * thing.
+     */
+    ctx->timeout_id = g_timeout_add_seconds (SETUP_CARRIER_CONFIG_STEP_TIMEOUT_SECS,
+                                             (GSourceFunc) setup_carrier_config_timeout_no_error,
+                                             task);
+    ctx->activate_config_indication_id = g_signal_connect (ctx->client,
+                                                           "activate-config",
+                                                           G_CALLBACK (activate_config_indication),
+                                                           task);
+out:
+    if (output)
+        qmi_message_pdc_activate_config_output_unref (output);
+}
+
+static void
+set_selected_config_indication (QmiClientPdc                            *client,
+                                QmiIndicationPdcSetSelectedConfigOutput *output,
+                                GTask                                   *task)
+{
+    SetupCarrierConfigContext *ctx;
+    GError                    *error = NULL;
+    guint16                    error_code = 0;
+
+    ctx = g_task_get_task_data (task);
+
+    if (!qmi_indication_pdc_set_selected_config_output_get_indication_result (output, &error_code, &error)) {
+        setup_carrier_config_abort (task, error);
+        return;
+    }
+
+    if (error_code != 0) {
+        setup_carrier_config_abort (task, g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                       "couldn't set selected config: %s",
+                                                       qmi_protocol_error_get_string ((QmiProtocolError) error_code)));
+        return;
+    }
+
+    /* Go on */
+    setup_carrier_config_context_cleanup_action (ctx);
+    ctx->step++;
+    setup_carrier_config_step (task);
+}
+
+static void
+set_selected_config_ready (QmiClientPdc *client,
+                           GAsyncResult *res,
+                           GTask        *task)
+{
+    QmiMessagePdcSetSelectedConfigOutput *output;
+    SetupCarrierConfigContext            *ctx;
+    GError                               *error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    output = qmi_client_pdc_set_selected_config_finish (client, res, &error);
+    if (!output || !qmi_message_pdc_set_selected_config_output_get_result (output, &error)) {
+        setup_carrier_config_abort (task, error);
+        goto out;
+    }
+
+    ctx->timeout_id = g_timeout_add_seconds (SETUP_CARRIER_CONFIG_STEP_TIMEOUT_SECS,
+                                             (GSourceFunc) setup_carrier_config_timeout,
+                                             task);
+    ctx->set_selected_config_indication_id = g_signal_connect (ctx->client,
+                                                               "set-selected-config",
+                                                               G_CALLBACK (set_selected_config_indication),
+                                                               task);
+out:
+    if (output)
+        qmi_message_pdc_set_selected_config_output_unref (output);
+}
+
+static gint
+select_newest_carrier_config (MMSharedQmi *self,
+                              gint         config_a_i,
+                              gint         config_b_i)
+{
+    Private    *priv;
+    ConfigInfo *config_a;
+    ConfigInfo *config_b;
+
+    priv = get_private (self);
+    config_a = &g_array_index (priv->config_list, ConfigInfo, config_a_i);
+    config_b = &g_array_index (priv->config_list, ConfigInfo, config_b_i);
+
+    g_assert (!g_strcmp0 (config_a->description, config_b->description));
+
+    if (config_a->version > config_b->version)
+        return config_a_i;
+    if (config_b->version > config_a->version)
+        return config_b_i;
+    /* if both are equal, return the first one found always */
+    return config_a_i;
+}
+
+static void
+find_requested_carrier_config (GTask *task)
+{
+    SetupCarrierConfigContext *ctx;
+    MMSharedQmi               *self;
+    Private                   *priv;
+    gchar                      mccmnc[7];
+    gchar                     *group;
+    gint                       config_fallback_i = -1;
+    gchar                     *config_fallback = NULL;
+
+    ctx  = g_task_get_task_data (task);
+    self = MM_SHARED_QMI (g_task_get_source_object (task));
+    priv = get_private (self);
+
+    /* Only one group expected per file, so get the start one */
+    group = g_key_file_get_start_group (ctx->keyfile);
+
+    /* Match generic configuration */
+    config_fallback = g_key_file_get_string (ctx->keyfile, group, GENERIC_CONFIG_FALLBACK, NULL);
+    mm_dbg ("Fallback carrier configuration %sfound in group '%s'", config_fallback ? "" : "not ", group);
+
+    /* First, try to match 6 MCCMNC digits (3-digit MNCs) */
+    strncpy (mccmnc, ctx->imsi, 6);
+    mccmnc[6] = '\0';
+    ctx->config_requested = g_key_file_get_string (ctx->keyfile, group, mccmnc, NULL);
+    if (!ctx->config_requested) {
+        /* If not found, try to match 5 MCCMNC digits (2-digit MNCs) */
+        mccmnc[5] = '\0';
+        ctx->config_requested = g_key_file_get_string (ctx->keyfile, group, mccmnc, NULL);
+    }
+    mm_dbg ("Requested carrier configuration %sfound for '%s' in group '%s': %s",
+            ctx->config_requested ? "" : "not ", mccmnc, group, ctx->config_requested ? ctx->config_requested : "n/a");
+
+    if (!ctx->config_requested && !config_fallback) {
+        setup_carrier_config_abort (task, g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
+                                                       "no valid configuration found in group '%s'", group));
+        goto out;
+    }
+
+    /* Now, look for the configurations among the ones available in the device */
+    if (priv->config_list) {
+        guint i;
+
+        for (i = 0; i < priv->config_list->len; i++) {
+            ConfigInfo *config;
+
+            config = &g_array_index (priv->config_list, ConfigInfo, i);
+            if (ctx->config_requested && !g_strcmp0 (ctx->config_requested, config->description)) {
+                mm_dbg ("Requested carrier configuration '%s' is available (version 0x%08x, size %u bytes)",
+                        config->description, config->version, config->total_size);
+                if (ctx->config_requested_i < 0)
+                    ctx->config_requested_i = i;
+                else
+                    ctx->config_requested_i = select_newest_carrier_config (self, ctx->config_requested_i, i);
+            }
+            if (config_fallback && !g_strcmp0 (config_fallback, config->description)) {
+                mm_dbg ("Fallback carrier configuration '%s' is available (version 0x%08x, size %u bytes)",
+                        config->description, config->version, config->total_size);
+                if (config_fallback_i < 0)
+                    config_fallback_i = i;
+                else
+                    config_fallback_i = select_newest_carrier_config (self, config_fallback_i, i);
+            }
+        }
+    }
+
+    /* Fail operation if we didn't find the one we want */
+    if ((ctx->config_requested_i < 0) && (config_fallback_i < 0)) {
+        setup_carrier_config_abort (task, g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                       "carrier configurations (requested '%s', fallback '%s') are not available",
+                                                       ctx->config_requested, config_fallback));
+        goto out;
+    }
+
+    /* If the mapping expects a given config, but the config isn't installed,
+     * we fallback to generic */
+    if (ctx->config_requested_i < 0) {
+        ConfigInfo *config;
+
+        g_assert (config_fallback_i >= 0);
+
+        config = &g_array_index (priv->config_list, ConfigInfo, config_fallback_i);
+        mm_info ("Using fallback carrier configuration '%s' (version 0x%08x, size %u bytes)",
+                        config->description, config->version, config->total_size);
+
+        g_free (ctx->config_requested);
+        ctx->config_requested = config_fallback;
+        ctx->config_requested_i = config_fallback_i;
+        config_fallback = NULL;
+    } else {
+        ConfigInfo *config;
+
+        config = &g_array_index (priv->config_list, ConfigInfo, ctx->config_requested_i);
+        mm_dbg ("Using requested carrier configuration '%s' (version 0x%08x, size %u bytes)",
+                config->description, config->version, config->total_size);
+    }
+
+    ctx->step++;
+    setup_carrier_config_step (task);
+
+out:
+    g_free (config_fallback);
+    g_free (group);
+}
+
+static void
+setup_carrier_config_step (GTask *task)
+{
+    SetupCarrierConfigContext *ctx;
+    Private                   *priv;
+
+    ctx = g_task_get_task_data (task);
+    priv = get_private (g_task_get_source_object (task));
+
+    switch (ctx->step) {
+    case SETUP_CARRIER_CONFIG_STEP_FIRST:
+        ctx->step++;
+        /* fall-through */
+
+    case SETUP_CARRIER_CONFIG_STEP_FIND_REQUESTED:
+        find_requested_carrier_config (task);
+        return;
+
+    case SETUP_CARRIER_CONFIG_STEP_CHECK_CHANGE_NEEDED:
+        g_assert (ctx->config_requested_i >= 0);
+        g_assert (priv->config_active_i >= 0 || priv->config_active_default);
+        if (ctx->config_requested_i == priv->config_active_i) {
+            mm_info ("Carrier config switching not needed: already using '%s'", ctx->config_requested);
+            ctx->step = SETUP_CARRIER_CONFIG_STEP_LAST;
+            setup_carrier_config_step (task);
+            return;
+        }
+
+        ctx->step++;
+        /* fall-through */
+
+    case SETUP_CARRIER_CONFIG_STEP_UPDATE_CURRENT: {
+        QmiMessagePdcSetSelectedConfigInput *input;
+        ConfigInfo                          *requested_config;
+        ConfigInfo                          *active_config;
+        QmiConfigTypeAndId                   type_and_id;
+
+        requested_config = &g_array_index (priv->config_list, ConfigInfo, ctx->config_requested_i);
+        active_config = (priv->config_active_default ? NULL : &g_array_index (priv->config_list, ConfigInfo, priv->config_active_i));
+        mm_warn ("Carrier config switching needed: '%s' -> '%s'",
+                 active_config ? active_config->description : DEFAULT_CONFIG_DESCRIPTION, requested_config->description);
+
+        type_and_id.config_type = requested_config->config_type;;
+        type_and_id.id = requested_config->id;
+
+        input = qmi_message_pdc_set_selected_config_input_new ();
+        qmi_message_pdc_set_selected_config_input_set_type_with_id (input, &type_and_id, NULL);
+        qmi_message_pdc_set_selected_config_input_set_token (input, ctx->token++, NULL);
+        qmi_client_pdc_set_selected_config (ctx->client,
+                                            input,
+                                            10,
+                                            NULL,
+                                            (GAsyncReadyCallback)set_selected_config_ready,
+                                            task);
+        qmi_message_pdc_set_selected_config_input_unref (input);
+        return;
+    }
+
+    case SETUP_CARRIER_CONFIG_STEP_ACTIVATE_CURRENT: {
+        QmiMessagePdcActivateConfigInput *input;
+        ConfigInfo                       *requested_config;
+
+        requested_config = &g_array_index (priv->config_list, ConfigInfo, ctx->config_requested_i);
+
+        input = qmi_message_pdc_activate_config_input_new ();
+        qmi_message_pdc_activate_config_input_set_config_type (input, requested_config->config_type, NULL);
+        qmi_message_pdc_activate_config_input_set_token (input, ctx->token++, NULL);
+        qmi_client_pdc_activate_config (ctx->client,
+                                        input,
+                                        10,
+                                        NULL,
+                                        (GAsyncReadyCallback) activate_config_ready,
+                                        task);
+        qmi_message_pdc_activate_config_input_unref (input);
+        return;
+    }
+
+    case SETUP_CARRIER_CONFIG_STEP_LAST:
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        break;
+    }
+}
+
+void
+mm_shared_qmi_setup_carrier_config (MMIfaceModem        *self,
+                                    const gchar         *imsi,
+                                    const gchar         *carrier_config_mapping,
+                                    GAsyncReadyCallback  callback,
+                                    gpointer             user_data)
+{
+    SetupCarrierConfigContext *ctx;
+    GTask                     *task;
+    QmiClient                 *client = NULL;
+    GError                    *error = NULL;
+
+    g_assert (imsi);
+    g_assert (carrier_config_mapping);
+
+    task = g_task_new (self, NULL, callback, user_data);
+    ctx = g_slice_new0 (SetupCarrierConfigContext);
+    ctx->step = SETUP_CARRIER_CONFIG_STEP_FIRST;
+    ctx->imsi = g_strdup (imsi);
+    ctx->keyfile = g_key_file_new ();
+    ctx->config_requested_i = -1;
+    g_task_set_task_data (task, ctx, (GDestroyNotify)setup_carrier_config_context_free);
+
+    /* Load mapping keyfile */
+    if (!g_key_file_load_from_file (ctx->keyfile,
+                                    carrier_config_mapping,
+                                    G_KEY_FILE_NONE,
+                                    &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    /* Load PDC client */
+    client = mm_shared_qmi_peek_client (MM_SHARED_QMI (self),
+                                        QMI_SERVICE_PDC,
+                                        MM_PORT_QMI_FLAG_DEFAULT,
+                                        NULL);
+    if (!client) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "QMI PDC not supported");
+        g_object_unref (task);
+        return;
+    }
+    ctx->client = g_object_ref (client);
+
+    setup_carrier_config_step (task);
+}
+
+/*****************************************************************************/
+/* Load carrier config (Modem interface) */
+
+#define LOAD_CARRIER_CONFIG_STEP_TIMEOUT_SECS 5
+
+typedef enum {
+    LOAD_CARRIER_CONFIG_STEP_FIRST,
+    LOAD_CARRIER_CONFIG_STEP_LIST_CONFIGS,
+    LOAD_CARRIER_CONFIG_STEP_QUERY_CURRENT,
+    LOAD_CARRIER_CONFIG_STEP_LAST,
+} LoadCarrierConfigStep;
+
+typedef struct {
+    LoadCarrierConfigStep step;
+
+    QmiClientPdc *client;
+
+    GArray       *config_list;
+    guint         configs_loaded;
+    gboolean      config_active_default;
+    gint          config_active_i;
+
+    guint         token;
+    guint         timeout_id;
+    gulong        list_configs_indication_id;
+    gulong        get_selected_config_indication_id;
+    gulong        get_config_info_indication_id;
+} LoadCarrierConfigContext;
+
+/* Allow to cleanup action load right away, without being tied
+ * to the lifecycle of the GTask */
+static void
+load_carrier_config_context_cleanup_action (LoadCarrierConfigContext *ctx)
+{
+    if (ctx->get_selected_config_indication_id) {
+        g_signal_handler_disconnect (ctx->client, ctx->get_selected_config_indication_id);
+        ctx->get_selected_config_indication_id = 0;
+    }
+    if (ctx->get_config_info_indication_id) {
+        g_signal_handler_disconnect (ctx->client, ctx->get_config_info_indication_id);
+        ctx->get_config_info_indication_id = 0;
+    }
+    if (ctx->list_configs_indication_id) {
+        g_signal_handler_disconnect (ctx->client, ctx->list_configs_indication_id);
+        ctx->list_configs_indication_id = 0;
+    }
+    if (ctx->timeout_id) {
+        g_source_remove (ctx->timeout_id);
+        ctx->timeout_id = 0;
+    }
+}
+
+static void
+load_carrier_config_context_free (LoadCarrierConfigContext *ctx)
+{
+    load_carrier_config_context_cleanup_action (ctx);
+
+    if (ctx->config_list)
+        g_array_unref (ctx->config_list);
+    g_clear_object (&ctx->client);
+    g_slice_free (LoadCarrierConfigContext, ctx);
+}
+
+gboolean
+mm_shared_qmi_load_carrier_config_finish (MMIfaceModem  *self,
+                                          GAsyncResult  *res,
+                                          gchar        **carrier_config_name,
+                                          gchar        **carrier_config_revision,
+                                          GError       **error)
+{
+    Private *priv;
+
+    if (!g_task_propagate_boolean (G_TASK (res), error))
+        return FALSE;
+
+    priv = get_private (MM_SHARED_QMI (self));
+    g_assert (priv->config_active_i >= 0 || priv->config_active_default);
+
+    if (priv->config_active_i >= 0) {
+        ConfigInfo *config;
+
+        config = &g_array_index (priv->config_list, ConfigInfo, priv->config_active_i);
+        *carrier_config_name = g_strdup (config->description);
+        *carrier_config_revision = g_strdup_printf ("%08X", config->version);
+    } else if (priv->config_active_default) {
+        *carrier_config_name = g_strdup (DEFAULT_CONFIG_DESCRIPTION);
+        *carrier_config_revision = NULL;
+    } else
+        g_assert_not_reached ();
+
+    return TRUE;
+}
+
+static void load_carrier_config_step (GTask *task);
+
+static void
+load_carrier_config_abort (GTask  *task,
+                           GError *error)
+{
+    LoadCarrierConfigContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+    load_carrier_config_context_cleanup_action (ctx);
+    g_task_return_error (task, error);
+    g_object_unref (task);
+}
+
+static gboolean
+load_carrier_config_timeout (GTask *task)
+{
+    LoadCarrierConfigContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+    g_assert (ctx->timeout_id);
+    ctx->timeout_id = 0;
+
+    load_carrier_config_abort (task, g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_ABORTED,
+                                                  "Operation timed out"));
+
+    return G_SOURCE_REMOVE;
+}
+
+static void
+get_selected_config_indication (QmiClientPdc                            *client,
+                                QmiIndicationPdcGetSelectedConfigOutput *output,
+                                GTask                                   *task)
+{
+    LoadCarrierConfigContext *ctx;
+    GArray                   *active_id = NULL;
+    GError                   *error = NULL;
+    guint16                   error_code = 0;
+    guint                     i;
+
+    ctx = g_task_get_task_data (task);
+
+    if (!qmi_indication_pdc_get_selected_config_output_get_indication_result (output, &error_code, &error)) {
+        load_carrier_config_abort (task, error);
+        return;
+    }
+
+    if (error_code != 0 &&
+        error_code != QMI_PROTOCOL_ERROR_NOT_PROVISIONED) { /* No configs active */
+        load_carrier_config_abort (task, g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                      "couldn't get selected config: %s",
+                                                      qmi_protocol_error_get_string ((QmiProtocolError) error_code)));
+        return;
+    }
+
+    qmi_indication_pdc_get_selected_config_output_get_active_id (output, &active_id, NULL);
+    if (!active_id) {
+        mm_dbg ("no carrier config currently selected (default in use)");
+        ctx->config_active_default = TRUE;
+        goto next;
+    }
+
+    g_assert (ctx->config_list);
+    g_assert (ctx->config_list->len);
+
+    for (i = 0; i < ctx->config_list->len; i++) {
+        ConfigInfo *config;
+
+        config = &g_array_index (ctx->config_list, ConfigInfo, i);
+        if ((config->id->len == active_id->len) &&
+            !memcmp (config->id->data, active_id->data, active_id->len)) {
+            ctx->config_active_i = i;
+            break;
+        }
+    }
+
+    if (i == ctx->config_list->len) {
+        load_carrier_config_abort (task, g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                      "couldn't find currently selected config"));
+        return;
+    }
+
+ next:
+
+    /* Go on */
+    load_carrier_config_context_cleanup_action (ctx);
+    ctx->step++;
+    load_carrier_config_step (task);
+}
+
+static void
+get_selected_config_ready (QmiClientPdc *client,
+                           GAsyncResult *res,
+                           GTask        *task)
+{
+    QmiMessagePdcGetSelectedConfigOutput *output;
+    LoadCarrierConfigContext             *ctx;
+    GError                               *error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    output = qmi_client_pdc_get_selected_config_finish (client, res, &error);
+    if (!output || !qmi_message_pdc_get_selected_config_output_get_result (output, &error)) {
+        load_carrier_config_abort (task, error);
+        goto out;
+    }
+
+    ctx->timeout_id = g_timeout_add_seconds (LOAD_CARRIER_CONFIG_STEP_TIMEOUT_SECS,
+                                             (GSourceFunc) load_carrier_config_timeout,
+                                             task);
+    ctx->get_selected_config_indication_id = g_signal_connect (ctx->client,
+                                                               "get-selected-config",
+                                                               G_CALLBACK (get_selected_config_indication),
+                                                               task);
+
+out:
+    if (output)
+        qmi_message_pdc_get_selected_config_output_unref (output);
+}
+
+static void
+get_config_info_indication (QmiClientPdc                        *client,
+                            QmiIndicationPdcGetConfigInfoOutput *output,
+                            GTask                               *task)
+{
+    LoadCarrierConfigContext *ctx;
+    GError                   *error = NULL;
+    ConfigInfo               *current_config = NULL;
+    guint32                   token;
+    const gchar              *description;
+    int                       i;
+    guint16                   error_code = 0;
+
+    ctx = g_task_get_task_data (task);
+
+    if (!qmi_indication_pdc_get_config_info_output_get_indication_result (output, &error_code, &error)) {
+        load_carrier_config_abort (task, error);
+        return;
+    }
+
+    if (error_code != 0) {
+        load_carrier_config_abort (task, g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                      "couldn't get config info: %s",
+                                                      qmi_protocol_error_get_string ((QmiProtocolError) error_code)));
+        return;
+    }
+
+    if (!qmi_indication_pdc_get_config_info_output_get_token (output, &token, &error)) {
+        load_carrier_config_abort (task, error);
+        return;
+    }
+
+    /* Look for the current config in the list, match by token */
+    for (i = 0; i < ctx->config_list->len; i++) {
+        current_config = &g_array_index (ctx->config_list, ConfigInfo, i);
+        if (current_config->token == token)
+            break;
+    }
+
+    /* Ignore if not found in the list */
+    if (i == ctx->config_list->len)
+        return;
+
+    /* Ignore if already set */
+    if (current_config->description)
+        return;
+
+    /* Store total size, version and description of the current config */
+    if (!qmi_indication_pdc_get_config_info_output_get_total_size  (output, &current_config->total_size, &error) ||
+        !qmi_indication_pdc_get_config_info_output_get_version     (output, &current_config->version,    &error) ||
+        !qmi_indication_pdc_get_config_info_output_get_description (output, &description,                &error)) {
+        load_carrier_config_abort (task, error);
+        return;
+    }
+
+    current_config->description = g_strdup (description);
+    ctx->configs_loaded++;
+
+    /* If not all loaded, wait for more */
+    if (ctx->configs_loaded < ctx->config_list->len)
+        return;
+
+    /* Go on */
+    load_carrier_config_context_cleanup_action (ctx);
+    ctx->step++;
+    load_carrier_config_step (task);
+}
+
+static void
+list_configs_indication (QmiClientPdc                      *client,
+                         QmiIndicationPdcListConfigsOutput *output,
+                         GTask                             *task)
+{
+    LoadCarrierConfigContext *ctx;
+    GError                   *error = NULL;
+    GArray                   *configs = NULL;
+    int                       i;
+    guint16                   error_code = 0;
+
+    ctx = g_task_get_task_data (task);
+
+    if (!qmi_indication_pdc_list_configs_output_get_indication_result (output, &error_code, &error)) {
+        load_carrier_config_abort (task, error);
+        return;
+    }
+
+    if (error_code != 0) {
+        load_carrier_config_abort (task, g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                      "couldn't list configs: %s",
+                                                      qmi_protocol_error_get_string ((QmiProtocolError) error_code)));
+        return;
+    }
+
+    if (!qmi_indication_pdc_list_configs_output_get_configs (output, &configs, &error)) {
+        load_carrier_config_abort (task, error);
+        return;
+    }
+
+    /* If no configs are installed, the module is running with the default one */
+    if (!configs || !configs->len) {
+        ctx->config_active_default = TRUE;
+        ctx->step = LOAD_CARRIER_CONFIG_STEP_LAST;
+        load_carrier_config_step (task);
+        return;
+    }
+
+    /* Preallocate config list and request details for each */
+    mm_dbg ("found %u carrier configurations...", configs->len);
+    ctx->config_list = g_array_sized_new (FALSE, TRUE, sizeof (ConfigInfo), configs->len);
+    g_array_set_size (ctx->config_list, configs->len);
+    g_array_set_clear_func (ctx->config_list, (GDestroyNotify) config_info_clear);
+
+    ctx->get_config_info_indication_id = g_signal_connect (ctx->client,
+                                                           "get-config-info",
+                                                           G_CALLBACK (get_config_info_indication),
+                                                           task);
+
+    for (i = 0; i < configs->len; i++) {
+        ConfigInfo                                      *current_info;
+        QmiIndicationPdcListConfigsOutputConfigsElement *element;
+        QmiConfigTypeAndId                               type_with_id;
+        QmiMessagePdcGetConfigInfoInput                 *input;
+
+        element = &g_array_index (configs, QmiIndicationPdcListConfigsOutputConfigsElement, i);
+
+        current_info              = &g_array_index (ctx->config_list, ConfigInfo, i);
+        current_info->token       = ctx->token++;
+        current_info->id          = g_array_ref (element->id);
+        current_info->config_type = element->config_type;
+
+        input = qmi_message_pdc_get_config_info_input_new ();
+        type_with_id.config_type = element->config_type;
+        type_with_id.id = current_info->id;
+        qmi_message_pdc_get_config_info_input_set_type_with_id (input, &type_with_id, NULL);
+        qmi_message_pdc_get_config_info_input_set_token (input, current_info->token, NULL);
+        qmi_client_pdc_get_config_info (ctx->client, input, 10, NULL, NULL, NULL); /* ignore response! */
+        qmi_message_pdc_get_config_info_input_unref (input);
+    }
+}
+
+static void
+list_configs_ready (QmiClientPdc *client,
+                    GAsyncResult *res,
+                    GTask        *task)
+{
+    QmiMessagePdcListConfigsOutput *output;
+    LoadCarrierConfigContext       *ctx;
+    GError                         *error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    output = qmi_client_pdc_list_configs_finish (client, res, &error);
+    if (!output || !qmi_message_pdc_list_configs_output_get_result (output, &error)) {
+        load_carrier_config_abort (task, error);
+        goto out;
+    }
+
+    ctx->timeout_id = g_timeout_add_seconds (LOAD_CARRIER_CONFIG_STEP_TIMEOUT_SECS,
+                                             (GSourceFunc) load_carrier_config_timeout,
+                                             task);
+    ctx->list_configs_indication_id = g_signal_connect (ctx->client,
+                                                        "list-configs",
+                                                        G_CALLBACK (list_configs_indication),
+                                                        task);
+out:
+    if (output)
+        qmi_message_pdc_list_configs_output_unref (output);
+}
+
+static void
+load_carrier_config_step (GTask *task)
+{
+    LoadCarrierConfigContext *ctx;
+    Private                  *priv;
+
+    ctx  = g_task_get_task_data (task);
+    priv = get_private (g_task_get_source_object (task));
+
+    switch (ctx->step) {
+    case LOAD_CARRIER_CONFIG_STEP_FIRST:
+        ctx->step++;
+        /* fall-through */
+
+    case LOAD_CARRIER_CONFIG_STEP_LIST_CONFIGS: {
+        QmiMessagePdcListConfigsInput *input;
+
+        input = qmi_message_pdc_list_configs_input_new ();
+        qmi_message_pdc_list_configs_input_set_config_type (input, QMI_PDC_CONFIGURATION_TYPE_SOFTWARE, NULL);
+        qmi_message_pdc_list_configs_input_set_token (input, ctx->token++, NULL);
+        qmi_client_pdc_list_configs (ctx->client,
+                                     input,
+                                     5,
+                                     NULL,
+                                     (GAsyncReadyCallback)list_configs_ready,
+                                     task);
+        qmi_message_pdc_list_configs_input_unref (input);
+        return;
+    }
+
+    case LOAD_CARRIER_CONFIG_STEP_QUERY_CURRENT: {
+        QmiMessagePdcGetSelectedConfigInput *input;
+
+        input = qmi_message_pdc_get_selected_config_input_new ();
+        qmi_message_pdc_get_selected_config_input_set_config_type (input, QMI_PDC_CONFIGURATION_TYPE_SOFTWARE, NULL);
+        qmi_message_pdc_get_selected_config_input_set_token (input, ctx->token++, NULL);
+        qmi_client_pdc_get_selected_config (ctx->client,
+                                            input,
+                                            5,
+                                            NULL,
+                                            (GAsyncReadyCallback)get_selected_config_ready,
+                                            task);
+        qmi_message_pdc_get_selected_config_input_unref (input);
+        return;
+    }
+
+    case LOAD_CARRIER_CONFIG_STEP_LAST:
+        /* We will now store the loaded information so that we can later on use it
+         * if needed during the automatic carrier config switching operation */
+        g_assert (priv->config_active_i < 0 && !priv->config_active_default);
+        g_assert (ctx->config_active_i >= 0 || ctx->config_active_default);
+        priv->config_list = ctx->config_list ? g_array_ref (ctx->config_list) : NULL;
+        priv->config_active_i = ctx->config_active_i;
+        priv->config_active_default = ctx->config_active_default;
+
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        break;
+    }
+}
+
+void
+mm_shared_qmi_load_carrier_config (MMIfaceModem        *self,
+                                   GAsyncReadyCallback  callback,
+                                   gpointer             user_data)
+{
+    LoadCarrierConfigContext *ctx;
+    GTask                    *task;
+    QmiClient                *client = NULL;
+
+
+    task = g_task_new (self, NULL, callback, user_data);
+    ctx = g_slice_new0 (LoadCarrierConfigContext);
+    ctx->step = LOAD_CARRIER_CONFIG_STEP_FIRST;
+    ctx->config_active_i = -1;
+    g_task_set_task_data (task, ctx, (GDestroyNotify)load_carrier_config_context_free);
+
+    /* Load PDC client */
+    client = mm_shared_qmi_peek_client (MM_SHARED_QMI (self),
+                                        QMI_SERVICE_PDC,
+                                        MM_PORT_QMI_FLAG_DEFAULT,
+                                        NULL);
+    if (!client) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "QMI PDC not supported");
+        g_object_unref (task);
+        return;
+    }
+    ctx->client = g_object_ref (client);
+
+    load_carrier_config_step (task);
 }
 
 /*****************************************************************************/

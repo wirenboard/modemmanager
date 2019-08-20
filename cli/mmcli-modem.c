@@ -351,6 +351,8 @@ print_modem_info (void)
     mmcli_output_string           (MMC_F_HARDWARE_MANUFACTURER,           mm_modem_get_manufacturer (ctx->modem));
     mmcli_output_string           (MMC_F_HARDWARE_MODEL,                  mm_modem_get_model (ctx->modem));
     mmcli_output_string           (MMC_F_HARDWARE_REVISION,               mm_modem_get_revision (ctx->modem));
+    mmcli_output_string           (MMC_F_HARDWARE_CARRIER_CONF,           mm_modem_get_carrier_configuration (ctx->modem));
+    mmcli_output_string           (MMC_F_HARDWARE_CARRIER_CONF_REV,       mm_modem_get_carrier_configuration_revision (ctx->modem));
     mmcli_output_string           (MMC_F_HARDWARE_HW_REVISION,            mm_modem_get_hardware_revision (ctx->modem));
     mmcli_output_string_multiline (MMC_F_HARDWARE_SUPPORTED_CAPABILITIES, supported_capabilities_string);
     mmcli_output_string_multiline (MMC_F_HARDWARE_CURRENT_CAPABILITIES,   current_capabilities_string);
@@ -901,6 +903,19 @@ state_changed (MMModem                  *modem,
 }
 
 static void
+device_removed (MMManager *manager,
+                MMObject  *object)
+{
+    if (object != ctx->object)
+        return;
+
+    g_print ("\t%s: Removed\n", mm_object_get_path (object));
+    fflush (stdout);
+
+    mmcli_async_operation_done ();
+}
+
+static void
 get_modem_ready (GObject      *source,
                  GAsyncResult *result,
                  gpointer      none)
@@ -928,6 +943,11 @@ get_modem_ready (GObject      *source,
         g_signal_connect (ctx->modem,
                           "state-changed",
                           G_CALLBACK (state_changed),
+                          NULL);
+
+        g_signal_connect (ctx->manager,
+                          "object-removed",
+                          G_CALLBACK (device_removed),
                           NULL);
 
         current = mm_modem_get_state (ctx->modem);

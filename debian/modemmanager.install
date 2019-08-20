@@ -3,6 +3,7 @@ etc/
 lib/
 usr/bin/
 usr/sbin/
+usr/share/ModemManager/
 usr/share/bash-completion/
 usr/share/dbus-1/system-services/
 usr/share/polkit-1/
