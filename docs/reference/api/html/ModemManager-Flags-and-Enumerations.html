@@ -8,7 +8,7 @@
 <link rel="up" href="ref-common-types.html" title="Part II. Common types and definitions">
 <link rel="prev" href="ModemManager-Version-checks.html" title="Version checks">
 <link rel="next" href="ModemManager-Errors.html" title="Errors">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -35,8 +35,8 @@
 <a name="ModemManager-Flags-and-Enumerations.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -270,6 +270,7 @@ specific traffic with different QoS settings.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -322,6 +323,7 @@ specific traffic with different QoS settings.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -377,6 +379,7 @@ is started to obtain the rest of the configuration.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -443,10 +446,12 @@ is started to obtain the rest of the configuration.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MMCallDirection"></a><h3>enum MMCallDirection</h3>
+<p>Direction of the call.</p>
 <div class="refsect3">
 <a name="MMCallDirection.members"></a><h4>Members</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -480,11 +485,12 @@ is started to obtain the rest of the configuration.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MMCallState"></a><h3>enum MMCallState</h3>
-<p>State of Call</p>
+<p>State of Call.</p>
 <div class="refsect3">
 <a name="MMCallState.members"></a><h4>Members</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -553,10 +559,12 @@ is started to obtain the rest of the configuration.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MMCallStateReason"></a><h3>enum MMCallStateReason</h3>
+<p>Reason for the state change in the call.</p>
 <div class="refsect3">
 <a name="MMCallStateReason.members"></a><h4>Members</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -618,13 +626,28 @@ is started to obtain the rest of the configuration.</p>
 <tr>
 <td class="enum_member_name"><p><a name="MM-CALL-STATE-REASON-AUDIO-SETUP-FAILED:CAPS"></a>MM_CALL_STATE_REASON_AUDIO_SETUP_FAILED</p></td>
 <td class="enum_member_description">
-<p>Error setting up audio channel.</p>
+<p>Error setting up audio channel. Since 1.10.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-CALL-STATE-REASON-TRANSFERRED:CAPS"></a>MM_CALL_STATE_REASON_TRANSFERRED</p></td>
+<td class="enum_member_description">
+<p>Call has been transferred. Since 1.12.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-CALL-STATE-REASON-DEFLECTED:CAPS"></a>MM_CALL_STATE_REASON_DEFLECTED</p></td>
+<td class="enum_member_description">
+<p>Call has been deflected to a new number. Since 1.12.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -663,6 +686,7 @@ is started to obtain the rest of the configuration.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -746,11 +770,12 @@ and the PIN and PIN2 locks, which are SIM locks.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MMModem3gppNetworkAvailability"></a><h3>enum MMModem3gppNetworkAvailability</h3>
-<p>Network availability status as defined in 3GPP TS 27.007 section 7.3</p>
+<p>Network availability status as defined in 3GPP TS 27.007 section 7.3.</p>
 <div class="refsect3">
 <a name="MMModem3gppNetworkAvailability.members"></a><h4>Members</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -791,6 +816,7 @@ and the PIN and PIN2 locks, which are SIM locks.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -837,6 +863,7 @@ modem attempts to register with the network.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -896,41 +923,42 @@ modem attempts to register with the network.</p>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-3GPP-REGISTRATION-STATE-HOME-SMS-ONLY:CAPS"></a>MM_MODEM_3GPP_REGISTRATION_STATE_HOME_SMS_ONLY</p></td>
 <td class="enum_member_description">
-<p>Registered for "SMS only", home network (applicable only when on LTE).</p>
+<p>Registered for "SMS only", home network (applicable only when on LTE). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-3GPP-REGISTRATION-STATE-ROAMING-SMS-ONLY:CAPS"></a>MM_MODEM_3GPP_REGISTRATION_STATE_ROAMING_SMS_ONLY</p></td>
 <td class="enum_member_description">
-<p>Registered for "SMS only", roaming network (applicable only when on LTE).</p>
+<p>Registered for "SMS only", roaming network (applicable only when on LTE). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-3GPP-REGISTRATION-STATE-EMERGENCY-ONLY:CAPS"></a>MM_MODEM_3GPP_REGISTRATION_STATE_EMERGENCY_ONLY</p></td>
 <td class="enum_member_description">
-<p>Emergency services only.</p>
+<p>Emergency services only. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-3GPP-REGISTRATION-STATE-HOME-CSFB-NOT-PREFERRED:CAPS"></a>MM_MODEM_3GPP_REGISTRATION_STATE_HOME_CSFB_NOT_PREFERRED</p></td>
 <td class="enum_member_description">
-<p>Registered for "CSFB not preferred", home network (applicable only when on LTE).</p>
+<p>Registered for "CSFB not preferred", home network (applicable only when on LTE). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-3GPP-REGISTRATION-STATE-ROAMING-CSFB-NOT-PREFERRED:CAPS"></a>MM_MODEM_3GPP_REGISTRATION_STATE_ROAMING_CSFB_NOT_PREFERRED</p></td>
 <td class="enum_member_description">
-<p>Registered for "CSFB not preferred", roaming network (applicable only when on LTE).</p>
+<p>Registered for "CSFB not preferred", roaming network (applicable only when on LTE). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -976,6 +1004,7 @@ modem attempts to register with the network.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -1028,6 +1057,7 @@ modem attempts to register with the network.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-8.html#api-index-1.8">1.8</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -1165,6 +1195,7 @@ or connected to a network.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -1217,63 +1248,63 @@ or connected to a network.</p>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-1:CAPS"></a>MM_MODEM_BAND_UTRAN_1</p></td>
 <td class="enum_member_description">
-<p>UMTS 2100 MHz (IMT, UTRAN band 1).</p>
+<p>UMTS 2100 MHz (IMT, UTRAN band 1). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-3:CAPS"></a>MM_MODEM_BAND_UTRAN_3</p></td>
 <td class="enum_member_description">
-<p>UMTS 1800 MHz (DCS, UTRAN band 3).</p>
+<p>UMTS 1800 MHz (DCS, UTRAN band 3). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-4:CAPS"></a>MM_MODEM_BAND_UTRAN_4</p></td>
 <td class="enum_member_description">
-<p>UMTS 1700 MHz (AWS A-F, UTRAN band 4).</p>
+<p>UMTS 1700 MHz (AWS A-F, UTRAN band 4). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-6:CAPS"></a>MM_MODEM_BAND_UTRAN_6</p></td>
 <td class="enum_member_description">
-<p>UMTS 800 MHz (UTRAN band 6).</p>
+<p>UMTS 800 MHz (UTRAN band 6). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-5:CAPS"></a>MM_MODEM_BAND_UTRAN_5</p></td>
 <td class="enum_member_description">
-<p>UMTS 850 MHz (CLR, UTRAN band 5).</p>
+<p>UMTS 850 MHz (CLR, UTRAN band 5). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-8:CAPS"></a>MM_MODEM_BAND_UTRAN_8</p></td>
 <td class="enum_member_description">
-<p>UMTS 900 MHz (E-GSM, UTRAN band 8).</p>
+<p>UMTS 900 MHz (E-GSM, UTRAN band 8). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-9:CAPS"></a>MM_MODEM_BAND_UTRAN_9</p></td>
 <td class="enum_member_description">
-<p>UMTS 1700 MHz (UTRAN band 9).</p>
+<p>UMTS 1700 MHz (UTRAN band 9). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-2:CAPS"></a>MM_MODEM_BAND_UTRAN_2</p></td>
 <td class="enum_member_description">
-<p>UMTS 1900 MHz (PCS A-F, UTRAN band 2).</p>
+<p>UMTS 1900 MHz (PCS A-F, UTRAN band 2). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-7:CAPS"></a>MM_MODEM_BAND_UTRAN_7</p></td>
 <td class="enum_member_description">
-<p>UMTS 2600 MHz (IMT-E, UTRAN band 7).</p>
+<p>UMTS 2600 MHz (IMT-E, UTRAN band 7). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -1329,707 +1360,707 @@ or connected to a network.</p>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-1:CAPS"></a>MM_MODEM_BAND_EUTRAN_1</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 1.</p>
+<p>E-UTRAN band 1. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-2:CAPS"></a>MM_MODEM_BAND_EUTRAN_2</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 2.</p>
+<p>E-UTRAN band 2. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-3:CAPS"></a>MM_MODEM_BAND_EUTRAN_3</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 3.</p>
+<p>E-UTRAN band 3. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-4:CAPS"></a>MM_MODEM_BAND_EUTRAN_4</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 4.</p>
+<p>E-UTRAN band 4. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-5:CAPS"></a>MM_MODEM_BAND_EUTRAN_5</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 5.</p>
+<p>E-UTRAN band 5. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-6:CAPS"></a>MM_MODEM_BAND_EUTRAN_6</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 6.</p>
+<p>E-UTRAN band 6. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-7:CAPS"></a>MM_MODEM_BAND_EUTRAN_7</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 7.</p>
+<p>E-UTRAN band 7. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-8:CAPS"></a>MM_MODEM_BAND_EUTRAN_8</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 8.</p>
+<p>E-UTRAN band 8. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-9:CAPS"></a>MM_MODEM_BAND_EUTRAN_9</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 9.</p>
+<p>E-UTRAN band 9. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-10:CAPS"></a>MM_MODEM_BAND_EUTRAN_10</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 10.</p>
+<p>E-UTRAN band 10. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-11:CAPS"></a>MM_MODEM_BAND_EUTRAN_11</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 11.</p>
+<p>E-UTRAN band 11. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-12:CAPS"></a>MM_MODEM_BAND_EUTRAN_12</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 12.</p>
+<p>E-UTRAN band 12. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-13:CAPS"></a>MM_MODEM_BAND_EUTRAN_13</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 13.</p>
+<p>E-UTRAN band 13. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-14:CAPS"></a>MM_MODEM_BAND_EUTRAN_14</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 14.</p>
+<p>E-UTRAN band 14. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-17:CAPS"></a>MM_MODEM_BAND_EUTRAN_17</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 17.</p>
+<p>E-UTRAN band 17. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-18:CAPS"></a>MM_MODEM_BAND_EUTRAN_18</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 18.</p>
+<p>E-UTRAN band 18. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-19:CAPS"></a>MM_MODEM_BAND_EUTRAN_19</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 19.</p>
+<p>E-UTRAN band 19. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-20:CAPS"></a>MM_MODEM_BAND_EUTRAN_20</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 20.</p>
+<p>E-UTRAN band 20. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-21:CAPS"></a>MM_MODEM_BAND_EUTRAN_21</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 21.</p>
+<p>E-UTRAN band 21. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-22:CAPS"></a>MM_MODEM_BAND_EUTRAN_22</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 22.</p>
+<p>E-UTRAN band 22. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-23:CAPS"></a>MM_MODEM_BAND_EUTRAN_23</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 23.</p>
+<p>E-UTRAN band 23. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-24:CAPS"></a>MM_MODEM_BAND_EUTRAN_24</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 24.</p>
+<p>E-UTRAN band 24. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-25:CAPS"></a>MM_MODEM_BAND_EUTRAN_25</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 25.</p>
+<p>E-UTRAN band 25. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-26:CAPS"></a>MM_MODEM_BAND_EUTRAN_26</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 26.</p>
+<p>E-UTRAN band 26. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-27:CAPS"></a>MM_MODEM_BAND_EUTRAN_27</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 27.</p>
+<p>E-UTRAN band 27. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-28:CAPS"></a>MM_MODEM_BAND_EUTRAN_28</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 28.</p>
+<p>E-UTRAN band 28. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-29:CAPS"></a>MM_MODEM_BAND_EUTRAN_29</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 29.</p>
+<p>E-UTRAN band 29. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-30:CAPS"></a>MM_MODEM_BAND_EUTRAN_30</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 30.</p>
+<p>E-UTRAN band 30. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-31:CAPS"></a>MM_MODEM_BAND_EUTRAN_31</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 31.</p>
+<p>E-UTRAN band 31. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-32:CAPS"></a>MM_MODEM_BAND_EUTRAN_32</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 32.</p>
+<p>E-UTRAN band 32. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-33:CAPS"></a>MM_MODEM_BAND_EUTRAN_33</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 33.</p>
+<p>E-UTRAN band 33. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-34:CAPS"></a>MM_MODEM_BAND_EUTRAN_34</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 34.</p>
+<p>E-UTRAN band 34. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-35:CAPS"></a>MM_MODEM_BAND_EUTRAN_35</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 35.</p>
+<p>E-UTRAN band 35. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-36:CAPS"></a>MM_MODEM_BAND_EUTRAN_36</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 36.</p>
+<p>E-UTRAN band 36. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-37:CAPS"></a>MM_MODEM_BAND_EUTRAN_37</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 37.</p>
+<p>E-UTRAN band 37. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-38:CAPS"></a>MM_MODEM_BAND_EUTRAN_38</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 38.</p>
+<p>E-UTRAN band 38. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-39:CAPS"></a>MM_MODEM_BAND_EUTRAN_39</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 39.</p>
+<p>E-UTRAN band 39. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-40:CAPS"></a>MM_MODEM_BAND_EUTRAN_40</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 40.</p>
+<p>E-UTRAN band 40. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-41:CAPS"></a>MM_MODEM_BAND_EUTRAN_41</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 41.</p>
+<p>E-UTRAN band 41. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-42:CAPS"></a>MM_MODEM_BAND_EUTRAN_42</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 42.</p>
+<p>E-UTRAN band 42. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-43:CAPS"></a>MM_MODEM_BAND_EUTRAN_43</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 43.</p>
+<p>E-UTRAN band 43. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-44:CAPS"></a>MM_MODEM_BAND_EUTRAN_44</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 44.</p>
+<p>E-UTRAN band 44. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-45:CAPS"></a>MM_MODEM_BAND_EUTRAN_45</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 45.</p>
+<p>E-UTRAN band 45. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-46:CAPS"></a>MM_MODEM_BAND_EUTRAN_46</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 46.</p>
+<p>E-UTRAN band 46. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-47:CAPS"></a>MM_MODEM_BAND_EUTRAN_47</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 47.</p>
+<p>E-UTRAN band 47. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-48:CAPS"></a>MM_MODEM_BAND_EUTRAN_48</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 48.</p>
+<p>E-UTRAN band 48. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-49:CAPS"></a>MM_MODEM_BAND_EUTRAN_49</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 49.</p>
+<p>E-UTRAN band 49. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-50:CAPS"></a>MM_MODEM_BAND_EUTRAN_50</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 50.</p>
+<p>E-UTRAN band 50. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-51:CAPS"></a>MM_MODEM_BAND_EUTRAN_51</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 51.</p>
+<p>E-UTRAN band 51. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-52:CAPS"></a>MM_MODEM_BAND_EUTRAN_52</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 52.</p>
+<p>E-UTRAN band 52. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-53:CAPS"></a>MM_MODEM_BAND_EUTRAN_53</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 53.</p>
+<p>E-UTRAN band 53. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-54:CAPS"></a>MM_MODEM_BAND_EUTRAN_54</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 54.</p>
+<p>E-UTRAN band 54. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-55:CAPS"></a>MM_MODEM_BAND_EUTRAN_55</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 55.</p>
+<p>E-UTRAN band 55. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-56:CAPS"></a>MM_MODEM_BAND_EUTRAN_56</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 56.</p>
+<p>E-UTRAN band 56. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-57:CAPS"></a>MM_MODEM_BAND_EUTRAN_57</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 57.</p>
+<p>E-UTRAN band 57. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-58:CAPS"></a>MM_MODEM_BAND_EUTRAN_58</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 58.</p>
+<p>E-UTRAN band 58. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-59:CAPS"></a>MM_MODEM_BAND_EUTRAN_59</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 59.</p>
+<p>E-UTRAN band 59. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-60:CAPS"></a>MM_MODEM_BAND_EUTRAN_60</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 60.</p>
+<p>E-UTRAN band 60. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-61:CAPS"></a>MM_MODEM_BAND_EUTRAN_61</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 61.</p>
+<p>E-UTRAN band 61. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-62:CAPS"></a>MM_MODEM_BAND_EUTRAN_62</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 62.</p>
+<p>E-UTRAN band 62. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-63:CAPS"></a>MM_MODEM_BAND_EUTRAN_63</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 63.</p>
+<p>E-UTRAN band 63. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-64:CAPS"></a>MM_MODEM_BAND_EUTRAN_64</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 64.</p>
+<p>E-UTRAN band 64. Since 1.10.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-65:CAPS"></a>MM_MODEM_BAND_EUTRAN_65</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 65.</p>
+<p>E-UTRAN band 65. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-66:CAPS"></a>MM_MODEM_BAND_EUTRAN_66</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 66.</p>
+<p>E-UTRAN band 66. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-67:CAPS"></a>MM_MODEM_BAND_EUTRAN_67</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 67.</p>
+<p>E-UTRAN band 67. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-68:CAPS"></a>MM_MODEM_BAND_EUTRAN_68</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 68.</p>
+<p>E-UTRAN band 68. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-69:CAPS"></a>MM_MODEM_BAND_EUTRAN_69</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 69.</p>
+<p>E-UTRAN band 69. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-70:CAPS"></a>MM_MODEM_BAND_EUTRAN_70</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 70.</p>
+<p>E-UTRAN band 70. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-71:CAPS"></a>MM_MODEM_BAND_EUTRAN_71</p></td>
 <td class="enum_member_description">
-<p>E-UTRAN band 71.</p>
+<p>E-UTRAN band 71. Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC0:CAPS"></a>MM_MODEM_BAND_CDMA_BC0</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 0 (US Cellular 850MHz).</p>
+<p>CDMA Band Class 0 (US Cellular 850MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC1:CAPS"></a>MM_MODEM_BAND_CDMA_BC1</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 1 (US PCS 1900MHz).</p>
+<p>CDMA Band Class 1 (US PCS 1900MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC2:CAPS"></a>MM_MODEM_BAND_CDMA_BC2</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 2 (UK TACS 900MHz).</p>
+<p>CDMA Band Class 2 (UK TACS 900MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC3:CAPS"></a>MM_MODEM_BAND_CDMA_BC3</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 3 (Japanese TACS).</p>
+<p>CDMA Band Class 3 (Japanese TACS). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC4:CAPS"></a>MM_MODEM_BAND_CDMA_BC4</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 4 (Korean PCS).</p>
+<p>CDMA Band Class 4 (Korean PCS). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC5:CAPS"></a>MM_MODEM_BAND_CDMA_BC5</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 5 (NMT 450MHz).</p>
+<p>CDMA Band Class 5 (NMT 450MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC6:CAPS"></a>MM_MODEM_BAND_CDMA_BC6</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 6 (IMT2000 2100MHz).</p>
+<p>CDMA Band Class 6 (IMT2000 2100MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC7:CAPS"></a>MM_MODEM_BAND_CDMA_BC7</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 7 (Cellular 700MHz).</p>
+<p>CDMA Band Class 7 (Cellular 700MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC8:CAPS"></a>MM_MODEM_BAND_CDMA_BC8</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 8 (1800MHz).</p>
+<p>CDMA Band Class 8 (1800MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC9:CAPS"></a>MM_MODEM_BAND_CDMA_BC9</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 9 (900MHz).</p>
+<p>CDMA Band Class 9 (900MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC10:CAPS"></a>MM_MODEM_BAND_CDMA_BC10</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 10 (US Secondary 800).</p>
+<p>CDMA Band Class 10 (US Secondary 800). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC11:CAPS"></a>MM_MODEM_BAND_CDMA_BC11</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 11 (European PAMR 400MHz).</p>
+<p>CDMA Band Class 11 (European PAMR 400MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC12:CAPS"></a>MM_MODEM_BAND_CDMA_BC12</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 12 (PAMR 800MHz).</p>
+<p>CDMA Band Class 12 (PAMR 800MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC13:CAPS"></a>MM_MODEM_BAND_CDMA_BC13</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 13 (IMT2000 2500MHz Expansion).</p>
+<p>CDMA Band Class 13 (IMT2000 2500MHz Expansion). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC14:CAPS"></a>MM_MODEM_BAND_CDMA_BC14</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 14 (More US PCS 1900MHz).</p>
+<p>CDMA Band Class 14 (More US PCS 1900MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC15:CAPS"></a>MM_MODEM_BAND_CDMA_BC15</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 15 (AWS 1700MHz).</p>
+<p>CDMA Band Class 15 (AWS 1700MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC16:CAPS"></a>MM_MODEM_BAND_CDMA_BC16</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 16 (US 2500MHz).</p>
+<p>CDMA Band Class 16 (US 2500MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC17:CAPS"></a>MM_MODEM_BAND_CDMA_BC17</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 17 (US 2500MHz Forward Link Only).</p>
+<p>CDMA Band Class 17 (US 2500MHz Forward Link Only). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC18:CAPS"></a>MM_MODEM_BAND_CDMA_BC18</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 18 (US 700MHz Public Safety).</p>
+<p>CDMA Band Class 18 (US 700MHz Public Safety). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-CDMA-BC19:CAPS"></a>MM_MODEM_BAND_CDMA_BC19</p></td>
 <td class="enum_member_description">
-<p>CDMA Band Class 19 (US Lower 700MHz).</p>
+<p>CDMA Band Class 19 (US Lower 700MHz). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-10:CAPS"></a>MM_MODEM_BAND_UTRAN_10</p></td>
 <td class="enum_member_description">
-<p>UMTS 1700 MHz (EAWS A-G, UTRAN band 10).</p>
+<p>UMTS 1700 MHz (EAWS A-G, UTRAN band 10). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-11:CAPS"></a>MM_MODEM_BAND_UTRAN_11</p></td>
 <td class="enum_member_description">
-<p>UMTS 1500 MHz (LPDC, UTRAN band 11).</p>
+<p>UMTS 1500 MHz (LPDC, UTRAN band 11). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-12:CAPS"></a>MM_MODEM_BAND_UTRAN_12</p></td>
 <td class="enum_member_description">
-<p>UMTS 700 MHz (LSMH A/B/C, UTRAN band 12).</p>
+<p>UMTS 700 MHz (LSMH A/B/C, UTRAN band 12). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-13:CAPS"></a>MM_MODEM_BAND_UTRAN_13</p></td>
 <td class="enum_member_description">
-<p>UMTS 700 MHz (USMH C, UTRAN band 13).</p>
+<p>UMTS 700 MHz (USMH C, UTRAN band 13). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-14:CAPS"></a>MM_MODEM_BAND_UTRAN_14</p></td>
 <td class="enum_member_description">
-<p>UMTS 700 MHz (USMH D, UTRAN band 14).</p>
+<p>UMTS 700 MHz (USMH D, UTRAN band 14). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-19:CAPS"></a>MM_MODEM_BAND_UTRAN_19</p></td>
 <td class="enum_member_description">
-<p>UMTS 800 MHz (UTRAN band 19).</p>
+<p>UMTS 800 MHz (UTRAN band 19). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-20:CAPS"></a>MM_MODEM_BAND_UTRAN_20</p></td>
 <td class="enum_member_description">
-<p>UMTS 800 MHz (EUDD, UTRAN band 20).</p>
+<p>UMTS 800 MHz (EUDD, UTRAN band 20). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-21:CAPS"></a>MM_MODEM_BAND_UTRAN_21</p></td>
 <td class="enum_member_description">
-<p>UMTS 1500 MHz (UPDC, UTRAN band 21).</p>
+<p>UMTS 1500 MHz (UPDC, UTRAN band 21). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-22:CAPS"></a>MM_MODEM_BAND_UTRAN_22</p></td>
 <td class="enum_member_description">
-<p>UMTS 3500 MHz (UTRAN band 22).</p>
+<p>UMTS 3500 MHz (UTRAN band 22). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-25:CAPS"></a>MM_MODEM_BAND_UTRAN_25</p></td>
 <td class="enum_member_description">
-<p>UMTS 1900 MHz (EPCS A-G, UTRAN band 25).</p>
+<p>UMTS 1900 MHz (EPCS A-G, UTRAN band 25). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-26:CAPS"></a>MM_MODEM_BAND_UTRAN_26</p></td>
 <td class="enum_member_description">
-<p>UMTS 850 MHz (ECLR, UTRAN band 26).</p>
+<p>UMTS 850 MHz (ECLR, UTRAN band 26). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-UTRAN-32:CAPS"></a>MM_MODEM_BAND_UTRAN_32</p></td>
 <td class="enum_member_description">
-<p>UMTS 1500 MHz (L-band, UTRAN band 32).</p>
+<p>UMTS 1500 MHz (L-band, UTRAN band 32). Since 1.8.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -2043,6 +2074,7 @@ or connected to a network.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2117,6 +2149,7 @@ modem supports.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2169,6 +2202,7 @@ modem supports.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2214,6 +2248,7 @@ modem supports.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2273,6 +2308,7 @@ modem supports.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2318,6 +2354,7 @@ modem supports.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2370,20 +2407,28 @@ modem supports.</p>
 <tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-LOCATION-SOURCE-GPS-UNMANAGED:CAPS"></a>MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED</p></td>
 <td class="enum_member_description">
-<p>No location given, just GPS module setup.</p>
+<p>No location given, just GPS module setup. Since 1.4.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="MM-MODEM-LOCATION-SOURCE-AGPS:CAPS"></a>MM_MODEM_LOCATION_SOURCE_AGPS</p></td>
+<td class="enum_member_name"><p><a name="MM-MODEM-LOCATION-SOURCE-AGPS-MSA:CAPS"></a>MM_MODEM_LOCATION_SOURCE_AGPS_MSA</p></td>
 <td class="enum_member_description">
-<p>A-GPS location requested.</p>
+<p>Mobile Station Assisted A-GPS location requested. Since 1.12.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-LOCATION-SOURCE-AGPS-MSB:CAPS"></a>MM_MODEM_LOCATION_SOURCE_AGPS_MSB</p></td>
+<td class="enum_member_description">
+<p>Mobile Station Based A-GPS location requested. Since 1.12.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2415,6 +2460,7 @@ modem supports.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2551,6 +2597,7 @@ modem supports.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2611,6 +2658,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2721,6 +2769,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2767,6 +2816,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2812,6 +2862,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2857,6 +2908,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2920,9 +2972,17 @@ preferred in a given device.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-PORT-TYPE-AUDIO:CAPS"></a>MM_MODEM_PORT_TYPE_AUDIO</p></td>
+<td class="enum_member_description">
+<p>Audio port. Since 1.12.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -2961,6 +3021,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -3006,6 +3067,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -3107,6 +3169,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -3166,6 +3229,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -3239,6 +3303,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -3284,48 +3349,49 @@ preferred in a given device.</p>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-PDU-TYPE-CDMA-DELIVER:CAPS"></a>MM_SMS_PDU_TYPE_CDMA_DELIVER</p></td>
 <td class="enum_member_description">
-<p>3GPP2 Mobile-Terminated (MT) message.</p>
+<p>3GPP2 Mobile-Terminated (MT) message. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-PDU-TYPE-CDMA-SUBMIT:CAPS"></a>MM_SMS_PDU_TYPE_CDMA_SUBMIT</p></td>
 <td class="enum_member_description">
-<p>3GPP2 Mobile-Originated (MO) message.</p>
+<p>3GPP2 Mobile-Originated (MO) message. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-PDU-TYPE-CDMA-CANCELLATION:CAPS"></a>MM_SMS_PDU_TYPE_CDMA_CANCELLATION</p></td>
 <td class="enum_member_description">
-<p>3GPP2 Cancellation (MO) message.</p>
+<p>3GPP2 Cancellation (MO) message. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-PDU-TYPE-CDMA-DELIVERY-ACKNOWLEDGEMENT:CAPS"></a>MM_SMS_PDU_TYPE_CDMA_DELIVERY_ACKNOWLEDGEMENT</p></td>
 <td class="enum_member_description">
-<p>3GPP2 Delivery Acknowledgement (MT) message.</p>
+<p>3GPP2 Delivery Acknowledgement (MT) message. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-PDU-TYPE-CDMA-USER-ACKNOWLEDGEMENT:CAPS"></a>MM_SMS_PDU_TYPE_CDMA_USER_ACKNOWLEDGEMENT</p></td>
 <td class="enum_member_description">
-<p>3GPP2 User Acknowledgement (MT or MO) message.</p>
+<p>3GPP2 User Acknowledgement (MT or MO) message. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-PDU-TYPE-CDMA-READ-ACKNOWLEDGEMENT:CAPS"></a>MM_SMS_PDU_TYPE_CDMA_READ_ACKNOWLEDGEMENT</p></td>
 <td class="enum_member_description">
-<p>3GPP2 Read Acknowledgement (MT or MO) message.</p>
+<p>3GPP2 Read Acknowledgement (MT or MO) message. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -3385,6 +3451,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -3586,398 +3653,399 @@ preferred in a given device.</p>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-NETWORK-PROBLEM-ADDRESS-VACANT:CAPS"></a>MM_SMS_DELIVERY_STATE_NETWORK_PROBLEM_ADDRESS_VACANT</p></td>
 <td class="enum_member_description">
-<p>Permanent error in network, address vacant.</p>
+<p>Permanent error in network, address vacant. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-NETWORK-PROBLEM-ADDRESS-TRANSLATION-FAILURE:CAPS"></a>MM_SMS_DELIVERY_STATE_NETWORK_PROBLEM_ADDRESS_TRANSLATION_FAILURE</p></td>
 <td class="enum_member_description">
-<p>Permanent error in network, address translation failure.</p>
+<p>Permanent error in network, address translation failure. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-NETWORK-PROBLEM-NETWORK-RESOURCE-OUTAGE:CAPS"></a>MM_SMS_DELIVERY_STATE_NETWORK_PROBLEM_NETWORK_RESOURCE_OUTAGE</p></td>
 <td class="enum_member_description">
-<p>Permanent error in network, network resource outage.</p>
+<p>Permanent error in network, network resource outage. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-NETWORK-PROBLEM-NETWORK-FAILURE:CAPS"></a>MM_SMS_DELIVERY_STATE_NETWORK_PROBLEM_NETWORK_FAILURE</p></td>
 <td class="enum_member_description">
-<p>Permanent error in network, network failure.</p>
+<p>Permanent error in network, network failure. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-NETWORK-PROBLEM-INVALID-TELESERVICE-ID:CAPS"></a>MM_SMS_DELIVERY_STATE_NETWORK_PROBLEM_INVALID_TELESERVICE_ID</p></td>
 <td class="enum_member_description">
-<p>Permanent error in network, invalid teleservice id.</p>
+<p>Permanent error in network, invalid teleservice id. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-NETWORK-PROBLEM-OTHER:CAPS"></a>MM_SMS_DELIVERY_STATE_NETWORK_PROBLEM_OTHER</p></td>
 <td class="enum_member_description">
-<p>Permanent error, other network problem.</p>
+<p>Permanent error, other network problem. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TERMINAL-PROBLEM-NO-PAGE-RESPONSE:CAPS"></a>MM_SMS_DELIVERY_STATE_TERMINAL_PROBLEM_NO_PAGE_RESPONSE</p></td>
 <td class="enum_member_description">
-<p>Permanent error in terminal, no page response.</p>
+<p>Permanent error in terminal, no page response. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TERMINAL-PROBLEM-DESTINATION-BUSY:CAPS"></a>MM_SMS_DELIVERY_STATE_TERMINAL_PROBLEM_DESTINATION_BUSY</p></td>
 <td class="enum_member_description">
-<p>Permanent error in terminal, destination busy.</p>
+<p>Permanent error in terminal, destination busy. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TERMINAL-PROBLEM-NO-ACKNOWLEDGMENT:CAPS"></a>MM_SMS_DELIVERY_STATE_TERMINAL_PROBLEM_NO_ACKNOWLEDGMENT</p></td>
 <td class="enum_member_description">
-<p>Permanent error in terminal, no acknowledgement.</p>
+<p>Permanent error in terminal, no acknowledgement. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TERMINAL-PROBLEM-DESTINATION-RESOURCE-SHORTAGE:CAPS"></a>MM_SMS_DELIVERY_STATE_TERMINAL_PROBLEM_DESTINATION_RESOURCE_SHORTAGE</p></td>
 <td class="enum_member_description">
-<p>Permanent error in terminal, destination resource shortage.</p>
+<p>Permanent error in terminal, destination resource shortage. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TERMINAL-PROBLEM-SMS-DELIVERY-POSTPONED:CAPS"></a>MM_SMS_DELIVERY_STATE_TERMINAL_PROBLEM_SMS_DELIVERY_POSTPONED</p></td>
 <td class="enum_member_description">
-<p>Permanent error in terminal, SMS delivery postponed.</p>
+<p>Permanent error in terminal, SMS delivery postponed. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TERMINAL-PROBLEM-DESTINATION-OUT-OF-SERVICE:CAPS"></a>MM_SMS_DELIVERY_STATE_TERMINAL_PROBLEM_DESTINATION_OUT_OF_SERVICE</p></td>
 <td class="enum_member_description">
-<p>Permanent error in terminal, destination out of service.</p>
+<p>Permanent error in terminal, destination out of service. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TERMINAL-PROBLEM-DESTINATION-NO-LONGER-AT-THIS-ADDRESS:CAPS"></a>MM_SMS_DELIVERY_STATE_TERMINAL_PROBLEM_DESTINATION_NO_LONGER_AT_THIS_ADDRESS</p></td>
 <td class="enum_member_description">
-<p>Permanent error in terminal, destination no longer at this address.</p>
+<p>Permanent error in terminal, destination no longer at this address. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TERMINAL-PROBLEM-OTHER:CAPS"></a>MM_SMS_DELIVERY_STATE_TERMINAL_PROBLEM_OTHER</p></td>
 <td class="enum_member_description">
-<p>Permanent error, other terminal problem.</p>
+<p>Permanent error, other terminal problem. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-RADIO-INTERFACE-PROBLEM-RESOURCE-SHORTAGE:CAPS"></a>MM_SMS_DELIVERY_STATE_RADIO_INTERFACE_PROBLEM_RESOURCE_SHORTAGE</p></td>
 <td class="enum_member_description">
-<p>Permanent error in radio interface, resource shortage.</p>
+<p>Permanent error in radio interface, resource shortage. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-RADIO-INTERFACE-PROBLEM-INCOMPATIBILITY:CAPS"></a>MM_SMS_DELIVERY_STATE_RADIO_INTERFACE_PROBLEM_INCOMPATIBILITY</p></td>
 <td class="enum_member_description">
-<p>Permanent error in radio interface, problem incompatibility.</p>
+<p>Permanent error in radio interface, problem incompatibility. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-RADIO-INTERFACE-PROBLEM-OTHER:CAPS"></a>MM_SMS_DELIVERY_STATE_RADIO_INTERFACE_PROBLEM_OTHER</p></td>
 <td class="enum_member_description">
-<p>Permanent error, other radio interface problem.</p>
+<p>Permanent error, other radio interface problem. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-GENERAL-PROBLEM-ENCODING:CAPS"></a>MM_SMS_DELIVERY_STATE_GENERAL_PROBLEM_ENCODING</p></td>
 <td class="enum_member_description">
-<p>Permanent error, encoding.</p>
+<p>Permanent error, encoding. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-GENERAL-PROBLEM-SMS-ORIGINATION-DENIED:CAPS"></a>MM_SMS_DELIVERY_STATE_GENERAL_PROBLEM_SMS_ORIGINATION_DENIED</p></td>
 <td class="enum_member_description">
-<p>Permanent error, SMS origination denied.</p>
+<p>Permanent error, SMS origination denied. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-GENERAL-PROBLEM-SMS-TERMINATION-DENIED:CAPS"></a>MM_SMS_DELIVERY_STATE_GENERAL_PROBLEM_SMS_TERMINATION_DENIED</p></td>
 <td class="enum_member_description">
-<p>Permanent error, SMS termination denied.</p>
+<p>Permanent error, SMS termination denied. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-GENERAL-PROBLEM-SUPPLEMENTARY-SERVICE-NOT-SUPPORTED:CAPS"></a>MM_SMS_DELIVERY_STATE_GENERAL_PROBLEM_SUPPLEMENTARY_SERVICE_NOT_SUPPORTED</p></td>
 <td class="enum_member_description">
-<p>Permanent error, supplementary service not supported.</p>
+<p>Permanent error, supplementary service not supported. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-GENERAL-PROBLEM-SMS-NOT-SUPPORTED:CAPS"></a>MM_SMS_DELIVERY_STATE_GENERAL_PROBLEM_SMS_NOT_SUPPORTED</p></td>
 <td class="enum_member_description">
-<p>Permanent error, SMS not supported.</p>
+<p>Permanent error, SMS not supported. Since 1.22.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-GENERAL-PROBLEM-MISSING-EXPECTED-PARAMETER:CAPS"></a>MM_SMS_DELIVERY_STATE_GENERAL_PROBLEM_MISSING_EXPECTED_PARAMETER</p></td>
 <td class="enum_member_description">
-<p>Permanent error, missing expected parameter.</p>
+<p>Permanent error, missing expected parameter. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-GENERAL-PROBLEM-MISSING-MANDATORY-PARAMETER:CAPS"></a>MM_SMS_DELIVERY_STATE_GENERAL_PROBLEM_MISSING_MANDATORY_PARAMETER</p></td>
 <td class="enum_member_description">
-<p>Permanent error, missing mandatory parameter.</p>
+<p>Permanent error, missing mandatory parameter. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-GENERAL-PROBLEM-UNRECOGNIZED-PARAMETER-VALUE:CAPS"></a>MM_SMS_DELIVERY_STATE_GENERAL_PROBLEM_UNRECOGNIZED_PARAMETER_VALUE</p></td>
 <td class="enum_member_description">
-<p>Permanent error, unrecognized parameter value.</p>
+<p>Permanent error, unrecognized parameter value. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-GENERAL-PROBLEM-UNEXPECTED-PARAMETER-VALUE:CAPS"></a>MM_SMS_DELIVERY_STATE_GENERAL_PROBLEM_UNEXPECTED_PARAMETER_VALUE</p></td>
 <td class="enum_member_description">
-<p>Permanent error, unexpected parameter value.</p>
+<p>Permanent error, unexpected parameter value. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-GENERAL-PROBLEM-USER-DATA-SIZE-ERROR:CAPS"></a>MM_SMS_DELIVERY_STATE_GENERAL_PROBLEM_USER_DATA_SIZE_ERROR</p></td>
 <td class="enum_member_description">
-<p>Permanent error, user data size error.</p>
+<p>Permanent error, user data size error. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-GENERAL-PROBLEM-OTHER:CAPS"></a>MM_SMS_DELIVERY_STATE_GENERAL_PROBLEM_OTHER</p></td>
 <td class="enum_member_description">
-<p>Permanent error, other general problem.</p>
+<p>Permanent error, other general problem. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-NETWORK-PROBLEM-ADDRESS-VACANT:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_NETWORK_PROBLEM_ADDRESS_VACANT</p></td>
 <td class="enum_member_description">
-<p>Temporary error in network, address vacant.</p>
+<p>Temporary error in network, address vacant. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-NETWORK-PROBLEM-ADDRESS-TRANSLATION-FAILURE:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_NETWORK_PROBLEM_ADDRESS_TRANSLATION_FAILURE</p></td>
 <td class="enum_member_description">
-<p>Temporary error in network, address translation failure.</p>
+<p>Temporary error in network, address translation failure. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-NETWORK-PROBLEM-NETWORK-RESOURCE-OUTAGE:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_NETWORK_PROBLEM_NETWORK_RESOURCE_OUTAGE</p></td>
 <td class="enum_member_description">
-<p>Temporary error in network, network resource outage.</p>
+<p>Temporary error in network, network resource outage. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-NETWORK-PROBLEM-NETWORK-FAILURE:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_NETWORK_PROBLEM_NETWORK_FAILURE</p></td>
 <td class="enum_member_description">
-<p>Temporary error in network, network failure.</p>
+<p>Temporary error in network, network failure. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-NETWORK-PROBLEM-INVALID-TELESERVICE-ID:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_NETWORK_PROBLEM_INVALID_TELESERVICE_ID</p></td>
 <td class="enum_member_description">
-<p>Temporary error in network, invalid teleservice id.</p>
+<p>Temporary error in network, invalid teleservice id. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-NETWORK-PROBLEM-OTHER:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_NETWORK_PROBLEM_OTHER</p></td>
 <td class="enum_member_description">
-<p>Temporary error, other network problem.</p>
+<p>Temporary error, other network problem. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-TERMINAL-PROBLEM-NO-PAGE-RESPONSE:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_TERMINAL_PROBLEM_NO_PAGE_RESPONSE</p></td>
 <td class="enum_member_description">
-<p>Temporary error in terminal, no page response.</p>
+<p>Temporary error in terminal, no page response. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-TERMINAL-PROBLEM-DESTINATION-BUSY:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_TERMINAL_PROBLEM_DESTINATION_BUSY</p></td>
 <td class="enum_member_description">
-<p>Temporary error in terminal, destination busy.</p>
+<p>Temporary error in terminal, destination busy. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-TERMINAL-PROBLEM-NO-ACKNOWLEDGMENT:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_TERMINAL_PROBLEM_NO_ACKNOWLEDGMENT</p></td>
 <td class="enum_member_description">
-<p>Temporary error in terminal, no acknowledgement.</p>
+<p>Temporary error in terminal, no acknowledgement. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-TERMINAL-PROBLEM-DESTINATION-RESOURCE-SHORTAGE:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_TERMINAL_PROBLEM_DESTINATION_RESOURCE_SHORTAGE</p></td>
 <td class="enum_member_description">
-<p>Temporary error in terminal, destination resource shortage.</p>
+<p>Temporary error in terminal, destination resource shortage. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-TERMINAL-PROBLEM-SMS-DELIVERY-POSTPONED:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_TERMINAL_PROBLEM_SMS_DELIVERY_POSTPONED</p></td>
 <td class="enum_member_description">
-<p>Temporary error in terminal, SMS delivery postponed.</p>
+<p>Temporary error in terminal, SMS delivery postponed. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-TERMINAL-PROBLEM-DESTINATION-OUT-OF-SERVICE:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_TERMINAL_PROBLEM_DESTINATION_OUT_OF_SERVICE</p></td>
 <td class="enum_member_description">
-<p>Temporary error in terminal, destination out of service.</p>
+<p>Temporary error in terminal, destination out of service. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-TERMINAL-PROBLEM-DESTINATION-NO-LONGER-AT-THIS-ADDRESS:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_TERMINAL_PROBLEM_DESTINATION_NO_LONGER_AT_THIS_ADDRESS</p></td>
 <td class="enum_member_description">
-<p>Temporary error in terminal, destination no longer at this address.</p>
+<p>Temporary error in terminal, destination no longer at this address. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-TERMINAL-PROBLEM-OTHER:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_TERMINAL_PROBLEM_OTHER</p></td>
 <td class="enum_member_description">
-<p>Temporary error, other terminal problem.</p>
+<p>Temporary error, other terminal problem. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-RADIO-INTERFACE-PROBLEM-RESOURCE-SHORTAGE:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_RADIO_INTERFACE_PROBLEM_RESOURCE_SHORTAGE</p></td>
 <td class="enum_member_description">
-<p>Temporary error in radio interface, resource shortage.</p>
+<p>Temporary error in radio interface, resource shortage. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-RADIO-INTERFACE-PROBLEM-INCOMPATIBILITY:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_RADIO_INTERFACE_PROBLEM_INCOMPATIBILITY</p></td>
 <td class="enum_member_description">
-<p>Temporary error in radio interface, problem incompatibility.</p>
+<p>Temporary error in radio interface, problem incompatibility. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-RADIO-INTERFACE-PROBLEM-OTHER:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_RADIO_INTERFACE_PROBLEM_OTHER</p></td>
 <td class="enum_member_description">
-<p>Temporary error, other radio interface problem.</p>
+<p>Temporary error, other radio interface problem. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-GENERAL-PROBLEM-ENCODING:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_GENERAL_PROBLEM_ENCODING</p></td>
 <td class="enum_member_description">
-<p>Temporary error, encoding.</p>
+<p>Temporary error, encoding. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-GENERAL-PROBLEM-SMS-ORIGINATION-DENIED:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_GENERAL_PROBLEM_SMS_ORIGINATION_DENIED</p></td>
 <td class="enum_member_description">
-<p>Temporary error, SMS origination denied.</p>
+<p>Temporary error, SMS origination denied. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-GENERAL-PROBLEM-SMS-TERMINATION-DENIED:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_GENERAL_PROBLEM_SMS_TERMINATION_DENIED</p></td>
 <td class="enum_member_description">
-<p>Temporary error, SMS termination denied.</p>
+<p>Temporary error, SMS termination denied. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-GENERAL-PROBLEM-SUPPLEMENTARY-SERVICE-NOT-SUPPORTED:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_GENERAL_PROBLEM_SUPPLEMENTARY_SERVICE_NOT_SUPPORTED</p></td>
 <td class="enum_member_description">
-<p>Temporary error, supplementary service not supported.</p>
+<p>Temporary error, supplementary service not supported. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-GENERAL-PROBLEM-SMS-NOT-SUPPORTED:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_GENERAL_PROBLEM_SMS_NOT_SUPPORTED</p></td>
 <td class="enum_member_description">
-<p>Temporary error, SMS not supported.</p>
+<p>Temporary error, SMS not supported. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-GENERAL-PROBLEM-MISSING-EXPECTED-PARAMETER:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_GENERAL_PROBLEM_MISSING_EXPECTED_PARAMETER</p></td>
 <td class="enum_member_description">
-<p>Temporary error, missing expected parameter.</p>
+<p>Temporary error, missing expected parameter. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-GENERAL-PROBLEM-MISSING-MANDATORY-PARAMETER:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_GENERAL_PROBLEM_MISSING_MANDATORY_PARAMETER</p></td>
 <td class="enum_member_description">
-<p>Temporary error, missing mandatory parameter.</p>
+<p>Temporary error, missing mandatory parameter. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-GENERAL-PROBLEM-UNRECOGNIZED-PARAMETER-VALUE:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_GENERAL_PROBLEM_UNRECOGNIZED_PARAMETER_VALUE</p></td>
 <td class="enum_member_description">
-<p>Temporary error, unrecognized parameter value.</p>
+<p>Temporary error, unrecognized parameter value. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-GENERAL-PROBLEM-UNEXPECTED-PARAMETER-VALUE:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_GENERAL_PROBLEM_UNEXPECTED_PARAMETER_VALUE</p></td>
 <td class="enum_member_description">
-<p>Temporary error, unexpected parameter value.</p>
+<p>Temporary error, unexpected parameter value. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-GENERAL-PROBLEM-USER-DATA-SIZE-ERROR:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_GENERAL_PROBLEM_USER_DATA_SIZE_ERROR</p></td>
 <td class="enum_member_description">
-<p>Temporary error, user data size error.</p>
+<p>Temporary error, user data size error. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="MM-SMS-DELIVERY-STATE-TEMPORARY-GENERAL-PROBLEM-OTHER:CAPS"></a>MM_SMS_DELIVERY_STATE_TEMPORARY_GENERAL_PROBLEM_OTHER</p></td>
 <td class="enum_member_description">
-<p>Temporary error, other general problem.</p>
+<p>Temporary error, other general problem. Since 1.2.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -4044,6 +4112,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -4089,6 +4158,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -4170,6 +4240,7 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -4446,10 +4517,11 @@ preferred in a given device.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

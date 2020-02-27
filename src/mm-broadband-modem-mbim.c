@@ -238,44 +238,47 @@ modem_load_current_capabilities_finish (MMIfaceModem *self,
 static void
 complete_current_capabilities (GTask *task)
 {
-    MMBroadbandModemMbim           *self;
     LoadCurrentCapabilitiesContext *ctx;
     MMModemCapability               result = 0;
 
-    self = g_task_get_source_object (task);
     ctx  = g_task_get_task_data (task);
 
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-    /* Warn if the MBIM loaded capabilities isn't a subset of the QMI loaded ones */
-    if (ctx->current_qmi && ctx->current_mbim) {
-        gchar *mbim_caps_str;
-        gchar *qmi_caps_str;
+    {
+        MMBroadbandModemMbim *self;
 
-        mbim_caps_str = mm_common_build_capabilities_string ((const MMModemCapability *)&(ctx->current_mbim), 1);
-        qmi_caps_str = mm_common_build_capabilities_string ((const MMModemCapability *)&(ctx->current_qmi), 1);
+        self = g_task_get_source_object (task);
+        /* Warn if the MBIM loaded capabilities isn't a subset of the QMI loaded ones */
+        if (ctx->current_qmi && ctx->current_mbim) {
+            gchar *mbim_caps_str;
+            gchar *qmi_caps_str;
 
-        if ((ctx->current_mbim & ctx->current_qmi) != ctx->current_mbim)
-            mm_warn ("MBIM reported current capabilities (%s) not found in QMI-over-MBIM reported ones (%s)",
-                     mbim_caps_str, qmi_caps_str);
-        else
-            mm_dbg ("MBIM reported current capabilities (%s) is a subset of the QMI-over-MBIM reported ones (%s)",
-                    mbim_caps_str, qmi_caps_str);
-        g_free (mbim_caps_str);
-        g_free (qmi_caps_str);
+            mbim_caps_str = mm_common_build_capabilities_string ((const MMModemCapability *)&(ctx->current_mbim), 1);
+            qmi_caps_str = mm_common_build_capabilities_string ((const MMModemCapability *)&(ctx->current_qmi), 1);
 
-        result = ctx->current_qmi;
-        self->priv->qmi_capability_and_mode_switching = TRUE;
-    } else if (ctx->current_qmi) {
-        result = ctx->current_qmi;
-        self->priv->qmi_capability_and_mode_switching = TRUE;
-    } else
-        result = ctx->current_mbim;
+            if ((ctx->current_mbim & ctx->current_qmi) != ctx->current_mbim)
+                mm_warn ("MBIM reported current capabilities (%s) not found in QMI-over-MBIM reported ones (%s)",
+                         mbim_caps_str, qmi_caps_str);
+            else
+                mm_dbg ("MBIM reported current capabilities (%s) is a subset of the QMI-over-MBIM reported ones (%s)",
+                        mbim_caps_str, qmi_caps_str);
+            g_free (mbim_caps_str);
+            g_free (qmi_caps_str);
 
-    /* If current capabilities loading is done via QMI, we can safely assume that all the other
-     * capability and mode related operations are going to be done via QMI as well, so that we
-     * don't mix both logics */
-    if (self->priv->qmi_capability_and_mode_switching)
-        mm_info ("QMI-based capability and mode switching support enabled");
+            result = ctx->current_qmi;
+            self->priv->qmi_capability_and_mode_switching = TRUE;
+        } else if (ctx->current_qmi) {
+            result = ctx->current_qmi;
+            self->priv->qmi_capability_and_mode_switching = TRUE;
+        } else
+            result = ctx->current_mbim;
+
+        /* If current capabilities loading is done via QMI, we can safely assume that all the other
+         * capability and mode related operations are going to be done via QMI as well, so that we
+         * don't mix both logics */
+        if (self->priv->qmi_capability_and_mode_switching)
+            mm_info ("QMI-based capability and mode switching support enabled");
+    }
 #else
     result = ctx->current_mbim;
 #endif
@@ -881,8 +884,8 @@ modem_load_supported_ip_families (MMIfaceModem *self,
 /* Unlock required loading (Modem interface) */
 
 typedef struct {
-    guint n_ready_status_checks;
     MbimDevice *device;
+    gboolean    last_attempt;
 } LoadUnlockRequiredContext;
 
 static void
@@ -1005,29 +1008,28 @@ unlock_required_subscriber_ready_state_ready (MbimDevice *device,
     if (error) {
         g_task_return_error (task, error);
         g_object_unref (task);
+        goto out;
     }
+
     /* Need to retry? */
-    else if (ready_state == MBIM_SUBSCRIBER_READY_STATE_NOT_INITIALIZED ||
-             ready_state == MBIM_SUBSCRIBER_READY_STATE_SIM_NOT_INSERTED) {
-        if (--ctx->n_ready_status_checks == 0) {
-            /* All retries consumed, issue error */
+    if (ready_state == MBIM_SUBSCRIBER_READY_STATE_NOT_INITIALIZED ||
+        ready_state == MBIM_SUBSCRIBER_READY_STATE_SIM_NOT_INSERTED) {
+        /* All retries consumed? issue error */
+        if (ctx->last_attempt) {
             if (ready_state == MBIM_SUBSCRIBER_READY_STATE_SIM_NOT_INSERTED)
-                g_task_return_error (
-                    task,
-                    mm_mobile_equipment_error_for_code (MM_MOBILE_EQUIPMENT_ERROR_SIM_NOT_INSERTED));
+                g_task_return_error (task, mm_mobile_equipment_error_for_code (MM_MOBILE_EQUIPMENT_ERROR_SIM_NOT_INSERTED));
             else
-                g_task_return_new_error (task,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_FAILED,
+                g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
                                          "Error waiting for SIM to get initialized");
-            g_object_unref (task);
-        } else {
-            /* Retry */
-            g_timeout_add_seconds (1, (GSourceFunc)wait_for_sim_ready, task);
-        }
+        } else
+            g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_RETRY,
+                                     "SIM not ready yet (retry)");
+        g_object_unref (task);
+        goto out;
     }
+
     /* Initialized but locked? */
-    else if (ready_state == MBIM_SUBSCRIBER_READY_STATE_DEVICE_LOCKED) {
+    if (ready_state == MBIM_SUBSCRIBER_READY_STATE_DEVICE_LOCKED) {
         MbimMessage *message;
 
         /* Query which lock is to unlock */
@@ -1039,14 +1041,19 @@ unlock_required_subscriber_ready_state_ready (MbimDevice *device,
                              (GAsyncReadyCallback)pin_query_ready,
                              task);
         mbim_message_unref (message);
+        goto out;
     }
-    /* Initialized but locked? */
-    else if (ready_state == MBIM_SUBSCRIBER_READY_STATE_INITIALIZED) {
+
+    /* Initialized! */
+    if (ready_state == MBIM_SUBSCRIBER_READY_STATE_INITIALIZED) {
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
-    } else
-        g_assert_not_reached ();
+        goto out;
+    }
 
+    g_assert_not_reached ();
+
+out:
     if (response)
         mbim_message_unref (response);
 }
@@ -1071,6 +1078,7 @@ wait_for_sim_ready (GTask *task)
 
 static void
 modem_load_unlock_required (MMIfaceModem *self,
+                            gboolean last_attempt,
                             GAsyncReadyCallback callback,
                             gpointer user_data)
 {
@@ -1083,7 +1091,7 @@ modem_load_unlock_required (MMIfaceModem *self,
 
     ctx = g_slice_new (LoadUnlockRequiredContext);
     ctx->device = g_object_ref (device);
-    ctx->n_ready_status_checks = 10;
+    ctx->last_attempt = last_attempt;
 
     task = g_task_new (self, NULL, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify)load_unlock_required_context_free);
@@ -1967,9 +1975,7 @@ static void
 allocate_next_qmi_client (GTask *task)
 {
     InitializationStartedContext *ctx;
-    MMBroadbandModemMbim         *self;
 
-    self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
 
     if (ctx->qmi_service_index == G_N_ELEMENTS (qmi_services)) {
@@ -2443,18 +2449,26 @@ lte_attach_status_query_ready (MbimDevice   *device,
 }
 
 static void
-modem_3gpp_load_initial_eps_bearer (MMIfaceModem3gpp    *self,
+modem_3gpp_load_initial_eps_bearer (MMIfaceModem3gpp    *_self,
                                     GAsyncReadyCallback  callback,
                                     gpointer             user_data)
 {
-    MbimDevice  *device;
-    MbimMessage *message;
-    GTask       *task;
+    MMBroadbandModemMbim *self = MM_BROADBAND_MODEM_MBIM (_self);
+    MbimDevice           *device;
+    MbimMessage          *message;
+    GTask                *task;
 
     if (!peek_device (self, &device, callback, user_data))
         return;
 
     task = g_task_new (self, NULL, callback, user_data);
+
+    if (!self->priv->is_lte_attach_status_supported) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                 "LTE attach status is unsupported");
+        g_object_unref (task);
+        return;
+    }
 
     message = mbim_message_ms_basic_connect_extensions_lte_attach_status_query_new (NULL);
     mbim_device_command (device,
@@ -2563,18 +2577,26 @@ lte_attach_configuration_query_ready (MbimDevice   *device,
 }
 
 static void
-modem_3gpp_load_initial_eps_bearer_settings (MMIfaceModem3gpp    *self,
+modem_3gpp_load_initial_eps_bearer_settings (MMIfaceModem3gpp    *_self,
                                              GAsyncReadyCallback  callback,
                                              gpointer             user_data)
 {
-    MbimDevice  *device;
-    MbimMessage *message;
-    GTask       *task;
+    MMBroadbandModemMbim *self = MM_BROADBAND_MODEM_MBIM (_self);
+    MbimDevice           *device;
+    MbimMessage          *message;
+    GTask                *task;
 
     if (!peek_device (self, &device, callback, user_data))
         return;
 
     task = g_task_new (self, NULL, callback, user_data);
+
+    if (!self->priv->is_lte_attach_status_supported) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                 "LTE attach configuration is unsupported");
+        g_object_unref (task);
+        return;
+    }
 
     message = mbim_message_ms_basic_connect_extensions_lte_attach_configuration_query_new (NULL);
     mbim_device_command (device,
@@ -2608,11 +2630,8 @@ set_lte_attach_configuration_set_ready (MbimDevice   *device,
                                         GAsyncResult *res,
                                         GTask        *task)
 {
-    MMBroadbandModemMbim *self;
     MbimMessage          *response;
     GError               *error = NULL;
-
-    self = g_task_get_source_object (task);
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error))
@@ -2630,7 +2649,6 @@ before_set_lte_attach_configuration_query_ready (MbimDevice   *device,
                                                  GAsyncResult *res,
                                                  GTask        *task)
 {
-    MMBroadbandModemMbim        *self;
     MbimMessage                 *request;
     MbimMessage                 *response;
     GError                      *error = NULL;
@@ -2639,7 +2657,6 @@ before_set_lte_attach_configuration_query_ready (MbimDevice   *device,
     MbimLteAttachConfiguration **configurations = NULL;
     guint                        i;
 
-    self   = g_task_get_source_object (task);
     config = g_task_get_task_data (task);
 
     response = mbim_device_command_finish (device, res, &error);
@@ -2730,19 +2747,28 @@ before_set_lte_attach_configuration_query_ready (MbimDevice   *device,
 }
 
 static void
-modem_3gpp_set_initial_eps_bearer_settings (MMIfaceModem3gpp    *self,
+modem_3gpp_set_initial_eps_bearer_settings (MMIfaceModem3gpp    *_self,
                                             MMBearerProperties  *config,
                                             GAsyncReadyCallback  callback,
                                             gpointer             user_data)
 {
-    GTask       *task;
-    MbimDevice  *device;
-    MbimMessage *message;
+    MMBroadbandModemMbim *self = MM_BROADBAND_MODEM_MBIM (_self);
+    GTask                *task;
+    MbimDevice           *device;
+    MbimMessage          *message;
 
     if (!peek_device (self, &device, callback, user_data))
         return;
 
     task = g_task_new (self, NULL, callback, user_data);
+
+    if (!self->priv->is_lte_attach_status_supported) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                 "LTE attach configuration is unsupported");
+        g_object_unref (task);
+        return;
+    }
+
     g_task_set_task_data (task, g_object_ref (config), g_object_unref);
 
     message = mbim_message_ms_basic_connect_extensions_lte_attach_configuration_query_new (NULL);
@@ -3308,7 +3334,7 @@ common_setup_cleanup_unsolicited_events_sync (MMBroadbandModemMbim *self,
             self->priv->setup_flags & PROCESS_NOTIFICATION_FLAG_PACKET_SERVICE ? "yes" : "no",
             self->priv->setup_flags & PROCESS_NOTIFICATION_FLAG_PCO ? "yes" : "no",
             self->priv->setup_flags & PROCESS_NOTIFICATION_FLAG_USSD ? "yes" : "no",
-            self->priv->setup_flags & MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_LTE_ATTACH_STATUS ? "yes" : "no");
+            self->priv->setup_flags & PROCESS_NOTIFICATION_FLAG_LTE_ATTACH_STATUS ? "yes" : "no");
 
     if (setup) {
         /* Don't re-enable it if already there */
@@ -4473,7 +4499,7 @@ process_ussd_message (MMBroadbandModemMbim *self,
 {
     GTask                       *task = NULL;
     MMModem3gppUssdSessionState  ussd_state = MM_MODEM_3GPP_USSD_SESSION_STATE_IDLE;
-    GByteArray                  *bytearray = NULL;
+    GByteArray                  *bytearray;
     gchar                       *converted = NULL;
     GError                      *error = NULL;
 
@@ -4483,8 +4509,9 @@ process_ussd_message (MMBroadbandModemMbim *self,
         self->priv->pending_ussd_action = NULL;
     }
 
-    if (data_size)
-        bytearray = g_byte_array_append (g_byte_array_new (), data, data_size);
+    bytearray = g_byte_array_new ();
+    if (data && data_size)
+        bytearray = g_byte_array_append (bytearray, data, data_size);
 
     switch (ussd_response) {
     case MBIM_USSD_RESPONSE_NO_ACTION_REQUIRED:
@@ -4519,30 +4546,29 @@ process_ussd_message (MMBroadbandModemMbim *self,
         break;
 
     case MBIM_USSD_RESPONSE_TERMINATED_BY_NETWORK:
-        error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_CANCELLED, "USSD terminated by network");
+        error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_ABORTED, "USSD terminated by network");
         break;
 
     case MBIM_USSD_RESPONSE_OTHER_LOCAL_CLIENT:
-        error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_CANCELLED, "Another ongoing USSD operation is in progress");
+        error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_RETRY, "Another ongoing USSD operation is in progress");
         break;
 
     case MBIM_USSD_RESPONSE_OPERATION_NOT_SUPPORTED:
-        error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_CANCELLED, "Operation not supported");
+        error = g_error_new (MM_MOBILE_EQUIPMENT_ERROR, MM_MOBILE_EQUIPMENT_ERROR_NOT_SUPPORTED, "Operation not supported");
         break;
 
     case MBIM_USSD_RESPONSE_NETWORK_TIMEOUT:
-        error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_CANCELLED, "Network timeout");
+        error = g_error_new (MM_MOBILE_EQUIPMENT_ERROR, MM_MOBILE_EQUIPMENT_ERROR_NETWORK_TIMEOUT, "Network timeout");
         break;
 
     default:
-        error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_CANCELLED, "Unknown USSD response (%u)", ussd_response);
+        error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "Unknown USSD response (%u)", ussd_response);
         break;
     }
 
     mm_iface_modem_3gpp_ussd_update_state (MM_IFACE_MODEM_3GPP_USSD (self), ussd_state);
 
-    if (bytearray)
-        g_byte_array_unref (bytearray);
+    g_byte_array_unref (bytearray);
 
     /* Complete the pending action */
     if (task) {
@@ -4552,6 +4578,7 @@ process_ussd_message (MMBroadbandModemMbim *self,
             g_task_return_pointer (task, converted, g_free);
         else
             g_assert_not_reached ();
+        g_object_unref (task);
         return;
     }
 
@@ -4850,7 +4877,7 @@ ussd_cancel_ready (MbimDevice   *device,
         task = self->priv->pending_ussd_action;
         self->priv->pending_ussd_action = NULL;
 
-        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_CANCELLED,
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_ABORTED,
                                  "USSD session was cancelled");
         g_object_unref (task);
     }

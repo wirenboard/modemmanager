@@ -53,6 +53,8 @@ struct _MMBearerStatsPrivate {
  * Gets the duration of the current connection, in seconds.
  *
  * Returns: a #guint.
+ *
+ * Since: 1.6
  */
 guint
 mm_bearer_stats_get_duration (MMBearerStats *self)
@@ -62,6 +64,9 @@ mm_bearer_stats_get_duration (MMBearerStats *self)
     return self->priv->duration;
 }
 
+/**
+ * mm_bearer_stats_set_duration: (skip)
+ */
 void
 mm_bearer_stats_set_duration (MMBearerStats *self,
                               guint duration)
@@ -80,6 +85,8 @@ mm_bearer_stats_set_duration (MMBearerStats *self,
  * Gets the number of bytes received without error in the connection.
  *
  * Returns: a #guint64.
+ *
+ * Since: 1.6
  */
 guint64
 mm_bearer_stats_get_rx_bytes (MMBearerStats *self)
@@ -89,6 +96,9 @@ mm_bearer_stats_get_rx_bytes (MMBearerStats *self)
     return self->priv->rx_bytes;
 }
 
+/**
+ * mm_bearer_stats_set_rx_bytes: (skip)
+ */
 void
 mm_bearer_stats_set_rx_bytes (MMBearerStats *self,
                               guint64 bytes)
@@ -107,6 +117,8 @@ mm_bearer_stats_set_rx_bytes (MMBearerStats *self,
  * Gets the number of bytes transmitted without error in the connection.
  *
  * Returns: a #guint64.
+ *
+ * Since: 1.6
  */
 guint64
 mm_bearer_stats_get_tx_bytes (MMBearerStats *self)
@@ -116,6 +128,9 @@ mm_bearer_stats_get_tx_bytes (MMBearerStats *self)
     return self->priv->tx_bytes;
 }
 
+/**
+ * mm_bearer_stats_set_tx_bytes: (skip)
+ */
 void
 mm_bearer_stats_set_tx_bytes (MMBearerStats *self,
                               guint64 bytes)
@@ -127,6 +142,9 @@ mm_bearer_stats_set_tx_bytes (MMBearerStats *self,
 
 /*****************************************************************************/
 
+/**
+ * mm_bearer_stats_get_dictionary: (skip)
+ */
 GVariant *
 mm_bearer_stats_get_dictionary (MMBearerStats *self)
 {
@@ -154,6 +172,9 @@ mm_bearer_stats_get_dictionary (MMBearerStats *self)
 
 /*****************************************************************************/
 
+/**
+ * mm_bearer_stats_new_from_dictionary: (skip)
+ */
 MMBearerStats *
 mm_bearer_stats_new_from_dictionary (GVariant *dictionary,
                                      GError **error)
@@ -201,6 +222,9 @@ mm_bearer_stats_new_from_dictionary (GVariant *dictionary,
 
 /*****************************************************************************/
 
+/**
+ * mm_bearer_stats_new: (skip)
+ */
 MMBearerStats *
 mm_bearer_stats_new (void)
 {

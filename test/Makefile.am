@@ -67,6 +67,56 @@ mmrules_LDADD = \
 	$(NULL)
 
 ################################################################################
+# mmsmspdu
+################################################################################
+
+noinst_PROGRAMS += mmsmspdu
+
+mmsmspdu_SOURCES = mmsmspdu.c
+
+mmsmspdu_CPPFLAGS = \
+	$(MM_CFLAGS) \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/include \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/libmm-glib \
+	-I$(top_srcdir)/libmm-glib/generated \
+	-I$(top_builddir)/libmm-glib/generated
+	$(NULL)
+
+mmsmspdu_LDADD = \
+	$(MM_LIBS) \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+################################################################################
+# mmsmsmonitor
+################################################################################
+
+noinst_PROGRAMS += mmsmsmonitor
+
+mmsmsmonitor_SOURCES = mmsmsmonitor.c
+
+mmsmsmonitor_CPPFLAGS = \
+	$(MM_CFLAGS) \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/include \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/libmm-glib \
+	-I$(top_srcdir)/libmm-glib/generated \
+	-I$(top_builddir)/libmm-glib/generated
+	$(NULL)
+
+mmsmsmonitor_LDADD = \
+	$(MM_LIBS) \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+################################################################################
 # mmcli-test-sms
 ################################################################################
 

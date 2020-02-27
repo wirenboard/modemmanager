@@ -424,6 +424,28 @@ mm_charset_gsm_unpacked_to_utf8 (const guint8 *gsm, guint32 len)
         guint8 uchars[4];
         guint8 ulen;
 
+        /*
+         * 	0x00 is NULL (when followed only by 0x00 up to the
+         * 	end of (fixed byte length) message, possibly also up to
+         * 	FORM FEED.  But 0x00 is also the code for COMMERCIAL AT
+         * 	when some other character (CARRIAGE RETURN if nothing else)
+         * 	comes after the 0x00.
+         *  http://unicode.org/Public/MAPPINGS/ETSI/GSM0338.TXT
+         *
+         * So, if we find a '@' (0x00) and all the next chars after that
+         * are also 0x00, we can consider the string finished already.
+         */
+        if (gsm[i] == 0x00) {
+            gsize j;
+
+            for (j = i + 1; j < len; j++) {
+                if (gsm[j] != 0x00)
+                    break;
+            }
+            if (j == len)
+                break;
+        }
+
         if (gsm[i] == GSM_ESCAPE_CHAR) {
             /* Extended alphabet, decode next char */
             ulen = gsm_ext_char_to_utf8 (gsm[i+1], uchars);
@@ -541,7 +563,7 @@ pccp437_is_subset (gunichar c, const char *utf8, gsize ulen)
 
     if (c <= 0x7F)
         return TRUE;
-    for (i = 0; i < sizeof (t) / sizeof (t[0]); i++) {
+    for (i = 0; i < G_N_ELEMENTS (t); i++) {
         if (c == t[i])
             return TRUE;
     }

@@ -52,6 +52,8 @@ struct _MMCallPrivate {
  * Gets the DBus path of the #MMCall object.
  *
  * Returns: (transfer none): The DBus path of the #MMCall object.
+ *
+ * Since: 1.6
  */
 const gchar *
 mm_call_get_path (MMCall *self)
@@ -68,7 +70,10 @@ mm_call_get_path (MMCall *self)
  *
  * Gets a copy of the DBus path of the #MMCall object.
  *
- * Returns: (transfer full): The DBus path of the #MMCall object. The returned value should be freed with g_free().
+ * Returns: (transfer full): The DBus path of the #MMCall object.
+ * The returned value should be freed with g_free().
+ *
+ * Since: 1.6
  */
 gchar *
 mm_call_dup_path (MMCall *self)
@@ -99,6 +104,8 @@ mm_call_dup_path (MMCall *self)
  * thread.</warning>
  *
  * Returns: (transfer none): The number, or %NULL if it couldn't be retrieved.
+ *
+ * Since: 1.6
  */
 const gchar *
 mm_call_get_number (MMCall *self)
@@ -116,7 +123,10 @@ mm_call_get_number (MMCall *self)
  * Gets the call number. In outgoing calls contains the dialing number or
  * the remote number in incoming calls
  *
- * Returns: (transfer full): The number, or %NULL if it couldn't be retrieved. The returned value should be freed with g_free().
+ * Returns: (transfer full): The number, or %NULL if it couldn't be retrieved.
+ * The returned value should be freed with g_free().
+ *
+ * Since: 1.6
  */
 gchar *
 mm_call_dup_number (MMCall *self)
@@ -136,6 +146,8 @@ mm_call_dup_number (MMCall *self)
  * Gets the call direction.
  *
  * Returns: a #MMCallDirection.
+ *
+ * Since: 1.6
  */
 MMCallDirection
 mm_call_get_direction (MMCall *self)
@@ -148,12 +160,34 @@ mm_call_get_direction (MMCall *self)
 /*****************************************************************************/
 
 /**
+ * mm_call_get_multiparty:
+ * @self: A #MMCall.
+ *
+ * Gets whether the call is part of a multiparty call.
+ *
+ * Returns: %TRUE if the call is part of a multiparty call, %FALSE otherwise.
+ *
+ * Since: 1.12
+ */
+gboolean
+mm_call_get_multiparty (MMCall *self)
+{
+    g_return_val_if_fail (MM_IS_CALL (self), FALSE);
+
+    return mm_gdbus_call_get_multiparty (MM_GDBUS_CALL (self));
+}
+
+/*****************************************************************************/
+
+/**
  * mm_call_get_state:
  * @self: A #MMCall.
  *
  * Gets the current state of call.
  *
  * Returns: a #MMCallState.
+ *
+ * Since: 1.6
  */
 MMCallState
 mm_call_get_state (MMCall *self)
@@ -172,6 +206,8 @@ mm_call_get_state (MMCall *self)
  * Gets the reason of why the call changes its state.
  *
  * Returns: a #MMCallStateReason.
+ *
+ * Since: 1.6
  */
 MMCallStateReason
 mm_call_get_state_reason (MMCall *self)
@@ -191,6 +227,8 @@ mm_call_get_state_reason (MMCall *self)
  *
  * Returns: (transfer none): The audio port, or %NULL if call audio is not
  * routed via the host or couldn't be retrieved.
+ *
+ * Since: 1.10
  */
 const gchar *
 mm_call_get_audio_port (MMCall *self)
@@ -209,6 +247,8 @@ mm_call_get_audio_port (MMCall *self)
  *
  * Returns: (transfer full): The audio port, or %NULL if call audio is not
  * routed via the host or couldn't be retrieved.
+ *
+ * Since: 1.10
  */
 gchar *
 mm_call_dup_audio_port (MMCall *self)
@@ -295,7 +335,10 @@ ensure_internal_audio_format (MMCall *self,
  * mm_call_get_audio_format() again to get a new #MMCallAudioFormat with the
  * new values.</warning>
  *
- * Returns: (transfer full): A #MMCallAudioFormat that must be freed with g_object_unref() or %NULL if unknown.
+ * Returns: (transfer full): A #MMCallAudioFormat that must be freed with
+ * g_object_unref() or %NULL if unknown.
+ *
+ * Since: 1.10
  */
 MMCallAudioFormat *
 mm_call_get_audio_format (MMCall *self)
@@ -320,7 +363,10 @@ mm_call_get_audio_format (MMCall *self)
  * @self was constructed. Use mm_call_get_audio_format() if on another
  * thread.</warning>
  *
- * Returns: (transfer none): A #MMCallAudioFormat. Do not free the returned value, it belongs to @self.
+ * Returns: (transfer none): A #MMCallAudioFormat. Do not free the returned
+ * value, it belongs to @self.
+ *
+ * Since: 1.10
  */
 MMCallAudioFormat *
 mm_call_peek_audio_format (MMCall *self)
@@ -336,12 +382,15 @@ mm_call_peek_audio_format (MMCall *self)
 /**
  * mm_call_start_finish:
  * @self: A #MMCall.
- * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to mm_call_start().
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to
+ *  mm_call_start().
  * @error: Return location for error or %NULL.
  *
  * Finishes an operation started with mm_call_start().
  *
  * Returns:  %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.6
  */
 gboolean
 mm_call_start_finish (MMCall *self,
@@ -357,17 +406,22 @@ mm_call_start_finish (MMCall *self,
  * mm_call_start:
  * @self: A #MMCall.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
- * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
+ * @callback: A #GAsyncReadyCallback to call when the request is satisfied or
+ *  %NULL.
  * @user_data: User data to pass to @callback.
  *
  * Asynchronously requests to queue the call.
  *
  * Call objects can only be executed once.
  *
- * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
- * You can then call mm_call_start_finish() to get the result of the operation.
+ * When the operation is finished, @callback will be invoked in the
+ * <link linkend="g-main-context-push-thread-default">thread-default main loop</link>
+ * of the thread you are calling this method from. You can then call
+ * mm_call_start_finish() to get the result of the operation.
  *
  * See mm_call_start_sync() for the synchronous, blocking version of this method.
+ *
+ * Since: 1.6
  */
 void
 mm_call_start (MMCall *self,
@@ -397,6 +451,8 @@ mm_call_start (MMCall *self,
  * See mm_call_start() for the asynchronous version of this method.
  *
  * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.6
  */
 gboolean
 mm_call_start_sync (MMCall *self,
@@ -415,12 +471,15 @@ mm_call_start_sync (MMCall *self,
 /**
  * mm_call_accept_finish:
  * @self: A #MMCall.
- * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to mm_call_accept().
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to
+ *  mm_call_accept().
  * @error: Return location for error or %NULL.
  *
  * Finishes an operation started with mm_call_accept().
  *
- * Returns:  %TRUE if the operation succeeded, %FALSE if @error is set.
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.6
  */
 gboolean
 mm_call_accept_finish (MMCall *self,
@@ -436,17 +495,22 @@ mm_call_accept_finish (MMCall *self,
  * mm_call_accept:
  * @self: A #MMCall.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
- * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
+ * @callback: A #GAsyncReadyCallback to call when the request is satisfied or
+ *  %NULL.
  * @user_data: User data to pass to @callback.
  *
  * Asynchronously requests to accept the incoming call.
  *
  * Call objects can only be executed once.
  *
- * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
- * You can then call mm_call_accept_finish() to get the result of the operation.
+ * When the operation is finished, @callback will be invoked in the
+ * <link linkend="g-main-context-push-thread-default">thread-default main loop</link>
+ * of the thread you are calling this method from. You can then call
+ * mm_call_accept_finish() to get the result of the operation.
  *
  * See mm_call_accept_sync() for the synchronous, blocking version of this method.
+ *
+ * Since: 1.6
  */
 void
 mm_call_accept (MMCall *self,
@@ -476,6 +540,8 @@ mm_call_accept (MMCall *self,
  * See mm_call_accept() for the asynchronous version of this method.
  *
  * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.6
  */
 gboolean
 mm_call_accept_sync (MMCall *self,
@@ -492,14 +558,285 @@ mm_call_accept_sync (MMCall *self,
 /*****************************************************************************/
 
 /**
+ * mm_call_deflect_finish:
+ * @self: A #MMCall.
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to
+ *  mm_call_deflect().
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with mm_call_deflect().
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+mm_call_deflect_finish (MMCall *self,
+                        GAsyncResult *res,
+                        GError **error)
+{
+    g_return_val_if_fail (MM_IS_CALL (self), FALSE);
+
+    return mm_gdbus_call_call_deflect_finish (MM_GDBUS_CALL (self), res, error);
+}
+
+/**
+ * mm_call_deflect:
+ * @self: A #MMCall.
+ * @number: new number where the call will be deflected.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @callback: A #GAsyncReadyCallback to call when the request is satisfied or
+ *  %NULL.
+ * @user_data: User data to pass to @callback.
+ *
+ * Asynchronously requests to deflect the incoming call.
+ *
+ * This call will be considered terminated once the deflection is performed.
+ *
+ * When the operation is finished, @callback will be invoked in the
+ * <link linkend="g-main-context-push-thread-default">thread-default main loop</link>
+ * of the thread you are calling this method from. You can then call
+ * mm_call_deflect_finish() to get the result of the operation.
+ *
+ * See mm_call_deflect_sync() for the synchronous, blocking version of this
+ * method.
+ *
+ * Since: 1.12
+ */
+void
+mm_call_deflect (MMCall *self,
+                 const gchar *number,
+                 GCancellable *cancellable,
+                 GAsyncReadyCallback callback,
+                 gpointer user_data)
+{
+    g_return_if_fail (MM_IS_CALL (self));
+
+    mm_gdbus_call_call_deflect (MM_GDBUS_CALL (self),
+                                number,
+                                cancellable,
+                                callback,
+                                user_data);
+}
+
+/**
+ * mm_call_deflect_sync:
+ * @self: A #MMCall.
+ * @number: new number where the call will be deflected.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Synchronously requests to deflect the incoming call.
+ *
+ * This call will be considered terminated once the deflection is performed.
+ *
+ * The calling thread is blocked until an incoming call is ready.
+ * See mm_call_deflect() for the asynchronous version of this method.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+mm_call_deflect_sync (MMCall *self,
+                      const gchar *number,
+                      GCancellable *cancellable,
+                      GError **error)
+{
+    g_return_val_if_fail (MM_IS_CALL (self), FALSE);
+
+    return mm_gdbus_call_call_deflect_sync (MM_GDBUS_CALL (self),
+                                            number,
+                                            cancellable,
+                                            error);
+}
+
+/*****************************************************************************/
+
+/**
+ * mm_call_join_multiparty_finish:
+ * @self: A #MMCall.
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to
+ *  mm_call_join_multiparty().
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with mm_call_join_multiparty().
+ *
+ * Returns:  %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+mm_call_join_multiparty_finish (MMCall        *self,
+                                GAsyncResult  *res,
+                                GError       **error)
+{
+    g_return_val_if_fail (MM_IS_CALL (self), FALSE);
+
+    return mm_gdbus_call_call_join_multiparty_finish (MM_GDBUS_CALL (self), res, error);
+}
+
+/**
+ * mm_call_join_multiparty:
+ * @self: A #MMCall.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @callback: A #GAsyncReadyCallback to call when the request is satisfied or
+ *  %NULL.
+ * @user_data: User data to pass to @callback.
+ *
+ * Synchronously requests to join this call into a multiparty call.
+ *
+ * When the operation is finished, @callback will be invoked in the
+ * <link linkend="g-main-context-push-thread-default">thread-default main loop</link>
+ * of the thread you are calling this method from. You can then call
+ * mm_call_join_multiparty_finish() to get the result of the operation.
+ *
+ * See mm_call_join_multiparty_sync() for the synchronous, blocking version of
+ * this method.
+ *
+ * Since: 1.12
+ */
+void
+mm_call_join_multiparty (MMCall              *self,
+                         GCancellable        *cancellable,
+                         GAsyncReadyCallback  callback,
+                         gpointer             user_data)
+{
+    g_return_if_fail (MM_IS_CALL (self));
+
+    mm_gdbus_call_call_join_multiparty (MM_GDBUS_CALL (self),
+                                        cancellable,
+                                        callback,
+                                        user_data);
+}
+
+/**
+ * mm_call_join_multiparty_sync:
+ * @self: A #MMCall.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Synchronously requests to join this call into a multiparty call.
+ *
+ * The calling thread is blocked until an incoming call is ready.
+ * See mm_call_join_multiparty() for the asynchronous version of this method.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+mm_call_join_multiparty_sync (MMCall       *self,
+                              GCancellable *cancellable,
+                              GError       **error)
+{
+    g_return_val_if_fail (MM_IS_CALL (self), FALSE);
+
+    return mm_gdbus_call_call_join_multiparty_sync (MM_GDBUS_CALL (self),
+                                                    cancellable,
+                                                    error);
+}
+
+/**
+ * mm_call_leave_multiparty_finish:
+ * @self: A #MMCall.
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to
+ *  mm_call_leave_multiparty().
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with mm_call_leave_multiparty().
+ *
+ * Returns:  %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+mm_call_leave_multiparty_finish (MMCall        *self,
+                                 GAsyncResult  *res,
+                                 GError       **error)
+{
+    g_return_val_if_fail (MM_IS_CALL (self), FALSE);
+
+    return mm_gdbus_call_call_leave_multiparty_finish (MM_GDBUS_CALL (self), res, error);
+}
+
+/**
+ * mm_call_leave_multiparty:
+ * @self: A #MMCall.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @callback: A #GAsyncReadyCallback to call when the request is satisfied or
+ *  %NULL.
+ * @user_data: User data to pass to @callback.
+ *
+ * Synchronously requests to make this call private again by leaving the
+ * multiparty call.
+ *
+ * When the operation is finished, @callback will be invoked in the
+ * <link linkend="g-main-context-push-thread-default">thread-default main loop</link>
+ * of the thread you are calling this method from. You can then call
+ * mm_call_leave_multiparty_finish() to get the result of the operation.
+ *
+ * See mm_call_leave_multiparty_sync() for the synchronous, blocking version
+ * of this method.
+ *
+ * Since: 1.12
+ */
+void
+mm_call_leave_multiparty (MMCall              *self,
+                          GCancellable        *cancellable,
+                          GAsyncReadyCallback  callback,
+                          gpointer             user_data)
+{
+    g_return_if_fail (MM_IS_CALL (self));
+
+    mm_gdbus_call_call_leave_multiparty (MM_GDBUS_CALL (self),
+                                         cancellable,
+                                         callback,
+                                         user_data);
+}
+
+/**
+ * mm_call_leave_multiparty_sync:
+ * @self: A #MMCall.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Synchronously requests to make this call private again by leaving the
+ * multiparty call.
+ *
+ * The calling thread is blocked until an incoming call is ready.
+ * See mm_call_leave_multiparty() for the asynchronous version of this method.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+mm_call_leave_multiparty_sync (MMCall       *self,
+                               GCancellable *cancellable,
+                               GError       **error)
+{
+    g_return_val_if_fail (MM_IS_CALL (self), FALSE);
+
+    return mm_gdbus_call_call_leave_multiparty_sync (MM_GDBUS_CALL (self),
+                                                     cancellable,
+                                                     error);
+}
+
+ /*****************************************************************************/
+
+/**
  * mm_call_hangup_finish:
  * @self: A #MMCall.
- * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to mm_call_hangup().
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to
+ *  mm_call_hangup().
  * @error: Return location for error or %NULL.
  *
  * Finishes an operation started with mm_call_hangup().
  *
  * Returns:  %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.6
  */
 gboolean
 mm_call_hangup_finish (MMCall *self,
@@ -515,17 +852,23 @@ mm_call_hangup_finish (MMCall *self,
  * mm_call_hangup:
  * @self: A #MMCall.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
- * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
+ * @callback: A #GAsyncReadyCallback to call when the request is satisfied or
+ *  %NULL.
  * @user_data: User data to pass to @callback.
  *
  * Asynchronously requests to hangup the call.
  *
  * Call objects can only be executed once.
  *
- * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
- * You can then call mm_call_hangup_finish() to get the result of the operation.
+ * When the operation is finished, @callback will be invoked in the
+ * <link linkend="g-main-context-push-thread-default">thread-default main loop</link>
+ * of the thread you are calling this method from. You can then call
+ * mm_call_hangup_finish() to get the result of the operation.
  *
- * See mm_call_hangup_sync() for the synchronous, blocking version of this method.
+ * See mm_call_hangup_sync() for the synchronous, blocking version of this
+ * method.
+ *
+ * Since: 1.6
  */
 void
 mm_call_hangup (MMCall *self,
@@ -555,6 +898,8 @@ mm_call_hangup (MMCall *self,
  * See mm_call_hangup() for the asynchronous version of this method.
  *
  * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.6
  */
 gboolean
 mm_call_hangup_sync (MMCall *self,
@@ -573,12 +918,15 @@ mm_call_hangup_sync (MMCall *self,
 /**
  * mm_call_send_dtmf_finish:
  * @self: A #MMCall.
- * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to mm_call_send_dtmf().
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to
+ *  mm_call_send_dtmf().
  * @error: Return location for error or %NULL.
  *
  * Finishes an operation started with mm_call_send_dtmf().
  *
  * Returns:  %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.6
  */
 gboolean
 mm_call_send_dtmf_finish (MMCall *self,
@@ -595,17 +943,23 @@ mm_call_send_dtmf_finish (MMCall *self,
  * @self: A #MMCall.
  * @dtmf: the DMTF tone.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
- * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
+ * @callback: A #GAsyncReadyCallback to call when the request is satisfied or
+ *  %NULL.
  * @user_data: User data to pass to @callback.
  *
  * Asynchronously requests to send a DTMF tone the call.
  *
  * Call objects can only be executed once.
  *
- * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
- * You can then call mm_call_send_dtmf_finish() to get the result of the operation.
+ * When the operation is finished, @callback will be invoked in the
+ * <link linkend="g-main-context-push-thread-default">thread-default main loop</link>
+ * of the thread you are calling this method from. You can then call
+ * mm_call_send_dtmf_finish() to get the result of the operation.
  *
- * See mm_call_send_dtmf_sync() for the synchronous, blocking version of this method.
+ * See mm_call_send_dtmf_sync() for the synchronous, blocking version of this
+ * method.
+ *
+ * Since: 1.6
  */
 void
 mm_call_send_dtmf (MMCall *self,
@@ -638,6 +992,8 @@ mm_call_send_dtmf (MMCall *self,
  * See mm_call_send_dtmf() for the asynchronous version of this method.
  *
  * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.6
  */
 gboolean
 mm_call_send_dtmf_sync (MMCall *self,

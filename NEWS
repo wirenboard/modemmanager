@@ -1,93 +1,233 @@
 
-ModemManager 1.10.4
+ModemManager 1.12.6
 -------------------------------------------
 This is a new bugfix release of ModemManager.
 
 The list of changes in this version includes:
 
- * QMI:
-   ** Fix assertion when cleaning up event report indications.
+ * SIM:
+   ** Updated logic to avoid sending PIN/PUK to the SIM card when not required
+      (e.g. if already unlocked).
 
- * MBIM:
-   ** Fix detecting errors in "Register State Set" responses.
+ * Simple interface:
+   ** Avoid aborting connection if SIM-PUK2 locked, as PIN2/PUK2 doesn't
+      prevent us from getting connected.
 
- * 3GPP interface:
-   ** Use correct finish() method to complete user registration.
+ * Location interface:
+   ** Fixed memory leak happening as soon as a position fix was obtained and
+      gps-raw location source was enabled.
 
- * Plugins:
-   ** u-blox: fix segfault when UACT? returns empty band list.
+ * Core:
+   ** Fixed handling of 0x00 bytes at the end of GSM encoded strings.
+   ** Fixed cleaning up 'timed-out' signal on the serial port objects.
+   ** Fixed logic that closes MBIM ports during cleanup.
+
+ * Several other minor fixes and memory leak plugs.
 
 
-ModemManager 1.10.2
+ModemManager 1.12.4
 -------------------------------------------
 This is a new bugfix release of ModemManager.
 
-Unlike previous bugfix releases of stable branches, this release comes with a
-new feature that may require packaging updates:
+This release breaks the API of the bindings supporting the MMModem3gppNetwork
+type, used as result when a Modem3gpp.Scan() operation finishes. This type is
+now a boxed type with explicit copy/free info, so the interpreter using the
+bindings is now able to cleanly dispose these variables (it would make the
+program crash otherwise, so the change is well justified).
 
- * Carrier configuration reporting and automatic selection.
+The getters for the MMModem3gppNetwork type now look like this:
 
-   It is now possible to load and expose in the modem interface the currently
-   selected carrier configuration in the module, if any, via the new
-   'CarrierConfiguration' and 'CarrierConfigurationRevision' properties.
+    E.g. instead of:
+      ModemManager.Modem3gpp.network_get_operator_code(network)
+    We should now do:
+      network.get_operator_code()
 
-   Additionally, if the modem/plugin supports it via a custom mapping,
-   ModemManager will also automatically select the best carrier configuration
-   for the currently available SIM card. The mapping is provided via an external
-   file that associates a SIM card MCCMNC with a given carrier ID string as
-   reported by the specific module.
+A new example python application using the Modem3gpp.Scan() operation is
+provided in the sources, under examples/network-scan-python.
 
-   Initially the carrier configuration reporting is available to all QMI modems
-   with PDC service support, and the automatic carrier configuration switching
-   only to the Dell DW5821e, for which a mapping configuration file is provided.
+There is no API/ABI break in libmm-glib itself.
 
-   This carrier configuration support provides the foundation for "carrier based
-   firmware upgrade paths" in the fwupd/LVFS integration. E.g. a modem running
-   with a Vodafone-specific carrier configuration will only be suggested firmware
-   upgrades providing Vodafone-specific carrier configurations, as the specific
-   GUIDs generated for fwupd contain the USB VID/PID/REV plus the currently used
-   carrier name: USB\VID_413C&PID_81D7&REV_0318&CARRIER_VODAFONE.
+The list of additional changes in this version includes:
 
-   Some notes to distribution packagers:
-   ** The mapping files will be installed under ${pkgdatadir}, e.g.:
-      /usr/share/ModemManager/mm-dell-dw5821e-carrier-mapping.conf
-   ** libqmi 1.22.4 is required as a buildtime and runtime dependency.
+ * Core:
+   ** Added missing ME error codes when building GError variables for the
+      MM_MOBILE_EQUIPMENT_ERROR domain.
 
-The list of changes in this version includes:
+ * Bearer:
+   ** Avoid connection checks or stats updates while disconnecting.
 
- * Manager interface:
-   ** Fixed inhibition alloc/dealloc mixup.
+ * Serial port:
+   ** Fix segfault when port flash operation gets cancelled.
 
- * Modem interface:
-   ** New 'CarrierConfiguration' property that shows which is the currently
-      selected carrier configuration in the device, if known.
-   ** New automatic carrier configuration selection logic, based on per-device
-      or per-vendor mapping.
+ * Simple interface:
+   ** Fix the ongoing connection cancellable handling.
 
- * Messaging interface:
-   ** Flush SMS list update before notifying added/removed signals.
-
- * SMS:
-   ** Fixed sending binary PDUs via AT commands when other AT command operations
-      are scheduled at the same time.
+ * Voice interface:
+   ** Fix segfault when voice support check fails.
 
  * QMI:
-   ** Increased the number of open retries from 10 to 20, required e.g. for
-      the Telit LM940/960 modems.
-   ** Implemented QMI PDC based carrier config loading and automatic switching.
+   ** Fixed several memory leaks, including a severe one happening when multiple
+      GPS sources (e.g. raw and nmea) were enabled at the same time.
 
  * Plugins:
-   ** dell: added port type hints for the DW5820e.
-   ** dell: use QMI DMS extension method to load properly formatted firmware
-      version strings.
-   ** quectel: added port type hints for the EG06.
-   ** ublox: added alternative port type hints for the LISA/SARA-U2.
-   ** telit: added support for MBIM-based telit modems.
+   ** ublox: ignore errors when attempting to disconnect last bearer.
 
  * mmcli:
-   ** Updated --monitor-state to report modem removal.
+   ** Allow "yes" and "no" as boolean strings.
 
- * Several memory leak fixes in different modules.
+ * Several other minor fixes and memory leak plugs.
+
+
+ModemManager 1.12.2
+-------------------------------------------
+This is a new bugfix release of ModemManager.
+
+The following notes are directed to package maintainers:
+
+ * This version splits all common logic from different plugins into separate
+   shared libraries that are loaded before the plugins. This means that in
+   addition to 'libmm-plugin-*.so' files, a new set of 'libmm-shared-*.so'
+   files will also be installed in ${libdir}/ModemManager.
+
+The list of changes in this version includes:
+
+ * Simple interface:
+   ** Avoid assertion on the ongoing connect cancellable.
+
+ * Plugin manager:
+   ** Fix waiting the minimum probing time.
+   ** Explicitly cancel timeouts when device probing is cancelled.
+   ** Disable lazy plugin loading, we now require all missing symbols to be
+      resolved at loading time for a plugin to correctly be loaded.
+
+ * Bearer:
+   ** Avoid reporting disconnection error if trying to disconnect a bearer that
+      is already disconnected.
+
+ * MBIM:
+   ** Completely skip LTE attach config/status if unsupported.
+
+ * QMI:
+   ** Make current settings mandatory when using 'static' addressing.
+   ** Handle disconnection indications during connection attempt.
+   ** Explicitly close QMI port during disconnection if it was opened during a
+      connection attempt.
+
+ * Plugins:
+   ** huawei: avoid using QCDM port during a voice call.
+   ** sierra: added port type hints for the EM7565.
+   ** dell,dw5821e: added support for the DW5821e with eSIM variant.
+
+ * mmcli:
+   ** Fix printing empty value lists in human-friendly output.
+
+ * Several other minor fixes and memory leak plugs.
+
+
+ModemManager 1.12.0
+-------------------------------------------
+This is a new stable release of ModemManager.
+
+The following notes are directed to package maintainers:
+
+ * This version requires:
+   ** libmbim >= 1.18.0 (for the optional MBIM support)
+   ** libqmi >= 1.24.0 (for the optional QMI support)
+
+ * The build allows to configure with '--with-at-command-via-dbus' in order to
+   unconditionally enable the Modem.Command() method to allow running AT
+   commands through ModemManager. This is not suggested for standard
+   distributions, though.
+
+The most important features and changes in this release are the following:
+
+ * Modem interface:
+   ** Updated logic to avoid assuming that setting bands or modes is immediate,
+      the daemon will now actively monitor for those updates to happen before
+      returning success.
+
+ * 3GPP interface:
+   ** libmm-glib: deprecated the mm_pco_list_free() helper method.
+
+ * Simple interface:
+   ** api,libmm-glib: deprecated the 'subscription state' property.
+
+ * Location interface:
+   ** Fixed 'unknown' lat/long/alt numeric values.
+   ** Added support for MSB A-GPS in addition to MSA A-GPS.
+
+ * Voice interface:
+   ** Improved voice call management with call id detection and tracking.
+   ** Improved detailed call state transitions on generic modems that support
+      call list polling.
+   ** Added support for GSM supplementary services, including call waiting,
+      call transfer, call deflection, multiparty calls...
+   ** Added emergency call support, allowing voice call to emergency numbers
+      even without SIM or with SIM-PIN locked.
+   ** Deprecated all properties except for 'number' in the CreateCall()
+      method.
+
+ * Messaging interface:
+   ** Updated to report SMS timestamps in correct ISO8601 format.
+
+ * Bearer:
+   ** Improved unused CID lookup to allow selecting non-sequential CIDs.
+   ** Disabled all AT protocol based context monitoring when PPP is used for
+      the connection, in order to properly sync with pppd, which should be the
+      one detecting the disconnections (already in 1.10.6).
+
+ * QMI:
+   ** Improved support to list stored firmware images in Sierra devices.
+   ** Added additional lock check retries on 'SIM not inserted' errors.
+   ** Updated explicit registration attempt to report success only when the
+      target requested network is registered.
+   ** Added MSB A-GPS support.
+   ** Implemented automatic carrier configuration selection using PDC service
+      (already in 1.10.2).
+
+ * mmcli:
+   ** New machine-readable JSON output with '--output-json'.
+   ** Updated to allow using the modem UID to specify SIM operations.
+
+ * udev:
+   ** New ID_MM_PORT_TYPE_AUDIO generic udev tag to identify ports that
+      should be used for in-band audio.
+   ** Removed support for the ID_MM_PLATFORM_DRIVER_PROBE udev tag, as it
+      is no longer required given that the more generic explicit whitelist
+      may be used to flag which devices should be probed.
+   ** Renamed ID_MM_DEVICE_MANUAL_SCAN_ONLY to ID_MM_TTY_MANUAL_SCAN_ONLY,
+      given that the tag only applies to TTYs.
+   ** ID_MM_DEVICE_IGNORE is no longer used internally in ModemManager, and
+      is instead targeted to users that want to explicitly ignore specific
+      devices regardless of what filter type is in use (already in 1.10.6).
+
+ * dbus:
+   ** Updated to always report the registered MM_CORE_ERROR_CANCELLED error
+      instead of the implicit G_IO_ERROR_CANCELLED ones generated by GLib.
+
+ * GObject introspection:
+   ** Fixed setup to explicitly skip all non-API methods.
+
+ * Plugins:
+   ** tplink: new plugin.
+   ** dlink: new plugin.
+   ** xmm: added MSB A-GPS support.
+   ** dell,dw5821e: update to allow unmanaged GPS support on the TTY even
+      when raw/NMEA GPS is enabled via QMI/LOC.
+   ** quectel: updated to allow TTY-only devices.
+   ** telit: added GPS support.
+   ** telit: improved band management with #BND.
+   ** simtech: added improved voice call support.
+   ** simtech: added support for LTE devices.
+   ** simtech: improved signal quality reporting logic.
+   ** simtech: added GPS support for the SIM7000/SIM7600 family.
+   ** cinterion: added support for time updates.
+   ** cinterion: added improved voice call support.
+   ** ublox: added improved voice call support.
+   ** ublox: improved band management with UBANDSEL.
+
+All the features and fixes which were backported to 1.10.x releases are also
+present in ModemManager 1.12.0.
 
 
 ModemManager 1.10.0

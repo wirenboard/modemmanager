@@ -89,6 +89,7 @@
 #define MM_SIM_PROPERTY_IMSI "Imsi"
 #define MM_SIM_PROPERTY_OPERATORIDENTIFIER "OperatorIdentifier"
 #define MM_SIM_PROPERTY_OPERATORNAME "OperatorName"
+#define MM_SIM_PROPERTY_EMERGENCYNUMBERS "EmergencyNumbers"
 /*
  * Interface 'org.freedesktop.ModemManager1.Bearer'
  */
@@ -132,6 +133,9 @@
  
 #define MM_CALL_METHOD_START "Start"
 #define MM_CALL_METHOD_ACCEPT "Accept"
+#define MM_CALL_METHOD_DEFLECT "Deflect"
+#define MM_CALL_METHOD_JOINMULTIPARTY "JoinMultiparty"
+#define MM_CALL_METHOD_LEAVEMULTIPARTY "LeaveMultiparty"
 #define MM_CALL_METHOD_HANGUP "Hangup"
 #define MM_CALL_METHOD_SENDDTMF "SendDtmf"
 #define MM_CALL_SIGNAL_DTMFRECEIVED "DtmfReceived"
@@ -140,6 +144,7 @@
 #define MM_CALL_PROPERTY_STATEREASON "StateReason"
 #define MM_CALL_PROPERTY_DIRECTION "Direction"
 #define MM_CALL_PROPERTY_NUMBER "Number"
+#define MM_CALL_PROPERTY_MULTIPARTY "Multiparty"
 #define MM_CALL_PROPERTY_AUDIOPORT "AudioPort"
 #define MM_CALL_PROPERTY_AUDIOFORMAT "AudioFormat"
 /*
@@ -197,9 +202,16 @@
 #define MM_MODEM_VOICE_METHOD_LISTCALLS "ListCalls"
 #define MM_MODEM_VOICE_METHOD_DELETECALL "DeleteCall"
 #define MM_MODEM_VOICE_METHOD_CREATECALL "CreateCall"
+#define MM_MODEM_VOICE_METHOD_HOLDANDACCEPT "HoldAndAccept"
+#define MM_MODEM_VOICE_METHOD_HANGUPANDACCEPT "HangupAndAccept"
+#define MM_MODEM_VOICE_METHOD_HANGUPALL "HangupAll"
+#define MM_MODEM_VOICE_METHOD_TRANSFER "Transfer"
+#define MM_MODEM_VOICE_METHOD_CALLWAITINGSETUP "CallWaitingSetup"
+#define MM_MODEM_VOICE_METHOD_CALLWAITINGQUERY "CallWaitingQuery"
 #define MM_MODEM_VOICE_SIGNAL_CALLADDED "CallAdded"
 #define MM_MODEM_VOICE_SIGNAL_CALLDELETED "CallDeleted"
 #define MM_MODEM_VOICE_PROPERTY_CALLS "Calls"
+#define MM_MODEM_VOICE_PROPERTY_EMERGENCYONLY "EmergencyOnly"
 /*
  * Interface 'org.freedesktop.ModemManager1.Modem.Modem3gpp'
  */

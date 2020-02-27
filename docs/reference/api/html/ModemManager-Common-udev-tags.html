@@ -8,7 +8,7 @@
 <link rel="up" href="ref-udev.html" title="Part III. Common udev tag definitions">
 <link rel="prev" href="ref-udev.html" title="Part III. Common udev tag definitions">
 <link rel="next" href="ref-dbus.html" title="Part IV. D-Bus Reference">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -35,8 +35,8 @@
 <a name="ModemManager-Common-udev-tags.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -49,10 +49,6 @@
 </tr>
 <tr>
 <td class="define_keyword">#define</td>
-<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-PORT-IGNORE:CAPS" title="ID_MM_PORT_IGNORE">ID_MM_PORT_IGNORE</a></td>
-</tr>
-<tr>
-<td class="define_keyword">#define</td>
 <td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-DEVICE-PROCESS:CAPS" title="ID_MM_DEVICE_PROCESS">ID_MM_DEVICE_PROCESS</a></td>
 </tr>
 <tr>
@@ -61,11 +57,15 @@
 </tr>
 <tr>
 <td class="define_keyword">#define</td>
-<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-DEVICE-MANUAL-SCAN-ONLY:CAPS" title="ID_MM_DEVICE_MANUAL_SCAN_ONLY">ID_MM_DEVICE_MANUAL_SCAN_ONLY</a></td>
+<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-PORT-IGNORE:CAPS" title="ID_MM_PORT_IGNORE">ID_MM_PORT_IGNORE</a></td>
 </tr>
 <tr>
 <td class="define_keyword">#define</td>
-<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-PLATFORM-DRIVER-PROBE:CAPS" title="ID_MM_PLATFORM_DRIVER_PROBE">ID_MM_PLATFORM_DRIVER_PROBE</a></td>
+<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-TTY-BLACKLIST:CAPS" title="ID_MM_TTY_BLACKLIST">ID_MM_TTY_BLACKLIST</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-TTY-MANUAL-SCAN-ONLY:CAPS" title="ID_MM_TTY_MANUAL_SCAN_ONLY">ID_MM_TTY_MANUAL_SCAN_ONLY</a></td>
 </tr>
 <tr>
 <td class="define_keyword">#define</td>
@@ -86,6 +86,10 @@
 <tr>
 <td class="define_keyword">#define</td>
 <td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-QCDM:CAPS" title="ID_MM_PORT_TYPE_QCDM">ID_MM_PORT_TYPE_QCDM</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AUDIO:CAPS" title="ID_MM_PORT_TYPE_AUDIO">ID_MM_PORT_TYPE_AUDIO</a></td>
 </tr>
 <tr>
 <td class="define_keyword">#define</td>
@@ -115,6 +119,7 @@ associated to full devices or to specific ports in a given device.</p>
 </pre>
 <p>This is a port-specific tag added automatically when all other
 ModemManager related tags have already been set.</p>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -133,15 +138,7 @@ the '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-
 property and can then be used in mmcli calls to refer unequivocally
 to a specific device, regardless of its modem index, e.g.:
  $ mmcli --modem=UID ...</p>
-</div>
-<hr>
-<div class="refsect2">
-<a name="ID-MM-PORT-IGNORE:CAPS"></a><h3>ID_MM_PORT_IGNORE</h3>
-<pre class="programlisting">#define ID_MM_PORT_IGNORE "ID_MM_PORT_IGNORE"
-</pre>
-<p>This is a port-specific tag that allows explicitly ignoring a given port
-in a device.</p>
-<p>This tag applies to all types of ports.</p>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -154,11 +151,36 @@ used by users when the daemon runs with WHITELIST-ONLY filter policy
 type, and is associated to the MM_FILTER_RULE_EXPLICIT_WHITELIST rule.</p>
 <p>This tag may also be specified in specific ports, e.g. when the modem
 exposes a single platform port without any parent device.</p>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="ID-MM-DEVICE-IGNORE:CAPS"></a><h3>ID_MM_DEVICE_IGNORE</h3>
 <pre class="programlisting">#define ID_MM_DEVICE_IGNORE "ID_MM_DEVICE_IGNORE"
+</pre>
+<p>This is a device-specific tag that allows explicitly requesting to
+ignore all ports exposed by the device.</p>
+<p>This tag was originally applicable to TTY ports and only when running
+in DEFAULT or PARANOID filter policy types. Since 1.12, this tag
+applies to all filter types (including STRICT), and to all port types
+(not only TTYs), and is associated to the
+MM_FILTER_RULE_EXPLICIT_BLACKLIST rule.</p>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="ID-MM-PORT-IGNORE:CAPS"></a><h3>ID_MM_PORT_IGNORE</h3>
+<pre class="programlisting">#define ID_MM_PORT_IGNORE "ID_MM_PORT_IGNORE"
+</pre>
+<p>This is a port-specific tag that allows explicitly ignoring a given port
+in a device.</p>
+<p>This tag applies to all types of ports.</p>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="ID-MM-TTY-BLACKLIST:CAPS"></a><h3>ID_MM_TTY_BLACKLIST</h3>
+<pre class="programlisting">#define ID_MM_TTY_BLACKLIST "ID_MM_TTY_BLACKLIST"
 </pre>
 <p>This is a device-specific tag that allows explicitly blacklisting
 devices that expose TTY devices so that they are never probed.</p>
@@ -166,11 +188,12 @@ devices that expose TTY devices so that they are never probed.</p>
 filter policy type, and is associated to the MM_FILTER_RULE_TTY_BLACKLIST
 rule.</p>
 <p>This tag is ignored when the STRICT filter policy is used.</p>
+<p class="since">Since: <a class="link" href="api-index-1-12.html#api-index-1.12">1.12</a></p>
 </div>
 <hr>
 <div class="refsect2">
-<a name="ID-MM-DEVICE-MANUAL-SCAN-ONLY:CAPS"></a><h3>ID_MM_DEVICE_MANUAL_SCAN_ONLY</h3>
-<pre class="programlisting">#define ID_MM_DEVICE_MANUAL_SCAN_ONLY "ID_MM_DEVICE_MANUAL_SCAN_ONLY"
+<a name="ID-MM-TTY-MANUAL-SCAN-ONLY:CAPS"></a><h3>ID_MM_TTY_MANUAL_SCAN_ONLY</h3>
+<pre class="programlisting">#define ID_MM_TTY_MANUAL_SCAN_ONLY "ID_MM_TTY_MANUAL_SCAN_ONLY"
 </pre>
 <p>This is a device-specific tag that allows explicitly greylisting
 devices that expose TTY devices so that they are never probed
@@ -181,21 +204,7 @@ probed.</p>
 filter policy type, and is associated to the MM_FILTER_RULE_TTY_MANUAL_SCAN_ONLY
 rule.</p>
 <p>This tag is ignored when the STRICT filter policy is used.</p>
-</div>
-<hr>
-<div class="refsect2">
-<a name="ID-MM-PLATFORM-DRIVER-PROBE:CAPS"></a><h3>ID_MM_PLATFORM_DRIVER_PROBE</h3>
-<pre class="programlisting">#define ID_MM_PLATFORM_DRIVER_PROBE "ID_MM_PLATFORM_DRIVER_PROBE"
-</pre>
-<p>This is a port-specific tag applied to platform ports so that they
-are probed automatically by the daemon. Platform ports that don't
-have this tag will never probed. This tag is a bit redundant, as
-the user could also use ID_MM_DEVICE_PROCESS for the same purpose.</p>
-<p>This tag is associated to the MM_FILTER_RULE_TTY_PLATFORM_DRIVER
-rule, which is only meaningful when the daemon runs with the
-DEFAULT filter policy type, as that is the only one that would
-allow probing all ports not explicitly forbidden before the last
-MM_FILTER_RULE_TTY_DEFAULT_ALLOWED rule.</p>
+<p class="since">Since: <a class="link" href="api-index-1-12.html#api-index-1.12">1.12</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -205,6 +214,7 @@ MM_FILTER_RULE_TTY_DEFAULT_ALLOWED rule.</p>
 <p>This is a port-specific tag applied to TTYs that we know in advance
 are AT ports to be used as data ports exclusively.</p>
 <p>This tag will also prevent QCDM probing on the port.</p>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -214,6 +224,7 @@ are AT ports to be used as data ports exclusively.</p>
 <p>This is a port-specific tag applied to TTYs that we know in advance
 are AT ports to be used as primary control ports.</p>
 <p>This tag will also prevent QCDM probing on the port.</p>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -223,6 +234,7 @@ are AT ports to be used as primary control ports.</p>
 <p>This is a port-specific tag applied to TTYs that we know in advance
 are AT ports to be used as secondary control ports.</p>
 <p>This tag will also prevent QCDM probing on the port.</p>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -232,6 +244,7 @@ are AT ports to be used as secondary control ports.</p>
 <p>This is a port-specific tag applied to TTYs that we know in advance
 are GPS data ports where we expect to receive NMEA traces.</p>
 <p>This tag also prevents AT and QCDM probing in the port.</p>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -241,6 +254,17 @@ are GPS data ports where we expect to receive NMEA traces.</p>
 <p>This is a port-specific tag applied to TTYs that we know in advance
 are QCDM ports.</p>
 <p>The only purpose of this tag is to prevent AT probing in the port.</p>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="ID-MM-PORT-TYPE-AUDIO:CAPS"></a><h3>ID_MM_PORT_TYPE_AUDIO</h3>
+<pre class="programlisting">#define ID_MM_PORT_TYPE_AUDIO "ID_MM_PORT_TYPE_AUDIO"
+</pre>
+<p>This is a port-specific tag applied to TTYs that we know in advance
+are audio ports.</p>
+<p>This tag also prevents AT and QCDM probing in the port.</p>
+<p class="since">Since: <a class="link" href="api-index-1-12.html#api-index-1.12">1.12</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -254,6 +278,7 @@ devices.</p>
 <p>The value of the tag should be the number of bauds per second to
 use when talking to the port, e.g. "115200". If not given, the
 default of 57600bps is assumed.</p>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -267,10 +292,11 @@ control mode.</p>
 'rts-cts', and must be a flow control value supported by the device
 where it's configured. If not given, it is assumed that the TTYs
 don't require any specific flow control setting in command mode.</p>
+<p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

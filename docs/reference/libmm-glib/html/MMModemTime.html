@@ -8,7 +8,7 @@
 <link rel="up" href="ch03s05.html" title="Time support">
 <link rel="prev" href="ch03s05.html" title="Time support">
 <link rel="next" href="MMNetworkTimezone.html" title="MMNetworkTimezone">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -37,8 +37,8 @@
 <a name="MMModemTime.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -103,8 +103,8 @@
 <a name="MMModemTime.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody><tr>
 <td class="datatype_keyword">struct</td>
@@ -159,13 +159,15 @@ mm_modem_time_get_path (<em class="parameter"><code><a class="link" href="MMMode
 <p>The DBus path of the <a class="link" href="MMObject.html" title="MMObject"><span class="type">MMObject</span></a> object. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="mm-modem-time-dup-path"></a><h3>mm_modem_time_dup_path ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *
 mm_modem_time_dup_path (<em class="parameter"><code><a class="link" href="MMModemTime.html" title="MMModemTime"><span class="type">MMModemTime</span></a> *self</code></em>);</pre>
-<p>Gets a copy of the DBus path of the <a class="link" href="MMObject.html" title="MMObject"><span class="type">MMObject</span></a> object which implements this interface.</p>
+<p>Gets a copy of the DBus path of the <a class="link" href="MMObject.html" title="MMObject"><span class="type">MMObject</span></a> object which implements this
+interface.</p>
 <div class="refsect3">
 <a name="mm-modem-time-dup-path.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -183,9 +185,11 @@ mm_modem_time_dup_path (<em class="parameter"><code><a class="link" href="MMMode
 </div>
 <div class="refsect3">
 <a name="mm-modem-time-dup-path.returns"></a><h4>Returns</h4>
-<p>The DBus path of the <a class="link" href="MMObject.html" title="MMObject"><span class="type">MMObject</span></a>. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
+<p>The DBus path of the <a class="link" href="MMObject.html" title="MMObject"><span class="type">MMObject</span></a>. The returned value
+should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -193,10 +197,9 @@ mm_modem_time_dup_path (<em class="parameter"><code><a class="link" href="MMMode
 <pre class="programlisting"><a class="link" href="MMNetworkTimezone.html" title="MMNetworkTimezone"><span class="returnvalue">MMNetworkTimezone</span></a> *
 mm_modem_time_peek_network_timezone (<em class="parameter"><code><a class="link" href="MMModemTime.html" title="MMModemTime"><span class="type">MMModemTime</span></a> *self</code></em>);</pre>
 <p>Gets the network timezone information.</p>
-<div class="warning">The returned value is only valid until the property changes so
-it is only safe to use this function on the thread where
-<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMModemTime.html#mm-modem-time-get-network-timezone" title="mm_modem_time_get_network_timezone ()"><code class="function">mm_modem_time_get_network_timezone()</code></a> if on another
-thread.</div>
+<div class="warning">The returned value is only valid until the property changes so it is
+only safe to use this function on the thread where <em class="parameter"><code>self</code></em> was constructed. Use
+<a class="link" href="MMModemTime.html#mm-modem-time-get-network-timezone" title="mm_modem_time_get_network_timezone ()"><code class="function">mm_modem_time_get_network_timezone()</code></a> if on another thread.</div>
 <div class="refsect3">
 <a name="mm-modem-time-peek-network-timezone.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -214,10 +217,12 @@ thread.</div>
 </div>
 <div class="refsect3">
 <a name="mm-modem-time-peek-network-timezone.returns"></a><h4>Returns</h4>
-<p>A <a class="link" href="MMNetworkTimezone.html" title="MMNetworkTimezone"><span class="type">MMNetworkTimezone</span></a>. Do not free the returned value, it belongs to <em class="parameter"><code>self</code></em>
+<p>A <a class="link" href="MMNetworkTimezone.html" title="MMNetworkTimezone"><span class="type">MMNetworkTimezone</span></a>. Do not free the returned
+value, it belongs to <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -227,8 +232,8 @@ mm_modem_time_get_network_timezone (<em class="parameter"><code><a class="link" 
 <p>Gets the network timezone information.</p>
 <div class="warning">The values reported by <em class="parameter"><code>self</code></em> are not updated when the values in the
 interface change. Instead, the client is expected to call
-<a class="link" href="MMModemTime.html#mm-modem-time-get-network-timezone" title="mm_modem_time_get_network_timezone ()"><code class="function">mm_modem_time_get_network_timezone()</code></a> again to get a new <a class="link" href="MMNetworkTimezone.html" title="MMNetworkTimezone"><span class="type">MMNetworkTimezone</span></a> with the
-new values.</div>
+<a class="link" href="MMModemTime.html#mm-modem-time-get-network-timezone" title="mm_modem_time_get_network_timezone ()"><code class="function">mm_modem_time_get_network_timezone()</code></a> again to get a new <a class="link" href="MMNetworkTimezone.html" title="MMNetworkTimezone"><span class="type">MMNetworkTimezone</span></a>
+with the new values.</div>
 <div class="refsect3">
 <a name="mm-modem-time-get-network-timezone.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -246,9 +251,11 @@ new values.</div>
 </div>
 <div class="refsect3">
 <a name="mm-modem-time-get-network-timezone.returns"></a><h4>Returns</h4>
-<p>A <a class="link" href="MMNetworkTimezone.html" title="MMNetworkTimezone"><span class="type">MMNetworkTimezone</span></a> that must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if unknown. </p>
+<p>A <a class="link" href="MMNetworkTimezone.html" title="MMNetworkTimezone"><span class="type">MMNetworkTimezone</span></a> that must be freed with
+<a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if unknown. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -260,9 +267,11 @@ mm_modem_time_get_network_time (<em class="parameter"><code><a class="link" href
                                 <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
 <p>Asynchronously requests the current network time.</p>
 <p>When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
-You can then call <a class="link" href="MMModemTime.html#mm-modem-time-get-network-time-finish" title="mm_modem_time_get_network_time_finish ()"><code class="function">mm_modem_time_get_network_time_finish()</code></a> to get the result of the operation.</p>
-<p>See <a class="link" href="MMModemTime.html#mm-modem-time-get-network-time-sync" title="mm_modem_time_get_network_time_sync ()"><code class="function">mm_modem_time_get_network_time_sync()</code></a> for the synchronous, blocking version of this method.</p>
+ will be invoked in the</p>
+<a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a><p>of the thread you are calling this method from. You can then call
+<a class="link" href="MMModemTime.html#mm-modem-time-get-network-time-finish" title="mm_modem_time_get_network_time_finish ()"><code class="function">mm_modem_time_get_network_time_finish()</code></a> to get the result of the operation.</p>
+<p>See <a class="link" href="MMModemTime.html#mm-modem-time-get-network-time-sync" title="mm_modem_time_get_network_time_sync ()"><code class="function">mm_modem_time_get_network_time_sync()</code></a> for the synchronous, blocking
+version of this method.</p>
 <div class="refsect3">
 <a name="mm-modem-time-get-network-time.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -284,7 +293,8 @@ You can then call <a class="link" href="MMModemTime.html#mm-modem-time-get-netwo
 </tr>
 <tr>
 <td class="parameter_name"><p>callback</p></td>
-<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
+<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or
+<a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -296,6 +306,7 @@ You can then call <a class="link" href="MMModemTime.html#mm-modem-time-get-netwo
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -321,7 +332,8 @@ mm_modem_time_get_network_time_finish (<em class="parameter"><code><a class="lin
 </tr>
 <tr>
 <td class="parameter_name"><p>res</p></td>
-<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to <a class="link" href="MMModem.html#mm-modem-enable" title="mm_modem_enable ()"><code class="function">mm_modem_enable()</code></a>.</p></td>
+<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to
+<a class="link" href="MMModem.html#mm-modem-enable" title="mm_modem_enable ()"><code class="function">mm_modem_enable()</code></a>.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -334,10 +346,12 @@ mm_modem_time_get_network_time_finish (<em class="parameter"><code><a class="lin
 </div>
 <div class="refsect3">
 <a name="mm-modem-time-get-network-time-finish.returns"></a><h4>Returns</h4>
-<p>A string containing the network time, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>error</code></em>
+<p>A string containing the network time, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if
+<em class="parameter"><code>error</code></em>
 is set. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -347,8 +361,8 @@ mm_modem_time_get_network_time_sync (<em class="parameter"><code><a class="link"
                                      <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> *cancellable</code></em>,
                                      <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>Synchronously requests the current network time.</p>
-<p>The calling thread is blocked until a reply is received. See <a class="link" href="MMModemTime.html#mm-modem-time-get-network-time" title="mm_modem_time_get_network_time ()"><code class="function">mm_modem_time_get_network_time()</code></a>
-for the asynchronous version of this method.</p>
+<p>The calling thread is blocked until a reply is received. See
+<a class="link" href="MMModemTime.html#mm-modem-time-get-network-time" title="mm_modem_time_get_network_time ()"><code class="function">mm_modem_time_get_network_time()</code></a> for the asynchronous version of this method.</p>
 <div class="refsect3">
 <a name="mm-modem-time-get-network-time-sync.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -378,10 +392,12 @@ for the asynchronous version of this method.</p>
 </div>
 <div class="refsect3">
 <a name="mm-modem-time-get-network-time-sync.returns"></a><h4>Returns</h4>
-<p>A string containing the network time, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if <em class="parameter"><code>error</code></em>
+<p>A string containing the network time, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if
+<em class="parameter"><code>error</code></em>
 is set. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 </div>
 <div class="refsect1">
@@ -395,6 +411,6 @@ using the provided API.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

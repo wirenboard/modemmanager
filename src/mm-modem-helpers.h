@@ -93,9 +93,23 @@ gchar *mm_bcd_to_string (const guint8 *bcd, gsize bcd_len);
 /*****************************************************************************/
 /* VOICE specific helpers and utilities */
 /*****************************************************************************/
+
 GRegex *mm_voice_ring_regex_get  (void);
 GRegex *mm_voice_cring_regex_get (void);
 GRegex *mm_voice_clip_regex_get  (void);
+GRegex *mm_voice_ccwa_regex_get  (void);
+
+/* +CLCC response parser */
+typedef struct {
+    guint            index;
+    MMCallDirection  direction;
+    MMCallState      state;
+    gchar           *number; /* optional */
+} MMCallInfo;
+gboolean mm_3gpp_parse_clcc_response (const gchar  *str,
+                                      GList       **out_list,
+                                      GError      **error);
+void     mm_3gpp_call_info_list_free (GList        *call_info_list);
 
 /*****************************************************************************/
 /* SERIAL specific helpers and utilities */
@@ -177,6 +191,14 @@ typedef struct {
 void mm_3gpp_pdp_context_list_free (GList *pdp_list);
 GList *mm_3gpp_parse_cgdcont_read_response (const gchar *reply,
                                             GError **error);
+
+/* Select best CID to use during connection */
+guint mm_3gpp_select_best_cid (const gchar      *apn,
+                               MMBearerIpFamily  ip_family,
+                               GList            *context_list,
+                               GList            *context_format_list,
+                               gboolean         *cid_reused,
+                               gboolean         *cid_overwritten);
 
 /* AT+CGACT? (active PDP context query) response parser */
 typedef struct {
@@ -383,6 +405,12 @@ gboolean  mm_3gpp_parse_cemode_query_response (const gchar                    *r
                                                MMModem3gppEpsUeModeOperation  *out_mode,
                                                GError                        **error);
 
+/* CCWA service query response parser */
+gboolean mm_3gpp_parse_ccwa_service_query_response (const gchar  *response,
+                                                    gboolean     *status,
+                                                    GError      **error);
+
+
 /* Additional 3GPP-specific helpers */
 
 MMModem3gppFacility mm_3gpp_acronym_to_facility (const gchar *str);
@@ -403,29 +431,21 @@ MMBearerIpFamily  mm_3gpp_get_ip_family_from_pdp_type (const gchar *pdp_type);
 
 char *mm_3gpp_parse_iccid (const char *raw_iccid, GError **error);
 
-gboolean
-mm_3gpp_rscp_level_to_rscp (guint    rscp_level,
-                            gdouble *out_rscp);
 
-gboolean
-mm_3gpp_rxlev_to_rssi (guint    rxlev,
-                       gdouble *out_rssi);
+gboolean mm_3gpp_rscp_level_to_rscp   (guint    rscp_level,
+                                       gdouble *out_rscp);
+gboolean mm_3gpp_rxlev_to_rssi        (guint    rxlev,
+                                       gdouble *out_rssi);
+gboolean mm_3gpp_ecn0_level_to_ecio   (guint    ecn0_level,
+                                       gdouble *out_ecio);
+gboolean mm_3gpp_rsrq_level_to_rsrq   (guint    rsrq_level,
+                                       gdouble *out_rsrq);
+gboolean mm_3gpp_rsrp_level_to_rsrp   (guint    rsrp_level,
+                                       gdouble *out_rsrp);
+gboolean mm_3gpp_rssnr_level_to_rssnr (gint     rssnr_level,
+                                       gdouble *out_rssnr);
 
-gboolean
-mm_3gpp_ecn0_level_to_ecio (guint    ecn0_level,
-                            gdouble *out_ecio);
-
-gboolean
-mm_3gpp_rsrq_level_to_rsrq (guint    rsrq_level,
-                            gdouble *out_rsrq);
-
-gboolean
-mm_3gpp_rsrp_level_to_rsrp (guint    rsrp_level,
-                            gdouble *out_rsrp);
-
-gboolean
-mm_3gpp_rssnr_level_to_rssnr (gint     rssnr_level,
-                              gdouble *out_rssnr);
+GStrv mm_3gpp_parse_emergency_numbers (const char *raw, GError **error);
 
 /*****************************************************************************/
 /* CDMA specific helpers and utilities */

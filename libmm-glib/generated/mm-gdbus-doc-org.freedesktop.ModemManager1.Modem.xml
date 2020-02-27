@@ -213,8 +213,8 @@ FactoryReset (IN  s code);
 SetPowerState (IN  u state);
 </programlisting>
 <para>        Set the power state of the modem. This action can only be run when the
-	modem is in <link linkend="MM-MODEM-STATE-DISABLED:CAPS"><constant>MM_MODEM_STATE_DISABLED</constant></link>
-	state.
+        modem is in <link linkend="MM-MODEM-STATE-DISABLED:CAPS"><constant>MM_MODEM_STATE_DISABLED</constant></link>
+        state.
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -580,9 +580,9 @@ State  readable   i
 StateFailedReason  readable   u
 </programlisting>
 <para>        Error specifying why the modem is in
-	<link linkend="MM-MODEM-STATE-FAILED:CAPS"><constant>MM_MODEM_STATE_FAILED</constant></link>
-	state, given as a
-	<link linkend="MMModemStateFailedReason">MMModemStateFailedReason</link> value.
+        <link linkend="MM-MODEM-STATE-FAILED:CAPS"><constant>MM_MODEM_STATE_FAILED</constant></link>
+        state, given as a
+        <link linkend="MMModemStateFailedReason">MMModemStateFailedReason</link> value.
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.AccessTechnologies">
@@ -628,8 +628,8 @@ OwnNumbers  readable   as
 <programlisting>
 PowerState  readable   u
 </programlisting>
-<para>	A <link linkend="MMModemPowerState">MMModemPowerState</link> value
-	specifying the current power state of the modem.
+<para>        A <link linkend="MMModemPowerState">MMModemPowerState</link> value
+        specifying the current power state of the modem.
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedModes">

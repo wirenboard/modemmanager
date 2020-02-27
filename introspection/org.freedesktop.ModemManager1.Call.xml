@@ -5,6 +5,7 @@
 
    Copyright (C) 2015 Marco Bascetta <marco.bascetta@sadel.it>
    Copyright (C) 2015 Riccardo Vangelisti <riccardo.vangelisti@sadel.it>
+   Copyright (C) 2019 Purism SPC
 -->
 
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
@@ -36,6 +37,48 @@
         <link linkend="MM-CALL-DIRECTION-INCOMING:CAPS"><constant>MM_CALL_DIRECTION_INCOMING</constant></link>.
     -->
     <method name="Accept" />
+
+    <!--
+        Deflect:
+        @number: new number where the call will be deflected.
+
+        Deflect an incoming or waiting call to a new number. This call will be
+        considered terminated once the deflection is performed.
+
+        Applicable only if state is <link linkend="MM-CALL-STATE-RINGING-IN:CAPS"><constant>MM_CALL_STATE_RINGING_IN</constant></link> or
+        <link linkend="MM-CALL-STATE-WAITING:CAPS"><constant>MM_CALL_STATE_WAITING</constant></link> and direction is
+        <link linkend="MM-CALL-DIRECTION-INCOMING:CAPS"><constant>MM_CALL_DIRECTION_INCOMING</constant></link>.
+    -->
+    <method name="Deflect">
+      <arg name="number" type="s" />
+    </method>
+
+    <!--
+        JoinMultiparty:
+
+        Join the currently held call into a single multiparty call with another
+        already active call.
+
+        The calls will be flagged with the
+        '<link linkend="gdbus-property-org-freedesktop-ModemManager1-Call.Multiparty">Multiparty</link>'
+        property while they are part of the multiparty call.
+
+        Applicable only if state is <link linkend="MM-CALL-STATE-HELD:CAPS"><constant>MM_CALL_STATE_HELD</constant></link>.
+    -->
+    <method name="JoinMultiparty" />
+
+    <!--
+        LeaveMultiparty:
+
+        If this call is part of an ongoing multiparty call, detach it from the multiparty call,
+        put the multiparty call on hold, and activate this one alone. This operation makes this
+        call private again between both ends of the call.
+
+        Applicable only if state is <link linkend="MM-CALL-STATE-ACTIVE:CAPS"><constant>MM_CALL_STATE_ACTIVE</constant></link> or
+        <link linkend="MM-CALL-STATE-HELD:CAPS"><constant>MM_CALL_STATE_HELD</constant></link> and
+        the call is a multiparty call.
+    -->
+    <method name="LeaveMultiparty"/>
 
     <!--
         Hangup:
@@ -111,6 +154,13 @@
         The remote phone number.
     -->
     <property name="Number" type="s" access="read" />
+
+    <!--
+        Multiparty:
+
+        Whether the call is currently part of a multiparty conference call.
+    -->
+    <property name="Multiparty" type="b" access="read" />
 
     <!--
         AudioPort:

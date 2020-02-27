@@ -53,6 +53,8 @@ struct _MMLocationCdmaBsPrivate {
  * Gets the longitude, in the [-180,180] range.
  *
  * Returns: the longitude, or %MM_LOCATION_LONGITUDE_UNKNOWN if unknown.
+ *
+ * Since: 1.0
  */
 gdouble
 mm_location_cdma_bs_get_longitude (MMLocationCdmaBs *self)
@@ -72,6 +74,8 @@ mm_location_cdma_bs_get_longitude (MMLocationCdmaBs *self)
  * Gets the latitude, in the [-90,90] range.
  *
  * Returns: the latitude, or %MM_LOCATION_LATITUDE_UNKNOWN if unknown.
+ *
+ * Since: 1.0
  */
 gdouble
 mm_location_cdma_bs_get_latitude (MMLocationCdmaBs *self)
@@ -84,6 +88,9 @@ mm_location_cdma_bs_get_latitude (MMLocationCdmaBs *self)
 
 /*****************************************************************************/
 
+/**
+ * mm_location_cdma_bs_set: (skip)
+ */
 gboolean
 mm_location_cdma_bs_set (MMLocationCdmaBs *self,
                          gdouble longitude,
@@ -107,6 +114,9 @@ mm_location_cdma_bs_set (MMLocationCdmaBs *self,
 
 /*****************************************************************************/
 
+/**
+ * mm_location_cdma_bs_get_dictionary: (skip)
+ */
 GVariant *
 mm_location_cdma_bs_get_dictionary (MMLocationCdmaBs *self)
 {
@@ -138,6 +148,9 @@ mm_location_cdma_bs_get_dictionary (MMLocationCdmaBs *self)
 
 /*****************************************************************************/
 
+/**
+ * mm_location_cdma_bs_new_from_dictionary: (skip)
+ */
 MMLocationCdmaBs *
 mm_location_cdma_bs_new_from_dictionary (GVariant *dictionary,
                                          GError **error)
@@ -192,6 +205,9 @@ mm_location_cdma_bs_new_from_dictionary (GVariant *dictionary,
 
 /*****************************************************************************/
 
+/**
+ * mm_location_cdma_bs_new: (skip)
+ */
 MMLocationCdmaBs *
 mm_location_cdma_bs_new (void)
 {

@@ -267,6 +267,7 @@ CLEANFILES    += $(DAEMON_ENUMS_GENERATED)
 
 ModemManager_CPPFLAGS = \
 	-DPLUGINDIR=\"$(pkglibdir)\" \
+	-DMM_COMPILATION \
 	$(NULL)
 
 ModemManager_LDADD = \
@@ -349,6 +350,7 @@ ModemManager_SOURCES = \
 	mm-port-probe-at.c \
 	mm-plugin.c \
 	mm-plugin.h \
+	mm-shared.h \
 	$(NULL)
 
 nodist_ModemManager_SOURCES = $(DAEMON_ENUMS_GENERATED)

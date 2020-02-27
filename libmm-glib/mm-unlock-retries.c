@@ -32,7 +32,7 @@
  * mm_modem_get_unlock_retries() or mm_modem_peek_unlock_retries().
  */
 
-G_DEFINE_TYPE (MMUnlockRetries, mm_unlock_retries, G_TYPE_OBJECT);
+G_DEFINE_TYPE (MMUnlockRetries, mm_unlock_retries, G_TYPE_OBJECT)
 
 struct _MMUnlockRetriesPrivate {
     GHashTable *ht;
@@ -40,6 +40,9 @@ struct _MMUnlockRetriesPrivate {
 
 /*****************************************************************************/
 
+/**
+ * mm_unlock_retries_set: (skip)
+ */
 void
 mm_unlock_retries_set (MMUnlockRetries *self,
                        MMModemLock lock,
@@ -50,6 +53,9 @@ mm_unlock_retries_set (MMUnlockRetries *self,
                           GUINT_TO_POINTER (retries));
 }
 
+/**
+ * mm_unlock_retries_unset: (skip)
+ */
 void
 mm_unlock_retries_unset (MMUnlockRetries *self,
                          MMModemLock lock)
@@ -68,6 +74,8 @@ mm_unlock_retries_unset (MMUnlockRetries *self,
  * Gets the unlock retries for the given @lock.
  *
  * Returns: the unlock retries or %MM_UNLOCK_RETRIES_UNKNOWN if unknown.
+ *
+ * Since: 1.0
  */
 guint
 mm_unlock_retries_get (MMUnlockRetries *self,
@@ -85,6 +93,9 @@ mm_unlock_retries_get (MMUnlockRetries *self,
 
 /*****************************************************************************/
 
+/**
+ * mm_unlock_retries_cmp: (skip)
+ */
 gboolean
 mm_unlock_retries_cmp (MMUnlockRetries *a,
                        MMUnlockRetries *b)
@@ -116,6 +127,8 @@ mm_unlock_retries_cmp (MMUnlockRetries *a,
  * @user_data: (closure): data to pass to @callback.
  *
  * Executes @callback for each lock information found in @self.
+ *
+ * Since: 1.0
  */
 void
 mm_unlock_retries_foreach (MMUnlockRetries *self,
@@ -135,6 +148,9 @@ mm_unlock_retries_foreach (MMUnlockRetries *self,
 
 /*****************************************************************************/
 
+/**
+ * mm_unlock_retries_get_dictionary: (skip)
+ */
 GVariant *
 mm_unlock_retries_get_dictionary (MMUnlockRetries *self)
 {
@@ -161,6 +177,9 @@ mm_unlock_retries_get_dictionary (MMUnlockRetries *self)
 
 /*****************************************************************************/
 
+/**
+ * mm_unlock_retries_new_from_dictionary: (skip)
+ */
 MMUnlockRetries *
 mm_unlock_retries_new_from_dictionary (GVariant *dictionary)
 {
@@ -184,6 +203,9 @@ mm_unlock_retries_new_from_dictionary (GVariant *dictionary)
 
 /*****************************************************************************/
 
+/**
+ * mm_unlock_retries_build_string: (skip)
+ */
 gchar *
 mm_unlock_retries_build_string (MMUnlockRetries *self)
 {
@@ -211,6 +233,9 @@ mm_unlock_retries_build_string (MMUnlockRetries *self)
 
 /*****************************************************************************/
 
+/**
+ * mm_unlock_retries_new: (skip)
+ */
 MMUnlockRetries *
 mm_unlock_retries_new (void)
 {
@@ -221,7 +246,7 @@ mm_unlock_retries_new (void)
 static void
 mm_unlock_retries_init (MMUnlockRetries *self)
 {
-    self->priv = G_TYPE_INSTANCE_GET_PRIVATE ((self),
+    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
                                               MM_TYPE_UNLOCK_RETRIES,
                                               MMUnlockRetriesPrivate);
     self->priv->ht = g_hash_table_new (g_direct_hash,

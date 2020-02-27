@@ -33,6 +33,8 @@
  *
  * Evaluates to the major version number of ModemManager which this source
  * is compiled against.
+ *
+ * Since: 1.0
  */
 #define MM_MAJOR_VERSION (1)
 
@@ -41,16 +43,20 @@
  *
  * Evaluates to the minor version number of ModemManager which this source
  * is compiled against.
+ *
+ * Since: 1.0
  */
-#define MM_MINOR_VERSION (10)
+#define MM_MINOR_VERSION (12)
 
 /**
  * MM_MICRO_VERSION:
  *
  * Evaluates to the micro version number of ModemManager which this source
  * compiled against.
+ *
+ * Since: 1.0
  */
-#define MM_MICRO_VERSION (4)
+#define MM_MICRO_VERSION (6)
 
 /**
  * MM_CHECK_VERSION:
@@ -58,8 +64,12 @@
  * @minor: minor version (e.g. 2 for version 1.2.5)
  * @micro: micro version (e.g. 5 for version 1.2.5)
  *
+ * Checks the version of ModemManager at compile time.
+ *
  * Returns: %TRUE if the version of the ModemManager header files
  * is the same as or newer than the passed-in version.
+ *
+ * Since: 1.0
  */
 #define MM_CHECK_VERSION(major,minor,micro)                         \
     (MM_MAJOR_VERSION > (major) ||                                  \

@@ -8,7 +8,7 @@
 <link rel="up" href="ch07.html" title="The Call object">
 <link rel="prev" href="MMCall.html" title="MMCall">
 <link rel="next" href="MMCallAudioFormat.html" title="MMCallAudioFormat">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -36,8 +36,8 @@
 <a name="MMCallProperties.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -118,8 +118,8 @@
 <a name="MMCallProperties.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody><tr>
 <td class="datatype_keyword">struct</td>
@@ -149,9 +149,11 @@ mm_call_properties_new (<em class="parameter"><code><span class="type">void</spa
 <p>Creates a new empty <a class="link" href="MMCallProperties.html" title="MMCallProperties"><span class="type">MMCallProperties</span></a>.</p>
 <div class="refsect3">
 <a name="mm-call-properties-new.returns"></a><h4>Returns</h4>
-<p>a <a class="link" href="MMCallProperties.html" title="MMCallProperties"><span class="type">MMCallProperties</span></a>. The returned value should be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a>. </p>
+<p>a <a class="link" href="MMCallProperties.html" title="MMCallProperties"><span class="type">MMCallProperties</span></a>. The returned value should be
+freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -176,9 +178,11 @@ mm_call_properties_get_number (<em class="parameter"><code><a class="link" href=
 </div>
 <div class="refsect3">
 <a name="mm-call-properties-get-number.returns"></a><h4>Returns</h4>
-<p> the call number, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any (anonymous caller). Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p> the call number, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any (anonymous
+caller). Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
 .</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -209,12 +213,19 @@ mm_call_properties_set_number (<em class="parameter"><code><a class="link" href=
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="mm-call-properties-get-direction"></a><h3>mm_call_properties_get_direction ()</h3>
 <pre class="programlisting"><a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMCallDirection"><span class="returnvalue">MMCallDirection</span></a>
 mm_call_properties_get_direction (<em class="parameter"><code><a class="link" href="MMCallProperties.html" title="MMCallProperties"><span class="type">MMCallProperties</span></a> *self</code></em>);</pre>
+<div class="warning">
+<p><code class="literal">mm_call_properties_get_direction</code> has been deprecated since version 1.12 and should not be used in newly-written code.</p>
+<p>the user should not specify the direction of the call, as
+it is implicit (outgoing always). This parameter has always been ignored
+during the new call creation processing.</p>
+</div>
 <p>Gets the call direction.</p>
 <div class="refsect3">
 <a name="mm-call-properties-get-direction.parameters"></a><h4>Parameters</h4>
@@ -235,6 +246,7 @@ mm_call_properties_get_direction (<em class="parameter"><code><a class="link" hr
 <a name="mm-call-properties-get-direction.returns"></a><h4>Returns</h4>
 <p> the call direction.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -242,7 +254,13 @@ mm_call_properties_get_direction (<em class="parameter"><code><a class="link" hr
 <pre class="programlisting"><span class="returnvalue">void</span>
 mm_call_properties_set_direction (<em class="parameter"><code><a class="link" href="MMCallProperties.html" title="MMCallProperties"><span class="type">MMCallProperties</span></a> *self</code></em>,
                                   <em class="parameter"><code><a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMCallDirection"><span class="type">MMCallDirection</span></a> direction</code></em>);</pre>
-<p>Sets the call direction</p>
+<div class="warning">
+<p><code class="literal">mm_call_properties_set_direction</code> has been deprecated since version 1.12 and should not be used in newly-written code.</p>
+<p>the user should not specify the direction of the call, as
+it is implicit (outgoing always). Anyway, this parameter has always been
+ignored during the new call creation processing.</p>
+</div>
+<p>Sets the call direction.</p>
 <div class="refsect3">
 <a name="mm-call-properties-set-direction.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -265,12 +283,19 @@ mm_call_properties_set_direction (<em class="parameter"><code><a class="link" hr
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="mm-call-properties-get-state"></a><h3>mm_call_properties_get_state ()</h3>
 <pre class="programlisting"><a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMCallState"><span class="returnvalue">MMCallState</span></a>
 mm_call_properties_get_state (<em class="parameter"><code><a class="link" href="MMCallProperties.html" title="MMCallProperties"><span class="type">MMCallProperties</span></a> *self</code></em>);</pre>
+<div class="warning">
+<p><code class="literal">mm_call_properties_get_state</code> has been deprecated since version 1.12 and should not be used in newly-written code.</p>
+<p>the user should not specify the state of the call before
+the call is created. This parameter has always been ignored during the new
+call creation processing.</p>
+</div>
 <p>Gets the call state.</p>
 <div class="refsect3">
 <a name="mm-call-properties-get-state.parameters"></a><h4>Parameters</h4>
@@ -291,6 +316,7 @@ mm_call_properties_get_state (<em class="parameter"><code><a class="link" href="
 <a name="mm-call-properties-get-state.returns"></a><h4>Returns</h4>
 <p> the call state.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -298,6 +324,12 @@ mm_call_properties_get_state (<em class="parameter"><code><a class="link" href="
 <pre class="programlisting"><span class="returnvalue">void</span>
 mm_call_properties_set_state (<em class="parameter"><code><a class="link" href="MMCallProperties.html" title="MMCallProperties"><span class="type">MMCallProperties</span></a> *self</code></em>,
                               <em class="parameter"><code><a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMCallState"><span class="type">MMCallState</span></a> state</code></em>);</pre>
+<div class="warning">
+<p><code class="literal">mm_call_properties_set_state</code> has been deprecated since version 1.12 and should not be used in newly-written code.</p>
+<p>the user should not specify the state of the call before
+the call is created. This parameter has always been ignored during the new
+call creation processing.</p>
+</div>
 <p>Sets the call state</p>
 <div class="refsect3">
 <a name="mm-call-properties-set-state.parameters"></a><h4>Parameters</h4>
@@ -321,12 +353,19 @@ mm_call_properties_set_state (<em class="parameter"><code><a class="link" href="
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="mm-call-properties-get-state-reason"></a><h3>mm_call_properties_get_state_reason ()</h3>
 <pre class="programlisting"><a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMCallStateReason"><span class="returnvalue">MMCallStateReason</span></a>
 mm_call_properties_get_state_reason (<em class="parameter"><code><a class="link" href="MMCallProperties.html" title="MMCallProperties"><span class="type">MMCallProperties</span></a> *self</code></em>);</pre>
+<div class="warning">
+<p><code class="literal">mm_call_properties_get_state_reason</code> has been deprecated since version 1.12 and should not be used in newly-written code.</p>
+<p>the user should not specify the state reason of the call
+before the call is created. This parameter has always been ignored during the
+new call creation processing.</p>
+</div>
 <p>Gets the call state reason.</p>
 <div class="refsect3">
 <a name="mm-call-properties-get-state-reason.parameters"></a><h4>Parameters</h4>
@@ -347,6 +386,7 @@ mm_call_properties_get_state_reason (<em class="parameter"><code><a class="link"
 <a name="mm-call-properties-get-state-reason.returns"></a><h4>Returns</h4>
 <p> the call state reason.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -354,7 +394,13 @@ mm_call_properties_get_state_reason (<em class="parameter"><code><a class="link"
 <pre class="programlisting"><span class="returnvalue">void</span>
 mm_call_properties_set_state_reason (<em class="parameter"><code><a class="link" href="MMCallProperties.html" title="MMCallProperties"><span class="type">MMCallProperties</span></a> *self</code></em>,
                                      <em class="parameter"><code><a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMCallStateReason"><span class="type">MMCallStateReason</span></a> state_reason</code></em>);</pre>
-<p>Sets the call state reason</p>
+<div class="warning">
+<p><code class="literal">mm_call_properties_set_state_reason</code> has been deprecated since version 1.12 and should not be used in newly-written code.</p>
+<p>the user should not specify the state reason of the call
+before the call is created. This parameter has always been ignored during the
+new call creation processing.</p>
+</div>
+<p>Sets the call state reason.</p>
 <div class="refsect3">
 <a name="mm-call-properties-set-state-reason.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -371,12 +417,13 @@ mm_call_properties_set_state_reason (<em class="parameter"><code><a class="link"
 </tr>
 <tr>
 <td class="parameter_name"><p>state_reason</p></td>
-<td class="parameter_description"><p>the call state_reason</p></td>
+<td class="parameter_description"><p>the call state reason.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
 </div>
 <div class="refsect1">
@@ -390,6 +437,6 @@ accessed using the provided API.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

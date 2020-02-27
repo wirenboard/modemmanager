@@ -648,6 +648,7 @@ typedef struct {
     LoadUnlockRequiredStep step;
     QmiClient *dms;
     QmiClient *uim;
+    gboolean last_attempt;
 } LoadUnlockRequiredContext;
 
 static MMModemLock
@@ -903,9 +904,12 @@ unlock_required_uim_get_card_status_ready (QmiClientUim *client,
                                            GAsyncResult *res,
                                            GTask *task)
 {
+    LoadUnlockRequiredContext *ctx;
     QmiMessageUimGetCardStatusOutput *output;
     GError *error = NULL;
     MMModemLock lock = MM_MODEM_LOCK_UNKNOWN;
+
+    ctx = g_task_get_task_data (task);
 
     output = qmi_client_uim_get_card_status_finish (client, res, &error);
     if (!output) {
@@ -919,6 +923,15 @@ unlock_required_uim_get_card_status_ready (QmiClientUim *client,
                                            &lock,
                                            NULL, NULL, NULL, NULL,
                                            &error)) {
+        /* The device may report a SIM NOT INSERTED error if we're querying the
+         * card status soon after power on. We'll let the Modem interface generic
+         * logic retry loading the info a bit later if that's the case. This will
+         * make device detection slower when there's really no SIM card, but there's
+         * no clear better way to handle it :/ */
+        if (g_error_matches (error, MM_MOBILE_EQUIPMENT_ERROR, MM_MOBILE_EQUIPMENT_ERROR_SIM_NOT_INSERTED) && !ctx->last_attempt) {
+            g_clear_error (&error);
+            g_set_error (&error, MM_CORE_ERROR, MM_CORE_ERROR_RETRY, "No card found (retry)");
+        }
         g_prefix_error (&error, "QMI operation failed: ");
         g_task_return_error (task, error);
     } else
@@ -1020,6 +1033,7 @@ dms_uim_get_pin_status_ready (QmiClientDms *client,
     }
 
     /* We're done! */
+    qmi_message_dms_uim_get_pin_status_output_unref (output);
     g_task_return_int (task, lock);
     g_object_unref (task);
 }
@@ -1101,6 +1115,7 @@ load_unlock_required_context_step (GTask *task)
 
 static void
 modem_load_unlock_required (MMIfaceModem *self,
+                            gboolean last_attempt,
                             GAsyncReadyCallback callback,
                             gpointer user_data)
 {
@@ -1109,6 +1124,7 @@ modem_load_unlock_required (MMIfaceModem *self,
 
     ctx = g_new0 (LoadUnlockRequiredContext, 1);
     ctx->step = LOAD_UNLOCK_REQUIRED_STEP_FIRST;
+    ctx->last_attempt = last_attempt;
 
     task = g_task_new (self, NULL, callback, user_data);
     g_task_set_task_data (task, ctx, g_free);
@@ -7038,14 +7054,18 @@ firmware_pair_free (FirmwarePair *pair)
 }
 
 typedef struct {
-    QmiClientDms *client;
-    GList *pairs;
-    GList *l;
+    QmiClientDms         *client;
+    GList                *pairs;
+    FirmwarePair         *current_pair;
+    MMFirmwareProperties *current_firmware;
+    gboolean              skip_image_info;
 } FirmwareListPreloadContext;
 
 static void
 firmware_list_preload_context_free (FirmwareListPreloadContext *ctx)
 {
+    g_clear_object (&ctx->current_firmware);
+    g_clear_pointer (&ctx->current_pair, (GDestroyNotify)firmware_pair_free);
     g_list_free_full (ctx->pairs, (GDestroyNotify)firmware_pair_free);
     g_object_unref (ctx->client);
     g_slice_free (FirmwareListPreloadContext, ctx);
@@ -7059,150 +7079,201 @@ firmware_list_preload_finish (MMBroadbandModemQmi  *self,
     return g_task_propagate_boolean (G_TASK (res), error);
 }
 
+static void
+store_preloaded_firmware_image_info (MMBroadbandModemQmi  *self,
+                                     MMFirmwareProperties *firmware,
+                                     gboolean              running)
+{
+    self->priv->firmware_list = g_list_append (self->priv->firmware_list, g_object_ref (firmware));
+
+    /* If this is is also the running image, keep an extra reference to it */
+    if (running) {
+        if (self->priv->current_firmware)
+            mm_warn ("A running firmware is already set (%s), not setting '%s'",
+                     mm_firmware_properties_get_unique_id (self->priv->current_firmware),
+                     mm_firmware_properties_get_unique_id (firmware));
+        else
+            self->priv->current_firmware = g_object_ref (firmware);
+    }
+}
+
 static void get_next_image_info (GTask *task);
 
 static void
 get_pri_image_info_ready (QmiClientDms *client,
                           GAsyncResult *res,
-                          GTask *task)
+                          GTask        *task)
 {
-    MMBroadbandModemQmi *self;
-    FirmwareListPreloadContext *ctx;
+    MMBroadbandModemQmi                   *self;
+    FirmwareListPreloadContext            *ctx;
     QmiMessageDmsGetStoredImageInfoOutput *output;
-    GError *error = NULL;
-    FirmwarePair *current;
+    GError                                *error = NULL;
 
     self = g_task_get_source_object (task);
-    ctx = g_task_get_task_data (task);
-    current = (FirmwarePair *)ctx->l->data;
+    ctx  = g_task_get_task_data (task);
+
+    g_assert (ctx->current_pair);
+    g_assert (ctx->current_firmware);
 
     output = qmi_client_dms_get_stored_image_info_finish (client, res, &error);
-    if (!output ||
-        !qmi_message_dms_get_stored_image_info_output_get_result (output, &error)) {
-        mm_warn ("Couldn't get detailed info for PRI image with build ID '%s': %s",
-                 current->build_id,
-                 error->message);
+    if (!output || !qmi_message_dms_get_stored_image_info_output_get_result (output, &error)) {
+        if (g_error_matches (error, QMI_PROTOCOL_ERROR, QMI_PROTOCOL_ERROR_INVALID_QMI_COMMAND))
+            ctx->skip_image_info = TRUE;
+        else
+            mm_dbg ("couldn't get detailed info for PRI image with build ID '%s': %s",
+                    ctx->current_pair->build_id, error->message);
         g_error_free (error);
-    } else {
-        gchar *unique_id_str;
-        MMFirmwareProperties *firmware;
+        goto out;
+    }
 
-        firmware = mm_firmware_properties_new (MM_FIRMWARE_IMAGE_TYPE_GOBI,
-                                               current->build_id);
+    /* Boot version (optional) */
+    {
+        guint16 boot_major_version;
+        guint16 boot_minor_version;
 
-        unique_id_str = mm_utils_bin2hexstr ((const guint8 *)current->pri_unique_id->data,
-                                             current->pri_unique_id->len);
-        mm_firmware_properties_set_gobi_pri_unique_id (firmware, unique_id_str);
-        g_free (unique_id_str);
+        if (qmi_message_dms_get_stored_image_info_output_get_boot_version (
+                output,
+                &boot_major_version,
+                &boot_minor_version,
+                NULL)) {
+            gchar *aux;
 
-        unique_id_str = mm_utils_bin2hexstr ((const guint8 *)current->modem_unique_id->data,
-                                             current->modem_unique_id->len);
-        mm_firmware_properties_set_gobi_modem_unique_id (firmware, unique_id_str);
-        g_free (unique_id_str);
-
-        /* Boot version (optional) */
-        {
-            guint16 boot_major_version;
-            guint16 boot_minor_version;
-
-            if (qmi_message_dms_get_stored_image_info_output_get_boot_version (
-                    output,
-                    &boot_major_version,
-                    &boot_minor_version,
-                    NULL)) {
-                gchar *aux;
-
-                aux = g_strdup_printf ("%u.%u", boot_major_version, boot_minor_version);
-                mm_firmware_properties_set_gobi_boot_version (firmware, aux);
-                g_free (aux);
-            }
-        }
-
-        /* PRI version (optional) */
-        {
-            guint32 pri_version;
-            const gchar *pri_info;
-
-            if (qmi_message_dms_get_stored_image_info_output_get_pri_version (
-                    output,
-                    &pri_version,
-                    &pri_info,
-                    NULL)) {
-                gchar *aux;
-
-                aux = g_strdup_printf ("%u", pri_version);
-                mm_firmware_properties_set_gobi_pri_version (firmware, aux);
-                g_free (aux);
-
-                mm_firmware_properties_set_gobi_pri_info (firmware, pri_info);
-            }
-        }
-
-        /* Add firmware image to our internal list */
-        self->priv->firmware_list = g_list_append (self->priv->firmware_list,
-                                                   firmware);
-
-        /* If this is is also the current image running, keep it */
-        if (current->current) {
-            if (self->priv->current_firmware)
-                mm_warn ("A current firmware is already set (%s), not setting '%s' as current",
-                         mm_firmware_properties_get_unique_id (self->priv->current_firmware),
-                         current->build_id);
-            else
-                self->priv->current_firmware = g_object_ref (firmware);
-
+            aux = g_strdup_printf ("%u.%u", boot_major_version, boot_minor_version);
+            mm_firmware_properties_set_gobi_boot_version (ctx->current_firmware, aux);
+            g_free (aux);
         }
     }
 
-    if (output)
-        qmi_message_dms_get_stored_image_info_output_unref (output);
+    /* PRI version (optional) */
+    {
+        guint32 pri_version;
+        const gchar *pri_info;
+
+        if (qmi_message_dms_get_stored_image_info_output_get_pri_version (
+                output,
+                &pri_version,
+                &pri_info,
+                NULL)) {
+            gchar *aux;
+
+            aux = g_strdup_printf ("%u", pri_version);
+            mm_firmware_properties_set_gobi_pri_version (ctx->current_firmware, aux);
+            g_free (aux);
+
+            mm_firmware_properties_set_gobi_pri_info (ctx->current_firmware, pri_info);
+        }
+    }
+
+out:
+
+    /* We're done with this image */
+    store_preloaded_firmware_image_info (self, ctx->current_firmware, ctx->current_pair->current);
+    g_clear_object (&ctx->current_firmware);
+    g_clear_pointer (&ctx->current_pair, (GDestroyNotify)firmware_pair_free);
 
     /* Go on to the next one */
-    ctx->l = g_list_next (ctx->l);
     get_next_image_info (task);
+
+    if (output)
+        qmi_message_dms_get_stored_image_info_output_unref (output);
+}
+
+static MMFirmwareProperties *
+create_firmware_properties_from_pair (FirmwarePair  *pair,
+                                      GError       **error)
+{
+    gchar                *pri_unique_id_str = NULL;
+    gchar                *modem_unique_id_str = NULL;
+    gchar                *firmware_unique_id_str = NULL;
+    MMFirmwareProperties *firmware = NULL;
+
+    /* If the string is ASCII, use it without converting to HEX */
+
+    pri_unique_id_str = mm_qmi_unique_id_to_firmware_unique_id (pair->pri_unique_id, error);
+    if (!pri_unique_id_str)
+        goto out;
+
+    modem_unique_id_str = mm_qmi_unique_id_to_firmware_unique_id (pair->modem_unique_id, error);
+    if (!modem_unique_id_str)
+        goto out;
+
+    /* We will always append the PRI unique ID to the build id to form the unique id
+     * used by the API, because it may happen that a device holds multiple PRI images
+     * for the same build ID.
+     *
+     * E.g. we could have a single modem image (e.g. 02.14.03.00) and then two or more
+     * different PRI images with the same build ID (e.g. 02.14.03.00_VODAFONE) but
+     * different unique IDs (e.g. 000.008_000 and 000.016_000).
+     */
+    firmware_unique_id_str = g_strdup_printf ("%s_%s", pair->build_id, pri_unique_id_str);
+
+    firmware = mm_firmware_properties_new (MM_FIRMWARE_IMAGE_TYPE_GOBI, firmware_unique_id_str);
+    mm_firmware_properties_set_gobi_pri_unique_id (firmware, pri_unique_id_str);
+    mm_firmware_properties_set_gobi_modem_unique_id (firmware, modem_unique_id_str);
+
+out:
+    g_free (firmware_unique_id_str);
+    g_free (pri_unique_id_str);
+    g_free (modem_unique_id_str);
+
+    return firmware;
 }
 
 static void
 get_next_image_info (GTask *task)
 {
-    MMBroadbandModemQmi *self;
+    MMBroadbandModemQmi        *self;
     FirmwareListPreloadContext *ctx;
-    QmiMessageDmsGetStoredImageInfoInputImage image_id;
-    QmiMessageDmsGetStoredImageInfoInput *input;
-    FirmwarePair *current;
+    GError                     *error = NULL;
 
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
 
-    if (!ctx->l) {
-        /* We're done */
-
-        if (!self->priv->firmware_list) {
-            mm_warn ("No valid firmware images listed. "
-                     "Assuming firmware unsupported.");
-            g_task_return_boolean (task, FALSE);
-        } else
-            g_task_return_boolean (task, TRUE);
-
+    if (!ctx->pairs) {
+        g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
     }
 
-    current = (FirmwarePair *)ctx->l->data;
+    /* Take next pair to process from list head */
+    ctx->current_pair = (FirmwarePair *)ctx->pairs->data;
+    ctx->pairs = g_list_delete_link (ctx->pairs, ctx->pairs);
 
-    /* Query PRI image info */
-    image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI;
-    image_id.unique_id = current->pri_unique_id;
-    image_id.build_id = current->build_id;
-    input = qmi_message_dms_get_stored_image_info_input_new ();
-    qmi_message_dms_get_stored_image_info_input_set_image (input, &image_id, NULL);
-    qmi_client_dms_get_stored_image_info (ctx->client,
-                                          input,
-                                          10,
-                                          NULL,
-                                          (GAsyncReadyCallback)get_pri_image_info_ready,
-                                          task);
-    qmi_message_dms_get_stored_image_info_input_unref (input);
+    /* Build firmware properties */
+    ctx->current_firmware = create_firmware_properties_from_pair (ctx->current_pair, &error);
+    if (!ctx->current_firmware) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    /* Now, load additional optional information for the PRI image */
+    if (!ctx->skip_image_info) {
+        QmiMessageDmsGetStoredImageInfoInputImage  image_id;
+        QmiMessageDmsGetStoredImageInfoInput      *input;
+
+        image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI;
+        image_id.unique_id = ctx->current_pair->pri_unique_id;
+        image_id.build_id = ctx->current_pair->build_id;
+        input = qmi_message_dms_get_stored_image_info_input_new ();
+        qmi_message_dms_get_stored_image_info_input_set_image (input, &image_id, NULL);
+        qmi_client_dms_get_stored_image_info (ctx->client,
+                                              input,
+                                              10,
+                                              NULL,
+                                              (GAsyncReadyCallback)get_pri_image_info_ready,
+                                              task);
+        qmi_message_dms_get_stored_image_info_input_unref (input);
+        return;
+    }
+
+    /* If we shouldn't be loading additional image info, we're done with this image */
+    store_preloaded_firmware_image_info (self, ctx->current_firmware, ctx->current_pair->current);
+    g_clear_object (&ctx->current_firmware);
+    g_clear_pointer (&ctx->current_pair, (GDestroyNotify)firmware_pair_free);
+
+    /* Go on to the next one */
+    get_next_image_info (task);
 }
 
 static gboolean
@@ -7227,85 +7298,15 @@ match_images (const gchar *pri_id, const gchar *modem_id)
     return strncmp (pri_id, modem_id, modem_id_len - 1) == 0;
 }
 
-static void
-list_stored_images_ready (QmiClientDms *client,
-                          GAsyncResult *res,
-                          GTask *task)
+static GList *
+find_image_pairs (QmiMessageDmsListStoredImagesOutputListImage  *image_pri,
+                  QmiMessageDmsListStoredImagesOutputListImage  *image_modem,
+                  GError                                       **error)
 {
-    FirmwareListPreloadContext *ctx;
-    GArray *array;
-    gint pri_id;
-    gint modem_id;
-    guint i;
-    guint j;
-    QmiMessageDmsListStoredImagesOutputListImage *image_pri;
-    QmiMessageDmsListStoredImagesOutputListImage *image_modem;
-    QmiMessageDmsListStoredImagesOutput *output;
+    guint  i, j;
+    GList *pairs = NULL;
 
-    output = qmi_client_dms_list_stored_images_finish (client, res, NULL);
-    if (!output ||
-        !qmi_message_dms_list_stored_images_output_get_result (output, NULL)) {
-        /* Assume firmware unsupported */
-        g_task_return_boolean (task, FALSE);
-        g_object_unref (task);
-        if (output)
-            qmi_message_dms_list_stored_images_output_unref (output);
-        return;
-    }
-
-    qmi_message_dms_list_stored_images_output_get_list (
-        output,
-        &array,
-        NULL);
-
-    /* Find which index corresponds to each image type */
-    pri_id = -1;
-    modem_id = -1;
-    for (i = 0; i < array->len; i++) {
-        QmiMessageDmsListStoredImagesOutputListImage *image;
-
-        image = &g_array_index (array,
-                                QmiMessageDmsListStoredImagesOutputListImage,
-                                i);
-
-        switch (image->type) {
-        case QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI:
-            if (pri_id != -1)
-                mm_warn ("Multiple array elements found with PRI type");
-            else
-                pri_id = (gint)i;
-            break;
-        case QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM:
-            if (modem_id != -1)
-                mm_warn ("Multiple array elements found with MODEM type");
-            else
-                modem_id = (gint)i;
-            break;
-        default:
-            break;
-        }
-    }
-
-    if (pri_id < 0 || modem_id < 0) {
-        mm_dbg ("We need both PRI (%s) and MODEM (%s) images",
-                pri_id < 0 ? "not found" : "found",
-                modem_id < 0 ? "not found" : "found");
-        g_task_return_boolean (task, FALSE);
-        g_object_unref (task);
-        qmi_message_dms_list_stored_images_output_unref (output);
-        return;
-    }
-
-    ctx = g_task_get_task_data (task);
-
-    /* Loop PRI images and try to find a pairing MODEM image with same boot ID */
-    image_pri = &g_array_index (array,
-                                QmiMessageDmsListStoredImagesOutputListImage,
-                                pri_id);
-    image_modem = &g_array_index (array,
-                                  QmiMessageDmsListStoredImagesOutputListImage,
-                                  modem_id);
-
+    /* Loop PRI images and try to find a pairing MODEM image with same build ID */
     for (i = 0; i < image_pri->sublist->len; i++) {
         QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement *subimage_pri;
 
@@ -7327,8 +7328,15 @@ list_stored_images_ready (QmiClientDms *client,
                 pair->build_id = g_strdup (subimage_pri->build_id);
                 pair->modem_unique_id = g_array_ref (subimage_modem->unique_id);
                 pair->pri_unique_id = g_array_ref (subimage_pri->unique_id);
+
+                /* We're using the PRI 'index_of_running_image' only as source to select
+                 * which is the current running firmware. This avoids issues with the wrong
+                 * 'index_of_running_image' reported for the MODEM images, see:
+                 *   https://forum.sierrawireless.com/t/mc74xx-wrong-running-image-in-qmi-get-stored-images/8998
+                 */
                 pair->current = (image_pri->index_of_running_image == i ? TRUE : FALSE);
-                ctx->pairs = g_list_append (ctx->pairs, pair);
+
+                pairs = g_list_append (pairs, pair);
                 break;
             }
         }
@@ -7337,19 +7345,110 @@ list_stored_images_ready (QmiClientDms *client,
             mm_dbg ("Pairing for PRI image with build ID '%s' not found", subimage_pri->build_id);
     }
 
-    if (!ctx->pairs) {
-        mm_dbg ("No valid PRI+MODEM pairs found");
-        g_task_return_boolean (task, FALSE);
-        g_object_unref (task);
-        qmi_message_dms_list_stored_images_output_unref (output);
-        return;
+    if (!pairs)
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND, "No valid PRI+MODEM pairs found");
+
+    return pairs;
+}
+
+static gboolean
+find_image_type_indices (GArray                                        *array,
+                         QmiMessageDmsListStoredImagesOutputListImage **image_pri,
+                         QmiMessageDmsListStoredImagesOutputListImage **image_modem,
+                         GError                                       **error)
+{
+    guint i;
+
+    g_assert (array);
+    g_assert (image_pri);
+    g_assert (image_modem);
+
+    *image_pri = NULL;
+    *image_modem = NULL;
+
+    /* The MODEM image list is usually given before the PRI image list, but
+     * let's not assume that. Try to find both lists and report at which index
+     * we can find each. */
+
+    for (i = 0; i < array->len; i++) {
+        QmiMessageDmsListStoredImagesOutputListImage *image;
+
+        image = &g_array_index (array, QmiMessageDmsListStoredImagesOutputListImage, i);
+        switch (image->type) {
+        case QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI:
+            if (*image_pri != NULL)
+                mm_dbg ("Multiple array elements found with PRI type: ignoring additional list at index %u", i);
+            else
+                *image_pri = image;
+            break;
+        case QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM:
+            if (*image_modem != NULL)
+                mm_dbg ("Multiple array elements found with MODEM type: ignoring additional list at index %u", i);
+            else
+                *image_modem = image;
+            break;
+        default:
+            break;
+        }
     }
 
-    /* Firmware is supported; now keep on loading info for each image and cache it */
-    qmi_message_dms_list_stored_images_output_unref (output);
+    if (!(*image_pri) || !(*image_modem)) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
+                     "Missing image list: pri list %s, modem list %s",
+                     !(*image_pri) ? "not found" : "found",
+                     !(*image_modem) ? "not found" : "found");
+        return FALSE;
+    }
 
-    ctx->l = ctx->pairs;
+    return TRUE;
+}
+
+static void
+list_stored_images_ready (QmiClientDms *client,
+                          GAsyncResult *res,
+                          GTask        *task)
+{
+    FirmwareListPreloadContext                   *ctx;
+    GArray                                       *array;
+    QmiMessageDmsListStoredImagesOutputListImage *image_pri;
+    QmiMessageDmsListStoredImagesOutputListImage *image_modem;
+    QmiMessageDmsListStoredImagesOutput          *output;
+    GError                                       *error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    /* Read array from output */
+    output = qmi_client_dms_list_stored_images_finish (client, res, &error);
+    if (!output ||
+        !qmi_message_dms_list_stored_images_output_get_result (output, &error) ||
+        !qmi_message_dms_list_stored_images_output_get_list (output, &array, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        goto out;
+    }
+
+    /* Find which index corresponds to each image type */
+    if (!find_image_type_indices (array, &image_pri, &image_modem, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        goto out;
+    }
+
+    /* Build firmware PRI+MODEM pair list */
+    ctx->pairs = find_image_pairs (image_pri, image_modem, &error);
+    if (!ctx->pairs) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        goto out;
+    }
+
+    /* Now keep on loading info for each image and cache it */
     get_next_image_info (task);
+
+out:
+
+    if (output)
+        qmi_message_dms_list_stored_images_output_unref (output);
 }
 
 static void
@@ -7597,21 +7696,21 @@ find_firmware_properties_by_gobi_pri_info_substring (MMBroadbandModemQmi *self,
 
 static void
 firmware_change_current (MMIfaceModemFirmware *_self,
-                         const gchar *unique_id,
-                         GAsyncReadyCallback callback,
-                         gpointer user_data)
+                         const gchar          *unique_id,
+                         GAsyncReadyCallback   callback,
+                         gpointer              user_data)
 {
-    MMBroadbandModemQmi *self = MM_BROADBAND_MODEM_QMI (_self);
-    QmiMessageDmsSetFirmwarePreferenceInput *input;
-    FirmwareChangeCurrentContext *ctx;
-    GTask *task;
-    QmiClient *client = NULL;
-    GArray *array;
-    QmiMessageDmsSetFirmwarePreferenceInputListImage modem_image_id;
-    QmiMessageDmsSetFirmwarePreferenceInputListImage pri_image_id;
-    guint8 *tmp;
-    gsize tmp_len;
+    MMBroadbandModemQmi                              *self;
+    GTask                                            *task;
+    FirmwareChangeCurrentContext                     *ctx;
+    GError                                           *error = NULL;
+    QmiClient                                        *client = NULL;
+    GArray                                           *array;
+    QmiMessageDmsSetFirmwarePreferenceInput          *input = NULL;
+    QmiMessageDmsSetFirmwarePreferenceInputListImage  modem_image_id = { 0 };
+    QmiMessageDmsSetFirmwarePreferenceInputListImage  pri_image_id   = { 0 };
 
+    self = MM_BROADBAND_MODEM_QMI (_self);
     if (!mm_shared_qmi_ensure_client (MM_SHARED_QMI (self),
                                       QMI_SERVICE_DMS, &client,
                                       callback, user_data))
@@ -7664,22 +7763,26 @@ firmware_change_current (MMIfaceModemFirmware *_self,
     }
 
     /* Modem image ID */
-    tmp_len = 0;
-    tmp = (guint8 *)mm_utils_hexstr2bin (mm_firmware_properties_get_gobi_modem_unique_id (ctx->firmware), &tmp_len);
     modem_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM;
     modem_image_id.build_id = (gchar *)mm_firmware_properties_get_unique_id (ctx->firmware);
-    modem_image_id.unique_id = g_array_sized_new (FALSE, FALSE, sizeof (guint8), tmp_len);
-    g_array_insert_vals (modem_image_id.unique_id, 0, tmp, tmp_len);
-    g_free (tmp);
+    modem_image_id.unique_id = mm_firmware_unique_id_to_qmi_unique_id (mm_firmware_properties_get_gobi_modem_unique_id (ctx->firmware), &error);
+    if (!modem_image_id.unique_id) {
+        g_prefix_error (&error, "Couldn't build modem image unique id: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        goto out;
+    }
 
     /* PRI image ID */
-    tmp_len = 0;
-    tmp = (guint8 *)mm_utils_hexstr2bin (mm_firmware_properties_get_gobi_pri_unique_id (ctx->firmware), &tmp_len);
     pri_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI;
     pri_image_id.build_id = (gchar *)mm_firmware_properties_get_unique_id (ctx->firmware);
-    pri_image_id.unique_id = g_array_sized_new (FALSE, FALSE, sizeof (guint8), tmp_len);
-    g_array_insert_vals (pri_image_id.unique_id, 0, tmp, tmp_len);
-    g_free (tmp);
+    pri_image_id.unique_id = mm_firmware_unique_id_to_qmi_unique_id (mm_firmware_properties_get_gobi_pri_unique_id (ctx->firmware), &error);
+    if (!pri_image_id.unique_id) {
+        g_prefix_error (&error, "Couldn't build PRI image unique id: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        goto out;
+    }
 
     mm_dbg ("Changing Gobi firmware to MODEM '%s' and PRI '%s' with Build ID '%s'...",
             mm_firmware_properties_get_gobi_modem_unique_id (ctx->firmware),
@@ -7700,9 +7803,14 @@ firmware_change_current (MMIfaceModemFirmware *_self,
         NULL,
         (GAsyncReadyCallback)firmware_select_stored_image_ready,
         task);
-    g_array_unref (modem_image_id.unique_id);
-    g_array_unref (pri_image_id.unique_id);
-    qmi_message_dms_set_firmware_preference_input_unref (input);
+
+out:
+    if (modem_image_id.unique_id)
+        g_array_unref (modem_image_id.unique_id);
+    if (pri_image_id.unique_id)
+        g_array_unref (pri_image_id.unique_id);
+    if (input)
+        qmi_message_dms_set_firmware_preference_input_unref (input);
 }
 
 /*****************************************************************************/

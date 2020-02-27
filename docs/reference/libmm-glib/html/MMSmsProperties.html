@@ -8,7 +8,7 @@
 <link rel="up" href="ch06.html" title="The SMS object">
 <link rel="prev" href="MMSms.html" title="MMSms">
 <link rel="next" href="ch07.html" title="The Call object">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -36,8 +36,8 @@
 <a name="MMSmsProperties.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -227,8 +227,8 @@
 <a name="MMSmsProperties.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody><tr>
 <td class="datatype_keyword">struct</td>
@@ -261,6 +261,7 @@ mm_sms_properties_new (<em class="parameter"><code><span class="type">void</span
 <p>a <a class="link" href="MMSmsProperties.html" title="MMSmsProperties"><span class="type">MMSmsProperties</span></a>. The returned value should be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -285,10 +286,13 @@ mm_sms_properties_get_text (<em class="parameter"><code><a class="link" href="MM
 </div>
 <div class="refsect3">
 <a name="mm-sms-properties-get-text.returns"></a><h4>Returns</h4>
-<p>The message text, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any (e.g. contains data instead). Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The message text, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain
+any (e.g. contains data instead). Do not free the returned value, it is
+owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -319,6 +323,7 @@ mm_sms_properties_set_text (<em class="parameter"><code><a class="link" href="MM
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -351,9 +356,11 @@ mm_sms_properties_get_data (<em class="parameter"><code><a class="link" href="MM
 </div>
 <div class="refsect3">
 <a name="mm-sms-properties-get-data.returns"></a><h4>Returns</h4>
-<p>The message data, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any (e.g. contains text instead). </p>
+<p>The message data, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain
+any (e.g. contains text instead). </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -391,6 +398,7 @@ mm_sms_properties_set_data (<em class="parameter"><code><a class="link" href="MM
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -415,10 +423,13 @@ mm_sms_properties_peek_data_bytearray (<em class="parameter"><code><a class="lin
 </div>
 <div class="refsect3">
 <a name="mm-sms-properties-peek-data-bytearray.returns"></a><h4>Returns</h4>
-<p>A <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#GByteArray"><span class="type">GByteArray</span></a> with the message data, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any (e.g. contains text instead). Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>A <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#GByteArray"><span class="type">GByteArray</span></a> with the message data, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it
+doesn't contain any (e.g. contains text instead). Do not free the returned
+value, it is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -443,9 +454,12 @@ mm_sms_properties_get_data_bytearray (<em class="parameter"><code><a class="link
 </div>
 <div class="refsect3">
 <a name="mm-sms-properties-get-data-bytearray.returns"></a><h4>Returns</h4>
-<p>A <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#GByteArray"><span class="type">GByteArray</span></a> with the message data, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any (e.g. contains text instead). The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#g-byte-array-unref"><code class="function">g_byte_array_unref()</code></a>. </p>
+<p>A <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#GByteArray"><span class="type">GByteArray</span></a> with the message data, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it
+doesn't contain any (e.g. contains text instead). The returned value should
+be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#g-byte-array-unref"><code class="function">g_byte_array_unref()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -470,13 +484,15 @@ mm_sms_properties_set_data_bytearray (<em class="parameter"><code><a class="link
 </tr>
 <tr>
 <td class="parameter_name"><p>data</p></td>
-<td class="parameter_description"><p>A <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#GByteArray"><span class="type">GByteArray</span></a> with the data to set. This method takes a new reference of <em class="parameter"><code>data</code></em>
+<td class="parameter_description"><p>A <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#GByteArray"><span class="type">GByteArray</span></a> with the data to set. This method takes a new reference
+of <em class="parameter"><code>data</code></em>
 .</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -501,10 +517,12 @@ mm_sms_properties_get_number (<em class="parameter"><code><a class="link" href="
 </div>
 <div class="refsect3">
 <a name="mm-sms-properties-get-number.returns"></a><h4>Returns</h4>
-<p>The number, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The number, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved.
+Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -535,6 +553,7 @@ mm_sms_properties_set_number (<em class="parameter"><code><a class="link" href="
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -559,10 +578,12 @@ mm_sms_properties_get_smsc (<em class="parameter"><code><a class="link" href="MM
 </div>
 <div class="refsect3">
 <a name="mm-sms-properties-get-smsc.returns"></a><h4>Returns</h4>
-<p>The number of the SMSC, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The number of the SMSC, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be
+retrieved. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -593,6 +614,7 @@ mm_sms_properties_set_smsc (<em class="parameter"><code><a class="link" href="MM
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -619,6 +641,7 @@ mm_sms_properties_get_validity_type (<em class="parameter"><code><a class="link"
 <a name="mm-sms-properties-get-validity-type.returns"></a><h4>Returns</h4>
 <p> a <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMSmsValidityType"><span class="type">MMSmsValidityType</span></a>.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -646,6 +669,7 @@ mm_sms_properties_get_validity_relative
 <a name="mm-sms-properties-get-validity-relative.returns"></a><h4>Returns</h4>
 <p> the validity time or 0 if unknown.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -677,6 +701,7 @@ mm_sms_properties_set_validity_relative
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -703,6 +728,7 @@ mm_sms_properties_get_class (<em class="parameter"><code><a class="link" href="M
 <a name="mm-sms-properties-get-class.returns"></a><h4>Returns</h4>
 <p> the message class, or -1 for invalid/unset class.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -733,6 +759,7 @@ mm_sms_properties_set_class (<em class="parameter"><code><a class="link" href="M
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -760,6 +787,7 @@ mm_sms_properties_get_delivery_report_request
 <a name="mm-sms-properties-get-delivery-report-request.returns"></a><h4>Returns</h4>
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if delivery report is requested, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> otherwise.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -791,6 +819,7 @@ mm_sms_properties_set_delivery_report_request
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -817,6 +846,7 @@ mm_sms_properties_get_teleservice_id (<em class="parameter"><code><a class="link
 <a name="mm-sms-properties-get-teleservice-id.returns"></a><h4>Returns</h4>
 <p> the CDMA teleservice ID.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -847,6 +877,7 @@ mm_sms_properties_set_teleservice_id (<em class="parameter"><code><a class="link
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -874,6 +905,7 @@ mm_sms_properties_get_service_category
 <a name="mm-sms-properties-get-service-category.returns"></a><h4>Returns</h4>
 <p> the CDMA service category.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -905,6 +937,7 @@ mm_sms_properties_set_service_category
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 </div>
 <div class="refsect1">
@@ -918,6 +951,6 @@ accessed using the provided API.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

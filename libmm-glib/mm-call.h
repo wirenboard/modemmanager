@@ -76,6 +76,8 @@ MMCallStateReason  mm_call_get_state_reason (MMCall *self);
 
 MMCallDirection    mm_call_get_direction    (MMCall *self);
 
+gboolean           mm_call_get_multiparty   (MMCall *self);
+
 const gchar       *mm_call_get_audio_port   (MMCall *self);
 gchar             *mm_call_dup_audio_port   (MMCall *self);
 
@@ -110,6 +112,46 @@ gboolean           mm_call_accept_sync      (MMCall *self,
                                              GCancellable *cancellable,
                                              GError **error);
 
+void               mm_call_deflect          (MMCall *self,
+                                             const gchar *number,
+                                             GCancellable *cancellable,
+                                             GAsyncReadyCallback callback,
+                                             gpointer user_data);
+
+gboolean           mm_call_deflect_finish   (MMCall *self,
+                                             GAsyncResult *res,
+                                             GError **error);
+
+gboolean           mm_call_deflect_sync     (MMCall *self,
+                                             const gchar *number,
+                                             GCancellable *cancellable,
+                                             GError **error);
+
+void               mm_call_join_multiparty        (MMCall              *self,
+                                                   GCancellable        *cancellable,
+                                                   GAsyncReadyCallback  callback,
+                                                   gpointer             user_data);
+
+gboolean           mm_call_join_multiparty_finish (MMCall        *self,
+                                                   GAsyncResult  *res,
+                                                   GError       **error);
+
+gboolean           mm_call_join_multiparty_sync   (MMCall        *self,
+                                                   GCancellable  *cancellable,
+                                                   GError       **error);
+
+void               mm_call_leave_multiparty        (MMCall              *self,
+                                                    GCancellable        *cancellable,
+                                                    GAsyncReadyCallback  callback,
+                                                    gpointer             user_data);
+
+gboolean           mm_call_leave_multiparty_finish (MMCall        *self,
+                                                    GAsyncResult  *res,
+                                                    GError       **error);
+
+gboolean           mm_call_leave_multiparty_sync   (MMCall        *self,
+                                                    GCancellable  *cancellable,
+                                                    GError       **error);
 
 void               mm_call_hangup           (MMCall *self,
                                              GCancellable *cancellable,

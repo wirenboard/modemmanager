@@ -31,7 +31,7 @@
  * or mm_modem_firmware_list_sync().
  */
 
-G_DEFINE_TYPE (MMFirmwareProperties, mm_firmware_properties, G_TYPE_OBJECT);
+G_DEFINE_TYPE (MMFirmwareProperties, mm_firmware_properties, G_TYPE_OBJECT)
 
 #define PROPERTY_UNIQUE_ID            "unique-id"
 #define PROPERTY_IMAGE_TYPE           "image-type"
@@ -64,7 +64,10 @@ static MMFirmwareProperties *firmware_properties_new_empty (void);
  *
  * Gets the unique ID of the firmare image.
  *
- * Returns: (transfer none): The ID of the image. Do not free the returned value, it is owned by @self.
+ * Returns: (transfer none): The ID of the image. Do not free the returned
+ * value, it is owned by @self.
+ *
+ * Since: 1.0
  */
 const gchar *
 mm_firmware_properties_get_unique_id (MMFirmwareProperties *self)
@@ -83,6 +86,8 @@ mm_firmware_properties_get_unique_id (MMFirmwareProperties *self)
  * Gets the type of the firmare image.
  *
  * Returns: A #MMFirmwareImageType specifying The type of the image.
+ *
+ * Since: 1.0
  */
 MMFirmwareImageType
 mm_firmware_properties_get_image_type (MMFirmwareProperties *self)
@@ -100,7 +105,10 @@ mm_firmware_properties_get_image_type (MMFirmwareProperties *self)
  *
  * Gets the PRI version of a firmware image of type %MM_FIRMWARE_IMAGE_TYPE_GOBI.
  *
- * Returns: The PRI version, or %NULL if unknown. Do not free the returned value, it is owned by @self.
+ * Returns: The PRI version, or %NULL if unknown. Do not free the returned value,
+ * it is owned by @self.
+ *
+ * Since: 1.0
  */
 const gchar *
 mm_firmware_properties_get_gobi_pri_version (MMFirmwareProperties *self)
@@ -111,6 +119,9 @@ mm_firmware_properties_get_gobi_pri_version (MMFirmwareProperties *self)
     return self->priv->gobi_pri_version;
 }
 
+/*
+ * mm_firmware_properties_set_gobi_pri_version: (skip)
+ */
 void
 mm_firmware_properties_set_gobi_pri_version (MMFirmwareProperties *self,
                                              const gchar *version)
@@ -130,7 +141,10 @@ mm_firmware_properties_set_gobi_pri_version (MMFirmwareProperties *self,
  *
  * Gets the PRI info of a firmware image of type %MM_FIRMWARE_IMAGE_TYPE_GOBI.
  *
- * Returns: The PRI info, or %NULL if unknown. Do not free the returned value, it is owned by @self.
+ * Returns: The PRI info, or %NULL if unknown. Do not free the returned value,
+ * it is owned by @self.
+ *
+ * Since: 1.0
  */
 const gchar *
 mm_firmware_properties_get_gobi_pri_info (MMFirmwareProperties *self)
@@ -141,6 +155,9 @@ mm_firmware_properties_get_gobi_pri_info (MMFirmwareProperties *self)
     return self->priv->gobi_pri_info;
 }
 
+/*
+ * mm_firmware_properties_set_gobi_pri_info: (skip)
+ */
 void
 mm_firmware_properties_set_gobi_pri_info (MMFirmwareProperties *self,
                                           const gchar *info)
@@ -156,9 +173,13 @@ mm_firmware_properties_set_gobi_pri_info (MMFirmwareProperties *self,
  * mm_firmware_properties_get_gobi_boot_version:
  * @self: a #MMFirmwareProperties.
  *
- * Gets the boot version of a firmware image of type %MM_FIRMWARE_IMAGE_TYPE_GOBI.
+ * Gets the boot version of a firmware image of type
+ * %MM_FIRMWARE_IMAGE_TYPE_GOBI.
  *
- * Returns: The boot version, or %NULL if unknown. Do not free the returned value, it is owned by @self.
+ * Returns: The boot version, or %NULL if unknown. Do not free the returned
+ * value, it is owned by @self.
+ *
+ * Since: 1.0
  */
 const gchar *
 mm_firmware_properties_get_gobi_boot_version (MMFirmwareProperties *self)
@@ -169,6 +190,9 @@ mm_firmware_properties_get_gobi_boot_version (MMFirmwareProperties *self)
     return self->priv->gobi_boot_version;
 }
 
+/*
+ * mm_firmware_properties_set_gobi_boot_version: (skip)
+ */
 void
 mm_firmware_properties_set_gobi_boot_version (MMFirmwareProperties *self,
                                               const gchar *version)
@@ -186,9 +210,13 @@ mm_firmware_properties_set_gobi_boot_version (MMFirmwareProperties *self,
  * mm_firmware_properties_get_gobi_pri_unique_id:
  * @self: a #MMFirmwareProperties.
  *
- * Gets the PRI unique ID of a firmware image of type %MM_FIRMWARE_IMAGE_TYPE_GOBI.
+ * Gets the PRI unique ID of a firmware image of type
+ * %MM_FIRMWARE_IMAGE_TYPE_GOBI.
  *
- * Returns: The PRI unique ID, or %NULL if unknown. Do not free the returned value, it is owned by @self.
+ * Returns: The PRI unique ID, or %NULL if unknown. Do not free the returned
+ * value, it is owned by @self.
+ *
+ * Since: 1.0
  */
 const gchar *
 mm_firmware_properties_get_gobi_pri_unique_id (MMFirmwareProperties *self)
@@ -199,6 +227,9 @@ mm_firmware_properties_get_gobi_pri_unique_id (MMFirmwareProperties *self)
     return self->priv->gobi_pri_unique_id;
 }
 
+/*
+ * mm_firmware_properties_set_gobi_pri_unique_id: (skip)
+ */
 void
 mm_firmware_properties_set_gobi_pri_unique_id (MMFirmwareProperties *self,
                                                const gchar *unique_id)
@@ -216,9 +247,13 @@ mm_firmware_properties_set_gobi_pri_unique_id (MMFirmwareProperties *self,
  * mm_firmware_properties_get_gobi_modem_unique_id:
  * @self: a #MMFirmwareProperties.
  *
- * Gets the MODEM unique ID of a firmware image of type %MM_FIRMWARE_IMAGE_TYPE_GOBI.
+ * Gets the MODEM unique ID of a firmware image of type
+ * %MM_FIRMWARE_IMAGE_TYPE_GOBI.
  *
- * Returns: The PRI unique ID, or %NULL if unknown. Do not free the returned value, it is owned by @self.
+ * Returns: The PRI unique ID, or %NULL if unknown. Do not free the returned
+ * value, it is owned by @self.
+ *
+ * Since: 1.0
  */
 const gchar *
 mm_firmware_properties_get_gobi_modem_unique_id (MMFirmwareProperties *self)
@@ -229,6 +264,9 @@ mm_firmware_properties_get_gobi_modem_unique_id (MMFirmwareProperties *self)
     return self->priv->gobi_modem_unique_id;
 }
 
+/*
+ * mm_firmware_properties_set_gobi_modem_unique_id: (skip)
+ */
 void
 mm_firmware_properties_set_gobi_modem_unique_id (MMFirmwareProperties *self,
                                                  const gchar *unique_id)
@@ -242,13 +280,8 @@ mm_firmware_properties_set_gobi_modem_unique_id (MMFirmwareProperties *self,
 
 /*****************************************************************************/
 
-/**
- * mm_firmware_properties_get_dictionary:
- * @self: A #MMFirmwareProperties.
- *
- * Gets a variant dictionary with the contents of @self.
- *
- * Returns: (transfer full): A dictionary with the image properties. The returned value should be freed with g_variant_unref().
+/*
+ * mm_firmware_properties_get_dictionary: (skip)
  */
 GVariant *
 mm_firmware_properties_get_dictionary (MMFirmwareProperties *self)
@@ -346,15 +379,8 @@ consume_variant (MMFirmwareProperties *self,
     return TRUE;
 }
 
-/**
- * mm_firmware_properties_new_from_dictionary:
- * @dictionary: A variant dictionary with the properties of the image.
- * @error: Return location for error or %NULL.
- *
- * Creates a new #MMFirmwareProperties object with the properties exposed in
- * the dictionary.
- *
- * Returns: (transfer full): A #MMFirmwareProperties or %NULL if @error is set. The returned value should be freed with g_object_unref().
+/*
+ * mm_firmware_properties_new_from_dictionary: (skip)
  */
 MMFirmwareProperties *
 mm_firmware_properties_new_from_dictionary (GVariant *dictionary,
@@ -420,14 +446,8 @@ mm_firmware_properties_new_from_dictionary (GVariant *dictionary,
 
 /*****************************************************************************/
 
-/**
- * mm_firmware_properties_new:
- * @image_type: A #MMFirmwareImageType specifying the type of the image.
- * @unique_id: The unique ID of the image.
- *
- * Creates a new #MMFirmwareProperties object with the properties specified.
- *
- * Returns: (transfer full): A #MMFirmwareProperties or %NULL if @error is set. The returned value should be freed with g_object_unref().
+/*
+ * mm_firmware_properties_new: (skip)
  */
 MMFirmwareProperties *
 mm_firmware_properties_new (MMFirmwareImageType image_type,

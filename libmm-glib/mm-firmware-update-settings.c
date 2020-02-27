@@ -52,6 +52,8 @@ struct _MMFirmwareUpdateSettingsPrivate {
  * Gets the methods to use during the firmware update operation.
  *
  * Returns: a bitmask of #MMModemFirmwareUpdateMethod values.
+ *
+ * Since: 1.10
  */
 MMModemFirmwareUpdateMethod
 mm_firmware_update_settings_get_method (MMFirmwareUpdateSettings *self)
@@ -67,10 +69,13 @@ mm_firmware_update_settings_get_method (MMFirmwareUpdateSettings *self)
  * mm_firmware_update_settings_get_device_ids:
  * @self: a #MMFirmwareUpdateSettings.
  *
- * Gets the list of device ids used to identify the device during a firmware update
- * operation.
+ * Gets the list of device ids used to identify the device during a firmware
+ * update operation.
  *
- * Returns: (transfer none): The list of device ids, or %NULL if unknown. Do not free the returned value, it is owned by @self.
+ * Returns: (transfer none): The list of device ids, or %NULL if unknown. Do not
+ * free the returned value, it is owned by @self.
+ *
+ * Since: 1.10
  */
 const gchar **
 mm_firmware_update_settings_get_device_ids (MMFirmwareUpdateSettings *self)
@@ -80,6 +85,9 @@ mm_firmware_update_settings_get_device_ids (MMFirmwareUpdateSettings *self)
     return (const gchar **) self->priv->device_ids;
 }
 
+/**
+ * mm_firmware_update_settings_set_device_ids: (skip)
+ */
 void
 mm_firmware_update_settings_set_device_ids (MMFirmwareUpdateSettings  *self,
                                             const gchar              **device_ids)
@@ -99,7 +107,10 @@ mm_firmware_update_settings_set_device_ids (MMFirmwareUpdateSettings  *self,
  * Gets firmware version string.
  *
  *
- * Returns: The version string, or %NULL if unknown. Do not free the returned value, it is owned by @self.
+ * Returns: The version string, or %NULL if unknown. Do not free the returned
+ * value, it is owned by @self.
+ *
+ * Since: 1.10
  */
 const gchar *
 mm_firmware_update_settings_get_version (MMFirmwareUpdateSettings *self)
@@ -109,6 +120,9 @@ mm_firmware_update_settings_get_version (MMFirmwareUpdateSettings *self)
     return self->priv->version;
 }
 
+/**
+ * mm_firmware_update_settings_set_version: (skip)
+ */
 void
 mm_firmware_update_settings_set_version (MMFirmwareUpdateSettings *self,
                                          const gchar              *version)
@@ -128,9 +142,13 @@ mm_firmware_update_settings_set_version (MMFirmwareUpdateSettings *self,
  * Gets the AT command that should be sent to the module to trigger a reset
  * into fastboot mode.
  *
- * Only applicable if the update method includes %MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT.
+ * Only applicable if the update method includes
+ * %MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT.
  *
- * Returns: The AT command string, or %NULL if unknown. Do not free the returned value, it is owned by @self.
+ * Returns: The AT command string, or %NULL if unknown. Do not free the returned
+ * value, it is owned by @self.
+ *
+ * Since: 1.10
  */
 const gchar *
 mm_firmware_update_settings_get_fastboot_at (MMFirmwareUpdateSettings *self)
@@ -141,6 +159,9 @@ mm_firmware_update_settings_get_fastboot_at (MMFirmwareUpdateSettings *self)
     return self->priv->fastboot_at;
 }
 
+/**
+ * mm_firmware_update_settings_set_fastboot_at: (skip)
+ */
 void
 mm_firmware_update_settings_set_fastboot_at (MMFirmwareUpdateSettings *self,
                                              const gchar              *fastboot_at)
@@ -155,12 +176,7 @@ mm_firmware_update_settings_set_fastboot_at (MMFirmwareUpdateSettings *self,
 /*****************************************************************************/
 
 /**
- * mm_firmware_update_settings_get_variant:
- * @self: A #MMFirmwareUpdateSettings.
- *
- * Gets a variant with the contents of @self.
- *
- * Returns: (transfer full): A variant with the update settings. The returned value should be freed with g_variant_unref().
+ * mm_firmware_update_settings_get_variant: (skip)
  */
 GVariant *
 mm_firmware_update_settings_get_variant (MMFirmwareUpdateSettings *self)
@@ -174,7 +190,7 @@ mm_firmware_update_settings_get_variant (MMFirmwareUpdateSettings *self)
     g_variant_builder_add (&builder, "u", method);
 
     g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
-    {
+    if (self) {
         g_variant_builder_add (&builder,
                                "{sv}",
                                PROPERTY_DEVICE_IDS,
@@ -223,13 +239,7 @@ consume_variant (MMFirmwareUpdateSettings  *self,
 }
 
 /**
- * mm_firmware_update_settings_new_from_variant:
- * @variant: A variant with the update settings.
- * @error: Return location for error or %NULL.
- *
- * Creates a new #MMFirmwareUpdateSettings from the input @variant.
- *
- * Returns: (transfer full): A #MMFirmwareUpdateSettings or %NULL if @error is set. The returned value should be freed with g_object_unref().
+ * mm_firmware_update_settings_new_from_variant: (skip)
  */
 MMFirmwareUpdateSettings *
 mm_firmware_update_settings_new_from_variant (GVariant  *variant,
@@ -295,6 +305,9 @@ mm_firmware_update_settings_new_from_variant (GVariant  *variant,
 
 /*****************************************************************************/
 
+/**
+ * mm_firmware_update_settings_new: (skip)
+ */
 MMFirmwareUpdateSettings *
 mm_firmware_update_settings_new (MMModemFirmwareUpdateMethod method)
 {

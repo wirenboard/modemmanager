@@ -66,6 +66,7 @@ static SectionInfo section_infos[] = {
     [MMC_S_MODEM_LOCATION_CDMABS]   = { "CDMA BS"            },
     [MMC_S_MODEM_FIRMWARE]          = { "Firmware"           },
     [MMC_S_MODEM_FIRMWARE_FASTBOOT] = { "Fastboot settings"  },
+    [MMC_S_MODEM_VOICE]             = { "Voice"              },
     [MMC_S_BEARER_GENERAL]          = { "General"            },
     [MMC_S_BEARER_STATUS]           = { "Status"             },
     [MMC_S_BEARER_PROPERTIES]       = { "Properties"         },
@@ -196,6 +197,7 @@ static FieldInfo field_infos[] = {
     [MMC_F_FIRMWARE_DEVICE_IDS]               = { "modem.firmware.device-ids",                       "device ids",               MMC_S_MODEM_FIRMWARE,          },
     [MMC_F_FIRMWARE_VERSION]                  = { "modem.firmware.version",                          "version",                  MMC_S_MODEM_FIRMWARE,          },
     [MMC_F_FIRMWARE_FASTBOOT_AT]              = { "modem.firmware.fastboot.at",                      "at command",               MMC_S_MODEM_FIRMWARE_FASTBOOT, },
+    [MMC_F_VOICE_EMERGENCY_ONLY]              = { "modem.voice.emergency-only",                      "emergency only",           MMC_S_MODEM_VOICE,             },
     [MMC_F_BEARER_GENERAL_DBUS_PATH]          = { "bearer.dbus-path",                                "dbus path",                MMC_S_BEARER_GENERAL,          },
     [MMC_F_BEARER_GENERAL_TYPE]               = { "bearer.type",                                     "type",                     MMC_S_BEARER_GENERAL,          },
     [MMC_F_BEARER_STATUS_CONNECTED]           = { "bearer.status.connected",                         "connected",                MMC_S_BEARER_STATUS,           },
@@ -227,6 +229,7 @@ static FieldInfo field_infos[] = {
     [MMC_F_CALL_GENERAL_DBUS_PATH]            = { "call.dbus-path",                                  "dbus path",                MMC_S_CALL_GENERAL,            },
     [MMC_F_CALL_PROPERTIES_NUMBER]            = { "call.properties.number",                          "number",                   MMC_S_CALL_PROPERTIES,         },
     [MMC_F_CALL_PROPERTIES_DIRECTION]         = { "call.properties.direction",                       "direction",                MMC_S_CALL_PROPERTIES,         },
+    [MMC_F_CALL_PROPERTIES_MULTIPARTY]        = { "call.properties.multiparty",                      "multiparty",               MMC_S_CALL_PROPERTIES,         },
     [MMC_F_CALL_PROPERTIES_STATE]             = { "call.properties.state",                           "state",                    MMC_S_CALL_PROPERTIES,         },
     [MMC_F_CALL_PROPERTIES_STATE_REASON]      = { "call.properties.state-reason",                    "state reason",             MMC_S_CALL_PROPERTIES,         },
     [MMC_F_CALL_PROPERTIES_AUDIO_PORT]        = { "call.properties.audio-port",                      "audio port",               MMC_S_CALL_PROPERTIES,         },
@@ -255,6 +258,7 @@ static FieldInfo field_infos[] = {
     [MMC_F_SIM_PROPERTIES_ICCID]              = { "sim.properties.iccid",                            "iccid",                    MMC_S_SIM_PROPERTIES,          },
     [MMC_F_SIM_PROPERTIES_OPERATOR_ID]        = { "sim.properties.operator-code",                    "operator id",              MMC_S_SIM_PROPERTIES,          },
     [MMC_F_SIM_PROPERTIES_OPERATOR_NAME]      = { "sim.properties.operator-name",                    "operator name",            MMC_S_SIM_PROPERTIES,          },
+    [MMC_F_SIM_PROPERTIES_EMERGENCY_NUMBERS]  = { "sim.properties.emergency-numbers",                "emergency numbers",        MMC_S_SIM_PROPERTIES,          },
     [MMC_F_MODEM_LIST_DBUS_PATH]              = { "modem-list",                                      "modems",                   MMC_S_UNKNOWN,                 },
     [MMC_F_SMS_LIST_DBUS_PATH]                = { "modem.messaging.sms",                             "sms messages",             MMC_S_UNKNOWN,                 },
     [MMC_F_CALL_LIST_DBUS_PATH]               = { "modem.voice.call",                                "calls",                    MMC_S_UNKNOWN,                 },
@@ -621,21 +625,21 @@ build_firmware_info_human (GPtrArray            *array,
                            gboolean              selected)
 {
     g_ptr_array_add (array, g_strdup (mm_firmware_properties_get_unique_id (props)));
-    g_ptr_array_add (array, g_strdup_printf ("\tcurrent: %s", selected ? "yes" : "no"));
+    g_ptr_array_add (array, g_strdup_printf ("    current: %s", selected ? "yes" : "no"));
 
     if (mm_firmware_properties_get_image_type (props) == MM_FIRMWARE_IMAGE_TYPE_GOBI) {
         const gchar *aux;
 
         if ((aux = mm_firmware_properties_get_gobi_pri_version (props)) != NULL)
-            g_ptr_array_add (array, g_strdup_printf ("\tgobi pri version: %s", aux));
+            g_ptr_array_add (array, g_strdup_printf ("    gobi pri version: %s", aux));
         if ((aux = mm_firmware_properties_get_gobi_pri_info (props)) != NULL)
-            g_ptr_array_add (array, g_strdup_printf ("\tgobi pri info: %s", aux));
+            g_ptr_array_add (array, g_strdup_printf ("    gobi pri info: %s", aux));
         if ((aux = mm_firmware_properties_get_gobi_boot_version (props)) != NULL)
-            g_ptr_array_add (array, g_strdup_printf ("\tgobi boot version: %s", aux));
+            g_ptr_array_add (array, g_strdup_printf ("    gobi boot version: %s", aux));
         if ((aux = mm_firmware_properties_get_gobi_pri_unique_id (props)) != NULL)
-            g_ptr_array_add (array, g_strdup_printf ("\tgobi pri unique id: %s", aux));
+            g_ptr_array_add (array, g_strdup_printf ("    gobi pri unique id: %s", aux));
         if ((aux = mm_firmware_properties_get_gobi_modem_unique_id (props)) != NULL)
-            g_ptr_array_add (array, g_strdup_printf ("\tgobi modem unique id: %s", aux));
+            g_ptr_array_add (array, g_strdup_printf ("    gobi modem unique id: %s", aux));
     }
 }
 
@@ -820,7 +824,7 @@ dump_output_human (void)
 
         /* Ignore items without a value set */
         if ((single && (!single->value || !single->value[0])) ||
-            (multiple && !multiple->values))
+            (multiple && (!multiple->values || !g_strv_length (multiple->values))))
             continue;
 
         /* Section change? */
@@ -960,8 +964,10 @@ dump_output_keyvalue (void)
 
             n = multiple->values ? g_strv_length (multiple->values) : 0;
             if (n > 0) {
+                guint aux = n;
+
                 key_length += ((strlen (KEY_ARRAY_VALUE_SUFFIX)) + 3);
-                if (n > 10)
+                while ((aux /= 10) > 0)
                     key_length++;
             }
         }
@@ -1071,6 +1077,129 @@ dump_output_list_keyvalue (MmcF field)
 }
 
 /******************************************************************************/
+/* JSON-friendly output */
+
+static gint
+list_sort_by_keys (const OutputItem *item_a,
+                   const OutputItem *item_b)
+{
+    return g_strcmp0 (field_infos[item_a->field].key, field_infos[item_b->field].key);
+}
+
+static void
+dump_output_json (void)
+{
+    GList   *l;
+    MmcF     current_field = MMC_F_UNKNOWN;
+    gchar  **current_path = NULL;
+    guint    cur_dlen = 0;
+
+    output_items = g_list_sort (output_items, (GCompareFunc) list_sort_by_keys);
+
+    g_print("{");
+    for (l = output_items; l; l = g_list_next (l)) {
+        OutputItem *item_l = (OutputItem *)(l->data);
+
+        if (current_field != item_l->field) {
+            guint   new_dlen;
+            guint   iter = 0;
+            gchar **new_path;
+
+            new_path = g_strsplit (field_infos[item_l->field].key, ".", -1);
+            new_dlen = g_strv_length (new_path) - 1;
+            if (current_path) {
+                guint min_dlen;
+
+                min_dlen = MIN (cur_dlen, new_dlen);
+                while (iter < min_dlen && g_strcmp0 (current_path[iter], new_path[iter]) == 0)
+                    iter++;
+
+                g_strfreev (current_path);
+
+                if (iter < min_dlen || new_dlen < cur_dlen)
+                    for (min_dlen = iter; min_dlen < cur_dlen; min_dlen++)
+                        g_print ("}");
+
+                g_print (",");
+            }
+
+            while (iter < new_dlen)
+                g_print ("\"%s\":{", new_path[iter++]);
+
+            cur_dlen = new_dlen;
+            current_path = new_path;
+            current_field = item_l->field;
+        } else {
+            g_print (",");
+        }
+
+        if (item_l->type == VALUE_TYPE_SINGLE) {
+            OutputItemSingle *single = (OutputItemSingle *) item_l;
+            gchar            *escaped = NULL;
+
+            if (single->value)
+                escaped = g_strescape (single->value, "\v");
+
+            g_print ("\"%s\":\"%s\"", current_path[cur_dlen], escaped ? escaped : "--");
+            g_free (escaped);
+        } else if (item_l->type == VALUE_TYPE_MULTIPLE) {
+            OutputItemMultiple *multiple = (OutputItemMultiple *) item_l;
+            guint               i, n;
+
+            n = multiple->values ? g_strv_length (multiple->values) : 0;
+
+            g_print ("\"%s\":[", current_path[cur_dlen]);
+            for (i = 0; i < n; i++) {
+                gchar *escaped;
+
+                escaped = g_strescape (multiple->values[i], "\v");
+                g_print("\"%s\"", escaped);
+                if (i < n - 1)
+                    g_print(",");
+                g_free (escaped);
+            }
+            g_print("]");
+        } else
+            g_assert_not_reached ();
+    }
+
+    while (cur_dlen--)
+        g_print ("}");
+    g_print("}\n");
+
+    g_strfreev (current_path);
+}
+
+static void
+dump_output_list_json (MmcF field)
+{
+    GList *l;
+
+    g_assert (field != MMC_F_UNKNOWN);
+
+    g_print("{\"%s\":[", field_infos[field].key);
+
+    for (l = output_items; l; l = g_list_next (l)) {
+        OutputItem         *item_l;
+        OutputItemListitem *listitem;
+
+        item_l = (OutputItem *)(l->data);
+        g_assert (item_l->type == VALUE_TYPE_LISTITEM);
+        listitem = (OutputItemListitem *)item_l;
+        g_assert (listitem->value);
+
+        /* All items must be of same type */
+        g_assert_cmpint (item_l->field, ==, field);
+        g_print("\"%s\"", listitem->value);
+
+        if (g_list_next (l))
+            g_print(",");
+    }
+
+    g_print("]}\n");
+}
+
+/******************************************************************************/
 /* Dump output */
 
 void
@@ -1084,6 +1213,9 @@ mmcli_output_dump (void)
         break;
     case MMC_OUTPUT_TYPE_KEYVALUE:
         dump_output_keyvalue ();
+        break;
+    case MMC_OUTPUT_TYPE_JSON:
+        dump_output_json ();
         break;
     }
 
@@ -1104,6 +1236,9 @@ mmcli_output_list_dump (MmcF field)
         break;
     case MMC_OUTPUT_TYPE_KEYVALUE:
         dump_output_list_keyvalue (field);
+        break;
+    case MMC_OUTPUT_TYPE_JSON:
+        dump_output_list_json (field);
         break;
     }
 

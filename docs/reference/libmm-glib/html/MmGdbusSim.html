@@ -8,7 +8,7 @@
 <link rel="up" href="pt02.html" title="Part II. Low level API">
 <link rel="prev" href="MmGdbusBearerSkeleton.html" title="MmGdbusBearerSkeleton">
 <link rel="next" href="MmGdbusSimProxy.html" title="MmGdbusSimProxy">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -40,8 +40,8 @@
 <a name="MmGdbusSim.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -102,6 +102,21 @@
 </td>
 <td class="function_name">
 <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-operator-name" title="mm_gdbus_sim_dup_operator_name ()">mm_gdbus_sim_dup_operator_name</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *const *
+</td>
+<td class="function_name">
+<a class="link" href="MmGdbusSim.html#mm-gdbus-sim-get-emergency-numbers" title="mm_gdbus_sim_get_emergency_numbers ()">mm_gdbus_sim_get_emergency_numbers</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> **
+</td>
+<td class="function_name">
+<a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-emergency-numbers" title="mm_gdbus_sim_dup_emergency_numbers ()">mm_gdbus_sim_dup_emergency_numbers</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -213,6 +228,11 @@
 </colgroup>
 <tbody>
 <tr>
+<td class="property_type"><a href="https://developer.gnome.org/glib/unstable/glib-String-Utility-Functions.html#GStrv"><span class="type">GStrv</span></a></td>
+<td class="property_name"><a class="link" href="MmGdbusSim.html#MmGdbusSim--emergency-numbers" title="The “emergency-numbers” property">emergency-numbers</a></td>
+<td class="property_flags">Read / Write</td>
+</tr>
+<tr>
 <td class="property_type">
 <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</td>
 <td class="property_name"><a class="link" href="MmGdbusSim.html#MmGdbusSim--imsi" title="The “imsi” property">imsi</a></td>
@@ -243,9 +263,9 @@
 <a name="MmGdbusSim.signals"></a><h2>Signals</h2>
 <div class="informaltable"><table class="informaltable" border="0">
 <colgroup>
-<col width="150px" class="signals_return">
-<col width="300px" class="signals_name">
-<col width="200px" class="signals_flags">
+<col width="150px" class="signal_proto_type">
+<col width="300px" class="signal_proto_name">
+<col width="200px" class="signal_proto_flags">
 </colgroup>
 <tbody>
 <tr>
@@ -275,8 +295,8 @@
 <a name="MmGdbusSim.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -550,6 +570,66 @@ mm_gdbus_sim_dup_operator_name (<em class="parameter"><code><a class="link" href
 <div class="refsect3">
 <a name="mm-gdbus-sim-dup-operator-name.returns"></a><h4>Returns</h4>
 <p>The property value or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if the property is not set. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
+<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>][<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-gdbus-sim-get-emergency-numbers"></a><h3>mm_gdbus_sim_get_emergency_numbers ()</h3>
+<pre class="programlisting">const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *const *
+mm_gdbus_sim_get_emergency_numbers (<em class="parameter"><code><a class="link" href="MmGdbusSim.html" title="MmGdbusSim"><span class="type">MmGdbusSim</span></a> *object</code></em>);</pre>
+<p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers">"EmergencyNumbers"</a> D-Bus property.</p>
+<p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
+<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-emergency-numbers" title="mm_gdbus_sim_dup_emergency_numbers ()"><code class="function">mm_gdbus_sim_dup_emergency_numbers()</code></a> if on another thread.</div>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
+<div class="refsect3">
+<a name="mm-gdbus-sim-get-emergency-numbers.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>object</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MmGdbusSim.html" title="MmGdbusSim"><span class="type">MmGdbusSim</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-gdbus-sim-get-emergency-numbers.returns"></a><h4>Returns</h4>
+<p>The property value or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if the property is not set. Do not free the returned value, it belongs to <em class="parameter"><code>object</code></em>
+. </p>
+<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-gdbus-sim-dup-emergency-numbers"></a><h3>mm_gdbus_sim_dup_emergency_numbers ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> **
+mm_gdbus_sim_dup_emergency_numbers (<em class="parameter"><code><a class="link" href="MmGdbusSim.html" title="MmGdbusSim"><span class="type">MmGdbusSim</span></a> *object</code></em>);</pre>
+<p>Gets a copy of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers">"EmergencyNumbers"</a> D-Bus property.</p>
+<p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
+<div class="refsect3">
+<a name="mm-gdbus-sim-dup-emergency-numbers.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>object</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MmGdbusSim.html" title="MmGdbusSim"><span class="type">MmGdbusSim</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-gdbus-sim-dup-emergency-numbers.returns"></a><h4>Returns</h4>
+<p>The property value or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if the property is not set. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-String-Utility-Functions.html#g-strfreev"><code class="function">g_strfreev()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>][<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
 </div>
 </div>
@@ -1187,7 +1267,6 @@ is set. </p>
 <pre class="programlisting">struct MmGdbusSimIface {
   GTypeInterface parent_iface;
 
-
   gboolean (*handle_change_pin) (
     MmGdbusSim *object,
     GDBusMethodInvocation *invocation,
@@ -1210,6 +1289,8 @@ is set. </p>
     GDBusMethodInvocation *invocation,
     const gchar *arg_puk,
     const gchar *arg_pin);
+
+  const gchar *const * (*get_emergency_numbers) (MmGdbusSim *object);
 
   const gchar * (*get_imsi) (MmGdbusSim *object);
 
@@ -1256,6 +1337,11 @@ is set. </p>
 <td class="struct_member_annotations"> </td>
 </tr>
 <tr>
+<td class="struct_member_name"><p><em class="structfield"><code><a name="MmGdbusSimIface.get-emergency-numbers"></a>get_emergency_numbers</code></em> ()</p></td>
+<td class="struct_member_description"><p>Getter for the <a class="link" href="MmGdbusSim.html#MmGdbusSim--emergency-numbers" title="The “emergency-numbers” property"><span class="type">“emergency-numbers”</span></a> property.</p></td>
+<td class="struct_member_annotations"> </td>
+</tr>
+<tr>
 <td class="struct_member_name"><p><em class="structfield"><code><a name="MmGdbusSimIface.get-imsi"></a>get_imsi</code></em> ()</p></td>
 <td class="struct_member_description"><p>Getter for the <a class="link" href="MmGdbusSim.html#MmGdbusSim--imsi" title="The “imsi” property"><span class="type">“imsi”</span></a> property.</p></td>
 <td class="struct_member_annotations"> </td>
@@ -1283,10 +1369,20 @@ is set. </p>
 <div class="refsect1">
 <a name="MmGdbusSim.property-details"></a><h2>Property Details</h2>
 <div class="refsect2">
+<a name="MmGdbusSim--emergency-numbers"></a><h3>The <code class="literal">“emergency-numbers”</code> property</h3>
+<pre class="programlisting">  “emergency-numbers”        <a href="https://developer.gnome.org/glib/unstable/glib-String-Utility-Functions.html#GStrv"><span class="type">GStrv</span></a></pre>
+<p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers">"EmergencyNumbers"</a>.</p>
+<p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSim</p>
+<p>Flags: Read / Write</p>
+</div>
+<hr>
+<div class="refsect2">
 <a name="MmGdbusSim--imsi"></a><h3>The <code class="literal">“imsi”</code> property</h3>
 <pre class="programlisting">  “imsi”                     <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.Imsi">"Imsi"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSim</p>
 <p>Flags: Read / Write</p>
 <p>Default value: NULL</p>
 </div>
@@ -1296,6 +1392,7 @@ is set. </p>
 <pre class="programlisting">  “operator-identifier”      <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorIdentifier">"OperatorIdentifier"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSim</p>
 <p>Flags: Read / Write</p>
 <p>Default value: NULL</p>
 </div>
@@ -1305,6 +1402,7 @@ is set. </p>
 <pre class="programlisting">  “operator-name”            <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorName">"OperatorName"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSim</p>
 <p>Flags: Read / Write</p>
 <p>Default value: NULL</p>
 </div>
@@ -1314,6 +1412,7 @@ is set. </p>
 <pre class="programlisting">  “sim-identifier”           <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.SimIdentifier">"SimIdentifier"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSim</p>
 <p>Flags: Read / Write</p>
 <p>Default value: NULL</p>
 </div>
@@ -1536,6 +1635,6 @@ user_function (<a class="link" href="MmGdbusSim.html" title="MmGdbusSim"><span c
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

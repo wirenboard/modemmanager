@@ -32,7 +32,7 @@
  * This object is retrieved with mm_modem_3gpp_get_pco().
  */
 
-G_DEFINE_TYPE (MMPco, mm_pco, G_TYPE_OBJECT);
+G_DEFINE_TYPE (MMPco, mm_pco, G_TYPE_OBJECT)
 
 struct _MMPcoPrivate {
     /* Session ID, signature 'u' */
@@ -77,6 +77,8 @@ _g_variant_get_bytes (GVariant *variant)
  * Gets the session ID associated with the PCO.
  *
  * Returns: the session ID.
+ *
+ * Since: 1.10
  */
 guint32
 mm_pco_get_session_id (MMPco *self)
@@ -86,6 +88,9 @@ mm_pco_get_session_id (MMPco *self)
     return self->priv->session_id;
 }
 
+/**
+ * mm_pco_set_session_id: (skip)
+ */
 void
 mm_pco_set_session_id (MMPco *self,
                        guint32 session_id)
@@ -104,7 +109,10 @@ mm_pco_set_session_id (MMPco *self,
  * Gets the complete flag that indicates whether the PCO data contains the
  * complete PCO structure received from the network.
  *
- * Returns: %TRUE if the PCO data contains the complete PCO structure, %FALSE otherwise.
+ * Returns: %TRUE if the PCO data contains the complete PCO structure, %FALSE
+ * otherwise.
+ *
+ * Since: 1.10
  */
 gboolean
 mm_pco_is_complete (MMPco *self)
@@ -114,6 +122,9 @@ mm_pco_is_complete (MMPco *self)
     return self->priv->is_complete;
 }
 
+/**
+ * mm_pco_set_complete: (skip)
+ */
 void
 mm_pco_set_complete (MMPco *self,
                      gboolean is_complete)
@@ -133,6 +144,8 @@ mm_pco_set_complete (MMPco *self,
  * Gets the PCO data in raw bytes.
  *
  * Returns: (transfer none): the PCO data, or %NULL if it doesn't contain any.
+ *
+ * Since: 1.10
  */
 const guint8 *
 mm_pco_get_data (MMPco *self,
@@ -143,6 +156,9 @@ mm_pco_get_data (MMPco *self,
     return g_bytes_get_data (self->priv->data, data_size);
 }
 
+/**
+ * mm_pco_set_data: (skip)
+ */
 void
 mm_pco_set_data (MMPco *self,
                  const guint8 *data,
@@ -159,14 +175,7 @@ mm_pco_set_data (MMPco *self,
 /*****************************************************************************/
 
 /**
- * mm_pco_from_variant:
- * @variant: A variant with the PCO information.
- * @error: Return location for error or %NULL.
- *
- * Creates a new #MMPco object with the values exposed in
- * the variant.
- *
- * Returns: (transfer full): A #MMPco or %NULL if @error is set. The returned value should be freed with g_object_unref().
+ * mm_pco_from_variant: (skip)
  */
 MMPco *
 mm_pco_from_variant (GVariant *variant,
@@ -204,12 +213,7 @@ mm_pco_from_variant (GVariant *variant,
 /*****************************************************************************/
 
 /**
- * mm_pco_to_variant:
- * @self: a #MMPco.
- *
- * Gets a GVariant representation with signature "(ubay)" of @self.
- *
- * Returns: (transfer full): A #GVariant representation of the #MMPco object. The returned value should be freed with g_variant_unref().
+ * mm_pco_to_variant: (skip)
  */
 GVariant *
 mm_pco_to_variant (MMPco *self)
@@ -242,11 +246,18 @@ mm_pco_to_variant (MMPco *self)
 
 /*****************************************************************************/
 
+#ifndef MM_DISABLE_DEPRECATED
+
 /**
  * mm_pco_list_free:
- * @pco_list: (transfer full)(element-type ModemManager.Pco): a #GList of #MMPco.
+ * @pco_list: (transfer full)(element-type ModemManager.Pco): a #GList of
+ *  #MMPco.
  *
  * Frees all of the memory used by a #GList of #MMPco.
+ *
+ * Since: 1.10
+ * Deprecated: 1.12.0: Use g_list_free_full() using g_object_unref() as
+ * #GDestroyNotify function instead.
  */
 void
 mm_pco_list_free (GList *pco_list)
@@ -254,16 +265,10 @@ mm_pco_list_free (GList *pco_list)
     g_list_free_full (pco_list, g_object_unref);
 }
 
+#endif /* MM_DISABLE_DEPRECATED */
+
 /**
- * mm_pco_list_add:
- * @pco_list: (transfer full)(element-type ModemManager.Pco): a #GList of #MMPco.
- * @pco: (transfer none): a #MMPco to add to the given list.
- *
- * Adds a #MMPco to a given PCO list. #MMPco objects stored in the order of
- * their session ID. An existing PCO with the same session ID is overwritten
- * with the new value.
- *
- * Returns: (transfer full)(element-type ModemManager.Pco): the new start of an updated or newly allocated #GList of #MMPco.
+ * mm_pco_list_add: (skip)
  */
 GList *
 mm_pco_list_add (GList *pco_list,
@@ -295,6 +300,9 @@ mm_pco_list_add (GList *pco_list,
 
 /*****************************************************************************/
 
+/**
+ * mm_pco_new: (skip)
+ */
 MMPco *
 mm_pco_new (void)
 {

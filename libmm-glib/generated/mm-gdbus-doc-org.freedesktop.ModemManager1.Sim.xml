@@ -24,6 +24,7 @@
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.Imsi">Imsi</link>                readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorIdentifier">OperatorIdentifier</link>  readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorName">OperatorName</link>        readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers">EmergencyNumbers</link>    readable   as
 </synopsis>
   </refsect1>
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Sim">
@@ -147,6 +148,17 @@ OperatorIdentifier  readable   s
 OperatorName  readable   s
 </programlisting>
 <para>        The name of the network operator, as given by the SIM card, if known.
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers">
+  <title>The "EmergencyNumbers" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers"><primary sortas="Sim:EmergencyNumbers">org.freedesktop.ModemManager1.Sim:EmergencyNumbers</primary></indexterm>
+<programlisting>
+EmergencyNumbers  readable   as
+</programlisting>
+<para>        List of emergency numbers programmed in the SIM card.
+</para><para>        These numbers should be treated as numbers for emergency calls in
+        addition to 112 and 911.
 </para>
 </refsect2>
 </refsect1>

@@ -34,6 +34,7 @@
 #include "mm-iface-modem-3gpp.h"
 #include "mm-iface-modem-messaging.h"
 #include "mm-iface-modem-location.h"
+#include "mm-iface-modem-voice.h"
 #include "mm-base-modem-at.h"
 #include "mm-broadband-modem-cinterion.h"
 #include "mm-modem-helpers-cinterion.h"
@@ -44,17 +45,23 @@ static void iface_modem_init           (MMIfaceModem          *iface);
 static void iface_modem_3gpp_init      (MMIfaceModem3gpp      *iface);
 static void iface_modem_messaging_init (MMIfaceModemMessaging *iface);
 static void iface_modem_location_init  (MMIfaceModemLocation  *iface);
+static void iface_modem_voice_init     (MMIfaceModemVoice     *iface);
+static void iface_modem_time_init      (MMIfaceModemTime      *iface);
 static void shared_cinterion_init      (MMSharedCinterion     *iface);
 
 static MMIfaceModem         *iface_modem_parent;
 static MMIfaceModem3gpp     *iface_modem_3gpp_parent;
 static MMIfaceModemLocation *iface_modem_location_parent;
+static MMIfaceModemVoice    *iface_modem_voice_parent;
+static MMIfaceModemTime     *iface_modem_time_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemCinterion, mm_broadband_modem_cinterion, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_3GPP, iface_modem_3gpp_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_MESSAGING, iface_modem_messaging_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_LOCATION, iface_modem_location_init)
+                        G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_VOICE, iface_modem_voice_init)
+                        G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_TIME, iface_modem_time_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_CINTERION, shared_cinterion_init))
 
 typedef enum {
@@ -80,8 +87,8 @@ struct _MMBroadbandModemCinterionPrivate {
     GArray *cnmi_supported_ds;
     GArray *cnmi_supported_bfr;
 
-    /* +CIEV 'psinfo' indications */
-    GRegex *ciev_psinfo_regex;
+    /* +CIEV indications as configured via AT^SIND */
+    GRegex *ciev_regex;
 
     /* Flags for feature support checks */
     FeatureSupport swwan_support;
@@ -287,6 +294,30 @@ messaging_check_support (MMIfaceModemMessaging *self,
                               TRUE,
                               (GAsyncReadyCallback)cnmi_format_check_ready,
                               task);
+}
+
+/*****************************************************************************/
+/* Reset (Modem interface) */
+
+static gboolean
+modem_reset_finish (MMIfaceModem  *self,
+                    GAsyncResult  *res,
+                    GError       **error)
+{
+    return !!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, error);
+}
+
+static void
+modem_reset (MMIfaceModem        *self,
+             GAsyncReadyCallback  callback,
+             gpointer             user_data)
+{
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "+CFUN=1,1",
+                              3,
+                              FALSE,
+                              callback,
+                              user_data);
 }
 
 /*****************************************************************************/
@@ -814,20 +845,25 @@ modem_3gpp_enable_unsolicited_events (MMIfaceModem3gpp    *self,
 /* Setup/Cleanup unsolicited events (3GPP interface) */
 
 static void
-sind_psinfo_received (MMPortSerialAt            *port,
-                      GMatchInfo                *match_info,
-                      MMBroadbandModemCinterion *self)
+sind_ciev_received (MMPortSerialAt            *port,
+                    GMatchInfo                *match_info,
+                    MMBroadbandModemCinterion *self)
 {
-    guint val;
+    guint  val = 0;
+    gchar *indicator;
 
-    if (!mm_get_uint_from_match_info (match_info, 1, &val)) {
-        mm_dbg ("Failed to convert psinfo value");
-        return;
+    indicator = mm_get_string_unquoted_from_match_info (match_info, 1);
+    if (!mm_get_uint_from_match_info (match_info, 2, &val))
+        mm_dbg ("couldn't parse indicator '%s' value", indicator);
+    else {
+        mm_dbg ("received indicator '%s' update: %u", indicator, val);
+        if (g_strcmp0 (indicator, "psinfo") == 0) {
+            mm_iface_modem_update_access_technologies (MM_IFACE_MODEM (self),
+                                                       mm_cinterion_get_access_technology_from_sind_psinfo (val),
+                                                       MM_IFACE_MODEM_3GPP_ALL_ACCESS_TECHNOLOGIES_MASK);
+        }
     }
-
-    mm_iface_modem_update_access_technologies (MM_IFACE_MODEM (self),
-                                               mm_cinterion_get_access_technology_from_sind_psinfo (val),
-                                               MM_IFACE_MODEM_3GPP_ALL_ACCESS_TECHNOLOGIES_MASK);
+    g_free (indicator);
 }
 
 static void
@@ -847,8 +883,8 @@ set_unsolicited_events_handlers (MMBroadbandModemCinterion *self,
 
         mm_port_serial_at_add_unsolicited_msg_handler (
             ports[i],
-            self->priv->ciev_psinfo_regex,
-            enable ? (MMPortSerialAtUnsolicitedMsgFn)sind_psinfo_received : NULL,
+            self->priv->ciev_regex,
+            enable ? (MMPortSerialAtUnsolicitedMsgFn)sind_ciev_received : NULL,
             enable ? self : NULL,
             NULL);
     }
@@ -1819,8 +1855,8 @@ mm_broadband_modem_cinterion_init (MMBroadbandModemCinterion *self)
     self->priv->sind_psinfo_support = FEATURE_SUPPORT_UNKNOWN;
     self->priv->swwan_support       = FEATURE_SUPPORT_UNKNOWN;
 
-    self->priv->ciev_psinfo_regex = g_regex_new ("\\r\\n\\+CIEV: psinfo,(\\d+)\\r\\n",
-                                                 G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->ciev_regex = g_regex_new ("\\r\\n\\+CIEV:\\s*([a-z]+),(\\d+)\\r\\n",
+                                          G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
 }
 
 static void
@@ -1842,7 +1878,7 @@ finalize (GObject *object)
     if (self->priv->cnmi_supported_bfr)
         g_array_unref (self->priv->cnmi_supported_bfr);
 
-    g_regex_unref (self->priv->ciev_psinfo_regex);
+    g_regex_unref (self->priv->ciev_regex);
 
     G_OBJECT_CLASS (mm_broadband_modem_cinterion_parent_class)->finalize (object);
 }
@@ -1872,6 +1908,8 @@ iface_modem_init (MMIfaceModem *iface)
     iface->modem_after_sim_unlock_finish = after_sim_unlock_finish;
     iface->load_unlock_retries = load_unlock_retries;
     iface->load_unlock_retries_finish = load_unlock_retries_finish;
+    iface->reset = modem_reset;
+    iface->reset_finish = modem_reset_finish;
     iface->modem_power_down = modem_power_down;
     iface->modem_power_down_finish = modem_power_down_finish;
     iface->modem_power_off = modem_power_off;
@@ -1926,9 +1964,53 @@ peek_parent_location_interface (MMSharedCinterion *self)
 }
 
 static void
+iface_modem_voice_init (MMIfaceModemVoice *iface)
+{
+    iface_modem_voice_parent = g_type_interface_peek_parent (iface);
+
+    iface->create_call = mm_shared_cinterion_create_call;
+
+    iface->check_support                     = mm_shared_cinterion_voice_check_support;
+    iface->check_support_finish              = mm_shared_cinterion_voice_check_support_finish;
+    iface->enable_unsolicited_events         = mm_shared_cinterion_voice_enable_unsolicited_events;
+    iface->enable_unsolicited_events_finish  = mm_shared_cinterion_voice_enable_unsolicited_events_finish;
+    iface->disable_unsolicited_events        = mm_shared_cinterion_voice_disable_unsolicited_events;
+    iface->disable_unsolicited_events_finish = mm_shared_cinterion_voice_disable_unsolicited_events_finish;
+    iface->setup_unsolicited_events          = mm_shared_cinterion_voice_setup_unsolicited_events;
+    iface->setup_unsolicited_events_finish   = mm_shared_cinterion_voice_setup_unsolicited_events_finish;
+    iface->cleanup_unsolicited_events        = mm_shared_cinterion_voice_cleanup_unsolicited_events;
+    iface->cleanup_unsolicited_events_finish = mm_shared_cinterion_voice_cleanup_unsolicited_events_finish;
+}
+
+static MMIfaceModemVoice *
+peek_parent_voice_interface (MMSharedCinterion *self)
+{
+    return iface_modem_voice_parent;
+}
+
+static void
+iface_modem_time_init (MMIfaceModemTime *iface)
+{
+    iface_modem_time_parent = g_type_interface_peek_parent (iface);
+
+    iface->setup_unsolicited_events          = mm_shared_cinterion_time_setup_unsolicited_events;
+    iface->setup_unsolicited_events_finish   = mm_shared_cinterion_time_setup_unsolicited_events_finish;
+    iface->cleanup_unsolicited_events        = mm_shared_cinterion_time_cleanup_unsolicited_events;
+    iface->cleanup_unsolicited_events_finish = mm_shared_cinterion_time_cleanup_unsolicited_events_finish;
+}
+
+static MMIfaceModemTime *
+peek_parent_time_interface (MMSharedCinterion *self)
+{
+    return iface_modem_time_parent;
+}
+
+static void
 shared_cinterion_init (MMSharedCinterion *iface)
 {
     iface->peek_parent_location_interface = peek_parent_location_interface;
+    iface->peek_parent_voice_interface    = peek_parent_voice_interface;
+    iface->peek_parent_time_interface     = peek_parent_time_interface;
 }
 
 static void

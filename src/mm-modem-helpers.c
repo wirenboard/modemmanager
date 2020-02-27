@@ -544,14 +544,159 @@ mm_voice_cring_regex_get (void)
 GRegex *
 mm_voice_clip_regex_get (void)
 {
-    /* Example:
-     * <CR><LF>+CLIP: "+393351391306",145,,,,0<CR><LF>
-     *                 \_ Number      \_ Type \_ Validity
+    /*
+     * Only first 2 fields are mandatory:
+     *   +CLIP: <number>,<type>[,<subaddr>,<satype>[,[<alpha>][,<CLI_validity>]]]
+     *
+     * Example:
+     *   <CR><LF>+CLIP: "+393351391306",145,,,,0<CR><LF>
+     *                   \_ Number      \_ Type
      */
-    return g_regex_new ("\\r\\n\\+CLIP:\\s*(\\S+),\\s*(\\d+),\\s*,\\s*,\\s*,\\s*(\\d+)\\r\\n",
+    return g_regex_new ("\\r\\n\\+CLIP:\\s*([^,\\s]*)\\s*,\\s*(\\d+)\\s*,?(.*)\\r\\n",
                         G_REGEX_RAW | G_REGEX_OPTIMIZE,
                         0,
                         NULL);
+}
+
+GRegex *
+mm_voice_ccwa_regex_get (void)
+{
+    /*
+     * Only first 3 fields are mandatory, but we read only the first one
+     *   +CCWA: <number>,<type>,<class>,[<alpha>][,<CLI_validity>[,<subaddr>,<satype>[,<priority>]]]
+     *
+     * Example:
+     *   <CR><LF>+CCWA: "+393351391306",145,1
+     *                   \_ Number      \_ Type
+     */
+    return g_regex_new ("\\r\\n\\+CCWA:\\s*([^,\\s]*)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,?(.*)\\r\\n",
+                        G_REGEX_RAW | G_REGEX_OPTIMIZE,
+                        0,
+                        NULL);
+}
+
+static void
+call_info_free (MMCallInfo *info)
+{
+    if (!info)
+        return;
+    g_free (info->number);
+    g_slice_free (MMCallInfo, info);
+}
+
+gboolean
+mm_3gpp_parse_clcc_response (const gchar  *str,
+                             GList       **out_list,
+                             GError      **error)
+{
+    GRegex     *r;
+    GList      *list = NULL;
+    GError     *inner_error = NULL;
+    GMatchInfo *match_info  = NULL;
+
+    static const MMCallDirection call_direction[] = {
+        [0] = MM_CALL_DIRECTION_OUTGOING,
+        [1] = MM_CALL_DIRECTION_INCOMING,
+    };
+
+    static const MMCallState call_state[] = {
+        [0] = MM_CALL_STATE_ACTIVE,
+        [1] = MM_CALL_STATE_HELD,
+        [2] = MM_CALL_STATE_DIALING,     /* Dialing  (MOC) */
+        [3] = MM_CALL_STATE_RINGING_OUT, /* Alerting (MOC) */
+        [4] = MM_CALL_STATE_RINGING_IN,  /* Incoming (MTC) */
+        [5] = MM_CALL_STATE_WAITING,     /* Waiting  (MTC) */
+
+        /* This next call state number isn't defined by 3GPP, because it
+         * doesn't make sense to have it when reporting a full list of calls
+         * via +CLCC (i.e. the absence of the call would mean it's terminated).
+         * But, this value may be used by other implementations (e.g. SimTech
+         * plugin) to report that a call is terminated even when the full
+         * call list isn't being reported. So, let's support it in the generic,
+         * parser, even if not strictly standard. */
+        [6] = MM_CALL_STATE_TERMINATED,
+    };
+
+    g_assert (out_list);
+
+    /*
+     *         1     2     3      4      5       6        7       8        9           10
+     *  +CLCC: <idx>,<dir>,<stat>,<mode>,<mpty>[,<number>,<type>[,<alpha>[,<priority>[,<CLI validity>]]]]
+     *  +CLCC: <idx>,<dir>,<stat>,<mode>,<mpty>[,<number>,<type>[,<alpha>[,<priority>[,<CLI validity>]]]]
+     *  ...
+     */
+
+    r = g_regex_new ("\\+CLCC:\\s*(\\d+),\\s*(\\d+),\\s*(\\d+),\\s*(\\d+),\\s*(\\d+)" /* mandatory fields */
+                     "(?:,\\s*([^,]*),\\s*(\\d+)"                                     /* number and type */
+                     "(?:,\\s*([^,]*)"                                                /* alpha */
+                     "(?:,\\s*(\\d*)"                                                 /* priority */
+                     "(?:,\\s*(\\d*)"                                                 /* CLI validity */
+                     ")?)?)?)?$",
+                     G_REGEX_RAW | G_REGEX_MULTILINE | G_REGEX_NEWLINE_CRLF,
+                     G_REGEX_MATCH_NEWLINE_CRLF,
+                     NULL);
+    g_assert (r != NULL);
+
+    g_regex_match_full (r, str, strlen (str), 0, 0, &match_info, &inner_error);
+    if (inner_error)
+        goto out;
+
+    /* Parse the results */
+    while (g_match_info_matches (match_info)) {
+        MMCallInfo *call_info;
+        guint       aux;
+
+        call_info = g_slice_new0 (MMCallInfo);
+
+        if (!mm_get_uint_from_match_info (match_info, 1, &call_info->index)) {
+            mm_warn ("couldn't parse call index from +CLCC line");
+            goto next;
+        }
+
+        if (!mm_get_uint_from_match_info (match_info, 2, &aux) ||
+            (aux >= G_N_ELEMENTS (call_direction))) {
+            mm_warn ("couldn't parse call direction from +CLCC line");
+            goto next;
+        }
+        call_info->direction = call_direction[aux];
+
+        if (!mm_get_uint_from_match_info (match_info, 3, &aux) ||
+            (aux >= G_N_ELEMENTS (call_state))) {
+            mm_warn ("couldn't parse call state from +CLCC line");
+            goto next;
+        }
+        call_info->state = call_state[aux];
+
+        if (g_match_info_get_match_count (match_info) >= 7)
+            call_info->number = mm_get_string_unquoted_from_match_info (match_info, 6);
+
+        list = g_list_append (list, call_info);
+        call_info = NULL;
+
+    next:
+        call_info_free (call_info);
+        g_match_info_next (match_info, NULL);
+    }
+
+out:
+    g_clear_pointer (&match_info, g_match_info_free);
+    g_regex_unref (r);
+
+    if (inner_error) {
+        mm_3gpp_call_info_list_free (list);
+        g_propagate_error (error, inner_error);
+        return FALSE;
+    }
+
+    *out_list = list;
+
+    return TRUE;
+}
+
+void
+mm_3gpp_call_info_list_free (GList *call_info_list)
+{
+    g_list_free_full (call_info_list, (GDestroyNotify) call_info_free);
 }
 
 /*************************************************************************/
@@ -1404,6 +1549,131 @@ mm_3gpp_cmp_apn_name (const gchar *requested,
 
 /*************************************************************************/
 
+static guint
+find_max_allowed_cid (GList            *context_format_list,
+                      MMBearerIpFamily  ip_family)
+{
+    GList *l;
+
+    for (l = context_format_list; l; l = g_list_next (l)) {
+        MM3gppPdpContextFormat *format = l->data;
+
+        /* Found exact PDP type? */
+        if (format->pdp_type == ip_family)
+            return format->max_cid;
+    }
+    return 0;
+}
+
+guint
+mm_3gpp_select_best_cid (const gchar      *apn,
+                         MMBearerIpFamily  ip_family,
+                         GList            *context_list,
+                         GList            *context_format_list,
+                         gboolean         *cid_reused,
+                         gboolean         *cid_overwritten)
+{
+    GList *l;
+    guint  prev_cid = 0;
+    guint  exact_cid = 0;
+    guint  unused_cid = 0;
+    guint  max_cid = 0;
+    guint  max_allowed_cid = 0;
+    guint  blank_cid = 0;
+    gchar *ip_family_str;
+
+    ip_family_str = mm_bearer_ip_family_build_string_from_mask (ip_family);
+    mm_dbg ("Looking for best CID matching APN '%s' and PDP type '%s'...",
+            apn, ip_family_str);
+    g_free (ip_family_str);
+
+    /* Look for the exact PDP context we want */
+    for (l = context_list; l; l = g_list_next (l)) {
+        MM3gppPdpContext *pdp = l->data;
+
+        /* Match PDP type */
+        if (pdp->pdp_type == ip_family) {
+            /* Try to match exact APN and PDP type */
+            if (mm_3gpp_cmp_apn_name (apn, pdp->apn)) {
+                exact_cid = pdp->cid;
+                break;
+            }
+
+            /* Same PDP type but with no APN set? we may use that one if no exact match found */
+            if ((!pdp->apn || !pdp->apn[0]) && !blank_cid)
+                blank_cid = pdp->cid;
+        }
+
+        /* If an unused CID was not found yet and the previous CID is not (CID - 1),
+         * this means that (previous CID + 1) is an unused CID that can be used.
+         * This logic will allow us using unused CIDs that are available in the gaps
+         * between already defined contexts.
+         */
+        if (!unused_cid && prev_cid && ((prev_cid + 1) < pdp->cid))
+            unused_cid = prev_cid + 1;
+
+        /* Update previous CID value to the current CID for use in the next loop,
+         * unless an unused CID was already found.
+         */
+        if (!unused_cid)
+            prev_cid = pdp->cid;
+
+        /* Update max CID if we found a bigger one */
+        if (max_cid < pdp->cid)
+            max_cid = pdp->cid;
+    }
+
+    /* Always prefer an exact match */
+    if (exact_cid) {
+        mm_dbg ("Found exact context at CID %u", exact_cid);
+        *cid_reused = TRUE;
+        *cid_overwritten = FALSE;
+        return exact_cid;
+    }
+
+    /* Try to use an unused CID detected in between the already defined contexts */
+    if (unused_cid) {
+        mm_dbg ("Found unused context at CID %u", unused_cid);
+        *cid_reused = FALSE;
+        *cid_overwritten = FALSE;
+        return unused_cid;
+    }
+
+    /* If the max existing CID found during CGDCONT? is below the max allowed
+     * CID, then we can use the next available CID because it's an unused one. */
+    max_allowed_cid = find_max_allowed_cid (context_format_list, ip_family);
+    if (max_cid && (max_cid < max_allowed_cid)) {
+        mm_dbg ("Found unused context at CID %u (<%u)", max_cid + 1, max_allowed_cid);
+        *cid_reused = FALSE;
+        *cid_overwritten = FALSE;
+        return (max_cid + 1);
+    }
+
+    /* Rewrite a context defined with no APN, if any */
+    if (blank_cid) {
+        mm_dbg ("Rewriting context with empty APN at CID %u", blank_cid);
+        *cid_reused = FALSE;
+        *cid_overwritten = TRUE;
+        return blank_cid;
+    }
+
+    /* Rewrite the last existing one found */
+    if (max_cid) {
+        mm_dbg ("Rewriting last context detected at CID %u", max_cid);
+        *cid_reused = FALSE;
+        *cid_overwritten = TRUE;
+        return max_cid;
+    }
+
+    /* Otherwise, just fallback to CID=1 */
+    mm_dbg ("Falling back to CID 1");
+    *cid_reused = FALSE;
+    *cid_overwritten = TRUE;
+    return 1;
+}
+
+/*************************************************************************/
+
 static void
 mm_3gpp_pdp_context_format_free (MM3gppPdpContextFormat *format)
 {
@@ -1876,7 +2146,7 @@ mm_3gpp_parse_cmgf_test_response (const gchar *reply,
     if (!r)
         return FALSE;
 
-    if (!g_regex_match_full (r, reply, strlen (reply), 0, 0, &match_info, NULL)) {
+    if (!g_regex_match (r, reply, 0, &match_info)) {
         g_set_error (error,
                      MM_CORE_ERROR,
                      MM_CORE_ERROR_FAILED,
@@ -1927,7 +2197,7 @@ mm_3gpp_parse_cmgr_read_response (const gchar *reply,
     r = g_regex_new ("\\+CMGR:\\s*(\\d+)\\s*,([^,]*),\\s*(\\d+)\\s*([^\\r\\n]*)", 0, 0, NULL);
     g_assert (r);
 
-    if (!g_regex_match_full (r, reply, strlen (reply), 0, 0, &match_info, NULL)) {
+    if (!g_regex_match (r, reply, 0, &match_info)) {
         g_set_error (error,
                      MM_CORE_ERROR,
                      MM_CORE_ERROR_FAILED,
@@ -2009,7 +2279,7 @@ mm_3gpp_parse_crsm_response (const gchar *reply,
                      G_REGEX_RAW, 0, NULL);
     g_assert (r != NULL);
 
-    if (g_regex_match_full (r, reply, strlen (reply), 0, 0, &match_info, NULL) &&
+    if (g_regex_match (r, reply, 0, &match_info) &&
         mm_get_uint_from_match_info (match_info, 1, sw1) &&
         mm_get_uint_from_match_info (match_info, 2, sw2))
         *hex = mm_get_string_unquoted_from_match_info (match_info, 3);
@@ -2588,6 +2858,85 @@ mm_3gpp_parse_cemode_query_response (const gchar                    *response,
 }
 
 /*************************************************************************/
+/* CCWA service query response parser */
+
+gboolean
+mm_3gpp_parse_ccwa_service_query_response (const gchar  *response,
+                                           gboolean     *status,
+                                           GError      **error)
+{
+    GRegex     *r;
+    GError     *inner_error = NULL;
+    GMatchInfo *match_info  = NULL;
+    gint        class_1_status = -1;
+
+    /*
+     * AT+CCWA=<n>[,<mode>]
+     *   +CCWA: <status>,<class1>
+     *   [+CCWA: <status>,<class2>
+     *   [...]]
+     *   OK
+     *
+     * If <classX> is 255 it applies to ALL classes.
+     *
+     * We're only interested in class 1 (voice)
+     */
+    r = g_regex_new ("\\+CCWA:\\s*(\\d+),\\s*(\\d+)$",
+                     G_REGEX_RAW | G_REGEX_MULTILINE | G_REGEX_NEWLINE_CRLF,
+                     G_REGEX_MATCH_NEWLINE_CRLF,
+                     NULL);
+    g_assert (r != NULL);
+
+    g_regex_match_full (r, response, strlen (response), 0, 0, &match_info, &inner_error);
+    if (inner_error)
+        goto out;
+
+    /* Parse the results */
+    while (g_match_info_matches (match_info)) {
+        guint st;
+        guint class;
+
+        if (!mm_get_uint_from_match_info (match_info, 2, &class))
+            mm_warn ("couldn't parse class from +CCWA line");
+        else if (class == 1 || class == 255) {
+            if (!mm_get_uint_from_match_info (match_info, 1, &st))
+                mm_warn ("couldn't parse status from +CCWA line");
+            else {
+                class_1_status = st;
+                break;
+            }
+        }
+        g_match_info_next (match_info, NULL);
+    }
+
+out:
+    g_clear_pointer (&match_info, g_match_info_free);
+    g_regex_unref (r);
+
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return FALSE;
+    }
+
+    if (class_1_status < 0) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
+                     "call waiting status for voice class missing");
+        return FALSE;
+    }
+
+    if (class_1_status != 0 && class_1_status != 1) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                     "call waiting status for voice class invalid: %d", class_1_status);
+        return FALSE;
+    }
+
+    if (status)
+        *status = (gboolean) class_1_status;
+
+    return TRUE;
+}
+
+/*************************************************************************/
 
 static MMSmsStorage
 storage_from_str (const gchar *str)
@@ -2648,7 +2997,7 @@ mm_3gpp_parse_cpms_test_response (const gchar *reply,
         array = g_array_new (FALSE, FALSE, sizeof (MMSmsStorage));
 
         /* Got a range group to match */
-        if (g_regex_match_full (r, split[i], strlen (split[i]), 0, 0, &match_info, NULL)) {
+        if (g_regex_match (r, split[i], 0, &match_info)) {
             while (g_match_info_matches (match_info)) {
                 gchar *str;
 
@@ -2812,7 +3161,7 @@ mm_3gpp_parse_cscs_test_response (const gchar *reply,
     if (!r)
         return FALSE;
 
-    if (g_regex_match_full (r, p, strlen (p), 0, 0, &match_info, NULL)) {
+    if (g_regex_match (r, p, 0, &match_info)) {
         while (g_match_info_matches (match_info)) {
             str = g_match_info_fetch (match_info, 1);
             charsets |= mm_modem_charset_from_string (str);
@@ -2854,7 +3203,7 @@ mm_3gpp_parse_clck_test_response (const gchar *reply,
     g_assert (r != NULL);
 
     *out_facilities = MM_MODEM_3GPP_FACILITY_NONE;
-    if (g_regex_match_full (r, reply, strlen (reply), 0, 0, &match_info, NULL)) {
+    if (g_regex_match (r, reply, 0, &match_info)) {
         while (g_match_info_matches (match_info)) {
             gchar *str;
 
@@ -3171,7 +3520,7 @@ mm_3gpp_parse_cind_test_response (const gchar *reply,
 
     hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) cind_response_free);
 
-    if (g_regex_match_full (r, reply, strlen (reply), 0, 0, &match_info, NULL)) {
+    if (g_regex_match (r, reply, 0, &match_info)) {
         while (g_match_info_matches (match_info)) {
             MM3gppCindResponse *resp;
             gchar *desc, *tmp;
@@ -3228,7 +3577,7 @@ mm_3gpp_parse_cind_read_response (const gchar *reply,
     r = g_regex_new ("(\\d+)[^0-9]+", G_REGEX_UNGREEDY, 0, NULL);
     g_assert (r != NULL);
 
-    if (!g_regex_match_full (r, reply, strlen (reply), 0, 0, &match_info, NULL)) {
+    if (!g_regex_match (r, reply, 0, &match_info)) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
                      "Could not parse the +CIND response '%s': didn't match",
                      reply);
@@ -4001,6 +4350,70 @@ mm_3gpp_parse_operator_id (const gchar *operator_id,
     }
 
     return TRUE;
+}
+
+/*************************************************************************/
+/* Emergency numbers (+CRSM output) */
+
+GStrv
+mm_3gpp_parse_emergency_numbers (const char *raw, GError **error)
+{
+    gsize      rawlen;
+    guint8    *bin;
+    gsize      binlen;
+    gsize      max_items;
+    GPtrArray *out;
+    guint      i;
+
+    /* The emergency call code is of a variable length with a maximum length of
+     * 6 digits. Each emergency call code is coded on three bytes, with each
+     * digit within the code being coded on four bits. If a code of less that 6
+     * digits is chosen, then the unused nibbles shall be set to 'F'. */
+
+    rawlen = strlen (raw);
+    if (!rawlen) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                     "empty emergency numbers list");
+        return NULL;
+    }
+
+    if (rawlen % 6 != 0) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                     "invalid raw emergency numbers list length: %" G_GSIZE_FORMAT, rawlen);
+        return NULL;
+    }
+
+    bin = (guint8 *) mm_utils_hexstr2bin (raw, &binlen);
+    if (!bin) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                     "invalid raw emergency numbers list contents: %s", raw);
+        return NULL;
+    }
+
+    max_items = binlen / 3;
+    out = g_ptr_array_sized_new (max_items + 1);
+
+    for (i = 0; i < max_items; i++) {
+        gchar *number;
+
+        number = mm_bcd_to_string (&bin[i*3], 3);
+        if (number && number[0])
+            g_ptr_array_add (out, number);
+        else
+            g_free (number);
+    }
+
+    g_free (bin);
+
+    if (!out->len) {
+        g_ptr_array_unref (out);
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                     "uninitialized emergency numbers list");
+        return NULL;
+    }
+
+    g_ptr_array_add (out, NULL);
+    return (GStrv) g_ptr_array_free (out, FALSE);
 }
 
 /*************************************************************************/

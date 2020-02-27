@@ -39,7 +39,14 @@ G_DEFINE_TYPE (MMBearerQmi, mm_bearer_qmi, MM_TYPE_BASE_BEARER)
 #define GLOBAL_PACKET_DATA_HANDLE 0xFFFFFFFF
 
 struct _MMBearerQmiPrivate {
+    /* Cancellables available during a connection attempt */
+    GCancellable *ongoing_connect_user_cancellable;
+    GCancellable *ongoing_connect_network_cancellable;
+
     /* State kept while connected */
+    MMPortQmi *qmi;
+    gboolean   explicit_qmi_open;
+
     QmiClientWds *client_ipv4;
     guint packet_service_status_ipv4_indication_id;
     guint event_report_ipv4_indication_id;
@@ -414,6 +421,7 @@ typedef struct {
     ConnectStep step;
     MMPort *data;
     MMPortQmi *qmi;
+    gboolean explicit_qmi_open;
     gchar *user;
     gchar *password;
     gchar *apn;
@@ -472,6 +480,9 @@ connect_context_free (ConnectContext *ctx)
                                                  &ctx->event_report_ipv6_indication_id);
     }
 
+    if (ctx->explicit_qmi_open)
+        mm_port_qmi_close (ctx->qmi);
+
     g_clear_error (&ctx->error_ipv4);
     g_clear_error (&ctx->error_ipv6);
     g_clear_object (&ctx->client_ipv4);
@@ -490,6 +501,27 @@ connect_finish (MMBaseBearer *self,
                 GError **error)
 {
     return g_task_propagate_pointer (G_TASK (res), error);
+}
+
+static void
+complete_connect (GTask                 *task,
+                  MMBearerConnectResult *result,
+                  GError                *error)
+{
+    ConnectContext *ctx;
+
+    g_assert (result || error);
+    g_assert (!(result && error));
+
+    ctx = g_task_get_task_data (task);
+    g_clear_object (&ctx->self->priv->ongoing_connect_user_cancellable);
+    g_clear_object (&ctx->self->priv->ongoing_connect_network_cancellable);
+
+    if (error)
+        g_task_return_error (task, error);
+    else
+        g_task_return_pointer (task, result, (GDestroyNotify)mm_bearer_connect_result_unref);
+    g_object_unref (task);
 }
 
 static void connect_context_step (GTask *task);
@@ -828,12 +860,31 @@ get_current_settings_ready (QmiClientWds *client,
     g_assert (ctx->running_ipv4 || ctx->running_ipv6);
 
     output = qmi_client_wds_get_current_settings_finish (client, res, &error);
-    if (!output ||
-        !qmi_message_wds_get_current_settings_output_get_result (output, &error)) {
-        /* Never treat this as a hard connection error; not all devices support
-         * "WDS Get Current Settings" */
-        mm_info ("error: couldn't get current settings: %s", error->message);
+    if (!output || !qmi_message_wds_get_current_settings_output_get_result (output, &error)) {
+        MMBearerIpConfig *config;
+
+        /* When we're using static IP address, the current settings are mandatory */
+        if (ctx->ip_method == MM_BEARER_IP_METHOD_STATIC) {
+            mm_warn ("Failed to retrieve mandatory IP settings: %s", error->message);
+            if (output)
+                qmi_message_wds_get_current_settings_output_unref (output);
+            complete_connect (task, NULL, error);
+            return;
+        }
+
+        /* Otherwise, just go on as we're asking for DHCP */
+        mm_dbg ("Couldn't get current settings: %s", error->message);
         g_error_free (error);
+
+        config = mm_bearer_ip_config_new ();
+        mm_bearer_ip_config_set_method (config, ctx->ip_method);
+
+        if (ctx->running_ipv4)
+            ctx->ipv4_config = config;
+        else if (ctx->running_ipv6)
+            ctx->ipv6_config = config;
+        else
+            g_assert_not_reached ();
     } else {
         QmiWdsIpFamily ip_family = QMI_WDS_IP_FAMILY_UNSPECIFIED;
         guint32 mtu = 0;
@@ -1162,8 +1213,10 @@ qmi_port_allocate_client_ready (MMPortQmi *qmi,
     g_assert (!(ctx->running_ipv4 && ctx->running_ipv6));
 
     if (!mm_port_qmi_allocate_client_finish (qmi, res, &error)) {
-        g_task_return_error (task, error);
-        g_object_unref (task);
+        g_prefix_error (&error, "Couldn't allocate %s client in QMI port %s: ",
+                        ctx->running_ipv4 ? "IPv4" : "IPv6",
+                        mm_port_get_device (MM_PORT (qmi)));
+        complete_connect (task, NULL, error);
         return;
     }
 
@@ -1190,13 +1243,16 @@ qmi_port_open_ready (MMPortQmi *qmi,
     GError *error = NULL;
 
     if (!mm_port_qmi_open_finish (qmi, res, &error)) {
-        g_task_return_error (task, error);
-        g_object_unref (task);
+        g_prefix_error (&error, "Couldn't open QMI port %s: ",
+                        mm_port_get_device (MM_PORT (qmi)));
+        complete_connect (task, NULL, error);
         return;
     }
 
-    /* Keep on */
     ctx = g_task_get_task_data (task);
+    ctx->explicit_qmi_open = TRUE;
+
+    /* Keep on */
     ctx->step++;
     connect_context_step (task);
 }
@@ -1204,17 +1260,32 @@ qmi_port_open_ready (MMPortQmi *qmi,
 static void
 connect_context_step (GTask *task)
 {
+    MMBearerQmi    *self;
     ConnectContext *ctx;
-    GCancellable *cancellable;
 
-    /* If cancelled, complete */
-    if (g_task_return_error_if_cancelled (task)) {
-        g_object_unref (task);
+    self = g_task_get_source_object (task);
+
+    g_assert (self->priv->ongoing_connect_user_cancellable);
+    if (g_cancellable_is_cancelled (self->priv->ongoing_connect_user_cancellable)) {
+        complete_connect (task,
+                          NULL,
+                          g_error_new (G_IO_ERROR,
+                                       G_IO_ERROR_CANCELLED,
+                                       "operation cancelled"));
+        return;
+    }
+
+    g_assert (self->priv->ongoing_connect_network_cancellable);
+    if (g_cancellable_is_cancelled (self->priv->ongoing_connect_network_cancellable)) {
+        complete_connect (task,
+                          NULL,
+                          g_error_new (MM_CORE_ERROR,
+                                       MM_CORE_ERROR_ABORTED,
+                                       "aborted by the network"));
         return;
     }
 
     ctx = g_task_get_task_data (task);
-    cancellable = g_task_get_cancellable (task);
 
     switch (ctx->step) {
     case CONNECT_STEP_FIRST:
@@ -1225,10 +1296,14 @@ connect_context_step (GTask *task)
         ctx->step++;
 
     case CONNECT_STEP_OPEN_QMI_PORT:
+        /* If we're explicitly opening the port (e.g. using a different cdc-wdm
+         * port because the primary one is already connected by a different
+         * bearer), then make sure we also close it if anything goes wrong and
+         * during disconnect */
         if (!mm_port_qmi_is_open (ctx->qmi)) {
             mm_port_qmi_open (ctx->qmi,
                               TRUE,
-                              cancellable,
+                              g_task_get_cancellable (task),
                               (GAsyncReadyCallback)qmi_port_open_ready,
                               task);
             return;
@@ -1278,7 +1353,7 @@ connect_context_step (GTask *task)
             mm_port_qmi_allocate_client (ctx->qmi,
                                          QMI_SERVICE_WDS,
                                          MM_PORT_QMI_FLAG_WDS_IPV4,
-                                         cancellable,
+                                         g_task_get_cancellable (task),
                                          (GAsyncReadyCallback)qmi_port_allocate_client_ready,
                                          task);
             return;
@@ -1301,7 +1376,7 @@ connect_context_step (GTask *task)
             qmi_client_wds_set_ip_family (ctx->client_ipv4,
                                           input,
                                           10,
-                                          cancellable,
+                                          g_task_get_cancellable (task),
                                           (GAsyncReadyCallback)set_ip_family_ready,
                                           task);
             qmi_message_wds_set_ip_family_input_unref (input);
@@ -1320,7 +1395,7 @@ connect_context_step (GTask *task)
                                                                        &ctx->packet_service_status_ipv4_indication_id);
         setup_event_report_unsolicited_events (ctx->self,
                                                ctx->client_ipv4,
-                                               cancellable,
+                                               g_task_get_cancellable (task),
                                                (GAsyncReadyCallback) connect_enable_indications_ipv4_ready,
                                                task);
         return;
@@ -1333,7 +1408,7 @@ connect_context_step (GTask *task)
         qmi_client_wds_start_network (ctx->client_ipv4,
                                       input,
                                       45,
-                                      cancellable,
+                                      g_task_get_cancellable (task),
                                       (GAsyncReadyCallback)start_network_ready,
                                       task);
         qmi_message_wds_start_network_input_unref (input);
@@ -1377,7 +1452,7 @@ connect_context_step (GTask *task)
             mm_port_qmi_allocate_client (ctx->qmi,
                                          QMI_SERVICE_WDS,
                                          MM_PORT_QMI_FLAG_WDS_IPV6,
-                                         cancellable,
+                                         g_task_get_cancellable (task),
                                          (GAsyncReadyCallback)qmi_port_allocate_client_ready,
                                          task);
             return;
@@ -1402,7 +1477,7 @@ connect_context_step (GTask *task)
             qmi_client_wds_set_ip_family (ctx->client_ipv6,
                                           input,
                                           10,
-                                          cancellable,
+                                          g_task_get_cancellable (task),
                                           (GAsyncReadyCallback)set_ip_family_ready,
                                           task);
             qmi_message_wds_set_ip_family_input_unref (input);
@@ -1421,7 +1496,7 @@ connect_context_step (GTask *task)
                                                                        &ctx->packet_service_status_ipv6_indication_id);
         setup_event_report_unsolicited_events (ctx->self,
                                                ctx->client_ipv6,
-                                               cancellable,
+                                               g_task_get_cancellable (task),
                                                (GAsyncReadyCallback) connect_enable_indications_ipv6_ready,
                                                task);
         return;
@@ -1434,7 +1509,7 @@ connect_context_step (GTask *task)
         qmi_client_wds_start_network (ctx->client_ipv6,
                                       input,
                                       45,
-                                      cancellable,
+                                      g_task_get_cancellable (task),
                                       (GAsyncReadyCallback)start_network_ready,
                                       task);
         qmi_message_wds_start_network_input_unref (input);
@@ -1454,42 +1529,7 @@ connect_context_step (GTask *task)
 
     case CONNECT_STEP_LAST:
         /* If one of IPv4 or IPv6 succeeds, we're connected */
-        if (ctx->packet_data_handle_ipv4 || ctx->packet_data_handle_ipv6) {
-            /* Port is connected; update the state */
-            mm_port_set_connected (MM_PORT (ctx->data), TRUE);
-
-            /* Keep connection related data */
-            g_assert (ctx->self->priv->data == NULL);
-            ctx->self->priv->data = g_object_ref (ctx->data);
-
-            g_assert (ctx->self->priv->packet_data_handle_ipv4 == 0);
-            g_assert (ctx->self->priv->client_ipv4 == NULL);
-            if (ctx->packet_data_handle_ipv4) {
-                ctx->self->priv->packet_data_handle_ipv4 = ctx->packet_data_handle_ipv4;
-                ctx->self->priv->packet_service_status_ipv4_indication_id = ctx->packet_service_status_ipv4_indication_id;
-                ctx->packet_service_status_ipv4_indication_id = 0;
-                ctx->self->priv->event_report_ipv4_indication_id = ctx->event_report_ipv4_indication_id;
-                ctx->event_report_ipv4_indication_id = 0;
-                ctx->self->priv->client_ipv4 = g_object_ref (ctx->client_ipv4);
-            }
-
-            g_assert (ctx->self->priv->packet_data_handle_ipv6 == 0);
-            g_assert (ctx->self->priv->client_ipv6 == NULL);
-            if (ctx->packet_data_handle_ipv6) {
-                ctx->self->priv->packet_data_handle_ipv6 = ctx->packet_data_handle_ipv6;
-                ctx->self->priv->packet_service_status_ipv6_indication_id = ctx->packet_service_status_ipv6_indication_id;
-                ctx->packet_service_status_ipv6_indication_id = 0;
-                ctx->self->priv->event_report_ipv6_indication_id = ctx->event_report_ipv6_indication_id;
-                ctx->event_report_ipv6_indication_id = 0;
-                ctx->self->priv->client_ipv6 = g_object_ref (ctx->client_ipv6);
-            }
-
-            /* Set operation result */
-            g_task_return_pointer (
-                task,
-                mm_bearer_connect_result_new (ctx->data, ctx->ipv4_config, ctx->ipv6_config),
-                (GDestroyNotify)mm_bearer_connect_result_unref);
-        } else {
+        if (!ctx->packet_data_handle_ipv4 && !ctx->packet_data_handle_ipv6) {
             GError *error;
 
             /* No connection, set error. If both set, IPv4 error preferred */
@@ -1501,28 +1541,79 @@ connect_context_step (GTask *task)
                 ctx->error_ipv6 = NULL;
             }
 
-            g_task_return_error (task, error);
+            complete_connect (task, NULL, error);
+            return;
         }
 
-        g_object_unref (task);
+        /* Port is connected; update the state */
+        mm_port_set_connected (MM_PORT (ctx->data), TRUE);
+
+        /* Keep connection related data */
+
+        g_assert (ctx->self->priv->qmi == NULL);
+        ctx->self->priv->qmi = g_object_ref (ctx->qmi);
+        if (ctx->explicit_qmi_open) {
+            ctx->self->priv->explicit_qmi_open = TRUE;
+            ctx->explicit_qmi_open = FALSE;
+        }
+
+        g_assert (ctx->self->priv->data == NULL);
+        ctx->self->priv->data = g_object_ref (ctx->data);
+
+        g_assert (ctx->self->priv->packet_data_handle_ipv4 == 0);
+        g_assert (ctx->self->priv->client_ipv4 == NULL);
+        if (ctx->packet_data_handle_ipv4) {
+            ctx->self->priv->packet_data_handle_ipv4 = ctx->packet_data_handle_ipv4;
+            ctx->self->priv->packet_service_status_ipv4_indication_id = ctx->packet_service_status_ipv4_indication_id;
+            ctx->packet_service_status_ipv4_indication_id = 0;
+            ctx->self->priv->event_report_ipv4_indication_id = ctx->event_report_ipv4_indication_id;
+            ctx->event_report_ipv4_indication_id = 0;
+            ctx->self->priv->client_ipv4 = g_object_ref (ctx->client_ipv4);
+        }
+
+        g_assert (ctx->self->priv->packet_data_handle_ipv6 == 0);
+        g_assert (ctx->self->priv->client_ipv6 == NULL);
+        if (ctx->packet_data_handle_ipv6) {
+            ctx->self->priv->packet_data_handle_ipv6 = ctx->packet_data_handle_ipv6;
+            ctx->self->priv->packet_service_status_ipv6_indication_id = ctx->packet_service_status_ipv6_indication_id;
+            ctx->packet_service_status_ipv6_indication_id = 0;
+            ctx->self->priv->event_report_ipv6_indication_id = ctx->event_report_ipv6_indication_id;
+            ctx->event_report_ipv6_indication_id = 0;
+            ctx->self->priv->client_ipv6 = g_object_ref (ctx->client_ipv6);
+        }
+
+        complete_connect (task,
+                          mm_bearer_connect_result_new (ctx->data,
+                                                        ctx->ipv4_config,
+                                                        ctx->ipv6_config),
+                          NULL);
         return;
     }
 }
 
 static void
-_connect (MMBaseBearer *self,
+cancel_operation_cancellable (GCancellable *cancellable,
+                              GCancellable *operation_cancellable)
+{
+    g_cancellable_cancel (operation_cancellable);
+}
+
+static void
+_connect (MMBaseBearer *_self,
           GCancellable *cancellable,
           GAsyncReadyCallback callback,
           gpointer user_data)
 {
+    MMBearerQmi *self = MM_BEARER_QMI (_self);
     MMBearerProperties *properties = NULL;
     ConnectContext *ctx;
     MMBaseModem *modem  = NULL;
-    MMPort *data;
-    MMPortQmi *qmi;
+    MMPort *data = NULL;
+    MMPortQmi *qmi = NULL;
     GError *error = NULL;
     const gchar *apn;
     GTask *task;
+    GCancellable *operation_cancellable = NULL;
 
     g_object_get (self,
                   MM_BASE_BEARER_MODEM, &modem,
@@ -1540,8 +1631,7 @@ _connect (MMBaseBearer *self,
             MM_CORE_ERROR,
             MM_CORE_ERROR_NOT_FOUND,
             "No valid data port found to launch connection");
-        g_object_unref (modem);
-        return;
+        goto out;
     }
 
     /* Each data port has a single QMI port associated */
@@ -1553,13 +1643,11 @@ _connect (MMBaseBearer *self,
             user_data,
             _connect,
             error);
-        g_object_unref (data);
-        g_object_unref (modem);
-        return;
+        goto out;
     }
 
     /* Check whether we have an APN */
-    apn = mm_bearer_properties_get_apn (mm_base_bearer_peek_config (MM_BASE_BEARER (self)));
+    apn = mm_bearer_properties_get_apn (mm_base_bearer_peek_config (_self));
 
     /* Is this a 3GPP only modem and no APN was given? If so, error */
     if (mm_iface_modem_is_3gpp_only (MM_IFACE_MODEM (modem)) && !apn) {
@@ -1571,8 +1659,7 @@ _connect (MMBaseBearer *self,
             MM_CORE_ERROR,
             MM_CORE_ERROR_INVALID_ARGS,
             "3GPP connection logic requires APN setting");
-        g_object_unref (modem);
-        return;
+        goto out;
     }
 
     /* Is this a 3GPP2 only modem and APN was given? If so, error */
@@ -1585,11 +1672,8 @@ _connect (MMBaseBearer *self,
             MM_CORE_ERROR,
             MM_CORE_ERROR_INVALID_ARGS,
             "3GPP2 doesn't support APN setting");
-        g_object_unref (modem);
-        return;
+        goto out;
     }
-
-    g_object_unref (modem);
 
     mm_dbg ("Launching connection with QMI port (%s/%s) and data port (%s/%s)",
             mm_port_subsys_get_string (mm_port_get_subsys (MM_PORT (qmi))),
@@ -1599,8 +1683,8 @@ _connect (MMBaseBearer *self,
 
     ctx = g_slice_new0 (ConnectContext);
     ctx->self = g_object_ref (self);
-    ctx->qmi = qmi;
-    ctx->data = data;
+    ctx->qmi = g_object_ref (qmi);
+    ctx->data = g_object_ref (data);
     ctx->step = CONNECT_STEP_FIRST;
     ctx->ip_method = MM_BEARER_IP_METHOD_UNKNOWN;
 
@@ -1608,7 +1692,9 @@ _connect (MMBaseBearer *self,
                   MM_BASE_BEARER_CONFIG, &properties,
                   NULL);
 
-    task = g_task_new (self, cancellable, callback, user_data);
+    operation_cancellable = g_cancellable_new ();
+    task = g_task_new (self, operation_cancellable, callback, user_data);
+    g_task_set_check_cancellable (task, FALSE);
     g_task_set_task_data (task, ctx, (GDestroyNotify)connect_context_free);
 
     if (properties) {
@@ -1624,7 +1710,7 @@ _connect (MMBaseBearer *self,
             ip_family == MM_BEARER_IP_FAMILY_ANY) {
             gchar *ip_family_str;
 
-            ip_family = mm_base_bearer_get_default_ip_family (self);
+            ip_family = mm_base_bearer_get_default_ip_family (_self);
             ip_family_str = mm_bearer_ip_family_build_string_from_mask (ip_family);
             mm_dbg ("No specific IP family requested, defaulting to %s",
                     ip_family_str);
@@ -1653,7 +1739,7 @@ _connect (MMBaseBearer *self,
                 str);
             g_object_unref (task);
             g_free (str);
-            return;
+            goto out;
         }
 
         auth = mm_bearer_properties_get_allowed_auth (properties);
@@ -1679,12 +1765,34 @@ _connect (MMBaseBearer *self,
                 str);
             g_object_unref (task);
             g_free (str);
-            return;
+            goto out;
         }
     }
 
+    /* setup network cancellable */
+    g_assert (!self->priv->ongoing_connect_network_cancellable);
+    self->priv->ongoing_connect_network_cancellable = g_cancellable_new ();
+    g_cancellable_connect (self->priv->ongoing_connect_network_cancellable,
+                           G_CALLBACK (cancel_operation_cancellable),
+                           g_object_ref (operation_cancellable),
+                           g_object_unref);
+
+    /* setup user cancellable */
+    g_assert (!self->priv->ongoing_connect_user_cancellable);
+    self->priv->ongoing_connect_user_cancellable = g_object_ref (cancellable);
+    g_cancellable_connect (self->priv->ongoing_connect_user_cancellable,
+                           G_CALLBACK (cancel_operation_cancellable),
+                           g_object_ref (operation_cancellable),
+                           g_object_unref);
+
     /* Run! */
     connect_context_step (task);
+
+ out:
+    g_clear_object (&operation_cancellable);
+    g_clear_object (&qmi);
+    g_clear_object (&data);
+    g_clear_object (&modem);
 }
 
 /*****************************************************************************/
@@ -1698,7 +1806,6 @@ typedef enum {
 } DisconnectStep;
 
 typedef struct {
-    MMPort *data;
     DisconnectStep step;
 
     gboolean running_ipv4;
@@ -1723,7 +1830,6 @@ disconnect_context_free (DisconnectContext *ctx)
         g_object_unref (ctx->client_ipv4);
     if (ctx->client_ipv6)
         g_object_unref (ctx->client_ipv6);
-    g_object_unref (ctx->data);
     g_slice_free (DisconnectContext, ctx);
 }
 
@@ -1772,8 +1878,15 @@ reset_bearer_connection (MMBearerQmi *self,
         g_clear_object (&self->priv->client_ipv6);
     }
 
-    if (!self->priv->packet_data_handle_ipv4 &&
-        !self->priv->packet_data_handle_ipv6) {
+    if (!self->priv->packet_data_handle_ipv4 && !self->priv->packet_data_handle_ipv6) {
+        /* Close port if we had it explicitly open for this connection */
+        if (self->priv->qmi) {
+            if (self->priv->explicit_qmi_open) {
+                self->priv->explicit_qmi_open = FALSE;
+                mm_port_qmi_close (self->priv->qmi);
+            }
+            g_clear_object (&self->priv->qmi);
+        }
         if (self->priv->data) {
             /* Port is disconnected; update the state */
             mm_port_set_connected (self->priv->data, FALSE);
@@ -1867,6 +1980,7 @@ disconnect_context_step (GTask *task)
                                          NULL,
                                          (GAsyncReadyCallback)stop_network_ready,
                                          task);
+            qmi_message_wds_stop_network_input_unref (input);
             return;
         }
 
@@ -1897,6 +2011,7 @@ disconnect_context_step (GTask *task)
                                          NULL,
                                          (GAsyncReadyCallback)stop_network_ready,
                                          task);
+            qmi_message_wds_stop_network_input_unref (input);
             return;
         }
 
@@ -1935,29 +2050,25 @@ disconnect (MMBaseBearer *_self,
     DisconnectContext *ctx;
     GTask *task;
 
+    task = g_task_new (self, NULL, callback, user_data);
+
     if ((!self->priv->packet_data_handle_ipv4 && !self->priv->packet_data_handle_ipv6) ||
         (!self->priv->client_ipv4 && !self->priv->client_ipv6) ||
-        !self->priv->data) {
-        g_task_report_new_error (
-            self,
-            callback,
-            user_data,
-            disconnect,
-            MM_CORE_ERROR,
-            MM_CORE_ERROR_FAILED,
-            "Couldn't disconnect QMI bearer: this bearer is not connected");
+        !self->priv->data ||
+        !self->priv->qmi) {
+        mm_dbg ("No need to disconnect: QMI bearer is already disconnected");
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
     ctx = g_slice_new0 (DisconnectContext);
-    ctx->data = g_object_ref (self->priv->data);
     ctx->client_ipv4 = self->priv->client_ipv4 ? g_object_ref (self->priv->client_ipv4) : NULL;
     ctx->packet_data_handle_ipv4 = self->priv->packet_data_handle_ipv4;
     ctx->client_ipv6 = self->priv->client_ipv6 ? g_object_ref (self->priv->client_ipv6) : NULL;
     ctx->packet_data_handle_ipv6 = self->priv->packet_data_handle_ipv6;
     ctx->step = DISCONNECT_STEP_FIRST;
 
-    task = g_task_new (self, NULL, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify)disconnect_context_free);
 
     /* Run! */
@@ -1967,15 +2078,20 @@ disconnect (MMBaseBearer *_self,
 /*****************************************************************************/
 
 static void
-report_connection_status (MMBaseBearer *self,
-                          MMBearerConnectionStatus status)
+report_connection_status (MMBaseBearer             *_self,
+                          MMBearerConnectionStatus  status)
 {
-    if (status == MM_BEARER_CONNECTION_STATUS_DISCONNECTED)
+    MMBearerQmi *self = MM_BEARER_QMI (_self);
+
+    if (status == MM_BEARER_CONNECTION_STATUS_DISCONNECTED) {
+        /* Cancel any ongoing connection attempt */
+        g_cancellable_cancel (self->priv->ongoing_connect_network_cancellable);
         /* Cleanup all connection related data */
-        reset_bearer_connection (MM_BEARER_QMI (self), TRUE, TRUE);
+        reset_bearer_connection (self, TRUE, TRUE);
+    }
 
     /* Chain up parent's report_connection_status() */
-    MM_BASE_BEARER_CLASS (mm_bearer_qmi_parent_class)->report_connection_status (self, status);
+    MM_BASE_BEARER_CLASS (mm_bearer_qmi_parent_class)->report_connection_status (_self, status);
 }
 
 /*****************************************************************************/
@@ -2014,32 +2130,9 @@ dispose (GObject *object)
 {
     MMBearerQmi *self = MM_BEARER_QMI (object);
 
-    if (self->priv->packet_service_status_ipv4_indication_id) {
-        common_setup_cleanup_packet_service_status_unsolicited_events (self,
-                                                                       self->priv->client_ipv4,
-                                                                       FALSE,
-                                                                       &self->priv->packet_service_status_ipv4_indication_id);
-    }
-    if (self->priv->event_report_ipv4_indication_id) {
-        cleanup_event_report_unsolicited_events (self,
-                                                 self->priv->client_ipv4,
-                                                 &self->priv->event_report_ipv4_indication_id);
-    }
-    if (self->priv->packet_service_status_ipv6_indication_id) {
-        common_setup_cleanup_packet_service_status_unsolicited_events (self,
-                                                                       self->priv->client_ipv6,
-                                                                       FALSE,
-                                                                       &self->priv->packet_service_status_ipv6_indication_id);
-    }
-    if (self->priv->event_report_ipv6_indication_id) {
-        cleanup_event_report_unsolicited_events (self,
-                                                 self->priv->client_ipv6,
-                                                 &self->priv->event_report_ipv6_indication_id);
-    }
-
-    g_clear_object (&self->priv->data);
-    g_clear_object (&self->priv->client_ipv4);
-    g_clear_object (&self->priv->client_ipv6);
+    g_assert (!self->priv->ongoing_connect_user_cancellable);
+    g_assert (!self->priv->ongoing_connect_network_cancellable);
+    reset_bearer_connection (self, TRUE, TRUE);
 
     G_OBJECT_CLASS (mm_bearer_qmi_parent_class)->dispose (object);
 }

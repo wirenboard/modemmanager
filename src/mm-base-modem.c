@@ -95,6 +95,9 @@ struct _MMBaseModemPrivate {
     MMPortSerialAt *gps_control;
     MMPortSerialGps *gps;
 
+    /* Some audio-capable devices will have a port for audio specifically */
+    MMPortSerial *audio;
+
     /* Support for parallel enable/disable operations */
     GList *enable_tasks;
     GList *disable_tasks;
@@ -232,6 +235,9 @@ mm_base_modem_grab_port (MMBaseModem         *self,
         } else if (ptype == MM_PORT_TYPE_GPS) {
             /* Raw GPS port */
             port = MM_PORT (mm_port_serial_gps_new (name));
+        } else if (ptype == MM_PORT_TYPE_AUDIO) {
+            /* Generic audio port */
+            port = MM_PORT (mm_port_serial_new (name, ptype));
         } else {
             g_set_error (error,
                          MM_CORE_ERROR,
@@ -646,6 +652,22 @@ mm_base_modem_peek_port_gps (MMBaseModem *self)
     return self->priv->gps;
 }
 
+MMPortSerial *
+mm_base_modem_get_port_audio (MMBaseModem *self)
+{
+    g_return_val_if_fail (MM_IS_BASE_MODEM (self), NULL);
+
+    return (self->priv->audio ? g_object_ref (self->priv->audio) : NULL);
+}
+
+MMPortSerial *
+mm_base_modem_peek_port_audio (MMBaseModem *self)
+{
+    g_return_val_if_fail (MM_IS_BASE_MODEM (self), NULL);
+
+    return self->priv->audio;
+}
+
 #if defined WITH_QMI
 
 MMPortQmi *
@@ -929,6 +951,9 @@ mm_base_modem_get_port_infos (MMBaseModem *self,
         case MM_PORT_TYPE_GPS:
             port_infos[i].type = MM_MODEM_PORT_TYPE_GPS;
             break;
+        case MM_PORT_TYPE_AUDIO:
+            port_infos[i].type = MM_MODEM_PORT_TYPE_AUDIO;
+            break;
         case MM_PORT_TYPE_QMI:
             port_infos[i].type = MM_MODEM_PORT_TYPE_QMI;
             break;
@@ -1039,6 +1064,7 @@ mm_base_modem_organize_ports (MMBaseModem *self,
     MMPortSerialQcdm *qcdm = NULL;
     MMPortSerialAt *gps_control = NULL;
     MMPortSerialGps *gps = NULL;
+    MMPortSerial *audio = NULL;
     MMPort *data_primary = NULL;
     GList *data = NULL;
 #if defined WITH_QMI
@@ -1127,6 +1153,12 @@ mm_base_modem_organize_ports (MMBaseModem *self,
             g_assert (MM_IS_PORT_SERIAL_GPS (candidate));
             if (!gps)
                 gps = MM_PORT_SERIAL_GPS (candidate);
+            break;
+
+        case MM_PORT_TYPE_AUDIO:
+            g_assert (MM_IS_PORT_SERIAL (candidate));
+            if (!audio)
+                audio = MM_PORT_SERIAL (candidate);
             break;
 
 #if defined WITH_QMI
@@ -1246,6 +1278,7 @@ mm_base_modem_organize_ports (MMBaseModem *self,
     log_port (self, MM_PORT (qcdm),         "qcdm");
     log_port (self, MM_PORT (gps_control),  "gps (control)");
     log_port (self, MM_PORT (gps),          "gps (nmea)");
+    log_port (self, MM_PORT (audio),        "audio");
 #if defined WITH_QMI
     log_port (self, MM_PORT (qmi_primary),  "qmi (primary)");
     for (l = qmi; l; l = g_list_next (l))
@@ -1413,6 +1446,69 @@ base_modem_cancelled (GCancellable *cancellable,
 /*****************************************************************************/
 
 static void
+setup_ports_table (MMBaseModem *self)
+{
+    g_assert (!self->priv->ports);
+    self->priv->ports = g_hash_table_new_full (g_str_hash,
+                                               g_str_equal,
+                                               g_free,
+                                               g_object_unref);
+}
+
+static void
+cleanup_modem_port (MMBaseModem *self,
+                    MMPort      *port)
+{
+    mm_dbg ("cleaning up port '%s/%s'...",
+            mm_port_subsys_get_string (mm_port_get_subsys (MM_PORT (port))),
+            mm_port_get_device (MM_PORT (port)));
+
+    /* Cleanup for serial ports */
+    if (MM_IS_PORT_SERIAL (port)) {
+        g_signal_handlers_disconnect_by_func (port, serial_port_timed_out_cb, self);
+        return;
+    }
+
+#if defined WITH_MBIM
+    /* We need to close the MBIM port cleanly when disposing the modem object */
+    if (MM_IS_PORT_MBIM (port)) {
+        mm_port_mbim_close (MM_PORT_MBIM (port), NULL, NULL);
+        return;
+    }
+#endif
+
+#if defined WITH_QMI
+    /* We need to close the QMI port cleanly when disposing the modem object,
+     * otherwise the allocated CIDs will be kept allocated, and if we end up
+     * allocating too many newer allocations will fail with client-ids-exhausted
+     * errors. */
+    if (MM_IS_PORT_QMI (port)) {
+        mm_port_qmi_close (MM_PORT_QMI (port));
+        return;
+    }
+#endif
+}
+
+static void
+teardown_ports_table (MMBaseModem *self)
+{
+    GHashTableIter iter;
+    gpointer       value;
+    gpointer       key;
+
+    if (!self->priv->ports)
+        return;
+
+    g_hash_table_iter_init (&iter, self->priv->ports);
+    while (g_hash_table_iter_next (&iter, &key, &value))
+        cleanup_modem_port (self, MM_PORT (value));
+    g_hash_table_destroy (self->priv->ports);
+    self->priv->ports = NULL;
+}
+
+/*****************************************************************************/
+
+static void
 mm_base_modem_init (MMBaseModem *self)
 {
     /* Initialize private data */
@@ -1432,12 +1528,9 @@ mm_base_modem_init (MMBaseModem *self)
                                self,
                                NULL);
 
-    self->priv->ports = g_hash_table_new_full (g_str_hash,
-                                               g_str_equal,
-                                               g_free,
-                                               g_object_unref);
-
     self->priv->max_timeouts = DEFAULT_MAX_TIMEOUTS;
+
+    setup_ports_table (self);
 }
 
 static void
@@ -1576,26 +1669,17 @@ dispose (GObject *object)
     g_clear_object (&self->priv->qcdm);
     g_clear_object (&self->priv->gps_control);
     g_clear_object (&self->priv->gps);
+    g_clear_object (&self->priv->audio);
 #if defined WITH_QMI
-    /* We need to close the QMI port cleanly when disposing the modem object,
-     * otherwise the allocated CIDs will be kept allocated, and if we end up
-     * allocating too many newer allocations will fail with client-ids-exhausted
-     * errors. */
-    g_list_foreach (self->priv->qmi, (GFunc)mm_port_qmi_close, NULL);
     g_list_free_full (self->priv->qmi, g_object_unref);
     self->priv->qmi = NULL;
 #endif
 #if defined WITH_MBIM
-    /* We need to close the MBIM port cleanly when disposing the modem object */
-    g_list_foreach (self->priv->mbim, (GFunc)mm_port_mbim_close, NULL);
     g_list_free_full (self->priv->mbim, g_object_unref);
     self->priv->mbim = NULL;
 #endif
 
-    if (self->priv->ports) {
-        g_hash_table_destroy (self->priv->ports);
-        self->priv->ports = NULL;
-    }
+    teardown_ports_table (self);
 
     g_clear_object (&self->priv->connection);
 

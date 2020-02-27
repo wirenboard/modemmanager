@@ -26,6 +26,8 @@
 #include "mm-modem-helpers.h"
 #include "mm-modem-helpers-ublox.h"
 
+#include "test-helpers.h"
+
 /*****************************************************************************/
 /* Test +UPINCNT responses */
 
@@ -485,183 +487,61 @@ test_urat_write_command (void)
 }
 
 /*****************************************************************************/
-/* Supported bands */
-
-static void
-common_compare_bands (GArray            *bands,
-                      const MMModemBand *expected_bands,
-                      guint              n_expected_bands)
-{
-    gchar  *bands_str;
-    GArray *expected_bands_array;
-    gchar  *expected_bands_str;
-
-    if (!expected_bands || !n_expected_bands) {
-        g_assert (!bands);
-        return;
-    }
-
-    g_assert (bands);
-    mm_common_bands_garray_sort (bands);
-    bands_str = mm_common_build_bands_string ((MMModemBand *)(bands->data), bands->len);
-    g_array_unref (bands);
-
-    expected_bands_array = g_array_sized_new (FALSE, FALSE, sizeof (MMModemBand), n_expected_bands);
-    g_array_append_vals (expected_bands_array, expected_bands, n_expected_bands);
-    mm_common_bands_garray_sort (expected_bands_array);
-    expected_bands_str = mm_common_build_bands_string ((MMModemBand *)(expected_bands_array->data), expected_bands_array->len);
-    g_array_unref (expected_bands_array);
-
-    g_assert_cmpstr (bands_str, ==, expected_bands_str);
-    g_free (bands_str);
-    g_free (expected_bands_str);
-}
-
-static void
-common_validate_supported_bands (const gchar       *model,
-                                 const MMModemBand *expected_bands,
-                                 guint              n_expected_bands)
-{
-    GError *error = NULL;
-    GArray *bands;
-
-    bands = mm_ublox_get_supported_bands (model, &error);
-    g_assert_no_error (error);
-    g_assert (bands);
-
-    common_compare_bands (bands, expected_bands, n_expected_bands);
-}
-
-static void
-test_supported_bands_all (void)
-{
-    /* All 2G, 3G and 4G bands */
-    const MMModemBand expected_bands[] = {
-        /*  700 */ MM_MODEM_BAND_EUTRAN_13, MM_MODEM_BAND_EUTRAN_17,
-        /*  800 */ MM_MODEM_BAND_UTRAN_6, MM_MODEM_BAND_EUTRAN_20,
-        /*  850 */ MM_MODEM_BAND_G850, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_EUTRAN_5,
-        /*  900 */ MM_MODEM_BAND_EGSM, MM_MODEM_BAND_UTRAN_8, MM_MODEM_BAND_EUTRAN_8,
-        /* 1500 */ MM_MODEM_BAND_UTRAN_11, MM_MODEM_BAND_EUTRAN_11,
-        /* 1700 */ MM_MODEM_BAND_UTRAN_4, MM_MODEM_BAND_EUTRAN_4,
-        /* 1800 */ MM_MODEM_BAND_DCS, MM_MODEM_BAND_UTRAN_3, MM_MODEM_BAND_EUTRAN_3,
-        /* 1900 */ MM_MODEM_BAND_PCS, MM_MODEM_BAND_UTRAN_2, MM_MODEM_BAND_EUTRAN_2,
-        /* 2100 */ MM_MODEM_BAND_UTRAN_1, MM_MODEM_BAND_EUTRAN_1,
-        /* 2600 */ MM_MODEM_BAND_UTRAN_7, MM_MODEM_BAND_EUTRAN_7,
-    };
-
-    common_validate_supported_bands (NULL, expected_bands, G_N_ELEMENTS (expected_bands));
-}
-
-static void
-test_supported_bands_toby_l201 (void)
-{
-    /* Only 3G and 4G bands */
-    const MMModemBand expected_bands[] = {
-        /*  700 */ MM_MODEM_BAND_EUTRAN_13, MM_MODEM_BAND_EUTRAN_17,
-        /*  800 */ MM_MODEM_BAND_UTRAN_6, MM_MODEM_BAND_EUTRAN_20,
-        /*  850 */ MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_EUTRAN_5,
-        /*  900 */ MM_MODEM_BAND_UTRAN_8, MM_MODEM_BAND_EUTRAN_8,
-        /* 1500 */ MM_MODEM_BAND_UTRAN_11, MM_MODEM_BAND_EUTRAN_11,
-        /* 1700 */ MM_MODEM_BAND_UTRAN_4, MM_MODEM_BAND_EUTRAN_4,
-        /* 1800 */ MM_MODEM_BAND_UTRAN_3, MM_MODEM_BAND_EUTRAN_3,
-        /* 1900 */ MM_MODEM_BAND_UTRAN_2, MM_MODEM_BAND_EUTRAN_2,
-        /* 2100 */ MM_MODEM_BAND_UTRAN_1, MM_MODEM_BAND_EUTRAN_1,
-        /* 2600 */ MM_MODEM_BAND_UTRAN_7, MM_MODEM_BAND_EUTRAN_7,
-    };
-
-    common_validate_supported_bands ("TOBY-L201", expected_bands, G_N_ELEMENTS (expected_bands));
-}
-
-static void
-test_supported_bands_lisa_u200 (void)
-{
-    /* Only 2G and 3G bands */
-    const MMModemBand expected_bands[] = {
-        /*  800 */ MM_MODEM_BAND_UTRAN_6,
-        /*  850 */ MM_MODEM_BAND_G850, MM_MODEM_BAND_UTRAN_5,
-        /*  900 */ MM_MODEM_BAND_EGSM, MM_MODEM_BAND_UTRAN_8,
-        /* 1500 */ MM_MODEM_BAND_UTRAN_11,
-        /* 1700 */ MM_MODEM_BAND_UTRAN_4,
-        /* 1800 */ MM_MODEM_BAND_DCS, MM_MODEM_BAND_UTRAN_3,
-        /* 1900 */ MM_MODEM_BAND_PCS, MM_MODEM_BAND_UTRAN_2,
-        /* 2100 */ MM_MODEM_BAND_UTRAN_1,
-        /* 2600 */ MM_MODEM_BAND_UTRAN_7,
-    };
-
-    common_validate_supported_bands ("LISA-U200", expected_bands, G_N_ELEMENTS (expected_bands));
-}
-
-static void
-test_supported_bands_sara_u280 (void)
-{
-    /* Only 3G bands */
-    const MMModemBand expected_bands[] = {
-        /*  800 */ MM_MODEM_BAND_UTRAN_6,
-        /*  850 */ MM_MODEM_BAND_UTRAN_5,
-        /*  900 */ MM_MODEM_BAND_UTRAN_8,
-        /* 1500 */ MM_MODEM_BAND_UTRAN_11,
-        /* 1700 */ MM_MODEM_BAND_UTRAN_4,
-        /* 1800 */ MM_MODEM_BAND_UTRAN_3,
-        /* 1900 */ MM_MODEM_BAND_UTRAN_2,
-        /* 2100 */ MM_MODEM_BAND_UTRAN_1,
-        /* 2600 */ MM_MODEM_BAND_UTRAN_7,
-    };
-
-    common_validate_supported_bands ("SARA-U280", expected_bands, G_N_ELEMENTS (expected_bands));
-}
-
-/*****************************************************************************/
 /* Test +UBANDSEL? response parser */
 
 static void
 common_validate_ubandsel_response (const gchar       *str,
                                    const MMModemBand *expected_bands,
+                                   const gchar       *model,
                                    guint              n_expected_bands)
 {
     GError *error = NULL;
     GArray *bands;
 
-    bands = mm_ublox_parse_ubandsel_response (str, &error);
+    bands = mm_ublox_parse_ubandsel_response (str, model, &error);
     g_assert_no_error (error);
     g_assert (bands);
 
-    common_compare_bands (bands, expected_bands, n_expected_bands);
+    mm_test_helpers_compare_bands (bands, expected_bands, n_expected_bands);
+    g_array_unref (bands);
 }
 
 static void
 test_ubandsel_response_four (void)
 {
     const MMModemBand expected_bands[] = {
-        /*  850 */ MM_MODEM_BAND_G850, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_EUTRAN_5,
-        /*  900 */ MM_MODEM_BAND_EGSM, MM_MODEM_BAND_UTRAN_8, MM_MODEM_BAND_EUTRAN_8,
-        /* 1800 */ MM_MODEM_BAND_DCS, MM_MODEM_BAND_UTRAN_3, MM_MODEM_BAND_EUTRAN_3,
-        /* 1900 */ MM_MODEM_BAND_PCS, MM_MODEM_BAND_UTRAN_2, MM_MODEM_BAND_EUTRAN_2,
+        /*  700 */ MM_MODEM_BAND_EUTRAN_4,
+        /* 1700 */ MM_MODEM_BAND_EUTRAN_13
     };
 
-    common_validate_ubandsel_response ("+UBANDSEL: 850,900,1800,1900\r\n", expected_bands, G_N_ELEMENTS (expected_bands));
+    common_validate_ubandsel_response ("+UBANDSEL: 700,1700\r\n", expected_bands, "LARA-R204", G_N_ELEMENTS (expected_bands));
 }
 
 static void
 test_ubandsel_response_three (void)
 {
     const MMModemBand expected_bands[] = {
-        /*  850 */ MM_MODEM_BAND_G850, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_EUTRAN_5,
-        /*  900 */ MM_MODEM_BAND_EGSM, MM_MODEM_BAND_UTRAN_8, MM_MODEM_BAND_EUTRAN_8,
-        /* 1800 */ MM_MODEM_BAND_DCS, MM_MODEM_BAND_UTRAN_3, MM_MODEM_BAND_EUTRAN_3,
+        /*  800 */ MM_MODEM_BAND_UTRAN_6,
+        /*  850 */ MM_MODEM_BAND_G850, MM_MODEM_BAND_UTRAN_5,
+        /*  900 */ MM_MODEM_BAND_EGSM, MM_MODEM_BAND_UTRAN_8,
+        /* 1900 */ MM_MODEM_BAND_PCS,  MM_MODEM_BAND_UTRAN_2,
+        /* 2100 */ MM_MODEM_BAND_UTRAN_1
     };
 
-    common_validate_ubandsel_response ("+UBANDSEL: 850,900,1800\r\n", expected_bands, G_N_ELEMENTS (expected_bands));
+    common_validate_ubandsel_response ("+UBANDSEL: 800,850,900,1900,2100\r\n", expected_bands, "SARA-U201", G_N_ELEMENTS (expected_bands));
 }
 
 static void
 test_ubandsel_response_two (void)
 {
     const MMModemBand expected_bands[] = {
-        /*  850 */ MM_MODEM_BAND_G850, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_EUTRAN_5,
-        /*  900 */ MM_MODEM_BAND_EGSM, MM_MODEM_BAND_UTRAN_8, MM_MODEM_BAND_EUTRAN_8,
+        /*  850 */ MM_MODEM_BAND_G850,
+        /*  900 */ MM_MODEM_BAND_EGSM,
+        /* 1800 */ MM_MODEM_BAND_DCS,
+        /* 1900 */ MM_MODEM_BAND_PCS
     };
 
-    common_validate_ubandsel_response ("+UBANDSEL: 850,900\r\n", expected_bands, G_N_ELEMENTS (expected_bands));
+    common_validate_ubandsel_response ("+UBANDSEL: 850,900,1800,1900\r\n", expected_bands, "SARA-G310", G_N_ELEMENTS (expected_bands));
 }
 
 static void
@@ -669,9 +549,11 @@ test_ubandsel_response_one (void)
 {
     const MMModemBand expected_bands[] = {
         /*  850 */ MM_MODEM_BAND_G850, MM_MODEM_BAND_UTRAN_5, MM_MODEM_BAND_EUTRAN_5,
+        /* 1700 */ MM_MODEM_BAND_EUTRAN_4,
+        /* 1900 */ MM_MODEM_BAND_PCS, MM_MODEM_BAND_UTRAN_2, MM_MODEM_BAND_EUTRAN_2
     };
 
-    common_validate_ubandsel_response ("+UBANDSEL: 850\r\n", expected_bands, G_N_ELEMENTS (expected_bands));
+    common_validate_ubandsel_response ("+UBANDSEL: 850,1700,1900\r\n", expected_bands, "TOBY-R200", G_N_ELEMENTS (expected_bands));
 }
 
 /*****************************************************************************/
@@ -680,6 +562,7 @@ test_ubandsel_response_one (void)
 static void
 common_validate_ubandsel_request (const MMModemBand *bands,
                                   guint              n_bands,
+                                  const gchar       *model,
                                   const gchar       *expected_request)
 {
     GError *error = NULL;
@@ -689,7 +572,7 @@ common_validate_ubandsel_request (const MMModemBand *bands,
     bands_array = g_array_sized_new (FALSE, FALSE, sizeof (MMModemBand), n_bands);
     g_array_append_vals (bands_array, bands, n_bands);
 
-    request = mm_ublox_build_ubandsel_set_command (bands_array, &error);
+    request = mm_ublox_build_ubandsel_set_command (bands_array, model, &error);
     g_assert_no_error (error);
     g_assert (request);
 
@@ -706,7 +589,7 @@ test_ubandsel_request_any (void)
         MM_MODEM_BAND_ANY
     };
 
-    common_validate_ubandsel_request (bands, G_N_ELEMENTS (bands), "+UBANDSEL=0");
+    common_validate_ubandsel_request (bands, G_N_ELEMENTS (bands), "TOBY-R200", "+UBANDSEL=0");
 }
 
 static void
@@ -716,7 +599,7 @@ test_ubandsel_request_2g (void)
         MM_MODEM_BAND_G850, MM_MODEM_BAND_EGSM, MM_MODEM_BAND_DCS, MM_MODEM_BAND_PCS
     };
 
-    common_validate_ubandsel_request (bands, G_N_ELEMENTS (bands), "+UBANDSEL=850,900,1800,1900");
+    common_validate_ubandsel_request (bands, G_N_ELEMENTS (bands), "SARA-G310", "+UBANDSEL=850,900,1800,1900");
 }
 
 static void
@@ -726,7 +609,7 @@ test_ubandsel_request_1800 (void)
         MM_MODEM_BAND_DCS, MM_MODEM_BAND_UTRAN_3, MM_MODEM_BAND_EUTRAN_3
     };
 
-    common_validate_ubandsel_request (bands, G_N_ELEMENTS (bands), "+UBANDSEL=1800");
+    common_validate_ubandsel_request (bands, G_N_ELEMENTS (bands), "TOBY-R200", "+UBANDSEL=1800");
 }
 
 /*****************************************************************************/
@@ -745,7 +628,8 @@ common_validate_uact_response (const gchar       *str,
     if (n_expected_bands > 0) {
         g_assert (bands);
         g_assert_no_error (error);
-        common_compare_bands (bands, expected_bands, n_expected_bands);
+        mm_test_helpers_compare_bands (bands, expected_bands, n_expected_bands);
+        g_array_unref (bands);
     } else {
         g_assert (!bands);
         g_assert (error);
@@ -821,9 +705,15 @@ common_validate_uact_test (const gchar       *str,
     g_assert_no_error (error);
     g_assert (result);
 
-    common_compare_bands (bands_2g, expected_bands_2g, n_expected_bands_2g);
-    common_compare_bands (bands_3g, expected_bands_3g, n_expected_bands_3g);
-    common_compare_bands (bands_4g, expected_bands_4g, n_expected_bands_4g);
+    mm_test_helpers_compare_bands (bands_2g, expected_bands_2g, n_expected_bands_2g);
+    if (bands_2g)
+        g_array_unref (bands_2g);
+    mm_test_helpers_compare_bands (bands_3g, expected_bands_3g, n_expected_bands_3g);
+    if (bands_3g)
+        g_array_unref (bands_3g);
+    mm_test_helpers_compare_bands (bands_4g, expected_bands_4g, n_expected_bands_4g);
+    if (bands_4g)
+        g_array_unref (bands_4g);
 }
 
 static void
@@ -1007,10 +897,10 @@ test_uauthreq_less_fields (void)
 typedef struct {
     const gchar *str;
     guint        cid;
-    guint        session_tx_bytes;
-    guint        session_rx_bytes;
-    guint        total_tx_bytes;
-    guint        total_rx_bytes;
+    guint64      session_tx_bytes;
+    guint64      session_rx_bytes;
+    guint64      total_tx_bytes;
+    guint64      total_rx_bytes;
 } UgcntrdResponseTest;
 
 static const UgcntrdResponseTest ugcntrd_response_tests[] = {
@@ -1047,6 +937,14 @@ static const UgcntrdResponseTest ugcntrd_response_tests[] = {
         .session_rx_bytes = 1819,
         .total_tx_bytes   = 2724,
         .total_rx_bytes   = 1839
+    },
+    {
+        .str = "+UGCNTRD: 2,1397316870,113728263578,1397316870,113728263578\r\n",
+        .cid = 2,
+        .session_tx_bytes = 1397316870ULL,
+        .session_rx_bytes = 113728263578ULL,
+        .total_tx_bytes   = 1397316870ULL,
+        .total_rx_bytes   = 113728263578ULL
     }
 };
 
@@ -1058,10 +956,10 @@ test_ugcntrd_response (void)
     for (i = 0; i < G_N_ELEMENTS (ugcntrd_response_tests); i++) {
         GError   *error = NULL;
         gboolean  success;
-        guint     session_tx_bytes = G_MAXUINT;
-        guint     session_rx_bytes = G_MAXUINT;
-        guint     total_tx_bytes   = G_MAXUINT;
-        guint     total_rx_bytes   = G_MAXUINT;
+        guint64   session_tx_bytes = 0;
+        guint64   session_rx_bytes = 0;
+        guint64   total_tx_bytes   = 0;
+        guint64   total_rx_bytes   = 0;
 
         success = mm_ublox_parse_ugcntrd_response_for_cid (ugcntrd_response_tests[i].str,
                                                            ugcntrd_response_tests[i].cid,
@@ -1088,17 +986,17 @@ _mm_log (const char *loc,
          const char *fmt,
          ...)
 {
-#if defined ENABLE_TEST_MESSAGE_TRACES
-    /* Dummy log function */
     va_list args;
     gchar *msg;
+
+    if (!g_test_verbose ())
+        return;
 
     va_start (args, fmt);
     msg = g_strdup_vprintf (fmt, args);
     va_end (args);
     g_print ("%s\n", msg);
     g_free (msg);
-#endif
 }
 
 int main (int argc, char **argv)
@@ -1120,10 +1018,6 @@ int main (int argc, char **argv)
     g_test_add_func ("/MM/ublox/urat/test/response/sara-u280", test_mode_filtering_sara_u280);
     g_test_add_func ("/MM/ublox/urat/read/response", test_urat_read_response);
     g_test_add_func ("/MM/ublox/urat/write/command", test_urat_write_command);
-    g_test_add_func ("/MM/ublox/supported-bands/all",       test_supported_bands_all);
-    g_test_add_func ("/MM/ublox/supported-bands/toby-l201", test_supported_bands_toby_l201);
-    g_test_add_func ("/MM/ublox/supported-bands/lisa-u200", test_supported_bands_lisa_u200);
-    g_test_add_func ("/MM/ublox/supported-bands/sara-u280", test_supported_bands_sara_u280);
     g_test_add_func ("/MM/ublox/ubandsel/response/one",   test_ubandsel_response_one);
     g_test_add_func ("/MM/ublox/ubandsel/response/two",   test_ubandsel_response_two);
     g_test_add_func ("/MM/ublox/ubandsel/response/three", test_ubandsel_response_three);

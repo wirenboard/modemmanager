@@ -22,11 +22,10 @@
 
 #include <ModemManager-enums.h>
 
-#ifndef MM_DISABLE_DEPRECATED
-
 /**
  * SECTION:mm-compat
  * @title: API break replacements
+ * @short_description: List of deprecated methods, types and symbols.
  *
  * These compatibility types and methods are flagged as deprecated and
  * therefore shouldn't be used in newly written code. They are provided to
@@ -40,6 +39,8 @@
 # define MM_DEPRECATED
 #endif
 
+#ifndef MM_DISABLE_DEPRECATED
+
 /* The following type exists just so that we can get deprecation warnings */
 MM_DEPRECATED
 typedef int MMModemBandDeprecated;
@@ -50,7 +51,7 @@ typedef int MMModemBandDeprecated;
  * WCDMA 2100 MHz (UTRAN band 1).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_UTRAN_1 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_UTRAN_1 instead.
  */
 #define MM_MODEM_BAND_U2100 ((MMModemBandDeprecated)MM_MODEM_BAND_UTRAN_1)
 
@@ -60,7 +61,7 @@ typedef int MMModemBandDeprecated;
  * WCDMA 1900 MHz (UTRAN band 2).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_UTRAN_2 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_UTRAN_2 instead.
  */
 #define MM_MODEM_BAND_U1900 ((MMModemBandDeprecated)MM_MODEM_BAND_UTRAN_2)
 
@@ -70,7 +71,7 @@ typedef int MMModemBandDeprecated;
  * WCDMA 1800 MHz (UTRAN band 3).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_UTRAN_3 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_UTRAN_3 instead.
  */
 #define MM_MODEM_BAND_U1800 ((MMModemBandDeprecated)MM_MODEM_BAND_UTRAN_3)
 
@@ -80,7 +81,7 @@ typedef int MMModemBandDeprecated;
  * AWS 1700/2100 MHz (UTRAN band 4).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_UTRAN_4 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_UTRAN_4 instead.
  */
 #define MM_MODEM_BAND_U17IV ((MMModemBandDeprecated)MM_MODEM_BAND_UTRAN_4)
 
@@ -90,7 +91,7 @@ typedef int MMModemBandDeprecated;
  * UMTS 850 MHz (UTRAN band 5).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_UTRAN_5 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_UTRAN_5 instead.
  */
 #define MM_MODEM_BAND_U850 ((MMModemBandDeprecated)MM_MODEM_BAND_UTRAN_5)
 
@@ -100,7 +101,7 @@ typedef int MMModemBandDeprecated;
  * UMTS 800 MHz (UTRAN band 6).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_UTRAN_6 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_UTRAN_6 instead.
  */
 #define MM_MODEM_BAND_U800 ((MMModemBandDeprecated)MM_MODEM_BAND_UTRAN_6)
 
@@ -110,7 +111,7 @@ typedef int MMModemBandDeprecated;
  * UMTS 2600 MHz (UTRAN band 7).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_UTRAN_7 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_UTRAN_7 instead.
  */
 #define MM_MODEM_BAND_U2600 ((MMModemBandDeprecated)MM_MODEM_BAND_UTRAN_7)
 
@@ -120,7 +121,7 @@ typedef int MMModemBandDeprecated;
  * UMTS 900 MHz (UTRAN band 8).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_UTRAN_8 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_UTRAN_8 instead.
  */
 #define MM_MODEM_BAND_U900 ((MMModemBandDeprecated)MM_MODEM_BAND_UTRAN_8)
 
@@ -130,7 +131,7 @@ typedef int MMModemBandDeprecated;
  * UMTS 1700 MHz (UTRAN band 9).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_UTRAN_9 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_UTRAN_9 instead.
  */
 #define MM_MODEM_BAND_U17IX ((MMModemBandDeprecated)MM_MODEM_BAND_UTRAN_9)
 
@@ -140,7 +141,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 1.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_1 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_1 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_I ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_1)
 
@@ -150,7 +151,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 2.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_2 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_2 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_II ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_2)
 
@@ -160,7 +161,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 3.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_3 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_3 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_III ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_3)
 
@@ -170,7 +171,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 4.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_4 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_4 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_IV ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_4)
 
@@ -180,7 +181,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 5.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_5 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_5 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_V ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_5)
 
@@ -190,7 +191,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 6.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_6 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_6 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_VI ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_6)
 
@@ -200,7 +201,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 7.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_7 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_7 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_VII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_7)
 
@@ -210,7 +211,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 8.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_8 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_8 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_VIII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_8)
 
@@ -220,7 +221,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 9.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_9 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_9 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_IX ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_9)
 
@@ -230,7 +231,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 10.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_10 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_10 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_X ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_10)
 
@@ -240,7 +241,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 11.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_11 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_11 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XI ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_11)
 
@@ -250,7 +251,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 12.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_12 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_12 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_12)
 
@@ -260,7 +261,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 13.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_13 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_13 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XIII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_13)
 
@@ -270,7 +271,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 14.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_14 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_14 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XIV ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_14)
 
@@ -280,7 +281,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 17.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_17 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_17 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XVII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_17)
 
@@ -290,7 +291,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 18.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_18 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_18 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XVIII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_18)
 
@@ -300,7 +301,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 19.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_19 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_19 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XIX ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_19)
 
@@ -310,7 +311,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 20.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_20 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_20 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XX ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_20)
 
@@ -320,7 +321,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 21.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_21 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_21 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXI ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_21)
 
@@ -330,7 +331,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 22.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_22 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_22 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_22)
 
@@ -340,7 +341,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 23.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_23 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_23 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXIII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_23)
 
@@ -350,7 +351,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 24.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_24 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_24 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXIV ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_24)
 
@@ -360,7 +361,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 25.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_25 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_25 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXV ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_25)
 
@@ -370,7 +371,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 26.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_26 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_26 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXVI ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_26)
 
@@ -380,7 +381,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 33.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_33 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_33 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXXIII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_33)
 
@@ -390,7 +391,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 34.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_34 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_34 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXXIV ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_34)
 
@@ -400,7 +401,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 35.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_35 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_35 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXXV ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_35)
 
@@ -410,7 +411,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 36.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_36 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_36 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXXVI ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_36)
 
@@ -420,7 +421,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 37.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_37 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_37 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXXVII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_37)
 
@@ -430,7 +431,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 38.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_38 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_38 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXXVIII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_38)
 
@@ -440,7 +441,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 39.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_39 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_39 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XXXIX ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_39)
 
@@ -450,7 +451,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 40.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_40 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_40 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XL ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_40)
 
@@ -460,7 +461,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 41.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_41 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_41 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XLI ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_41)
 
@@ -470,7 +471,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 42.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_42 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_42 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XLII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_42)
 
@@ -480,7 +481,7 @@ typedef int MMModemBandDeprecated;
  * E-UTRAN band 43.
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_43 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_43 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XLIII ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_43)
 
@@ -489,8 +490,8 @@ typedef int MMModemBandDeprecated;
  *
  * E-UTRAN band 44.
  *
- * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_EUTRAN_44 instead.
+ * Since: 1.4
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_EUTRAN_44 instead.
  */
 #define MM_MODEM_BAND_EUTRAN_XLIV ((MMModemBandDeprecated)MM_MODEM_BAND_EUTRAN_44)
 
@@ -500,7 +501,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 0 (US Cellular 850MHz)
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC0 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC0 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC0_CELLULAR_800 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC0)
 
@@ -510,7 +511,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 1 (US PCS 1900MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC1 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC1 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC1_PCS_1900 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC1)
 
@@ -520,7 +521,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 2 (UK TACS 900MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC2 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC2 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC2_TACS ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC2)
 
@@ -530,7 +531,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 3 (Japanese TACS).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC3 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC3 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC3_JTACS ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC3)
 
@@ -540,7 +541,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 4 (Korean PCS).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC4 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC4 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC4_KOREAN_PCS ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC4)
 
@@ -550,7 +551,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 5 (NMT 450MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC5 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC5 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC5_NMT450 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC5)
 
@@ -560,7 +561,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 6 (IMT2000 2100MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC6 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC6 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC6_IMT2000 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC6)
 
@@ -570,7 +571,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 7 (Cellular 700MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC7 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC7 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC7_CELLULAR_700 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC7)
 
@@ -580,7 +581,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 8 (1800MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC8 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC8 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC8_1800 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC8)
 
@@ -590,7 +591,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 9 (900MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC9 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC9 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC9_900 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC9)
 
@@ -600,7 +601,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 10 (US Secondary 800).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC10 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC10 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC10_SECONDARY_800 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC10)
 
@@ -610,7 +611,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 11 (European PAMR 400MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC11 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC11 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC11_PAMR_400 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC11)
 
@@ -620,7 +621,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 12 (PAMR 800MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC12 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC12 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC12_PAMR_800 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC12)
 
@@ -630,7 +631,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 13 (IMT2000 2500MHz Expansion).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC13 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC13 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC13_IMT2000_2500 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC13)
 
@@ -640,7 +641,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 14 (More US PCS 1900MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC14 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC14 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC14_PCS2_1900 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC14)
 
@@ -650,7 +651,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 15 (AWS 1700MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC15 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC15 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC15_AWS ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC15)
 
@@ -660,7 +661,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 16 (US 2500MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC16 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC16 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC16_US_2500 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC16)
 
@@ -670,7 +671,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 17 (US 2500MHz Forward Link Only).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC17 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC17 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC17_US_FLO_2500 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC17)
 
@@ -680,7 +681,7 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 18 (US 700MHz Public Safety).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC18 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC18 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC18_US_PS_700 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC18)
 
@@ -690,9 +691,23 @@ typedef int MMModemBandDeprecated;
  * CDMA Band Class 19 (US Lower 700MHz).
  *
  * Since: 1.0
- * Deprecated: 1.8.0: Use #MM_MODEM_BAND_CDMA_BC19 instead.
+ * Deprecated: 1.8: Use #MM_MODEM_BAND_CDMA_BC19 instead.
  */
 #define MM_MODEM_BAND_CDMA_BC19_US_LOWER_700 ((MMModemBandDeprecated)MM_MODEM_BAND_CDMA_BC19)
+
+/* The following type exists just so that we can get deprecation warnings */
+MM_DEPRECATED
+typedef int MMModemLocationSourceDeprecated;
+
+/**
+ * MM_MODEM_LOCATION_SOURCE_AGPS:
+ *
+ * A-GPS location requested.
+ *
+ * Since: 1.6
+ * Deprecated: 1.12.0: Use #MM_MODEM_LOCATION_SOURCE_AGPS_MSA instead.
+ */
+#define MM_MODEM_LOCATION_SOURCE_AGPS ((MMModemLocationSourceDeprecated)MM_MODEM_LOCATION_SOURCE_AGPS_MSA)
 
 #endif /* MM_DISABLE_DEPRECATED */
 

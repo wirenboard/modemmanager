@@ -8,7 +8,7 @@
 <link rel="up" href="ch02.html" title="The Manager object">
 <link rel="prev" href="MMManager.html" title="MMManager">
 <link rel="next" href="ch03.html" title="The Modem object">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -36,8 +36,8 @@
 <a name="MMKernelEventProperties.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -115,8 +115,8 @@
 <a name="MMKernelEventProperties.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody><tr>
 <td class="datatype_keyword">struct</td>
@@ -146,9 +146,11 @@ mm_kernel_event_properties_new (<em class="parameter"><code><span class="type">v
 <p>Creates a new empty <a class="link" href="MMKernelEventProperties.html" title="MMKernelEventProperties"><span class="type">MMKernelEventProperties</span></a>.</p>
 <div class="refsect3">
 <a name="mm-kernel-event-properties-new.returns"></a><h4>Returns</h4>
-<p>a <a class="link" href="MMKernelEventProperties.html" title="MMKernelEventProperties"><span class="type">MMKernelEventProperties</span></a>. The returned value should be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a>. </p>
+<p>a <a class="link" href="MMKernelEventProperties.html" title="MMKernelEventProperties"><span class="type">MMKernelEventProperties</span></a>. The returned value
+should be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-8.html#api-index-1.8">1.8</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -173,10 +175,12 @@ mm_kernel_event_properties_get_action (<em class="parameter"><code><a class="lin
 </div>
 <div class="refsect3">
 <a name="mm-kernel-event-properties-get-action.returns"></a><h4>Returns</h4>
-<p>The action. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The action. Do not free the returned value, it is
+owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-8.html#api-index-1.8">1.8</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -207,6 +211,7 @@ mm_kernel_event_properties_set_action (<em class="parameter"><code><a class="lin
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-8.html#api-index-1.8">1.8</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -231,10 +236,12 @@ mm_kernel_event_properties_get_name (<em class="parameter"><code><a class="link"
 </div>
 <div class="refsect3">
 <a name="mm-kernel-event-properties-get-name.returns"></a><h4>Returns</h4>
-<p>The name. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The name. Do not free the returned value, it is
+owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-8.html#api-index-1.8">1.8</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -265,6 +272,7 @@ mm_kernel_event_properties_set_name (<em class="parameter"><code><a class="link"
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-8.html#api-index-1.8">1.8</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -290,10 +298,12 @@ mm_kernel_event_properties_get_subsystem
 </div>
 <div class="refsect3">
 <a name="mm-kernel-event-properties-get-subsystem.returns"></a><h4>Returns</h4>
-<p>The subsystem. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The subsystem. Do not free the returned value, it
+is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-8.html#api-index-1.8">1.8</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -325,6 +335,7 @@ mm_kernel_event_properties_set_subsystem
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-8.html#api-index-1.8">1.8</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -349,10 +360,12 @@ mm_kernel_event_properties_get_uid (<em class="parameter"><code><a class="link" 
 </div>
 <div class="refsect3">
 <a name="mm-kernel-event-properties-get-uid.returns"></a><h4>Returns</h4>
-<p>The uid. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The uid. Do not free the returned value, it is
+owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-8.html#api-index-1.8">1.8</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -383,6 +396,7 @@ mm_kernel_event_properties_set_uid (<em class="parameter"><code><a class="link" 
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-8.html#api-index-1.8">1.8</a></p>
 </div>
 </div>
 <div class="refsect1">
@@ -396,6 +410,6 @@ accessed using the provided API.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>
