@@ -8,7 +8,7 @@
 <link rel="up" href="pt02.html" title="Part II. Low level API">
 <link rel="prev" href="MmGdbusModemTimeSkeleton.html" title="MmGdbusModemTimeSkeleton">
 <link rel="next" href="MmGdbusModemFirmwareProxy.html" title="MmGdbusModemFirmwareProxy">
-<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -229,7 +229,8 @@ mm_gdbus_modem_firmware_get_update_settings
                                (<em class="parameter"><code><a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="type">MmGdbusModemFirmware</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Firmware.UpdateSettings">"UpdateSettings"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModemFirmware.html#mm-gdbus-modem-firmware-dup-update-settings" title="mm_gdbus_modem_firmware_dup_update_settings ()"><code class="function">mm_gdbus_modem_firmware_dup_update_settings()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModemFirmware.html#mm-gdbus-modem-firmware-dup-update-settings" title="mm_gdbus_modem_firmware_dup_update_settings ()"><code class="function">mm_gdbus_modem_firmware_dup_update_settings()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-firmware-get-update-settings.parameters"></a><h4>Parameters</h4>
@@ -264,7 +265,7 @@ mm_gdbus_modem_firmware_call_list (<em class="parameter"><code><a class="link" h
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Firmware.List"><GTKDOCLINK HREF="List"><code class="function">List()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModemFirmware.html#mm-gdbus-modem-firmware-call-list-finish" title="mm_gdbus_modem_firmware_call_list_finish ()"><code class="function">mm_gdbus_modem_firmware_call_list_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModemFirmware.html#mm-gdbus-modem-firmware-call-list-sync" title="mm_gdbus_modem_firmware_call_list_sync ()"><code class="function">mm_gdbus_modem_firmware_call_list_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -425,7 +426,7 @@ mm_gdbus_modem_firmware_call_select (<em class="parameter"><code><a class="link"
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Firmware.Select"><GTKDOCLINK HREF="Select"><code class="function">Select()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModemFirmware.html#mm-gdbus-modem-firmware-call-select-finish" title="mm_gdbus_modem_firmware_call_select_finish ()"><code class="function">mm_gdbus_modem_firmware_call_select_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModemFirmware.html#mm-gdbus-modem-firmware-call-select-sync" title="mm_gdbus_modem_firmware_call_select_sync ()"><code class="function">mm_gdbus_modem_firmware_call_select_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -731,6 +732,6 @@ user_function (<a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusMo
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.32</div>
+<hr>Generated by GTK-Doc V1.32.1</div>
 </body>
 </html>

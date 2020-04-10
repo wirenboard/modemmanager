@@ -4,11 +4,11 @@ Bug-Debian: https://bugs.debian.org/683839
 Last-Update: 2018-03-01
 Forwarded: not-needed
 
-Index: modemmanager/data/ModemManager.service.in
+Index: modemmanager-1.12.8/data/ModemManager.service.in
 ===================================================================
---- modemmanager.orig/data/ModemManager.service.in
-+++ modemmanager/data/ModemManager.service.in
-@@ -4,7 +4,7 @@ Description=Modem Manager
+--- modemmanager-1.12.8.orig/data/ModemManager.service.in
++++ modemmanager-1.12.8/data/ModemManager.service.in
+@@ -6,7 +6,7 @@ Requires=@MM_POLKIT_SERVICE@
  [Service]
  Type=dbus
  BusName=org.freedesktop.ModemManager1

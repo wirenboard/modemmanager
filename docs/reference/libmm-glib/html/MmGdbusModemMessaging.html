@@ -8,7 +8,7 @@
 <link rel="up" href="pt02.html" title="Part II. Low level API">
 <link rel="prev" href="MmGdbusModemLocationSkeleton.html" title="MmGdbusModemLocationSkeleton">
 <link rel="next" href="MmGdbusModemMessagingProxy.html" title="MmGdbusModemMessagingProxy">
-<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -272,7 +272,8 @@ MmGdbusModemMessaging is implemented by
 mm_gdbus_modem_messaging_get_messages (<em class="parameter"><code><a class="link" href="MmGdbusModemMessaging.html" title="MmGdbusModemMessaging"><span class="type">MmGdbusModemMessaging</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Messaging.Messages">"Messages"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModemMessaging.html#mm-gdbus-modem-messaging-dup-messages" title="mm_gdbus_modem_messaging_dup_messages ()"><code class="function">mm_gdbus_modem_messaging_dup_messages()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModemMessaging.html#mm-gdbus-modem-messaging-dup-messages" title="mm_gdbus_modem_messaging_dup_messages ()"><code class="function">mm_gdbus_modem_messaging_dup_messages()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-messaging-get-messages.parameters"></a><h4>Parameters</h4>
@@ -333,7 +334,8 @@ mm_gdbus_modem_messaging_get_supported_storages
                                (<em class="parameter"><code><a class="link" href="MmGdbusModemMessaging.html" title="MmGdbusModemMessaging"><span class="type">MmGdbusModemMessaging</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Messaging.SupportedStorages">"SupportedStorages"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModemMessaging.html#mm-gdbus-modem-messaging-dup-supported-storages" title="mm_gdbus_modem_messaging_dup_supported_storages ()"><code class="function">mm_gdbus_modem_messaging_dup_supported_storages()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModemMessaging.html#mm-gdbus-modem-messaging-dup-supported-storages" title="mm_gdbus_modem_messaging_dup_supported_storages ()"><code class="function">mm_gdbus_modem_messaging_dup_supported_storages()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-messaging-get-supported-storages.parameters"></a><h4>Parameters</h4>
@@ -428,7 +430,7 @@ mm_gdbus_modem_messaging_call_create (<em class="parameter"><code><a class="link
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Messaging.Create"><GTKDOCLINK HREF="Create"><code class="function">Create()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModemMessaging.html#mm-gdbus-modem-messaging-call-create-finish" title="mm_gdbus_modem_messaging_call_create_finish ()"><code class="function">mm_gdbus_modem_messaging_call_create_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModemMessaging.html#mm-gdbus-modem-messaging-call-create-sync" title="mm_gdbus_modem_messaging_call_create_sync ()"><code class="function">mm_gdbus_modem_messaging_call_create_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -588,7 +590,7 @@ mm_gdbus_modem_messaging_call_delete (<em class="parameter"><code><a class="link
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Messaging.Delete"><GTKDOCLINK HREF="Delete"><code class="function">Delete()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModemMessaging.html#mm-gdbus-modem-messaging-call-delete-finish" title="mm_gdbus_modem_messaging_call_delete_finish ()"><code class="function">mm_gdbus_modem_messaging_call_delete_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModemMessaging.html#mm-gdbus-modem-messaging-call-delete-sync" title="mm_gdbus_modem_messaging_call_delete_sync ()"><code class="function">mm_gdbus_modem_messaging_call_delete_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -735,7 +737,7 @@ mm_gdbus_modem_messaging_call_list (<em class="parameter"><code><a class="link" 
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Messaging.List"><GTKDOCLINK HREF="List"><code class="function">List()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModemMessaging.html#mm-gdbus-modem-messaging-call-list-finish" title="mm_gdbus_modem_messaging_call_list_finish ()"><code class="function">mm_gdbus_modem_messaging_call_list_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModemMessaging.html#mm-gdbus-modem-messaging-call-list-sync" title="mm_gdbus_modem_messaging_call_list_sync ()"><code class="function">mm_gdbus_modem_messaging_call_list_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -1235,6 +1237,6 @@ user_function (<a class="link" href="MmGdbusModemMessaging.html" title="MmGdbusM
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.32</div>
+<hr>Generated by GTK-Doc V1.32.1</div>
 </body>
 </html>

@@ -8,7 +8,7 @@
 <link rel="up" href="pt02.html" title="Part II. Low level API">
 <link rel="prev" href="MmGdbusObjectManagerClient.html" title="MmGdbusObjectManagerClient">
 <link rel="next" href="MmGdbusObjectProxy.html" title="MmGdbusObjectProxy">
-<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -370,7 +370,8 @@ MmGdbusObject is implemented by
 <pre class="programlisting"><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="returnvalue">MmGdbusModem</span></a> *
 mm_gdbus_object_peek_modem (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem" title="mm_gdbus_object_get_modem ()"><code class="function">mm_gdbus_object_get_modem()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<p>It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em>
+ is running.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem.parameters"></a><h4>Parameters</h4>
@@ -430,7 +431,8 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModem3gpp.html" title="MmGdbusModem3gpp"><span class="returnvalue">MmGdbusModem3gpp</span></a> *
 mm_gdbus_object_peek_modem3gpp (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem3gpp" title="mm_gdbus_object_get_modem3gpp ()"><code class="function">mm_gdbus_object_get_modem3gpp()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<p>It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em>
+ is running.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem3gpp.parameters"></a><h4>Parameters</h4>
@@ -490,7 +492,8 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd"><span class="returnvalue">MmGdbusModem3gppUssd</span></a> *
 mm_gdbus_object_peek_modem3gpp_ussd (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem3gpp-ussd" title="mm_gdbus_object_get_modem3gpp_ussd ()"><code class="function">mm_gdbus_object_get_modem3gpp_ussd()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<p>It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em>
+ is running.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem3gpp-ussd.parameters"></a><h4>Parameters</h4>
@@ -550,7 +553,8 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemCdma"><span class="returnvalue">MmGdbusModemCdma</span></a> *
 mm_gdbus_object_peek_modem_cdma (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-cdma" title="mm_gdbus_object_get_modem_cdma ()"><code class="function">mm_gdbus_object_get_modem_cdma()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<p>It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em>
+ is running.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-cdma.parameters"></a><h4>Parameters</h4>
@@ -610,7 +614,8 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemLocation.html" title="MmGdbusModemLocation"><span class="returnvalue">MmGdbusModemLocation</span></a> *
 mm_gdbus_object_peek_modem_location (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-location" title="mm_gdbus_object_get_modem_location ()"><code class="function">mm_gdbus_object_get_modem_location()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<p>It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em>
+ is running.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-location.parameters"></a><h4>Parameters</h4>
@@ -670,7 +675,8 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemMessaging.html" title="MmGdbusModemMessaging"><span class="returnvalue">MmGdbusModemMessaging</span></a> *
 mm_gdbus_object_peek_modem_messaging (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-messaging" title="mm_gdbus_object_get_modem_messaging ()"><code class="function">mm_gdbus_object_get_modem_messaging()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<p>It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em>
+ is running.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-messaging.parameters"></a><h4>Parameters</h4>
@@ -730,7 +736,8 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemTime.html" title="MmGdbusModemTime"><span class="returnvalue">MmGdbusModemTime</span></a> *
 mm_gdbus_object_peek_modem_time (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-time" title="mm_gdbus_object_get_modem_time ()"><code class="function">mm_gdbus_object_get_modem_time()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<p>It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em>
+ is running.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-time.parameters"></a><h4>Parameters</h4>
@@ -790,7 +797,8 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware"><span class="returnvalue">MmGdbusModemFirmware</span></a> *
 mm_gdbus_object_peek_modem_firmware (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-firmware" title="mm_gdbus_object_get_modem_firmware ()"><code class="function">mm_gdbus_object_get_modem_firmware()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<p>It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em>
+ is running.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-firmware.parameters"></a><h4>Parameters</h4>
@@ -850,7 +858,8 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemOma.html" title="MmGdbusModemOma"><span class="returnvalue">MmGdbusModemOma</span></a> *
 mm_gdbus_object_peek_modem_oma (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-oma" title="mm_gdbus_object_get_modem_oma ()"><code class="function">mm_gdbus_object_get_modem_oma()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<p>It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em>
+ is running.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-oma.parameters"></a><h4>Parameters</h4>
@@ -910,7 +919,8 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemSimple.html" title="MmGdbusModemSimple"><span class="returnvalue">MmGdbusModemSimple</span></a> *
 mm_gdbus_object_peek_modem_simple (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-simple" title="mm_gdbus_object_get_modem_simple ()"><code class="function">mm_gdbus_object_get_modem_simple()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<p>It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em>
+ is running.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-simple.parameters"></a><h4>Parameters</h4>
@@ -970,7 +980,8 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="returnvalue">MmGdbusModemSignal</span></a> *
 mm_gdbus_object_peek_modem_signal (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-signal" title="mm_gdbus_object_get_modem_signal ()"><code class="function">mm_gdbus_object_get_modem_signal()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<p>It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em>
+ is running.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-signal.parameters"></a><h4>Parameters</h4>
@@ -1030,7 +1041,8 @@ does not implement the interface. </p>
 <pre class="programlisting"><a class="link" href="MmGdbusModemVoice.html" title="MmGdbusModemVoice"><span class="returnvalue">MmGdbusModemVoice</span></a> *
 mm_gdbus_object_peek_modem_voice (<em class="parameter"><code><a class="link" href="MmGdbusObject.html" title="MmGdbusObject"><span class="type">MmGdbusObject</span></a> *object</code></em>);</pre>
 <p>Like <a class="link" href="MmGdbusObject.html#mm-gdbus-object-get-modem-voice" title="mm_gdbus_object_get_modem_voice ()"><code class="function">mm_gdbus_object_get_modem_voice()</code></a> but doesn't increase the reference count on the returned object.</p>
-<div class="warning">It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em> is running.</div>
+<p>It is not safe to use the returned object if you are on another thread than the one where the <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerClient.html#GDBusObjectManagerClient-struct"><span class="type">GDBusObjectManagerClient</span></a> or <a href="https://developer.gnome.org/gio/unstable/GDBusObjectManagerServer.html#GDBusObjectManagerServer-struct"><span class="type">GDBusObjectManagerServer</span></a> for <em class="parameter"><code>object</code></em>
+ is running.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-object-peek-modem-voice.parameters"></a><h4>Parameters</h4>
@@ -1229,6 +1241,6 @@ does not implement the interface. </p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.32</div>
+<hr>Generated by GTK-Doc V1.32.1</div>
 </body>
 </html>

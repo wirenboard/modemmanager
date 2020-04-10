@@ -7503,7 +7503,7 @@ set_voice_in_call_unsolicited_events_handlers (MMBroadbandModem *self,
     GRegex         *in_call_event_regex;
     guint           i;
 
-    in_call_event_regex = g_regex_new ("\\r\\n(NO CARRIER|BUSY|NO ANSWER|NO DIALTONE)\\r\\n$",
+    in_call_event_regex = g_regex_new ("\\r\\n(NO CARRIER|BUSY|NO ANSWER|NO DIALTONE)(\\r)?\\r\\n$",
                                        G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
 
     ports[0] = MM_PORT_SERIAL_AT (ports_ctx->primary);
@@ -7543,7 +7543,7 @@ modem_voice_setup_in_call_unsolicited_events (MMIfaceModemVoice   *_self,
 
         mm_dbg ("Setting up in-call ports context");
         ctx = ports_context_new ();
-        if (!ports_context_open (self, ctx, FALSE, FALSE, FALSE, &error)) {
+        if (!ports_context_open (self, ctx, FALSE, TRUE, FALSE, &error)) {
             ports_context_unref (ctx);
             g_prefix_error (&error, "Couldn't open ports in-call: ");
         } else {

@@ -99,7 +99,7 @@ huawei_custom_init_finish (MMPortProbe *probe,
 
 static void huawei_custom_init_step (GTask *task);
 
-static void
+static gboolean
 cache_port_mode (MMDevice *device,
                  const gchar *reply,
                  const gchar *type,
@@ -114,9 +114,12 @@ cache_port_mode (MMDevice *device,
         errno = 0;
         /* shift by 1 so NULL return from g_object_get_data() means no tag */
         i = 1 + strtol (p + strlen (type), NULL, 10);
-        if (i > 0 && i < 256 && errno == 0)
+        if (i > 0 && i < 256 && errno == 0) {
             g_object_set_data (G_OBJECT (device), tag, GINT_TO_POINTER ((gint) i));
+            return TRUE;
+        }
     }
+    return FALSE;
 }
 
 static void
@@ -146,20 +149,22 @@ getportmode_ready (MMPortSerialAt *port,
         /* Port mode not supported */
     } else {
         MMDevice *device;
+        guint     n_cached_port_modes = 0;
 
         mm_dbg ("(Huawei) port mode layout retrieved");
 
         /* Results are cached in the parent device object */
         device = mm_port_probe_peek_device (ctx->probe);
-        cache_port_mode (device, response, "PCUI:", TAG_HUAWEI_PCUI_PORT);
-        cache_port_mode (device, response, "MDM:",  TAG_HUAWEI_MODEM_PORT);
-        cache_port_mode (device, response, "NDIS:", TAG_HUAWEI_NDIS_PORT);
-        cache_port_mode (device, response, "DIAG:", TAG_HUAWEI_DIAG_PORT);
+        n_cached_port_modes += cache_port_mode (device, response, "PCUI:", TAG_HUAWEI_PCUI_PORT);
+        n_cached_port_modes += cache_port_mode (device, response, "MDM:",  TAG_HUAWEI_MODEM_PORT);
+        n_cached_port_modes += cache_port_mode (device, response, "NDIS:", TAG_HUAWEI_NDIS_PORT);
+        n_cached_port_modes += cache_port_mode (device, response, "DIAG:", TAG_HUAWEI_DIAG_PORT);
         /* GETPORTMODE response format in newer devices... (e.g. E3372) */
-        cache_port_mode (device, response, "pcui:",  TAG_HUAWEI_PCUI_PORT);
-        cache_port_mode (device, response, "modem:", TAG_HUAWEI_MODEM_PORT);
+        n_cached_port_modes += cache_port_mode (device, response, "pcui:",  TAG_HUAWEI_PCUI_PORT);
+        n_cached_port_modes += cache_port_mode (device, response, "modem:", TAG_HUAWEI_MODEM_PORT);
 
-        g_object_set_data (G_OBJECT (device), TAG_GETPORTMODE_SUPPORTED, GUINT_TO_POINTER (TRUE));
+        if (n_cached_port_modes > 0)
+            g_object_set_data (G_OBJECT (device), TAG_GETPORTMODE_SUPPORTED, GUINT_TO_POINTER (TRUE));
 
         /* Mark port as being AT already */
         mm_port_probe_set_result_at (ctx->probe, TRUE);
@@ -261,7 +266,6 @@ huawei_custom_init_step (GTask *task)
     if (g_task_return_error_if_cancelled (task)) {
         mm_dbg ("(Huawei) no need to keep on running custom init in (%s)",
                 mm_port_get_device (MM_PORT (ctx->port)));
-        g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
     }
@@ -422,42 +426,67 @@ static void
 propagate_port_mode_results (GList *probes)
 {
     MMDevice *device;
-    GList *l;
-    gboolean primary_flagged = FALSE;
+    GList    *l;
+    gboolean  primary_flagged = FALSE;
 
     g_assert (probes != NULL);
-    device = mm_port_probe_peek_device (MM_PORT_PROBE (probes->data));
 
     /* Now we propagate the tags to the specific port probes */
+    device = mm_port_probe_peek_device (MM_PORT_PROBE (probes->data));
     for (l = probes; l; l = g_list_next (l)) {
-        MMPortSerialAtFlag at_port_flags = MM_PORT_SERIAL_AT_FLAG_NONE;
-        guint usbif;
+        MMPortSerialAtFlag  at_port_flags = MM_PORT_SERIAL_AT_FLAG_NONE;
+        MMPortProbe        *probe;
+        guint               usbif;
+        const gchar        *description;
 
-        usbif = mm_kernel_device_get_property_as_int_hex (mm_port_probe_peek_port (MM_PORT_PROBE (l->data)), "ID_USB_INTERFACE_NUM");
+        probe = MM_PORT_PROBE (l->data);
 
+        /* Tags only applicable to AT ports */
+        if (!mm_port_probe_is_at (probe))
+            goto next;
+
+        /* Port type hints from AT^GETPORTMODE */
+        usbif = mm_kernel_device_get_property_as_int_hex (mm_port_probe_peek_port (probe), "ID_USB_INTERFACE_NUM");
         if (GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (device), TAG_GETPORTMODE_SUPPORTED))) {
             if (usbif + 1 == GPOINTER_TO_INT (g_object_get_data (G_OBJECT (device), TAG_HUAWEI_PCUI_PORT))) {
                 at_port_flags = MM_PORT_SERIAL_AT_FLAG_PRIMARY;
                 primary_flagged = TRUE;
-            } else if (usbif + 1 == GPOINTER_TO_INT (g_object_get_data (G_OBJECT (device), TAG_HUAWEI_MODEM_PORT)))
+            } else if (usbif + 1 == GPOINTER_TO_INT (g_object_get_data (G_OBJECT (device), TAG_HUAWEI_MODEM_PORT))) {
                 at_port_flags = MM_PORT_SERIAL_AT_FLAG_PPP;
-            else if (!g_object_get_data (G_OBJECT (device), TAG_HUAWEI_MODEM_PORT) &&
-                     usbif + 1 == GPOINTER_TO_INT (g_object_get_data (G_OBJECT (device), TAG_HUAWEI_NDIS_PORT)))
+            } else if (!g_object_get_data (G_OBJECT (device), TAG_HUAWEI_MODEM_PORT) &&
+                       usbif + 1 == GPOINTER_TO_INT (g_object_get_data (G_OBJECT (device), TAG_HUAWEI_NDIS_PORT))) {
                 /* If NDIS reported only instead of MDM, use it */
                 at_port_flags = MM_PORT_SERIAL_AT_FLAG_PPP;
-        } else if (usbif == 0 &&
-                   mm_port_probe_is_at (MM_PORT_PROBE (l->data))) {
-            /* If GETPORTMODE is not supported, we assume usbif 0 is the modem port */
-            at_port_flags = MM_PORT_SERIAL_AT_FLAG_PPP;
-
-            /* /\* TODO. */
-            /*  * For CDMA modems we assume usbif0 is both primary and PPP, since */
-            /*  * they don't have problems with talking on secondary ports. */
-            /*  *\/ */
-            /* if (caps & CAP_CDMA) */
-            /*     pflags |= MM_PORT_SERIAL_AT_FLAG_PRIMARY; */
+            }
+            goto next;
         }
 
+        /* Port type hints from interface description */
+        description = mm_kernel_device_get_interface_description (mm_port_probe_peek_port (probe));
+        if (description) {
+            gchar *lower_description;
+
+            mm_dbg ("(Huawei) %s interface description: %s", mm_port_probe_get_port_name (probe), description);
+
+            lower_description = g_ascii_strdown (description, -1);
+            if (strstr (lower_description, "modem"))
+                at_port_flags = MM_PORT_SERIAL_AT_FLAG_PPP;
+            else if (strstr (lower_description, "pcui")) {
+                at_port_flags = MM_PORT_SERIAL_AT_FLAG_PRIMARY;
+                primary_flagged = TRUE;
+            }
+            g_free (lower_description);
+            goto next;
+        }
+
+        /* If GETPORTMODE unsupported and no other port type hints, we assume
+         * usbif 0 is the modem port */
+        if (usbif == 0) {
+            at_port_flags = MM_PORT_SERIAL_AT_FLAG_PPP;
+            goto next;
+        }
+
+    next:
         g_object_set_data (G_OBJECT (l->data), TAG_AT_PORT_FLAGS, GUINT_TO_POINTER (at_port_flags));
     }
 
