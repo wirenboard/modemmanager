@@ -1,3 +1,1856 @@
+commit e89a4a6389cd05ee8f7323b382ac139a8d56768f
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Sep 22 11:01:22 2018 +0200
+
+    release: bump version to 1.8.2
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 9b2ce2e47d69c69d4edb4614bf236f06766d76dd
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Sep 22 10:51:29 2018 +0200
+
+    NEWS: update for 1.8.2
+
+ NEWS | 69
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 69 insertions(+)
+
+commit bf395fe61a6b074b33c40bf8348323ed0efc05aa
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Sep 21 15:02:03 2018 +0200
+
+    cli,signal: add generic fields in its own group
+
+    This is just to consolidate the output w.r.t. similar fields in
+    e.g. the Messaging or Location interfaces.
+
+    (cherry picked from commit 8ef6d397c70313bdc511319c707e0ae825eacc96)
+
+ cli/mmcli-modem-signal.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 18b8664ae14d7ff39484b808b21bd6de482615fc
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Sep 13 09:35:42 2018 +0200
+
+    po: minor updates in fr and it translation files
+
+    (cherry picked from commit e75063d80a8b18a28a89116beb78e42fe85c0d56)
+
+ po/fr.po | 17 ++++++++---------
+ po/it.po |  7 +++----
+ 2 files changed, 11 insertions(+), 13 deletions(-)
+
+commit 7286c9691a2102f074afa49be4238569f347e2ea
+Author: Milo Casagrande <milo@milo.name>
+Date:   Tue Sep 11 11:36:38 2018 +0200
+
+    [l10n] Add Italian translation
+
+    Signed-off-by: Milo Casagrande <milo@milo.name>
+    (cherry picked from commit 45a8fccb03ddcc35080f746bbe00b481bdbfb43e)
+
+ po/LINGUAS |   1 +
+ po/it.po   | 108
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 109 insertions(+)
+
+commit 02ebd432346c4aafd64a2819bf9e1da48e67e8da
+Author: Paul Bartell <p.bartell@temperednetworks.com>
+Date:   Mon Sep 18 19:24:38 2017 -0700
+
+    broadband-modem: Call signal shutdown function when modem is disabled
+
+    (cherry picked from commit 3dc4106f0da30a31af040cb7c38cc1df6a1a177c)
+
+ src/mm-broadband-modem.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+commit df4970995c2c453b15918bff3ec0d6ac8f33f801
+Author: Paul Bartell <p.bartell@temperednetworks.com>
+Date:   Mon Sep 18 19:23:33 2017 -0700
+
+    iface-modem-signal: Tear down refresh context upon shutdown.
+
+    (cherry picked from commit fe3665b18ed79f6de759718959154d5cbee4382a)
+
+ src/mm-iface-modem-signal.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit 61b54ba924ead946471fe716668ec25790c215f8
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Aug 24 18:44:36 2018 +0200
+
+    helpers,tests: update ICCID related unit tests
+
+    Fix the test for invalid characters, because now I allow hex chars in
+    the account number.
+
+    And add new tests with real China Mobile ICCIDs that contain hex chars
+    in the account number.
+
+    (cherry picked from commit 32aa8333c62296c7c9c918b161e35355821e7615)
+
+ src/tests/test-modem-helpers.c | 32 +++++++++++++++++++++++++++++++-
+ 1 file changed, 31 insertions(+), 1 deletion(-)
+
+commit cc8891ef67986f71e4a56cccec25d33da8352260
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Aug 21 16:31:35 2018 +0200
+
+    helpers: allow [A-F] range in operator-specific ICCID account number
+
+    There are operators (e.g. the Chinese CMCC operator) that abuse the
+    fact that 4 bits are used to store the BCD encoded numbers, and also
+    use the [A-F] range as valid characters for the ICCID in the operator
+    specific account number part. Haven't seen any documentation where
+    this format with [A-F] characters is explicitly allowed, but I have
+    seen multiple real cases where it happens. E.g.:
+
+      898602F9091830030220
+      898602C0123456789012
+
+    This patch also removes the 'last F' validation, used when reading
+    19-digit ICCIDs with +CRSM, as it no longer applies.
+
+    (cherry picked from commit 099d54a4bcaf7d71ccda1d42424d5b73ec286911)
+
+ src/mm-modem-helpers.c | 41 ++++++++++++++++++++++-------------------
+ 1 file changed, 22 insertions(+), 19 deletions(-)
+
+commit 3e811f80b9cee1419c5d9dae562859a07fd38a07
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Aug 21 16:26:45 2018 +0200
+
+    ublox: implement custom ICCID loading
+
+    Use AT+CCID to query the SIM ICCID, and fallback to parent's +CRSM
+    based method otherwise.
+
+    (cherry picked from commit eb01914bd0cada5d2ed144d5f3f45fd17722e97c)
+
+ plugins/Makefile.am                      |   2 +
+ plugins/ublox/mm-broadband-modem-ublox.c |  25 +++++
+ plugins/ublox/mm-sim-ublox.c             | 162
+ +++++++++++++++++++++++++++++++
+ plugins/ublox/mm-sim-ublox.h             |  51 ++++++++++
+ 4 files changed, 240 insertions(+)
+
+commit fdacaa50c8261b0a62deeff05fed2365bc2389f0
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jan 8 13:37:24 2018 +0100
+
+    helpers: allow 19-digit reported ICCIDs
+
+    The mm_3gpp_parse_iccid() method does validation of the ICCID string
+    and was originally implemented to handle +CRSM reported values. The
+    implementation was looking for 20-digit strings, even for 19-digit
+    ICCIDs (those finished with a trailing 'F').
+
+    We now extend the logic to also validate ICCID strings reported as
+    19-digit values directly, and when that happens we won't allow
+    swapping of the digits (a +CRSM specific requirement) or trailing 'F'
+    characters (as that is only required when reporting 19-digit ICCIDs
+    with 20-digit strings).
+
+    This change allows us to e.g. use the u-blox specific AT+CCID command
+    and validate the returned ICCID with the same helper method, which
+    currently fails:
+
+      (ttyACM2): --> 'AT+CCID<CR>'
+      (ttyACM2): <-- '<CR><LF>+CCID:
+      8934077700015848638<CR><LF><CR><LF>OK<CR><LF>'
+      couldn't load SIM identifier: 'Invalid ICCID response size (was 19,
+      expected 20)'
+
+    (cherry picked from commit 02821232878d2a12bf248b7f2594c48076593810)
+
+ src/mm-modem-helpers.c         | 25 +++++++++++++++++--------
+ src/tests/test-modem-helpers.c | 15 +++++++++++++++
+ 2 files changed, 32 insertions(+), 8 deletions(-)
+
+commit 301331c30ac3f970b49b1aba5fd17c7769bc63ae
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Sep 8 10:04:58 2018 +0200
+
+    broadband-bearer: don't do connection checks on CDMA
+
+    On CDMA-only connections we won't have a CID defined, so instead of
+    getting in a loop of warnings reporting "cid not defined", early error
+    out with an UNSUPPORTED error so that the connection check isn't tried
+    any more.
+
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/issues/83
+    (cherry picked from commit 47ed19d5be68f139d4fbb00c997cd2805488ace7)
+
+ src/mm-broadband-bearer.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+commit 2ccd8a3de1fda051d8684864cc7ff6416dde0c2b
+Author: Ben Chan <benchan@chromium.org>
+Date:   Tue Aug 28 13:10:24 2018 -0700
+
+    test,modem-helpers: remove unnecessary NULL check for g_free()
+
+    g_free() handles a NULL pointer properly, so there is no need to
+    have a
+    NULL check before calling g_free().
+
+    (cherry picked from commit 1b3b2e26a7ff4faf536074b8b82d6e4eec11b36c)
+
+ src/tests/test-modem-helpers.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+commit e1e856c38e5b7424e988fc4aa9fced4721682dff
+Author: Guido Günther <agx@sigxcpu.org>
+Date:   Mon Aug 27 16:51:28 2018 +0200
+
+    docs: mm_modem_get_sim is async
+
+    Signed-off-by: Guido Günther <guido.gunther@puri.sm>
+    (cherry picked from commit f24d8279bcfac4f9945c2e47bf60e6dfc5a686f5)
+
+ libmm-glib/mm-modem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit a90aa9ac89bf9f6fb79470e1f0276f5753d6ff84
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Aug 13 19:14:30 2018 +0200
+
+    cinterion: new 'MMSharedCinterion' interface
+
+    Implement a new interface to keep the code shared between the QMI and
+    non-QMI modem implementations.
+
+    While doing that, also fix the parent interface pointer handling, so
+    that it isn't a static pointer applicable to all modems, and make it a
+    per-modem specific pointer. Without this fix, ModemManager would crash
+    if e.g. running with both a QMI and non-QMI Cinterion modem at the
+    same time.
+
+    The new shared Cinterion logic will be in charge of managing all GPS
+    sources not already managed by the parent interface. E.g. if the
+    parent implementation already supports QMI-based GPS location (using
+    the LOC service for example) prefer that to the custom AT-based
+    logic.
+
+    (cherry picked from commit 59e79c996b4863448f68a262bf8be053416a1344)
+
+ plugins/Makefile.am                                |   4 +-
+ plugins/cinterion/mm-broadband-modem-cinterion.c   |  43 +-
+ .../cinterion/mm-broadband-modem-qmi-cinterion.c   |  34 +-
+ ...mm-common-cinterion.c => mm-shared-cinterion.c} | 498
+ +++++++++++----------
+ ...mm-common-cinterion.h => mm-shared-cinterion.h} |  46 +-
+ 5 files changed, 343 insertions(+), 282 deletions(-)
+
+commit 4c9a6a29f05770efa50218580cc8e7a49b0d6acb
+Author: Claude Paroz <claude@2xlibre.net>
+Date:   Sat Aug 18 18:36:03 2018 +0200
+
+    Add French translation
+
+    (cherry picked from commit cc0c76d87564aacee774644a3422d7854f0090bb)
+
+ po/LINGUAS |   1 +
+ po/fr.po   | 106
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 107 insertions(+)
+
+commit d322b20f958e5902dd53ef0d866a3b664009a5d6
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Aug 14 10:59:53 2018 +0200
+
+    po: add Turkish translation
+
+    From: Emin Tufan Çetin <etcetin@gmail.com>
+
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/issues/80
+    (cherry picked from commit 89ffcbdd8db4164a4a1cbea0224b0cc14a3f57b0)
+
+ po/LINGUAS |   1 +
+ po/tr.po   | 105
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 106 insertions(+)
+
+commit 9433ddfa75b5605e5db4383d2587d36b2418ccb5
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Aug 14 10:33:49 2018 +0200
+
+    broadband-modem-mbim: explicitly ignore SMS storage initialization
+
+    The MBIM protocol hides to the user the concept of SMS storages, so we
+    should explicitly ignore the initialization step so that it isn't run
+    with the parent AT-based implementation.
+
+    (cherry picked from commit b7e5ca62c5eca1118e0c5cbda3d769f2c756c92c)
+
+ src/mm-broadband-modem-mbim.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit d678a0a8d5e21cc4de270d9b53439fbbe2e5f4ac
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Aug 9 13:29:32 2018 +0200
+
+    cli,signal: print unset signal values as n/a
+
+    (cherry picked from commit 342abd7f6303ccd7f9a519c766ea53f3aa924b2d)
+
+ cli/mmcli-modem-signal.c | 74
+ ++++++++++++++++++++++++------------------------
+ 1 file changed, 37 insertions(+), 37 deletions(-)
+
+commit c8a57fc68602f504bf07b837a6253c2be06fa262
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Aug 9 11:59:40 2018 +0200
+
+    libmm-glib,signal: fix MM_SIGNAL_UNKNOWN symbol value
+
+    Unfortunately, G_MINDOUBLE is basically 0.0, so MM_SIGNAL_UNKNOWN ends
+    up giving us a value that may fall in the range of expected values for
+    the signal component.
+
+    Update the MM_SIGNAL_UNKNOWN symbol to match a value which is
+    definitely out any other possible valid range, so that we can easily
+    detect which values are set and which aren't.
+
+    While API is maintained, this fix is introducing an ABI break. Not a
+    big deal anyway, as the purpose of the value is just to detect unset
+    fields.
+
+    (cherry picked from commit fe66bdf65e57fa7dee3dcb8dea068fb3fc7aec34)
+
+ libmm-glib/mm-signal.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit ece31853692f98b6d0c2ef2771362519af85e73d
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Aug 4 17:27:53 2018 +0200
+
+    iface-modem: reload current bands after setting
+
+    Setting bands is a very device-specific operation. Sometimes the
+    device requires specific band combinations, or sometimes the 'any'
+    specific logic doesn't apply to all supported bands (e.g. may apply
+    only to the currently selected modes, as in XMM based devices).
+
+    So, don't assume that if the set command succeeds we have set all
+    expected bands. Instead, do an explicit loading of the current bands
+    after the set operation, same thing as we do when setting modes.
+
+    (cherry picked from commit 59a5af9771b942ea6878e2f428635daae624f229)
+
+ src/mm-iface-modem.c | 90
+ ++++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 66 insertions(+), 24 deletions(-)
+
+commit 855defe006513441146341f36974a89badbc8ec6
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Jul 24 00:04:13 2018 +0200
+
+    dell: don't ignore TTYs in QMI/MBIM modems
+
+    When we detect that the modem is QMI-capable or MBIM-capable, we still
+    want to be able to use TTYs, for features unsupported by the main
+    protocols.
+
+    So, don't flag all the TTYs as non-AT non-QCDM, let them probe as
+    usual instead.
+
+    (cherry picked from commit 24e31dc2b86ade753a0c5853ae568f2312e19072)
+
+ plugins/dell/mm-plugin-dell.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+commit 5f6ebc7c544100153c2b019268cb55f889476a64
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Aug 6 10:15:36 2018 +0200
+
+    broadband-modem: allow Enable() if disabling or initializing
+
+    The first step in the Enable() processing is to wait for a final
+    state, so we can definitely wait for the ongoing disabling or
+    initializing states to finish before we go on with the enable
+    operation, there is no need to early fail if the disabling or
+    initializing intermediate states are detected.
+
+    (cherry picked from commit 8430b051139cc4ca5711345f6244ca5cf160c7e6)
+
+ src/mm-broadband-modem.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
+
+commit 2e6bcd3171ee7c033fea54a74588c1e2ec1af1f6
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Aug 6 10:12:01 2018 +0200
+
+    base-modem: allow parallel Enable() and Disable() requests
+
+    If additional Enable() requests are received while one is already
+    ongoing, we queue them and will end up completing all with the same
+    result once the first one finishes.
+
+    Same logic also for Disable().
+
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/issues/8
+    (cherry picked from commit c4766122476b53a89c606bd0c0cbbd0ec6d9826b)
+
+ src/mm-base-modem.c      | 117
+ +++++++++++++++++++++++++++++++++++++++--------
+ src/mm-broadband-modem.c |   6 +--
+ 2 files changed, 100 insertions(+), 23 deletions(-)
+
+commit b15b01e26f883f4f52eae1d8eb3a7fbe405198d4
+Author: Lubomir Rintel <lkundrak@v3.sk>
+Date:   Mon Aug 6 13:48:05 2018 +0200
+
+    docs/ModemManager.8: document --filter-policy option
+
+    (cherry picked from commit dbfc03d9ac5f0ab78d5447b0541cb459ab15c32c)
+
+ docs/man/ModemManager.8 | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+commit c68a703f77b06397c97a2c1e11a11a0440eda4b7
+Author: Lubomir Rintel <lkundrak@v3.sk>
+Date:   Mon Aug 6 13:34:09 2018 +0200
+
+    docs: move mmcli(8) to section 1
+
+    Section (8) is for tools that require root privileges.
+
+    (cherry picked from commit b56cd74ab57edc024eefbcfa0bf0e5ffbabe32eb)
+
+ docs/man/Makefile.am          | 2 +-
+ docs/man/ModemManager.8       | 2 +-
+ docs/man/{mmcli.8 => mmcli.1} | 4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+commit 9541fc20a6991e35b3c0a67fb4fd4d38adc0f014
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Aug 5 14:24:25 2018 +0200
+
+    signal: cleanup previous extended info if no new one given
+
+    E.g. if the modem switches from 4G to 3G while the extended signal
+    information is enabled, we should no longer expose LTE specific signal
+    quality values, only the UMTS specific ones.
+
+    E.g. to avoid this:
+
+        $ mmcli -m 1 --signal-get
+          -------------------------
+          UMTS   | RSSI: '0,00' dBm
+                 | RSCP: '-92,00' dBm
+                 | EcIo: '-13,00' dB
+          -------------------------
+          LTE    | RSSI: '0,00' dBm
+                 | RSRQ: '-6,50' dB
+                 | RSRP: '-96,00' dBm
+                 |  SNR: '0,00' dB
+
+    (cherry picked from commit ae9efa05c855c94122ef25ab6ee43dee13c1a64c)
+
+ src/mm-iface-modem-signal.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+commit b90c142ad8f107963a99d59e3a3e499705c1901e
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Aug 3 17:24:27 2018 +0200
+
+    build: ignore all tester programs for plugin-specific modem helpers
+
+    (cherry picked from commit ab0133445c67091bc494f01bfaea663d5298c568)
+
+ .gitignore | 10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
+
+commit d12fb36f526a5d4a269568b760da29df58778e51
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Jul 31 00:21:05 2018 +0200
+
+    cinterion: fix band related unit tests
+
+    The sort_band() method used in the tester was totally wrong, it was
+    comparing the addresses of the variables instead of the MMModemBand
+    values.
+
+    Use the common mm_common_bands_garray_sort() instead, which works as
+    expected.
+
+    (cherry picked from commit b8c7773a74f0c460ff19742a29dbf0060119e584)
+
+ plugins/cinterion/tests/test-modem-helpers-cinterion.c | 14
+ ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
+
+commit 895c62609e9ec201a8bf712948d5415d8aa6c929
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jul 30 23:30:43 2018 +0200
+
+    broadband-modem-mbim: avoid use of uninitialized variable
+
+    (cherry picked from commit 3a4a137de31cf1513c5fba4685b3de34eaa8713a)
+
+ src/mm-broadband-modem-mbim.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 950883d87d80a1206c9773de4d841463c4e72663
+Author: Reinhard Speyerer <rspmn@arcor.de>
+Date:   Mon Jul 30 17:26:46 2018 +0200
+
+    mm-modem-helpers-cinterion: update band table for PLS8-J
+
+    The default AT^SCFG="Radio/Band" value for Cinterion PLS8-J devices is
+    "16819472". Add UMTS band 19 and LTE band 19 entries based on the
+    information given in the PLS8 datasheet.
+
+    (cherry picked from commit ebe9fcd57445460c3a37f7a82dc67843fb07a5cb)
+
+ plugins/cinterion/mm-modem-helpers-cinterion.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+commit db76ab5f4495c43136c514b5d0495a406b1e0f28
+Author: Bob Ham <bob.ham@puri.sm>
+Date:   Wed Jul 25 09:50:41 2018 +0100
+
+    iface-modem-voice: fix ordering of D-Bus signals for call
+    addition/deletion
+
+    To have proper ordering in the D-Bus signals, the skeleton's property
+    changes must be flushed before the Call{Add,Delet}ed signals are
+    emitted.  Without this flush, the emission of the PropertiesChanged
+    signal is delayed until the main loop is idle.  This causes problems
+    on the client side, for example the CallAdded signal being received
+    before the Calls property contains the call.
+
+    Closes: #81
+    (cherry picked from commit a160832fced9c1e944e119ffdb47ff6460abc8aa)
+
+ src/mm-iface-modem-voice.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit fb5c7be493ba4746ae02300d25bad905c1729d88
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Jul 27 17:46:01 2018 +0200
+
+    man,mmcli: fix documentation for --set-current-bands
+
+    Reported by: Matthew Stanger <stangerm2@gmail.com>
+
+    (cherry picked from commit 95cee88ccd7a87147ef8222ed575eb12c73320ee)
+
+ docs/man/mmcli.8 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 51c358cacfd0800af7b89a06b80719d48280b9f8
+Author: mstanger <matthew_stanger@trimble.com>
+Date:   Wed Jul 25 14:44:27 2018 -0600
+
+    mm-modem-helpers-cinterion: update freq/band table
+
+    This info comes from PLS8-X/E/J/V/US, HC25 & PHS8 references, the
+    last two can be found publicly via Google search.
+
+    Swapped bit-mask locations for G850 & PCS bands as they may have
+    changed with FW or where accidently put in the wrong place.
+
+    Updated many 3G & 4G bit-mask fields.
+
+    (cherry picked from commit 7913fe4fafb583d517ca21ab6ea59d9a1d8c773d)
+
+ plugins/cinterion/mm-modem-helpers-cinterion.c | 32
+ ++++++++++++++++++--------
+ 1 file changed, 22 insertions(+), 10 deletions(-)
+
+commit 6fda81b4fae75ae0e184c076d7286707399e41fb
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Jul 18 12:54:49 2018 +0200
+
+    broadband-modem-mbim: show USB product attribute as model
+
+    (cherry picked from commit 8ea8d4e7747d469e93c6a0c31a7b023e0f5633d1)
+
+ src/mm-broadband-modem-mbim.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+commit c93b1823743fba3bcf99ad7fc8165e48b3f8337c
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Jul 18 12:53:44 2018 +0200
+
+    kerneldevice: allow loading physdev product string
+
+    (cherry picked from commit 0a2060cc78150039bfd07d875016a52672dfe7bd)
+
+ src/kerneldevice/mm-kernel-device-generic.c |  9 +++++++++
+ src/kerneldevice/mm-kernel-device-udev.c    | 16 ++++++++++++++++
+ src/kerneldevice/mm-kernel-device.c         | 10 ++++++++++
+ src/kerneldevice/mm-kernel-device.h         |  2 ++
+ 4 files changed, 37 insertions(+)
+
+commit 635057a91747b5c580a5f06a10ed170f1aa03ac8
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jul 19 15:56:40 2018 +0200
+
+    blacklist: include all devices from Prusa Research
+
+    (cherry picked from commit df8ead4808095fe1d0bd079234ddfd56e591fc4b)
+
+ src/77-mm-usb-device-blacklist.rules | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit 9b0cd6aaf529c3d12961e86c0496a52ac17ab5c1
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Jul 8 14:25:01 2018 +0200
+
+    broadband-modem-qmi: plug memleak when processing a factory reset
+
+    (cherry picked from commit d3bc04676444b26991dd08426422079f541ba8f4)
+
+ src/mm-broadband-modem-qmi.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit 420aabc50a3117af0d1b812389d9be0c22e3d40b
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Jun 15 17:04:39 2018 +0200
+
+    broadband-modem: skip concatenated AT commands
+
+    Not all modems support AT command concatenation (e.g. u-blox TOBY-L4
+    doesn't, according to a specific note about it in the AT command
+    reference). So just skip concatenation in the few places where it's
+    used.
+
+    (cherry picked from commit fff3f0ff7130f291cbaf530d1aa3c31168e5e5db)
+
+ src/mm-broadband-modem.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
+
+commit 0b3437f90e4c9facd1442671874d150fd5e14a9c
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Jun 15 16:48:18 2018 +0200
+
+    ublox: always send user/pass strings, even if no authentication
+    requested
+
+    The TOBY-L2 allowed to skup the user/pass string fields when no
+    authentication was requested, but according to the AT command
+    reference, all the remaining u-blox modules do require these two
+    fields given always (e.g. just as empty strings).
+
+    As per this sequence in a TOBY-L4:
+
+     (ttyACM2): --> 'AT+UAUTHREQ=?<CR>'
+     (ttyACM2): <-- '<CR><LF>+UAUTHREQ:
+     (1-4),(0-2),,<CR><LF><CR><LF>OK<CR><LF>'
+     (ttyACM2): --> 'AT+UAUTHREQ=1,0<CR>'
+     (ttyACM2): <-- '<CR><LF>+CME ERROR: 4<CR><LF>'
+
+    It should have been: AT+UAUTHREQ=1,0,"",""
+
+    (cherry picked from commit d134402efc49eb5e51ee7db33c8aef785837ef16)
+
+ plugins/ublox/mm-broadband-bearer-ublox.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit fdb096f7a18a1d227c961224f02092546dd06adb
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon May 14 21:38:07 2018 +0200
+
+    iface-modem-simple: no need for an extra 'self' reference when
+    using GTask
+
+    (cherry picked from commit 3570604bc4005e36e506c896bdb8cfc6a026df96)
+
+ src/mm-iface-modem-simple.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
+
+commit 63c8f509d458a8039a22cd8c928e33b136320f3c
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jul 5 22:53:28 2018 +0200
+
+    iface-modem-time: make sure timezone context is cleaned up properly
+
+    If we're going to overwrite the timezone context, make sure everything
+    is cleaned up, including the signal handler. Otherwise, we may end up
+    running the signal handler without a context attached:
+
+        (gdb) bt
+        #0  network_timezone_state_changed (self=0x6aa1e8) at
+        mm-iface-modem-time.c:266
+        #1  0x76a8d418 in g_closure_invoke (closure=0x6c9810,
+        return_value=0x0, return_value@entry=0x1, n_param_values=2,
+        param_values=0x7edb58c0, param_values@entry=0x6cdab8,
+            invocation_hint=invocation_hint@entry=0x7edb585c) at
+            gclosure.c:804
+        #2  0x76a9e674 in signal_emit_unlocked_R
+        (node=node@entry=0x6794d0, detail=0, detail@entry=391,
+        instance=instance@entry=0x6aa1e8, emission_return=0x6794a8,
+        emission_return@entry=0x0,
+            instance_and_params=instance_and_params@entry=0x7edb58c0)
+            at gsignal.c:3629
+        #3  0x76aa31f4 in g_signal_emit_valist
+        (instance=instance@entry=0x6aa1e8, signal_id=signal_id@entry=1,
+        detail=detail@entry=6767564, var_args=..., var_args@entry=...) at
+        gsignal.c:3385
+        #4  0x76aa34ec in g_signal_emit (instance=instance@entry=0x6aa1e8,
+        signal_id=signal_id@entry=1, detail=391) at gsignal.c:3441
+        #5  0x76a91698 in g_object_dispatch_properties_changed
+        (object=0x6aa1e8, n_pspecs=1, pspecs=<optimized out>) at
+        gobject.c:1062
+        #6  0x76a90e7c in g_object_notify_queue_thaw
+        (object=object@entry=0x6aa1e8, nqueue=nqueue@entry=0x75409418)
+        at gobject.c:296
+        #7  0x76a9470c in g_object_set_valist
+        (object=object@entry=0x6aa1e8,
+        first_property_name=first_property_name@entry=0xad566
+        "iface-modem-state", var_args=..., var_args@entry=...) at
+        gobject.c:2171
+        #8  0x76a94b18 in g_object_set (_object=_object@entry=0x6aa1e8,
+        first_property_name=0xad566 "iface-modem-state") at gobject.c:2275
+        #9  0x0004b8a4 in __iface_modem_update_state_internal
+        (self=0x6aa1e8, new_state=MM_MODEM_STATE_DISABLED,
+        reason=MM_MODEM_STATE_CHANGE_REASON_USER_REQUESTED,
+        failed_reason=MM_MODEM_STATE_FAILED_REASON_NONE)
+            at mm-iface-modem.c:1487
+        #10 0x0007047c in disabling_context_free (ctx=0x6ba850) at
+        mm-broadband-modem.c:9053
+        #11 0x76b4e538 in g_task_finalize (object=0x682488) at gtask.c:636
+        #12 0x76a92800 in g_object_unref (_object=0x682488) at
+        gobject.c:3183
+        #13 0x00072154 in iface_modem_disable_ready (self=0x6aa1e8,
+        result=0x7011b0, task=0x682488) at mm-broadband-modem.c:9101
+        #14 0x76b4e6ec in g_task_return_now (task=0x7011b0) at
+        gtask.c:1107
+        #15 0x76b4e720 in complete_in_idle_cb (task=0x7011b0) at
+        gtask.c:1121
+        #16 0x7694d144 in g_main_dispatch (context=0x6765a8) at
+        gmain.c:3154
+        #17 g_main_context_dispatch (context=context@entry=0x6765a8)
+        at gmain.c:3769
+        #18 0x7694d40c in g_main_context_iterate (context=0x6765a8,
+        block=block@entry=1, dispatch=dispatch@entry=1, self=<optimized
+        out>) at gmain.c:3840
+        #19 0x7694d838 in g_main_loop_run (loop=0x6750d0) at gmain.c:4034
+        #20 0x0002bec0 in main (argc=<optimized out>, argv=<optimized
+        out>) at main.c:181
+
+    (cherry picked from commit a77beaa271cad696f74579f4b409916606b16b6a)
+
+ src/mm-iface-modem-time.c | 35 +++++++++++++++++++----------------
+ 1 file changed, 19 insertions(+), 16 deletions(-)
+
+commit 579f1d59136ad58669e48b6b11f7496020722ea3
+Author: Alexander Couzens <lynxis@fe80.eu>
+Date:   Tue Jul 10 16:03:10 2018 +0200
+
+    blacklist: remove OpenMoko Hubs from the blacklist
+
+    The problem of full vendor blacklist are hubs.
+    Because ATTRS{} matches all devices in the tree,
+    a modem connected to a OpenMoko hub will be blacklisted as well.
+
+    (cherry picked from commit 62334b60a24c06a9e699c7b1dde56f52c30729f8)
+
+ src/77-mm-usb-device-blacklist.rules | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 30407c09481147063cf0fc64e3077efeaa54f060
+Author: Enrico Mioso <mrkiko.rs@gmail.com>
+Date:   Fri Jun 29 08:50:36 2018 +0200
+
+    libmm-glib: reference dup_equipment_identifier instead of dup_plugin
+
+    Fix the comment.
+
+    (cherry picked from commit f01d88bf914303257d420d66146ac10575805e83)
+
+ libmm-glib/mm-modem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit b08a2ca87a9422cbc4f75047da9f308bfec6570b
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jun 28 00:07:32 2018 +0200
+
+    libmm-glib,location-gps-raw: plug memleak
+
+        ==8663== 1 bytes in 1 blocks are definitely lost in loss record
+        5 of 4,864
+        ==8663==    at 0x4C2CEDF: malloc (vg_replace_malloc.c:299)
+        ==8663==    by 0x669FAC9: g_malloc (in
+        /usr/lib/libglib-2.0.so.0.5600.1)
+        ==8663==    by 0x66B9AEA: g_strndup (in
+        /usr/lib/libglib-2.0.so.0.5600.1)
+        ==8663==    by 0x66ACE52: g_match_info_fetch (in
+        /usr/lib/libglib-2.0.so.0.5600.1)
+        ==8663==    by 0x4E96DD2: mm_location_gps_raw_add_trace
+        (mm-location-gps-raw.c:208)
+        ==8663==    by 0x18721E: mm_iface_modem_location_gps_update
+        (mm-iface-modem-location.c:264)
+        ==8663==    by 0x1B9C7F: loc_location_nmea_indication_cb
+        (mm-shared-qmi.c:712)
+        ==8663==    by 0x640C9E7: g_cclosure_marshal_VOID__BOXEDv (in
+        /usr/lib/libgobject-2.0.so.0.5600.1)
+        ==8663==    by 0x6409C95: ??? (in
+        /usr/lib/libgobject-2.0.so.0.5600.1)
+        ==8663==    by 0x64259E8: g_signal_emit_valist (in
+        /usr/lib/libgobject-2.0.so.0.5600.1)
+        ==8663==    by 0x642612F: g_signal_emit (in
+        /usr/lib/libgobject-2.0.so.0.5600.1)
+        ==8663==    by 0x54AAB2D: process_indication (qmi-loc.c:7454)
+
+    Reported by: Thomas Weißschuh <thomas@weissschuh.net>
+
+    (cherry picked from commit 066c9c1e403a156e5d8da593cd0861646a7ae1d9)
+
+ libmm-glib/mm-location-gps-raw.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit 1d5543dfb871c33563ee37a86209a68ee54a55a9
+Author: Brian, Sam <Samuel.Brian@digi.com>
+Date:   Fri Jun 22 01:50:20 2018 +0000
+
+    port-serial: don't close tty file descriptor twice
+
+    After the tty is opened, the fd is passed off to a GIOChannel which
+    manages it. When the serial port is closed with _close_internal(),
+    g_io_channel_shutdown() is called which then calls g_io_unix_close()
+    which
+    in turn close()s the fd.
+    _close_internal() performs a second explicit close() after the
+    g_io_channel_shutdown() which *in the best case scenario* will
+    fail with
+    EBADF.
+    This is a race condition that can result in other file descriptors
+    being
+    closed.
+
+    This change avoids double closing the serial port fd -- the shutdown()
+    call
+    is removed in favour of the explicit close().
+
+    (cherry picked from commit bb9e9a92a325b955ee839565618f13a2a0bf4cf0)
+
+ src/mm-port-serial.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+commit 7912d0e8dc27192cc5f6ec421284dad00c1c4b09
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Jun 19 18:01:50 2018 +0200
+
+    po: add Friulian translation
+
+    From: Fabio Tomat <f.t.public@gmail.com>
+
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/issues/42
+    (cherry picked from commit efd57e8d5b2e0ced4ab857d72af0e86ae0bbf3f8)
+
+ po/LINGUAS |   1 +
+ po/fur.po  | 108
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 109 insertions(+)
+
+commit a8ac384329e0288e349ca76db1c1c16eb842d9f0
+Author: Baruch Siach <baruch@tkos.co.il>
+Date:   Fri Jun 15 06:30:17 2018 +0300
+
+    kerneldevice: fix build with musl libc
+
+    musl libc does not implement the canonicalize_file_name() GNU
+    extension.
+    Use the POSIX standard realpath() instead.
+
+    (cherry picked from commit 105e321951e3303ddf0c9c1df83bc673c92eb7de)
+
+ src/kerneldevice/mm-kernel-device-generic.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+commit c490cc8e6ab262a7094a127f480bf0ac47f0c014
+Author: Lubomir Rintel <lkundrak@v3.sk>
+Date:   Thu Jan 25 17:23:14 2018 +0100
+
+    service: set User=root so that gio doesn't have to look into
+    /etc/passwd
+
+    GVfs' libgvfsdbus.so GIo module, when automatically loaded,
+    attempts to
+    discover if there's a session D-Bus instance to use. It tries
+    real hard
+    to get the socket name it would use -- in absence of XDG_RUNTIME_DIR
+    it
+    decides to make it up with user's home directory. When HOME is unset
+    too, it just tries to figure it out by looking into /etc/passwd. Which
+    upsets SELinux that would better not see us looking into it.
+
+    We trigger the load of the GIo modules, by using the GFile API
+    to access
+    the the ports in /dev. They're utterly uesless to us, but there
+    doesn't
+    seem to be a way to disable their load. Oh well.
+
+    For now, let's just ensure HOME is set and the problematic path
+    in glib
+    is not taken.
+
+    (cherry picked from commit cf3f3ffcd0da1ef5512bf4a2dce4e0e1861acbc7)
+
+ data/ModemManager.service.in | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit 49b9e2b0191760b6cb7456630607c1b5f5efdbf4
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jun 11 18:09:49 2018 +0200
+
+    iface-modem-voice: plug memleak when creating new incoming call
+
+    The mm_call_list_add_call() takes a full reference to the call, so we
+    can unref the original one safely.
+
+    (cherry picked from commit 6169d3d14fdb10b3b2537ebfd29d7f2d10965b2a)
+
+ src/mm-iface-modem-voice.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+commit ac452454f847a6cdc47947c71179f97b807db623
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jun 11 18:06:38 2018 +0200
+
+    call-list: coding style fixes
+
+    (cherry picked from commit a6101a85323fb366cc95fb6e16bd0d991de1e866)
+
+ src/mm-base-call.c |   2 +-
+ src/mm-base-call.h |   2 +-
+ src/mm-call-list.c | 110
+ ++++++++++++++++++++++++++---------------------------
+ src/mm-call-list.h |  34 ++++++++---------
+ 4 files changed, 73 insertions(+), 75 deletions(-)
+
+commit 05719e80fdbdcfda50e725e51b987c6f652b9dba
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Jun 10 14:47:39 2018 +0200
+
+    doc: fix explanation of MM_CALL_STATE_RINGING_{IN|OUT}
+
+    They were reversed; ringing in applies to incoming calls, ringing out
+    applies to outgoing calls.
+
+    (cherry picked from commit 588d6144a7c1da461d70abad05f4c56fd6dc667f)
+
+ include/ModemManager-enums.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 458663cbb37f78ceded33a65618ca45700429637
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Jun 2 17:49:02 2018 +0200
+
+    build: post release version bump to 1.8.1
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit c187c5fef5e3ffa456b73367afb8d3c888599437
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Jun 2 16:59:17 2018 +0200
+
+    release: bump version to 1.8.0
+
+ configure.ac | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 01a5d8a294c1022c99e5e82ab96460f630c6a420
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Jun 2 17:30:53 2018 +0200
+
+    NEWS: update for 1.8
+
+ NEWS | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+commit c07382a486f53e1b3cf729b41518d2a0ba528f5a
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun May 27 16:39:17 2018 +0200
+
+    udev: add tags also on bind action
+
+    When a new USB device is hotplugged, e.g. a USB<->RS232 converter that
+    exposes a single ttyUSB0, these udev events happen:
+
+      add  /devices/pci0000:00/0000:00:14.0/usb2/2-1 (usb/usb-device)
+      add  /devices/pci0000:00/0000:00:14.0/usb2/2-1/2-1:1.0
+      (usb/usb-interface)
+      add  /devices/pci0000:00/0000:00:14.0/usb2/2-1/2-1:1.0/ttyUSB0
+      (usb-serial)
+      add
+      /devices/pci0000:00/0000:00:14.0/usb2/2-1/2-1:1.0/ttyUSB0/tty/ttyUSB0
+      (tty)
+      bind /devices/pci0000:00/0000:00:14.0/usb2/2-1/2-1:1.0/ttyUSB0
+      (usb-serial)
+      bind /devices/pci0000:00/0000:00:14.0/usb2/2-1/2-1:1.0
+      (usb/usb-interface)
+      bind /devices/pci0000:00/0000:00:14.0/usb2/2-1 (usb/usb-device)
+
+    Our udev rules in MM only added tags in the 'add' events, and it looks
+    like the only ones 'persistent' after this sequence are those of the
+    last event happening on the specific path.
+
+    This meant that all TTY subsystem rules (e.g. ID_MM_CANDIDATE) would
+    be stored for later check (e.g. if ModemManager is started after these
+    rules have been applied), which was ok. "udevadm info -p ..." would
+    show these tags correctly always.
+
+    But this also meant that the 'bind' udev event happening for the USB
+    device didn't get any of our device-specific tags, and so we would be
+    missing them (e.g. ID_MM_DEVICE_MANUAL_SCAN_ONLY) if MM is started
+    after the last event has happened. "udevadm info -p ..." would
+    not show these tags.
+
+    Modify all our rules to also run at the 'bind' events.
+
+    See, for context:
+      https://github.com/systemd/systemd/issues/8221
+
+ plugins/cinterion/77-mm-cinterion-port-types.rules | 2 +-
+ plugins/dell/77-mm-dell-port-types.rules           | 2 +-
+ plugins/haier/77-mm-haier-port-types.rules         | 2 +-
+ plugins/huawei/77-mm-huawei-net-port-types.rules   | 2 +-
+ plugins/longcheer/77-mm-longcheer-port-types.rules | 2 +-
+ plugins/mbm/77-mm-ericsson-mbm.rules               | 2 +-
+ plugins/mtk/77-mm-mtk-port-types.rules             | 2 +-
+ plugins/nokia/77-mm-nokia-port-types.rules         | 2 +-
+ plugins/sierra/77-mm-sierra.rules                  | 2 +-
+ plugins/simtech/77-mm-simtech-port-types.rules     | 2 +-
+ plugins/telit/77-mm-telit-port-types.rules         | 2 +-
+ plugins/ublox/77-mm-ublox-port-types.rules         | 2 +-
+ plugins/x22x/77-mm-x22x-port-types.rules           | 2 +-
+ plugins/zte/77-mm-zte-port-types.rules             | 2 +-
+ src/77-mm-pcmcia-device-blacklist.rules            | 2 +-
+ src/77-mm-usb-device-blacklist.rules               | 2 +-
+ src/77-mm-usb-serial-adapters-greylist.rules       | 2 +-
+ src/80-mm-candidate.rules                          | 2 +-
+ 18 files changed, 18 insertions(+), 18 deletions(-)
+
+commit 4bc7d6862d3b908476e8bddd70cfc9e571dc9622
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Jun 2 16:48:07 2018 +0200
+
+    u-blox: wait 20s before probing TOBY-L200 ports
+
+    https://bugs.freedesktop.org/show_bug.cgi?id=106623
+
+ plugins/ublox/77-mm-ublox-port-types.rules | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+commit 6c37488d4ebbbb2afdefce193e6fb4070cde8ab3
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun May 27 11:23:54 2018 +0200
+
+    broadband-modem-mbim: minor function renames for SMS read logic
+
+    There are two ways to report new received SMS messages:
+      * For class 0 (flash) messages, MBIM_CID_SMS_READ are sent. The SMS
+      comes in the MBIM indication itself.
+      * For non-class 0 (standard) messages, a
+      MBIM_CID_SMS_MESSAGE_STORE_STATUS notifications are sent, the SMS is
+      stored and must be read with an additional MBIM request specifying
+      storage index.
+
+    The names of the functions we had implied the opposite, we were
+    assuming flash/alert messages were reported via
+    MBIM_CID_SMS_MESSAGE_STORE_STATUS, not via MBIM_CID_SMS_READ.
+
+ src/mm-broadband-modem-mbim.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+commit fd3a4d8d8beecc8b58cd6602cc8ee7207c1bf268
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 22 12:31:04 2018 +0200
+
+    filter: pci and sdio ports under the platform driver filter
+
+    Do not automatically probe serial ports under the 'pci' or 'sdio'
+    platform drivers unless explicitly tagged with
+    ID_MM_PLATFORM_DRIVER_PROBE.
+
+      $ realpath /sys/class/tty/ttyS0/
+      /sys/devices/pci0000:00/0000:00:16.3/tty/ttyS0
+      $ basename $(realpath
+      /sys/devices/pci0000:00/0000:00:16.3/subsystem)
+      pci
+
+ src/mm-filter.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+commit 38f9510a9893b12cd6746c3daeeb2c84166746b1
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 15 11:27:42 2018 +0200
+
+    iface-modem-time: don't hold a ref while waiting to be registered
+
+    The logic implementing the network timezone loading was holding a
+    strong reference to the modem (inside the GTask) while waiting to
+    be registered.
+
+    This was triggering some possible memory leaks as the modem object
+    could have been left around even after the modem was disconnected.
+    E.g. if the modem booted without antennas plugged in, it was never
+    getting registered, and if we unplugged it right away in that state,
+    the network timezone logic would have left a modem reference around
+    without disposing it.
+
+    This issue, combined with e.g. other interfaces relying on disposing
+    its own logic with the last object reference (e.g. Signal interface
+    sets up its logic in a context bound to the lifetime of the object)
+    would mean that a lot of different logic blocks were kept running even
+    after the modem device was unplugged from the system.
+
+    We avoid this issue by making sure that no new additional reference is
+    taken by the logic in charge of updating the network timezone. We just
+    make the timezone update context be bound to the lifetime of the
+    object, as other interfaces do.
+
+    While doing this, we also remove the logic in charge of "cancelling"
+    the context, as it isn't needed. If the logic needs to be cancelled,
+    we would just remove any configured timeout, which is enough.
+
+    As part of the changes, the logic has also been improved so that the
+    network timezone isn't only updated the first time the modem gets
+    registered. If the modem gets unregistered and re-registered, we would
+    reload the network timezone information.
+
+ src/mm-iface-modem-time.c | 334
+ +++++++++++++++++-----------------------------
+ 1 file changed, 122 insertions(+), 212 deletions(-)
+
+commit 67ecad51e163b131a1331ffcb09af18269c39025
+Author: Dan Williams <dcbw@redhat.com>
+Date:   Thu May 24 09:54:42 2018 -0500
+
+    filter: add 'nozomi' and 'qcaux' drivers to MM_FILTER_RULE_TTY_DRIVER
+
+    nozomi and qcaux only drive modems and thus should be included
+    in this filter rule.  Allows nozomi/qcaux devices to work
+    automatically with strict filter mode.
+
+ src/mm-filter.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit aecc3e99a029d037245d85f0e734aa997d2b06fd
+Author: Dan Williams <dcbw@redhat.com>
+Date:   Thu May 24 09:59:47 2018 -0500
+
+    include: fix up whitespace
+
+ include/ModemManager-errors.h | 160
+ +++++++++++++++++++++---------------------
+ 1 file changed, 80 insertions(+), 80 deletions(-)
+
+commit b074a2b4a421b9a468a59896c94f701456bb85d4
+Author: Dan Williams <dcbw@redhat.com>
+Date:   Tue May 22 12:01:30 2018 -0500
+
+    include: add more 3GPP errors
+
+    From 3GPP TS 27.007 version 11.6.0 Release 11, sections 9.2.1,
+    9.2.2.1, 9.2.2.2, and 9.2.2.3.
+
+ include/ModemManager-errors.h | 50
+ +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+
+commit ac5d068e377352c208b792229fe4ab96a239b4b3
+Author: Matthew Stanger <matthew_stanger@trimble.com>
+Date:   Sun May 20 08:44:09 2018 +0200
+
+    broadband-modem: increase signal_quality_cind() poll CIND timeout
+
+    Gemalto's PLS8 may timeout on 3 second CIND query. Debug log shows
+    5 seconds should suffice.
+
+ src/mm-broadband-modem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 051b15cca89670d943459f734e20117ca1b8afcf
+Author: Ben Chan <benchan@chromium.org>
+Date:   Wed May 16 12:45:57 2018 -0700
+
+    iface-modem-3gpp: ignore initial registration check result when
+    enabling
+
+    This patch extends commit c9e85b671 ("iface-modem-3gpp: ignore initial
+    registration check result when appropriate") to handle the situation
+    where a registration check update may prematurely transition the modem
+    to the 'enabled' state while the modem is still being enabled.
+
+    The issue is identified by Dan Williams <dcbw@redhat.com>. More
+    details
+    can be found in https://bugs.freedesktop.org/show_bug.cgi?id=106468
+
+ src/mm-iface-modem-3gpp.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+commit 3e469e7b8055a0a11abc8304ec44c3df39e74d3d
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 8 09:49:11 2018 +0200
+
+    u-blox: don't run quick AT procedure if READY_DELAY not configured
+
+    The quick AT probe procedure is only meaningful to avoid waiting the
+    +READY URC delay. If there is no such delay configured, we shouldn't
+    run the quick AT probe (as a failure in the AT probe may also
+    trigger a +READY URC delay).
+
+    Just read the udev tag value early and complete the task if the delay
+    is not configured.
+
+ plugins/ublox/mm-plugin-ublox.c | 25 ++++++++++++-------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
+
+commit 1a56b97061252fa4605bd0b58de491bbe43a6685
+Author: Matthew Starr <mstarr@hedonline.com>
+Date:   Mon May 7 22:26:48 2018 +0000
+
+    ublox: use ID_MM_UBLOX_PORT_READY_DELAY udev flag as init delay
+
+    Added reading the ID_MM_UBLOX_PORT_READY_DELAY udev flag value
+    and using
+    it as an init delay when a value is set.
+
+    The 20 second delay for the TOBY-L4 +READ URC has been reimplemented
+    using the new ID_MM_UBLOX_PORT_READY_DELAY udev value.
+
+ plugins/ublox/77-mm-ublox-port-types.rules |  2 ++
+ plugins/ublox/mm-plugin-ublox.c            | 26
+ ++++++++++++++++++++------
+ 2 files changed, 22 insertions(+), 6 deletions(-)
+
+commit 6be6aa474f238f771579adbba800ab0408c7f0d9
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon May 7 18:27:26 2018 +0200
+
+    filter: fix option1 driver name
+
+    This was preventing TTY-only ZTE and Huawei modules from being grabbed
+    in STRICT mode.
+
+    https://bugs.freedesktop.org/show_bug.cgi?id=106253
+    https://bugs.freedesktop.org/show_bug.cgi?id=106234
+
+ src/mm-filter.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 4895577597f6cadb9c791ef0483a95ba85aa27f5
+Author: Matthew Starr <mstarr@hedonline.com>
+Date:   Tue Apr 10 17:30:32 2018 +0000
+
+    u-blox: ignore non-AT ttyACM interfaces
+
+    For the TOBY-R2, LISA-R2, and LARA-R2, the only valid AT ports are
+    ttyACM0, ttyACM1, and ttyACM2.  All other ttyACM ports cause MM to
+    wait 20-30 seconds probing the port on startup.
+
+    Ignoring the non-AT ttyACM ports allows MM to not wait 20-30 seconds
+    probing and therefore startup much faster with these modems.
+
+ plugins/ublox/77-mm-ublox-port-types.rules | 35
+ ++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+commit e17d5a51a24248d53ea5da8d16d86f2ca187a566
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Apr 28 10:38:53 2018 +0200
+
+    broadband-bearer: allow matching empty APN when looking for PDP CID
+
+    The PDP contexts that are found with an empty APN configured are right
+    now used as placeholders that can be overwritten with the user
+    provided APN if no direct match is found.
+
+    We want to keep that logic in place, but for the case where we do get
+    an empty APN requested by the user, we need to perform the full
+    context match, so that the first PDP context matching the empty APN is
+    used.
+
+    Right now we're overwriting with the empty APN again the last PDP
+    context found with an empty APN, which doesn't make much sense:
+
+        Apr 27 08:15:21 ModemManager[4251]: <debug> Found '3' PDP contexts
+        Apr 27 08:15:21 ModemManager[4251]: <debug>   PDP context [cid=1]
+        [type='ipv4'] [apn='']
+        Apr 27 08:15:21 ModemManager[4251]: <debug>   PDP context [cid=2]
+        [type='ipv4'] [apn='broadband']
+        Apr 27 08:15:21 ModemManager[4251]: <debug>   PDP context [cid=15]
+        [type='ipv4'] [apn='']
+        Apr 27 08:15:21 ModemManager[4251]: <debug> Found PDP context
+        with CID 1 and no APN
+        Apr 27 08:15:21 ModemManager[4251]: <debug> Found PDP context
+        with CID 15 and no APN
+        Apr 27 08:15:21 ModemManager[4251]: <debug> (ttyUSB3) device
+        open count is 3 (open)
+        Apr 27 08:15:21 ModemManager[4251]: <debug> (ttyUSB3) device
+        open count is 2 (close)
+        Apr 27 08:15:21 ModemManager[4251]: <debug> (ttyUSB3): -->
+        'AT+CGDCONT=15,"IP",""<CR>'
+        Apr 27 08:15:21 ModemManager[4251]: <debug> (ttyUSB3): <--
+        '<CR><LF>OK<CR><LF>'
+
+ src/mm-broadband-bearer.c      | 37 +++++++++++++++++++------------------
+ src/mm-modem-helpers.c         |  4 ++++
+ src/tests/test-modem-helpers.c |  7 ++++++-
+ 3 files changed, 29 insertions(+), 19 deletions(-)
+
+commit 43d0bd0f9135512a0531b5808354e00db9d6f22a
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Apr 30 12:57:50 2018 +0200
+
+    base-modem: improve broken modem detection logic
+
+    If the serial port timeout detection logic is enabled, warn whenever
+    more than one consecutive command timeout happens, not just when the
+    limit is reached.
+
+ src/mm-base-modem.c | 34 ++++++++++++++++++++--------------
+ 1 file changed, 20 insertions(+), 14 deletions(-)
+
+commit 21c9a239ecc56d941032630649ca6149296bf98d
+Author: Ben Chan <benchan@chromium.org>
+Date:   Sat Apr 28 11:51:28 2018 -0700
+
+    broadband-modem-qmi: fix memory leak in dms_set_operating_mode_ready
+
+ src/mm-broadband-modem-qmi.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit f9a0b945bcc0b374a122e6cdd4ac6ce92066c7c8
+Author: Ben Chan <benchan@chromium.org>
+Date:   Tue Apr 24 17:18:56 2018 -0700
+
+    iface-modem: allow initial signal check after the modem is re-enabled
+
+    Commit 708b00ae3 "modem: allow periodic signal check to be disabled"
+    added a "iface-modem-periodic-signal-check-disabled" property in
+    MMIfaceModem/MMBroadbandModem to indicate if the periodic signal check
+    should be disabled. If the property is set to TRUE, the
+    signal_quality_polling_supported field of SignalCheckContext is set to
+    FALSE, which is sticky across modem disable/enable
+    operations. However,
+    that is undesirable as we would like to issue an initial signal
+    check to
+    refresh the signal quality value after the modem is re-enabled from a
+    state when the RF may have been previously turned off.
+
+ src/mm-iface-modem.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
+
+commit 5e5160c46ad426233123287c0505253e4ea3ff35
+Author: Ben Chan <benchan@chromium.org>
+Date:   Mon Apr 23 16:24:42 2018 -0700
+
+    broadband-modem-mbim: implement initial signal quality loading
+
+    ModemManager currently relies on unsolicited MBIM_CID_SIGNAL_STATE
+    notifications to obtain signal quality updates, and it doesn't
+    query the
+    initial signal quality. It's been observed that some MBIM modems
+    issue a
+    MBIM_CID_SIGNAL_STATE notification only when there is a notable change
+    in RSSI. The signal quality may remain at 0 for quite some time. It's
+    more noticeable when simply restarting ModemManager after the
+    modem has
+    been initialized and enabled once.
+
+    We could simply enable periodic signal check on an MBIM modem, but
+    that's less ideal as it may unnecessarily wake the modem up from USB
+    selective suspend (unless we use a much longer polling period).
+
+    To address the issue, this patch adds the implementation of
+    load_signal_quality to MMBroadbandModemMbim so that the signal quality
+    is initially polled via a solicited MBIM_CID_SIGNAL_STATE query. To
+    avoid the periodic signal check, we set the
+    MM_IFACE_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED property to TRUE for
+    MMBroadbandModemMbim.
+
+ src/mm-broadband-modem-mbim.c | 80
+ +++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 78 insertions(+), 2 deletions(-)
+
+commit 708b00ae3be84e7927a2566b7ccbd9163698321e
+Author: Ben Chan <benchan@chromium.org>
+Date:   Mon Apr 23 16:24:41 2018 -0700
+
+    modem: allow periodic signal check to be disabled
+
+    ModemManager decides to disable periodic signal check if either
+    load_signal_quality is not implemented or load_signal_quality
+    returns an
+    unsupported error. However, in some cases, we want to use
+    load_signal_quality to query the initial signal quality but rely on
+    unsolicited signal quality updates from the modem afterwards without
+    periodically polling for signal quality. To support that, this patch
+    introduces a property in MMIfaceModem/MMBroadbandModem to indicate if
+    the periodic signal check should be disabled.
+
+ src/mm-broadband-modem.c | 14 ++++++++++++++
+ src/mm-iface-modem.c     | 47
+ +++++++++++++++++++++++++++++++++--------------
+ src/mm-iface-modem.h     |  1 +
+ 3 files changed, 48 insertions(+), 14 deletions(-)
+
+commit b39dd2ec05c7db7e5eb12953eadba809aa2b3e8a
+Author: Lubomir Rintel <lkundrak@v3.sk>
+Date:   Tue Apr 24 09:42:06 2018 +0200
+
+    all: drop unused variables
+
+    Keeps build with GCC 8 happy.
+
+    mm-base-call.c:758:18: warning: variable 'response' set but not used
+    [-Wunused-but-set-variable]
+    mm-base-call.c:822:18: warning: variable 'response' set but not used
+    [-Wunused-but-set-variable]
+    mm-base-sms.c:908:18: warning: variable 'response' set but not used
+    [-Wunused-but-set-variable]
+    mm-sms-list.c:331:25: warning: variable 'ctx' set but not used
+    [-Wunused-but-set-variable]
+    mm-iface-modem-messaging.c:1210:21: warning: variable 'storage_ctx'
+    set but not used [-Wunused-but-set-variable]
+    huawei/mm-plugin-huawei.c:183:18: warning: variable 'response'
+    set but not used [-Wunused-but-set-variable]
+    ublox/mm-plugin-ublox.c:161:24: warning: variable 'response' set
+    but not used [-Wunused-but-set-variable]
+    ublox/mm-plugin-ublox.c:159:24: warning: variable 'ctx' set but not
+    used [-Wunused-but-set-variable]
+    icera/mm-modem-helpers-icera.c:218:25: warning: variable 'first_free'
+    set but not used [-Wunused-but-set-variable]
+    novatel/mm-common-novatel.c:50:18: warning: variable 'response'
+    set but not used [-Wunused-but-set-variable]
+
+ plugins/huawei/mm-plugin-huawei.c      | 3 +--
+ plugins/icera/mm-modem-helpers-icera.c | 4 ++--
+ plugins/novatel/mm-common-novatel.c    | 3 +--
+ plugins/ublox/mm-plugin-ublox.c        | 5 +----
+ src/mm-base-call.c                     | 6 ++----
+ src/mm-base-sms.c                      | 3 +--
+ src/mm-iface-modem-messaging.c         | 2 --
+ src/mm-sms-list.c                      | 5 -----
+ 8 files changed, 8 insertions(+), 23 deletions(-)
+
+commit 5072db3418ce5799a75a577612b30de97ca700f0
+Author: Iain Lane <iainl@gnome.org>
+Date:   Tue Apr 24 12:31:44 2018 +0100
+
+    m4/compiler_warnings.m4: Let -Werror be disabled
+
+    It's annoying for distributors to build with -Werror, since it means
+    that compiler upgrades can break the build. Let's let them disable it,
+    but keep it enabled by default.
+
+ m4/compiler_warnings.m4 | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+commit 7e94928301a971488ea53b17dd7d5ef37f468b1d
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Apr 3 00:31:02 2018 +0200
+
+    ublox: fix 'any' mode building
+
+    The 'any' mode refers to the mode which includes most access
+    technologies and where none of them is preferred.
+
+    Fix the logic so that all combinations with one technology preferred
+    over the others are ignored, instead of the other way around.
+
+    Fixes assertion with the 4G-only LARA R204.
+
+        ModemManager[424]: <debug> [-192499452.090358] (ttyACM0): -->
+        'AT+URAT=?<CR>'
+        ModemManager[424]: <debug> [-192499452.092150] (ttyACM0): <--
+        '<CR><LF>+URAT: (3)<CR><LF><CR><LF>OK<CR><LF>'
+        **
+        ERROR:ublox/mm-modem-helpers-ublox.c:817:mm_ublox_get_modem_mode_any:
+        assertion failed: (any != MM_MODEM_MODE_NONE)
+
+    Reported-by: Matthew Starr <mstarr@hedonline.com>
+
+ plugins/ublox/mm-modem-helpers-ublox.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit c9dee2b960d6176c1d5462c5db8cd55925eafc44
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Mar 27 13:27:27 2018 +0200
+
+    build: bump version to 1.7.991 (1.8-rc2)
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit b451a838a4ad66b6d4e02dff7538ce7530188c6b
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Mar 13 13:33:28 2018 +0100
+
+    docs: add missing reference to
+    mm_modem_3gpp_get_eps_ue_mode_operation()
+
+ docs/reference/libmm-glib/libmm-glib-sections.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit bcb0175f62bea60b06d971f3cfec87f5b362ee56
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Mar 13 13:26:29 2018 +0100
+
+    docs: always rebuild libmm-glib types
+
+    So that we don't forget to add new types here manually...
+    (e.g. MMBearerStats)
+
+ .gitignore                                 |   1 +
+ docs/reference/libmm-glib/Makefile.am      |   2 +-
+ docs/reference/libmm-glib/libmm-glib.types | 132
+ -----------------------------
+ 3 files changed, 2 insertions(+), 133 deletions(-)
+
+commit c147dfc267bfe3e9a43ab8873e285f45e66b3528
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Mar 13 13:07:10 2018 +0100
+
+    libmm-glib: use ModemManager prefix to refer to the introspected types
+
+ libmm-glib/mm-modem-messaging.c | 2 +-
+ libmm-glib/mm-modem-voice.c     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit 5dff6ce5944d2f97522ead0914f4814dd9a939a0
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Mar 13 12:53:37 2018 +0100
+
+    libmm-glib,modem: fix introspection annotation for bearer list
+
+ libmm-glib/mm-modem.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit eb6b4cac8a752674a7b8359c713ecf5ae1a1f098
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Mar 13 12:53:18 2018 +0100
+
+    libmm-glib: add several missing headers
+
+ libmm-glib/libmm-glib.h | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+commit 1481dd58e2fccbd005b63f866be2b910c4724ed3
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Mar 13 12:41:47 2018 +0100
+
+    libmm-glib,bearer-properties: minor documentation typo fix
+
+ libmm-glib/mm-bearer-properties.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 9535f4c474a33c229f5761d7a6e67fd4253bbb57
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Mar 13 12:25:43 2018 +0100
+
+    libmm-glib,bearer: cleanup stats related mutex and object
+
+ libmm-glib/mm-bearer.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit 3a7d4b12005da1e5e861b8a213814c8743e5208f
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Feb 21 13:38:53 2018 +0100
+
+    ublox: ignore ttyACM0 in the TOBY-L4
+
+    We used ttyACM0 as secondary port until now, just because we had an
+    extra AT capable TTY around in addition to the main control ttyACM2
+    port.
+
+    Turns out, using this ttyACM0 may actually break the connection setup
+    in the wwan interface in a bad way (e.g. not allowing DHCP setup).
+
+    The suggestion from u-blox and Intel is to fully ignore ttyACM0; and
+    given that we no longer need any primary/secondary port logic, we just
+    remove all the associated udev tags.
+
+ plugins/ublox/77-mm-ublox-port-types.rules |  7 +++----
+ plugins/ublox/mm-plugin-ublox.c            | 29
+ -----------------------------
+ 2 files changed, 3 insertions(+), 33 deletions(-)
+
+commit c9a78e12b7d6ce4369f0de6c0c41c66e0110e9ee
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Mar 4 17:00:48 2018 +0100
+
+    po: add Indonesian translation
+
+    From: Andika Triwidada <andika@gmail.com>
+
+    https://bugs.freedesktop.org/show_bug.cgi?id=105337
+
+ po/LINGUAS |   1 +
+ po/id.po   | 102
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 103 insertions(+)
+
+commit dc678bfef292728c9dfba2e9a9f27c555644c634
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Feb 23 12:43:22 2018 +0100
+
+    base-manager: additional indentation for the block covered by
+    ref/unref
+
+ src/mm-base-manager.c | 29 +++++++++++++++--------------
+ 1 file changed, 15 insertions(+), 14 deletions(-)
+
+commit 402559bb62bb44aa146b1c170bb86812d6d514a9
+Author: Eric Caruso <ejcaruso@chromium.org>
+Date:   Wed Feb 21 13:49:34 2018 -0800
+
+    mm-base-manager: ref MMDevice before releasing port
+
+    Releasing the port on the device looks benign but because it emits
+    a signal, it could call device_context_port_released and unref the
+    MMDevice in port_context_unref. This means the MMDevice might be
+    disposed before we get to the g_object_ref and the subsequent call
+    to g_hash_table_remove will try to hash a null string, which makes
+    MM crash.
+
+ src/mm-base-manager.c | 30 +++++++++++++++---------------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
+
+commit d416ea491d88b2b3bb4e5cd8077e0b758bcfad2e
+Author: Eric Caruso <ejcaruso@chromium.org>
+Date:   Tue Feb 20 16:04:18 2018 -0800
+
+    mm-base-manager: remove element from hastable by key, not value
+
+    The hashtable is keyed on the UID of the MMDevice, and its hash
+    function is g_str_hash. We shouldn't be passing a GObject into
+    g_hash_table_remove because calling g_str_hash on an MMDevice is
+    wrong.
+
+ src/mm-base-manager.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 10cb61f399b80c9db1b3b1b570214da164c469aa
+Author: Alfonso Sánchez-Beato <alfonso.sanchez-beato@canonical.com>
+Date:   Tue Feb 13 10:38:49 2018 +0100
+
+    broadband-modem-qmi: update EPS registration state for LTE qmi modems
+
+    MM was not updating the EPS registration status for qmi modems. This
+    led to LTE-only modems never having 'registered' status. This was
+    happening for Quectel EC21-V modem.
+
+ src/mm-broadband-modem-qmi.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
+
+commit dce07527433aad328f2bb3c2bddaab0c91fbc6c1
+Author: Dan Williams <dcbw@redhat.com>
+Date:   Tue Feb 6 09:47:17 2018 -0600
+
+    iface-modem-3gpp: don't force auto registration if already registered
+
+    In mm_iface_modem_3gpp_register_in_network() when deciding whether to
+    force automatic registration or not, check whether the modem is
+    already
+    registered in a network.  Just checking whether we have a valid
+    operator
+    code is not sufficient, as some modems (ublox Toby R2xx) don't always
+    return an operator name/code even when registered.
+
+ src/mm-iface-modem-3gpp.c | 52
+ +++++++++++++++++------------------------------
+ 1 file changed, 19 insertions(+), 33 deletions(-)
+
+commit 1817746f512553ab91af79f6e74e07360a77356b
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Feb 6 14:01:04 2018 +0100
+
+    broadband-modem: fix reloading of detailed signal quality status
+
+    We should not cache the AT command response otherwise we will never
+    re-run the same command again. The cache is needed only for AT test
+    commands (e.g. AT+CESQ=?).
+
+ src/mm-broadband-modem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 357b186134641927b1ce30c960ae95555ae7ecb5
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Feb 6 13:38:39 2018 +0100
+
+    ublox: ignore +PBREADY URCs
+
+    We don't want them to get in the way of our initialization phase:
+
+        /org/freedesktop/ModemManager1/Modem/0 (device id
+        'c49ed59c4a411e923307330d3e1d82582cbfac37')
+         -------------------------
+         Hardware | manufacturer: 'u-blox'
+                  | model: 'unknown'
+                  | revision: 'TOBY-L4906
+                  | +PBREADY
+                  | 40.19_ENG0003'
+                  | H/W revision: 'unknown'
+                  | supported: 'gsm-umts, lte'
+                  | current: 'gsm-umts, lte'
+
+ plugins/ublox/mm-broadband-modem-ublox.c | 32
+ ++++++++++++++++++++++++++++----
+ 1 file changed, 28 insertions(+), 4 deletions(-)
+
+commit b0b405858f33584a7d9f43de1625255d73183b60
+Author: Ben Chan <benchan@chromium.org>
+Date:   Mon Feb 5 20:31:29 2018 -0800
+
+    broadband-modem: remove unused GError field in
+    SetupRegistrationChecksContext
+
+ src/mm-broadband-modem.c | 64
+ ++++++++++++++++++++++--------------------------
+ 1 file changed, 29 insertions(+), 35 deletions(-)
+
+commit 0f377f943eeb81472fd73189f2c3d8fc65b8c609
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Feb 5 09:45:42 2018 +0100
+
+    API: don't depend on GLib in ModemManager headers
+
+    We should only depend on GLib on the libmm-glib headers. Otherwise,
+    packages using just the core headers (e.g. ModemManagerQt) would also
+    need to build-depend on GLib and we don't want to enforce that.
+
+        cd ~/buildroot/output/build/kde-modemmanager-qt-v5.36.0/src &&
+        ~/buildroot/output/host/usr/bin/arm-cortexa9_neon-linux-gnueabihf-g++
+        .... -fPIC -o
+        CMakeFiles/KF5ModemManagerQt_static.dir/bearer.cpp.o -c
+        ~/buildroot/output/build/kde-modemmanager-qt-v5.36.0/src/bearer.cpp
+        In file included from
+        ~/buildroot/output/host/usr/arm-buildroot-linux-gnueabihf/sysroot/usr/include/ModemManager/ModemManager.h:41:0,
+                         from
+                         ~/buildroot/output/build/kde-modemmanager-qt-v5.36.0/src/generictypes.h:27,
+                         from
+                         ~/buildroot/output/build/kde-modemmanager-qt-v5.36.0/src/generictypes.cpp:23:
+        ~/buildroot/output/host/usr/arm-buildroot-linux-gnueabihf/sysroot/usr/include/ModemManager/ModemManager-compat.h:23:18:
+        fatal error: glib.h: No such file or directory
+        compilation terminated.
+
+ include/ModemManager-compat.h | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+commit 636c245cd37bcddf6f354cbd53eb88ccf8104387
+Author: Ben Chan <benchan@chromium.org>
+Date:   Wed Jan 31 21:57:09 2018 -0800
+
+    bearer-mbim: check if IP session is activated before deactivating it
+
+    It may be undesirable to issue a MBIM_CID_CONNECT
+    (MBIMActivationCommandDeactivate) command to deactivate an IP session
+    when the session isn't activated. For instance, it's been observed on
+    Huawei ME936 that it takes more than 30s for the modem to deactivate a
+    not-yet-activated session. This patch modifies MMBearerMbim to
+    query if
+    a session is activated before trying to deactivate the session
+    during a
+    connection attempt.
+
+ src/mm-bearer-mbim.c | 75
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 75 insertions(+)
+
+commit 785dfd3edd98da26c1c1832c39ea6dfea3b1e877
+Author: Ben Chan <benchan@chromium.org>
+Date:   Wed Jan 31 21:57:08 2018 -0800
+
+    bearer-mbim: increase timeout for deactivating IP session to 60s
+
+    Since commit 0c7f3380a ("bearer-mbim: ensure session is disconnected
+    before trying to connect"), MMBearerMbim always issues a
+    MBIM_CID_CONNECT (MBIMActivationCommandDeactivate) command before a
+    MBIM_CID_CONNECT (MBIMActivationCommandActivate) command during a
+    connection attempt. That is to ensure that an IP session is actually
+    deactivated before we try to activate a new IP session.
+
+    Unfortunately, it's been observed on Huawei ME936 that it takes more
+    than 30s for the modem to respond to a MBIM_CID_CONNECT
+    (MBIMActivationCommandDeactivate) command when trying to deactivate a
+    session that hasn't been activated.
+
+    When the signal is weak, it's also possible that a modem takes
+    more than
+    30s to deactivate an IP session during a disconnection attempt.
+
+    This patch increases the timeout for deactivating an IP session
+    from 30s
+    to 60s in both connection and disconnection attempt.
+
+ src/mm-bearer-mbim.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 3de58d41374467d0b2cd6620a476758a44ebf697
+Author: Ben Chan <benchan@chromium.org>
+Date:   Wed Jan 31 21:57:07 2018 -0800
+
+    bearer-mbim: remove a unnecessary MbimMessage variable
+
+ src/mm-bearer-mbim.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+commit 456e1e0d0cb8f6f49d83359bcdb65b04fdbf77ff
+Author: Ben Chan <benchan@chromium.org>
+Date:   Fri Jan 26 14:25:56 2018 -0800
+
+    huawei: handle optional 0x prefix on hex numbers in ^DHCP response
+
+    On Huawei ME936, the hex numbers in the response to AT^DHCP contain
+    the 0x prefix, e.g.
+
+      AT^DHCP?
+
+      ^DHCP:
+      0xda7d0e0a,0xff000000,0xdb7d0e0a,0xdb7d0e0a,0x01261aac,0x00000000,100000000,50000000
+
+    This patch updates mm_huawei_parse_dhcp_response() to handle the
+    optional 0x prefix.
+
+ plugins/huawei/mm-modem-helpers-huawei.c         | 2 +-
+ plugins/huawei/tests/test-modem-helpers-huawei.c | 6 ++++++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+commit 90b89bb9f4d055bc5713b733503e7d39c54ca55f
+Author: Ville Skyttä <ville.skytta@iki.fi>
+Date:   Wed Jan 24 20:16:44 2018 +0200
+
+    *: Spelling fixes
+
+ TODO                                                 |  2 +-
+ .../api/ModemManager-migration-reference.xml         |  2 +-
+ include/ModemManager.h                               |  2 +-
+ libmm-glib/mm-bearer-properties.c                    |  4 ++--
+ libmm-glib/mm-bearer.c                               |  8 ++++----
+ libmm-glib/mm-call.c                                 | 16
+ ++++++++--------
+ libmm-glib/mm-manager.c                              | 12 ++++++------
+ libmm-glib/mm-sim.c                                  | 20
+ ++++++++++----------
+ libmm-glib/mm-sms.c                                  |  8 ++++----
+ libqcdm/src/dm-commands.h                            |  4 ++--
+ plugins/altair/mm-modem-helpers-altair-lte.c         |  2 +-
+ plugins/telit/mm-modem-helpers-telit.c               |  6 +++---
+ src/mm-base-call.h                                   |  2 +-
+ src/mm-base-modem-at.c                               |  2 +-
+ src/mm-base-sms.h                                    |  2 +-
+ src/mm-bearer-qmi.c                                  |  2 +-
+ src/mm-broadband-modem-qmi.c                         |  2 +-
+ src/mm-iface-modem.c                                 |  2 +-
+ src/mm-modem-helpers.c                               |  4 ++--
+ src/mm-plugin-manager.c                              |  4 ++--
+ src/mm-plugin.c                                      |  2 +-
+ src/mm-sms-part-3gpp.c                               |  2 +-
+ 22 files changed, 55 insertions(+), 55 deletions(-)
+
 commit 223b754fccba28dbb3ce950058a81bd133c8ce86
 Author: Aleksander Morgado <aleksander@aleksander.es>
 Date:   Sun Jan 21 22:56:53 2018 +0100

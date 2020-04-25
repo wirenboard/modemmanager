@@ -2091,10 +2091,52 @@ test_iccid_parse_unquoted_unswapped_19_digit (void *f, gpointer d)
 }
 
 static void
+test_iccid_parse_unquoted_unswapped_19_digit_no_f (void *f, gpointer d)
+{
+    const char *raw_iccid = "8944200053671052499";
+    const char *expected = "8944200053671052499";
+    char *parsed;
+    GError *error = NULL;
+
+    parsed = mm_3gpp_parse_iccid (raw_iccid, &error);
+    g_assert_no_error (error);
+    g_assert_cmpstr (parsed, ==, expected);
+    g_free (parsed);
+}
+
+static void
 test_iccid_parse_quoted_unswapped_20_digit (void *f, gpointer d)
 {
     const char *raw_iccid = "\"89324102234690160476\"";
     const char *expected = "89324102234690160476";
+    char *parsed;
+    GError *error = NULL;
+
+    parsed = mm_3gpp_parse_iccid (raw_iccid, &error);
+    g_assert_no_error (error);
+    g_assert_cmpstr (parsed, ==, expected);
+    g_free (parsed);
+}
+
+static void
+test_iccid_parse_quoted_unswapped_hex_account (void *f, gpointer d)
+{
+    const char *raw_iccid = "\"898602F9091830030220\"";
+    const char *expected = "898602F9091830030220";
+    char *parsed;
+    GError *error = NULL;
+
+    parsed = mm_3gpp_parse_iccid (raw_iccid, &error);
+    g_assert_no_error (error);
+    g_assert_cmpstr (parsed, ==, expected);
+    g_free (parsed);
+}
+
+static void
+test_iccid_parse_quoted_unswapped_hex_account_2 (void *f, gpointer d)
+{
+    const char *raw_iccid = "\"898602C0123456789012\"";
+    const char *expected = "898602C0123456789012";
     char *parsed;
     GError *error = NULL;
 
@@ -2120,7 +2162,7 @@ test_iccid_parse_short (void *f, gpointer d)
 static void
 test_iccid_parse_invalid_chars (void *f, gpointer d)
 {
-    const char *raw_iccid = "98231420326ab9614067";
+    const char *raw_iccid = "98231420326pl9614067";
     char *parsed;
     GError *error = NULL;
 
@@ -2166,17 +2208,22 @@ typedef struct {
 } TestApnCmp;
 
 static const TestApnCmp test_apn_cmp[] = {
+    { "",                                  "",                                  TRUE  },
+    { NULL,                                "",                                  TRUE  },
+    { "",                                  NULL,                                TRUE  },
+    { NULL,                                NULL,                                TRUE  },
     { "m2m.com.attz",                      "m2m.com.attz",                      TRUE  },
     { "m2m.com.attz",                      "M2M.COM.ATTZ",                      TRUE  },
     { "M2M.COM.ATTZ",                      "m2m.com.attz",                      TRUE  },
     { "m2m.com.attz.mnc170.mcc310.gprs",   "m2m.com.attz",                      TRUE  },
     { "ac.vodafone.es.MNC001.MCC214.GPRS", "ac.vodafone.es",                    TRUE  },
+    { "",                                  "m2m.com.attz",                      FALSE },
+    { "m2m.com.attz",                      "",                                  FALSE },
     { "m2m.com.attz",                      "m2m.com.attz.mnc170.mcc310.gprs",   FALSE },
     { "ac.vodafone.es",                    "ac.vodafone.es.MNC001.MCC214.GPRS", FALSE },
     { "internet.test",                     "internet",                          FALSE },
     { "internet.test",                     "INTERNET",                          FALSE },
     { "internet.test",                     "internet.tes",                      FALSE },
-    { "",                                  "",                                  FALSE },
 };
 
 static void
@@ -3260,8 +3307,7 @@ test_cclk_response (void)
             g_assert (mm_network_timezone_get_leap_seconds (tz) == MM_NETWORK_TIMEZONE_LEAP_SECONDS_UNKNOWN);
         }
 
-        if (iso8601)
-            g_free (iso8601);
+        g_free (iso8601);
 
         if (tz)
             g_object_unref (tz);
@@ -3920,7 +3966,10 @@ int main (int argc, char **argv)
     g_test_suite_add (suite, TESTCASE (test_iccid_parse_quoted_swap_19_digit, NULL));
     g_test_suite_add (suite, TESTCASE (test_iccid_parse_unquoted_swap_20_digit, NULL));
     g_test_suite_add (suite, TESTCASE (test_iccid_parse_unquoted_unswapped_19_digit, NULL));
+    g_test_suite_add (suite, TESTCASE (test_iccid_parse_unquoted_unswapped_19_digit_no_f, NULL));
     g_test_suite_add (suite, TESTCASE (test_iccid_parse_quoted_unswapped_20_digit, NULL));
+    g_test_suite_add (suite, TESTCASE (test_iccid_parse_quoted_unswapped_hex_account, NULL));
+    g_test_suite_add (suite, TESTCASE (test_iccid_parse_quoted_unswapped_hex_account_2, NULL));
     g_test_suite_add (suite, TESTCASE (test_iccid_parse_short, NULL));
     g_test_suite_add (suite, TESTCASE (test_iccid_parse_invalid_chars, NULL));
     g_test_suite_add (suite, TESTCASE (test_iccid_parse_quoted_invalid_mii, NULL));

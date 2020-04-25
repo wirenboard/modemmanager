@@ -1305,6 +1305,10 @@ mm_3gpp_cmp_apn_name (const gchar *requested,
     size_t requested_len;
     size_t existing_len;
 
+    /* If both empty, that's a good match */
+    if ((!existing || !existing[0]) && (!requested || !requested[0]))
+        return TRUE;
+
     /* Both must be given to compare properly */
     if (!existing || !existing[0] || !requested || !requested[0])
         return FALSE;
@@ -2668,7 +2672,7 @@ mm_3gpp_parse_cpms_query_response (const gchar *reply,
 
     if (!g_regex_match (r, reply, 0, &match_info)) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                     "Could not parse CPMS query reponse '%s'", reply);
+                     "Could not parse CPMS query response '%s'", reply);
         goto end;
     }
 
@@ -3473,14 +3477,21 @@ mm_3gpp_get_ip_family_from_pdp_type (const gchar *pdp_type)
 }
 
 /*************************************************************************/
-
+/* ICCID validation */
+/*
+ * 89: telecom (2 digits)
+ * cc: country (2 digits)
+ * oo: operator (2 digits)
+ * aaaaaaaaaaaaa: operator-specific account number (13 digits)
+ * x: checksum (1 digit)
+ */
 char *
 mm_3gpp_parse_iccid (const char *raw_iccid, GError **error)
 {
     gboolean swap;
     char *buf, *swapped = NULL;
     gsize len = 0;
-    int f_pos = -1, i;
+    int i;
 
     g_return_val_if_fail (raw_iccid != NULL, NULL);
 
@@ -3491,13 +3502,20 @@ mm_3gpp_parse_iccid (const char *raw_iccid, GError **error)
     /* Make sure the buffer is only digits or 'F' */
     buf = g_strdup (raw_iccid);
     for (len = 0; buf[len]; len++) {
-        if (isdigit (buf[len]))
+        /* Digit values allowed anywhere */
+        if (g_ascii_isdigit (buf[len]))
             continue;
-        if (buf[len] == 'F' || buf[len] == 'f') {
-            buf[len] = 'F';  /* canonicalize the F */
-            f_pos = len;
+
+        /* There are operators (e.g. the Chinese CMCC operator) that abuse the
+         * fact that 4 bits are used to store the BCD encoded numbers, and also
+         * use the [A-F] range as valid characters for the ICCID. Explicitly
+         * allow this range in the operator-specific part. */
+        if (len >= 6 && g_ascii_isxdigit (buf[len])) {
+            /* canonicalize hex digit */
+            buf[len] = g_ascii_toupper (buf[len]);
             continue;
         }
+
         if (buf[len] == '\"') {
             buf[len] = 0;
             break;
@@ -3505,15 +3523,15 @@ mm_3gpp_parse_iccid (const char *raw_iccid, GError **error)
 
         /* Invalid character */
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                     "ICCID response contained invalid character '%c'",
-                     buf[len]);
+                     "ICCID response contained invalid character '%c' at index '%zu'",
+                     buf[len], len);
         goto error;
     }
 
-    /* BCD encoded ICCIDs are 20 digits long */
-    if (len != 20) {
+    /* ICCIDs are 19 or 20 digits long */
+    if (len < 19 || len > 20) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                     "Invalid ICCID response size (was %zd, expected 20)",
+                     "Invalid ICCID response size (was %zd, expected 19 or 20)",
                      len);
         goto error;
     }
@@ -3522,9 +3540,16 @@ mm_3gpp_parse_iccid (const char *raw_iccid, GError **error)
      * should be '89' for telecommunication purposes according to ISO/IEC 7812.
      */
     if (buf[0] == '8' && buf[1] == '9') {
-      swap = FALSE;
+        swap = FALSE;
     } else if (buf[0] == '9' && buf[1] == '8') {
-      swap = TRUE;
+        /* swapped digits are only expected in raw +CRSM responses, which must all
+         * be 20-bytes long */
+        if (len != 20) {
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                         "Invalid ICCID response size while swap needed (expected 20)");
+            goto error;
+        }
+        swap = TRUE;
     } else {
       /* FIXME: Instead of erroring out, revisit this solution if we find any SIM
        * that doesn't use '89' as the major industry identifier of the ICCID.
@@ -3534,23 +3559,14 @@ mm_3gpp_parse_iccid (const char *raw_iccid, GError **error)
       goto error;
     }
 
-    /* Ensure if there's an 'F' that it's second-to-last if swap = TRUE,
-     * otherwise last if swap = FALSE */
-    if (f_pos >= 0) {
-        if ((swap && (f_pos != len - 2)) || (!swap && (f_pos != len - 1))) {
-            g_set_error_literal (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                                 "Invalid ICCID length (unexpected F position)");
-            goto error;
-        }
-    }
-
     if (swap) {
         /* Swap digits in the ICCID response to get the actual ICCID, each
          * group of 2 digits is reversed.
          *
          *    21436587 -> 12345678
          */
-        swapped = g_malloc0 (25);
+        g_assert (len == 20);
+        swapped = g_malloc0 (21);
         for (i = 0; i < 10; i++) {
             swapped[i * 2] = buf[(i * 2) + 1];
             swapped[(i * 2) + 1] = buf[i * 2];
@@ -4005,7 +4021,7 @@ mm_cdma_get_index_from_rm_protocol (MMModemCdmaRmProtocol protocol,
         return 0;
     }
 
-    /* just substracting 1 from the enum value should give us the index */
+    /* just subtracting 1 from the enum value should give us the index */
     return (protocol - 1);
 }
 

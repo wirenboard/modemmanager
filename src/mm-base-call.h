@@ -91,7 +91,7 @@ struct _MMBaseCallClass {
 
 GType mm_base_call_get_type (void);
 
-/* This one can be overriden by plugins */
+/* This one can be overridden by plugins */
 MMBaseCall *mm_base_call_new                 (MMBaseModem *modem);
 MMBaseCall *mm_base_call_new_from_properties (MMBaseModem *modem,
                                               MMCallProperties *properties,
@@ -104,7 +104,7 @@ void         mm_base_call_change_state   (MMBaseCall *self,
                                           MMCallState new_state,
                                           MMCallStateReason reason);
 void         mm_base_call_received_dtmf  (MMBaseCall *self,
-                                          gchar *dtmf);
+                                          const gchar *dtmf);
 
 void         mm_base_call_delete         (MMBaseCall *self,
                                           GAsyncReadyCallback callback,

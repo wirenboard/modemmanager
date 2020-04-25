@@ -4,6 +4,7 @@ mm_bearer_ip_config_get_type
 mm_bearer_ip_family_get_type
 mm_bearer_ip_method_get_type
 mm_bearer_properties_get_type
+mm_bearer_stats_get_type
 mm_call_direction_get_type
 mm_call_get_type
 mm_call_properties_get_type
@@ -70,6 +71,7 @@ mm_gdbus_sim_skeleton_get_type
 mm_gdbus_sms_get_type
 mm_gdbus_sms_proxy_get_type
 mm_gdbus_sms_skeleton_get_type
+mm_kernel_event_properties_get_type
 mm_location_3gpp_get_type
 mm_location_cdma_bs_get_type
 mm_location_gps_nmea_get_type
@@ -77,6 +79,7 @@ mm_location_gps_raw_get_type
 mm_manager_get_type
 mm_message_error_get_type
 mm_mobile_equipment_error_get_type
+mm_modem_3gpp_eps_ue_mode_operation_get_type
 mm_modem_3gpp_facility_get_type
 mm_modem_3gpp_get_type
 mm_modem_3gpp_network_availability_get_type

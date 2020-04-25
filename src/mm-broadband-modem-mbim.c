@@ -268,12 +268,20 @@ modem_load_model (MMIfaceModem *self,
                   GAsyncReadyCallback callback,
                   gpointer user_data)
 {
-    gchar *model;
+    gchar *model = NULL;
     GTask *task;
+    MMPortMbim *port;
 
-    model = g_strdup_printf ("MBIM [%04X:%04X]",
-                             (mm_base_modem_get_vendor_id (MM_BASE_MODEM (self)) & 0xFFFF),
-                             (mm_base_modem_get_product_id (MM_BASE_MODEM (self)) & 0xFFFF));
+    port = mm_base_modem_peek_port_mbim (MM_BASE_MODEM (self));
+    if (port) {
+        model = g_strdup (mm_kernel_device_get_physdev_product (
+            mm_port_peek_kernel_device (MM_PORT (port))));
+    }
+
+    if (!model)
+        model = g_strdup_printf ("MBIM [%04X:%04X]",
+                                 (mm_base_modem_get_vendor_id (MM_BASE_MODEM (self)) & 0xFFFF),
+                                 (mm_base_modem_get_product_id (MM_BASE_MODEM (self)) & 0xFFFF));
 
     task = g_task_new (self, NULL, callback, user_data);
     g_task_return_pointer (task, model, g_free);
@@ -1434,6 +1442,79 @@ modem_power_down (MMIfaceModem *self,
 }
 
 /*****************************************************************************/
+/* Signal quality loading (Modem interface) */
+
+static guint
+modem_load_signal_quality_finish (MMIfaceModem *self,
+                                  GAsyncResult *res,
+                                  GError **error)
+{
+    gssize value;
+
+    value = g_task_propagate_int (G_TASK (res), error);
+    return value < 0 ? 0 : value;
+}
+
+static void
+signal_state_query_ready (MbimDevice *device,
+                          GAsyncResult *res,
+                          GTask *task)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    guint32 rssi;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (response &&
+        mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error) &&
+        mbim_message_signal_state_response_parse (
+            response,
+            &rssi,
+            NULL, /* error_rate */
+            NULL, /* signal_strength_interval */
+            NULL, /* rssi_threshold */
+            NULL, /* error_rate_threshold */
+            &error)) {
+        guint32 quality;
+
+        /* Normalize the quality. 99 means unknown, we default it to 0 */
+        quality = CLAMP (rssi == 99 ? 0 : rssi, 0, 31) * 100 / 31;
+
+        g_task_return_int (task, quality);
+    } else
+        g_task_return_error (task, error);
+
+    g_object_unref (task);
+
+    if (response)
+        mbim_message_unref (response);
+}
+
+static void
+modem_load_signal_quality (MMIfaceModem *self,
+                           GAsyncReadyCallback callback,
+                           gpointer user_data)
+{
+    MbimDevice *device;
+    MbimMessage *message;
+    GTask *task;
+
+    if (!peek_device (self, &device, callback, user_data))
+        return;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    message = mbim_message_signal_state_query_new (NULL);
+    mbim_device_command (device,
+                         message,
+                         10,
+                         NULL,
+                         (GAsyncReadyCallback)signal_state_query_ready,
+                         task);
+    mbim_message_unref (message);
+}
+
+/*****************************************************************************/
 /* Create Bearer (Modem interface) */
 
 static MMBaseBearer *
@@ -2166,8 +2247,8 @@ static void add_sms_part (MMBroadbandModemMbim *self,
                           const MbimSmsPduReadRecord *pdu);
 
 static void
-sms_notification_read_sms (MMBroadbandModemMbim *self,
-                           MbimMessage *notification)
+sms_notification_read_flash_sms (MMBroadbandModemMbim *self,
+                                 MbimMessage *notification)
 {
     MbimSmsFormat format;
     guint32 messages_count;
@@ -2262,8 +2343,8 @@ alert_sms_read_query_ready (MbimDevice *device,
 }
 
 static void
-sms_notification_read_alert_sms (MMBroadbandModemMbim *self,
-                                 guint32 index)
+sms_notification_read_stored_sms (MMBroadbandModemMbim *self,
+                                  guint32 index)
 {
     MMPortMbim *port;
     MbimDevice *device;
@@ -2276,7 +2357,7 @@ sms_notification_read_alert_sms (MMBroadbandModemMbim *self,
     if (!device)
         return;
 
-    mm_dbg ("Reading flash SMS at index '%u'", index);
+    mm_dbg ("Reading new SMS at index '%u'", index);
     message = mbim_message_sms_read_query_new (MBIM_SMS_FORMAT_PDU,
                                                MBIM_SMS_FLAG_INDEX,
                                                index,
@@ -2296,24 +2377,24 @@ sms_notification (MMBroadbandModemMbim *self,
 {
     switch (mbim_message_indicate_status_get_cid (notification)) {
     case MBIM_CID_SMS_READ:
+        /* New flash/alert message? */
         if (self->priv->setup_flags & PROCESS_NOTIFICATION_FLAG_SMS_READ)
-            sms_notification_read_sms (self, notification);
+            sms_notification_read_flash_sms (self, notification);
         break;
 
     case MBIM_CID_SMS_MESSAGE_STORE_STATUS: {
         MbimSmsStatusFlag flag;
         guint32 index;
 
-        /* New flash/alert message? */
         if (self->priv->setup_flags & PROCESS_NOTIFICATION_FLAG_SMS_READ &&
             mbim_message_sms_message_store_status_notification_parse (
                 notification,
                 &flag,
                 &index,
                 NULL)) {
-            mm_dbg ("Received flash message: '%s'", mbim_sms_status_flag_get_string (flag));
+            mm_dbg ("Received SMS store status update: '%s'", mbim_sms_status_flag_get_string (flag));
             if (flag == MBIM_SMS_STATUS_FLAG_NEW_MESSAGE)
-                sms_notification_read_alert_sms (self, index);
+                sms_notification_read_stored_sms (self, index);
         }
         break;
     }
@@ -3305,6 +3386,7 @@ mm_broadband_modem_mbim_new (const gchar *device,
                          MM_BASE_MODEM_PRODUCT_ID, product_id,
                          MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED, TRUE,
                          MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED, FALSE,
+                         MM_IFACE_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED, TRUE,
                          NULL);
 }
 
@@ -3379,6 +3461,10 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_supported_ip_families = modem_load_supported_ip_families;
     iface->load_supported_ip_families_finish = modem_load_supported_ip_families_finish;
 
+    /* Additional actions */
+    iface->load_signal_quality = modem_load_signal_quality;
+    iface->load_signal_quality_finish = modem_load_signal_quality_finish;
+
     /* Unneeded things */
     iface->modem_after_power_up = NULL;
     iface->modem_after_power_up_finish = NULL;
@@ -3388,8 +3474,6 @@ iface_modem_init (MMIfaceModem *iface)
     iface->setup_flow_control_finish = NULL;
     iface->setup_charset = NULL;
     iface->setup_charset_finish = NULL;
-    iface->load_signal_quality = NULL;
-    iface->load_signal_quality_finish = NULL;
     iface->load_access_technologies = NULL;
     iface->load_access_technologies_finish = NULL;
 
@@ -3463,6 +3547,8 @@ iface_modem_messaging_init (MMIfaceModemMessaging *iface)
     iface->setup_sms_format_finish = NULL;
     iface->set_default_storage = NULL;
     iface->set_default_storage_finish = NULL;
+    iface->init_current_storages = NULL;
+    iface->init_current_storages_finish = NULL;
     iface->load_initial_sms_parts = load_initial_sms_parts;
     iface->load_initial_sms_parts_finish = load_initial_sms_parts_finish;
     iface->setup_unsolicited_events = setup_unsolicited_events_messaging;

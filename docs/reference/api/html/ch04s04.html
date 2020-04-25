@@ -8,7 +8,7 @@
 <link rel="up" href="ref-overview-modem-port-probing.html" title="Port probing">
 <link rel="prev" href="ch04s03.html" title="Post-probing filters">
 <link rel="next" href="ref-overview-modem-object-creation.html" title="Modem object creation">
-<meta name="generator" content="GTK-Doc V1.27 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.29 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -56,15 +56,15 @@
         <td class="listing_code"><pre class="programlisting"><span class="usertype">G_MODULE_EXPORT</span><span class="normal"> MMPlugin </span><span class="symbol">*</span>
 <span class="function">mm_plugin_create</span><span class="normal"> </span><span class="symbol">(</span><span class="type">void</span><span class="symbol">)</span>
 <span class="cbracket">{</span>
-<span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">gchar</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">subsystems</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="string">"tty"</span><span class="symbol">,</span><span class="normal"> <a href="../glib/glib-Standard-Macros.html#NULL:CAPS">NULL</a> </span><span class="cbracket">}</span><span class="symbol">;</span>
+<span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">gchar</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">subsystems</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="string">"tty"</span><span class="symbol">,</span><span class="normal"> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a> </span><span class="cbracket">}</span><span class="symbol">;</span>
 <span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">guint16</span><span class="normal"> vendor_ids</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="number">0xabcd</span><span class="symbol">,</span><span class="normal"> </span><span class="number">0</span><span class="normal"> </span><span class="cbracket">}</span><span class="symbol">;</span>
 <span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">mm_uint16_pair</span><span class="normal"> product_ids</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span>
 <span class="normal">        </span><span class="cbracket">{</span><span class="normal"> </span><span class="number">0x1234</span><span class="symbol">,</span><span class="normal"> </span><span class="number">0xffff</span><span class="normal"> </span><span class="cbracket">}</span>
 <span class="normal">    </span><span class="cbracket">}</span><span class="symbol">;</span>
-<span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">gchar</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">vendor_strings</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="string">"vendor"</span><span class="symbol">,</span><span class="normal"> <a href="../glib/glib-Standard-Macros.html#NULL:CAPS">NULL</a> </span><span class="cbracket">}</span><span class="symbol">;</span>
+<span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">gchar</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">vendor_strings</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="string">"vendor"</span><span class="symbol">,</span><span class="normal"> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a> </span><span class="cbracket">}</span><span class="symbol">;</span>
 
 <span class="normal">    </span><span class="keyword">return</span><span class="normal"> </span><span class="function">MM_PLUGIN</span><span class="normal"> </span><span class="symbol">(</span>
-<span class="normal">        </span><span class="function"><a href="../gobject/gobject-The-Base-Object-Type.html#g-object-new">g_object_new</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">MM_TYPE_PLUGIN_IRIDIUM</span><span class="symbol">,</span>
+<span class="normal">        </span><span class="function"><a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-new">g_object_new</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">MM_TYPE_PLUGIN_IRIDIUM</span><span class="symbol">,</span>
 <span class="normal">                      MM_PLUGIN_NAME</span><span class="symbol">,</span><span class="normal"> </span><span class="string">"Example"</span><span class="symbol">,</span>
 
 <span class="normal">                      </span><span class="comment">/* Next items are pre-probing filters */</span>
@@ -73,10 +73,10 @@
 <span class="normal">                      MM_PLUGIN_ALLOWED_PRODUCT_IDS</span><span class="symbol">,</span><span class="normal"> product_ids</span><span class="symbol">,</span>
 
 <span class="normal">                      </span><span class="comment">/* Next items are probing sequence setup */</span>
-<span class="normal">                      MM_PLUGIN_ALLOWED_AT</span><span class="symbol">,</span><span class="normal"> <a href="../glib/glib-Standard-Macros.html#TRUE:CAPS">TRUE</a></span><span class="symbol">,</span>
+<span class="normal">                      MM_PLUGIN_ALLOWED_AT</span><span class="symbol">,</span><span class="normal"> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS">TRUE</a></span><span class="symbol">,</span>
 
 <span class="normal">                      </span><span class="comment">/* No post-probing filters */</span>
-<span class="normal">                      <a href="../glib/glib-Standard-Macros.html#NULL:CAPS">NULL</a></span><span class="symbol">));</span>
+<span class="normal">                      <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a></span><span class="symbol">));</span>
 <span class="cbracket">}</span></pre></td>
       </tr>
     </tbody>
@@ -115,24 +115,24 @@
         <td class="listing_code"><pre class="programlisting"><span class="usertype">G_MODULE_EXPORT</span><span class="normal"> MMPlugin </span><span class="symbol">*</span>
 <span class="function">mm_plugin_create</span><span class="normal"> </span><span class="symbol">(</span><span class="type">void</span><span class="symbol">)</span>
 <span class="cbracket">{</span>
-<span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">gchar</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">subsystems</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="string">"tty"</span><span class="symbol">,</span><span class="normal"> <a href="../glib/glib-Standard-Macros.html#NULL:CAPS">NULL</a> </span><span class="cbracket">}</span><span class="symbol">;</span>
-<span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">gchar</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">vendor_strings</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="string">"vendor"</span><span class="symbol">,</span><span class="normal"> <a href="../glib/glib-Standard-Macros.html#NULL:CAPS">NULL</a> </span><span class="cbracket">}</span><span class="symbol">;</span>
+<span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">gchar</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">subsystems</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="string">"tty"</span><span class="symbol">,</span><span class="normal"> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a> </span><span class="cbracket">}</span><span class="symbol">;</span>
+<span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">gchar</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">vendor_strings</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="string">"vendor"</span><span class="symbol">,</span><span class="normal"> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a> </span><span class="cbracket">}</span><span class="symbol">;</span>
 <span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">mm_str_pair</span><span class="normal"> product_strings</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="string">"another-vendor"</span><span class="symbol">,</span><span class="normal"> </span><span class="string">"product xyz"</span><span class="normal"> </span><span class="cbracket">}</span><span class="symbol">;</span>
 
 <span class="normal">    </span><span class="keyword">return</span><span class="normal"> </span><span class="function">MM_PLUGIN</span><span class="normal"> </span><span class="symbol">(</span>
-<span class="normal">        </span><span class="function"><a href="../gobject/gobject-The-Base-Object-Type.html#g-object-new">g_object_new</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">MM_TYPE_PLUGIN_IRIDIUM</span><span class="symbol">,</span>
+<span class="normal">        </span><span class="function"><a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-new">g_object_new</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">MM_TYPE_PLUGIN_IRIDIUM</span><span class="symbol">,</span>
 <span class="normal">                      MM_PLUGIN_NAME</span><span class="symbol">,</span><span class="normal"> </span><span class="string">"Example"</span><span class="symbol">,</span>
 
 <span class="normal">                      </span><span class="comment">/* Next items are pre-probing filters */</span>
 <span class="normal">                      MM_PLUGIN_ALLOWED_SUBSYSTEMS</span><span class="symbol">,</span><span class="normal"> subsystems</span><span class="symbol">,</span>
 
 <span class="normal">                      </span><span class="comment">/* Next items are probing sequence setup */</span>
-<span class="normal">                      MM_PLUGIN_ALLOWED_AT</span><span class="symbol">,</span><span class="normal"> <a href="../glib/glib-Standard-Macros.html#TRUE:CAPS">TRUE</a></span><span class="symbol">,</span>
+<span class="normal">                      MM_PLUGIN_ALLOWED_AT</span><span class="symbol">,</span><span class="normal"> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS">TRUE</a></span><span class="symbol">,</span>
 
 <span class="normal">                      </span><span class="comment">/* Next items are post-probing filters */</span>
 <span class="normal">                      MM_PLUGIN_VENDOR_STRINGS</span><span class="symbol">,</span><span class="normal"> vendor_strings</span><span class="symbol">,</span>
 <span class="normal">                      MM_PLUGIN_PRODUCT_STRINGS</span><span class="symbol">,</span><span class="normal"> product_strings</span><span class="symbol">,</span>
-<span class="normal">                      <a href="../glib/glib-Standard-Macros.html#NULL:CAPS">NULL</a></span><span class="symbol">));</span>
+<span class="normal">                      <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a></span><span class="symbol">));</span>
 <span class="cbracket">}</span></pre></td>
       </tr>
     </tbody>
@@ -189,36 +189,36 @@
 41
 42
 43</pre></td>
-        <td class="listing_code"><pre class="programlisting"><span class="keyword">static</span><span class="normal"> <a href="../glib/glib-Basic-Types.html#gboolean">gboolean</a></span>
+        <td class="listing_code"><pre class="programlisting"><span class="keyword">static</span><span class="normal"> <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean">gboolean</a></span>
 <span class="function">parse_custom_at</span><span class="normal"> </span><span class="symbol">(</span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">gchar</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">response</span><span class="symbol">,</span>
 <span class="normal">                 </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">GError</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">error</span><span class="symbol">,</span>
 <span class="normal">                 </span><span class="usertype">GValue</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">result</span><span class="symbol">,</span>
 <span class="normal">                 </span><span class="usertype">GError</span><span class="normal"> </span><span class="symbol">**</span><span class="normal">result_error</span><span class="symbol">)</span>
 <span class="cbracket">{</span>
 <span class="normal">    </span><span class="keyword">if</span><span class="normal"> </span><span class="symbol">(</span><span class="normal">error</span><span class="symbol">)</span><span class="normal"> </span><span class="cbracket">{</span>
-<span class="normal">        </span><span class="symbol">*</span><span class="normal">result_error </span><span class="symbol">=</span><span class="normal"> </span><span class="function"><a href="../glib/glib-Error-Reporting.html#g-error-copy">g_error_copy</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">error</span><span class="symbol">);</span>
-<span class="normal">        </span><span class="keyword">return</span><span class="normal"> <a href="../glib/glib-Standard-Macros.html#FALSE:CAPS">FALSE</a></span><span class="symbol">;</span>
+<span class="normal">        </span><span class="symbol">*</span><span class="normal">result_error </span><span class="symbol">=</span><span class="normal"> </span><span class="function"><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#g-error-copy">g_error_copy</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">error</span><span class="symbol">);</span>
+<span class="normal">        </span><span class="keyword">return</span><span class="normal"> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS">FALSE</a></span><span class="symbol">;</span>
 <span class="normal">    </span><span class="cbracket">}</span>
 
 <span class="normal">    </span><span class="comment">/* Otherwise, done. And also report that it's an AT port. */</span>
-<span class="normal">    </span><span class="function"><a href="../gobject/gobject-Generic-values.html#g-value-init">g_value_init</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">result</span><span class="symbol">,</span><span class="normal"> <a href="../gobject/gobject-Type-Information.html#G-TYPE-BOOLEAN:CAPS">G_TYPE_BOOLEAN</a></span><span class="symbol">);</span>
-<span class="normal">    </span><span class="function"><a href="../gobject/gobject-Standard-Parameter-and-Value-Types.html#g-value-set-boolean">g_value_set_boolean</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">result</span><span class="symbol">,</span><span class="normal"> <a href="../glib/glib-Standard-Macros.html#TRUE:CAPS">TRUE</a></span><span class="symbol">);</span>
-<span class="normal">    </span><span class="keyword">return</span><span class="normal"> <a href="../glib/glib-Standard-Macros.html#TRUE:CAPS">TRUE</a></span><span class="symbol">;</span>
+<span class="normal">    </span><span class="function"><a href="https://developer.gnome.org/gobject/unstable/gobject-Generic-values.html#g-value-init">g_value_init</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">result</span><span class="symbol">,</span><span class="normal"> <a href="https://developer.gnome.org/gobject/unstable/gobject-Type-Information.html#G-TYPE-BOOLEAN:CAPS">G_TYPE_BOOLEAN</a></span><span class="symbol">);</span>
+<span class="normal">    </span><span class="function"><a href="https://developer.gnome.org/gobject/unstable/gobject-Standard-Parameter-and-Value-Types.html#g-value-set-boolean">g_value_set_boolean</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">result</span><span class="symbol">,</span><span class="normal"> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS">TRUE</a></span><span class="symbol">);</span>
+<span class="normal">    </span><span class="keyword">return</span><span class="normal"> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS">TRUE</a></span><span class="symbol">;</span>
 <span class="cbracket">}</span>
 
 <span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">MMPortProbeAtCommand</span><span class="normal"> custom_at_probe</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span>
 <span class="normal">    </span><span class="cbracket">{</span><span class="normal"> </span><span class="string">"AT+SOMETHING"</span><span class="symbol">,</span><span class="normal"> parse_custom_at </span><span class="cbracket">}</span><span class="symbol">,</span>
-<span class="normal">    </span><span class="cbracket">{</span><span class="normal"> <a href="../glib/glib-Standard-Macros.html#NULL:CAPS">NULL</a> </span><span class="cbracket">}</span>
+<span class="normal">    </span><span class="cbracket">{</span><span class="normal"> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a> </span><span class="cbracket">}</span>
 <span class="cbracket">}</span><span class="symbol">;</span>
 
 <span class="usertype">G_MODULE_EXPORT</span><span class="normal"> MMPlugin </span><span class="symbol">*</span>
 <span class="function">mm_plugin_create</span><span class="normal"> </span><span class="symbol">(</span><span class="type">void</span><span class="symbol">)</span>
 <span class="cbracket">{</span>
-<span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">gchar</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">subsystems</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="string">"tty"</span><span class="symbol">,</span><span class="normal"> <a href="../glib/glib-Standard-Macros.html#NULL:CAPS">NULL</a> </span><span class="cbracket">}</span><span class="symbol">;</span>
+<span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">gchar</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">subsystems</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="string">"tty"</span><span class="symbol">,</span><span class="normal"> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a> </span><span class="cbracket">}</span><span class="symbol">;</span>
 <span class="normal">    </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">guint16</span><span class="normal"> vendor_ids</span><span class="symbol">[]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="cbracket">{</span><span class="normal"> </span><span class="number">0xabcd</span><span class="symbol">,</span><span class="normal"> </span><span class="number">0</span><span class="normal"> </span><span class="cbracket">}</span><span class="symbol">;</span>
 
 <span class="normal">    </span><span class="keyword">return</span><span class="normal"> </span><span class="function">MM_PLUGIN</span><span class="normal"> </span><span class="symbol">(</span>
-<span class="normal">        </span><span class="function"><a href="../gobject/gobject-The-Base-Object-Type.html#g-object-new">g_object_new</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">MM_TYPE_PLUGIN_EXAMPLE</span><span class="symbol">,</span>
+<span class="normal">        </span><span class="function"><a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-new">g_object_new</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">MM_TYPE_PLUGIN_EXAMPLE</span><span class="symbol">,</span>
 <span class="normal">                      MM_PLUGIN_NAME</span><span class="symbol">,</span><span class="normal"> </span><span class="string">"Example"</span><span class="symbol">,</span>
 
 <span class="normal">                      </span><span class="comment">/* Next items are pre-probing filters */</span>
@@ -227,10 +227,10 @@
 
 <span class="normal">                      </span><span class="comment">/* Next items are probing sequence setup */</span>
 <span class="normal">                      MM_PLUGIN_CUSTOM_AT_PROBE</span><span class="symbol">,</span><span class="normal"> custom_at_probe</span><span class="symbol">,</span>
-<span class="normal">                      MM_PLUGIN_ALLOWED_AT</span><span class="symbol">,</span><span class="normal">      <a href="../glib/glib-Standard-Macros.html#TRUE:CAPS">TRUE</a></span><span class="symbol">,</span>
+<span class="normal">                      MM_PLUGIN_ALLOWED_AT</span><span class="symbol">,</span><span class="normal">      <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS">TRUE</a></span><span class="symbol">,</span>
 
 <span class="normal">                      </span><span class="comment">/* No post-probing filters */</span>
-<span class="normal">                      <a href="../glib/glib-Standard-Macros.html#NULL:CAPS">NULL</a></span><span class="symbol">));</span>
+<span class="normal">                      <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a></span><span class="symbol">));</span>
 <span class="cbracket">}</span></pre></td>
       </tr>
     </tbody>
@@ -241,6 +241,6 @@
 <br class="example-break">
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.27</div>
+<hr>Generated by GTK-Doc V1.29</div>
 </body>
 </html>

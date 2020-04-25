@@ -231,8 +231,8 @@ libmm_plugin_cinterion_la_DEPENDENCIES =  \
 am__libmm_plugin_cinterion_la_SOURCES_DIST =  \
 	cinterion/mm-plugin-cinterion.c \
 	cinterion/mm-plugin-cinterion.h \
-	cinterion/mm-common-cinterion.c \
-	cinterion/mm-common-cinterion.h \
+	cinterion/mm-shared-cinterion.c \
+	cinterion/mm-shared-cinterion.h \
 	cinterion/mm-broadband-modem-cinterion.c \
 	cinterion/mm-broadband-modem-cinterion.h \
 	cinterion/mm-broadband-bearer-cinterion.c \
@@ -242,7 +242,7 @@ am__libmm_plugin_cinterion_la_SOURCES_DIST =  \
 @WITH_QMI_TRUE@am__objects_3 = cinterion/libmm_plugin_cinterion_la-mm-broadband-modem-qmi-cinterion.lo
 am_libmm_plugin_cinterion_la_OBJECTS =  \
 	cinterion/libmm_plugin_cinterion_la-mm-plugin-cinterion.lo \
-	cinterion/libmm_plugin_cinterion_la-mm-common-cinterion.lo \
+	cinterion/libmm_plugin_cinterion_la-mm-shared-cinterion.lo \
 	cinterion/libmm_plugin_cinterion_la-mm-broadband-modem-cinterion.lo \
 	cinterion/libmm_plugin_cinterion_la-mm-broadband-bearer-cinterion.lo \
 	$(am__objects_3)
@@ -498,7 +498,8 @@ libmm_plugin_ublox_la_DEPENDENCIES = $(builddir)/libhelpers-ublox.la
 am_libmm_plugin_ublox_la_OBJECTS =  \
 	ublox/libmm_plugin_ublox_la-mm-plugin-ublox.lo \
 	ublox/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.lo \
-	ublox/libmm_plugin_ublox_la-mm-broadband-modem-ublox.lo
+	ublox/libmm_plugin_ublox_la-mm-broadband-modem-ublox.lo \
+	ublox/libmm_plugin_ublox_la-mm-sim-ublox.lo
 libmm_plugin_ublox_la_OBJECTS = $(am_libmm_plugin_ublox_la_OBJECTS)
 libmm_plugin_ublox_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -1626,8 +1627,8 @@ test_modem_helpers_cinterion_LDADD = \
 
 libmm_plugin_cinterion_la_SOURCES = cinterion/mm-plugin-cinterion.c \
 	cinterion/mm-plugin-cinterion.h \
-	cinterion/mm-common-cinterion.c \
-	cinterion/mm-common-cinterion.h \
+	cinterion/mm-shared-cinterion.c \
+	cinterion/mm-shared-cinterion.h \
 	cinterion/mm-broadband-modem-cinterion.c \
 	cinterion/mm-broadband-modem-cinterion.h \
 	cinterion/mm-broadband-bearer-cinterion.c \
@@ -1853,6 +1854,8 @@ libmm_plugin_ublox_la_SOURCES = \
 	ublox/mm-broadband-bearer-ublox.c \
 	ublox/mm-broadband-modem-ublox.h \
 	ublox/mm-broadband-modem-ublox.c \
+	ublox/mm-sim-ublox.c \
+	ublox/mm-sim-ublox.h \
 	$(NULL)
 
 libmm_plugin_ublox_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(PLUGIN_UBLOX_COMPILER_FLAGS)
@@ -2090,7 +2093,7 @@ libmm-plugin-anydata.la: $(libmm_plugin_anydata_la_OBJECTS) $(libmm_plugin_anyda
 	$(AM_V_CCLD)$(libmm_plugin_anydata_la_LINK) -rpath $(pkglibdir) $(libmm_plugin_anydata_la_OBJECTS) $(libmm_plugin_anydata_la_LIBADD) $(LIBS)
 cinterion/libmm_plugin_cinterion_la-mm-plugin-cinterion.lo:  \
 	cinterion/$(am__dirstamp) cinterion/$(DEPDIR)/$(am__dirstamp)
-cinterion/libmm_plugin_cinterion_la-mm-common-cinterion.lo:  \
+cinterion/libmm_plugin_cinterion_la-mm-shared-cinterion.lo:  \
 	cinterion/$(am__dirstamp) cinterion/$(DEPDIR)/$(am__dirstamp)
 cinterion/libmm_plugin_cinterion_la-mm-broadband-modem-cinterion.lo:  \
 	cinterion/$(am__dirstamp) cinterion/$(DEPDIR)/$(am__dirstamp)
@@ -2365,6 +2368,8 @@ ublox/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.lo:  \
 	ublox/$(am__dirstamp) ublox/$(DEPDIR)/$(am__dirstamp)
 ublox/libmm_plugin_ublox_la-mm-broadband-modem-ublox.lo:  \
 	ublox/$(am__dirstamp) ublox/$(DEPDIR)/$(am__dirstamp)
+ublox/libmm_plugin_ublox_la-mm-sim-ublox.lo: ublox/$(am__dirstamp) \
+	ublox/$(DEPDIR)/$(am__dirstamp)
 
 libmm-plugin-ublox.la: $(libmm_plugin_ublox_la_OBJECTS) $(libmm_plugin_ublox_la_DEPENDENCIES) $(EXTRA_libmm_plugin_ublox_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libmm_plugin_ublox_la_LINK) -rpath $(pkglibdir) $(libmm_plugin_ublox_la_OBJECTS) $(libmm_plugin_ublox_la_LIBADD) $(LIBS)
@@ -2713,8 +2718,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-broadband-bearer-cinterion.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-broadband-modem-cinterion.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-broadband-modem-qmi-cinterion.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-common-cinterion.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-plugin-cinterion.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-shared-cinterion.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@cinterion/$(DEPDIR)/mm-modem-helpers-cinterion.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@cinterion/tests/$(DEPDIR)/test_modem_helpers_cinterion-test-modem-helpers-cinterion.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@dell/$(DEPDIR)/libmm_plugin_dell_la-mm-plugin-dell.Plo@am__quote@
@@ -2801,6 +2806,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-broadband-modem-ublox.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-plugin-ublox.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-sim-ublox.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ublox/tests/$(DEPDIR)/test_modem_helpers_ublox-test-modem-helpers-ublox.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@via/$(DEPDIR)/libmm_plugin_via_la-mm-broadband-modem-via.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@via/$(DEPDIR)/libmm_plugin_via_la-mm-plugin-via.Plo@am__quote@
@@ -2907,12 +2913,12 @@ cinterion/libmm_plugin_cinterion_la-mm-plugin-cinterion.lo: cinterion/mm-plugin-
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_cinterion_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cinterion/libmm_plugin_cinterion_la-mm-plugin-cinterion.lo `test -f 'cinterion/mm-plugin-cinterion.c' || echo '$(srcdir)/'`cinterion/mm-plugin-cinterion.c
 
-cinterion/libmm_plugin_cinterion_la-mm-common-cinterion.lo: cinterion/mm-common-cinterion.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_cinterion_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cinterion/libmm_plugin_cinterion_la-mm-common-cinterion.lo -MD -MP -MF cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-common-cinterion.Tpo -c -o cinterion/libmm_plugin_cinterion_la-mm-common-cinterion.lo `test -f 'cinterion/mm-common-cinterion.c' || echo '$(srcdir)/'`cinterion/mm-common-cinterion.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-common-cinterion.Tpo cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-common-cinterion.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cinterion/mm-common-cinterion.c' object='cinterion/libmm_plugin_cinterion_la-mm-common-cinterion.lo' libtool=yes @AMDEPBACKSLASH@
+cinterion/libmm_plugin_cinterion_la-mm-shared-cinterion.lo: cinterion/mm-shared-cinterion.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_cinterion_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cinterion/libmm_plugin_cinterion_la-mm-shared-cinterion.lo -MD -MP -MF cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-shared-cinterion.Tpo -c -o cinterion/libmm_plugin_cinterion_la-mm-shared-cinterion.lo `test -f 'cinterion/mm-shared-cinterion.c' || echo '$(srcdir)/'`cinterion/mm-shared-cinterion.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-shared-cinterion.Tpo cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-shared-cinterion.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cinterion/mm-shared-cinterion.c' object='cinterion/libmm_plugin_cinterion_la-mm-shared-cinterion.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_cinterion_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cinterion/libmm_plugin_cinterion_la-mm-common-cinterion.lo `test -f 'cinterion/mm-common-cinterion.c' || echo '$(srcdir)/'`cinterion/mm-common-cinterion.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_cinterion_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cinterion/libmm_plugin_cinterion_la-mm-shared-cinterion.lo `test -f 'cinterion/mm-shared-cinterion.c' || echo '$(srcdir)/'`cinterion/mm-shared-cinterion.c
 
 cinterion/libmm_plugin_cinterion_la-mm-broadband-modem-cinterion.lo: cinterion/mm-broadband-modem-cinterion.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_cinterion_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cinterion/libmm_plugin_cinterion_la-mm-broadband-modem-cinterion.lo -MD -MP -MF cinterion/$(DEPDIR)/libmm_plugin_cinterion_la-mm-broadband-modem-cinterion.Tpo -c -o cinterion/libmm_plugin_cinterion_la-mm-broadband-modem-cinterion.lo `test -f 'cinterion/mm-broadband-modem-cinterion.c' || echo '$(srcdir)/'`cinterion/mm-broadband-modem-cinterion.c
@@ -3291,6 +3297,13 @@ ublox/libmm_plugin_ublox_la-mm-broadband-modem-ublox.lo: ublox/mm-broadband-mode
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ublox/mm-broadband-modem-ublox.c' object='ublox/libmm_plugin_ublox_la-mm-broadband-modem-ublox.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ublox_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ublox/libmm_plugin_ublox_la-mm-broadband-modem-ublox.lo `test -f 'ublox/mm-broadband-modem-ublox.c' || echo '$(srcdir)/'`ublox/mm-broadband-modem-ublox.c
+
+ublox/libmm_plugin_ublox_la-mm-sim-ublox.lo: ublox/mm-sim-ublox.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ublox_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ublox/libmm_plugin_ublox_la-mm-sim-ublox.lo -MD -MP -MF ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-sim-ublox.Tpo -c -o ublox/libmm_plugin_ublox_la-mm-sim-ublox.lo `test -f 'ublox/mm-sim-ublox.c' || echo '$(srcdir)/'`ublox/mm-sim-ublox.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-sim-ublox.Tpo ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-sim-ublox.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ublox/mm-sim-ublox.c' object='ublox/libmm_plugin_ublox_la-mm-sim-ublox.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ublox_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ublox/libmm_plugin_ublox_la-mm-sim-ublox.lo `test -f 'ublox/mm-sim-ublox.c' || echo '$(srcdir)/'`ublox/mm-sim-ublox.c
 
 via/libmm_plugin_via_la-mm-plugin-via.lo: via/mm-plugin-via.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_via_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT via/libmm_plugin_via_la-mm-plugin-via.lo -MD -MP -MF via/$(DEPDIR)/libmm_plugin_via_la-mm-plugin-via.Tpo -c -o via/libmm_plugin_via_la-mm-plugin-via.lo `test -f 'via/mm-plugin-via.c' || echo '$(srcdir)/'`via/mm-plugin-via.c
