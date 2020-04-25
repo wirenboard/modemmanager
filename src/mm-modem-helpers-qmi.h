@@ -35,7 +35,8 @@ gboolean mm_pin_enabled_from_qmi_uim_pin_status (QmiDmsUimPinStatus status);
 QmiDmsUimFacility mm_3gpp_facility_to_qmi_uim_facility (MMModem3gppFacility mm);
 
 GArray *mm_modem_bands_from_qmi_band_capabilities (QmiDmsBandCapability qmi_bands,
-                                                   QmiDmsLteBandCapability qmi_lte_bands);
+                                                   QmiDmsLteBandCapability qmi_lte_bands,
+                                                   GArray *extended_qmi_lte_bands);
 
 /*****************************************************************************/
 /* QMI/NAS to MM translations */
@@ -45,6 +46,8 @@ MMModemAccessTechnology mm_modem_access_technologies_from_qmi_radio_interface_ar
 
 MMModemAccessTechnology mm_modem_access_technology_from_qmi_data_capability (QmiNasDataCapability cap);
 MMModemAccessTechnology mm_modem_access_technologies_from_qmi_data_capability_array (GArray *data_capabilities);
+
+MMModemMode mm_modem_mode_from_qmi_nas_radio_interface (QmiNasRadioInterface iface);
 
 MMModemMode mm_modem_mode_from_qmi_radio_technology_preference (QmiNasRadioTechnologyPreference qmi);
 QmiNasRadioTechnologyPreference mm_modem_mode_to_qmi_radio_technology_preference (MMModemMode mode,
@@ -58,6 +61,12 @@ QmiNasRatModePreference mm_modem_mode_to_qmi_rat_mode_preference (MMModemMode mo
 MMModemCapability mm_modem_capability_from_qmi_rat_mode_preference (QmiNasRatModePreference qmi);
 QmiNasRatModePreference mm_modem_capability_to_qmi_rat_mode_preference (MMModemCapability caps);
 
+GArray *mm_modem_capability_to_qmi_acquisition_order_preference (MMModemCapability caps);
+GArray *mm_modem_mode_to_qmi_acquisition_order_preference       (MMModemMode       allowed,
+                                                                 MMModemMode       preferred,
+                                                                 gboolean          is_cdma,
+                                                                 gboolean          is_3gpp);
+
 MMModemCapability mm_modem_capability_from_qmi_radio_technology_preference (QmiNasRadioTechnologyPreference qmi);
 QmiNasRadioTechnologyPreference mm_modem_capability_to_qmi_radio_technology_preference (MMModemCapability caps);
 
@@ -69,10 +78,14 @@ QmiNasGsmWcdmaAcquisitionOrderPreference mm_modem_mode_to_qmi_gsm_wcdma_acquisit
 GArray *mm_modem_bands_from_qmi_rf_band_information_array (GArray *info_array);
 
 GArray *mm_modem_bands_from_qmi_band_preference (QmiNasBandPreference qmi_bands,
-                                                 QmiNasLteBandPreference qmi_lte_bands);
+                                                 QmiNasLteBandPreference qmi_lte_bands,
+                                                 const guint64 *extended_qmi_lte_bands,
+                                                 guint extended_qmi_lte_bands_size);
 void mm_modem_bands_to_qmi_band_preference (GArray *mm_bands,
                                             QmiNasBandPreference *qmi_bands,
-                                            QmiNasLteBandPreference *qmi_lte_bands);
+                                            QmiNasLteBandPreference *qmi_lte_bands,
+                                            guint64 *extended_qmi_lte_bands,
+                                            guint extended_qmi_lte_bands_size);
 
 MMModem3gppRegistrationState mm_modem_3gpp_registration_state_from_qmi_registration_state (QmiNasAttachState attach_state,
                                                                                            QmiNasRegistrationState registration_state,
@@ -104,6 +117,12 @@ QmiOmaSessionType mm_oma_session_type_to_qmi_oma_session_type (MMOmaSessionType 
 MMOmaSessionState mm_oma_session_state_from_qmi_oma_session_state (QmiOmaSessionState qmi_session_state);
 
 MMOmaSessionStateFailedReason mm_oma_session_state_failed_reason_from_qmi_oma_session_failed_reason (QmiOmaSessionFailedReason qmi_session_failed_reason);
+
+/*****************************************************************************/
+/* QMI/LOC to MM translations */
+
+gboolean mm_error_from_qmi_loc_indication_status (QmiLocIndicationStatus   status,
+                                                  GError                 **error);
 
 /*****************************************************************************/
 /* Utility to gather current capabilities from various sources */

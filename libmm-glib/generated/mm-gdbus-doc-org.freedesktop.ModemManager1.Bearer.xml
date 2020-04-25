@@ -22,6 +22,7 @@
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip6Config">Ip6Config</link>   readable   a{sv}
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Stats">Stats</link>       readable   a{sv}
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.IpTimeout">IpTimeout</link>   readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.BearerType">BearerType</link>  readable   u
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties">Properties</link>  readable   a{sv}
 </synopsis>
   </refsect1>
@@ -285,6 +286,15 @@ Stats  readable   a{sv}
 IpTimeout  readable   u
 </programlisting>
 <para>        Maximum time to wait for a successful IP establishment, when PPP is used.
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.BearerType">
+  <title>The "BearerType" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Bearer.BearerType"><primary sortas="Bearer:BearerType">org.freedesktop.ModemManager1.Bearer:BearerType</primary></indexterm>
+<programlisting>
+BearerType  readable   u
+</programlisting>
+<para>        A <link linkend="MMBearerType">MMBearerType</link>
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties">

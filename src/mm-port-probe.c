@@ -11,8 +11,8 @@
  * GNU General Public License for more details:
  *
  * Copyright (C) 2008 - 2009 Novell, Inc.
- * Copyright (C) 2009 - 2011 Red Hat, Inc.
- * Copyright (C) 2011 Aleksander Morgado <aleksander@gnu.org>
+ * Copyright (C) 2009 - 2018 Red Hat, Inc.
+ * Copyright (C) 2011 - 2018 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include "config.h"
@@ -22,6 +22,8 @@
 #include <string.h>
 
 #include <ModemManager.h>
+#include <ModemManager-tags.h>
+
 #include <mm-errors-types.h>
 
 #include "mm-port-probe.h"
@@ -52,6 +54,7 @@
  *      |----> Vendor
  *      |----> Product
  *      |----> Is Icera?
+ *      |----> Is Xmm?
  * ----> QCDM Serial Open
  *   |----> QCDM?
  * ----> QMI Device Open
@@ -83,11 +86,17 @@ struct _MMPortProbePrivate {
     gchar *vendor;
     gchar *product;
     gboolean is_icera;
+    gboolean is_xmm;
     gboolean is_qmi;
     gboolean is_mbim;
 
     /* From udev tags */
     gboolean is_ignored;
+    gboolean is_gps;
+    gboolean maybe_at_primary;
+    gboolean maybe_at_secondary;
+    gboolean maybe_at_ppp;
+    gboolean maybe_qcdm;
 
     /* Current probing task. Only one can be available at a time */
     GTask *task;
@@ -165,9 +174,11 @@ mm_port_probe_set_result_at (MMPortProbe *self,
         self->priv->vendor = NULL;
         self->priv->product = NULL;
         self->priv->is_icera = FALSE;
+        self->priv->is_xmm = FALSE;
         self->priv->flags |= (MM_PORT_PROBE_AT_VENDOR |
                               MM_PORT_PROBE_AT_PRODUCT |
-                              MM_PORT_PROBE_AT_ICERA);
+                              MM_PORT_PROBE_AT_ICERA |
+                              MM_PORT_PROBE_AT_XMM);
     }
 }
 
@@ -230,6 +241,25 @@ mm_port_probe_set_result_at_icera (MMPortProbe *self,
 }
 
 void
+mm_port_probe_set_result_at_xmm (MMPortProbe *self,
+                                 gboolean is_xmm)
+{
+    if (is_xmm) {
+        mm_dbg ("(%s/%s) Modem is XMM-based",
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
+        self->priv->is_xmm = TRUE;
+        self->priv->flags |= MM_PORT_PROBE_AT_XMM;
+    } else {
+        mm_dbg ("(%s/%s) Modem is probably not XMM-based",
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
+        self->priv->is_xmm = FALSE;
+        self->priv->flags |= MM_PORT_PROBE_AT_XMM;
+    }
+}
+
+void
 mm_port_probe_set_result_qcdm (MMPortProbe *self,
                                gboolean qcdm)
 {
@@ -248,10 +278,12 @@ mm_port_probe_set_result_qcdm (MMPortProbe *self,
         self->priv->vendor = NULL;
         self->priv->product = NULL;
         self->priv->is_icera = FALSE;
+        self->priv->is_xmm = FALSE;
         self->priv->flags |= (MM_PORT_PROBE_AT |
                               MM_PORT_PROBE_AT_VENDOR |
                               MM_PORT_PROBE_AT_PRODUCT |
                               MM_PORT_PROBE_AT_ICERA |
+                              MM_PORT_PROBE_AT_XMM |
                               MM_PORT_PROBE_QMI |
                               MM_PORT_PROBE_MBIM);
     } else
@@ -282,6 +314,7 @@ mm_port_probe_set_result_qmi (MMPortProbe *self,
                               MM_PORT_PROBE_AT_VENDOR |
                               MM_PORT_PROBE_AT_PRODUCT |
                               MM_PORT_PROBE_AT_ICERA |
+                              MM_PORT_PROBE_AT_XMM |
                               MM_PORT_PROBE_QCDM |
                               MM_PORT_PROBE_MBIM);
     } else
@@ -312,6 +345,7 @@ mm_port_probe_set_result_mbim (MMPortProbe *self,
                               MM_PORT_PROBE_AT_VENDOR |
                               MM_PORT_PROBE_AT_PRODUCT |
                               MM_PORT_PROBE_AT_ICERA |
+                              MM_PORT_PROBE_AT_XMM |
                               MM_PORT_PROBE_QCDM |
                               MM_PORT_PROBE_QMI);
     } else
@@ -552,6 +586,9 @@ wdm_probe_mbim (MMPortProbe *self)
     /* Create a port and try to open it */
     ctx->mbim_port = mm_port_mbim_new (mm_kernel_device_get_name (self->priv->port));
     mm_port_mbim_open (ctx->mbim_port,
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+                       FALSE, /* Don't check QMI over MBIM support at this stage */
+#endif
                        NULL,
                        (GAsyncReadyCallback) mbim_port_open_ready,
                        self);
@@ -592,6 +629,39 @@ wdm_probe (MMPortProbe *self)
     /* All done now */
     port_probe_task_return_boolean (self, TRUE);
     return G_SOURCE_REMOVE;
+}
+
+/***************************************************************/
+
+static void
+common_serial_port_setup (MMPortProbe  *self,
+                          MMPortSerial *serial)
+{
+    const gchar *flow_control_tag;
+
+    if (mm_kernel_device_has_property (self->priv->port, ID_MM_TTY_BAUDRATE))
+        g_object_set (serial,
+                      MM_PORT_SERIAL_BAUD, mm_kernel_device_get_property_as_int (self->priv->port, ID_MM_TTY_BAUDRATE),
+                      NULL);
+
+    flow_control_tag = mm_kernel_device_get_property (self->priv->port, ID_MM_TTY_FLOW_CONTROL);
+    if (flow_control_tag) {
+        MMFlowControl flow_control;
+        GError *error = NULL;
+
+        flow_control = mm_flow_control_from_string (flow_control_tag, &error);
+        if (flow_control == MM_FLOW_CONTROL_UNKNOWN) {
+            mm_warn ("(%s/%s) Unsupported flow control settings in port: %s",
+                     mm_kernel_device_get_subsystem (self->priv->port),
+                     mm_kernel_device_get_name (self->priv->port),
+                     error->message);
+            g_error_free (error);
+        } else {
+            g_object_set (serial,
+                          MM_PORT_SERIAL_FLOW_CONTROL, flow_control,
+                          NULL);
+        }
+    }
 }
 
 /***************************************************************/
@@ -712,10 +782,8 @@ serial_probe_qcdm (MMPortProbe *self)
         return G_SOURCE_REMOVE;
     }
 
-    if (mm_kernel_device_has_property (self->priv->port, "ID_MM_TTY_BAUDRATE"))
-        g_object_set (ctx->serial,
-                      MM_PORT_SERIAL_BAUD, mm_kernel_device_get_property_as_int (self->priv->port, "ID_MM_TTY_BAUDRATE"),
-                      NULL);
+    /* Setup port if needed */
+    common_serial_port_setup (self, ctx->serial);
 
     /* Try to open the port */
     if (!mm_port_serial_open (ctx->serial, &error)) {
@@ -817,6 +885,22 @@ is_non_at_response (const guint8 *data, gsize len)
     }
 
     return FALSE;
+}
+
+static void
+serial_probe_at_xmm_result_processor (MMPortProbe *self,
+                                      GVariant *result)
+{
+    if (result) {
+        /* If any result given, it must be a string */
+        g_assert (g_variant_is_of_type (result, G_VARIANT_TYPE_STRING));
+        if (strstr (g_variant_get_string (result, NULL), "XACT:")) {
+            mm_port_probe_set_result_at_xmm (self, TRUE);
+            return;
+        }
+    }
+
+    mm_port_probe_set_result_at_xmm (self, FALSE);
 }
 
 static void
@@ -1030,6 +1114,11 @@ static const MMPortProbeAtCommand icera_probing[] = {
     { NULL }
 };
 
+static const MMPortProbeAtCommand xmm_probing[] = {
+    { "+XACT=?", 3, mm_port_probe_response_processor_string },
+    { NULL }
+};
+
 static void
 at_custom_init_ready (MMPortProbe *self,
                       GAsyncResult *res)
@@ -1066,10 +1155,13 @@ serial_probe_schedule (MMPortProbe *self)
         return;
 
     /* If we got some custom initialization setup requested, go on with it
-     * first. */
+     * first. We completely ignore the custom initialization if the serial port
+     * that we receive in the context isn't an AT port (e.g. if it was flagged
+     * as not being an AT port early) */
     if (!ctx->at_custom_init_run &&
         ctx->at_custom_init &&
-        ctx->at_custom_init_finish) {
+        ctx->at_custom_init_finish &&
+        MM_IS_PORT_SERIAL_AT (ctx->serial)) {
         ctx->at_custom_init (self,
                              MM_PORT_SERIAL_AT (ctx->serial),
                              ctx->at_probing_cancellable,
@@ -1115,6 +1207,13 @@ serial_probe_schedule (MMPortProbe *self)
         ctx->at_commands = icera_probing;
         /* By default, wait 2 seconds between ICERA probing retries */
         ctx->at_commands_wait_secs = 2;
+    }
+    /* XMM support check requested and not already done? */
+    else if ((ctx->flags & MM_PORT_PROBE_AT_XMM) &&
+             !(self->priv->flags & MM_PORT_PROBE_AT_XMM)) {
+        /* Prepare AT product probing */
+        ctx->at_result_processor = serial_probe_at_xmm_result_processor;
+        ctx->at_commands = xmm_probing;
     }
 
     /* If a next AT group detected, go for it */
@@ -1225,10 +1324,7 @@ serial_open_at (MMPortProbe *self)
                       MM_PORT_SERIAL_AT_SEND_LF,     ctx->at_send_lf,
                       NULL);
 
-        if (mm_kernel_device_has_property (self->priv->port, "ID_MM_TTY_BAUDRATE"))
-            g_object_set (ctx->serial,
-                          MM_PORT_SERIAL_BAUD, mm_kernel_device_get_property_as_int (self->priv->port, "ID_MM_TTY_BAUDRATE"),
-                          NULL);
+        common_serial_port_setup (self, ctx->serial);
 
         parser = mm_serial_parser_v1_new ();
         mm_serial_parser_v1_add_filter (parser,
@@ -1372,6 +1468,31 @@ mm_port_probe_run (MMPortProbe                *self,
         return;
     }
 
+    /* If this is a port flagged as a GPS port, don't do any AT or QCDM probing */
+    if (self->priv->is_gps) {
+        mm_dbg ("(%s/%s) GPS port detected",
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
+        mm_port_probe_set_result_at (self, FALSE);
+        mm_port_probe_set_result_qcdm (self, FALSE);
+    }
+
+    /* If this is a port flagged as being an AT port, don't do any QCDM probing */
+    if (self->priv->maybe_at_primary || self->priv->maybe_at_secondary || self->priv->maybe_at_ppp) {
+        mm_dbg ("(%s/%s) no QCDM probing in possible AT port",
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
+        mm_port_probe_set_result_qcdm (self, FALSE);
+    }
+
+    /* If this is a port flagged as being a QCDM port, don't do any AT probing */
+    if (self->priv->maybe_qcdm) {
+        mm_dbg ("(%s/%s) no AT probing in possible QCDM port",
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
+        mm_port_probe_set_result_at (self, FALSE);
+    }
+
     /* Check if we already have the requested probing results.
      * We will fix here the 'ctx->flags' so that we only request probing
      * for the missing things. */
@@ -1401,7 +1522,8 @@ mm_port_probe_run (MMPortProbe                *self,
     if (ctx->flags & MM_PORT_PROBE_AT ||
         ctx->flags & MM_PORT_PROBE_AT_VENDOR ||
         ctx->flags & MM_PORT_PROBE_AT_PRODUCT ||
-        ctx->flags & MM_PORT_PROBE_AT_ICERA) {
+        ctx->flags & MM_PORT_PROBE_AT_ICERA ||
+        ctx->flags & MM_PORT_PROBE_AT_XMM) {
         ctx->at_probing_cancellable = g_cancellable_new ();
         /* If the main cancellable is cancelled, so will be the at-probing one */
         if (cancellable)
@@ -1586,6 +1708,9 @@ mm_port_probe_get_port_type (MMPortProbe *self)
         self->priv->is_at)
         return MM_PORT_TYPE_AT;
 
+    if (self->priv->is_gps)
+        return MM_PORT_TYPE_GPS;
+
     return MM_PORT_TYPE_UNKNOWN;
 }
 
@@ -1688,6 +1813,32 @@ mm_port_probe_list_is_icera (GList *probes)
 }
 
 gboolean
+mm_port_probe_is_xmm (MMPortProbe *self)
+{
+    g_return_val_if_fail (MM_IS_PORT_PROBE (self), FALSE);
+
+    if (g_str_equal (mm_kernel_device_get_subsystem (self->priv->port), "net"))
+        return FALSE;
+
+    return (self->priv->flags & MM_PORT_PROBE_AT_XMM ?
+            self->priv->is_xmm :
+            FALSE);
+}
+
+gboolean
+mm_port_probe_list_is_xmm (GList *probes)
+{
+    GList *l;
+
+    for (l = probes; l; l = g_list_next (l)) {
+        if (mm_port_probe_is_xmm (MM_PORT_PROBE (l->data)))
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+gboolean
 mm_port_probe_is_ignored (MMPortProbe *self)
 {
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), FALSE);
@@ -1747,7 +1898,12 @@ set_property (GObject *object,
     case PROP_PORT:
         /* construct only */
         self->priv->port = g_value_dup_object (value);
-        self->priv->is_ignored = mm_kernel_device_get_property_as_boolean (self->priv->port, "ID_MM_PORT_IGNORE");
+        self->priv->is_ignored = mm_kernel_device_get_property_as_boolean (self->priv->port, ID_MM_PORT_IGNORE);
+        self->priv->is_gps = mm_kernel_device_get_property_as_boolean (self->priv->port, ID_MM_PORT_TYPE_GPS);
+        self->priv->maybe_at_primary = mm_kernel_device_get_property_as_boolean (self->priv->port, ID_MM_PORT_TYPE_AT_PRIMARY);
+        self->priv->maybe_at_secondary = mm_kernel_device_get_property_as_boolean (self->priv->port, ID_MM_PORT_TYPE_AT_SECONDARY);
+        self->priv->maybe_at_ppp = mm_kernel_device_get_property_as_boolean (self->priv->port, ID_MM_PORT_TYPE_AT_PPP);
+        self->priv->maybe_qcdm = mm_kernel_device_get_property_as_boolean (self->priv->port, ID_MM_PORT_TYPE_QCDM);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

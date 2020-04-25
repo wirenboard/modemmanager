@@ -564,6 +564,11 @@ connection.</p>
 <a name="mm-bearer-properties-get-number"></a><h3>mm_bearer_properties_get_number ()</h3>
 <pre class="programlisting">const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *
 mm_bearer_properties_get_number (<em class="parameter"><code><a class="link" href="MMBearerProperties.html" title="MMBearerProperties"><span class="type">MMBearerProperties</span></a> *self</code></em>);</pre>
+<div class="warning">
+<p><code class="literal">mm_bearer_properties_get_number</code> has been deprecated since version 1.10.0. and should not be used in newly-written code.</p>
+<p>The number setting is not used anywhere, and therefore
+it doesn't make sense to expose it in the ModemManager interface.</p>
+</div>
 <p>Gets the number to use when performing the connection.</p>
 <div class="refsect3">
 <a name="mm-bearer-properties-get-number.parameters"></a><h4>Parameters</h4>
@@ -593,6 +598,11 @@ mm_bearer_properties_get_number (<em class="parameter"><code><a class="link" hre
 <pre class="programlisting"><span class="returnvalue">void</span>
 mm_bearer_properties_set_number (<em class="parameter"><code><a class="link" href="MMBearerProperties.html" title="MMBearerProperties"><span class="type">MMBearerProperties</span></a> *self</code></em>,
                                  <em class="parameter"><code>const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *number</code></em>);</pre>
+<div class="warning">
+<p><code class="literal">mm_bearer_properties_set_number</code> has been deprecated since version 1.10.0. and should not be used in newly-written code.</p>
+<p>The number setting is not used anywhere, and therefore
+it doesn't make sense to expose it in the ModemManager interface.</p>
+</div>
 <p>Sets the number to use when performing the connection.</p>
 <div class="refsect3">
 <a name="mm-bearer-properties-set-number.parameters"></a><h4>Parameters</h4>

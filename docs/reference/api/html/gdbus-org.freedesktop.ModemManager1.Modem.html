@@ -53,7 +53,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.5.6.4"></a><h2>Signals</h2>
+<a name="id-1.5.5.6.4"></a><h2>Signals</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-signal-org-freedesktop-ModemManager1-Modem.StateChanged" title='The "StateChanged" signal'>StateChanged</a> (i old,
               i new,
@@ -61,7 +61,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.5.6.5"></a><h2>Properties</h2>
+<a name="id-1.5.5.6.5"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Sim" title='The "Sim" property'>Sim</a>                    readable   o
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers" title='The "Bearers" property'>Bearers</a>                readable   ao
@@ -100,6 +100,9 @@
 <p>      The Modem interface controls the status and actions in a given modem
       object.
 </p>
+<p>      This interface will always be available as long a the modem is considered
+      valid.
+</p>
 </div>
 <div class="refsect1">
 <a name="gdbus-methods-org.freedesktop.ModemManager1.Modem"></a><h2>Method Details</h2>
@@ -135,6 +138,9 @@ ListBearers (OUT ao bearers);
 </pre>
 <p>        List configured packet data bearers (EPS Bearers, PDP Contexts, or
         CDMA2000 Packet Data Sessions).
+</p>
+<p>        Deprecated: 1.10.0. Use <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers" title='The "Bearers" property'>"Bearers"</a>
+        property instead.
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -446,7 +452,10 @@ Sim  readable   o
 Bearers  readable   ao
 </pre>
 <p>        The list of bearer object paths (EPS Bearers, PDP Contexts, or
-        CDMA2000 Packet Data Sessions).
+        CDMA2000 Packet Data Sessions) as requested by the user.
+</p>
+<p>        This list does not include the initial EPS bearer details (see
+        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer" title='The "InitialEpsBearer" property'>"InitialEpsBearer"</a>).
 </p>
 </div>
 <hr>
@@ -497,7 +506,9 @@ MaxBearers  readable   u
 <pre class="programlisting">
 MaxActiveBearers  readable   u
 </pre>
-<p>        The maximum number of active packet data bearers the modem supports.
+<p>        The maximum number of active
+        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-DEFAULT:CAPS"><code class="constant">MM_BEARER_TYPE_DEFAULT</code></a>
+        bearers that may be explicitly enabled by the user.
 </p>
 <p>        POTS and CDMA2000-only devices support one active bearer, while GSM/UMTS
         and LTE-capable devices (including LTE/CDMA devices) typically support

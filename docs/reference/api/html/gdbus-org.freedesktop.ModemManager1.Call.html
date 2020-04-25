@@ -7,7 +7,7 @@
 <link rel="home" href="index.html" title="ModemManager Reference Manual">
 <link rel="up" href="ref-dbus-object-call.html" title="The /org/freedesktop/ModemManager/Calls objects">
 <link rel="prev" href="ref-dbus-object-call.html" title="The /org/freedesktop/ModemManager/Calls objects">
-<link rel="next" href="ref-migrating.html" title="Part IV. Migrating from ModemManager 0.6 to ModemManager 1.0">
+<link rel="next" href="ref-migrating.html" title="Part V. Migrating from ModemManager 0.6 to ModemManager 1.0">
 <meta name="generator" content="GTK-Doc V1.29 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
@@ -43,7 +43,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.9.3.4"></a><h2>Signals</h2>
+<a name="id-1.5.9.3.4"></a><h2>Signals</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-signal-org-freedesktop-ModemManager1-Call.DtmfReceived" title='The "DtmfReceived" signal'>DtmfReceived</a> (s dtmf);
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-signal-org-freedesktop-ModemManager1-Call.StateChanged" title='The "StateChanged" signal'>StateChanged</a> (i old,
@@ -52,12 +52,14 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.9.3.5"></a><h2>Properties</h2>
+<a name="id-1.5.9.3.5"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.State" title='The "State" property'>State</a>        readable   i
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.StateReason" title='The "StateReason" property'>StateReason</a>  readable   i
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Direction" title='The "Direction" property'>Direction</a>    readable   i
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Number" title='The "Number" property'>Number</a>       readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.AudioPort" title='The "AudioPort" property'>AudioPort</a>    readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.AudioFormat" title='The "AudioFormat" property'>AudioFormat</a>  readable   a{sv}
 </pre>
 </div>
 <div class="refsect1">
@@ -212,6 +214,60 @@ Direction  readable   i
 Number  readable   s
 </pre>
 <p>        The remote phone number.
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Call.AudioPort"></a><h3>The "AudioPort" property</h3>
+<pre class="programlisting">
+AudioPort  readable   s
+</pre>
+<p>        If call audio is routed via the host, the name of the kernel device that
+        provides the audio.  For example, with certain Huawei USB modems, this
+        property might be "ttyUSB2" indicating audio is available via ttyUSB2 in
+        the format described by the AudioFormat property.
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Call.AudioFormat"></a><h3>The "AudioFormat" property</h3>
+<pre class="programlisting">
+AudioFormat  readable   a{sv}
+</pre>
+<p>        If call audio is routed via the host, a description of the audio format
+        supported by the audio port.
+</p>
+<p>        This property may include the following items:
+        </p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><code class="literal">"encoding"</code></span></p></td>
+<td>
+              The audio encoding format.  For example, "pcm" for PCM audio.
+            </td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">"resolution"</code></span></p></td>
+<td>
+              The sampling precision and its encoding format. For example,
+              "s16le" for signed 16-bit little-endian samples.
+            </td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">"rate"</code></span></p></td>
+<td>
+              The sampling rate as an unsigned integer.  For example, 8000 for
+              8000hz.
+            </td>
+</tr>
+</tbody>
+</table></div>
+<p>
 </p>
 </div>
 </div>

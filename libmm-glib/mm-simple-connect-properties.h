@@ -57,6 +57,10 @@ struct _MMSimpleConnectPropertiesClass {
 
 GType mm_simple_connect_properties_get_type (void);
 
+#if GLIB_CHECK_VERSION(2, 44, 0)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MMSimpleConnectProperties, g_object_unref)
+#endif
+
 MMSimpleConnectProperties *mm_simple_connect_properties_new (void);
 
 void mm_simple_connect_properties_set_pin           (MMSimpleConnectProperties *self,
@@ -75,8 +79,6 @@ void mm_simple_connect_properties_set_ip_type       (MMSimpleConnectProperties *
                                                      MMBearerIpFamily ip_type);
 void mm_simple_connect_properties_set_allow_roaming (MMSimpleConnectProperties *self,
                                                      gboolean allow_roaming);
-void mm_simple_connect_properties_set_number        (MMSimpleConnectProperties *self,
-                                                     const gchar *number);
 
 const gchar         *mm_simple_connect_properties_get_pin           (MMSimpleConnectProperties *self);
 const gchar         *mm_simple_connect_properties_get_operator_id   (MMSimpleConnectProperties *self);
@@ -86,7 +88,14 @@ const gchar         *mm_simple_connect_properties_get_user          (MMSimpleCon
 const gchar         *mm_simple_connect_properties_get_password      (MMSimpleConnectProperties *self);
 MMBearerIpFamily     mm_simple_connect_properties_get_ip_type       (MMSimpleConnectProperties *self);
 gboolean             mm_simple_connect_properties_get_allow_roaming (MMSimpleConnectProperties *self);
-const gchar         *mm_simple_connect_properties_get_number        (MMSimpleConnectProperties *self);
+
+#ifndef MM_DISABLE_DEPRECATED
+G_DEPRECATED
+void         mm_simple_connect_properties_set_number (MMSimpleConnectProperties *self,
+                                                      const gchar               *number);
+G_DEPRECATED
+const gchar *mm_simple_connect_properties_get_number (MMSimpleConnectProperties *self);
+#endif
 
 /*****************************************************************************/
 /* ModemManager/libmm-glib/mmcli specific methods */

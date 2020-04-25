@@ -8,27 +8,35 @@
   </refmeta>  <refnamediv>    <refname>org.freedesktop.ModemManager1.Modem.Modem3gpp</refname>    <refpurpose>The ModemManager 3GPP interface.</refpurpose>  </refnamediv>  <refsynopsisdiv role="synopsis">
     <title role="synopsis.title">Methods</title>
     <synopsis>
-<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Register">Register</link>              (IN  s      operator_id);
-<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Scan">Scan</link>                  (OUT aa{sv} results);
-<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetEpsUeModeOperation">SetEpsUeModeOperation</link> (IN  u      mode);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Register">Register</link>                    (IN  s      operator_id);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Scan">Scan</link>                        (OUT aa{sv} results);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetEpsUeModeOperation">SetEpsUeModeOperation</link>       (IN  u      mode);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings">SetInitialEpsBearerSettings</link> (IN  a{sv}  settings);
 </synopsis>
   </refsynopsisdiv>
   <refsect1 role="properties">
     <title role="properties.title">Properties</title>
     <synopsis>
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.Imei">Imei</link>                  readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.RegistrationState">RegistrationState</link>     readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.OperatorCode">OperatorCode</link>          readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.OperatorName">OperatorName</link>          readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EnabledFacilityLocks">EnabledFacilityLocks</link>  readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.SubscriptionState">SubscriptionState</link>     readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EpsUeModeOperation">EpsUeModeOperation</link>    readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.Imei">Imei</link>                      readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.RegistrationState">RegistrationState</link>         readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.OperatorCode">OperatorCode</link>              readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.OperatorName">OperatorName</link>              readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EnabledFacilityLocks">EnabledFacilityLocks</link>      readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.SubscriptionState">SubscriptionState</link>         readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EpsUeModeOperation">EpsUeModeOperation</link>        readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.Pco">Pco</link>                       readable   a(ubay)
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer">InitialEpsBearer</link>          readable   o
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearerSettings">InitialEpsBearerSettings</link>  readable   a{sv}
 </synopsis>
   </refsect1>
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Modem-Modem3gpp">
   <title role="desc.title">Description</title>
   <para>      This interface provides access to specific actions that may be performed
       in modems with 3GPP capabilities.
+</para><para>      This interface will only be available once the modem is ready to be
+      registered in the cellular network. 3GPP devices will require a valid
+      unlocked SIM card before any of the features in the interface can be
+      used.
 </para>
 </refsect1>
 <refsect1 role="details" id="gdbus-methods-org.freedesktop.ModemManager1.Modem.Modem3gpp">
@@ -122,6 +130,34 @@ SetEpsUeModeOperation (IN  u mode);
 </varlistentry>
 </variablelist>
 </refsect2>
+<refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings">
+  <title>The SetInitialEpsBearerSettings() method</title>
+  <indexterm zone="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings"><primary sortas="Modem3gpp.SetInitialEpsBearerSettings">org.freedesktop.ModemManager1.Modem.Modem3gpp.SetInitialEpsBearerSettings()</primary></indexterm>
+<programlisting>
+SetInitialEpsBearerSettings (IN  a{sv} settings);
+</programlisting>
+<para>        Updates the default settings to be used in the initial default EPS bearer when registering to the LTE network.
+</para><para>        Allowed properties are:
+        <variablelist>
+        <varlistentry><term><literal>"apn"</literal></term>
+          <listitem><para>Access Point Name, given as a string value (signature <literal>"s"</literal>).</para></listitem></varlistentry>
+        <varlistentry><term><literal>"ip-type"</literal></term>
+          <listitem><para>Addressing type, given as a <link linkend="MMBearerIpFamily">MMBearerIpFamily</link> value (signature <literal>"u"</literal>).</para></listitem></varlistentry>
+        <varlistentry><term><literal>"allowed-auth"</literal></term>
+          <listitem><para>The authentication method to use, given as a <link linkend="MMBearerAllowedAuth">MMBearerAllowedAuth</link> value (signature <literal>"u"</literal>).</para></listitem></varlistentry>
+        <varlistentry><term><literal>"user"</literal></term>
+          <listitem><para>User name (if any) required by the network, given as a string value (signature <literal>"s"</literal>).</para></listitem></varlistentry>
+        <varlistentry><term><literal>"password"</literal></term>
+          <listitem><para>Password (if any) required by the network, given as a string value (signature <literal>"s"</literal>).</para></listitem></varlistentry>
+        </variablelist>
+</para>
+<variablelist role="params">
+<varlistentry>
+  <term><literal>IN a{sv} <parameter>settings</parameter></literal>:</term>
+  <listitem><para>List of properties to use when requesting the LTE attach procedure.</para></listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
 </refsect1>
 <refsect1 role="details" id="gdbus-properties-org.freedesktop.ModemManager1.Modem.Modem3gpp">
   <title role="details.title">Property Details</title>
@@ -192,6 +228,9 @@ SubscriptionState  readable   u
 <para>        A <link linkend="MMModem3gppSubscriptionState">MMModem3gppSubscriptionState</link>
         value representing the subscription status of the account and whether there
         is any data remaining, given as an unsigned integer (signature <literal>"u"</literal>).
+</para><para>        Deprecated: 1.10.0. The value of this property can only be obtained with operator
+        specific logic (e.g. processing specific PCO info), and therefore it doesn't make sense
+        to expose it in the ModemManager interface.
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EpsUeModeOperation">
@@ -203,6 +242,41 @@ EpsUeModeOperation  readable   u
 <para>        A <link linkend="MMModem3gppEpsUeModeOperation">MMModem3gppEpsUeModeOperation</link>
         value representing the UE mode of operation for EPS, given as an unsigned integer
         (signature <literal>"u"</literal>).
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.Pco">
+  <title>The "Pco" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.Pco"><primary sortas="Modem3gpp:Pco">org.freedesktop.ModemManager1.Modem.Modem3gpp:Pco</primary></indexterm>
+<programlisting>
+Pco  readable   a(ubay)
+</programlisting>
+<para>        The raw PCOs received from the network.
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer">
+  <title>The "InitialEpsBearer" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer"><primary sortas="Modem3gpp:InitialEpsBearer">org.freedesktop.ModemManager1.Modem.Modem3gpp:InitialEpsBearer</primary></indexterm>
+<programlisting>
+InitialEpsBearer  readable   o
+</programlisting>
+<para>        The object path for the initial default EPS bearer.
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearerSettings">
+  <title>The "InitialEpsBearerSettings" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearerSettings"><primary sortas="Modem3gpp:InitialEpsBearerSettings">org.freedesktop.ModemManager1.Modem.Modem3gpp:InitialEpsBearerSettings</primary></indexterm>
+<programlisting>
+InitialEpsBearerSettings  readable   a{sv}
+</programlisting>
+<para>        List of properties requested by the device for the initial EPS bearer during
+        LTE network attach procedure.
+</para><para>        The network may decide to use different settings during the actual device attach
+        procedure, e.g. if the device is roaming or no explicit settings were requested,
+        so the properties shown in the <link linkend="gdbus-interface-org-freedesktop-ModemManager1-Modem-Modem3gpp.top_of_page">org.freedesktop.ModemManager1.Modem.Modem3gpp</link>.InitialEpsBearer:InitialEpsBearer
+        may be totally different.
+</para><para>        This is a read-only property, updating these settings should be done using the
+        <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings">SetInitialEpsBearerSettings()</link>
+        method.
 </para>
 </refsect2>
 </refsect1>

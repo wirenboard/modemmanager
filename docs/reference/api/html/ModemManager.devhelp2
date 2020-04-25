@@ -31,6 +31,9 @@
       <sub name="Flags and Enumerations" link="ModemManager-Flags-and-Enumerations.html"/>
       <sub name="Errors" link="ModemManager-Errors.html"/>
     </sub>
+    <sub name="Common udev tag definitions" link="ref-udev.html">
+      <sub name="Common udev tags" link="ModemManager-Common-udev-tags.html"/>
+    </sub>
     <sub name="D-Bus Reference" link="ref-dbus.html">
       <sub name="The org.freedesktop.ModemManager1 bus name" link="ref-dbus-bus-name.html"/>
       <sub name="Standard interfaces" link="ref-dbus-standard-interfaces.html">
@@ -70,7 +73,7 @@
     </sub>
     <sub name="Migrating from ModemManager 0.6 to ModemManager 1.0" link="ref-migrating.html">
       <sub name="" link="ch16.html">
-        <sub name="Listing available modems" link="ch16.html#id-1.5.3.1"/>
+        <sub name="Listing available modems" link="ch16.html#id-1.6.3.1"/>
         <sub name="PIN unlocking" link="ch16s02.html"/>
         <sub name="Connection and disconnection" link="ch16s03.html"/>
         <sub name="Simple connection" link="ch16s04.html"/>
@@ -86,6 +89,7 @@
     <keyword type="macro" name="MM_MAJOR_VERSION" link="ModemManager-Version-checks.html#MM-MAJOR-VERSION:CAPS"/>
     <keyword type="macro" name="MM_MINOR_VERSION" link="ModemManager-Version-checks.html#MM-MINOR-VERSION:CAPS"/>
     <keyword type="macro" name="MM_MICRO_VERSION" link="ModemManager-Version-checks.html#MM-MICRO-VERSION:CAPS"/>
+    <keyword type="enum" name="enum MMBearerType" link="ModemManager-Flags-and-Enumerations.html#MMBearerType"/>
     <keyword type="enum" name="enum MMBearerIpFamily" link="ModemManager-Flags-and-Enumerations.html#MMBearerIpFamily"/>
     <keyword type="enum" name="enum MMBearerIpMethod" link="ModemManager-Flags-and-Enumerations.html#MMBearerIpMethod"/>
     <keyword type="enum" name="enum MMBearerAllowedAuth" link="ModemManager-Flags-and-Enumerations.html#MMBearerAllowedAuth"/>
@@ -107,6 +111,7 @@
     <keyword type="enum" name="enum MMModemCdmaRmProtocol" link="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRmProtocol"/>
     <keyword type="enum" name="enum MMModemContactsStorage" link="ModemManager-Flags-and-Enumerations.html#MMModemContactsStorage"/>
     <keyword type="enum" name="enum MMModemLocationSource" link="ModemManager-Flags-and-Enumerations.html#MMModemLocationSource"/>
+    <keyword type="enum" name="enum MMModemLocationAssistanceDataType" link="ModemManager-Flags-and-Enumerations.html#MMModemLocationAssistanceDataType"/>
     <keyword type="enum" name="enum MMModemLock" link="ModemManager-Flags-and-Enumerations.html#MMModemLock"/>
     <keyword type="enum" name="enum MMModemMode" link="ModemManager-Flags-and-Enumerations.html#MMModemMode"/>
     <keyword type="enum" name="enum MMModemState" link="ModemManager-Flags-and-Enumerations.html#MMModemState"/>
@@ -114,6 +119,7 @@
     <keyword type="enum" name="enum MMModemStateChangeReason" link="ModemManager-Flags-and-Enumerations.html#MMModemStateChangeReason"/>
     <keyword type="enum" name="enum MMModemPowerState" link="ModemManager-Flags-and-Enumerations.html#MMModemPowerState"/>
     <keyword type="enum" name="enum MMModemPortType" link="ModemManager-Flags-and-Enumerations.html#MMModemPortType"/>
+    <keyword type="enum" name="enum MMModemFirmwareUpdateMethod" link="ModemManager-Flags-and-Enumerations.html#MMModemFirmwareUpdateMethod"/>
     <keyword type="enum" name="enum MMOmaFeature" link="ModemManager-Flags-and-Enumerations.html#MMOmaFeature"/>
     <keyword type="enum" name="enum MMOmaSessionState" link="ModemManager-Flags-and-Enumerations.html#MMOmaSessionState"/>
     <keyword type="enum" name="enum MMOmaSessionStateFailedReason" link="ModemManager-Flags-and-Enumerations.html#MMOmaSessionStateFailedReason"/>
@@ -131,9 +137,25 @@
     <keyword type="enum" name="enum MMMobileEquipmentError" link="ModemManager-Errors.html#MMMobileEquipmentError"/>
     <keyword type="enum" name="enum MMSerialError" link="ModemManager-Errors.html#MMSerialError"/>
     <keyword type="enum" name="enum MMCdmaActivationError" link="ModemManager-Errors.html#MMCdmaActivationError"/>
+    <keyword type="macro" name="ID_MM_CANDIDATE" link="ModemManager-Common-udev-tags.html#ID-MM-CANDIDATE:CAPS"/>
+    <keyword type="macro" name="ID_MM_PHYSDEV_UID" link="ModemManager-Common-udev-tags.html#ID-MM-PHYSDEV-UID:CAPS"/>
+    <keyword type="macro" name="ID_MM_PORT_IGNORE" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-IGNORE:CAPS"/>
+    <keyword type="macro" name="ID_MM_DEVICE_PROCESS" link="ModemManager-Common-udev-tags.html#ID-MM-DEVICE-PROCESS:CAPS"/>
+    <keyword type="macro" name="ID_MM_DEVICE_IGNORE" link="ModemManager-Common-udev-tags.html#ID-MM-DEVICE-IGNORE:CAPS"/>
+    <keyword type="macro" name="ID_MM_DEVICE_MANUAL_SCAN_ONLY" link="ModemManager-Common-udev-tags.html#ID-MM-DEVICE-MANUAL-SCAN-ONLY:CAPS"/>
+    <keyword type="macro" name="ID_MM_PLATFORM_DRIVER_PROBE" link="ModemManager-Common-udev-tags.html#ID-MM-PLATFORM-DRIVER-PROBE:CAPS"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_AT_PPP" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AT-PPP:CAPS"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_AT_PRIMARY" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AT-PRIMARY:CAPS"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_AT_SECONDARY" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AT-SECONDARY:CAPS"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_GPS" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-GPS:CAPS"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_QCDM" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-QCDM:CAPS"/>
+    <keyword type="macro" name="ID_MM_TTY_BAUDRATE" link="ModemManager-Common-udev-tags.html#ID-MM-TTY-BAUDRATE:CAPS"/>
+    <keyword type="macro" name="ID_MM_TTY_FLOW_CONTROL" link="ModemManager-Common-udev-tags.html#ID-MM-TTY-FLOW-CONTROL:CAPS"/>
     <keyword type="method" name="The ScanDevices() method" link="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.ScanDevices"/>
     <keyword type="method" name="The SetLogging() method" link="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.SetLogging"/>
     <keyword type="method" name="The ReportKernelEvent() method" link="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.ReportKernelEvent"/>
+    <keyword type="method" name="The InhibitDevice() method" link="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.InhibitDevice"/>
+    <keyword type="property" name="The &quot;Version&quot; property" link="gdbus-org.freedesktop.ModemManager1.html#gdbus-property-org-freedesktop-ModemManager1.Version"/>
     <keyword type="method" name="The Enable() method" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.Enable"/>
     <keyword type="method" name="The ListBearers() method" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.ListBearers"/>
     <keyword type="method" name="The CreateBearer() method" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.CreateBearer"/>
@@ -182,6 +204,7 @@
     <keyword type="method" name="The Register() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Register"/>
     <keyword type="method" name="The Scan() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Scan"/>
     <keyword type="method" name="The SetEpsUeModeOperation() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetEpsUeModeOperation"/>
+    <keyword type="method" name="The SetInitialEpsBearerSettings() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings"/>
     <keyword type="property" name="The &quot;Imei&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.Imei"/>
     <keyword type="property" name="The &quot;RegistrationState&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.RegistrationState"/>
     <keyword type="property" name="The &quot;OperatorCode&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.OperatorCode"/>
@@ -189,6 +212,9 @@
     <keyword type="property" name="The &quot;EnabledFacilityLocks&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EnabledFacilityLocks"/>
     <keyword type="property" name="The &quot;SubscriptionState&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.SubscriptionState"/>
     <keyword type="property" name="The &quot;EpsUeModeOperation&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EpsUeModeOperation"/>
+    <keyword type="property" name="The &quot;Pco&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.Pco"/>
+    <keyword type="property" name="The &quot;InitialEpsBearer&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer"/>
+    <keyword type="property" name="The &quot;InitialEpsBearerSettings&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearerSettings"/>
     <keyword type="method" name="The Initiate() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Initiate"/>
     <keyword type="method" name="The Respond() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Respond"/>
     <keyword type="method" name="The Cancel() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Cancel"/>
@@ -216,12 +242,15 @@
     <keyword type="method" name="The Setup() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.Setup"/>
     <keyword type="method" name="The GetLocation() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.GetLocation"/>
     <keyword type="method" name="The SetSuplServer() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.SetSuplServer"/>
+    <keyword type="method" name="The InjectAssistanceData() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.InjectAssistanceData"/>
     <keyword type="method" name="The SetGpsRefreshRate() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.SetGpsRefreshRate"/>
     <keyword type="property" name="The &quot;Capabilities&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Capabilities"/>
+    <keyword type="property" name="The &quot;SupportedAssistanceData&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SupportedAssistanceData"/>
     <keyword type="property" name="The &quot;Enabled&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Enabled"/>
     <keyword type="property" name="The &quot;SignalsLocation&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SignalsLocation"/>
     <keyword type="property" name="The &quot;Location&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Location"/>
     <keyword type="property" name="The &quot;SuplServer&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SuplServer"/>
+    <keyword type="property" name="The &quot;AssistanceDataServers&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.AssistanceDataServers"/>
     <keyword type="property" name="The &quot;GpsRefreshRate&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.GpsRefreshRate"/>
     <keyword type="method" name="The GetNetworkTime() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Time.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Time.GetNetworkTime"/>
     <keyword type="signal" name="The &quot;NetworkTimeChanged&quot; signal" link="gdbus-org.freedesktop.ModemManager1.Modem.Time.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Time.NetworkTimeChanged"/>
@@ -234,6 +263,7 @@
     <keyword type="property" name="The &quot;Calls&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Voice.Calls"/>
     <keyword type="method" name="The List() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Firmware.List"/>
     <keyword type="method" name="The Select() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Firmware.Select"/>
+    <keyword type="property" name="The &quot;UpdateSettings&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Firmware.UpdateSettings"/>
     <keyword type="method" name="The Setup() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Signal.Setup"/>
     <keyword type="property" name="The &quot;Rate&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Rate"/>
     <keyword type="property" name="The &quot;Cdma&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Cdma"/>
@@ -259,6 +289,7 @@
     <keyword type="property" name="The &quot;Ip6Config&quot; property" link="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip6Config"/>
     <keyword type="property" name="The &quot;Stats&quot; property" link="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Stats"/>
     <keyword type="property" name="The &quot;IpTimeout&quot; property" link="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.IpTimeout"/>
+    <keyword type="property" name="The &quot;BearerType&quot; property" link="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.BearerType"/>
     <keyword type="property" name="The &quot;Properties&quot; property" link="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties"/>
     <keyword type="method" name="The SendPin() method" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.SendPin"/>
     <keyword type="method" name="The SendPuk() method" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.SendPuk"/>
@@ -296,6 +327,8 @@
     <keyword type="property" name="The &quot;StateReason&quot; property" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.StateReason"/>
     <keyword type="property" name="The &quot;Direction&quot; property" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Direction"/>
     <keyword type="property" name="The &quot;Number&quot; property" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Number"/>
+    <keyword type="property" name="The &quot;AudioPort&quot; property" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.AudioPort"/>
+    <keyword type="property" name="The &quot;AudioFormat&quot; property" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.AudioFormat"/>
     <keyword type="macro" name="MM_MODEM_BAND_U2100" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U2100:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_UTRAN_1 instead." since="1.0"/>
     <keyword type="macro" name="MM_MODEM_BAND_U1900" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U1900:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_UTRAN_2 instead." since="1.0"/>
     <keyword type="macro" name="MM_MODEM_BAND_U1800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U1800:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_UTRAN_3 instead." since="1.0"/>
@@ -361,6 +394,10 @@
     <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC17_US_FLO_2500" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC17-US-FLO-2500:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC17 instead." since="1.0"/>
     <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC18_US_PS_700" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC18-US-PS-700:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC18 instead." since="1.0"/>
     <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC19_US_LOWER_700" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC19-US-LOWER-700:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC19 instead." since="1.0"/>
+    <keyword type="constant" name="MM_BEARER_TYPE_UNKNOWN" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-UNKNOWN:CAPS"/>
+    <keyword type="constant" name="MM_BEARER_TYPE_DEFAULT" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-DEFAULT:CAPS"/>
+    <keyword type="constant" name="MM_BEARER_TYPE_DEFAULT_ATTACH" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-DEFAULT-ATTACH:CAPS"/>
+    <keyword type="constant" name="MM_BEARER_TYPE_DEDICATED" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-DEDICATED:CAPS"/>
     <keyword type="constant" name="MM_BEARER_IP_FAMILY_NONE" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-FAMILY-NONE:CAPS"/>
     <keyword type="constant" name="MM_BEARER_IP_FAMILY_IPV4" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-FAMILY-IPV4:CAPS"/>
     <keyword type="constant" name="MM_BEARER_IP_FAMILY_IPV6" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-FAMILY-IPV6:CAPS"/>
@@ -395,6 +432,7 @@
     <keyword type="constant" name="MM_CALL_STATE_REASON_TERMINATED" link="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-REASON-TERMINATED:CAPS"/>
     <keyword type="constant" name="MM_CALL_STATE_REASON_REFUSED_OR_BUSY" link="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-REASON-REFUSED-OR-BUSY:CAPS"/>
     <keyword type="constant" name="MM_CALL_STATE_REASON_ERROR" link="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-REASON-ERROR:CAPS"/>
+    <keyword type="constant" name="MM_CALL_STATE_REASON_AUDIO_SETUP_FAILED" link="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-REASON-AUDIO-SETUP-FAILED:CAPS"/>
     <keyword type="constant" name="MM_FIRMWARE_IMAGE_TYPE_UNKNOWN" link="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-UNKNOWN:CAPS"/>
     <keyword type="constant" name="MM_FIRMWARE_IMAGE_TYPE_GENERIC" link="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GENERIC:CAPS"/>
     <keyword type="constant" name="MM_FIRMWARE_IMAGE_TYPE_GOBI" link="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS"/>
@@ -519,6 +557,22 @@
     <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_46" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-46:CAPS"/>
     <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_47" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-47:CAPS"/>
     <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_48" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-48:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_49" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-49:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_50" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-50:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_51" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-51:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_52" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-52:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_53" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-53:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_54" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-54:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_55" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-55:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_56" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-56:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_57" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-57:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_58" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-58:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_59" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-59:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_60" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-60:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_61" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-61:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_62" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-62:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_63" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-63:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_64" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-64:CAPS"/>
     <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_65" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-65:CAPS"/>
     <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_66" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-66:CAPS"/>
     <keyword type="constant" name="MM_MODEM_BAND_EUTRAN_67" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EUTRAN-67:CAPS"/>
@@ -593,6 +647,8 @@
     <keyword type="constant" name="MM_MODEM_LOCATION_SOURCE_CDMA_BS" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-SOURCE-CDMA-BS:CAPS"/>
     <keyword type="constant" name="MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-SOURCE-GPS-UNMANAGED:CAPS"/>
     <keyword type="constant" name="MM_MODEM_LOCATION_SOURCE_AGPS" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-SOURCE-AGPS:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_NONE" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-ASSISTANCE-DATA-TYPE-NONE:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_XTRA" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-ASSISTANCE-DATA-TYPE-XTRA:CAPS"/>
     <keyword type="constant" name="MM_MODEM_LOCK_UNKNOWN" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCK-UNKNOWN:CAPS"/>
     <keyword type="constant" name="MM_MODEM_LOCK_NONE" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCK-NONE:CAPS"/>
     <keyword type="constant" name="MM_MODEM_LOCK_SIM_PIN" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCK-SIM-PIN:CAPS"/>
@@ -648,6 +704,9 @@
     <keyword type="constant" name="MM_MODEM_PORT_TYPE_GPS" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-PORT-TYPE-GPS:CAPS"/>
     <keyword type="constant" name="MM_MODEM_PORT_TYPE_QMI" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-PORT-TYPE-QMI:CAPS"/>
     <keyword type="constant" name="MM_MODEM_PORT_TYPE_MBIM" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-PORT-TYPE-MBIM:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-FIRMWARE-UPDATE-METHOD-NONE:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-FIRMWARE-UPDATE-METHOD-FASTBOOT:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-FIRMWARE-UPDATE-METHOD-QMI-PDC:CAPS"/>
     <keyword type="constant" name="MM_OMA_FEATURE_NONE" link="ModemManager-Flags-and-Enumerations.html#MM-OMA-FEATURE-NONE:CAPS"/>
     <keyword type="constant" name="MM_OMA_FEATURE_DEVICE_PROVISIONING" link="ModemManager-Flags-and-Enumerations.html#MM-OMA-FEATURE-DEVICE-PROVISIONING:CAPS"/>
     <keyword type="constant" name="MM_OMA_FEATURE_PRL_UPDATE" link="ModemManager-Flags-and-Enumerations.html#MM-OMA-FEATURE-PRL-UPDATE:CAPS"/>

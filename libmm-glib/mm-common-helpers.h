@@ -106,6 +106,11 @@ GVariant    *mm_common_build_bands_unknown (void);
 gboolean     mm_common_bands_garray_cmp  (GArray *a, GArray *b);
 void         mm_common_bands_garray_sort (GArray *array);
 
+gboolean mm_common_band_is_gsm    (MMModemBand band);
+gboolean mm_common_band_is_utran  (MMModemBand band);
+gboolean mm_common_band_is_eutran (MMModemBand band);
+gboolean mm_common_band_is_cdma   (MMModemBand band);
+
 GArray                 *mm_common_mode_combinations_variant_to_garray (GVariant *variant);
 MMModemModeCombination *mm_common_mode_combinations_variant_to_array  (GVariant *variant,
                                                                        guint *n_modes);
@@ -168,5 +173,28 @@ gchar    *mm_utils_bin2hexstr (const guint8 *bin, gsize len);
 gboolean  mm_utils_ishexstr   (const gchar *hex);
 
 gboolean  mm_utils_check_for_single_value (guint32 value);
+
+#if GLIB_CHECK_VERSION(2, 44, 0)
+#define mm_autoptr g_autoptr
+#else
+
+/* Re-implement for those glib that don't have it */
+#define _MM_AUTOPTR_FUNC_NAME(TypeName) mm_autoptr_cleanup_##TypeName
+#define _MM_AUTOPTR_TYPENAME(TypeName)  TypeName##_autoptr
+#define _MM_CLEANUP(func)               __attribute__((cleanup(func)))
+
+#define _MM_DEFINE_AUTOPTR_CLEANUP_FUNCS(TypeName, cleanup) \
+  typedef TypeName *_MM_AUTOPTR_TYPENAME(TypeName);                                 \
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                                  \
+  static G_GNUC_UNUSED inline void _MM_AUTOPTR_FUNC_NAME(TypeName) (TypeName **_ptr) \
+    { if (_ptr && *_ptr) (cleanup) (*_ptr); }                                                 \
+  G_GNUC_END_IGNORE_DEPRECATIONS
+
+#define mm_autoptr(TypeName) _MM_CLEANUP(_MM_AUTOPTR_FUNC_NAME(TypeName)) _MM_AUTOPTR_TYPENAME(TypeName)
+
+_MM_DEFINE_AUTOPTR_CLEANUP_FUNCS(GRegex, g_regex_unref)
+_MM_DEFINE_AUTOPTR_CLEANUP_FUNCS(GMatchInfo, g_match_info_unref)
+
+#endif
 
 #endif /* MM_COMMON_HELPERS_H */

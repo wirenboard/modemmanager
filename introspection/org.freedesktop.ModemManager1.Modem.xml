@@ -17,6 +17,9 @@
 
       The Modem interface controls the status and actions in a given modem
       object.
+
+      This interface will always be available as long a the modem is considered
+      valid.
   -->
   <interface name="org.freedesktop.ModemManager1.Modem">
 
@@ -42,6 +45,9 @@
 
         List configured packet data bearers (EPS Bearers, PDP Contexts, or
         CDMA2000 Packet Data Sessions).
+
+        Deprecated: 1.10.0. Use #org.freedesktop.ModemManager1.Modem:Bearers
+        property instead.
     -->
     <method name="ListBearers">
       <arg name="bearers" type="ao" direction="out" />
@@ -213,7 +219,10 @@
         Bearers:
 
         The list of bearer object paths (EPS Bearers, PDP Contexts, or
-        CDMA2000 Packet Data Sessions).
+        CDMA2000 Packet Data Sessions) as requested by the user.
+
+        This list does not include the initial EPS bearer details (see
+        #org.freedesktop.ModemManager1.Modem.Modem3gpp:InitialEpsBearer).
     -->
     <property name="Bearers" type="ao" access="read" />
 
@@ -256,7 +265,9 @@
     <!--
         MaxActiveBearers:
 
-        The maximum number of active packet data bearers the modem supports.
+        The maximum number of active
+        <link linkend="MM-BEARER-TYPE-DEFAULT:CAPS"><constant>MM_BEARER_TYPE_DEFAULT</constant></link>
+        bearers that may be explicitly enabled by the user.
 
         POTS and CDMA2000-only devices support one active bearer, while GSM/UMTS
         and LTE-capable devices (including LTE/CDMA devices) typically support

@@ -703,6 +703,11 @@ connection.</p>
 <pre class="programlisting">const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *
 mm_simple_connect_properties_get_number
                                (<em class="parameter"><code><a class="link" href="MMSimpleConnectProperties.html" title="MMSimpleConnectProperties"><span class="type">MMSimpleConnectProperties</span></a> *self</code></em>);</pre>
+<div class="warning">
+<p><code class="literal">mm_simple_connect_properties_get_number</code> has been deprecated since version 1.10.0. and should not be used in newly-written code.</p>
+<p>The number setting is not used anywhere, and therefore
+it doesn't make sense to expose it in the ModemManager interface.</p>
+</div>
 <p>Gets the number to use when performing the connection.</p>
 <div class="refsect3">
 <a name="mm-simple-connect-properties-get-number.parameters"></a><h4>Parameters</h4>
@@ -733,6 +738,11 @@ mm_simple_connect_properties_get_number
 mm_simple_connect_properties_set_number
                                (<em class="parameter"><code><a class="link" href="MMSimpleConnectProperties.html" title="MMSimpleConnectProperties"><span class="type">MMSimpleConnectProperties</span></a> *self</code></em>,
                                 <em class="parameter"><code>const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *number</code></em>);</pre>
+<div class="warning">
+<p><code class="literal">mm_simple_connect_properties_set_number</code> has been deprecated since version 1.10.0. and should not be used in newly-written code.</p>
+<p>The number setting is not used anywhere, and therefore
+it doesn't make sense to expose it in the ModemManager interface.</p>
+</div>
 <p>Sets the number to use when performing the connection.</p>
 <div class="refsect3">
 <a name="mm-simple-connect-properties-set-number.parameters"></a><h4>Parameters</h4>

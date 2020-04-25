@@ -69,6 +69,14 @@
 <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gulong"><span class="returnvalue">gulong</span></a>
 </td>
 <td class="function_name">
+<a class="link" href="MMLocation3gpp.html#mm-location-3gpp-get-tracking-area-code" title="mm_location_3gpp_get_tracking_area_code ()">mm_location_3gpp_get_tracking_area_code</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gulong"><span class="returnvalue">gulong</span></a>
+</td>
+<td class="function_name">
 <a class="link" href="MMLocation3gpp.html#mm-location-3gpp-get-cell-id" title="mm_location_3gpp_get_cell_id ()">mm_location_3gpp_get_cell_id</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
@@ -137,6 +145,9 @@ mm_location_3gpp_get_mobile_country_code
 mm_location_3gpp_get_mobile_network_code
                                (<em class="parameter"><code><a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="type">MMLocation3gpp</span></a> *self</code></em>);</pre>
 <p>Gets the Mobile Network Code of the 3GPP network.</p>
+<p>Note that 0 may actually be a valid MNC. In general, the MNC should be
+considered valid just if the reported MCC is valid, as MCC should never
+be 0.</p>
 <div class="refsect3">
 <a name="mm-location-3gpp-get-mobile-network-code.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -181,6 +192,33 @@ mm_location_3gpp_get_location_area_code
 </div>
 <div class="refsect3">
 <a name="mm-location-3gpp-get-location-area-code.returns"></a><h4>Returns</h4>
+<p> the location area code, or 0 if unknown.</p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-location-3gpp-get-tracking-area-code"></a><h3>mm_location_3gpp_get_tracking_area_code ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gulong"><span class="returnvalue">gulong</span></a>
+mm_location_3gpp_get_tracking_area_code
+                               (<em class="parameter"><code><a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="type">MMLocation3gpp</span></a> *self</code></em>);</pre>
+<p>Gets the location area code of the 3GPP network.</p>
+<div class="refsect3">
+<a name="mm-location-3gpp-get-tracking-area-code.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>a <a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="type">MMLocation3gpp</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-location-3gpp-get-tracking-area-code.returns"></a><h4>Returns</h4>
 <p> the location area code, or 0 if unknown.</p>
 </div>
 </div>

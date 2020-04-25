@@ -10,8 +10,14 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details:
  *
- * Copyright (C) 2012 Google, Inc.
+ * Copyright (C) 2012-2018 Google, Inc.
+ * Copyright (C) 2018 Aleksander Morgado <aleksander@aleksander.es>
  */
+
+#include <string.h>
+
+#include <ModemManager.h>
+#include <mm-errors-types.h>
 
 #include "mm-modem-helpers-qmi.h"
 #include "mm-enums-types.h"
@@ -298,15 +304,51 @@ dms_add_qmi_lte_bands (GArray *mm_bands,
     }
 }
 
+static void
+dms_add_extended_qmi_lte_bands (GArray *mm_bands,
+                                GArray *extended_qmi_bands)
+{
+    guint i;
+
+    g_assert (mm_bands != NULL);
+
+    if (!extended_qmi_bands)
+        return;
+
+    for (i = 0; i < extended_qmi_bands->len; i++) {
+        guint16 val;
+
+        val = g_array_index (extended_qmi_bands, guint16, i);
+
+        /* MM_MODEM_BAND_EUTRAN_1 = 31,
+         * ...
+         * MM_MODEM_BAND_EUTRAN_71 = 101
+         */
+        if (val < 1 || val > 71)
+            mm_dbg ("Unexpected LTE band supported by module: EUTRAN %u", val);
+        else {
+            MMModemBand band;
+
+            band = (MMModemBand)(val + MM_MODEM_BAND_EUTRAN_1 - 1);
+            g_array_append_val (mm_bands, band);
+        }
+    }
+}
+
 GArray *
 mm_modem_bands_from_qmi_band_capabilities (QmiDmsBandCapability qmi_bands,
-                                           QmiDmsLteBandCapability qmi_lte_bands)
+                                           QmiDmsLteBandCapability qmi_lte_bands,
+                                           GArray *extended_qmi_lte_bands)
 {
     GArray *mm_bands;
 
     mm_bands = g_array_new (FALSE, FALSE, sizeof (MMModemBand));
     dms_add_qmi_bands (mm_bands, qmi_bands);
-    dms_add_qmi_lte_bands (mm_bands, qmi_lte_bands);
+
+    if (extended_qmi_lte_bands)
+        dms_add_extended_qmi_lte_bands (mm_bands, extended_qmi_lte_bands);
+    else
+        dms_add_qmi_lte_bands (mm_bands, qmi_lte_bands);
 
     return mm_bands;
 }
@@ -365,9 +407,8 @@ static const NasBandsMap nas_bands_map [] = {
     { QMI_NAS_BAND_PREFERENCE_WCDMA_900,        MM_MODEM_BAND_UTRAN_8  },
     { QMI_NAS_BAND_PREFERENCE_WCDMA_1700_JAPAN, MM_MODEM_BAND_UTRAN_9  },
     { QMI_NAS_BAND_PREFERENCE_WCDMA_2600,       MM_MODEM_BAND_UTRAN_7  },
-    /* TODO: undefined in libqmi? */
-    /* { QMI_NAS_BAND_PREFERENCE_WCDMA_1500,       MM_MODEM_BAND_UTRAN_11 }, */
-    /* { QMI_NAS_BAND_PREFERENCE_WCDMA_850_JAPAN,  MM_MODEM_BAND_UTRAN_19 }, */
+    { QMI_NAS_BAND_PREFERENCE_WCDMA_1500,       MM_MODEM_BAND_UTRAN_11 },
+    { QMI_NAS_BAND_PREFERENCE_WCDMA_850_JAPAN,  MM_MODEM_BAND_UTRAN_19 },
 };
 
 static void
@@ -460,15 +501,57 @@ nas_add_qmi_lte_bands (GArray *mm_bands,
     }
 }
 
+static void
+nas_add_extended_qmi_lte_bands (GArray *mm_bands,
+                                const guint64 *extended_qmi_lte_bands,
+                                guint extended_qmi_lte_bands_size)
+{
+    guint i;
+
+    g_assert (mm_bands != NULL);
+
+    for (i = 0; i < extended_qmi_lte_bands_size; i++) {
+        guint j;
+
+        for (j = 0; j < 64; j++) {
+            guint val;
+
+            if (!(extended_qmi_lte_bands[i] & (((guint64) 1) << j)))
+                continue;
+
+            val = 1 + j + (i * 64);
+
+            /* MM_MODEM_BAND_EUTRAN_1 = 31,
+             * ...
+             * MM_MODEM_BAND_EUTRAN_71 = 101
+             */
+            if (val < 1 || val > 71)
+                mm_dbg ("Unexpected LTE band supported by module: EUTRAN %u", val);
+            else {
+                MMModemBand band;
+
+                band = (val + MM_MODEM_BAND_EUTRAN_1 - 1);
+                g_array_append_val (mm_bands, band);
+            }
+        }
+    }
+}
+
 GArray *
 mm_modem_bands_from_qmi_band_preference (QmiNasBandPreference qmi_bands,
-                                         QmiNasLteBandPreference qmi_lte_bands)
+                                         QmiNasLteBandPreference qmi_lte_bands,
+                                         const guint64 *extended_qmi_lte_bands,
+                                         guint extended_qmi_lte_bands_size)
 {
     GArray *mm_bands;
 
     mm_bands = g_array_new (FALSE, FALSE, sizeof (MMModemBand));
     nas_add_qmi_bands (mm_bands, qmi_bands);
-    nas_add_qmi_lte_bands (mm_bands, qmi_lte_bands);
+
+    if (extended_qmi_lte_bands && extended_qmi_lte_bands_size)
+        nas_add_extended_qmi_lte_bands (mm_bands, extended_qmi_lte_bands, extended_qmi_lte_bands_size);
+    else
+        nas_add_qmi_lte_bands (mm_bands, qmi_lte_bands);
 
     return mm_bands;
 }
@@ -476,32 +559,51 @@ mm_modem_bands_from_qmi_band_preference (QmiNasBandPreference qmi_bands,
 void
 mm_modem_bands_to_qmi_band_preference (GArray *mm_bands,
                                        QmiNasBandPreference *qmi_bands,
-                                       QmiNasLteBandPreference *qmi_lte_bands)
+                                       QmiNasLteBandPreference *qmi_lte_bands,
+                                       guint64 *extended_qmi_lte_bands,
+                                       guint extended_qmi_lte_bands_size)
 {
     guint i;
 
     *qmi_bands = 0;
     *qmi_lte_bands = 0;
+    memset (extended_qmi_lte_bands, 0, extended_qmi_lte_bands_size * sizeof (guint64));
 
     for (i = 0; i < mm_bands->len; i++) {
         MMModemBand band;
 
         band = g_array_index (mm_bands, MMModemBand, i);
 
-        if (band >= MM_MODEM_BAND_EUTRAN_1 && band <= MM_MODEM_BAND_EUTRAN_44) {
-            /* Add LTE band preference */
-            guint j;
+        if (band >= MM_MODEM_BAND_EUTRAN_1 && band <= MM_MODEM_BAND_EUTRAN_71) {
+            if (extended_qmi_lte_bands && extended_qmi_lte_bands_size) {
+                /* Add extended LTE band preference */
+                guint val;
+                guint j;
+                guint k;
 
-            for (j = 0; j < G_N_ELEMENTS (nas_lte_bands_map); j++) {
-                if (nas_lte_bands_map[j].mm_band == band) {
-                    *qmi_lte_bands |= nas_lte_bands_map[j].qmi_band;
-                    break;
+                /* it's really (band - MM_MODEM_BAND_EUTRAN_1 +1 -1), because
+                 * we want EUTRAN1 in index 0 */
+                val = band - MM_MODEM_BAND_EUTRAN_1;
+                j = val / 64;
+                g_assert (j < extended_qmi_lte_bands_size);
+                k = val % 64;
+
+                extended_qmi_lte_bands[j] |= ((guint64)1 << k);
+            } else {
+                /* Add LTE band preference */
+                guint j;
+
+                for (j = 0; j < G_N_ELEMENTS (nas_lte_bands_map); j++) {
+                    if (nas_lte_bands_map[j].mm_band == band) {
+                        *qmi_lte_bands |= nas_lte_bands_map[j].qmi_band;
+                        break;
+                    }
                 }
-            }
 
-            if (j == G_N_ELEMENTS (nas_lte_bands_map))
-                mm_dbg ("Cannot add the following LTE band: '%s'",
-                        mm_modem_band_get_string (band));
+                if (j == G_N_ELEMENTS (nas_lte_bands_map))
+                    mm_dbg ("Cannot add the following LTE band: '%s'",
+                            mm_modem_band_get_string (band));
+            }
         } else {
             /* Add non-LTE band preference */
             guint j;
@@ -751,6 +853,25 @@ mm_modem_access_technologies_from_qmi_data_capability_array (GArray *data_capabi
 /*****************************************************************************/
 
 MMModemMode
+mm_modem_mode_from_qmi_nas_radio_interface (QmiNasRadioInterface iface)
+{
+    switch (iface) {
+        case QMI_NAS_RADIO_INTERFACE_CDMA_1X:
+        case QMI_NAS_RADIO_INTERFACE_GSM:
+            return MM_MODEM_MODE_2G;
+        case QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO:
+        case QMI_NAS_RADIO_INTERFACE_UMTS:
+            return MM_MODEM_MODE_3G;
+        case QMI_NAS_RADIO_INTERFACE_LTE:
+            return MM_MODEM_MODE_4G;
+        default:
+            return MM_MODEM_MODE_NONE;
+    }
+}
+
+/*****************************************************************************/
+
+MMModemMode
 mm_modem_mode_from_qmi_radio_technology_preference (QmiNasRadioTechnologyPreference qmi)
 {
     MMModemMode mode = MM_MODEM_MODE_NONE;
@@ -902,6 +1023,94 @@ mm_modem_capability_to_qmi_rat_mode_preference (MMModemCapability caps)
         qmi |= QMI_NAS_RAT_MODE_PREFERENCE_LTE;
 
     return qmi;
+}
+
+/*****************************************************************************/
+
+GArray *
+mm_modem_capability_to_qmi_acquisition_order_preference (MMModemCapability caps)
+{
+    GArray               *array;
+    QmiNasRadioInterface  value;
+
+    array = g_array_new (FALSE, FALSE, sizeof (QmiNasRadioInterface));
+
+    if (caps & MM_MODEM_CAPABILITY_LTE) {
+        value = QMI_NAS_RADIO_INTERFACE_LTE;
+        g_array_append_val (array, value);
+    }
+
+    if (caps & MM_MODEM_CAPABILITY_GSM_UMTS) {
+        value = QMI_NAS_RADIO_INTERFACE_UMTS;
+        g_array_append_val (array, value);
+        value = QMI_NAS_RADIO_INTERFACE_GSM;
+        g_array_append_val (array, value);
+    }
+
+    if (caps & MM_MODEM_CAPABILITY_CDMA_EVDO) {
+        value = QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO;
+        g_array_append_val (array, value);
+        value = QMI_NAS_RADIO_INTERFACE_CDMA_1X;
+        g_array_append_val (array, value);
+    }
+
+    return array;
+}
+
+GArray *
+mm_modem_mode_to_qmi_acquisition_order_preference (MMModemMode allowed,
+                                                   MMModemMode preferred,
+                                                   gboolean    is_cdma,
+                                                   gboolean    is_3gpp)
+{
+    GArray               *array;
+    QmiNasRadioInterface  value;
+
+    array = g_array_new (FALSE, FALSE, sizeof (QmiNasRadioInterface));
+
+    if (allowed & MM_MODEM_MODE_4G) {
+        value = QMI_NAS_RADIO_INTERFACE_LTE;
+        if (preferred == MM_MODEM_MODE_4G)
+            g_array_prepend_val (array, value);
+        else
+            g_array_append_val (array, value);
+    }
+
+    if (allowed & MM_MODEM_MODE_3G) {
+        if (is_cdma) {
+            value = QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO;
+            if (preferred == MM_MODEM_MODE_3G)
+                g_array_prepend_val (array, value);
+            else
+                g_array_append_val (array, value);
+        }
+        if (is_3gpp) {
+            value = QMI_NAS_RADIO_INTERFACE_UMTS;
+            if (preferred == MM_MODEM_MODE_3G)
+                g_array_prepend_val (array, value);
+            else
+                g_array_append_val (array, value);
+        }
+    }
+
+    if (allowed & MM_MODEM_MODE_2G) {
+        if (is_cdma) {
+            value = QMI_NAS_RADIO_INTERFACE_CDMA_1X;
+            if (preferred == MM_MODEM_MODE_2G)
+                g_array_prepend_val (array, value);
+            else
+                g_array_append_val (array, value);
+        }
+        if (is_3gpp) {
+            value = QMI_NAS_RADIO_INTERFACE_GSM;
+            if (preferred == MM_MODEM_MODE_2G)
+                g_array_prepend_val (array, value);
+            else
+                g_array_append_val (array, value);
+        }
+    }
+
+    return array;
 }
 
 /*****************************************************************************/
@@ -1197,6 +1406,15 @@ mm_bearer_allowed_auth_to_qmi_authentication (MMBearerAllowedAuth auth)
 
 /*****************************************************************************/
 
+/**
+ * The only case where we need to apply some logic to decide what the current
+ * capabilities are is when we have a multimode CDMA/EVDO+GSM/UMTS device, in
+ * which case we'll check the SSP and TP current values to decide which
+ * capabilities are present and which have been disabled.
+ *
+ * For all the other cases, the DMS capabilities are exactly the current ones,
+ * as there would be no capability switching support.
+ */
 MMModemCapability
 mm_modem_capability_from_qmi_capabilities_context (MMQmiCapabilitiesContext *ctx)
 {
@@ -1206,16 +1424,19 @@ mm_modem_capability_from_qmi_capabilities_context (MMQmiCapabilitiesContext *ctx
     gchar *dms_capabilities_str;
     gchar *tmp_str;
 
-    /* SSP logic to gather capabilities uses the Mode Preference TLV if available,
-     * and if not available it falls back to using Band Preference TLVs */
+    /* If not a multimode device, we're done */
+#define MULTIMODE (MM_MODEM_CAPABILITY_GSM_UMTS | MM_MODEM_CAPABILITY_CDMA_EVDO)
+    if ((ctx->dms_capabilities & MULTIMODE) != MULTIMODE)
+        return ctx->dms_capabilities;
+
+    /* We have a multimode CDMA/EVDO+GSM/UMTS device, check SSP and TP */
+
+    /* SSP logic to gather capabilities uses the Mode Preference TLV if available */
     if (ctx->nas_ssp_mode_preference_mask)
         tmp = mm_modem_capability_from_qmi_rat_mode_preference (ctx->nas_ssp_mode_preference_mask);
-
     /* If no value retrieved from SSP, check TP. We only process TP
      * values if not 'auto'. */
-    if (   tmp == MM_MODEM_CAPABILITY_NONE
-        && ctx->nas_tp_mask
-        && ctx->nas_tp_mask != QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_AUTO)
+    else if (ctx->nas_tp_mask && (ctx->nas_tp_mask != QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_AUTO))
         tmp = mm_modem_capability_from_qmi_radio_technology_preference (ctx->nas_tp_mask);
 
     /* Final capabilities are the intersection between the Technology
@@ -1349,5 +1570,36 @@ mm_oma_session_state_failed_reason_from_qmi_oma_session_failed_reason (QmiOmaSes
         return MM_OMA_SESSION_STATE_FAILED_REASON_SESSION_CANCELLED;
     default:
         return MM_OMA_SESSION_STATE_FAILED_REASON_UNKNOWN;
+    }
+}
+
+gboolean
+mm_error_from_qmi_loc_indication_status (QmiLocIndicationStatus   status,
+                                         GError                 **error)
+{
+    switch (status) {
+    case QMI_LOC_INDICATION_STATUS_SUCCESS:
+        return TRUE;
+    case QMI_LOC_INDICATION_STATUS_GENERAL_FAILURE:
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "LOC service: general failure");
+        return FALSE;
+    case QMI_LOC_INDICATION_STATUS_UNSUPPORTED:
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED, "LOC service: unsupported");
+        return FALSE;
+    case QMI_LOC_INDICATION_STATUS_INVALID_PARAMETER:
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS, "LOC service: invalid parameter");
+        return FALSE;
+    case QMI_LOC_INDICATION_STATUS_ENGINE_BUSY:
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_IN_PROGRESS, "LOC service: engine busy");
+        return FALSE;
+    case QMI_LOC_INDICATION_STATUS_PHONE_OFFLINE:
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_WRONG_STATE, "LOC service: phone offline");
+        return FALSE;
+    case QMI_LOC_INDICATION_STATUS_TIMEOUT:
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_ABORTED, "LOC service: timeout");
+        return FALSE;
+    default:
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "LOC service: unknown failure");
+        return FALSE;
     }
 }

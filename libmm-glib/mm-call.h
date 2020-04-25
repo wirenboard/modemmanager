@@ -26,7 +26,7 @@
 #include <ModemManager.h>
 
 #include "mm-gdbus-call.h"
-#include "mm-call-properties.h"
+#include "mm-call-audio-format.h"
 
 G_BEGIN_DECLS
 
@@ -39,6 +39,7 @@ G_BEGIN_DECLS
 
 typedef struct _MMCall MMCall;
 typedef struct _MMCallClass MMCallClass;
+typedef struct _MMCallPrivate MMCallPrivate;
 
 /**
  * MMCall:
@@ -49,7 +50,7 @@ typedef struct _MMCallClass MMCallClass;
 struct _MMCall {
     /*< private >*/
     MmGdbusCallProxy parent;
-    gpointer unused;
+    MMCallPrivate *priv;
 };
 
 struct _MMCallClass {
@@ -58,6 +59,10 @@ struct _MMCallClass {
 };
 
 GType mm_call_get_type (void);
+
+#if GLIB_CHECK_VERSION(2, 44, 0)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MMCall, g_object_unref)
+#endif
 
 const gchar       *mm_call_get_path         (MMCall *self);
 gchar             *mm_call_dup_path         (MMCall *self);
@@ -71,6 +76,11 @@ MMCallStateReason  mm_call_get_state_reason (MMCall *self);
 
 MMCallDirection    mm_call_get_direction    (MMCall *self);
 
+const gchar       *mm_call_get_audio_port   (MMCall *self);
+gchar             *mm_call_dup_audio_port   (MMCall *self);
+
+MMCallAudioFormat *mm_call_get_audio_format (MMCall *self);
+MMCallAudioFormat *mm_call_peek_audio_format(MMCall *self);
 
 
 void               mm_call_start            (MMCall *self,

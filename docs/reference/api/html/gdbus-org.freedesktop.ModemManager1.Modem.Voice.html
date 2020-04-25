@@ -43,14 +43,14 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.5.14.4"></a><h2>Signals</h2>
+<a name="id-1.5.5.14.4"></a><h2>Signals</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Voice.CallAdded" title='The "CallAdded" signal'>CallAdded</a>   (o path);
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Voice.CallDeleted" title='The "CallDeleted" signal'>CallDeleted</a> (o path);
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.5.14.5"></a><h2>Properties</h2>
+<a name="id-1.5.5.14.5"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Voice.Calls" title='The "Calls" property'>Calls</a>  readable   ao
 </pre>
@@ -58,6 +58,11 @@
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Modem-Voice"></a><h2>Description</h2>
 <p>      The Voice interface handles Calls.
+</p>
+<p>      This interface will only be available once the modem is ready to be
+      registered in the cellular network. 3GPP devices will require a valid
+      unlocked SIM card before any of the features in the interface can be
+      used.
 </p>
 </div>
 <div class="refsect1">

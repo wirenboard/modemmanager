@@ -34,6 +34,7 @@
 
 #include "mmcli.h"
 #include "mmcli-common.h"
+#include "mmcli-output.h"
 
 /* Context */
 typedef struct {
@@ -50,6 +51,7 @@ static gboolean scan_flag;
 static gboolean register_home_flag;
 static gchar *register_in_operator_str;
 static gchar *set_eps_ue_mode_operation_str;
+static gchar *set_initial_eps_bearer_settings_str;
 static gboolean ussd_status_flag;
 static gchar *ussd_initiate_str;
 static gchar *ussd_respond_str;
@@ -71,6 +73,10 @@ static GOptionEntry entries[] = {
     { "3gpp-set-eps-ue-mode-operation", 0, 0, G_OPTION_ARG_STRING, &set_eps_ue_mode_operation_str,
       "Set the UE mode of operation for EPS",
       "[ps-1|ps-2|csps-1|csps-2]"
+    },
+    { "3gpp-set-initial-eps-bearer-settings", 0, 0, G_OPTION_ARG_STRING, &set_initial_eps_bearer_settings_str,
+      "Set the initial EPS bearer settings",
+      "[\"key=value,...\"]"
     },
     { "3gpp-ussd-status", 0, 0, G_OPTION_ARG_NONE, &ussd_status_flag,
       "Show status of any ongoing USSD session",
@@ -119,6 +125,7 @@ mmcli_modem_3gpp_options_enabled (void)
                  register_home_flag +
                  !!register_in_operator_str +
                  !!set_eps_ue_mode_operation_str +
+                 !!set_initial_eps_bearer_settings_str +
                  ussd_status_flag +
                  !!ussd_initiate_str +
                  !!ussd_respond_str +
@@ -204,34 +211,6 @@ mmcli_modem_3gpp_shutdown (void)
 }
 
 static void
-print_network_info (MMModem3gppNetwork *network)
-{
-    const gchar *name;
-    gchar *access_technologies;
-
-    /* Not the best thing to do, as we may be doing _get() calls twice, but
-     * easiest to maintain */
-#undef VALIDATE
-#define VALIDATE(str) (str ? str : "unknown")
-
-    access_technologies = (mm_modem_access_technology_build_string_from_mask (
-                               mm_modem_3gpp_network_get_access_technology (network)));
-
-    /* Prefer long name */
-    name = mm_modem_3gpp_network_get_operator_long (network);
-    if (!name)
-        name = mm_modem_3gpp_network_get_operator_short (network);
-
-    g_print ("%s - %s (%s, %s)\n",
-             VALIDATE (mm_modem_3gpp_network_get_operator_code (network)),
-             VALIDATE (name),
-             access_technologies,
-             mm_modem_3gpp_network_availability_get_string (
-                 mm_modem_3gpp_network_get_availability (network)));
-    g_free (access_technologies);
-}
-
-static void
 scan_process_reply (GList *result,
                     const GError *error)
 {
@@ -241,19 +220,10 @@ scan_process_reply (GList *result,
         exit (EXIT_FAILURE);
     }
 
-    g_print ("\n");
-    if (!result)
-        g_print ("No networks were found\n");
-    else {
-        GList *l;
+    mmcli_output_scan_networks (result);
+    mmcli_output_dump ();
 
-        g_print ("Found %u networks:\n", g_list_length (result));
-        for (l = result; l; l = g_list_next (l)) {
-            print_network_info ((MMModem3gppNetwork *)(l->data));
-        }
-        g_list_free_full (result, (GDestroyNotify) mm_modem_3gpp_network_free);
-    }
-    g_print ("\n");
+    g_list_free_full (result, (GDestroyNotify) mm_modem_3gpp_network_free);
 }
 
 static void
@@ -293,6 +263,32 @@ register_ready (MMModem3gpp  *modem_3gpp,
 
     operation_result = mm_modem_3gpp_register_finish (modem_3gpp, result, &error);
     register_process_reply (operation_result, error);
+
+    mmcli_async_operation_done ();
+}
+
+static void
+set_initial_eps_bearer_settings_process_reply (gboolean      result,
+                                               const GError *error)
+{
+    if (!result) {
+        g_printerr ("error: couldn't set initial EPS bearer properties: '%s'\n",
+                    error ? error->message : "unknown error");
+        exit (EXIT_FAILURE);
+    }
+
+    g_print ("Successfully set initial EPS bearer properties\n");
+}
+
+static void
+set_initial_eps_bearer_settings_ready (MMModem3gpp  *modem,
+                                       GAsyncResult *res)
+{
+    gboolean  result;
+    GError   *error = NULL;
+
+    result = mm_modem_3gpp_set_initial_eps_bearer_settings_finish (modem, res, &error);
+    set_initial_eps_bearer_settings_process_reply (result, error);
 
     mmcli_async_operation_done ();
 }
@@ -339,22 +335,12 @@ parse_eps_ue_mode_operation (MMModem3gppEpsUeModeOperation *uemode)
 static void
 print_ussd_status (void)
 {
-    /* Not the best thing to do, as we may be doing _get() calls twice, but
-     * easiest to maintain */
-#undef VALIDATE
-#define VALIDATE(str) (str ? str : "none")
-
-    g_print ("\n"
-             "%s\n"
-             "  ----------------------------\n"
-             "  USSD |               status: '%s'\n"
-             "       |      network request: '%s'\n"
-             "       | network notification: '%s'\n",
-             mm_modem_3gpp_ussd_get_path (ctx->modem_3gpp_ussd),
-             mm_modem_3gpp_ussd_session_state_get_string (
-                 mm_modem_3gpp_ussd_get_state (ctx->modem_3gpp_ussd)),
-             VALIDATE (mm_modem_3gpp_ussd_get_network_request (ctx->modem_3gpp_ussd)),
-             VALIDATE (mm_modem_3gpp_ussd_get_network_notification (ctx->modem_3gpp_ussd)));
+    mmcli_output_string (MMC_F_GENERAL_DBUS_PATH,              mm_modem_3gpp_ussd_get_path (ctx->modem_3gpp_ussd));
+    mmcli_output_string (MMC_F_3GPP_USSD_STATUS,               mm_modem_3gpp_ussd_session_state_get_string (
+                                                                 mm_modem_3gpp_ussd_get_state (ctx->modem_3gpp_ussd)));
+    mmcli_output_string (MMC_F_3GPP_USSD_NETWORK_REQUEST,      mm_modem_3gpp_ussd_get_network_request      (ctx->modem_3gpp_ussd));
+    mmcli_output_string (MMC_F_3GPP_USSD_NETWORK_NOTIFICATION, mm_modem_3gpp_ussd_get_network_notification (ctx->modem_3gpp_ussd));
+    mmcli_output_dump ();
 }
 
 static void
@@ -498,6 +484,28 @@ get_modem_ready (GObject      *source,
         return;
     }
 
+    /* Request to set initial EPS bearer properties? */
+    if (set_initial_eps_bearer_settings_str) {
+        GError             *error = NULL;
+        MMBearerProperties *config;
+
+        config = mm_bearer_properties_new_from_string (set_initial_eps_bearer_settings_str, &error);
+        if (!config) {
+            g_printerr ("Error parsing properties string: '%s'\n", error->message);
+            exit (EXIT_FAILURE);
+        }
+
+        g_debug ("Asynchronously setting initial EPS bearer properties...");
+        mm_modem_3gpp_set_initial_eps_bearer_settings (ctx->modem_3gpp,
+                                                       config,
+                                                       ctx->cancellable,
+                                                       (GAsyncReadyCallback)set_initial_eps_bearer_settings_ready,
+                                                       NULL);
+        g_object_unref (config);
+        return;
+
+    }
+
     /* Request to initiate USSD session? */
     if (ussd_initiate_str) {
         ensure_modem_3gpp_ussd ();
@@ -611,6 +619,28 @@ mmcli_modem_3gpp_run_synchronous (GDBusConnection *connection)
                                                                NULL,
                                                                &error);
         set_eps_ue_mode_operation_process_reply (result, error);
+        return;
+    }
+
+    /* Request to set initial EPS bearer properties? */
+    if (set_initial_eps_bearer_settings_str) {
+        GError             *error = NULL;
+        gboolean            result;
+        MMBearerProperties *config;
+
+        config = mm_bearer_properties_new_from_string (set_initial_eps_bearer_settings_str, &error);
+        if (!config) {
+            g_printerr ("Error parsing properties string: '%s'\n", error->message);
+            exit (EXIT_FAILURE);
+        }
+
+        g_debug ("Synchronously setting initial EPS bearer properties...");
+        result = mm_modem_3gpp_set_initial_eps_bearer_settings_sync (ctx->modem_3gpp,
+                                                                     config,
+                                                                     NULL,
+                                                                     &error);
+        set_initial_eps_bearer_settings_process_reply (result, error);
+        g_object_unref (config);
         return;
     }
 

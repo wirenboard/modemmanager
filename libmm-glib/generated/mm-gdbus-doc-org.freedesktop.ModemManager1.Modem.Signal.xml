@@ -25,6 +25,10 @@
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Modem-Signal">
   <title role="desc.title">Description</title>
   <para>      This interface provides access to extended signal quality information.
+</para><para>      This interface will only be available once the modem is ready to be
+      registered in the cellular network. 3GPP devices will require a valid
+      unlocked SIM card before any of the features in the interface can be
+      used.
 </para>
 </refsect1>
 <refsect1 role="details" id="gdbus-methods-org.freedesktop.ModemManager1.Modem.Signal">

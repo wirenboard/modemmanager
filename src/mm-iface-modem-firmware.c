@@ -21,12 +21,6 @@
 #include "mm-iface-modem-firmware.h"
 #include "mm-log.h"
 
-#define SUPPORT_CHECKED_TAG "firmware-support-checked-tag"
-#define SUPPORTED_TAG       "firmware-supported-tag"
-
-static GQuark support_checked_quark;
-static GQuark supported_quark;
-
 /*****************************************************************************/
 
 void
@@ -81,7 +75,7 @@ load_current_ready (MMIfaceModemFirmware *self,
     }
 
     /* Build array of dicts */
-    g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+    g_variant_builder_init (&builder, G_VARIANT_TYPE ("aa{sv}"));
     for (l = ctx->list; l; l = g_list_next (l))
         g_variant_builder_add_value (
             &builder,
@@ -132,6 +126,18 @@ list_auth_ready (MMBaseModem *self,
         return;
     }
 
+    if (!MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_list ||
+        !MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_list_finish ||
+        !MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_current ||
+        !MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_current_finish) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot list firmware: operation not supported");
+        handle_list_context_free (ctx);
+        return;
+    }
+
     MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_list (MM_IFACE_MODEM_FIRMWARE (self),
                                                              (GAsyncReadyCallback)load_list_ready,
                                                              ctx);
@@ -143,11 +149,6 @@ handle_list (MmGdbusModemFirmware *skeleton,
              MMIfaceModemFirmware *self)
 {
     HandleListContext *ctx;
-
-    g_assert (MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_list != NULL);
-    g_assert (MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_list_finish != NULL);
-    g_assert (MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_current != NULL);
-    g_assert (MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_current_finish != NULL);
 
     ctx = g_slice_new (HandleListContext);
     ctx->skeleton = g_object_ref (skeleton);
@@ -210,6 +211,17 @@ select_auth_ready (MMBaseModem *self,
         return;
     }
 
+
+    if (!MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->change_current ||
+        !MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->change_current_finish) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot select firmware: operation not supported");
+        handle_select_context_free (ctx);
+        return;
+    }
+
     MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->change_current (MM_IFACE_MODEM_FIRMWARE (self),
                                                                   ctx->name,
                                                                   (GAsyncReadyCallback)change_current_ready,
@@ -223,9 +235,6 @@ handle_select (MmGdbusModemFirmware *skeleton,
                MMIfaceModemFirmware *self)
 {
     HandleSelectContext *ctx;
-
-    g_assert (MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->change_current != NULL);
-    g_assert (MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->change_current_finish != NULL);
 
     ctx = g_slice_new (HandleSelectContext);
     ctx->skeleton = g_object_ref (skeleton);
@@ -249,14 +258,13 @@ static void interface_initialization_step (GTask *task);
 
 typedef enum {
     INITIALIZATION_STEP_FIRST,
-    INITIALIZATION_STEP_CHECK_SUPPORT,
-    INITIALIZATION_STEP_FAIL_IF_UNSUPPORTED,
+    INITIALIZATION_STEP_UPDATE_SETTINGS,
     INITIALIZATION_STEP_LAST
 } InitializationStep;
 
 struct _InitializationContext {
     MmGdbusModemFirmware *skeleton;
-    InitializationStep step;
+    InitializationStep    step;
 };
 
 static void
@@ -266,31 +274,124 @@ initialization_context_free (InitializationContext *ctx)
     g_free (ctx);
 }
 
-static void
-check_support_ready (MMIfaceModemFirmware *self,
-                     GAsyncResult *res,
-                     GTask *task)
+gboolean
+mm_iface_modem_firmware_initialize_finish (MMIfaceModemFirmware  *self,
+                                           GAsyncResult          *res,
+                                           GError               **error)
 {
-    InitializationContext *ctx;
-    GError *error = NULL;
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
 
-    if (!MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->check_support_finish (self,
-                                                                             res,
-                                                                             &error)) {
-        if (error) {
-            /* This error shouldn't be treated as critical */
-            mm_dbg ("Firmware support check failed: '%s'", error->message);
-            g_error_free (error);
-        }
-    } else {
-        /* Firmware is supported! */
-        g_object_set_qdata (G_OBJECT (self),
-                            supported_quark,
-                            GUINT_TO_POINTER (TRUE));
+static gboolean
+add_generic_version (MMBaseModem               *self,
+                     MMFirmwareUpdateSettings  *update_settings,
+                     GError                   **error)
+{
+    const gchar *revision;
+
+    revision = mm_iface_modem_get_revision (MM_IFACE_MODEM (self));
+    if (!revision) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "Unknown revision");
+        return FALSE;
     }
 
-    /* Go on to next step */
+    mm_firmware_update_settings_set_version (update_settings, revision);
+    return TRUE;
+}
+
+static gboolean
+add_generic_device_ids (MMBaseModem               *self,
+                        MMFirmwareUpdateSettings  *update_settings,
+                        GError                   **error)
+{
+    guint16      vid;
+    guint16      pid;
+    guint16      rid;
+    GPtrArray   *ids;
+    MMPort      *primary = NULL;
+    const gchar *subsystem;
+
+    vid = mm_base_modem_get_vendor_id (self);
+    pid = mm_base_modem_get_product_id (self);
+
+#if defined WITH_QMI
+    primary = MM_PORT (mm_base_modem_peek_port_qmi (self));
+#endif
+#if defined WITH_MBIM
+    if (!primary)
+        primary = MM_PORT (mm_base_modem_peek_port_mbim (self));
+#endif
+    if (!primary)
+        primary = MM_PORT (mm_base_modem_peek_port_primary (self));
+    g_assert (primary != NULL);
+    rid = mm_kernel_device_get_physdev_revision (mm_port_peek_kernel_device (primary));
+
+    subsystem = mm_kernel_device_get_physdev_subsystem (mm_port_peek_kernel_device (primary));
+    if (g_strcmp0 (subsystem, "usb")) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "Unsupported subsystem: %s", subsystem);
+        return FALSE;
+    }
+
+    ids = g_ptr_array_new_with_free_func ((GDestroyNotify)g_free);
+    g_ptr_array_add (ids, g_strdup_printf ("USB\\VID_%04X&PID_%04X&REV_%04X", vid, pid, rid));
+    g_ptr_array_add (ids, g_strdup_printf ("USB\\VID_%04X&PID_%04X", vid, pid));
+    g_ptr_array_add (ids, g_strdup_printf ("USB\\VID_%04X", vid));
+    g_ptr_array_add (ids, NULL);
+
+    mm_firmware_update_settings_set_device_ids (update_settings, (const gchar **)ids->pdata);
+    g_ptr_array_unref (ids);
+    return TRUE;
+}
+
+static void
+load_update_settings_ready (MMIfaceModemFirmware *self,
+                            GAsyncResult         *res,
+                            GTask                *task)
+{
+    InitializationContext    *ctx;
+    MMFirmwareUpdateSettings *update_settings;
+    GError                   *error = NULL;
+    GVariant                 *variant = NULL;
+
     ctx = g_task_get_task_data (task);
+
+    update_settings = MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_update_settings_finish (self, res, &error);
+    if (!update_settings) {
+        mm_dbg ("Couldn't load update settings: '%s'", error->message);
+        g_error_free (error);
+        goto out;
+    }
+
+    /* If the plugin didn't specify custom device ids, add the default ones ourselves */
+    if (!mm_firmware_update_settings_get_device_ids (update_settings) &&
+        !add_generic_device_ids (MM_BASE_MODEM (self), update_settings, &error)) {
+        mm_warn ("Couldn't build device ids: '%s'", error->message);
+        g_error_free (error);
+        g_clear_object (&update_settings);
+        goto out;
+    }
+
+    /* If the plugin didn't specify custom version, add the default one ourselves */
+    if (!mm_firmware_update_settings_get_version (update_settings) &&
+        !add_generic_version (MM_BASE_MODEM (self), update_settings, &error)) {
+        mm_warn ("Couldn't set version: '%s'", error->message);
+        g_error_free (error);
+        g_clear_object (&update_settings);
+        goto out;
+    }
+
+out:
+    if (update_settings) {
+        variant = mm_firmware_update_settings_get_variant (update_settings);
+        g_object_unref (update_settings);
+    }
+    mm_gdbus_modem_firmware_set_update_settings (ctx->skeleton, variant);
+    if (variant)
+        g_variant_unref (variant);
+
+    /* Go on to next step */
     ctx->step++;
     interface_initialization_step (task);
 }
@@ -312,52 +413,16 @@ interface_initialization_step (GTask *task)
 
     switch (ctx->step) {
     case INITIALIZATION_STEP_FIRST:
-        /* Setup quarks if we didn't do it before */
-        if (G_UNLIKELY (!support_checked_quark))
-            support_checked_quark = (g_quark_from_static_string (
-                                         SUPPORT_CHECKED_TAG));
-        if (G_UNLIKELY (!supported_quark))
-            supported_quark = (g_quark_from_static_string (
-                                   SUPPORTED_TAG));
-
         /* Fall down to next step */
         ctx->step++;
 
-    case INITIALIZATION_STEP_CHECK_SUPPORT:
-        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
-                                                   support_checked_quark))) {
-            /* Set the checked flag so that we don't run it again */
-            g_object_set_qdata (G_OBJECT (self),
-                                support_checked_quark,
-                                GUINT_TO_POINTER (TRUE));
-            /* Initially, assume we don't support it */
-            g_object_set_qdata (G_OBJECT (self),
-                                supported_quark,
-                                GUINT_TO_POINTER (FALSE));
-
-            if (MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->check_support &&
-                MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->check_support_finish) {
-                MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->check_support (
-                    self,
-                    (GAsyncReadyCallback)check_support_ready,
-                    task);
-                return;
-            }
-
-            /* If there is no implementation to check support, assume we DON'T
-             * support it. */
-        }
-        /* Fall down to next step */
-        ctx->step++;
-
-    case INITIALIZATION_STEP_FAIL_IF_UNSUPPORTED:
-        if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
-                                                   supported_quark))) {
-            g_task_return_new_error (task,
-                                     MM_CORE_ERROR,
-                                     MM_CORE_ERROR_UNSUPPORTED,
-                                     "Firmware interface not available");
-            g_object_unref (task);
+    case INITIALIZATION_STEP_UPDATE_SETTINGS:
+        if (MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_update_settings &&
+            MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_update_settings_finish) {
+            MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_update_settings (
+                self,
+                (GAsyncReadyCallback)load_update_settings_ready,
+                task);
             return;
         }
         /* Fall down to next step */
@@ -367,14 +432,10 @@ interface_initialization_step (GTask *task)
         /* We are done without errors! */
 
         /* Handle method invocations */
-        g_signal_connect (ctx->skeleton,
-                          "handle-list",
-                          G_CALLBACK (handle_list),
-                          self);
-        g_signal_connect (ctx->skeleton,
-                          "handle-select",
-                          G_CALLBACK (handle_select),
-                          self);
+        g_object_connect (ctx->skeleton,
+                          "signal::handle-list",   G_CALLBACK (handle_list),   self,
+                          "signal::handle-select", G_CALLBACK (handle_select), self,
+                          NULL);
 
         /* Finally, export the new interface */
         mm_gdbus_object_skeleton_set_modem_firmware (MM_GDBUS_OBJECT_SKELETON (self),
@@ -388,23 +449,15 @@ interface_initialization_step (GTask *task)
     g_assert_not_reached ();
 }
 
-gboolean
-mm_iface_modem_firmware_initialize_finish (MMIfaceModemFirmware *self,
-                                           GAsyncResult *res,
-                                           GError **error)
-{
-    return g_task_propagate_boolean (G_TASK (res), error);
-}
-
 void
 mm_iface_modem_firmware_initialize (MMIfaceModemFirmware *self,
-                                    GCancellable *cancellable,
-                                    GAsyncReadyCallback callback,
-                                    gpointer user_data)
+                                    GCancellable         *cancellable,
+                                    GAsyncReadyCallback   callback,
+                                    gpointer              user_data)
 {
     InitializationContext *ctx;
-    MmGdbusModemFirmware *skeleton = NULL;
-    GTask *task;
+    MmGdbusModemFirmware  *skeleton = NULL;
+    GTask                 *task;
 
     /* Did we already create it? */
     g_object_get (self,
@@ -418,7 +471,6 @@ mm_iface_modem_firmware_initialize (MMIfaceModemFirmware *self,
     }
 
     /* Perform async initialization here */
-
     ctx = g_new0 (InitializationContext, 1);
     ctx->step = INITIALIZATION_STEP_FIRST;
     ctx->skeleton = skeleton;

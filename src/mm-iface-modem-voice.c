@@ -38,16 +38,42 @@ mm_iface_modem_voice_bind_simple_status (MMIfaceModemVoice *self,
 
 /*****************************************************************************/
 
-MMBaseCall *
-mm_iface_modem_voice_create_call (MMIfaceModemVoice *self)
+static MMBaseCall *
+create_incoming_call (MMIfaceModemVoice *self,
+                      const gchar       *number)
 {
     g_assert (MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->create_call != NULL);
 
-    return MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->create_call (self);
+    return MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->create_call (self, MM_CALL_DIRECTION_INCOMING, number);
 }
 
-MMBaseCall *
-mm_iface_modem_voice_create_incoming_call (MMIfaceModemVoice *self)
+static MMBaseCall *
+create_outgoing_call_from_properties (MMIfaceModemVoice  *self,
+                                      MMCallProperties   *properties,
+                                      GError            **error)
+{
+    const gchar *number;
+
+    /* Don't create CALL from properties if either number is missing */
+    number = mm_call_properties_get_number (properties) ;
+    if (!number) {
+        g_set_error (error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_INVALID_ARGS,
+                     "Cannot create call: mandatory parameter 'number' is missing");
+        return NULL;
+    }
+
+    /* Create a call object as defined by the interface */
+    g_assert (MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->create_call != NULL);
+    return MM_IFACE_MODEM_VOICE_GET_INTERFACE (self)->create_call (self, MM_CALL_DIRECTION_OUTGOING, number);
+}
+
+/*****************************************************************************/
+
+void
+mm_iface_modem_voice_report_incoming_call (MMIfaceModemVoice *self,
+                                           const gchar       *number)
 {
     MMBaseCall *call = NULL;
     MMCallList *list = NULL;
@@ -56,158 +82,36 @@ mm_iface_modem_voice_create_incoming_call (MMIfaceModemVoice *self)
                   MM_IFACE_MODEM_VOICE_CALL_LIST, &list,
                   NULL);
 
-    if (list) {
-        call = mm_call_list_get_new_incoming (list);
-
-        if (!call) {
-            mm_dbg ("Creating new incoming call...");
-
-            call = mm_base_call_new (MM_BASE_MODEM (self));
-            g_object_set (call,
-                          "state",          MM_CALL_STATE_RINGING_IN,
-                          "state-reason",   MM_CALL_STATE_REASON_INCOMING_NEW,
-                          "direction",      MM_CALL_DIRECTION_INCOMING,
-                          NULL);
-
-            /* Only export once properly created */
-            mm_base_call_export (call);
-            mm_call_list_add_call (list, call);
-            g_object_unref (call);
-        }
-
-        g_object_unref (list);
+    if (!list) {
+        mm_warn ("Cannot create incoming call: missing call list");
+        return;
     }
 
-    return call;
-}
+    call = mm_call_list_get_first_ringing_in_call (list);
 
-gboolean
-mm_iface_modem_voice_update_incoming_call_number (MMIfaceModemVoice *self,
-                                                  gchar *number,
-                                                  guint type,
-                                                  guint validity)
-{
-    gboolean    updated = FALSE;
-    MMBaseCall  *call   = NULL;
-    MMCallList  *list   = NULL;
-
-    g_object_get (MM_BASE_MODEM (self),
-                  MM_IFACE_MODEM_VOICE_CALL_LIST, &list,
-                  NULL);
-
-    if (list) {
-        call = mm_call_list_get_new_incoming (list);
-
-        if (call) {
-            g_object_set (call, "number", number, NULL);
+    /* If call exists already, refresh its validity and set number if it wasn't set */
+    if (call) {
+        if (number && !mm_gdbus_call_get_number (MM_GDBUS_CALL (call)))
             mm_gdbus_call_set_number (MM_GDBUS_CALL (call), number);
-
-            /*
-             * TODO: Maybe also this parameters should be used:
-             *  - type
-             *  - validity
-             */
-
-            updated = TRUE;
-        } else {
-            mm_dbg ("Incoming call does not exist yet");
-        }
+        mm_base_call_incoming_refresh (call);
+        g_object_unref (list);
+        return;
     }
 
-    return updated;
-}
+    mm_dbg ("Creating new incoming call...");
+    call = create_incoming_call (self, number);
 
-gboolean
-mm_iface_modem_voice_call_dialing_to_ringing (MMIfaceModemVoice *self)
-{
-    gboolean    updated = FALSE;
-    MMBaseCall  *call   = NULL;
-    MMCallList  *list   = NULL;
+    /* Set the state as ringing in */
+    mm_base_call_change_state (call, MM_CALL_STATE_RINGING_IN, MM_CALL_STATE_REASON_INCOMING_NEW);
 
-    g_object_get (MM_BASE_MODEM (self),
-                  MM_IFACE_MODEM_VOICE_CALL_LIST, &list,
-                  NULL);
+    /* Start its validity timeout */
+    mm_base_call_incoming_refresh (call);
 
-    if (list) {
-        call = mm_call_list_get_first_outgoing_dialing_call (list);
-
-        if (call) {
-            mm_base_call_change_state (call, MM_CALL_STATE_RINGING_OUT, MM_CALL_STATE_REASON_OUTGOING_STARTED);
-            updated = TRUE;
-        } else {
-            mm_dbg ("Outgoing dialing call does not exist");
-        }
-    }
-
-    return updated;
-}
-
-gboolean
-mm_iface_modem_voice_call_ringing_to_active (MMIfaceModemVoice *self)
-{
-    gboolean    updated = FALSE;
-    MMBaseCall  *call   = NULL;
-    MMCallList  *list   = NULL;
-
-    g_object_get (MM_BASE_MODEM (self),
-                  MM_IFACE_MODEM_VOICE_CALL_LIST, &list,
-                  NULL);
-
-    if (list) {
-        call = mm_call_list_get_first_ringing_call (list);
-
-        if (call) {
-            mm_base_call_change_state (call, MM_CALL_STATE_ACTIVE, MM_CALL_STATE_REASON_ACCEPTED);
-            updated = TRUE;
-        } else {
-            mm_dbg ("Ringing call does not exist");
-        }
-    }
-
-    return updated;
-}
-
-gboolean
-mm_iface_modem_voice_network_hangup (MMIfaceModemVoice *self)
-{
-    gboolean    updated = FALSE;
-    MMBaseCall  *call   = NULL;
-    MMCallList  *list   = NULL;
-
-    g_object_get (MM_BASE_MODEM (self),
-                  MM_IFACE_MODEM_VOICE_CALL_LIST, &list,
-                  NULL);
-
-    if (list) {
-        call = mm_call_list_get_first_non_terminated_call (list);
-
-        if (call) {
-            mm_base_call_change_state (call, MM_CALL_STATE_TERMINATED, MM_CALL_STATE_REASON_TERMINATED);
-            updated = TRUE;
-        } else {
-            mm_dbg ("No call to hangup");
-        }
-    }
-
-    return updated;
-}
-
-gboolean
-mm_iface_modem_voice_received_dtmf (MMIfaceModemVoice *self,
-                                    gchar *dtmf)
-{
-    gboolean    updated = FALSE;
-    MMCallList  *list   = NULL;
-
-    g_object_get (MM_BASE_MODEM (self),
-                  MM_IFACE_MODEM_VOICE_CALL_LIST, &list,
-                  NULL);
-
-    if (list) {
-        updated = mm_call_list_send_dtmf_to_active_calls (list, dtmf);
-    }
-
-    return updated;
+    /* Only export once properly created */
+    mm_base_call_export (call);
+    mm_call_list_add_call (list, call);
+    g_object_unref (call);
+    g_object_unref (list);
 }
 
 /*****************************************************************************/
@@ -227,21 +131,6 @@ handle_delete_context_free (HandleDeleteContext *ctx)
     g_object_unref (ctx->self);
     g_free (ctx->path);
     g_free (ctx);
-}
-
-static void
-handle_delete_ready (MMCallList *list,
-                     GAsyncResult *res,
-                     HandleDeleteContext *ctx)
-{
-    GError *error = NULL;
-
-    if (!mm_call_list_delete_call_finish (list, res, &error))
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
-    else
-        mm_gdbus_modem_voice_complete_delete_call (ctx->skeleton, ctx->invocation);
-
-    handle_delete_context_free (ctx);
 }
 
 static void
@@ -267,7 +156,7 @@ handle_delete_auth_ready (MMBaseModem *self,
         g_dbus_method_invocation_return_error (ctx->invocation,
                                                MM_CORE_ERROR,
                                                MM_CORE_ERROR_WRONG_STATE,
-                                               "Cannot delete CALL: device not yet enabled");
+                                               "Cannot delete call: device not yet enabled");
         handle_delete_context_free (ctx);
         return;
     }
@@ -279,15 +168,17 @@ handle_delete_auth_ready (MMBaseModem *self,
         g_dbus_method_invocation_return_error (ctx->invocation,
                                                MM_CORE_ERROR,
                                                MM_CORE_ERROR_WRONG_STATE,
-                                               "Cannot delete CALL: missing CALL list");
+                                               "Cannot delete call: missing call list");
         handle_delete_context_free (ctx);
         return;
     }
 
-    mm_call_list_delete_call (list,
-                            ctx->path,
-                            (GAsyncReadyCallback)handle_delete_ready,
-                            ctx);
+    if (!mm_call_list_delete_call (list, ctx->path, &error))
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+    else
+        mm_gdbus_modem_voice_complete_delete_call (ctx->skeleton, ctx->invocation);
+
+    handle_delete_context_free (ctx);
     g_object_unref (list);
 }
 
@@ -370,9 +261,7 @@ handle_create_auth_ready (MMBaseModem *self,
         return;
     }
 
-    call = mm_base_call_new_from_properties (MM_BASE_MODEM (self),
-                                             properties,
-                                             &error);
+    call = create_outgoing_call_from_properties (MM_IFACE_MODEM_VOICE (self), properties, &error);
     if (!call) {
         g_object_unref (properties);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
@@ -394,7 +283,8 @@ handle_create_auth_ready (MMBaseModem *self,
         return;
     }
 
-    /* Add it to the list */
+    /* Only export once properly created */
+    mm_base_call_export (call);
     mm_call_list_add_call (list, call);
 
     /* Complete the DBus call */

@@ -27,6 +27,10 @@
   <title role="desc.title">Description</title>
   <para>      This interface allows clients to receive network time and timezone
       updates broadcast by mobile networks.
+</para><para>      This interface will only be available once the modem is ready to be
+      registered in the cellular network. 3GPP devices will require a valid
+      unlocked SIM card before any of the features in the interface can be
+      used.
 </para>
 </refsect1>
 <refsect1 role="details" id="gdbus-methods-org.freedesktop.ModemManager1.Modem.Time">

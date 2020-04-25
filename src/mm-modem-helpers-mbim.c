@@ -21,6 +21,28 @@
 
 /*****************************************************************************/
 
+MMModemCapability
+mm_modem_capability_from_mbim_device_caps (MbimCellularClass caps_cellular_class,
+                                           MbimDataClass     caps_data_class)
+{
+    MMModemCapability mask = 0;
+
+    if (caps_cellular_class & MBIM_CELLULAR_CLASS_GSM)
+        mask |= MM_MODEM_CAPABILITY_GSM_UMTS;
+
+#if 0  /* Disable until we add MBIM CDMA support */
+    if (caps_cellular_class & MBIM_CELLULAR_CLASS_CDMA)
+        mask |= MM_MODEM_CAPABILITY_CDMA_EVDO;
+#endif
+
+    if (caps_data_class & MBIM_DATA_CLASS_LTE)
+        mask |= MM_MODEM_CAPABILITY_LTE;
+
+    return mask;
+}
+
+/*****************************************************************************/
+
 MMModemLock
 mm_modem_lock_from_mbim_pin_type (MbimPinType pin_type)
 {
@@ -239,10 +261,30 @@ mm_mobile_equipment_error_from_mbim_nw_error (MbimNwError nw_error)
         return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
                             MM_MOBILE_EQUIPMENT_ERROR_GPRS_USER_AUTHENTICATION_FAILED,
                             "Not authorized for this CSG");
+    case MBIM_NW_ERROR_INSUFFICIENT_RESOURCES:
+        return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
+                            MM_MOBILE_EQUIPMENT_ERROR_GPRS_INSUFFICIENT_RESOURCES,
+                            "Insufficient resources");
     case MBIM_NW_ERROR_MISSING_OR_UNKNOWN_APN:
         return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
                             MM_MOBILE_EQUIPMENT_ERROR_GPRS_MISSING_OR_UNKNOWN_APN,
                             "Missing or unknown APN");
+    case MBIM_NW_ERROR_UNKNOWN_PDP_ADDRESS_OR_TYPE:
+        return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
+                            MM_MOBILE_EQUIPMENT_ERROR_GPRS_UNKNOWN_PDP_ADDRESS_OR_TYPE,
+                            "Unknown PDP address or type");
+    case MBIM_NW_ERROR_USER_AUTHENTICATION_FAILED:
+        return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
+                            MM_MOBILE_EQUIPMENT_ERROR_GPRS_USER_AUTHENTICATION_FAILED,
+                            "User authentication failed");
+    case MBIM_NW_ERROR_ACTIVATION_REJECTED_BY_GGSN_OR_GW:
+        return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
+                            MM_MOBILE_EQUIPMENT_ERROR_GPRS_ACTIVATION_REJECTED_BY_GGSN_OR_GW,
+                            "Activation rejected by GGSN or GW");
+    case MBIM_NW_ERROR_ACTIVATION_REJECTED_UNSPECIFIED:
+        return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
+                            MM_MOBILE_EQUIPMENT_ERROR_GPRS_ACTIVATION_REJECTED_UNSPECIFIED,
+                            "Activation rejected; unspecified");
     case MBIM_NW_ERROR_SERVICE_OPTION_NOT_SUPPORTED:
         return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
                             MM_MOBILE_EQUIPMENT_ERROR_GPRS_SERVICE_OPTION_NOT_SUPPORTED,
@@ -255,12 +297,124 @@ mm_mobile_equipment_error_from_mbim_nw_error (MbimNwError nw_error)
         return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
                             MM_MOBILE_EQUIPMENT_ERROR_GPRS_SERVICE_OPTION_OUT_OF_ORDER,
                             "Service option temporarily out of order");
+    case MBIM_NW_ERROR_MAXIMUM_NUMBER_OF_PDP_CONTEXTS_REACHED:
+        return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
+                            MM_MOBILE_EQUIPMENT_ERROR_GPRS_MAXIMUM_NUMBER_OF_PDP_CONTEXTS_REACHED,
+                            "Maximum number of PDP contexts reached");
+    case MBIM_NW_ERROR_REQUESTED_APN_NOT_SUPPORTED_IN_CURRENT_RAT_AND_PLMN:
+        return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
+                            MM_MOBILE_EQUIPMENT_ERROR_GPRS_REQUESTED_APN_NOT_SUPPORTED,
+                            "Requested APN not supported");
     default:
         return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
                             MM_MOBILE_EQUIPMENT_ERROR_GPRS_UNKNOWN,
                             "Unknown error (%u)",
                             nw_error);
     }
+}
+
+/*****************************************************************************/
+
+MMBearerAllowedAuth
+mm_bearer_allowed_auth_from_mbim_auth_protocol (MbimAuthProtocol auth_protocol)
+{
+    switch (auth_protocol) {
+    case MBIM_AUTH_PROTOCOL_NONE:
+        return MM_BEARER_ALLOWED_AUTH_NONE;
+    case MBIM_AUTH_PROTOCOL_PAP:
+        return MM_BEARER_ALLOWED_AUTH_PAP;
+    case MBIM_AUTH_PROTOCOL_CHAP:
+        return MM_BEARER_ALLOWED_AUTH_CHAP;
+    case MBIM_AUTH_PROTOCOL_MSCHAPV2:
+        return MM_BEARER_ALLOWED_AUTH_MSCHAPV2;
+    default:
+        return MM_BEARER_ALLOWED_AUTH_UNKNOWN;
+    }
+}
+
+MbimAuthProtocol
+mm_bearer_allowed_auth_to_mbim_auth_protocol (MMBearerAllowedAuth   bearer_auth,
+                                              GError              **error)
+{
+    gchar *str;
+
+    /* NOTE: the input is a BITMASK, so we try to find a "best match" */
+
+    if (bearer_auth == MM_BEARER_ALLOWED_AUTH_UNKNOWN) {
+        mm_dbg ("Using default (PAP) authentication method");
+        return MBIM_AUTH_PROTOCOL_PAP;
+    }
+    if (bearer_auth & MM_BEARER_ALLOWED_AUTH_PAP)
+        return MBIM_AUTH_PROTOCOL_PAP;
+    if (bearer_auth & MM_BEARER_ALLOWED_AUTH_CHAP)
+        return MBIM_AUTH_PROTOCOL_CHAP;
+    if (bearer_auth & MM_BEARER_ALLOWED_AUTH_MSCHAPV2)
+        return MBIM_AUTH_PROTOCOL_MSCHAPV2;
+    if (bearer_auth & MM_BEARER_ALLOWED_AUTH_NONE)
+        return MBIM_AUTH_PROTOCOL_NONE;
+
+    str = mm_bearer_allowed_auth_build_string_from_mask (bearer_auth);
+    g_set_error (error,
+                 MM_CORE_ERROR,
+                 MM_CORE_ERROR_UNSUPPORTED,
+                 "Unsupported authentication methods (%s)",
+                 str);
+    g_free (str);
+    return MBIM_AUTH_PROTOCOL_NONE;
+}
+
+/*****************************************************************************/
+
+MMBearerIpFamily
+mm_bearer_ip_family_from_mbim_context_ip_type (MbimContextIpType ip_type)
+{
+    switch (ip_type) {
+    case MBIM_CONTEXT_IP_TYPE_IPV4:
+        return MM_BEARER_IP_FAMILY_IPV4;
+    case MBIM_CONTEXT_IP_TYPE_IPV6:
+        return MM_BEARER_IP_FAMILY_IPV6;
+    case MBIM_CONTEXT_IP_TYPE_IPV4V6:
+        return MM_BEARER_IP_FAMILY_IPV4V6;
+    case MBIM_CONTEXT_IP_TYPE_IPV4_AND_IPV6:
+        return MM_BEARER_IP_FAMILY_IPV4 | MM_BEARER_IP_FAMILY_IPV6;
+    default:
+        return MM_BEARER_IP_FAMILY_NONE;
+    }
+}
+
+MbimContextIpType
+mm_bearer_ip_family_to_mbim_context_ip_type (MMBearerIpFamily   ip_family,
+                                             GError           **error)
+{
+    gchar *str;
+
+    /* NOTE: the input is a BITMASK, so we try to find a "best match" */
+
+    switch ((guint)ip_family) {
+    case MM_BEARER_IP_FAMILY_IPV4:
+        return MBIM_CONTEXT_IP_TYPE_IPV4;
+    case MM_BEARER_IP_FAMILY_IPV6:
+        return MBIM_CONTEXT_IP_TYPE_IPV6;
+    case  MM_BEARER_IP_FAMILY_IPV4V6:
+        return MBIM_CONTEXT_IP_TYPE_IPV4V6;
+    case (MM_BEARER_IP_FAMILY_IPV4 | MM_BEARER_IP_FAMILY_IPV6):
+        return MBIM_CONTEXT_IP_TYPE_IPV4_AND_IPV6;
+    case MM_BEARER_IP_FAMILY_NONE:
+    case MM_BEARER_IP_FAMILY_ANY:
+        /* A valid default IP family should have been specified */
+        g_assert_not_reached ();
+    default:
+        break;
+    }
+
+    str = mm_bearer_ip_family_build_string_from_mask (ip_family);
+    g_set_error (error,
+                 MM_CORE_ERROR,
+                 MM_CORE_ERROR_UNSUPPORTED,
+                 "Unsupported IP type configuration: '%s'",
+                 str);
+    g_free (str);
+    return MBIM_CONTEXT_IP_TYPE_DEFAULT;
 }
 
 /*****************************************************************************/

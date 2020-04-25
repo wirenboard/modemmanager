@@ -17,6 +17,11 @@
 
       This interface provides access to specific actions that may be performed
       in modems with 3GPP capabilities.
+
+      This interface will only be available once the modem is ready to be
+      registered in the cellular network. 3GPP devices will require a valid
+      unlocked SIM card before any of the features in the interface can be
+      used.
   -->
   <interface name="org.freedesktop.ModemManager1.Modem.Modem3gpp">
 
@@ -96,6 +101,30 @@
     </method>
 
     <!--
+        SetInitialEpsBearerSettings:
+        @settings: List of properties to use when requesting the LTE attach procedure.
+
+        Updates the default settings to be used in the initial default EPS bearer when registering to the LTE network.
+
+        Allowed properties are:
+        <variablelist>
+        <varlistentry><term><literal>"apn"</literal></term>
+          <listitem><para>Access Point Name, given as a string value (signature <literal>"s"</literal>).</para></listitem></varlistentry>
+        <varlistentry><term><literal>"ip-type"</literal></term>
+          <listitem><para>Addressing type, given as a <link linkend="MMBearerIpFamily">MMBearerIpFamily</link> value (signature <literal>"u"</literal>).</para></listitem></varlistentry>
+        <varlistentry><term><literal>"allowed-auth"</literal></term>
+          <listitem><para>The authentication method to use, given as a <link linkend="MMBearerAllowedAuth">MMBearerAllowedAuth</link> value (signature <literal>"u"</literal>).</para></listitem></varlistentry>
+        <varlistentry><term><literal>"user"</literal></term>
+          <listitem><para>User name (if any) required by the network, given as a string value (signature <literal>"s"</literal>).</para></listitem></varlistentry>
+        <varlistentry><term><literal>"password"</literal></term>
+          <listitem><para>Password (if any) required by the network, given as a string value (signature <literal>"s"</literal>).</para></listitem></varlistentry>
+        </variablelist>
+    -->
+    <method name="SetInitialEpsBearerSettings">
+      <arg name="settings" type="a{sv}" direction="in" />
+    </method>
+
+    <!--
         Imei:
 
         The <ulink url="http://en.wikipedia.org/wiki/Imei">IMEI</ulink> of the device.
@@ -152,6 +181,10 @@
         A <link linkend="MMModem3gppSubscriptionState">MMModem3gppSubscriptionState</link>
         value representing the subscription status of the account and whether there
         is any data remaining, given as an unsigned integer (signature <literal>"u"</literal>).
+
+        Deprecated: 1.10.0. The value of this property can only be obtained with operator
+        specific logic (e.g. processing specific PCO info), and therefore it doesn't make sense
+        to expose it in the ModemManager interface.
     -->
     <property name="SubscriptionState" type="u" access="read" />
 
@@ -163,6 +196,37 @@
         (signature <literal>"u"</literal>).
     -->
     <property name="EpsUeModeOperation" type="u" access="read" />
+
+    <!--
+        Pco:
+
+        The raw PCOs received from the network.
+    -->
+    <property name="Pco" type="a(ubay)" access="read" />
+
+    <!--
+        InitialEpsBearer:
+
+        The object path for the initial default EPS bearer.
+    -->
+    <property name="InitialEpsBearer" type="o" access="read" />
+
+    <!--
+        InitialEpsBearerSettings:
+
+        List of properties requested by the device for the initial EPS bearer during
+        LTE network attach procedure.
+
+        The network may decide to use different settings during the actual device attach
+        procedure, e.g. if the device is roaming or no explicit settings were requested,
+        so the properties shown in the #org.freedesktop.ModemManager1.Modem.Modem3gpp.InitialEpsBearer:InitialEpsBearer
+        may be totally different.
+
+        This is a read-only property, updating these settings should be done using the
+        <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings">SetInitialEpsBearerSettings()</link>
+        method.
+    -->
+    <property name="InitialEpsBearerSettings" type="a{sv}" access="read" />
 
   </interface>
 </node>

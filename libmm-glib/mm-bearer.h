@@ -67,17 +67,23 @@ struct _MMBearerClass {
 
 GType mm_bearer_get_type (void);
 
-const gchar *mm_bearer_get_path       (MMBearer *self);
-gchar       *mm_bearer_dup_path       (MMBearer *self);
+#if GLIB_CHECK_VERSION(2, 44, 0)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MMBearer, g_object_unref)
+#endif
 
-const gchar *mm_bearer_get_interface  (MMBearer *self);
-gchar       *mm_bearer_dup_interface  (MMBearer *self);
+const gchar  *mm_bearer_get_path        (MMBearer *self);
+gchar        *mm_bearer_dup_path        (MMBearer *self);
 
-gboolean     mm_bearer_get_connected  (MMBearer *self);
+const gchar  *mm_bearer_get_interface   (MMBearer *self);
+gchar        *mm_bearer_dup_interface   (MMBearer *self);
 
-gboolean     mm_bearer_get_suspended  (MMBearer *self);
+gboolean      mm_bearer_get_connected   (MMBearer *self);
 
-guint        mm_bearer_get_ip_timeout (MMBearer *self);
+gboolean      mm_bearer_get_suspended   (MMBearer *self);
+
+guint         mm_bearer_get_ip_timeout  (MMBearer *self);
+
+MMBearerType  mm_bearer_get_bearer_type (MMBearer *self);
 
 void     mm_bearer_connect        (MMBearer *self,
                                    GCancellable *cancellable,

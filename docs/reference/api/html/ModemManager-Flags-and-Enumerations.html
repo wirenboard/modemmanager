@@ -41,6 +41,10 @@
 <tbody>
 <tr>
 <td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerType" title="enum MMBearerType">MMBearerType</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
 <td class="function_name"><a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerIpFamily" title="enum MMBearerIpFamily">MMBearerIpFamily</a></td>
 </tr>
 <tr>
@@ -125,6 +129,10 @@
 </tr>
 <tr>
 <td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemLocationAssistanceDataType" title="enum MMModemLocationAssistanceDataType">MMModemLocationAssistanceDataType</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
 <td class="function_name"><a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemLock" title="enum MMModemLock">MMModemLock</a></td>
 </tr>
 <tr>
@@ -150,6 +158,10 @@
 <tr>
 <td class="datatype_keyword">enum</td>
 <td class="function_name"><a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemPortType" title="enum MMModemPortType">MMModemPortType</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemFirmwareUpdateMethod" title="enum MMModemFirmwareUpdateMethod">MMModemFirmwareUpdateMethod</a></td>
 </tr>
 <tr>
 <td class="datatype_keyword">enum</td>
@@ -209,6 +221,57 @@ ModemManager interface.</p>
 </div>
 <div class="refsect1">
 <a name="ModemManager-Flags-and-Enumerations.other_details"></a><h2>Types and Values</h2>
+<div class="refsect2">
+<a name="MMBearerType"></a><h3>enum MMBearerType</h3>
+<p>Type of context (2G/3G) or bearer (4G).</p>
+<div class="refsect3">
+<a name="MMBearerType.members"></a><h4>Members</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-TYPE-UNKNOWN:CAPS"></a>MM_BEARER_TYPE_UNKNOWN</p></td>
+<td class="enum_member_description">
+<p>Unknown bearer.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-TYPE-DEFAULT:CAPS"></a>MM_BEARER_TYPE_DEFAULT</p></td>
+<td class="enum_member_description">
+<p>Primary context (2G/3G) or default bearer (4G),
+defined by the user of the API.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-TYPE-DEFAULT-ATTACH:CAPS"></a>MM_BEARER_TYPE_DEFAULT_ATTACH</p></td>
+<td class="enum_member_description">
+<p>The initial default bearer established
+during LTE attach procedure, automatically connected as long as the device is
+regitered in the LTE network.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-TYPE-DEDICATED:CAPS"></a>MM_BEARER_TYPE_DEDICATED</p></td>
+<td class="enum_member_description">
+<p>Secondary context (2G/3G) or dedicated bearer
+(4G), defined by the user of the API. These bearers use the same IP address
+used by a primary context or default bearer and provide a dedicated flow for
+specific traffic with different QoS settings.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<hr>
 <div class="refsect2">
 <a name="MMBearerIpFamily"></a><h3>enum MMBearerIpFamily</h3>
 <p>Type of IP family to be used in a given Bearer.</p>
@@ -541,7 +604,7 @@ is started to obtain the rest of the configuration.</p>
 <tr>
 <td class="enum_member_name"><p><a name="MM-CALL-STATE-REASON-REFUSED-OR-BUSY:CAPS"></a>MM_CALL_STATE_REASON_REFUSED_OR_BUSY</p></td>
 <td class="enum_member_description">
-<p>Remote peer is busy or refused call</p>
+<p>Remote peer is busy or refused call.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -549,6 +612,13 @@ is started to obtain the rest of the configuration.</p>
 <td class="enum_member_name"><p><a name="MM-CALL-STATE-REASON-ERROR:CAPS"></a>MM_CALL_STATE_REASON_ERROR</p></td>
 <td class="enum_member_description">
 <p>Wrong number or generic network error.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-CALL-STATE-REASON-AUDIO-SETUP-FAILED:CAPS"></a>MM_CALL_STATE_REASON_AUDIO_SETUP_FAILED</p></td>
+<td class="enum_member_description">
+<p>Error setting up audio channel.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -1579,6 +1649,118 @@ or connected to a network.</p>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-49:CAPS"></a>MM_MODEM_BAND_EUTRAN_49</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 49.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-50:CAPS"></a>MM_MODEM_BAND_EUTRAN_50</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 50.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-51:CAPS"></a>MM_MODEM_BAND_EUTRAN_51</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 51.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-52:CAPS"></a>MM_MODEM_BAND_EUTRAN_52</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 52.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-53:CAPS"></a>MM_MODEM_BAND_EUTRAN_53</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 53.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-54:CAPS"></a>MM_MODEM_BAND_EUTRAN_54</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 54.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-55:CAPS"></a>MM_MODEM_BAND_EUTRAN_55</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 55.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-56:CAPS"></a>MM_MODEM_BAND_EUTRAN_56</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 56.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-57:CAPS"></a>MM_MODEM_BAND_EUTRAN_57</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 57.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-58:CAPS"></a>MM_MODEM_BAND_EUTRAN_58</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 58.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-59:CAPS"></a>MM_MODEM_BAND_EUTRAN_59</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 59.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-60:CAPS"></a>MM_MODEM_BAND_EUTRAN_60</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 60.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-61:CAPS"></a>MM_MODEM_BAND_EUTRAN_61</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 61.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-62:CAPS"></a>MM_MODEM_BAND_EUTRAN_62</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 62.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-63:CAPS"></a>MM_MODEM_BAND_EUTRAN_63</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 63.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-64:CAPS"></a>MM_MODEM_BAND_EUTRAN_64</p></td>
+<td class="enum_member_description">
+<p>E-UTRAN band 64.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
 <td class="enum_member_name"><p><a name="MM-MODEM-BAND-EUTRAN-65:CAPS"></a>MM_MODEM_BAND_EUTRAN_65</p></td>
 <td class="enum_member_description">
 <p>E-UTRAN band 65.</p>
@@ -2205,6 +2387,37 @@ modem supports.</p>
 </div>
 <hr>
 <div class="refsect2">
+<a name="MMModemLocationAssistanceDataType"></a><h3>enum MMModemLocationAssistanceDataType</h3>
+<p>Type of assistance data that may be injected to the GNSS module.</p>
+<div class="refsect3">
+<a name="MMModemLocationAssistanceDataType.members"></a><h4>Members</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-LOCATION-ASSISTANCE-DATA-TYPE-NONE:CAPS"></a>MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_NONE</p></td>
+<td class="enum_member_description">
+<p>None.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-LOCATION-ASSISTANCE-DATA-TYPE-XTRA:CAPS"></a>MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_XTRA</p></td>
+<td class="enum_member_description">
+<p>Qualcomm gpsOneXTRA.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<hr>
+<div class="refsect2">
 <a name="MMModemLock"></a><h3>enum MMModemLock</h3>
 <p>Enumeration of possible lock reasons.</p>
 <div class="refsect3">
@@ -2704,6 +2917,44 @@ preferred in a given device.</p>
 <td class="enum_member_name"><p><a name="MM-MODEM-PORT-TYPE-MBIM:CAPS"></a>MM_MODEM_PORT_TYPE_MBIM</p></td>
 <td class="enum_member_description">
 <p>MBIM port.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MMModemFirmwareUpdateMethod"></a><h3>enum MMModemFirmwareUpdateMethod</h3>
+<p>Type of firmware update method supported by the module.</p>
+<div class="refsect3">
+<a name="MMModemFirmwareUpdateMethod.members"></a><h4>Members</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-FIRMWARE-UPDATE-METHOD-NONE:CAPS"></a>MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE</p></td>
+<td class="enum_member_description">
+<p>No method specified.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-FIRMWARE-UPDATE-METHOD-FASTBOOT:CAPS"></a>MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT</p></td>
+<td class="enum_member_description">
+<p>Device supports fastboot-based update.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-FIRMWARE-UPDATE-METHOD-QMI-PDC:CAPS"></a>MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC</p></td>
+<td class="enum_member_description">
+<p>Device supports QMI PDC based update.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>

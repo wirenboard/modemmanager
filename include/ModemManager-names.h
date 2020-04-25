@@ -75,6 +75,8 @@
 #define MM_MANAGER_METHOD_SCANDEVICES "ScanDevices"
 #define MM_MANAGER_METHOD_SETLOGGING "SetLogging"
 #define MM_MANAGER_METHOD_REPORTKERNELEVENT "ReportKernelEvent"
+#define MM_MANAGER_METHOD_INHIBITDEVICE "InhibitDevice"
+#define MM_MANAGER_PROPERTY_VERSION "Version"
 /*
  * Interface 'org.freedesktop.ModemManager1.Sim'
  */
@@ -100,6 +102,7 @@
 #define MM_BEARER_PROPERTY_IP6CONFIG "Ip6Config"
 #define MM_BEARER_PROPERTY_STATS "Stats"
 #define MM_BEARER_PROPERTY_IPTIMEOUT "IpTimeout"
+#define MM_BEARER_PROPERTY_BEARERTYPE "BearerType"
 #define MM_BEARER_PROPERTY_PROPERTIES "Properties"
 /*
  * Interface 'org.freedesktop.ModemManager1.Sms'
@@ -137,6 +140,8 @@
 #define MM_CALL_PROPERTY_STATEREASON "StateReason"
 #define MM_CALL_PROPERTY_DIRECTION "Direction"
 #define MM_CALL_PROPERTY_NUMBER "Number"
+#define MM_CALL_PROPERTY_AUDIOPORT "AudioPort"
+#define MM_CALL_PROPERTY_AUDIOFORMAT "AudioFormat"
 /*
  * Interface 'org.freedesktop.ModemManager1.Modem'
  */
@@ -200,6 +205,7 @@
 #define MM_MODEM_MODEM3GPP_METHOD_REGISTER "Register"
 #define MM_MODEM_MODEM3GPP_METHOD_SCAN "Scan"
 #define MM_MODEM_MODEM3GPP_METHOD_SETEPSUEMODEOPERATION "SetEpsUeModeOperation"
+#define MM_MODEM_MODEM3GPP_METHOD_SETINITIALEPSBEARERSETTINGS "SetInitialEpsBearerSettings"
 #define MM_MODEM_MODEM3GPP_PROPERTY_IMEI "Imei"
 #define MM_MODEM_MODEM3GPP_PROPERTY_REGISTRATIONSTATE "RegistrationState"
 #define MM_MODEM_MODEM3GPP_PROPERTY_OPERATORCODE "OperatorCode"
@@ -207,6 +213,9 @@
 #define MM_MODEM_MODEM3GPP_PROPERTY_ENABLEDFACILITYLOCKS "EnabledFacilityLocks"
 #define MM_MODEM_MODEM3GPP_PROPERTY_SUBSCRIPTIONSTATE "SubscriptionState"
 #define MM_MODEM_MODEM3GPP_PROPERTY_EPSUEMODEOPERATION "EpsUeModeOperation"
+#define MM_MODEM_MODEM3GPP_PROPERTY_PCO "Pco"
+#define MM_MODEM_MODEM3GPP_PROPERTY_INITIALEPSBEARER "InitialEpsBearer"
+#define MM_MODEM_MODEM3GPP_PROPERTY_INITIALEPSBEARERSETTINGS "InitialEpsBearerSettings"
 /*
  * Interface 'org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd'
  */
@@ -250,12 +259,15 @@
 #define MM_MODEM_LOCATION_METHOD_SETUP "Setup"
 #define MM_MODEM_LOCATION_METHOD_GETLOCATION "GetLocation"
 #define MM_MODEM_LOCATION_METHOD_SETSUPLSERVER "SetSuplServer"
+#define MM_MODEM_LOCATION_METHOD_INJECTASSISTANCEDATA "InjectAssistanceData"
 #define MM_MODEM_LOCATION_METHOD_SETGPSREFRESHRATE "SetGpsRefreshRate"
 #define MM_MODEM_LOCATION_PROPERTY_CAPABILITIES "Capabilities"
+#define MM_MODEM_LOCATION_PROPERTY_SUPPORTEDASSISTANCEDATA "SupportedAssistanceData"
 #define MM_MODEM_LOCATION_PROPERTY_ENABLED "Enabled"
 #define MM_MODEM_LOCATION_PROPERTY_SIGNALSLOCATION "SignalsLocation"
 #define MM_MODEM_LOCATION_PROPERTY_LOCATION "Location"
 #define MM_MODEM_LOCATION_PROPERTY_SUPLSERVER "SuplServer"
+#define MM_MODEM_LOCATION_PROPERTY_ASSISTANCEDATASERVERS "AssistanceDataServers"
 #define MM_MODEM_LOCATION_PROPERTY_GPSREFRESHRATE "GpsRefreshRate"
 /*
  * Interface 'org.freedesktop.ModemManager1.Modem.Time'
@@ -270,6 +282,7 @@
  
 #define MM_MODEM_FIRMWARE_METHOD_LIST "List"
 #define MM_MODEM_FIRMWARE_METHOD_SELECT "Select"
+#define MM_MODEM_FIRMWARE_PROPERTY_UPDATESETTINGS "UpdateSettings"
 /*
  * Interface 'org.freedesktop.ModemManager1.Modem.Signal'
  */

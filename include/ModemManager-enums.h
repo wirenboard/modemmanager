@@ -323,6 +323,22 @@ typedef enum { /*< underscore_name=mm_modem_mode >*/
  * @MM_MODEM_BAND_EUTRAN_46: E-UTRAN band 46.
  * @MM_MODEM_BAND_EUTRAN_47: E-UTRAN band 47.
  * @MM_MODEM_BAND_EUTRAN_48: E-UTRAN band 48.
+ * @MM_MODEM_BAND_EUTRAN_49: E-UTRAN band 49.
+ * @MM_MODEM_BAND_EUTRAN_50: E-UTRAN band 50.
+ * @MM_MODEM_BAND_EUTRAN_51: E-UTRAN band 51.
+ * @MM_MODEM_BAND_EUTRAN_52: E-UTRAN band 52.
+ * @MM_MODEM_BAND_EUTRAN_53: E-UTRAN band 53.
+ * @MM_MODEM_BAND_EUTRAN_54: E-UTRAN band 54.
+ * @MM_MODEM_BAND_EUTRAN_55: E-UTRAN band 55.
+ * @MM_MODEM_BAND_EUTRAN_56: E-UTRAN band 56.
+ * @MM_MODEM_BAND_EUTRAN_57: E-UTRAN band 57.
+ * @MM_MODEM_BAND_EUTRAN_58: E-UTRAN band 58.
+ * @MM_MODEM_BAND_EUTRAN_59: E-UTRAN band 59.
+ * @MM_MODEM_BAND_EUTRAN_60: E-UTRAN band 60.
+ * @MM_MODEM_BAND_EUTRAN_61: E-UTRAN band 61.
+ * @MM_MODEM_BAND_EUTRAN_62: E-UTRAN band 62.
+ * @MM_MODEM_BAND_EUTRAN_63: E-UTRAN band 63.
+ * @MM_MODEM_BAND_EUTRAN_64: E-UTRAN band 64.
  * @MM_MODEM_BAND_EUTRAN_65: E-UTRAN band 65.
  * @MM_MODEM_BAND_EUTRAN_66: E-UTRAN band 66.
  * @MM_MODEM_BAND_EUTRAN_67: E-UTRAN band 67.
@@ -424,6 +440,22 @@ typedef enum { /*< underscore_name=mm_modem_band >*/
     MM_MODEM_BAND_EUTRAN_46 = 76,
     MM_MODEM_BAND_EUTRAN_47 = 77,
     MM_MODEM_BAND_EUTRAN_48 = 78,
+    MM_MODEM_BAND_EUTRAN_49 = 79,
+    MM_MODEM_BAND_EUTRAN_50 = 80,
+    MM_MODEM_BAND_EUTRAN_51 = 81,
+    MM_MODEM_BAND_EUTRAN_52 = 82,
+    MM_MODEM_BAND_EUTRAN_53 = 83,
+    MM_MODEM_BAND_EUTRAN_54 = 84,
+    MM_MODEM_BAND_EUTRAN_55 = 85,
+    MM_MODEM_BAND_EUTRAN_56 = 86,
+    MM_MODEM_BAND_EUTRAN_57 = 87,
+    MM_MODEM_BAND_EUTRAN_58 = 88,
+    MM_MODEM_BAND_EUTRAN_59 = 89,
+    MM_MODEM_BAND_EUTRAN_60 = 90,
+    MM_MODEM_BAND_EUTRAN_61 = 91,
+    MM_MODEM_BAND_EUTRAN_62 = 92,
+    MM_MODEM_BAND_EUTRAN_63 = 93,
+    MM_MODEM_BAND_EUTRAN_64 = 94,
     MM_MODEM_BAND_EUTRAN_65 = 95,
     MM_MODEM_BAND_EUTRAN_66 = 96,
     MM_MODEM_BAND_EUTRAN_67 = 97,
@@ -911,6 +943,18 @@ typedef enum { /*< underscore_name=mm_modem_location_source >*/
 } MMModemLocationSource;
 
 /**
+ * MMModemLocationAssistanceDataType:
+ * @MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_NONE: None.
+ * @MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_XTRA: Qualcomm gpsOneXTRA.
+ *
+ * Type of assistance data that may be injected to the GNSS module.
+ */
+typedef enum { /*< underscore_name=mm_modem_location_assistance_data_type >*/
+    MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_NONE = 0,
+    MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_XTRA = 1 << 0,
+} MMModemLocationAssistanceDataType;
+
+/**
  * MMModemContactsStorage:
  * @MM_MODEM_CONTACTS_STORAGE_UNKNOWN: Unknown location.
  * @MM_MODEM_CONTACTS_STORAGE_ME: Device's local memory.
@@ -925,6 +969,28 @@ typedef enum { /*< underscore_name=mm_modem_contacts_storage >*/
     MM_MODEM_CONTACTS_STORAGE_SM      = 2,
     MM_MODEM_CONTACTS_STORAGE_MT      = 3,
 } MMModemContactsStorage;
+
+/**
+ * MMBearerType:
+ * @MM_BEARER_TYPE_UNKNOWN: Unknown bearer.
+ * @MM_BEARER_TYPE_DEFAULT: Primary context (2G/3G) or default bearer (4G),
+ * defined by the user of the API.
+ * @MM_BEARER_TYPE_DEFAULT_ATTACH: The initial default bearer established
+ * during LTE attach procedure, automatically connected as long as the device is
+ * regitered in the LTE network.
+ * @MM_BEARER_TYPE_DEDICATED: Secondary context (2G/3G) or dedicated bearer
+ * (4G), defined by the user of the API. These bearers use the same IP address
+ * used by a primary context or default bearer and provide a dedicated flow for
+ * specific traffic with different QoS settings.
+ *
+ * Type of context (2G/3G) or bearer (4G).
+ */
+typedef enum { /*< underscore_name=mm_bearer_type >*/
+    MM_BEARER_TYPE_UNKNOWN        = 0,
+    MM_BEARER_TYPE_DEFAULT        = 1,
+    MM_BEARER_TYPE_DEFAULT_ATTACH = 2,
+    MM_BEARER_TYPE_DEDICATED      = 3,
+} MMBearerType;
 
 /**
  * MMBearerIpMethod:
@@ -1310,8 +1376,9 @@ typedef enum { /*< underscore_name=mm_call_state >*/
  * @MM_CALL_STATE_REASON_INCOMING_NEW: Received a new incoming call.
  * @MM_CALL_STATE_REASON_ACCEPTED: Dialing or Ringing call is accepted.
  * @MM_CALL_STATE_REASON_TERMINATED: Call is correctly terminated.
- * @MM_CALL_STATE_REASON_REFUSED_OR_BUSY: Remote peer is busy or refused call
+ * @MM_CALL_STATE_REASON_REFUSED_OR_BUSY: Remote peer is busy or refused call.
  * @MM_CALL_STATE_REASON_ERROR: Wrong number or generic network error.
+ * @MM_CALL_STATE_REASON_AUDIO_SETUP_FAILED: Error setting up audio channel.
  */
 typedef enum { /*< underscore_name=mm_call_state_reason >*/
     MM_CALL_STATE_REASON_UNKNOWN            = 0,
@@ -1320,7 +1387,8 @@ typedef enum { /*< underscore_name=mm_call_state_reason >*/
     MM_CALL_STATE_REASON_ACCEPTED           = 3,
     MM_CALL_STATE_REASON_TERMINATED         = 4,
     MM_CALL_STATE_REASON_REFUSED_OR_BUSY    = 5,
-    MM_CALL_STATE_REASON_ERROR              = 6
+    MM_CALL_STATE_REASON_ERROR              = 6,
+    MM_CALL_STATE_REASON_AUDIO_SETUP_FAILED = 7
 } MMCallStateReason;
 
 /**
@@ -1334,5 +1402,19 @@ typedef enum { /*< underscore_name=mm_call_direction >*/
     MM_CALL_DIRECTION_INCOMING  = 1,
     MM_CALL_DIRECTION_OUTGOING  = 2
 } MMCallDirection;
+
+/**
+ * MMModemFirmwareUpdateMethod:
+ * @MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE: No method specified.
+ * @MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT: Device supports fastboot-based update.
+ * @MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC: Device supports QMI PDC based update.
+ *
+ * Type of firmware update method supported by the module.
+ */
+typedef enum { /*< underscore_name=mm_modem_firmware_update_method >*/
+    MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE     = 0,
+    MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT = 1 << 0,
+    MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC  = 1 << 1,
+} MMModemFirmwareUpdateMethod;
 
 #endif /*  _MODEMMANAGER_ENUMS_H_ */

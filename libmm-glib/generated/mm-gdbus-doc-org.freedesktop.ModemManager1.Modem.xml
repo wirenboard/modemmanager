@@ -71,6 +71,8 @@
   <title role="desc.title">Description</title>
   <para>      The Modem interface controls the status and actions in a given modem
       object.
+</para><para>      This interface will always be available as long a the modem is considered
+      valid.
 </para>
 </refsect1>
 <refsect1 role="details" id="gdbus-methods-org.freedesktop.ModemManager1.Modem">
@@ -102,6 +104,8 @@ ListBearers (OUT ao bearers);
 </programlisting>
 <para>        List configured packet data bearers (EPS Bearers, PDP Contexts, or
         CDMA2000 Packet Data Sessions).
+</para><para>        Deprecated: 1.10.0. Use <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers">"Bearers"</link>
+        property instead.
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -337,7 +341,9 @@ Sim  readable   o
 Bearers  readable   ao
 </programlisting>
 <para>        The list of bearer object paths (EPS Bearers, PDP Contexts, or
-        CDMA2000 Packet Data Sessions).
+        CDMA2000 Packet Data Sessions) as requested by the user.
+</para><para>        This list does not include the initial EPS bearer details (see
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer">"InitialEpsBearer"</link>).
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities">
@@ -386,7 +392,9 @@ MaxBearers  readable   u
 <programlisting>
 MaxActiveBearers  readable   u
 </programlisting>
-<para>        The maximum number of active packet data bearers the modem supports.
+<para>        The maximum number of active
+        <link linkend="MM-BEARER-TYPE-DEFAULT:CAPS"><constant>MM_BEARER_TYPE_DEFAULT</constant></link>
+        bearers that may be explicitly enabled by the user.
 </para><para>        POTS and CDMA2000-only devices support one active bearer, while GSM/UMTS
         and LTE-capable devices (including LTE/CDMA devices) typically support
         at least two active bearers.

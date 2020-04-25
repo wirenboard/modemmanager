@@ -74,6 +74,14 @@
 </tr>
 <tr>
 <td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-gps-refresh-rate" title="mm_modem_location_get_gps_refresh_rate ()">mm_modem_location_get_gps_refresh_rate</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
 <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
 </td>
 <td class="function_name">
@@ -97,10 +105,25 @@
 </tr>
 <tr>
 <td class="function_type">
-<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>
+<a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMModemLocationAssistanceDataType"><span class="returnvalue">MMModemLocationAssistanceDataType</span></a>
 </td>
 <td class="function_name">
-<a class="link" href="MMModemLocation.html#mm-modem-location-get-gps-refresh-rate" title="mm_modem_location_get_gps_refresh_rate ()">mm_modem_location_get_gps_refresh_rate</a> <span class="c_punctuation">()</span>
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-supported-assistance-data" title="mm_modem_location_get_supported_assistance_data ()">mm_modem_location_get_supported_assistance_data</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> **
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-dup-assistance-data-servers" title="mm_modem_location_dup_assistance_data_servers ()">mm_modem_location_dup_assistance_data_servers</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> **
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-assistance-data-servers" title="mm_modem_location_get_assistance_data_servers ()">mm_modem_location_get_assistance_data_servers</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -149,6 +172,30 @@
 </td>
 <td class="function_name">
 <a class="link" href="MMModemLocation.html#mm-modem-location-set-supl-server-sync" title="mm_modem_location_set_supl_server_sync ()">mm_modem_location_set_supl_server_sync</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-inject-assistance-data" title="mm_modem_location_inject_assistance_data ()">mm_modem_location_inject_assistance_data</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-inject-assistance-data-finish" title="mm_modem_location_inject_assistance_data_finish ()">mm_modem_location_inject_assistance_data_finish</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-inject-assistance-data-sync" title="mm_modem_location_inject_assistance_data_sync ()">mm_modem_location_inject_assistance_data_sync</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -454,6 +501,33 @@ mm_modem_location_get_enabled (<em class="parameter"><code><a class="link" href=
 </div>
 <hr>
 <div class="refsect2">
+<a name="mm-modem-location-get-gps-refresh-rate"></a><h3>mm_modem_location_get_gps_refresh_rate ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>
+mm_modem_location_get_gps_refresh_rate
+                               (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
+<p>Gets the GPS refresh rate, in seconds.</p>
+<div class="refsect3">
+<a name="mm-modem-location-get-gps-refresh-rate.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-get-gps-refresh-rate.returns"></a><h4>Returns</h4>
+<p> The GPS refresh rate, or 0 if no fixed rate is used.</p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
 <a name="mm-modem-location-signals-location"></a><h3>mm_modem_location_signals_location ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
 mm_modem_location_signals_location (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
@@ -539,13 +613,13 @@ thread.</div>
 </div>
 <hr>
 <div class="refsect2">
-<a name="mm-modem-location-get-gps-refresh-rate"></a><h3>mm_modem_location_get_gps_refresh_rate ()</h3>
-<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>
-mm_modem_location_get_gps_refresh_rate
+<a name="mm-modem-location-get-supported-assistance-data"></a><h3>mm_modem_location_get_supported_assistance_data ()</h3>
+<pre class="programlisting"><a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMModemLocationAssistanceDataType"><span class="returnvalue">MMModemLocationAssistanceDataType</span></a>
+mm_modem_location_get_supported_assistance_data
                                (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
-<p>Gets the GPS refresh rate, in seconds.</p>
+<p>Gets a bitmask of the supported assistance data types.</p>
 <div class="refsect3">
-<a name="mm-modem-location-get-gps-refresh-rate.parameters"></a><h4>Parameters</h4>
+<a name="mm-modem-location-get-supported-assistance-data.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -560,8 +634,69 @@ mm_modem_location_get_gps_refresh_rate
 </table></div>
 </div>
 <div class="refsect3">
-<a name="mm-modem-location-get-gps-refresh-rate.returns"></a><h4>Returns</h4>
-<p> The GPS refresh rate, or 0 if no fixed rate is used.</p>
+<a name="mm-modem-location-get-supported-assistance-data.returns"></a><h4>Returns</h4>
+<p> A <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMModemLocationAssistanceDataType"><span class="type">MMModemLocationAssistanceDataType</span></a>.</p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-location-dup-assistance-data-servers"></a><h3>mm_modem_location_dup_assistance_data_servers ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> **
+mm_modem_location_dup_assistance_data_servers
+                               (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
+<p>Gets the list of assistance data servers.</p>
+<div class="refsect3">
+<a name="mm-modem-location-dup-assistance-data-servers.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-dup-assistance-data-servers.returns"></a><h4>Returns</h4>
+<p>a <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>-terminated array of server addresses, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-String-Utility-Functions.html#g-strfreev"><code class="function">g_strfreev()</code></a>. </p>
+<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-location-get-assistance-data-servers"></a><h3>mm_modem_location_get_assistance_data_servers ()</h3>
+<pre class="programlisting">const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> **
+mm_modem_location_get_assistance_data_servers
+                               (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
+<p>Gets the list of assistance data servers.</p>
+<div class="warning">The returned value is only valid until the property changes so
+it is only safe to use this function on the thread where
+<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMModemLocation.html#mm-modem-location-dup-assistance-data-servers" title="mm_modem_location_dup_assistance_data_servers ()"><code class="function">mm_modem_location_dup_assistance_data_servers()</code></a> if on another
+thread.</div>
+<div class="refsect3">
+<a name="mm-modem-location-get-assistance-data-servers.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-get-assistance-data-servers.returns"></a><h4>Returns</h4>
+<p>a <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>-terminated array of server addresses, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. Do not free the returned value, it belongs to <em class="parameter"><code>self</code></em>
+. </p>
+<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -863,6 +998,166 @@ for the asynchronous version of this method.</p>
 <div class="refsect3">
 <a name="mm-modem-location-set-supl-server-sync.returns"></a><h4>Returns</h4>
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if setting the SUPL server was successful, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
+is set.</p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-location-inject-assistance-data"></a><h3>mm_modem_location_inject_assistance_data ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+mm_modem_location_inject_assistance_data
+                               (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>,
+                                <em class="parameter"><code>const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint8"><span class="type">guint8</span></a> *data</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gsize"><span class="type">gsize</span></a> data_size</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> *cancellable</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> callback</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
+<p>Aynchronously injects assistance data to the GNSS module.</p>
+<p>When the operation is finished, <em class="parameter"><code>callback</code></em>
+ will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+You can then call <a class="link" href="MMModemLocation.html#mm-modem-location-inject-assistance-data-finish" title="mm_modem_location_inject_assistance_data_finish ()"><code class="function">mm_modem_location_inject_assistance_data_finish()</code></a> to get the result of the operation.</p>
+<p>See <a class="link" href="MMModemLocation.html#mm-modem-location-inject-assistance-data-sync" title="mm_modem_location_inject_assistance_data_sync ()"><code class="function">mm_modem_location_inject_assistance_data_sync()</code></a> for the synchronous, blocking version of this method.</p>
+<div class="refsect3">
+<a name="mm-modem-location-inject-assistance-data.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+<tr>
+<td class="parameter_name"><p>data</p></td>
+<td class="parameter_description"><p>Data to inject. </p></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> length=data_size]</span></td>
+</tr>
+<tr>
+<td class="parameter_name"><p>data_size</p></td>
+<td class="parameter_description"><p>size of <em class="parameter"><code>data</code></em>
+.</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+<tr>
+<td class="parameter_name"><p>cancellable</p></td>
+<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>. </p></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL is OK, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span></td>
+</tr>
+<tr>
+<td class="parameter_name"><p>callback</p></td>
+<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+<tr>
+<td class="parameter_name"><p>user_data</p></td>
+<td class="parameter_description"><p>User data to pass to <em class="parameter"><code>callback</code></em>
+.</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-location-inject-assistance-data-finish"></a><h3>mm_modem_location_inject_assistance_data_finish ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
+mm_modem_location_inject_assistance_data_finish
+                               (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> *res</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+<p>Finishes an operation started with <a class="link" href="MMModemLocation.html#mm-modem-location-inject-assistance-data" title="mm_modem_location_inject_assistance_data ()"><code class="function">mm_modem_location_inject_assistance_data()</code></a>.</p>
+<div class="refsect3">
+<a name="mm-modem-location-inject-assistance-data-finish.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+<tr>
+<td class="parameter_name"><p>res</p></td>
+<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to <a class="link" href="MMModemLocation.html#mm-modem-location-inject-assistance-data" title="mm_modem_location_inject_assistance_data ()"><code class="function">mm_modem_location_inject_assistance_data()</code></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+<tr>
+<td class="parameter_name"><p>error</p></td>
+<td class="parameter_description"><p>Return location for error or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-inject-assistance-data-finish.returns"></a><h4>Returns</h4>
+<p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the injection was successful, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
+is set.</p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-location-inject-assistance-data-sync"></a><h3>mm_modem_location_inject_assistance_data_sync ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
+mm_modem_location_inject_assistance_data_sync
+                               (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>,
+                                <em class="parameter"><code>const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint8"><span class="type">guint8</span></a> *data</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gsize"><span class="type">gsize</span></a> data_size</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> *cancellable</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+<p>Synchronously injects assistance data to the GNSS module.</p>
+<p>The calling thread is blocked until a reply is received. See <a class="link" href="MMModemLocation.html#mm-modem-location-inject-assistance-data" title="mm_modem_location_inject_assistance_data ()"><code class="function">mm_modem_location_inject_assistance_data()</code></a>
+for the asynchronous version of this method.</p>
+<div class="refsect3">
+<a name="mm-modem-location-inject-assistance-data-sync.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+<tr>
+<td class="parameter_name"><p>data</p></td>
+<td class="parameter_description"><p>Data to inject. </p></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> length=data_size]</span></td>
+</tr>
+<tr>
+<td class="parameter_name"><p>data_size</p></td>
+<td class="parameter_description"><p>size of <em class="parameter"><code>data</code></em>
+.</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+<tr>
+<td class="parameter_name"><p>cancellable</p></td>
+<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>. </p></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL is OK, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span></td>
+</tr>
+<tr>
+<td class="parameter_name"><p>error</p></td>
+<td class="parameter_description"><p>Return location for error or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-inject-assistance-data-sync.returns"></a><h4>Returns</h4>
+<p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the injection was successful, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set.</p>
 </div>
 </div>

@@ -23,6 +23,7 @@
 #include <libmm-glib.h>
 
 #include "mm-base-modem.h"
+#include "mm-call-audio-format.h"
 
 #define MM_TYPE_BASE_CALL            (mm_base_call_get_type ())
 #define MM_BASE_CALL(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), MM_TYPE_BASE_CALL, MMBaseCall))
@@ -35,9 +36,11 @@ typedef struct _MMBaseCall MMBaseCall;
 typedef struct _MMBaseCallClass MMBaseCallClass;
 typedef struct _MMBaseCallPrivate MMBaseCallPrivate;
 
-#define MM_BASE_CALL_PATH       "call-path"
-#define MM_BASE_CALL_CONNECTION "call-connection"
-#define MM_BASE_CALL_MODEM      "call-modem"
+#define MM_BASE_CALL_PATH                        "call-path"
+#define MM_BASE_CALL_CONNECTION                  "call-connection"
+#define MM_BASE_CALL_MODEM                       "call-modem"
+#define MM_BASE_CALL_SUPPORTS_DIALING_TO_RINGING "call-supports-dialing-to-ringing"
+#define MM_BASE_CALL_SUPPORTS_RINGING_TO_ACTIVE  "call-supports-ringing-to-active"
 
 struct _MMBaseCall {
     MmGdbusCallSkeleton parent;
@@ -80,37 +83,47 @@ struct _MMBaseCallClass {
                                    GAsyncResult *res,
                                    GError **error);
 
-    /* Delete the call */
-    void     (* delete)        (MMBaseCall *self,
-                                GAsyncReadyCallback callback,
-                                gpointer user_data);
-    gboolean (* delete_finish) (MMBaseCall *self,
-                                GAsyncResult *res,
-                                GError **error);
+    /* Setup/cleanup in-call unsolicited events */
+    gboolean (* setup_unsolicited_events)   (MMBaseCall  *self,
+                                             GError     **error);
+    gboolean (* cleanup_unsolicited_events) (MMBaseCall  *self,
+                                             GError     **error);
+
+    /* Setup/cleanup audio channel */
+    void     (* setup_audio_channel)          (MMBaseCall           *self,
+                                               GAsyncReadyCallback   callback,
+                                               gpointer              user_data);
+    gboolean (* setup_audio_channel_finish)   (MMBaseCall           *self,
+                                               GAsyncResult         *res,
+                                               MMPort              **audio_port,
+                                               MMCallAudioFormat   **audio_format,
+                                               GError              **error);
+    void     (* cleanup_audio_channel)        (MMBaseCall           *self,
+                                               GAsyncReadyCallback   callback,
+                                               gpointer              user_data);
+    gboolean (* cleanup_audio_channel_finish) (MMBaseCall           *self,
+                                               GAsyncResult         *res,
+                                               GError              **error);
 };
 
 GType mm_base_call_get_type (void);
 
-/* This one can be overridden by plugins */
-MMBaseCall *mm_base_call_new                 (MMBaseModem *modem);
-MMBaseCall *mm_base_call_new_from_properties (MMBaseModem *modem,
-                                              MMCallProperties *properties,
-                                              GError **error);
+/* This one can be overriden by plugins */
+MMBaseCall *mm_base_call_new (MMBaseModem     *modem,
+                              MMCallDirection  direction,
+                              const gchar     *number);
 
-void         mm_base_call_export         (MMBaseCall *self);
-void         mm_base_call_unexport       (MMBaseCall *self);
-const gchar *mm_base_call_get_path       (MMBaseCall *self);
-void         mm_base_call_change_state   (MMBaseCall *self,
-                                          MMCallState new_state,
-                                          MMCallStateReason reason);
-void         mm_base_call_received_dtmf  (MMBaseCall *self,
-                                          const gchar *dtmf);
+void         mm_base_call_export   (MMBaseCall *self);
+void         mm_base_call_unexport (MMBaseCall *self);
+const gchar *mm_base_call_get_path (MMBaseCall *self);
 
-void         mm_base_call_delete         (MMBaseCall *self,
-                                          GAsyncReadyCallback callback,
-                                          gpointer user_data);
-gboolean     mm_base_call_delete_finish  (MMBaseCall *self,
-                                          GAsyncResult *res,
-                                          GError **error);
+void         mm_base_call_change_state (MMBaseCall *self,
+                                        MMCallState new_state,
+                                        MMCallStateReason reason);
+
+void         mm_base_call_received_dtmf (MMBaseCall *self,
+                                         const gchar *dtmf);
+
+void         mm_base_call_incoming_refresh (MMBaseCall *self);
 
 #endif /* MM_BASE_CALL_H */

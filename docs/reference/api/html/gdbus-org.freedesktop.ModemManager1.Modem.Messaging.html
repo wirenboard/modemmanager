@@ -43,7 +43,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.5.11.4"></a><h2>Signals</h2>
+<a name="id-1.5.5.11.4"></a><h2>Signals</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Messaging.Added" title='The "Added" signal'>Added</a>   (o path,
          b received);
@@ -51,7 +51,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.5.11.5"></a><h2>Properties</h2>
+<a name="id-1.5.5.11.5"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Messaging.Messages" title='The "Messages" property'>Messages</a>           readable   ao
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Messaging.SupportedStorages" title='The "SupportedStorages" property'>SupportedStorages</a>  readable   au
@@ -62,6 +62,11 @@
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Modem-Messaging"></a><h2>Description</h2>
 <p>      The Messaging interface handles sending SMS messages and notification of new
       incoming messages.
+</p>
+<p>      This interface will only be available once the modem is ready to be
+      registered in the cellular network. 3GPP devices will require a valid
+      unlocked SIM card before any of the features in the interface can be
+      used (including listing stored messages).
 </p>
 </div>
 <div class="refsect1">

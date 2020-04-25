@@ -40,7 +40,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.6.3.4"></a><h2>Properties</h2>
+<a name="id-1.5.6.3.4"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Interface" title='The "Interface" property'>Interface</a>   readable   s
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Connected" title='The "Connected" property'>Connected</a>   readable   b
@@ -49,6 +49,7 @@
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip6Config" title='The "Ip6Config" property'>Ip6Config</a>   readable   a{sv}
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Stats" title='The "Stats" property'>Stats</a>       readable   a{sv}
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.IpTimeout" title='The "IpTimeout" property'>IpTimeout</a>   readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.BearerType" title='The "BearerType" property'>BearerType</a>  readable   u
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties" title='The "Properties" property'>Properties</a>  readable   a{sv}
 </pre>
 </div>
@@ -390,6 +391,15 @@ Stats  readable   a{sv}
 IpTimeout  readable   u
 </pre>
 <p>        Maximum time to wait for a successful IP establishment, when PPP is used.
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Bearer.BearerType"></a><h3>The "BearerType" property</h3>
+<pre class="programlisting">
+BearerType  readable   u
+</pre>
+<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerType" title="enum MMBearerType">MMBearerType</a>
 </p>
 </div>
 <hr>

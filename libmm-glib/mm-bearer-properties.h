@@ -55,6 +55,10 @@ struct _MMBearerPropertiesClass {
 
 GType mm_bearer_properties_get_type (void);
 
+#if GLIB_CHECK_VERSION(2, 44, 0)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MMBearerProperties, g_object_unref)
+#endif
+
 MMBearerProperties *mm_bearer_properties_new (void);
 
 void mm_bearer_properties_set_apn           (MMBearerProperties *self,
@@ -69,8 +73,6 @@ void mm_bearer_properties_set_ip_type       (MMBearerProperties *self,
                                              MMBearerIpFamily ip_type);
 void mm_bearer_properties_set_allow_roaming (MMBearerProperties *self,
                                              gboolean allow_roaming);
-void mm_bearer_properties_set_number        (MMBearerProperties *self,
-                                             const gchar *number);
 void mm_bearer_properties_set_rm_protocol   (MMBearerProperties *self,
                                              MMModemCdmaRmProtocol protocol);
 
@@ -80,8 +82,15 @@ const gchar           *mm_bearer_properties_get_user          (MMBearerPropertie
 const gchar           *mm_bearer_properties_get_password      (MMBearerProperties *self);
 MMBearerIpFamily       mm_bearer_properties_get_ip_type       (MMBearerProperties *self);
 gboolean               mm_bearer_properties_get_allow_roaming (MMBearerProperties *self);
-const gchar           *mm_bearer_properties_get_number        (MMBearerProperties *self);
 MMModemCdmaRmProtocol  mm_bearer_properties_get_rm_protocol   (MMBearerProperties *self);
+
+#ifndef MM_DISABLE_DEPRECATED
+G_DEPRECATED
+void         mm_bearer_properties_set_number (MMBearerProperties *self,
+                                              const gchar        *number);
+G_DEPRECATED
+const gchar *mm_bearer_properties_get_number (MMBearerProperties *self);
+#endif
 
 /*****************************************************************************/
 /* ModemManager/libmm-glib/mmcli specific methods */

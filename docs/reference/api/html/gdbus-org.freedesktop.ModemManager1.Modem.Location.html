@@ -35,22 +35,25 @@
 <div class="refsynopsisdiv">
 <h2>Methods</h2>
 <pre class="synopsis">
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.Setup" title="The Setup() method">Setup</a>             (IN  u     sources,
-                   IN  b     signal_location);
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.GetLocation" title="The GetLocation() method">GetLocation</a>       (OUT a{uv} Location);
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.SetSuplServer" title="The SetSuplServer() method">SetSuplServer</a>     (IN  s     supl);
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.SetGpsRefreshRate" title="The SetGpsRefreshRate() method">SetGpsRefreshRate</a> (IN  u     rate);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.Setup" title="The Setup() method">Setup</a>                (IN  u     sources,
+                      IN  b     signal_location);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.GetLocation" title="The GetLocation() method">GetLocation</a>          (OUT a{uv} Location);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.SetSuplServer" title="The SetSuplServer() method">SetSuplServer</a>        (IN  s     supl);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.InjectAssistanceData" title="The InjectAssistanceData() method">InjectAssistanceData</a> (IN  ay    data);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.SetGpsRefreshRate" title="The SetGpsRefreshRate() method">SetGpsRefreshRate</a>    (IN  u     rate);
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.4.5.12.4"></a><h2>Properties</h2>
+<a name="id-1.5.5.12.4"></a><h2>Properties</h2>
 <pre class="synopsis">
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Capabilities" title='The "Capabilities" property'>Capabilities</a>     readable   u
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Enabled" title='The "Enabled" property'>Enabled</a>          readable   u
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SignalsLocation" title='The "SignalsLocation" property'>SignalsLocation</a>  readable   b
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Location" title='The "Location" property'>Location</a>         readable   a{uv}
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SuplServer" title='The "SuplServer" property'>SuplServer</a>       readable   s
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.GpsRefreshRate" title='The "GpsRefreshRate" property'>GpsRefreshRate</a>   readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Capabilities" title='The "Capabilities" property'>Capabilities</a>             readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SupportedAssistanceData" title='The "SupportedAssistanceData" property'>SupportedAssistanceData</a>  readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Enabled" title='The "Enabled" property'>Enabled</a>                  readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SignalsLocation" title='The "SignalsLocation" property'>SignalsLocation</a>          readable   b
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Location" title='The "Location" property'>Location</a>                 readable   a{uv}
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SuplServer" title='The "SuplServer" property'>SuplServer</a>               readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.AssistanceDataServers" title='The "AssistanceDataServers" property'>AssistanceDataServers</a>    readable   as
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Location.GpsRefreshRate" title='The "GpsRefreshRate" property'>GpsRefreshRate</a>           readable   u
 </pre>
 </div>
 <div class="refsect1">
@@ -59,6 +62,11 @@
       client applications. Not all devices can provide this information, or even
       if they do, they may not be able to provide it while a data session is
       active.
+</p>
+<p>      This interface will only be available once the modem is ready to be
+      registered in the cellular network. 3GPP devices will require a valid
+      unlocked SIM card before any of the features in the interface can be
+      used (including GNSS module management).
 </p>
 </div>
 <div class="refsect1">
@@ -146,7 +154,32 @@ SetSuplServer (IN  s supl);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>supl</code></em></code>:</span></p></td>
-<td><p>SUPL server configuration, given either as IP:PORT or with a full URL.</p></td>
+<td><p>SUPL server configuration, given either as IP:PORT or as FQDN:PORT.</p></td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.InjectAssistanceData"></a><h3>The InjectAssistanceData() method</h3>
+<pre class="programlisting">
+InjectAssistanceData (IN  ay data);
+</pre>
+<p>        Inject assistance data to the GNSS module.
+        The data files should be downloaded using external means from the URLs specified in
+        the AssistanceDataServers property.
+</p>
+<p>        The user does not need to specify the assistance data type being given.
+</p>
+<p>        There is no maximum <em class="parameter"><code>data</code></em> size limit specified, default DBus system bus limits apply.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><code class="literal">IN ay <em class="parameter"><code>data</code></em></code>:</span></p></td>
+<td><p>assistance data to be injected to the GNSS module.</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -183,6 +216,16 @@ Capabilities  readable   u
 </pre>
 <p>        Bitmask of <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemLocationSource" title="enum MMModemLocationSource">MMModemLocationSource</a>
         values, specifying the supported location sources.
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SupportedAssistanceData"></a><h3>The "SupportedAssistanceData" property</h3>
+<pre class="programlisting">
+SupportedAssistanceData  readable   u
+</pre>
+<p>        Bitmask of <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemLocationAssistanceDataType" title="enum MMModemLocationAssistanceDataType">MMModemLocationAssistanceDataType</a>
+        values, specifying the supported types of assistance data.
 </p>
 </div>
 <hr>
@@ -241,7 +284,7 @@ Location  readable   a{uv}
 <td>
 <p>
               Devices supporting this
-              capability return a string in the format <code class="literal">"MCC,MNC,LAC,CI"</code> (without the
+              capability return a string in the format <code class="literal">"MCC,MNC,LAC,CI,TAC"</code> (without the
               quotes of course) where the following applies:
             </p>
 <div class="variablelist"><table border="0" class="variablelist">
@@ -269,10 +312,10 @@ Location  readable   a{uv}
 <tr>
 <td><p><span class="term"><code class="literal">LAC</code></span></p></td>
 <td>
-                  This is the two-byte Location Area Code of the base station with
-                  which the mobile is registered, in upper-case hexadecimal format
-                  without leading zeros, as specified in 3GPP TS 27.007 section
-                  10.1.19. e.g. <code class="literal">"84CD"</code>.
+                  This is the two-byte Location Area Code of the GSM/UMTS base
+                  station with which the mobile is registered, in upper-case
+                  hexadecimal format without leading zeros, as specified in
+                  3GPP TS 27.007. E.g. <code class="literal">"84CD"</code>.
                 </td>
 </tr>
 <tr>
@@ -282,6 +325,15 @@ Location  readable   a{uv}
                   is registered, in upper-case hexadecimal format without leading
                   zeros, as specified in 3GPP TS 27.007.
                   e.g. <code class="literal">"2BAF"</code> or <code class="literal">"D30156"</code>.
+                </td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">TAC</code></span></p></td>
+<td>
+                  This is the two-byte Location Area Code of the LTE base
+                  station with which the mobile is registered, in upper-case
+                  hexadecimal format without leading zeros, as specified in
+                  3GPP TS 27.007. E.g. <code class="literal">"6FFE"</code>.
                 </td>
 </tr>
 </tbody>
@@ -439,7 +491,17 @@ Location  readable   a{uv}
 <pre class="programlisting">
 SuplServer  readable   s
 </pre>
-<p>        SUPL server configuration for A-GPS, given either as IP:PORT or with a full URL.
+<p>        SUPL server configuration for A-GPS, given either as IP:PORT or FQDN:PORT.
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.AssistanceDataServers"></a><h3>The "AssistanceDataServers" property</h3>
+<pre class="programlisting">
+AssistanceDataServers  readable   as
+</pre>
+<p>        URLs from where the user can download assistance data files to inject with
+        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Location.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Location.InjectAssistanceData" title="The InjectAssistanceData() method">InjectAssistanceData()</a>.
 </p>
 </div>
 <hr>
