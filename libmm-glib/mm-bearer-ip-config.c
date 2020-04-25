@@ -60,6 +60,8 @@ struct _MMBearerIpConfigPrivate {
  * Gets the IP method to be used with this bearer.
  *
  * Returns: a #MMBearerIpMethod.
+ *
+ * Since: 1.0
  */
 MMBearerIpMethod
 mm_bearer_ip_config_get_method (MMBearerIpConfig *self)
@@ -69,6 +71,9 @@ mm_bearer_ip_config_get_method (MMBearerIpConfig *self)
     return self->priv->method;
 }
 
+/**
+ * mm_bearer_ip_config_set_method: (skip)
+ */
 void
 mm_bearer_ip_config_set_method (MMBearerIpConfig *self,
                                 MMBearerIpMethod method)
@@ -86,7 +91,10 @@ mm_bearer_ip_config_set_method (MMBearerIpConfig *self,
  *
  * Gets the IP address to be used with this bearer.
  *
- * Returns: a string with the IP address, or #NULL if unknown. Do not free the returned value, it is owned by @self.
+ * Returns: a string with the IP address, or #NULL if unknown. Do not free the
+ * returned value, it is owned by @self.
+ *
+ * Since: 1.0
  */
 const gchar *
 mm_bearer_ip_config_get_address (MMBearerIpConfig *self)
@@ -96,6 +104,9 @@ mm_bearer_ip_config_get_address (MMBearerIpConfig *self)
     return self->priv->address;
 }
 
+/**
+ * mm_bearer_ip_config_set_address: (skip)
+ */
 void
 mm_bearer_ip_config_set_address (MMBearerIpConfig *self,
                                  const gchar *address)
@@ -115,6 +126,8 @@ mm_bearer_ip_config_set_address (MMBearerIpConfig *self,
  * Gets the network prefix to be used with this bearer.
  *
  * Returns: the network prefix.
+ *
+ * Since: 1.0
  */
 guint
 mm_bearer_ip_config_get_prefix (MMBearerIpConfig *self)
@@ -124,6 +137,9 @@ mm_bearer_ip_config_get_prefix (MMBearerIpConfig *self)
     return self->priv->prefix;
 }
 
+/**
+ * mm_bearer_ip_config_set_prefix: (skip)
+ */
 void
 mm_bearer_ip_config_set_prefix (MMBearerIpConfig *self,
                                 guint prefix)
@@ -141,7 +157,10 @@ mm_bearer_ip_config_set_prefix (MMBearerIpConfig *self,
  *
  * Gets the list of IP addresses of DNS servers to be used with this bearer.
  *
- * Returns: (transfer none) (array zero-terminated=1): a NULL-terminated array of strings. Do not free the returned value, it is owned by @self.
+ * Returns: (transfer none) (array zero-terminated=1): a %NULL-terminated array
+ * of strings. Do not free the returned value, it is owned by @self.
+ *
+ * Since: 1.0
  */
 const gchar **
 mm_bearer_ip_config_get_dns (MMBearerIpConfig *self)
@@ -151,6 +170,9 @@ mm_bearer_ip_config_get_dns (MMBearerIpConfig *self)
     return (const gchar **)self->priv->dns;
 }
 
+/**
+ * mm_bearer_ip_config_set_dns: (skip)
+ */
 void
 mm_bearer_ip_config_set_dns (MMBearerIpConfig *self,
                              const gchar **dns)
@@ -169,7 +191,10 @@ mm_bearer_ip_config_set_dns (MMBearerIpConfig *self,
  *
  * Gets the IP address of the gateway to be used with this bearer.
  *
- * Returns: a string with the IP address, or #NULL if unknown. Do not free the returned value, it is owned by @self.
+ * Returns: a string with the IP address, or #NULL if unknown. Do not free the
+ * returned value, it is owned by @self.
+ *
+ * Since: 1.0
  */
 const gchar *
 mm_bearer_ip_config_get_gateway (MMBearerIpConfig *self)
@@ -179,6 +204,9 @@ mm_bearer_ip_config_get_gateway (MMBearerIpConfig *self)
     return self->priv->gateway;
 }
 
+/**
+ * mm_bearer_ip_config_set_gateway: (skip)
+ */
 void
 mm_bearer_ip_config_set_gateway (MMBearerIpConfig *self,
                                  const gchar *gateway)
@@ -198,6 +226,8 @@ mm_bearer_ip_config_set_gateway (MMBearerIpConfig *self,
  * Gets the MTU to be used with this bearer.
  *
  * Returns: the MTU.
+ *
+ * Since: 1.4
  */
 guint
 mm_bearer_ip_config_get_mtu (MMBearerIpConfig *self)
@@ -207,6 +237,9 @@ mm_bearer_ip_config_get_mtu (MMBearerIpConfig *self)
     return self->priv->mtu;
 }
 
+/**
+ * mm_bearer_ip_config_set_mtu: (skip)
+ */
 void
 mm_bearer_ip_config_set_mtu (MMBearerIpConfig *self,
                              guint mtu)
@@ -218,6 +251,9 @@ mm_bearer_ip_config_set_mtu (MMBearerIpConfig *self,
 
 /*****************************************************************************/
 
+/**
+ * mm_bearer_ip_config_get_dictionary: (skip)
+ */
 GVariant *
 mm_bearer_ip_config_get_dictionary (MMBearerIpConfig *self)
 {
@@ -285,6 +321,9 @@ mm_bearer_ip_config_get_dictionary (MMBearerIpConfig *self)
 
 /*****************************************************************************/
 
+/**
+ * mm_bearer_ip_config_new_from_dictionary: (skip)
+ */
 MMBearerIpConfig *
 mm_bearer_ip_config_new_from_dictionary (GVariant *dictionary,
                                          GError **error)
@@ -368,32 +407,8 @@ mm_bearer_ip_config_new_from_dictionary (GVariant *dictionary,
 /*****************************************************************************/
 
 /**
- * mm_bearer_ip_config_dup:
- * @orig: a #MMBearerIpConfig
- *
- * Creates a copy of @orig.
- *
- * Returns: (transfer full): a newly created #MMBearerIpConfig
+ * mm_bearer_ip_config_new: (skip)
  */
-MMBearerIpConfig *
-mm_bearer_ip_config_dup (MMBearerIpConfig *orig)
-{
-    GVariant *dict;
-    MMBearerIpConfig *copy;
-    GError *error = NULL;
-
-    g_return_val_if_fail (MM_IS_BEARER_IP_CONFIG (orig), NULL);
-
-    dict = mm_bearer_ip_config_get_dictionary (orig);
-    copy = mm_bearer_ip_config_new_from_dictionary (dict, &error);
-    g_assert_no_error (error);
-    g_variant_unref (dict);
-
-    return copy;
-}
-
-/*****************************************************************************/
-
 MMBearerIpConfig *
 mm_bearer_ip_config_new (void)
 {

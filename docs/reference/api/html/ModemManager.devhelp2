@@ -82,75 +82,84 @@
     <sub name="Compatibility with older versions" link="ref-compat.html">
       <sub name="API break replacements" link="ModemManager-API-break-replacements.html"/>
     </sub>
-    <sub name="Index" link="ix01.html"/>
+    <sub name="Index" link="api-index-full.html"/>
+    <sub name="Index of deprecated symbols" link="api-index-deprecated.html"/>
+    <sub name="Index of new symbols in 1.0" link="api-index-1-0.html"/>
+    <sub name="Index of new symbols in 1.2" link="api-index-1-2.html"/>
+    <sub name="Index of new symbols in 1.4" link="api-index-1-4.html"/>
+    <sub name="Index of new symbols in 1.6" link="api-index-1-6.html"/>
+    <sub name="Index of new symbols in 1.8" link="api-index-1-8.html"/>
+    <sub name="Index of new symbols in 1.10" link="api-index-1-10.html"/>
+    <sub name="Index of new symbols in 1.12" link="api-index-1-12.html"/>
   </chapters>
   <functions>
-    <keyword type="macro" name="MM_CHECK_VERSION()" link="ModemManager-Version-checks.html#MM-CHECK-VERSION:CAPS"/>
-    <keyword type="macro" name="MM_MAJOR_VERSION" link="ModemManager-Version-checks.html#MM-MAJOR-VERSION:CAPS"/>
-    <keyword type="macro" name="MM_MINOR_VERSION" link="ModemManager-Version-checks.html#MM-MINOR-VERSION:CAPS"/>
-    <keyword type="macro" name="MM_MICRO_VERSION" link="ModemManager-Version-checks.html#MM-MICRO-VERSION:CAPS"/>
-    <keyword type="enum" name="enum MMBearerType" link="ModemManager-Flags-and-Enumerations.html#MMBearerType"/>
-    <keyword type="enum" name="enum MMBearerIpFamily" link="ModemManager-Flags-and-Enumerations.html#MMBearerIpFamily"/>
-    <keyword type="enum" name="enum MMBearerIpMethod" link="ModemManager-Flags-and-Enumerations.html#MMBearerIpMethod"/>
-    <keyword type="enum" name="enum MMBearerAllowedAuth" link="ModemManager-Flags-and-Enumerations.html#MMBearerAllowedAuth"/>
-    <keyword type="enum" name="enum MMCallDirection" link="ModemManager-Flags-and-Enumerations.html#MMCallDirection"/>
-    <keyword type="enum" name="enum MMCallState" link="ModemManager-Flags-and-Enumerations.html#MMCallState"/>
-    <keyword type="enum" name="enum MMCallStateReason" link="ModemManager-Flags-and-Enumerations.html#MMCallStateReason"/>
-    <keyword type="enum" name="enum MMFirmwareImageType" link="ModemManager-Flags-and-Enumerations.html#MMFirmwareImageType"/>
-    <keyword type="enum" name="enum MMModem3gppFacility" link="ModemManager-Flags-and-Enumerations.html#MMModem3gppFacility"/>
-    <keyword type="enum" name="enum MMModem3gppNetworkAvailability" link="ModemManager-Flags-and-Enumerations.html#MMModem3gppNetworkAvailability"/>
-    <keyword type="enum" name="enum MMModem3gppSubscriptionState" link="ModemManager-Flags-and-Enumerations.html#MMModem3gppSubscriptionState"/>
-    <keyword type="enum" name="enum MMModem3gppRegistrationState" link="ModemManager-Flags-and-Enumerations.html#MMModem3gppRegistrationState"/>
-    <keyword type="enum" name="enum MMModem3gppUssdSessionState" link="ModemManager-Flags-and-Enumerations.html#MMModem3gppUssdSessionState"/>
-    <keyword type="enum" name="enum MMModem3gppEpsUeModeOperation" link="ModemManager-Flags-and-Enumerations.html#MMModem3gppEpsUeModeOperation"/>
-    <keyword type="enum" name="enum MMModemAccessTechnology" link="ModemManager-Flags-and-Enumerations.html#MMModemAccessTechnology"/>
-    <keyword type="enum" name="enum MMModemBand" link="ModemManager-Flags-and-Enumerations.html#MMModemBand"/>
-    <keyword type="enum" name="enum MMModemCapability" link="ModemManager-Flags-and-Enumerations.html#MMModemCapability"/>
-    <keyword type="enum" name="enum MMModemCdmaActivationState" link="ModemManager-Flags-and-Enumerations.html#MMModemCdmaActivationState"/>
-    <keyword type="enum" name="enum MMModemCdmaRegistrationState" link="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRegistrationState"/>
-    <keyword type="enum" name="enum MMModemCdmaRmProtocol" link="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRmProtocol"/>
-    <keyword type="enum" name="enum MMModemContactsStorage" link="ModemManager-Flags-and-Enumerations.html#MMModemContactsStorage"/>
-    <keyword type="enum" name="enum MMModemLocationSource" link="ModemManager-Flags-and-Enumerations.html#MMModemLocationSource"/>
-    <keyword type="enum" name="enum MMModemLocationAssistanceDataType" link="ModemManager-Flags-and-Enumerations.html#MMModemLocationAssistanceDataType"/>
-    <keyword type="enum" name="enum MMModemLock" link="ModemManager-Flags-and-Enumerations.html#MMModemLock"/>
-    <keyword type="enum" name="enum MMModemMode" link="ModemManager-Flags-and-Enumerations.html#MMModemMode"/>
-    <keyword type="enum" name="enum MMModemState" link="ModemManager-Flags-and-Enumerations.html#MMModemState"/>
-    <keyword type="enum" name="enum MMModemStateFailedReason" link="ModemManager-Flags-and-Enumerations.html#MMModemStateFailedReason"/>
-    <keyword type="enum" name="enum MMModemStateChangeReason" link="ModemManager-Flags-and-Enumerations.html#MMModemStateChangeReason"/>
-    <keyword type="enum" name="enum MMModemPowerState" link="ModemManager-Flags-and-Enumerations.html#MMModemPowerState"/>
-    <keyword type="enum" name="enum MMModemPortType" link="ModemManager-Flags-and-Enumerations.html#MMModemPortType"/>
-    <keyword type="enum" name="enum MMModemFirmwareUpdateMethod" link="ModemManager-Flags-and-Enumerations.html#MMModemFirmwareUpdateMethod"/>
-    <keyword type="enum" name="enum MMOmaFeature" link="ModemManager-Flags-and-Enumerations.html#MMOmaFeature"/>
-    <keyword type="enum" name="enum MMOmaSessionState" link="ModemManager-Flags-and-Enumerations.html#MMOmaSessionState"/>
-    <keyword type="enum" name="enum MMOmaSessionStateFailedReason" link="ModemManager-Flags-and-Enumerations.html#MMOmaSessionStateFailedReason"/>
-    <keyword type="enum" name="enum MMOmaSessionType" link="ModemManager-Flags-and-Enumerations.html#MMOmaSessionType"/>
-    <keyword type="enum" name="enum MMSmsPduType" link="ModemManager-Flags-and-Enumerations.html#MMSmsPduType"/>
-    <keyword type="enum" name="enum MMSmsState" link="ModemManager-Flags-and-Enumerations.html#MMSmsState"/>
-    <keyword type="enum" name="enum MMSmsDeliveryState" link="ModemManager-Flags-and-Enumerations.html#MMSmsDeliveryState"/>
-    <keyword type="enum" name="enum MMSmsStorage" link="ModemManager-Flags-and-Enumerations.html#MMSmsStorage"/>
-    <keyword type="enum" name="enum MMSmsValidityType" link="ModemManager-Flags-and-Enumerations.html#MMSmsValidityType"/>
-    <keyword type="enum" name="enum MMSmsCdmaTeleserviceId" link="ModemManager-Flags-and-Enumerations.html#MMSmsCdmaTeleserviceId"/>
-    <keyword type="enum" name="enum MMSmsCdmaServiceCategory" link="ModemManager-Flags-and-Enumerations.html#MMSmsCdmaServiceCategory"/>
-    <keyword type="enum" name="enum MMConnectionError" link="ModemManager-Errors.html#MMConnectionError"/>
-    <keyword type="enum" name="enum MMCoreError" link="ModemManager-Errors.html#MMCoreError"/>
-    <keyword type="enum" name="enum MMMessageError" link="ModemManager-Errors.html#MMMessageError"/>
-    <keyword type="enum" name="enum MMMobileEquipmentError" link="ModemManager-Errors.html#MMMobileEquipmentError"/>
-    <keyword type="enum" name="enum MMSerialError" link="ModemManager-Errors.html#MMSerialError"/>
-    <keyword type="enum" name="enum MMCdmaActivationError" link="ModemManager-Errors.html#MMCdmaActivationError"/>
-    <keyword type="macro" name="ID_MM_CANDIDATE" link="ModemManager-Common-udev-tags.html#ID-MM-CANDIDATE:CAPS"/>
-    <keyword type="macro" name="ID_MM_PHYSDEV_UID" link="ModemManager-Common-udev-tags.html#ID-MM-PHYSDEV-UID:CAPS"/>
-    <keyword type="macro" name="ID_MM_PORT_IGNORE" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-IGNORE:CAPS"/>
-    <keyword type="macro" name="ID_MM_DEVICE_PROCESS" link="ModemManager-Common-udev-tags.html#ID-MM-DEVICE-PROCESS:CAPS"/>
-    <keyword type="macro" name="ID_MM_DEVICE_IGNORE" link="ModemManager-Common-udev-tags.html#ID-MM-DEVICE-IGNORE:CAPS"/>
-    <keyword type="macro" name="ID_MM_DEVICE_MANUAL_SCAN_ONLY" link="ModemManager-Common-udev-tags.html#ID-MM-DEVICE-MANUAL-SCAN-ONLY:CAPS"/>
-    <keyword type="macro" name="ID_MM_PLATFORM_DRIVER_PROBE" link="ModemManager-Common-udev-tags.html#ID-MM-PLATFORM-DRIVER-PROBE:CAPS"/>
-    <keyword type="macro" name="ID_MM_PORT_TYPE_AT_PPP" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AT-PPP:CAPS"/>
-    <keyword type="macro" name="ID_MM_PORT_TYPE_AT_PRIMARY" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AT-PRIMARY:CAPS"/>
-    <keyword type="macro" name="ID_MM_PORT_TYPE_AT_SECONDARY" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AT-SECONDARY:CAPS"/>
-    <keyword type="macro" name="ID_MM_PORT_TYPE_GPS" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-GPS:CAPS"/>
-    <keyword type="macro" name="ID_MM_PORT_TYPE_QCDM" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-QCDM:CAPS"/>
-    <keyword type="macro" name="ID_MM_TTY_BAUDRATE" link="ModemManager-Common-udev-tags.html#ID-MM-TTY-BAUDRATE:CAPS"/>
-    <keyword type="macro" name="ID_MM_TTY_FLOW_CONTROL" link="ModemManager-Common-udev-tags.html#ID-MM-TTY-FLOW-CONTROL:CAPS"/>
+    <keyword type="macro" name="MM_CHECK_VERSION()" link="ModemManager-Version-checks.html#MM-CHECK-VERSION:CAPS" since="1.0"/>
+    <keyword type="macro" name="MM_MAJOR_VERSION" link="ModemManager-Version-checks.html#MM-MAJOR-VERSION:CAPS" since="1.0"/>
+    <keyword type="macro" name="MM_MINOR_VERSION" link="ModemManager-Version-checks.html#MM-MINOR-VERSION:CAPS" since="1.0"/>
+    <keyword type="macro" name="MM_MICRO_VERSION" link="ModemManager-Version-checks.html#MM-MICRO-VERSION:CAPS" since="1.0"/>
+    <keyword type="enum" name="enum MMBearerType" link="ModemManager-Flags-and-Enumerations.html#MMBearerType" since="1.10"/>
+    <keyword type="enum" name="enum MMBearerIpFamily" link="ModemManager-Flags-and-Enumerations.html#MMBearerIpFamily" since="1.0"/>
+    <keyword type="enum" name="enum MMBearerIpMethod" link="ModemManager-Flags-and-Enumerations.html#MMBearerIpMethod" since="1.0"/>
+    <keyword type="enum" name="enum MMBearerAllowedAuth" link="ModemManager-Flags-and-Enumerations.html#MMBearerAllowedAuth" since="1.0"/>
+    <keyword type="enum" name="enum MMCallDirection" link="ModemManager-Flags-and-Enumerations.html#MMCallDirection" since="1.6"/>
+    <keyword type="enum" name="enum MMCallState" link="ModemManager-Flags-and-Enumerations.html#MMCallState" since="1.6"/>
+    <keyword type="enum" name="enum MMCallStateReason" link="ModemManager-Flags-and-Enumerations.html#MMCallStateReason" since="1.6"/>
+    <keyword type="enum" name="enum MMFirmwareImageType" link="ModemManager-Flags-and-Enumerations.html#MMFirmwareImageType" since="1.0"/>
+    <keyword type="enum" name="enum MMModem3gppFacility" link="ModemManager-Flags-and-Enumerations.html#MMModem3gppFacility" since="1.0"/>
+    <keyword type="enum" name="enum MMModem3gppNetworkAvailability" link="ModemManager-Flags-and-Enumerations.html#MMModem3gppNetworkAvailability" since="1.0"/>
+    <keyword type="enum" name="enum MMModem3gppSubscriptionState" link="ModemManager-Flags-and-Enumerations.html#MMModem3gppSubscriptionState" since="1.2"/>
+    <keyword type="enum" name="enum MMModem3gppRegistrationState" link="ModemManager-Flags-and-Enumerations.html#MMModem3gppRegistrationState" since="1.0"/>
+    <keyword type="enum" name="enum MMModem3gppUssdSessionState" link="ModemManager-Flags-and-Enumerations.html#MMModem3gppUssdSessionState" since="1.0"/>
+    <keyword type="enum" name="enum MMModem3gppEpsUeModeOperation" link="ModemManager-Flags-and-Enumerations.html#MMModem3gppEpsUeModeOperation" since="1.8"/>
+    <keyword type="enum" name="enum MMModemAccessTechnology" link="ModemManager-Flags-and-Enumerations.html#MMModemAccessTechnology" since="1.0"/>
+    <keyword type="enum" name="enum MMModemBand" link="ModemManager-Flags-and-Enumerations.html#MMModemBand" since="1.0"/>
+    <keyword type="enum" name="enum MMModemCapability" link="ModemManager-Flags-and-Enumerations.html#MMModemCapability" since="1.0"/>
+    <keyword type="enum" name="enum MMModemCdmaActivationState" link="ModemManager-Flags-and-Enumerations.html#MMModemCdmaActivationState" since="1.0"/>
+    <keyword type="enum" name="enum MMModemCdmaRegistrationState" link="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRegistrationState" since="1.0"/>
+    <keyword type="enum" name="enum MMModemCdmaRmProtocol" link="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRmProtocol" since="1.0"/>
+    <keyword type="enum" name="enum MMModemContactsStorage" link="ModemManager-Flags-and-Enumerations.html#MMModemContactsStorage" since="1.0"/>
+    <keyword type="enum" name="enum MMModemLocationSource" link="ModemManager-Flags-and-Enumerations.html#MMModemLocationSource" since="1.0"/>
+    <keyword type="enum" name="enum MMModemLocationAssistanceDataType" link="ModemManager-Flags-and-Enumerations.html#MMModemLocationAssistanceDataType" since="1.10"/>
+    <keyword type="enum" name="enum MMModemLock" link="ModemManager-Flags-and-Enumerations.html#MMModemLock" since="1.0"/>
+    <keyword type="enum" name="enum MMModemMode" link="ModemManager-Flags-and-Enumerations.html#MMModemMode" since="1.0"/>
+    <keyword type="enum" name="enum MMModemState" link="ModemManager-Flags-and-Enumerations.html#MMModemState" since="1.0"/>
+    <keyword type="enum" name="enum MMModemStateFailedReason" link="ModemManager-Flags-and-Enumerations.html#MMModemStateFailedReason" since="1.0"/>
+    <keyword type="enum" name="enum MMModemStateChangeReason" link="ModemManager-Flags-and-Enumerations.html#MMModemStateChangeReason" since="1.0"/>
+    <keyword type="enum" name="enum MMModemPowerState" link="ModemManager-Flags-and-Enumerations.html#MMModemPowerState" since="1.0"/>
+    <keyword type="enum" name="enum MMModemPortType" link="ModemManager-Flags-and-Enumerations.html#MMModemPortType" since="1.0"/>
+    <keyword type="enum" name="enum MMModemFirmwareUpdateMethod" link="ModemManager-Flags-and-Enumerations.html#MMModemFirmwareUpdateMethod" since="1.10"/>
+    <keyword type="enum" name="enum MMOmaFeature" link="ModemManager-Flags-and-Enumerations.html#MMOmaFeature" since="1.2"/>
+    <keyword type="enum" name="enum MMOmaSessionState" link="ModemManager-Flags-and-Enumerations.html#MMOmaSessionState" since="1.2"/>
+    <keyword type="enum" name="enum MMOmaSessionStateFailedReason" link="ModemManager-Flags-and-Enumerations.html#MMOmaSessionStateFailedReason" since="1.2"/>
+    <keyword type="enum" name="enum MMOmaSessionType" link="ModemManager-Flags-and-Enumerations.html#MMOmaSessionType" since="1.2"/>
+    <keyword type="enum" name="enum MMSmsPduType" link="ModemManager-Flags-and-Enumerations.html#MMSmsPduType" since="1.0"/>
+    <keyword type="enum" name="enum MMSmsState" link="ModemManager-Flags-and-Enumerations.html#MMSmsState" since="1.0"/>
+    <keyword type="enum" name="enum MMSmsDeliveryState" link="ModemManager-Flags-and-Enumerations.html#MMSmsDeliveryState" since="1.0"/>
+    <keyword type="enum" name="enum MMSmsStorage" link="ModemManager-Flags-and-Enumerations.html#MMSmsStorage" since="1.0"/>
+    <keyword type="enum" name="enum MMSmsValidityType" link="ModemManager-Flags-and-Enumerations.html#MMSmsValidityType" since="1.0"/>
+    <keyword type="enum" name="enum MMSmsCdmaTeleserviceId" link="ModemManager-Flags-and-Enumerations.html#MMSmsCdmaTeleserviceId" since="1.2"/>
+    <keyword type="enum" name="enum MMSmsCdmaServiceCategory" link="ModemManager-Flags-and-Enumerations.html#MMSmsCdmaServiceCategory" since="1.2"/>
+    <keyword type="enum" name="enum MMConnectionError" link="ModemManager-Errors.html#MMConnectionError" since="1.0"/>
+    <keyword type="enum" name="enum MMCoreError" link="ModemManager-Errors.html#MMCoreError" since="1.0"/>
+    <keyword type="enum" name="enum MMMessageError" link="ModemManager-Errors.html#MMMessageError" since="1.0"/>
+    <keyword type="enum" name="enum MMMobileEquipmentError" link="ModemManager-Errors.html#MMMobileEquipmentError" since="1.0"/>
+    <keyword type="enum" name="enum MMSerialError" link="ModemManager-Errors.html#MMSerialError" since="1.0"/>
+    <keyword type="enum" name="enum MMCdmaActivationError" link="ModemManager-Errors.html#MMCdmaActivationError" since="1.0"/>
+    <keyword type="macro" name="ID_MM_CANDIDATE" link="ModemManager-Common-udev-tags.html#ID-MM-CANDIDATE:CAPS" since="1.10"/>
+    <keyword type="macro" name="ID_MM_PHYSDEV_UID" link="ModemManager-Common-udev-tags.html#ID-MM-PHYSDEV-UID:CAPS" since="1.10"/>
+    <keyword type="macro" name="ID_MM_DEVICE_PROCESS" link="ModemManager-Common-udev-tags.html#ID-MM-DEVICE-PROCESS:CAPS" since="1.10"/>
+    <keyword type="macro" name="ID_MM_DEVICE_IGNORE" link="ModemManager-Common-udev-tags.html#ID-MM-DEVICE-IGNORE:CAPS" since="1.10"/>
+    <keyword type="macro" name="ID_MM_PORT_IGNORE" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-IGNORE:CAPS" since="1.10"/>
+    <keyword type="macro" name="ID_MM_TTY_BLACKLIST" link="ModemManager-Common-udev-tags.html#ID-MM-TTY-BLACKLIST:CAPS" since="1.12"/>
+    <keyword type="macro" name="ID_MM_TTY_MANUAL_SCAN_ONLY" link="ModemManager-Common-udev-tags.html#ID-MM-TTY-MANUAL-SCAN-ONLY:CAPS" since="1.12"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_AT_PPP" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AT-PPP:CAPS" since="1.10"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_AT_PRIMARY" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AT-PRIMARY:CAPS" since="1.10"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_AT_SECONDARY" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AT-SECONDARY:CAPS" since="1.10"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_GPS" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-GPS:CAPS" since="1.10"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_QCDM" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-QCDM:CAPS" since="1.10"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_AUDIO" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AUDIO:CAPS" since="1.12"/>
+    <keyword type="macro" name="ID_MM_TTY_BAUDRATE" link="ModemManager-Common-udev-tags.html#ID-MM-TTY-BAUDRATE:CAPS" since="1.10"/>
+    <keyword type="macro" name="ID_MM_TTY_FLOW_CONTROL" link="ModemManager-Common-udev-tags.html#ID-MM-TTY-FLOW-CONTROL:CAPS" since="1.10"/>
     <keyword type="method" name="The ScanDevices() method" link="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.ScanDevices"/>
     <keyword type="method" name="The SetLogging() method" link="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.SetLogging"/>
     <keyword type="method" name="The ReportKernelEvent() method" link="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.ReportKernelEvent"/>
@@ -260,9 +269,16 @@
     <keyword type="method" name="The ListCalls() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Voice.ListCalls"/>
     <keyword type="method" name="The DeleteCall() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Voice.DeleteCall"/>
     <keyword type="method" name="The CreateCall() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Voice.CreateCall"/>
+    <keyword type="method" name="The HoldAndAccept() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Voice.HoldAndAccept"/>
+    <keyword type="method" name="The HangupAndAccept() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Voice.HangupAndAccept"/>
+    <keyword type="method" name="The HangupAll() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Voice.HangupAll"/>
+    <keyword type="method" name="The Transfer() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Voice.Transfer"/>
+    <keyword type="method" name="The CallWaitingSetup() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Voice.CallWaitingSetup"/>
+    <keyword type="method" name="The CallWaitingQuery() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Voice.CallWaitingQuery"/>
     <keyword type="signal" name="The &quot;CallAdded&quot; signal" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Voice.CallAdded"/>
     <keyword type="signal" name="The &quot;CallDeleted&quot; signal" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Voice.CallDeleted"/>
     <keyword type="property" name="The &quot;Calls&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Voice.Calls"/>
+    <keyword type="property" name="The &quot;EmergencyOnly&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Voice.EmergencyOnly"/>
     <keyword type="method" name="The List() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Firmware.List"/>
     <keyword type="method" name="The Select() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Firmware.Select"/>
     <keyword type="property" name="The &quot;UpdateSettings&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Firmware.UpdateSettings"/>
@@ -301,6 +317,7 @@
     <keyword type="property" name="The &quot;Imsi&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.Imsi"/>
     <keyword type="property" name="The &quot;OperatorIdentifier&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorIdentifier"/>
     <keyword type="property" name="The &quot;OperatorName&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorName"/>
+    <keyword type="property" name="The &quot;EmergencyNumbers&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers"/>
     <keyword type="method" name="The Send() method" link="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-method-org-freedesktop-ModemManager1-Sms.Send"/>
     <keyword type="method" name="The Store() method" link="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-method-org-freedesktop-ModemManager1-Sms.Store"/>
     <keyword type="property" name="The &quot;State&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.State"/>
@@ -321,6 +338,9 @@
     <keyword type="property" name="The &quot;Storage&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Storage"/>
     <keyword type="method" name="The Start() method" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Start"/>
     <keyword type="method" name="The Accept() method" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Accept"/>
+    <keyword type="method" name="The Deflect() method" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Deflect"/>
+    <keyword type="method" name="The JoinMultiparty() method" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.JoinMultiparty"/>
+    <keyword type="method" name="The LeaveMultiparty() method" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.LeaveMultiparty"/>
     <keyword type="method" name="The Hangup() method" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Hangup"/>
     <keyword type="method" name="The SendDtmf() method" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.SendDtmf"/>
     <keyword type="signal" name="The &quot;DtmfReceived&quot; signal" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-signal-org-freedesktop-ModemManager1-Call.DtmfReceived"/>
@@ -329,73 +349,75 @@
     <keyword type="property" name="The &quot;StateReason&quot; property" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.StateReason"/>
     <keyword type="property" name="The &quot;Direction&quot; property" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Direction"/>
     <keyword type="property" name="The &quot;Number&quot; property" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Number"/>
+    <keyword type="property" name="The &quot;Multiparty&quot; property" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Multiparty"/>
     <keyword type="property" name="The &quot;AudioPort&quot; property" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.AudioPort"/>
     <keyword type="property" name="The &quot;AudioFormat&quot; property" link="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.AudioFormat"/>
-    <keyword type="macro" name="MM_MODEM_BAND_U2100" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U2100:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_UTRAN_1 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_U1900" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U1900:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_UTRAN_2 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_U1800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U1800:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_UTRAN_3 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_U17IV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U17IV:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_UTRAN_4 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_U850" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U850:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_UTRAN_5 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_U800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U800:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_UTRAN_6 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_U2600" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U2600:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_UTRAN_7 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_U900" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U900:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_UTRAN_8 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_U17IX" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U17IX:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_UTRAN_9 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_I" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-I:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_1 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_II" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-II:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_2 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_III" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-III:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_3 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_IV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-IV:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_4 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_V" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-V:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_5 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_VI" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-VI:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_6 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_VII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-VII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_7 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_VIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-VIII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_8 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_IX" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-IX:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_9 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_X" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-X:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_10 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XI" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XI:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_11 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_12 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XIII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_13 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XIV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XIV:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_14 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XVII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XVII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_17 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XVIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XVIII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_18 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XIX" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XIX:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_19 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XX" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XX:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_20 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXI" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXI:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_21 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_22 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXIII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_23 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXIV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXIV:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_24 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXV:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_25 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXVI" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXVI:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_26 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXIII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_33 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXIV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXIV:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_34 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXV:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_35 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXVI" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXVI:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_36 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXVII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXVII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_37 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXVIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXVIII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_38 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXIX" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXIX:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_39 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XL" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XL:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_40 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XLI" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XLI:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_41 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XLII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XLII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_42 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XLIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XLIII:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_43 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XLIV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XLIV:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_EUTRAN_44 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC0_CELLULAR_800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC0-CELLULAR-800:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC0 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC1_PCS_1900" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC1-PCS-1900:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC1 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC2_TACS" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC2-TACS:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC2 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC3_JTACS" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC3-JTACS:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC3 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC4_KOREAN_PCS" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC4-KOREAN-PCS:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC4 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC5_NMT450" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC5-NMT450:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC5 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC6_IMT2000" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC6-IMT2000:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC6 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC7_CELLULAR_700" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC7-CELLULAR-700:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC7 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC8_1800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC8-1800:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC8 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC9_900" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC9-900:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC9 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC10_SECONDARY_800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC10-SECONDARY-800:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC10 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC11_PAMR_400" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC11-PAMR-400:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC11 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC12_PAMR_800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC12-PAMR-800:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC12 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC13_IMT2000_2500" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC13-IMT2000-2500:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC13 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC14_PCS2_1900" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC14-PCS2-1900:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC14 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC15_AWS" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC15-AWS:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC15 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC16_US_2500" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC16-US-2500:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC16 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC17_US_FLO_2500" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC17-US-FLO-2500:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC17 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC18_US_PS_700" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC18-US-PS-700:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC18 instead." since="1.0"/>
-    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC19_US_LOWER_700" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC19-US-LOWER-700:CAPS" deprecated="1.8.0: Use #MM_MODEM_BAND_CDMA_BC19 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_U2100" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U2100:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_UTRAN_1 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_U1900" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U1900:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_UTRAN_2 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_U1800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U1800:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_UTRAN_3 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_U17IV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U17IV:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_UTRAN_4 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_U850" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U850:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_UTRAN_5 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_U800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U800:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_UTRAN_6 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_U2600" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U2600:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_UTRAN_7 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_U900" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U900:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_UTRAN_8 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_U17IX" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-U17IX:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_UTRAN_9 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_I" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-I:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_1 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_II" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-II:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_2 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_III" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-III:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_3 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_IV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-IV:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_4 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_V" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-V:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_5 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_VI" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-VI:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_6 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_VII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-VII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_7 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_VIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-VIII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_8 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_IX" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-IX:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_9 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_X" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-X:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_10 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XI" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XI:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_11 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_12 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XIII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_13 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XIV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XIV:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_14 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XVII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XVII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_17 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XVIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XVIII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_18 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XIX" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XIX:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_19 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XX" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XX:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_20 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXI" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXI:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_21 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_22 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXIII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_23 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXIV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXIV:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_24 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXV:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_25 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXVI" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXVI:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_26 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXIII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_33 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXIV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXIV:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_34 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXV:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_35 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXVI" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXVI:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_36 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXVII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXVII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_37 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXVIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXVIII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_38 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XXXIX" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XXXIX:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_39 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XL" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XL:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_40 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XLI" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XLI:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_41 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XLII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XLII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_42 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XLIII" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XLIII:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_43 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_EUTRAN_XLIV" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-EUTRAN-XLIV:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_EUTRAN_44 instead." since="1.4"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC0_CELLULAR_800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC0-CELLULAR-800:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC0 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC1_PCS_1900" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC1-PCS-1900:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC1 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC2_TACS" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC2-TACS:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC2 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC3_JTACS" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC3-JTACS:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC3 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC4_KOREAN_PCS" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC4-KOREAN-PCS:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC4 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC5_NMT450" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC5-NMT450:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC5 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC6_IMT2000" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC6-IMT2000:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC6 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC7_CELLULAR_700" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC7-CELLULAR-700:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC7 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC8_1800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC8-1800:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC8 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC9_900" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC9-900:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC9 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC10_SECONDARY_800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC10-SECONDARY-800:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC10 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC11_PAMR_400" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC11-PAMR-400:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC11 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC12_PAMR_800" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC12-PAMR-800:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC12 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC13_IMT2000_2500" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC13-IMT2000-2500:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC13 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC14_PCS2_1900" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC14-PCS2-1900:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC14 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC15_AWS" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC15-AWS:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC15 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC16_US_2500" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC16-US-2500:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC16 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC17_US_FLO_2500" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC17-US-FLO-2500:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC17 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC18_US_PS_700" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC18-US-PS-700:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC18 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC19_US_LOWER_700" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC19-US-LOWER-700:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC19 instead." since="1.0"/>
+    <keyword type="macro" name="MM_MODEM_LOCATION_SOURCE_AGPS" link="ModemManager-API-break-replacements.html#MM-MODEM-LOCATION-SOURCE-AGPS:CAPS" deprecated="1.12.0: Use #MM_MODEM_LOCATION_SOURCE_AGPS_MSA instead." since="1.6"/>
     <keyword type="constant" name="MM_BEARER_TYPE_UNKNOWN" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-UNKNOWN:CAPS"/>
     <keyword type="constant" name="MM_BEARER_TYPE_DEFAULT" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-DEFAULT:CAPS"/>
     <keyword type="constant" name="MM_BEARER_TYPE_DEFAULT_ATTACH" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-DEFAULT-ATTACH:CAPS"/>
@@ -435,6 +457,8 @@
     <keyword type="constant" name="MM_CALL_STATE_REASON_REFUSED_OR_BUSY" link="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-REASON-REFUSED-OR-BUSY:CAPS"/>
     <keyword type="constant" name="MM_CALL_STATE_REASON_ERROR" link="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-REASON-ERROR:CAPS"/>
     <keyword type="constant" name="MM_CALL_STATE_REASON_AUDIO_SETUP_FAILED" link="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-REASON-AUDIO-SETUP-FAILED:CAPS"/>
+    <keyword type="constant" name="MM_CALL_STATE_REASON_TRANSFERRED" link="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-REASON-TRANSFERRED:CAPS"/>
+    <keyword type="constant" name="MM_CALL_STATE_REASON_DEFLECTED" link="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-REASON-DEFLECTED:CAPS"/>
     <keyword type="constant" name="MM_FIRMWARE_IMAGE_TYPE_UNKNOWN" link="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-UNKNOWN:CAPS"/>
     <keyword type="constant" name="MM_FIRMWARE_IMAGE_TYPE_GENERIC" link="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GENERIC:CAPS"/>
     <keyword type="constant" name="MM_FIRMWARE_IMAGE_TYPE_GOBI" link="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS"/>
@@ -648,7 +672,8 @@
     <keyword type="constant" name="MM_MODEM_LOCATION_SOURCE_GPS_NMEA" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-SOURCE-GPS-NMEA:CAPS"/>
     <keyword type="constant" name="MM_MODEM_LOCATION_SOURCE_CDMA_BS" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-SOURCE-CDMA-BS:CAPS"/>
     <keyword type="constant" name="MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-SOURCE-GPS-UNMANAGED:CAPS"/>
-    <keyword type="constant" name="MM_MODEM_LOCATION_SOURCE_AGPS" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-SOURCE-AGPS:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_LOCATION_SOURCE_AGPS_MSA" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-SOURCE-AGPS-MSA:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_LOCATION_SOURCE_AGPS_MSB" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-SOURCE-AGPS-MSB:CAPS"/>
     <keyword type="constant" name="MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_NONE" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-ASSISTANCE-DATA-TYPE-NONE:CAPS"/>
     <keyword type="constant" name="MM_MODEM_LOCATION_ASSISTANCE_DATA_TYPE_XTRA" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCATION-ASSISTANCE-DATA-TYPE-XTRA:CAPS"/>
     <keyword type="constant" name="MM_MODEM_LOCK_UNKNOWN" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-LOCK-UNKNOWN:CAPS"/>
@@ -706,6 +731,7 @@
     <keyword type="constant" name="MM_MODEM_PORT_TYPE_GPS" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-PORT-TYPE-GPS:CAPS"/>
     <keyword type="constant" name="MM_MODEM_PORT_TYPE_QMI" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-PORT-TYPE-QMI:CAPS"/>
     <keyword type="constant" name="MM_MODEM_PORT_TYPE_MBIM" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-PORT-TYPE-MBIM:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_PORT_TYPE_AUDIO" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-PORT-TYPE-AUDIO:CAPS"/>
     <keyword type="constant" name="MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-FIRMWARE-UPDATE-METHOD-NONE:CAPS"/>
     <keyword type="constant" name="MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-FIRMWARE-UPDATE-METHOD-FASTBOOT:CAPS"/>
     <keyword type="constant" name="MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-FIRMWARE-UPDATE-METHOD-QMI-PDC:CAPS"/>
@@ -1008,6 +1034,7 @@
     <keyword type="constant" name="MM_MOBILE_EQUIPMENT_ERROR_GPRS_UNKNOWN" link="ModemManager-Errors.html#MM-MOBILE-EQUIPMENT-ERROR-GPRS-UNKNOWN:CAPS"/>
     <keyword type="constant" name="MM_MOBILE_EQUIPMENT_ERROR_GPRS_PDP_AUTH_FAILURE" link="ModemManager-Errors.html#MM-MOBILE-EQUIPMENT-ERROR-GPRS-PDP-AUTH-FAILURE:CAPS"/>
     <keyword type="constant" name="MM_MOBILE_EQUIPMENT_ERROR_GPRS_INVALID_MOBILE_CLASS" link="ModemManager-Errors.html#MM-MOBILE-EQUIPMENT-ERROR-GPRS-INVALID-MOBILE-CLASS:CAPS"/>
+    <keyword type="constant" name="MM_MOBILE_EQUIPMENT_ERROR_GPRS_LAST_PDN_DISCONNECTION_NOT_ALLOWED_LEGACY" link="ModemManager-Errors.html#MM-MOBILE-EQUIPMENT-ERROR-GPRS-LAST-PDN-DISCONNECTION-NOT-ALLOWED-LEGACY:CAPS"/>
     <keyword type="constant" name="MM_MOBILE_EQUIPMENT_ERROR_GPRS_LAST_PDN_DISCONNECTION_NOT_ALLOWED" link="ModemManager-Errors.html#MM-MOBILE-EQUIPMENT-ERROR-GPRS-LAST-PDN-DISCONNECTION-NOT-ALLOWED:CAPS"/>
     <keyword type="constant" name="MM_MOBILE_EQUIPMENT_ERROR_GPRS_SEMANTICALLY_INCORRECT_MESSAGE" link="ModemManager-Errors.html#MM-MOBILE-EQUIPMENT-ERROR-GPRS-SEMANTICALLY-INCORRECT-MESSAGE:CAPS"/>
     <keyword type="constant" name="MM_MOBILE_EQUIPMENT_ERROR_GPRS_MANDATORY_IE_ERROR" link="ModemManager-Errors.html#MM-MOBILE-EQUIPMENT-ERROR-GPRS-MANDATORY-IE-ERROR:CAPS"/>

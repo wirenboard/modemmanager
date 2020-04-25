@@ -110,6 +110,9 @@
 /* Version number of package */
 #undef VERSION
 
+/* Define if you want to enable AT commands via DBus */
+#undef WITH_AT_COMMAND_VIA_DBUS
+
 /* Define if you want MBIM support */
 #undef WITH_MBIM
 

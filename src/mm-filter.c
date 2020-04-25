@@ -34,8 +34,47 @@ enum {
 };
 
 struct _MMFilterPrivate {
-    MMFilterRule enabled_rules;
+    MMFilterRule  enabled_rules;
+    GList        *plugin_whitelist_tags;
+    GArray       *plugin_whitelist_product_ids;
 };
+
+/*****************************************************************************/
+
+void
+mm_filter_register_plugin_whitelist_tag (MMFilter    *self,
+                                         const gchar *tag)
+{
+    if (!g_list_find_custom (self->priv->plugin_whitelist_tags, tag, (GCompareFunc) g_strcmp0)) {
+        mm_dbg ("[filter] registered plugin whitelist tag: %s", tag);
+        self->priv->plugin_whitelist_tags = g_list_prepend (self->priv->plugin_whitelist_tags, g_strdup (tag));
+    }
+}
+
+void
+mm_filter_register_plugin_whitelist_product_id (MMFilter *self,
+                                                guint16   vid,
+                                                guint16   pid)
+{
+    mm_uint16_pair new_item;
+    guint          i;
+
+    if (!self->priv->plugin_whitelist_product_ids)
+        self->priv->plugin_whitelist_product_ids = g_array_sized_new (FALSE, FALSE, sizeof (mm_uint16_pair), 10);
+
+    for (i = 0; i < self->priv->plugin_whitelist_product_ids->len; i++) {
+        mm_uint16_pair *item;
+
+        item = &g_array_index (self->priv->plugin_whitelist_product_ids, mm_uint16_pair, i);
+        if (item->l == vid && item->r == pid)
+            return;
+    }
+
+    new_item.l = vid;
+    new_item.r = pid;
+    g_array_append_val (self->priv->plugin_whitelist_product_ids, new_item);
+    mm_dbg ("[filter] registered plugin whitelist product id: %04x:%04x", vid, pid);
+}
 
 /*****************************************************************************/
 
@@ -58,6 +97,46 @@ mm_filter_port (MMFilter        *self,
          mm_kernel_device_get_property_as_boolean (port, ID_MM_DEVICE_PROCESS))) {
         mm_dbg ("[filter] (%s/%s) port allowed: device is whitelisted", subsystem, name);
         return TRUE;
+    }
+
+    /* If the device is explicitly blacklisted, we ignore every port. */
+    if ((self->priv->enabled_rules & MM_FILTER_RULE_EXPLICIT_BLACKLIST) &&
+        (mm_kernel_device_get_global_property_as_boolean (port, ID_MM_DEVICE_IGNORE))) {
+        mm_dbg ("[filter] (%s/%s): port filtered: device is blacklisted", subsystem, name);
+        return FALSE;
+    }
+
+    /* If the device is whitelisted by a plugin, we allow it. */
+    if (self->priv->enabled_rules & MM_FILTER_RULE_PLUGIN_WHITELIST) {
+        GList   *l;
+        guint16  vid = 0;
+        guint16  pid = 0;
+
+        for (l = self->priv->plugin_whitelist_tags; l; l = g_list_next (l)) {
+            if (mm_kernel_device_get_global_property_as_boolean (port, (const gchar *)(l->data)) ||
+                mm_kernel_device_get_property_as_boolean (port, (const gchar *)(l->data))) {
+                mm_dbg ("[filter] (%s/%s) port allowed: device is whitelisted by plugin (tag)", subsystem, name);
+                return TRUE;
+            }
+        }
+
+        vid = mm_kernel_device_get_physdev_vid (port);
+        if (vid)
+            pid = mm_kernel_device_get_physdev_pid (port);
+
+        if (vid && pid && self->priv->plugin_whitelist_product_ids) {
+            guint i;
+
+            for (i = 0; i < self->priv->plugin_whitelist_product_ids->len; i++) {
+                mm_uint16_pair *item;
+
+                item = &g_array_index (self->priv->plugin_whitelist_product_ids, mm_uint16_pair, i);
+                if (item->l == vid && item->r == pid) {
+                    mm_dbg ("[filter] (%s/%s) port allowed: device is whitelisted by plugin (vid/pid)", subsystem, name);
+                    return TRUE;
+                }
+            }
+        }
     }
 
     /* If this is a virtual device, don't allow it */
@@ -92,16 +171,16 @@ mm_filter_port (MMFilter        *self,
 
         /* Ignore blacklisted tty devices. */
         if ((self->priv->enabled_rules & MM_FILTER_RULE_TTY_BLACKLIST) &&
-            (mm_kernel_device_get_global_property_as_boolean (port, ID_MM_DEVICE_IGNORE))) {
-            mm_dbg ("[filter] (%s/%s): port filtered: device is blacklisted", subsystem, name);
+            (mm_kernel_device_get_global_property_as_boolean (port, ID_MM_TTY_BLACKLIST))) {
+            mm_dbg ("[filter] (%s/%s): port filtered: tty is blacklisted", subsystem, name);
             return FALSE;
         }
 
         /* Is the device in the manual-only greylist? If so, return if this is an
          * automatic scan. */
         if ((self->priv->enabled_rules & MM_FILTER_RULE_TTY_MANUAL_SCAN_ONLY) &&
-            (!manual_scan && mm_kernel_device_get_global_property_as_boolean (port, ID_MM_DEVICE_MANUAL_SCAN_ONLY))) {
-            mm_dbg ("[filter] (%s/%s): port filtered: device probed only in manual scan", subsystem, name);
+            (!manual_scan && mm_kernel_device_get_global_property_as_boolean (port, ID_MM_TTY_MANUAL_SCAN_ONLY))) {
+            mm_dbg ("[filter] (%s/%s): port filtered: tty probed only in manual scan", subsystem, name);
             return FALSE;
         }
 
@@ -114,12 +193,8 @@ mm_filter_port (MMFilter        *self,
              !g_strcmp0 (physdev_subsystem, "pci") ||
              !g_strcmp0 (physdev_subsystem, "pnp") ||
              !g_strcmp0 (physdev_subsystem, "sdio"))) {
-            if (!mm_kernel_device_get_global_property_as_boolean (port, ID_MM_PLATFORM_DRIVER_PROBE)) {
-                mm_dbg ("[filter] (%s/%s): port filtered: port's parent platform driver is not whitelisted", subsystem, name);
-                return FALSE;
-            }
-            mm_dbg ("[filter] (%s/%s): port allowed: port's parent platform driver is whitelisted", subsystem, name);
-            return TRUE;
+            mm_dbg ("[filter] (%s/%s): port filtered: tty platform driver", subsystem, name);
+            return FALSE;
         }
 
         /* Default allowed? */
@@ -143,7 +218,13 @@ mm_filter_port (MMFilter        *self,
         }
 
         /*
-         * If the TTY kernel driver is cdc-acm and the interface is class=2/subclass=2/protocol=[1-6], allow it.
+         * If the TTY kernel driver is cdc-acm and the interface is not
+         * class=2/subclass=2/protocol=[1-6], forbidden.
+         *
+         * Otherwise, we'll require the modem to have more ports other
+         * than the ttyACM one (see mm_filter_device_and_port()), because
+         * there are lots of Arduino devices out there exposing a single
+         * ttyACM port and wrongly claiming AT protocol support...
          *
          * Class definitions for Communication Devices 1.2
          * Communications Interface Class Control Protocol Codes:
@@ -161,11 +242,12 @@ mm_filter_port (MMFilter        *self,
          */
         if ((self->priv->enabled_rules & MM_FILTER_RULE_TTY_ACM_INTERFACE) &&
             (!g_strcmp0 (driver, "cdc_acm")) &&
-            (mm_kernel_device_get_interface_class (port) == 2) &&
-            (mm_kernel_device_get_interface_subclass (port) == 2) &&
-            (mm_kernel_device_get_interface_protocol (port) >= 1) && (mm_kernel_device_get_interface_protocol (port) <= 6)) {
-            mm_dbg ("[filter] (%s/%s): port allowed: cdc-acm interface reported AT-capable", subsystem, name);
-            return TRUE;
+            ((mm_kernel_device_get_interface_class (port) != 2)    ||
+             (mm_kernel_device_get_interface_subclass (port) != 2) ||
+             (mm_kernel_device_get_interface_protocol (port) < 1)  ||
+             (mm_kernel_device_get_interface_protocol (port) > 6))) {
+            mm_dbg ("[filter] (%s/%s): port filtered: cdc-acm interface is not AT-capable", subsystem, name);
+            return FALSE;
         }
 
         /* Default forbidden? flag the port as maybe-forbidden, and go on */
@@ -184,6 +266,24 @@ mm_filter_port (MMFilter        *self,
 
 /*****************************************************************************/
 
+static gboolean
+device_has_net_port (MMDevice *device)
+{
+    GList *l;
+
+    for (l = mm_device_peek_port_probe_list (device); l; l = g_list_next (l)) {
+        if (!g_strcmp0 (mm_port_probe_get_port_subsys (MM_PORT_PROBE (l->data)), "net"))
+            return TRUE;
+    }
+    return FALSE;
+}
+
+static gboolean
+device_has_multiple_ports (MMDevice *device)
+{
+    return (g_list_length (mm_device_peek_port_probe_list (device)) > 1);
+}
+
 gboolean
 mm_filter_device_and_port (MMFilter       *self,
                            MMDevice       *device,
@@ -191,6 +291,7 @@ mm_filter_device_and_port (MMFilter       *self,
 {
     const gchar *subsystem;
     const gchar *name;
+    const gchar *driver;
 
     /* If it wasn't flagged as maybe forbidden, there's nothing to do */
     if (!GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (port), FILTER_PORT_MAYBE_FORBIDDEN)))
@@ -200,16 +301,19 @@ mm_filter_device_and_port (MMFilter       *self,
     name      = mm_kernel_device_get_name      (port);
 
     /* Check whether this device holds a NET port in addition to this TTY */
-    if (self->priv->enabled_rules & MM_FILTER_RULE_TTY_WITH_NET) {
-        GList *l;
+    if ((self->priv->enabled_rules & MM_FILTER_RULE_TTY_WITH_NET) &&
+        device_has_net_port (device)) {
+        mm_dbg ("[filter] (%s/%s): port allowed: device also exports a net interface", subsystem, name);
+        return TRUE;
+    }
 
-        for (l = mm_device_peek_port_probe_list (device); l; l = g_list_next (l)) {
-            if (!g_strcmp0 (mm_port_probe_get_port_subsys (MM_PORT_PROBE (l->data)), "net")) {
-                mm_dbg ("[filter] (%s/%s): port allowed: device also exports a net interface (%s)",
-                        subsystem, name, mm_port_probe_get_port_name (MM_PORT_PROBE (l->data)));
-                return TRUE;
-            }
-        }
+    /* Check whether this device holds any other port in addition to the ttyACM port */
+    driver = mm_kernel_device_get_driver (port);
+    if ((self->priv->enabled_rules & MM_FILTER_RULE_TTY_ACM_INTERFACE) &&
+        (!g_strcmp0 (driver, "cdc_acm")) &&
+        device_has_multiple_ports (device)) {
+        mm_dbg ("[filter] (%s/%s): port allowed: device exports multiple interfaces", subsystem, name);
+        return TRUE;
     }
 
     mm_dbg ("[filter] (%s/%s) port filtered: forbidden", subsystem, name);
@@ -255,6 +359,15 @@ filter_rule_env_process (MMFilterRule enabled_rules)
 
 /*****************************************************************************/
 
+gboolean
+mm_filter_check_rule_enabled (MMFilter     *self,
+                              MMFilterRule  rule)
+{
+    return !!(self->priv->enabled_rules & rule);
+}
+
+/*****************************************************************************/
+
 /* If TTY rule enabled, either DEFAULT_ALLOWED or DEFAULT_FORBIDDEN must be set. */
 #define VALIDATE_RULE_TTY(rules) (!(rules & MM_FILTER_RULE_TTY) || \
                                   ((rules & (MM_FILTER_RULE_TTY_DEFAULT_ALLOWED | MM_FILTER_RULE_TTY_DEFAULT_FORBIDDEN)) && \
@@ -285,6 +398,8 @@ mm_filter_new (MMFilterRule   enabled_rules,
 
     mm_dbg ("[filter] created");
     mm_dbg ("[filter]   explicit whitelist:         %s", RULE_ENABLED_STR (MM_FILTER_RULE_EXPLICIT_WHITELIST));
+    mm_dbg ("[filter]   explicit blacklist:         %s", RULE_ENABLED_STR (MM_FILTER_RULE_EXPLICIT_BLACKLIST));
+    mm_dbg ("[filter]   plugin whitelist:           %s", RULE_ENABLED_STR (MM_FILTER_RULE_PLUGIN_WHITELIST));
     mm_dbg ("[filter]   virtual devices forbidden:  %s", RULE_ENABLED_STR (MM_FILTER_RULE_VIRTUAL));
     mm_dbg ("[filter]   net devices allowed:        %s", RULE_ENABLED_STR (MM_FILTER_RULE_NET));
     mm_dbg ("[filter]   cdc-wdm devices allowed:    %s", RULE_ENABLED_STR (MM_FILTER_RULE_CDC_WDM));
@@ -353,6 +468,17 @@ mm_filter_init (MMFilter *self)
 }
 
 static void
+finalize (GObject *object)
+{
+    MMFilter *self = MM_FILTER (object);
+
+    g_clear_pointer (&self->priv->plugin_whitelist_product_ids, g_array_unref);
+    g_list_free_full (self->priv->plugin_whitelist_tags, g_free);
+
+    G_OBJECT_CLASS (mm_filter_parent_class)->finalize (object);
+}
+
+static void
 mm_filter_class_init (MMFilterClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -362,6 +488,7 @@ mm_filter_class_init (MMFilterClass *klass)
     /* Virtual methods */
     object_class->set_property = set_property;
     object_class->get_property = get_property;
+    object_class->finalize     = finalize;
 
     g_object_class_install_property (
         object_class, PROP_ENABLED_RULES,

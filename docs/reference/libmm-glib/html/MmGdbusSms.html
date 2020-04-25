@@ -8,7 +8,7 @@
 <link rel="up" href="pt02.html" title="Part II. Low level API">
 <link rel="prev" href="MmGdbusSimSkeleton.html" title="MmGdbusSimSkeleton">
 <link rel="next" href="MmGdbusSmsProxy.html" title="MmGdbusSmsProxy">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -40,8 +40,8 @@
 <a name="MmGdbusSms.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -377,9 +377,9 @@
 <a name="MmGdbusSms.signals"></a><h2>Signals</h2>
 <div class="informaltable"><table class="informaltable" border="0">
 <colgroup>
-<col width="150px" class="signals_return">
-<col width="300px" class="signals_name">
-<col width="200px" class="signals_flags">
+<col width="150px" class="signal_proto_type">
+<col width="300px" class="signal_proto_name">
+<col width="200px" class="signal_proto_flags">
 </colgroup>
 <tbody>
 <tr>
@@ -399,8 +399,8 @@
 <a name="MmGdbusSms.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -1404,7 +1404,6 @@ is set. </p>
 <pre class="programlisting">struct MmGdbusSmsIface {
   GTypeInterface parent_iface;
 
-
   gboolean (*handle_send) (
     MmGdbusSms *object,
     GDBusMethodInvocation *invocation);
@@ -1564,6 +1563,7 @@ is set. </p>
 <pre class="programlisting">  “class”                    <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Class">"Class"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -1573,6 +1573,7 @@ is set. </p>
 <pre class="programlisting">  “data”                     <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Data">"Data"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Allowed values: GVariant&lt;ay&gt;</p>
 <p>Default value: NULL</p>
@@ -1583,6 +1584,7 @@ is set. </p>
 <pre class="programlisting">  “delivery-report-request”  <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.DeliveryReportRequest">"DeliveryReportRequest"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: FALSE</p>
 </div>
@@ -1592,6 +1594,7 @@ is set. </p>
 <pre class="programlisting">  “delivery-state”           <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.DeliveryState">"DeliveryState"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -1601,6 +1604,7 @@ is set. </p>
 <pre class="programlisting">  “discharge-timestamp”      <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.DischargeTimestamp">"DischargeTimestamp"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: NULL</p>
 </div>
@@ -1610,6 +1614,7 @@ is set. </p>
 <pre class="programlisting">  “message-reference”        <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.MessageReference">"MessageReference"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -1619,6 +1624,7 @@ is set. </p>
 <pre class="programlisting">  “number”                   <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Number">"Number"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: NULL</p>
 </div>
@@ -1628,6 +1634,7 @@ is set. </p>
 <pre class="programlisting">  “pdu-type”                 <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.PduType">"PduType"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -1637,6 +1644,7 @@ is set. </p>
 <pre class="programlisting">  “service-category”         <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.ServiceCategory">"ServiceCategory"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -1646,6 +1654,7 @@ is set. </p>
 <pre class="programlisting">  “smsc”                     <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.SMSC">"SMSC"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: NULL</p>
 </div>
@@ -1655,6 +1664,7 @@ is set. </p>
 <pre class="programlisting">  “state”                    <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.State">"State"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -1664,6 +1674,7 @@ is set. </p>
 <pre class="programlisting">  “storage”                  <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Storage">"Storage"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -1673,6 +1684,7 @@ is set. </p>
 <pre class="programlisting">  “teleservice-id”           <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.TeleserviceId">"TeleserviceId"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -1682,6 +1694,7 @@ is set. </p>
 <pre class="programlisting">  “text”                     <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Text">"Text"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: NULL</p>
 </div>
@@ -1691,6 +1704,7 @@ is set. </p>
 <pre class="programlisting">  “timestamp”                <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Timestamp">"Timestamp"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Default value: NULL</p>
 </div>
@@ -1700,6 +1714,7 @@ is set. </p>
 <pre class="programlisting">  “validity”                 <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Validity">"Validity"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusSms</p>
 <p>Flags: Read / Write</p>
 <p>Allowed values: GVariant&lt;(uv)&gt;</p>
 <p>Default value: NULL</p>
@@ -1801,6 +1816,6 @@ user_function (<a class="link" href="MmGdbusSms.html" title="MmGdbusSms"><span c
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

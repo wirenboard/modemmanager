@@ -51,7 +51,10 @@ struct _MMCallAudioFormatPrivate {
  * Gets the encoding of the audio format.  For example, "pcm" for PCM-encoded
  * audio.
  *
- * Returns: a string with the encoding, or #NULL if unknown. Do not free the returned value, it is owned by @self.
+ * Returns: a string with the encoding, or #NULL if unknown. Do not free the
+ * returned value, it is owned by @self.
+ *
+ * Since: 1.10
  */
 const gchar *
 mm_call_audio_format_get_encoding (MMCallAudioFormat *self)
@@ -61,6 +64,9 @@ mm_call_audio_format_get_encoding (MMCallAudioFormat *self)
     return self->priv->encoding;
 }
 
+/**
+ * mm_call_audio_format_set_encoding: (skip)
+ */
 void
 mm_call_audio_format_set_encoding (MMCallAudioFormat *self,
                                    const gchar *encoding)
@@ -80,7 +86,10 @@ mm_call_audio_format_set_encoding (MMCallAudioFormat *self,
  * Gets the resolution of the audio format.  For example, "s16le" for signed
  * 16-bit little-endian audio sampling resolution.
  *
- * Returns: a string with the resolution, or #NULL if unknown. Do not free the returned value, it is owned by @self.
+ * Returns: a string with the resolution, or #NULL if unknown. Do not free the
+ * returned value, it is owned by @self.
+ *
+ * Since: 1.10
  */
 const gchar *
 mm_call_audio_format_get_resolution (MMCallAudioFormat *self)
@@ -90,6 +99,9 @@ mm_call_audio_format_get_resolution (MMCallAudioFormat *self)
     return self->priv->resolution;
 }
 
+/**
+ * mm_call_audio_format_set_resolution: (skip)
+ */
 void
 mm_call_audio_format_set_resolution (MMCallAudioFormat *self,
                                      const gchar *resolution)
@@ -110,6 +122,8 @@ mm_call_audio_format_set_resolution (MMCallAudioFormat *self,
  * sampling rate.
  *
  * Returns: the sampling rate, or 0 if unknown.
+ *
+ * Since: 1.10
  */
 guint
 mm_call_audio_format_get_rate (MMCallAudioFormat *self)
@@ -119,6 +133,9 @@ mm_call_audio_format_get_rate (MMCallAudioFormat *self)
     return self->priv->rate;
 }
 
+/**
+ * mm_call_audio_format_set_rate: (skip)
+ */
 void
 mm_call_audio_format_set_rate (MMCallAudioFormat *self,
                                guint rate)
@@ -130,6 +147,9 @@ mm_call_audio_format_set_rate (MMCallAudioFormat *self,
 
 /*****************************************************************************/
 
+/**
+ * mm_call_audio_format_get_dictionary: (skip)
+ */
 GVariant *
 mm_call_audio_format_get_dictionary (MMCallAudioFormat *self)
 {
@@ -165,6 +185,9 @@ mm_call_audio_format_get_dictionary (MMCallAudioFormat *self)
 
 /*****************************************************************************/
 
+/**
+ * mm_call_audio_format_new_from_dictionary: (skip)
+ */
 MMCallAudioFormat *
 mm_call_audio_format_new_from_dictionary (GVariant *dictionary,
                                           GError **error)
@@ -213,32 +236,8 @@ mm_call_audio_format_new_from_dictionary (GVariant *dictionary,
 /*****************************************************************************/
 
 /**
- * mm_call_audio_format_dup:
- * @orig: a #MMCallAudioFormat
- *
- * Creates a copy of @orig.
- *
- * Returns: (transfer full): a newly created #MMCallAudioFormat
+ * mm_call_audio_format_new: (skip)
  */
-MMCallAudioFormat *
-mm_call_audio_format_dup (MMCallAudioFormat *orig)
-{
-    GVariant *dict;
-    MMCallAudioFormat *copy;
-    GError *error = NULL;
-
-    g_return_val_if_fail (MM_IS_CALL_AUDIO_FORMAT (orig), NULL);
-
-    dict = mm_call_audio_format_get_dictionary (orig);
-    copy = mm_call_audio_format_new_from_dictionary (dict, &error);
-    g_assert_no_error (error);
-    g_variant_unref (dict);
-
-    return copy;
-}
-
-/*****************************************************************************/
-
 MMCallAudioFormat *
 mm_call_audio_format_new (void)
 {

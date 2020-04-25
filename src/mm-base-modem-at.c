@@ -168,9 +168,7 @@ at_sequence_parse_response (MMPortSerialAt *port,
 
     /* Cancelled? */
     if (g_cancellable_is_cancelled (ctx->cancellable)) {
-        g_simple_async_result_set_error (ctx->simple,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_CANCELLED,
+        g_simple_async_result_set_error (ctx->simple, G_IO_ERROR, G_IO_ERROR_CANCELLED,
                                          "AT sequence was cancelled");
         if (error)
             g_error_free (error);
@@ -301,7 +299,7 @@ mm_base_modem_at_sequence_full (MMBaseModem *self,
         ctx->current->command,
         ctx->current->timeout,
         FALSE,
-        FALSE,
+        ctx->current->allow_cached,
         ctx->cancellable,
         (GAsyncReadyCallback)at_sequence_parse_response,
         ctx);
@@ -483,9 +481,7 @@ at_command_ready (MMPortSerialAt *port,
 
     /* Cancelled? */
     if (g_cancellable_is_cancelled (ctx->cancellable)) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MM_CORE_ERROR,
-                                         MM_CORE_ERROR_CANCELLED,
+        g_simple_async_result_set_error (ctx->result, G_IO_ERROR, G_IO_ERROR_CANCELLED,
                                          "AT command was cancelled");
         if (error)
             g_error_free (error);

@@ -8,7 +8,7 @@
 <link rel="up" href="ref-dbus-object-call.html" title="The /org/freedesktop/ModemManager/Calls objects">
 <link rel="prev" href="ref-dbus-object-call.html" title="The /org/freedesktop/ModemManager/Calls objects">
 <link rel="next" href="ref-migrating.html" title="Part V. Migrating from ModemManager 0.6 to ModemManager 1.0">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -36,10 +36,13 @@
 <div class="refsynopsisdiv">
 <h2>Methods</h2>
 <pre class="synopsis">
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Start" title="The Start() method">Start</a>    ();
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Accept" title="The Accept() method">Accept</a>   ();
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Hangup" title="The Hangup() method">Hangup</a>   ();
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.SendDtmf" title="The SendDtmf() method">SendDtmf</a> (IN  s dtmf);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Start" title="The Start() method">Start</a>           ();
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Accept" title="The Accept() method">Accept</a>          ();
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Deflect" title="The Deflect() method">Deflect</a>         (IN  s number);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.JoinMultiparty" title="The JoinMultiparty() method">JoinMultiparty</a>  ();
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.LeaveMultiparty" title="The LeaveMultiparty() method">LeaveMultiparty</a> ();
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Hangup" title="The Hangup() method">Hangup</a>          ();
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.SendDtmf" title="The SendDtmf() method">SendDtmf</a>        (IN  s dtmf);
 </pre>
 </div>
 <div class="refsect1">
@@ -58,6 +61,7 @@
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.StateReason" title='The "StateReason" property'>StateReason</a>  readable   i
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Direction" title='The "Direction" property'>Direction</a>    readable   i
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Number" title='The "Number" property'>Number</a>       readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Multiparty" title='The "Multiparty" property'>Multiparty</a>   readable   b
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.AudioPort" title='The "AudioPort" property'>AudioPort</a>    readable   s
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.AudioFormat" title='The "AudioFormat" property'>AudioFormat</a>  readable   a{sv}
 </pre>
@@ -90,6 +94,61 @@ Accept ();
 </p>
 <p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-RINGING-IN:CAPS"><code class="constant">MM_CALL_STATE_RINGING_IN</code></a> and direction is
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-DIRECTION-INCOMING:CAPS"><code class="constant">MM_CALL_DIRECTION_INCOMING</code></a>.
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-method-org-freedesktop-ModemManager1-Call.Deflect"></a><h3>The Deflect() method</h3>
+<pre class="programlisting">
+Deflect (IN  s number);
+</pre>
+<p>        Deflect an incoming or waiting call to a new number. This call will be
+        considered terminated once the deflection is performed.
+</p>
+<p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-RINGING-IN:CAPS"><code class="constant">MM_CALL_STATE_RINGING_IN</code></a> or
+        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-WAITING:CAPS"><code class="constant">MM_CALL_STATE_WAITING</code></a> and direction is
+        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-DIRECTION-INCOMING:CAPS"><code class="constant">MM_CALL_DIRECTION_INCOMING</code></a>.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>number</code></em></code>:</span></p></td>
+<td><p>new number where the call will be deflected.</p></td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-method-org-freedesktop-ModemManager1-Call.JoinMultiparty"></a><h3>The JoinMultiparty() method</h3>
+<pre class="programlisting">
+JoinMultiparty ();
+</pre>
+<p>        Join the currently held call into a single multiparty call with another
+        already active call.
+</p>
+<p>        The calls will be flagged with the
+        '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Multiparty" title='The "Multiparty" property'>Multiparty</a>'
+        property while they are part of the multiparty call.
+</p>
+<p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-HELD:CAPS"><code class="constant">MM_CALL_STATE_HELD</code></a>.
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-method-org-freedesktop-ModemManager1-Call.LeaveMultiparty"></a><h3>The LeaveMultiparty() method</h3>
+<pre class="programlisting">
+LeaveMultiparty ();
+</pre>
+<p>        If this call is part of an ongoing multiparty call, detach it from the multiparty call,
+        put the multiparty call on hold, and activate this one alone. This operation makes this
+        call private again between both ends of the call.
+</p>
+<p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-ACTIVE:CAPS"><code class="constant">MM_CALL_STATE_ACTIVE</code></a> or
+        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-HELD:CAPS"><code class="constant">MM_CALL_STATE_HELD</code></a> and
+        the call is a multiparty call.
 </p>
 </div>
 <hr>
@@ -218,6 +277,15 @@ Number  readable   s
 </div>
 <hr>
 <div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Call.Multiparty"></a><h3>The "Multiparty" property</h3>
+<pre class="programlisting">
+Multiparty  readable   b
+</pre>
+<p>        Whether the call is currently part of a multiparty conference call.
+</p>
+</div>
+<hr>
+<div class="refsect2">
 <a name="gdbus-property-org-freedesktop-ModemManager1-Call.AudioPort"></a><h3>The "AudioPort" property</h3>
 <pre class="programlisting">
 AudioPort  readable   s
@@ -273,6 +341,6 @@ AudioFormat  readable   a{sv}
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

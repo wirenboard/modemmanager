@@ -10,9 +10,10 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details:
  *
- * Copyright (C) 2016 Trimble Navigation Limited
  * Copyright (C) 2014 Aleksander Morgado <aleksander@aleksander.es>
- * Contributor: Matthew Stanger <matthew_stanger@trimble.com>
+ * Copyright (C) 2016 Trimble Navigation Limited
+ * Copyright (C) 2016 Matthew Stanger <matthew_stanger@trimble.com>
+ * Copyright (C) 2019 Purism SPC
  */
 
 #ifndef MM_MODEM_HELPERS_CINTERION_H
@@ -22,6 +23,8 @@
 
 #include <ModemManager.h>
 #include <mm-base-bearer.h>
+#define _LIBMM_INSIDE_MM
+#include <libmm-glib.h>
 
 /*****************************************************************************/
 /* ^SCFG test parser */
@@ -86,5 +89,25 @@ gboolean mm_cinterion_parse_smong_response (const gchar              *response,
 /* ^SIND psinfo helper */
 
 MMModemAccessTechnology mm_cinterion_get_access_technology_from_sind_psinfo (guint val);
+
+/*****************************************************************************/
+/* ^SLCC URC helpers */
+
+GRegex *mm_cinterion_get_slcc_regex (void);
+
+/* MMCallInfo list management */
+gboolean mm_cinterion_parse_slcc_list     (const gchar  *str,
+                                           GList       **out_list,
+                                           GError      **error);
+void     mm_cinterion_call_info_list_free (GList        *call_info_list);
+
+/*****************************************************************************/
+/* +CTZU URC helpers */
+
+GRegex   *mm_cinterion_get_ctzu_regex (void);
+gboolean  mm_cinterion_parse_ctzu_urc (GMatchInfo         *match_info,
+                                       gchar             **iso8601p,
+                                       MMNetworkTimezone **tzp,
+                                       GError            **error);
 
 #endif  /* MM_MODEM_HELPERS_CINTERION_H */

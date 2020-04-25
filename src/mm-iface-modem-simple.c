@@ -29,6 +29,40 @@
 #include "mm-log.h"
 
 /*****************************************************************************/
+/* Private data context */
+
+#define PRIVATE_TAG "iface-modem-simple-private-tag"
+static GQuark private_quark;
+
+typedef struct {
+    GCancellable *ongoing_connect;
+} Private;
+
+static void
+private_free (Private *priv)
+{
+    g_clear_object (&priv->ongoing_connect);
+    g_slice_free (Private, priv);
+}
+
+static Private *
+get_private (MMIfaceModemSimple *self)
+{
+    Private *priv;
+
+    if (G_UNLIKELY (!private_quark))
+        private_quark = g_quark_from_static_string (PRIVATE_TAG);
+
+    priv = g_object_get_qdata (G_OBJECT (self), private_quark);
+    if (!priv) {
+        priv = g_slice_new0 (Private);
+        g_object_set_qdata_full (G_OBJECT (self), private_quark, priv, (GDestroyNotify)private_free);
+    }
+
+    return priv;
+}
+
+/*****************************************************************************/
 /* Register in either a CDMA or a 3GPP network (or both) */
 
 typedef struct {
@@ -198,16 +232,37 @@ typedef struct {
 
     /* Results to set */
     MMBaseBearer *bearer;
+
+    /* Cancellation */
+    GCancellable *cancellable;
 } ConnectionContext;
+
+static void
+cleanup_cancellation (ConnectionContext *ctx)
+{
+    Private *priv;
+
+    /* The ongoing connect cancellable and the one in the connection context
+     * must be the same, as they're set together, so if the one in the
+     * context doesn't exist, do nothing. */
+    if (!ctx->cancellable)
+        return;
+
+    /* If the ongoing connect cancellable is cancelled via the Simple.Disconnect
+     * method, it won't exist in the private struct, so don't assume they
+     * both exist. */
+    priv = get_private (ctx->self);
+    g_clear_object (&priv->ongoing_connect);
+    g_clear_object (&ctx->cancellable);
+}
 
 static void
 connection_context_free (ConnectionContext *ctx)
 {
+    cleanup_cancellation (ctx);
+    g_clear_object (&ctx->properties);
+    g_clear_object (&ctx->bearer);
     g_variant_unref (ctx->dictionary);
-    if (ctx->properties)
-        g_object_unref (ctx->properties);
-    if (ctx->bearer)
-        g_object_unref (ctx->bearer);
     g_object_unref (ctx->skeleton);
     g_object_unref (ctx->invocation);
     g_object_unref (ctx->self);
@@ -376,10 +431,11 @@ update_lock_info_ready (MMIfaceModem *self,
     }
 
     /* If we are already unlocked, go on to next step. Note that we do also
-     * allow SIM-PIN2, as we don't need to unlock that in order to get
+     * allow SIM-PIN2/SIM-PUK2, as we don't need to unlock that in order to get
      * connected. */
     if (lock == MM_MODEM_LOCK_NONE ||
-        lock == MM_MODEM_LOCK_SIM_PIN2) {
+        lock == MM_MODEM_LOCK_SIM_PIN2 ||
+        lock == MM_MODEM_LOCK_SIM_PUK2) {
         ctx->step++;
         connection_step (ctx);
         return;
@@ -436,9 +492,48 @@ bearer_list_find_disconnected (MMBaseBearer *bearer,
         ctx->found = g_object_ref (bearer);
 }
 
+static gboolean
+completed_if_cancelled (ConnectionContext *ctx)
+{
+    /* Do nothing if not cancelled */
+    if (!g_cancellable_is_cancelled (ctx->cancellable))
+        return FALSE;
+
+    /* Otherwise cancellable is valid and it's cancelled */
+    g_dbus_method_invocation_return_error (
+        ctx->invocation, G_IO_ERROR, G_IO_ERROR_CANCELLED,
+        "Connection attempt cancelled");
+    connection_context_free (ctx);
+    return TRUE;
+}
+
+static gboolean
+setup_cancellation (ConnectionContext  *ctx,
+                    GError            **error)
+{
+    Private *priv;
+
+    /* Only one connection attempt by Simple.Connect() may be handled at a time */
+    priv = get_private (ctx->self);
+    if (priv->ongoing_connect) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_IN_PROGRESS,
+                     "Connection request forbidden: operation already in progress");
+        return FALSE;
+    }
+
+    g_assert (!ctx->cancellable);
+    ctx->cancellable = g_cancellable_new ();
+    priv->ongoing_connect = g_object_ref (ctx->cancellable);
+    return TRUE;
+}
+
 static void
 connection_step (ConnectionContext *ctx)
 {
+    /* Early abort if operation is cancelled */
+    if (completed_if_cancelled (ctx))
+        return;
+
     switch (ctx->step) {
     case CONNECTION_STEP_FIRST:
         /* Fall down to next step */
@@ -588,6 +683,10 @@ connection_step (ConnectionContext *ctx)
         mm_info ("Simple connect state (%d/%d): Connect",
                  ctx->step, CONNECTION_STEP_LAST);
 
+        /* At this point, we can cleanup the cancellation point in the Simple interface,
+         * because the bearer connection has its own cancellation setup. */
+        cleanup_cancellation (ctx);
+
         /* Wait... if we're already using an existing bearer, we need to check if it is
          * already connected; and if so, just don't do anything else */
         if (mm_base_bearer_get_status (ctx->bearer) != MM_BEARER_STATUS_CONNECTED) {
@@ -634,6 +733,12 @@ connect_auth_ready (MMBaseModem *self,
 
     ctx->properties = mm_simple_connect_properties_new_from_dictionary (ctx->dictionary, &error);
     if (!ctx->properties) {
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        connection_context_free (ctx);
+        return;
+    }
+
+    if (!setup_cancellation (ctx, &error)) {
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         connection_context_free (ctx);
         return;
@@ -736,6 +841,8 @@ handle_connect (MmGdbusModemSimple *skeleton,
     ctx->self = g_object_ref (self);
     ctx->dictionary = g_variant_ref (dictionary);
 
+    mm_dbg ("User request to connect modem");
+
     mm_base_modem_authorize (MM_BASE_MODEM (self),
                              invocation,
                              MM_AUTHORIZATION_DEVICE_CONTROL,
@@ -824,11 +931,20 @@ disconnect_auth_ready (MMBaseModem *self,
 {
     GError *error = NULL;
     MMBearerList *list = NULL;
+    Private *priv;
 
     if (!mm_base_modem_authorize_finish (self, res, &error)) {
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         disconnection_context_free (ctx);
         return;
+    }
+
+    /* If not disconnecting a specific bearer, also cancel any ongoing
+     * connection attempt. */
+    priv = get_private (MM_IFACE_MODEM_SIMPLE (self));
+    if (!ctx->bearer_path && priv->ongoing_connect) {
+        g_cancellable_cancel (priv->ongoing_connect);
+        g_clear_object (&priv->ongoing_connect);
     }
 
     g_object_get (self,
@@ -878,11 +994,18 @@ handle_disconnect (MmGdbusModemSimple *skeleton,
     ctx->self = g_object_ref (self);
     ctx->invocation = g_object_ref (invocation);
 
-    if (bearer_path &&
-        bearer_path[0] == '/' &&
-        bearer_path[1]) {
-        ctx->bearer_path = g_strdup (ctx->bearer_path);
-    }
+    /* The Disconnect() method expects a valid object path given in bearer path,
+     * it cannot be NULL, so we assume we get '/' when we're asked to disconnect
+     * all connected bearers, as that is what mm_modem_simple_disconnect() does
+     * when a NULL bearer path is given to that method.
+     *
+     * We will detect the '/' string and set the bearer path as NULL in the
+     * context if so, and otherwise use the given input string as path */
+    if (g_strcmp0 (bearer_path, "/") != 0) {
+        mm_dbg ("User request to disconnect modem (bearer '%s')", bearer_path);
+        ctx->bearer_path = g_strdup (bearer_path);
+    } else
+        mm_dbg ("User request to disconnect modem (all bearers)");
 
     mm_base_modem_authorize (MM_BASE_MODEM (self),
                              invocation,

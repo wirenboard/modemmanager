@@ -11,7 +11,8 @@
  * GNU General Public License for more details:
  *
  * Copyright (C) 2012 Google, Inc.
- * Copyright (C) 2012 Lanedo GmbH <aleksander@lanedo.com>
+ * Copyright (C) 2012 Lanedo GmbH
+ * Copyright (C) 2012-2019 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <ModemManager.h>
@@ -140,10 +141,13 @@ build_location_dictionary (GVariant *previous,
                 break;
             case MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED:
                 g_assert_not_reached ();
-            case MM_MODEM_LOCATION_SOURCE_AGPS:
+            case MM_MODEM_LOCATION_SOURCE_AGPS_MSA:
+                g_assert_not_reached ();
+            case MM_MODEM_LOCATION_SOURCE_AGPS_MSB:
                 g_assert_not_reached ();
             default:
                 g_warn_if_reached ();
+                g_variant_unref (value);
                 break;
             }
         }
@@ -160,10 +164,12 @@ build_location_dictionary (GVariant *previous,
     }
 
     if (location_3gpp_value) {
+        g_assert (!g_variant_is_floating (location_3gpp_value));
         g_variant_builder_add (&builder,
                                "{uv}",
                                MM_MODEM_LOCATION_SOURCE_3GPP_LAC_CI,
                                location_3gpp_value);
+        g_variant_unref (location_3gpp_value);
     }
 
     /* If a new one given, use it */
@@ -173,11 +179,14 @@ build_location_dictionary (GVariant *previous,
         location_gps_nmea_value = mm_location_gps_nmea_get_string_variant (location_gps_nmea);
     }
 
-    if (location_gps_nmea_value)
+    if (location_gps_nmea_value) {
+        g_assert (!g_variant_is_floating (location_gps_nmea_value));
         g_variant_builder_add (&builder,
                                "{uv}",
                                MM_MODEM_LOCATION_SOURCE_GPS_NMEA,
                                location_gps_nmea_value);
+        g_variant_unref (location_gps_nmea_value);
+    }
 
     /* If a new one given, use it */
     if (location_gps_raw) {
@@ -186,11 +195,14 @@ build_location_dictionary (GVariant *previous,
         location_gps_raw_value = mm_location_gps_raw_get_dictionary (location_gps_raw);
     }
 
-    if (location_gps_raw_value)
+    if (location_gps_raw_value) {
+        g_assert (!g_variant_is_floating (location_gps_raw_value));
         g_variant_builder_add (&builder,
                                "{uv}",
                                MM_MODEM_LOCATION_SOURCE_GPS_RAW,
                                location_gps_raw_value);
+        g_variant_unref (location_gps_raw_value);
+    }
 
     /* If a new one given, use it */
     if (location_cdma_bs) {
@@ -199,11 +211,14 @@ build_location_dictionary (GVariant *previous,
         location_cdma_bs_value = mm_location_cdma_bs_get_dictionary (location_cdma_bs);
     }
 
-    if (location_cdma_bs_value)
+    if (location_cdma_bs_value) {
+        g_assert (!g_variant_is_floating (location_cdma_bs_value));
         g_variant_builder_add (&builder,
                                "{uv}",
                                MM_MODEM_LOCATION_SOURCE_CDMA_BS,
                                location_cdma_bs_value);
+        g_variant_unref (location_cdma_bs_value);
+    }
 
     return g_variant_builder_end (&builder);
 }
@@ -506,7 +521,8 @@ update_location_source_status (MMIfaceModemLocation *self,
             g_clear_object (&ctx->location_cdma_bs);
         break;
     case MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED:
-    case MM_MODEM_LOCATION_SOURCE_AGPS:
+    case MM_MODEM_LOCATION_SOURCE_AGPS_MSA:
+    case MM_MODEM_LOCATION_SOURCE_AGPS_MSB:
         /* Nothing to setup in the context */
     default:
         break;
@@ -622,7 +638,7 @@ setup_gathering_step (GTask *task)
         return;
     }
 
-    while (ctx->current <= MM_MODEM_LOCATION_SOURCE_AGPS) {
+    while (ctx->current <= MM_MODEM_LOCATION_SOURCE_LAST) {
         gchar *source_str;
 
         if (ctx->to_enable & ctx->current) {
@@ -692,6 +708,7 @@ setup_gathering (MMIfaceModemLocation *self,
     MMModemLocationSource currently_enabled;
     MMModemLocationSource source;
     gchar *str;
+    gboolean allow_gps_unmanaged_always = FALSE;
 
     ctx = g_new (SetupGatheringContext, 1);
 
@@ -699,7 +716,8 @@ setup_gathering (MMIfaceModemLocation *self,
     g_task_set_task_data (task, ctx, (GDestroyNotify)setup_gathering_context_free);
 
     g_object_get (self,
-                  MM_IFACE_MODEM_LOCATION_DBUS_SKELETON, &ctx->skeleton,
+                  MM_IFACE_MODEM_LOCATION_DBUS_SKELETON,              &ctx->skeleton,
+                  MM_IFACE_MODEM_LOCATION_ALLOW_GPS_UNMANAGED_ALWAYS, &allow_gps_unmanaged_always,
                   NULL);
     if (!ctx->skeleton) {
         g_task_return_new_error (task,
@@ -718,8 +736,8 @@ setup_gathering (MMIfaceModemLocation *self,
     ctx->to_disable = MM_MODEM_LOCATION_SOURCE_NONE;
 
     /* Loop through all known bits in the bitmask to enable/disable specific location sources */
-    for (source = MM_MODEM_LOCATION_SOURCE_3GPP_LAC_CI;
-         source <= MM_MODEM_LOCATION_SOURCE_AGPS;
+    for (source = MM_MODEM_LOCATION_SOURCE_FIRST;
+         source <= MM_MODEM_LOCATION_SOURCE_LAST;
          source = source << 1) {
         /* skip unsupported sources */
         if (!(mm_gdbus_modem_location_get_capabilities (ctx->skeleton) & source))
@@ -745,17 +763,35 @@ setup_gathering (MMIfaceModemLocation *self,
     }
 
     /* When standard GPS retrieval (RAW/NMEA) is enabled, we cannot enable the
-     * UNMANAGED setup, and viceversa. */
-    if ((ctx->to_enable & MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED &&
-         currently_enabled & (MM_MODEM_LOCATION_SOURCE_GPS_RAW | MM_MODEM_LOCATION_SOURCE_GPS_NMEA)) ||
-        (ctx->to_enable & (MM_MODEM_LOCATION_SOURCE_GPS_RAW | MM_MODEM_LOCATION_SOURCE_GPS_NMEA) &&
-         currently_enabled & MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED) ||
-        (ctx->to_enable & (MM_MODEM_LOCATION_SOURCE_GPS_RAW | MM_MODEM_LOCATION_SOURCE_GPS_NMEA) &&
-         ctx->to_enable & MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED)) {
+     * UNMANAGED setup, and viceversa, unless explicitly allowed to do so by the
+     * plugin implementation (e.g. if the RAW/NMEA sources don't use the same TTY
+     * as the GPS UNMANAGED setup. */
+    if (!allow_gps_unmanaged_always &&
+        ((ctx->to_enable & MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED &&
+          currently_enabled & (MM_MODEM_LOCATION_SOURCE_GPS_RAW | MM_MODEM_LOCATION_SOURCE_GPS_NMEA)) ||
+         (ctx->to_enable & (MM_MODEM_LOCATION_SOURCE_GPS_RAW | MM_MODEM_LOCATION_SOURCE_GPS_NMEA) &&
+          currently_enabled & MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED) ||
+         (ctx->to_enable & (MM_MODEM_LOCATION_SOURCE_GPS_RAW | MM_MODEM_LOCATION_SOURCE_GPS_NMEA) &&
+          ctx->to_enable & MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED))) {
         g_task_return_new_error (task,
                                  MM_CORE_ERROR,
                                  MM_CORE_ERROR_FAILED,
                                  "Cannot have both unmanaged GPS and raw/nmea GPS enabled at the same time");
+        g_object_unref (task);
+        return;
+    }
+
+    /* MSA A-GPS and MSB A-GPS cannot be set at the same time */
+    if ((ctx->to_enable & MM_MODEM_LOCATION_SOURCE_AGPS_MSA &&
+         currently_enabled & MM_MODEM_LOCATION_SOURCE_AGPS_MSB) ||
+        (ctx->to_enable & MM_MODEM_LOCATION_SOURCE_AGPS_MSB &&
+         currently_enabled & MM_MODEM_LOCATION_SOURCE_AGPS_MSA) ||
+        (ctx->to_enable & MM_MODEM_LOCATION_SOURCE_AGPS_MSA &&
+         ctx->to_enable & MM_MODEM_LOCATION_SOURCE_AGPS_MSB)) {
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Cannot have both MSA A-GPS and MSB A-GPS enabled at the same time");
         g_object_unref (task);
         return;
     }
@@ -773,7 +809,7 @@ setup_gathering (MMIfaceModemLocation *self,
     }
 
     /* Start enabling/disabling location sources */
-    ctx->current = MM_MODEM_LOCATION_SOURCE_3GPP_LAC_CI;
+    ctx->current = MM_MODEM_LOCATION_SOURCE_FIRST;
     setup_gathering_step (task);
 }
 
@@ -977,7 +1013,7 @@ handle_set_supl_server_auth_ready (MMBaseModem *self,
     }
 
     /* If A-GPS is NOT supported, set error */
-    if (!(mm_gdbus_modem_location_get_capabilities (ctx->skeleton) & MM_MODEM_LOCATION_SOURCE_AGPS)) {
+    if (!(mm_gdbus_modem_location_get_capabilities (ctx->skeleton) & (MM_MODEM_LOCATION_SOURCE_AGPS_MSA | MM_MODEM_LOCATION_SOURCE_AGPS_MSB))) {
         g_dbus_method_invocation_return_error (ctx->invocation,
                                                MM_CORE_ERROR,
                                                MM_CORE_ERROR_UNSUPPORTED,
@@ -1491,7 +1527,8 @@ interface_enabling_step (GTask *task)
         default_sources &= ~(MM_MODEM_LOCATION_SOURCE_GPS_RAW |
                              MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
                              MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED |
-                             MM_MODEM_LOCATION_SOURCE_AGPS);
+                             MM_MODEM_LOCATION_SOURCE_AGPS_MSA |
+                             MM_MODEM_LOCATION_SOURCE_AGPS_MSB);
 
         setup_gathering (self,
                          default_sources,
@@ -1718,7 +1755,8 @@ interface_initialization_step (GTask *task)
 
     case INITIALIZATION_STEP_SUPL_SERVER:
         /* If the modem supports A-GPS, load SUPL server */
-        if (ctx->capabilities & MM_MODEM_LOCATION_SOURCE_AGPS &&
+        if ((ctx->capabilities & (MM_MODEM_LOCATION_SOURCE_AGPS_MSA |
+                                  MM_MODEM_LOCATION_SOURCE_AGPS_MSB)) &&
             MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_supl_server &&
             MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_supl_server_finish) {
             MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_supl_server (
@@ -1732,7 +1770,8 @@ interface_initialization_step (GTask *task)
 
     case INITIALIZATION_STEP_SUPPORTED_ASSISTANCE_DATA:
         /* If the modem supports any GPS-related technology, check assistance data types supported */
-        if ((ctx->capabilities & (MM_MODEM_LOCATION_SOURCE_AGPS    |
+        if ((ctx->capabilities & (MM_MODEM_LOCATION_SOURCE_AGPS_MSA |
+                                  MM_MODEM_LOCATION_SOURCE_AGPS_MSB |
                                   MM_MODEM_LOCATION_SOURCE_GPS_RAW |
                                   MM_MODEM_LOCATION_SOURCE_GPS_NMEA)) &&
             MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_supported_assistance_data &&
@@ -1886,6 +1925,14 @@ iface_modem_location_init (gpointer g_iface)
                               "DBus skeleton for the Location interface",
                               MM_GDBUS_TYPE_MODEM_LOCATION_SKELETON,
                               G_PARAM_READWRITE));
+
+    g_object_interface_install_property
+        (g_iface,
+         g_param_spec_boolean (MM_IFACE_MODEM_LOCATION_ALLOW_GPS_UNMANAGED_ALWAYS,
+                               "Allow unmanaged GPS always",
+                               "Whether to always allow GPS unmanaged, even when raw/nmea GPS sources are enabled",
+                               FALSE,
+                               G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
     initialized = TRUE;
 }

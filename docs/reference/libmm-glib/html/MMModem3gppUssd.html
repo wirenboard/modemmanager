@@ -8,7 +8,7 @@
 <link rel="up" href="ch03.html#id-1.2.4.3" title="Generic interfaces">
 <link rel="prev" href="MMModem3gpp.html" title="MMModem3gpp">
 <link rel="next" href="MMModemCdma.html" title="MMModemCdma">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -37,8 +37,8 @@
 <a name="MMModem3gppUssd.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -173,8 +173,8 @@
 <a name="MMModem3gppUssd.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody><tr>
 <td class="datatype_keyword">struct</td>
@@ -229,13 +229,15 @@ mm_modem_3gpp_ussd_get_path (<em class="parameter"><code><a class="link" href="M
 <p>The DBus path of the <a class="link" href="MMObject.html" title="MMObject"><span class="type">MMObject</span></a> object. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="mm-modem-3gpp-ussd-dup-path"></a><h3>mm_modem_3gpp_ussd_dup_path ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *
 mm_modem_3gpp_ussd_dup_path (<em class="parameter"><code><a class="link" href="MMModem3gppUssd.html" title="MMModem3gppUssd"><span class="type">MMModem3gppUssd</span></a> *self</code></em>);</pre>
-<p>Gets a copy of the DBus path of the <a class="link" href="MMObject.html" title="MMObject"><span class="type">MMObject</span></a> object which implements this interface.</p>
+<p>Gets a copy of the DBus path of the <a class="link" href="MMObject.html" title="MMObject"><span class="type">MMObject</span></a> object which implements this
+interface.</p>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-dup-path.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -253,9 +255,11 @@ mm_modem_3gpp_ussd_dup_path (<em class="parameter"><code><a class="link" href="M
 </div>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-dup-path.returns"></a><h4>Returns</h4>
-<p>The DBus path of the <a class="link" href="MMObject.html" title="MMObject"><span class="type">MMObject</span></a>. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
+<p>The DBus path of the <a class="link" href="MMObject.html" title="MMObject"><span class="type">MMObject</span></a>. The returned value
+should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -282,6 +286,7 @@ mm_modem_3gpp_ussd_get_state (<em class="parameter"><code><a class="link" href="
 <a name="mm-modem-3gpp-ussd-get-state.returns"></a><h4>Returns</h4>
 <p> A <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMModem3gppUssdSessionState"><span class="type">MMModem3gppUssdSessionState</span></a> value, specifying the current state.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -292,8 +297,8 @@ mm_modem_3gpp_ussd_get_network_request
 <p>Gets any pending network-initiated request.</p>
 <div class="warning">The returned value is only valid until the property changes so
 it is only safe to use this function on the thread where
-<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-dup-network-request" title="mm_modem_3gpp_ussd_dup_network_request ()"><code class="function">mm_modem_3gpp_ussd_dup_network_request()</code></a> if on another
-thread.</div>
+<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-dup-network-request" title="mm_modem_3gpp_ussd_dup_network_request ()"><code class="function">mm_modem_3gpp_ussd_dup_network_request()</code></a> if on
+another thread.</div>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-get-network-request.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -314,6 +319,7 @@ thread.</div>
 <p>The network request, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -339,9 +345,11 @@ mm_modem_3gpp_ussd_dup_network_request
 </div>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-dup-network-request.returns"></a><h4>Returns</h4>
-<p>The network request, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
+<p>The network request, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available.
+The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -349,11 +357,11 @@ mm_modem_3gpp_ussd_dup_network_request
 <pre class="programlisting">const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *
 mm_modem_3gpp_ussd_get_network_notification
                                (<em class="parameter"><code><a class="link" href="MMModem3gppUssd.html" title="MMModem3gppUssd"><span class="type">MMModem3gppUssd</span></a> *self</code></em>);</pre>
-<p>Gets any pending network-initiated request to which no USSD response is required.</p>
-<div class="warning">The returned value is only valid until the property changes so
-it is only safe to use this function on the thread where
-<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-dup-network-notification" title="mm_modem_3gpp_ussd_dup_network_notification ()"><code class="function">mm_modem_3gpp_ussd_dup_network_notification()</code></a> if on another
-thread.</div>
+<p>Gets any pending network-initiated request to which no USSD response is
+required.</p>
+<div class="warning">The returned value is only valid until the property changes so it is
+only safe to use this function on the thread where <em class="parameter"><code>self</code></em> was constructed. Use
+<a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-dup-network-notification" title="mm_modem_3gpp_ussd_dup_network_notification ()"><code class="function">mm_modem_3gpp_ussd_dup_network_notification()</code></a> if on another thread.</div>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-get-network-notification.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -371,9 +379,11 @@ thread.</div>
 </div>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-get-network-notification.returns"></a><h4>Returns</h4>
-<p>The network notification, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. </p>
+<p>The network notification, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none
+available. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -381,7 +391,8 @@ thread.</div>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *
 mm_modem_3gpp_ussd_dup_network_notification
                                (<em class="parameter"><code><a class="link" href="MMModem3gppUssd.html" title="MMModem3gppUssd"><span class="type">MMModem3gppUssd</span></a> *self</code></em>);</pre>
-<p>Gets a copy of any pending network-initiated request to which no USSD response is required.</p>
+<p>Gets a copy of any pending network-initiated request to which no USSD
+response is required.</p>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-dup-network-notification.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -399,9 +410,11 @@ mm_modem_3gpp_ussd_dup_network_notification
 </div>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-dup-network-notification.returns"></a><h4>Returns</h4>
-<p>The network notification, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
+<p>The network notification, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none
+available. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -412,14 +425,17 @@ mm_modem_3gpp_ussd_initiate (<em class="parameter"><code><a class="link" href="M
                              <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> *cancellable</code></em>,
                              <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> callback</code></em>,
                              <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
-<p>Asynchronously sends a USSD command string to the network initiating a USSD session.</p>
+<p>Asynchronously sends a USSD command string to the network initiating a USSD
+session.</p>
 <p>When the request is handled by the network, the method returns the
 response or an appropriate error. The network may be awaiting further
 response from the ME after returning from this method and no new command.</p>
 <p>When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
-You can then call <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate-finish" title="mm_modem_3gpp_ussd_initiate_finish ()"><code class="function">mm_modem_3gpp_ussd_initiate_finish()</code></a> to get the result of the operation.</p>
-<p>See <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate-sync" title="mm_modem_3gpp_ussd_initiate_sync ()"><code class="function">mm_modem_3gpp_ussd_initiate_sync()</code></a> for the synchronous, blocking version of this method.</p>
+ will be invoked in the</p>
+<a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a><p>of the thread you are calling this method from. You can then call
+<a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate-finish" title="mm_modem_3gpp_ussd_initiate_finish ()"><code class="function">mm_modem_3gpp_ussd_initiate_finish()</code></a> to get the result of the operation.</p>
+<p>See <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate-sync" title="mm_modem_3gpp_ussd_initiate_sync ()"><code class="function">mm_modem_3gpp_ussd_initiate_sync()</code></a> for the synchronous, blocking version
+of this method.</p>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-initiate.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -446,7 +462,8 @@ You can then call <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-
 </tr>
 <tr>
 <td class="parameter_name"><p>callback</p></td>
-<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
+<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or
+<a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -458,6 +475,7 @@ You can then call <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -483,7 +501,8 @@ mm_modem_3gpp_ussd_initiate_finish (<em class="parameter"><code><a class="link" 
 </tr>
 <tr>
 <td class="parameter_name"><p>res</p></td>
-<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate" title="mm_modem_3gpp_ussd_initiate ()"><code class="function">mm_modem_3gpp_ussd_initiate()</code></a>.</p></td>
+<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to
+<a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate" title="mm_modem_3gpp_ussd_initiate ()"><code class="function">mm_modem_3gpp_ussd_initiate()</code></a>.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -496,8 +515,10 @@ mm_modem_3gpp_ussd_initiate_finish (<em class="parameter"><code><a class="link" 
 </div>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-initiate-finish.returns"></a><h4>Returns</h4>
-<p> The response from the network, if any. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>.</p>
+<p> The response from the network, if any. The returned value should be
+freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -507,12 +528,13 @@ mm_modem_3gpp_ussd_initiate_sync (<em class="parameter"><code><a class="link" hr
                                   <em class="parameter"><code>const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *command</code></em>,
                                   <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> *cancellable</code></em>,
                                   <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);</pre>
-<p>Synchronously sends a USSD command string to the network initiating a USSD session.</p>
+<p>Synchronously sends a USSD command string to the network initiating a USSD
+session.</p>
 <p>When the request is handled by the network, the method returns the
 response or an appropriate error. The network may be awaiting further
 response from the ME after returning from this method and no new command.</p>
-<p>The calling thread is blocked until a reply is received. See <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate" title="mm_modem_3gpp_ussd_initiate ()"><code class="function">mm_modem_3gpp_ussd_initiate()</code></a>
-for the asynchronous version of this method.</p>
+<p>The calling thread is blocked until a reply is received. See
+<a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate" title="mm_modem_3gpp_ussd_initiate ()"><code class="function">mm_modem_3gpp_ussd_initiate()</code></a> for the asynchronous version of this method.</p>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-initiate-sync.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -547,8 +569,10 @@ for the asynchronous version of this method.</p>
 </div>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-initiate-sync.returns"></a><h4>Returns</h4>
-<p> The response from the network, if any. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>.</p>
+<p> The response from the network, if any. The returned value should be
+freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -563,9 +587,11 @@ mm_modem_3gpp_ussd_respond (<em class="parameter"><code><a class="link" href="MM
 mobile network, or that is awaiting further input after a previous call to
 <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate" title="mm_modem_3gpp_ussd_initiate ()"><code class="function">mm_modem_3gpp_ussd_initiate()</code></a>.</p>
 <p>When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
-You can then call <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond-finish" title="mm_modem_3gpp_ussd_respond_finish ()"><code class="function">mm_modem_3gpp_ussd_respond_finish()</code></a> to get the result of the operation.</p>
-<p>See <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond-sync" title="mm_modem_3gpp_ussd_respond_sync ()"><code class="function">mm_modem_3gpp_ussd_respond_sync()</code></a> for the synchronous, blocking version of this method.</p>
+ will be invoked in the</p>
+<a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a><p>of the thread you are calling this method from. You can then call
+<a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond-finish" title="mm_modem_3gpp_ussd_respond_finish ()"><code class="function">mm_modem_3gpp_ussd_respond_finish()</code></a> to get the result of the operation.</p>
+<p>See <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond-sync" title="mm_modem_3gpp_ussd_respond_sync ()"><code class="function">mm_modem_3gpp_ussd_respond_sync()</code></a> for the synchronous, blocking version
+of this method.</p>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-respond.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -582,7 +608,8 @@ You can then call <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-
 </tr>
 <tr>
 <td class="parameter_name"><p>response</p></td>
-<td class="parameter_description"><p>The response to network-initiated USSD command, or a response to a request for further input.</p></td>
+<td class="parameter_description"><p>The response to network-initiated USSD command, or a response to a
+request for further input.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -592,7 +619,8 @@ You can then call <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-
 </tr>
 <tr>
 <td class="parameter_name"><p>callback</p></td>
-<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
+<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or
+<a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -604,6 +632,7 @@ You can then call <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -629,7 +658,8 @@ mm_modem_3gpp_ussd_respond_finish (<em class="parameter"><code><a class="link" h
 </tr>
 <tr>
 <td class="parameter_name"><p>res</p></td>
-<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond" title="mm_modem_3gpp_ussd_respond ()"><code class="function">mm_modem_3gpp_ussd_respond()</code></a>.</p></td>
+<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to
+<a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond" title="mm_modem_3gpp_ussd_respond ()"><code class="function">mm_modem_3gpp_ussd_respond()</code></a>.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -642,8 +672,11 @@ mm_modem_3gpp_ussd_respond_finish (<em class="parameter"><code><a class="link" h
 </div>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-respond-finish.returns"></a><h4>Returns</h4>
-<p> The network reply to this response to the network-initiated USSD command. The reply may require further responses. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>.</p>
+<p> The network reply to this response to the network-initiated USSD
+command. The reply may require further responses. The returned value should
+be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -656,8 +689,8 @@ mm_modem_3gpp_ussd_respond_sync (<em class="parameter"><code><a class="link" hre
 <p>Synchronously responds to a USSD request that is either initiated by the
 mobile network, or that is awaiting further input after a previous call to
 <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate" title="mm_modem_3gpp_ussd_initiate ()"><code class="function">mm_modem_3gpp_ussd_initiate()</code></a>.</p>
-<p>The calling thread is blocked until a reply is received. See <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond" title="mm_modem_3gpp_ussd_respond ()"><code class="function">mm_modem_3gpp_ussd_respond()</code></a>
-for the asynchronous version of this method.</p>
+<p>The calling thread is blocked until a reply is received. See
+<a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond" title="mm_modem_3gpp_ussd_respond ()"><code class="function">mm_modem_3gpp_ussd_respond()</code></a> for the asynchronous version of this method.</p>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-respond-sync.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -674,7 +707,8 @@ for the asynchronous version of this method.</p>
 </tr>
 <tr>
 <td class="parameter_name"><p>response</p></td>
-<td class="parameter_description"><p>The response to network-initiated USSD command, or a response to a request for further input.</p></td>
+<td class="parameter_description"><p>The response to network-initiated USSD command, or a response to a
+request for further input.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -692,8 +726,11 @@ for the asynchronous version of this method.</p>
 </div>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-respond-sync.returns"></a><h4>Returns</h4>
-<p> The network reply to this response to the network-initiated USSD command. The reply may require further responses. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>.</p>
+<p> The network reply to this response to the network-initiated USSD
+command. The reply may require further responses. The returned value should
+be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -703,11 +740,14 @@ mm_modem_3gpp_ussd_cancel (<em class="parameter"><code><a class="link" href="MMM
                            <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> *cancellable</code></em>,
                            <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> callback</code></em>,
                            <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
-<p>Asynchronously cancels an ongoing USSD session, either mobile or network initiated.</p>
+<p>Asynchronously cancels an ongoing USSD session, either mobile or network
+initiated.</p>
 <p>When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
-You can then call <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel-finish" title="mm_modem_3gpp_ussd_cancel_finish ()"><code class="function">mm_modem_3gpp_ussd_cancel_finish()</code></a> to get the result of the operation.</p>
-<p>See <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel-sync" title="mm_modem_3gpp_ussd_cancel_sync ()"><code class="function">mm_modem_3gpp_ussd_cancel_sync()</code></a> for the synchronous, blocking version of this method.</p>
+ will be invoked in the</p>
+<a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a><p>of the thread you are calling this method from. You can then call
+<a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel-finish" title="mm_modem_3gpp_ussd_cancel_finish ()"><code class="function">mm_modem_3gpp_ussd_cancel_finish()</code></a> to get the result of the operation.</p>
+<p>See <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel-sync" title="mm_modem_3gpp_ussd_cancel_sync ()"><code class="function">mm_modem_3gpp_ussd_cancel_sync()</code></a> for the synchronous, blocking version
+of this method.</p>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-cancel.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -729,7 +769,8 @@ You can then call <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-
 </tr>
 <tr>
 <td class="parameter_name"><p>callback</p></td>
-<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
+<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or
+<a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -741,6 +782,7 @@ You can then call <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -766,7 +808,8 @@ mm_modem_3gpp_ussd_cancel_finish (<em class="parameter"><code><a class="link" hr
 </tr>
 <tr>
 <td class="parameter_name"><p>res</p></td>
-<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel" title="mm_modem_3gpp_ussd_cancel ()"><code class="function">mm_modem_3gpp_ussd_cancel()</code></a>.</p></td>
+<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to
+<a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel" title="mm_modem_3gpp_ussd_cancel ()"><code class="function">mm_modem_3gpp_ussd_cancel()</code></a>.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -780,8 +823,10 @@ mm_modem_3gpp_ussd_cancel_finish (<em class="parameter"><code><a class="link" hr
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-cancel-finish.returns"></a><h4>Returns</h4>
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the session was successfully cancelled, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
-is set.</p>
+is
+set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -790,9 +835,10 @@ is set.</p>
 mm_modem_3gpp_ussd_cancel_sync (<em class="parameter"><code><a class="link" href="MMModem3gppUssd.html" title="MMModem3gppUssd"><span class="type">MMModem3gppUssd</span></a> *self</code></em>,
                                 <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> *cancellable</code></em>,
                                 <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);</pre>
-<p>Synchronously cancels an ongoing USSD session, either mobile or network initiated.</p>
-<p>The calling thread is blocked until a reply is received. See <a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel" title="mm_modem_3gpp_ussd_cancel ()"><code class="function">mm_modem_3gpp_ussd_cancel()</code></a>
-for the asynchronous version of this method.</p>
+<p>Synchronously cancels an ongoing USSD session, either mobile or network
+initiated.</p>
+<p>The calling thread is blocked until a reply is received. See
+<a class="link" href="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel" title="mm_modem_3gpp_ussd_cancel ()"><code class="function">mm_modem_3gpp_ussd_cancel()</code></a> for the asynchronous version of this method.</p>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-cancel-sync.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -823,8 +869,10 @@ for the asynchronous version of this method.</p>
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-cancel-sync.returns"></a><h4>Returns</h4>
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the session was successfully cancelled, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
-is set.</p>
+is
+set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 </div>
 <div class="refsect1">
@@ -838,6 +886,6 @@ using the provided API.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

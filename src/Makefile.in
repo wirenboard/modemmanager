@@ -263,14 +263,14 @@ am__ModemManager_SOURCES_DIST = main.c mm-context.h mm-context.c \
 	mm-iface-modem-oma.h mm-iface-modem-oma.c mm-broadband-modem.h \
 	mm-broadband-modem.c mm-port-probe.h mm-port-probe.c \
 	mm-port-probe-at.h mm-port-probe-at.c mm-plugin.c mm-plugin.h \
-	mm-auth-provider-polkit.h mm-auth-provider-polkit.c \
-	mm-sleep-monitor.h mm-sleep-monitor.c mm-shared-qmi.h \
-	mm-shared-qmi.c mm-sms-qmi.h mm-sms-qmi.c mm-sim-qmi.h \
-	mm-sim-qmi.c mm-bearer-qmi.h mm-bearer-qmi.c \
-	mm-broadband-modem-qmi.h mm-broadband-modem-qmi.c \
-	mm-sms-mbim.h mm-sms-mbim.c mm-sim-mbim.h mm-sim-mbim.c \
-	mm-bearer-mbim.h mm-bearer-mbim.c mm-broadband-modem-mbim.h \
-	mm-broadband-modem-mbim.c
+	mm-shared.h mm-auth-provider-polkit.h \
+	mm-auth-provider-polkit.c mm-sleep-monitor.h \
+	mm-sleep-monitor.c mm-shared-qmi.h mm-shared-qmi.c \
+	mm-sms-qmi.h mm-sms-qmi.c mm-sim-qmi.h mm-sim-qmi.c \
+	mm-bearer-qmi.h mm-bearer-qmi.c mm-broadband-modem-qmi.h \
+	mm-broadband-modem-qmi.c mm-sms-mbim.h mm-sms-mbim.c \
+	mm-sim-mbim.h mm-sim-mbim.c mm-bearer-mbim.h mm-bearer-mbim.c \
+	mm-broadband-modem-mbim.h mm-broadband-modem-mbim.c
 @WITH_POLKIT_TRUE@am__objects_8 = ModemManager-mm-auth-provider-polkit.$(OBJEXT)
 @WITH_SYSTEMD_SUSPEND_RESUME_TRUE@am__objects_9 = ModemManager-mm-sleep-monitor.$(OBJEXT)
 @WITH_QMI_TRUE@am__objects_10 = ModemManager-mm-shared-qmi.$(OBJEXT) \
@@ -630,6 +630,7 @@ MM_LIBS = @MM_LIBS@
 MM_MAJOR_VERSION = @MM_MAJOR_VERSION@
 MM_MICRO_VERSION = @MM_MICRO_VERSION@
 MM_MINOR_VERSION = @MM_MINOR_VERSION@
+MM_POLKIT_SERVICE = @MM_POLKIT_SERVICE@
 MM_VERSION = @MM_VERSION@
 MSGFMT = @MSGFMT@
 MSGFMT_015 = @MSGFMT_015@
@@ -838,6 +839,7 @@ DAEMON_ENUMS_GENERATED = \
 
 ModemManager_CPPFLAGS = \
 	-DPLUGINDIR=\"$(pkglibdir)\" \
+	-DMM_COMPILATION \
 	$(NULL)
 
 ModemManager_LDADD = \
@@ -872,8 +874,8 @@ ModemManager_SOURCES = main.c mm-context.h mm-context.c mm-log.c \
 	mm-iface-modem-oma.h mm-iface-modem-oma.c mm-broadband-modem.h \
 	mm-broadband-modem.c mm-port-probe.h mm-port-probe.c \
 	mm-port-probe-at.h mm-port-probe-at.c mm-plugin.c mm-plugin.h \
-	$(NULL) $(am__append_14) $(am__append_15) $(am__append_16) \
-	$(am__append_17)
+	mm-shared.h $(NULL) $(am__append_14) $(am__append_15) \
+	$(am__append_16) $(am__append_17)
 nodist_ModemManager_SOURCES = $(DAEMON_ENUMS_GENERATED)
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

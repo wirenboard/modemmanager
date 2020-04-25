@@ -8,7 +8,7 @@
 <link rel="up" href="pt02.html" title="Part II. Low level API">
 <link rel="prev" href="MmGdbusModem3gppUssdSkeleton.html" title="MmGdbusModem3gppUssdSkeleton">
 <link rel="next" href="MmGdbusModemCdmaProxy.html" title="MmGdbusModemCdmaProxy">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -40,8 +40,8 @@
 <a name="MmGdbusModemCdma.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -218,9 +218,9 @@
 <a name="MmGdbusModemCdma.signals"></a><h2>Signals</h2>
 <div class="informaltable"><table class="informaltable" border="0">
 <colgroup>
-<col width="150px" class="signals_return">
-<col width="300px" class="signals_name">
-<col width="200px" class="signals_flags">
+<col width="150px" class="signal_proto_type">
+<col width="300px" class="signal_proto_name">
+<col width="200px" class="signal_proto_flags">
 </colgroup>
 <tbody>
 <tr>
@@ -245,8 +245,8 @@
 <a name="MmGdbusModemCdma.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -857,8 +857,6 @@ is set. </p>
 <pre class="programlisting">struct MmGdbusModemCdmaIface {
   GTypeInterface parent_iface;
 
-
-
   gboolean (*handle_activate) (
     MmGdbusModemCdma *object,
     GDBusMethodInvocation *invocation,
@@ -967,6 +965,7 @@ is set. </p>
 <pre class="programlisting">  “activation-state”         <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.ActivationState">"ActivationState"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusModemCdma</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -976,6 +975,7 @@ is set. </p>
 <pre class="programlisting">  “cdma1x-registration-state” <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Cdma1xRegistrationState">"Cdma1xRegistrationState"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusModemCdma</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -985,6 +985,7 @@ is set. </p>
 <pre class="programlisting">  “esn”                      <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Esn">"Esn"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusModemCdma</p>
 <p>Flags: Read / Write</p>
 <p>Default value: NULL</p>
 </div>
@@ -994,6 +995,7 @@ is set. </p>
 <pre class="programlisting">  “evdo-registration-state”  <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.EvdoRegistrationState">"EvdoRegistrationState"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusModemCdma</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -1003,6 +1005,7 @@ is set. </p>
 <pre class="programlisting">  “meid”                     <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Meid">"Meid"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusModemCdma</p>
 <p>Flags: Read / Write</p>
 <p>Default value: NULL</p>
 </div>
@@ -1012,6 +1015,7 @@ is set. </p>
 <pre class="programlisting">  “nid”                      <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Nid">"Nid"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusModemCdma</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -1021,6 +1025,7 @@ is set. </p>
 <pre class="programlisting">  “sid”                      <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Sid">"Sid"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusModemCdma</p>
 <p>Flags: Read / Write</p>
 <p>Default value: 0</p>
 </div>
@@ -1177,6 +1182,6 @@ user_function (<a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemC
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

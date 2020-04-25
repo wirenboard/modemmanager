@@ -157,7 +157,7 @@ handle_list (MmGdbusModemFirmware *skeleton,
 
     mm_base_modem_authorize (MM_BASE_MODEM (self),
                              invocation,
-                             MM_AUTHORIZATION_DEVICE_CONTROL,
+                             MM_AUTHORIZATION_FIRMWARE,
                              (GAsyncReadyCallback)list_auth_ready,
                              ctx);
 
@@ -244,7 +244,7 @@ handle_select (MmGdbusModemFirmware *skeleton,
 
     mm_base_modem_authorize (MM_BASE_MODEM (self),
                              invocation,
-                             MM_AUTHORIZATION_DEVICE_CONTROL,
+                             MM_AUTHORIZATION_FIRMWARE,
                              (GAsyncReadyCallback)select_auth_ready,
                              ctx);
 
@@ -348,7 +348,7 @@ add_generic_device_ids (MMBaseModem               *self,
 
     mm_iface_modem_get_carrier_config (MM_IFACE_MODEM (self), &aux, NULL);
 
-    ids = g_ptr_array_new_with_free_func ((GDestroyNotify)g_free);
+    ids = g_ptr_array_new_with_free_func (g_free);
     if (aux) {
         gchar *carrier;
 

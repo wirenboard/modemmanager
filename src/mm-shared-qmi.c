@@ -143,6 +143,31 @@ get_private (MMSharedQmi *self)
 /*****************************************************************************/
 /* Register in network (3GPP interface) */
 
+/* wait this amount of time at most if we don't get the serving system
+ * indication earlier */
+#define REGISTER_IN_NETWORK_TIMEOUT_SECS 25
+
+typedef struct {
+    guint         timeout_id;
+    gulong        serving_system_indication_id;
+    GCancellable *cancellable;
+    gulong        cancellable_id;
+    QmiClientNas *client;
+} RegisterInNetworkContext;
+
+static void
+register_in_network_context_free (RegisterInNetworkContext *ctx)
+{
+    g_assert (!ctx->cancellable_id);
+    g_assert (!ctx->timeout_id);
+    if (ctx->client) {
+        g_assert (!ctx->serving_system_indication_id);
+        g_object_unref (ctx->client);
+    }
+    g_clear_object (&ctx->cancellable);
+    g_slice_free (RegisterInNetworkContext, ctx);
+}
+
 gboolean
 mm_shared_qmi_3gpp_register_in_network_finish (MMIfaceModem3gpp  *self,
                                                GAsyncResult      *res,
@@ -152,27 +177,150 @@ mm_shared_qmi_3gpp_register_in_network_finish (MMIfaceModem3gpp  *self,
 }
 
 static void
+register_in_network_cancelled (GCancellable *cancellable,
+                               GTask        *task)
+{
+    RegisterInNetworkContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    g_assert (ctx->cancellable);
+    g_assert (ctx->cancellable_id);
+    ctx->cancellable_id = 0;
+
+    g_assert (ctx->timeout_id);
+    g_source_remove (ctx->timeout_id);
+    ctx->timeout_id = 0;
+
+    g_assert (ctx->client);
+    g_assert (ctx->serving_system_indication_id);
+    g_signal_handler_disconnect (ctx->client, ctx->serving_system_indication_id);
+    ctx->serving_system_indication_id = 0;
+
+    g_assert (g_task_return_error_if_cancelled (task));
+    g_object_unref (task);
+}
+
+static gboolean
+register_in_network_timeout (GTask *task)
+{
+    RegisterInNetworkContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    g_assert (ctx->timeout_id);
+    ctx->timeout_id = 0;
+
+    g_assert (ctx->client);
+    g_assert (ctx->serving_system_indication_id);
+    g_signal_handler_disconnect (ctx->client, ctx->serving_system_indication_id);
+    ctx->serving_system_indication_id = 0;
+
+    g_assert (!ctx->cancellable || ctx->cancellable_id);
+    g_cancellable_disconnect (ctx->cancellable, ctx->cancellable_id);
+    ctx->cancellable_id = 0;
+
+    /* the 3GPP interface will take care of checking if the registration is
+     * the one we asked for */
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+
+    return G_SOURCE_REMOVE;
+}
+
+static void
+register_in_network_ready (GTask                               *task,
+                           QmiIndicationNasServingSystemOutput *output)
+{
+    RegisterInNetworkContext *ctx;
+    QmiNasRegistrationState   registration_state;
+
+    /* ignore indication updates reporting "searching" */
+    qmi_indication_nas_serving_system_output_get_serving_system (
+            output,
+            &registration_state,
+            NULL, /* cs_attach_state  */
+            NULL, /* ps_attach_state  */
+            NULL, /* selected_network */
+            NULL, /* radio_interfaces */
+            NULL);
+    if (registration_state == QMI_NAS_REGISTRATION_STATE_NOT_REGISTERED_SEARCHING)
+        return;
+
+    ctx = g_task_get_task_data (task);
+
+    g_assert (ctx->client);
+    g_assert (ctx->serving_system_indication_id);
+    g_signal_handler_disconnect (ctx->client, ctx->serving_system_indication_id);
+    ctx->serving_system_indication_id = 0;
+
+    g_assert (ctx->timeout_id);
+    g_source_remove (ctx->timeout_id);
+    ctx->timeout_id = 0;
+
+    g_assert (!ctx->cancellable || ctx->cancellable_id);
+    g_cancellable_disconnect (ctx->cancellable, ctx->cancellable_id);
+    ctx->cancellable_id = 0;
+
+    /* the 3GPP interface will take care of checking if the registration is
+     * the one we asked for */
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
 initiate_network_register_ready (QmiClientNas *client,
                                  GAsyncResult *res,
                                  GTask        *task)
 {
     GError                                     *error = NULL;
     QmiMessageNasInitiateNetworkRegisterOutput *output;
+    RegisterInNetworkContext                   *ctx;
+
+    ctx = g_task_get_task_data (task);
 
     output = qmi_client_nas_initiate_network_register_finish (client, res, &error);
     if (!output || !qmi_message_nas_initiate_network_register_output_get_result (output, &error)) {
-        if (!g_error_matches (error, QMI_PROTOCOL_ERROR, QMI_PROTOCOL_ERROR_NO_EFFECT)) {
+        /* No effect would mean we're already in the desired network */
+        if (g_error_matches (error, QMI_PROTOCOL_ERROR, QMI_PROTOCOL_ERROR_NO_EFFECT)) {
+            g_task_return_boolean (task, TRUE);
+            g_error_free (error);
+        } else {
             g_prefix_error (&error, "Couldn't initiate network register: ");
             g_task_return_error (task, error);
-            goto out;
         }
-        g_error_free (error);
+        g_object_unref (task);
+        goto out;
     }
 
-    g_task_return_boolean (task, TRUE);
+    /* Registration attempt started, now we need to monitor "serving system" indications
+     * to get notified when the registration changed. Note that we won't need to process
+     * the indication, because we already have that logic setup (and it runs before this
+     * new signal handler), we just need to get notified of when it happens. We will also
+     * setup a maximum operation timeuot plus a cancellability point, as this operation
+     * may be explicitly cancelled by the 3GPP interface if a new registration request
+     * arrives while the current one is being processed.
+     *
+     * Task is shared among cancellable, indication and timeout. The first one triggered
+     * will cancel the others.
+     */
+
+    if (ctx->cancellable)
+        ctx->cancellable_id = g_cancellable_connect (ctx->cancellable,
+                                                     G_CALLBACK (register_in_network_cancelled),
+                                                     task,
+                                                     NULL);
+
+    ctx->serving_system_indication_id = g_signal_connect_swapped (client,
+                                                                  "serving-system",
+                                                                  G_CALLBACK (register_in_network_ready),
+                                                                  task);
+
+    ctx->timeout_id = g_timeout_add_seconds (REGISTER_IN_NETWORK_TIMEOUT_SECS,
+                                             (GSourceFunc) register_in_network_timeout,
+                                             task);
 
 out:
-    g_object_unref (task);
 
     if (output)
         qmi_message_nas_initiate_network_register_output_unref (output);
@@ -186,9 +334,10 @@ mm_shared_qmi_3gpp_register_in_network (MMIfaceModem3gpp    *self,
                                         gpointer             user_data)
 {
     GTask                                     *task;
+    RegisterInNetworkContext                  *ctx;
     QmiMessageNasInitiateNetworkRegisterInput *input;
     guint16                                    mcc = 0;
-    guint16                                    mnc = 0;
+    guint16                                    mnc;
     QmiClient                                 *client = NULL;
     GError                                    *error = NULL;
 
@@ -198,7 +347,12 @@ mm_shared_qmi_3gpp_register_in_network (MMIfaceModem3gpp    *self,
                                       callback, user_data))
         return;
 
-    task = g_task_new (self, NULL, callback, user_data);
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    ctx = g_slice_new0 (RegisterInNetworkContext);
+    ctx->client = g_object_ref (client);
+    ctx->cancellable = cancellable ? g_object_ref (cancellable) : NULL;
+    g_task_set_task_data (task, ctx, (GDestroyNotify)register_in_network_context_free);
 
     /* Parse input MCC/MNC */
     if (operator_id && !mm_3gpp_parse_operator_id (operator_id, &mcc, &mnc, &error)) {
@@ -398,14 +552,10 @@ out:
 static void
 set_current_capabilities_system_selection_preference (GTask *task)
 {
-    MMSharedQmi                                    *self;
-    Private                                        *priv;
     SetCurrentCapabilitiesContext                  *ctx;
     QmiMessageNasSetSystemSelectionPreferenceInput *input;
     QmiNasRatModePreference                         pref;
 
-    self = g_task_get_source_object (task);
-    priv = get_private (MM_SHARED_QMI (self));
     ctx  = g_task_get_task_data (task);
 
     pref = mm_modem_capability_to_qmi_rat_mode_preference (ctx->capabilities);
@@ -850,7 +1000,7 @@ mm_shared_qmi_load_supported_capabilities (MMIfaceModem        *self,
      * switching only when switching GSM/UMTS+CDMA/EVDO multimode devices, and only if
      * we have support for the commands doing it.
      */
-    if (priv->feature_nas_technology_preference == FEATURE_SUPPORTED || priv->feature_nas_system_selection_preference == FEATURE_UNKNOWN) {
+    if (priv->feature_nas_technology_preference == FEATURE_SUPPORTED || priv->feature_nas_system_selection_preference == FEATURE_SUPPORTED) {
         if (mask == (MM_MODEM_CAPABILITY_GSM_UMTS | MM_MODEM_CAPABILITY_CDMA_EVDO)) {
             /* Multimode GSM/UMTS+CDMA/EVDO device switched to GSM/UMTS only */
             single = MM_MODEM_CAPABILITY_GSM_UMTS;
@@ -919,11 +1069,8 @@ set_current_modes_technology_preference_ready (QmiClientNas *client,
                                                GAsyncResult *res,
                                                GTask        *task)
 {
-    SetCurrentModesContext                     *ctx;
     QmiMessageNasSetTechnologyPreferenceOutput *output = NULL;
     GError                                     *error = NULL;
-
-    ctx = g_task_get_task_data (task);
 
     output = qmi_client_nas_set_technology_preference_finish (client, res, &error);
     if (!output ||
@@ -993,11 +1140,8 @@ set_current_modes_system_selection_preference_ready (QmiClientNas *client,
                                                      GAsyncResult *res,
                                                      GTask        *task)
 {
-    SetCurrentModesContext                          *ctx;
     QmiMessageNasSetSystemSelectionPreferenceOutput *output = NULL;
     GError                                          *error = NULL;
-
-    ctx = g_task_get_task_data (task);
 
     output = qmi_client_nas_set_system_selection_preference_finish (client, res, &error);
     if (!output || !qmi_message_nas_set_system_selection_preference_output_get_result (output, &error))
@@ -1016,11 +1160,9 @@ set_current_modes_system_selection_preference (GTask *task)
     MMIfaceModem                                   *self;
     SetCurrentModesContext                         *ctx;
     QmiMessageNasSetSystemSelectionPreferenceInput *input;
-    Private                                        *priv;
     QmiNasRatModePreference                         pref;
 
     self = g_task_get_source_object (task);
-    priv = get_private (MM_SHARED_QMI (self));
     ctx  = g_task_get_task_data (task);
 
     input = qmi_message_nas_set_system_selection_preference_input_new ();
@@ -1162,14 +1304,11 @@ get_technology_preference_ready (QmiClientNas *client,
                                  GAsyncResult *res,
                                  GTask        *task)
 {
-    LoadCurrentModesContext                    *ctx;
     LoadCurrentModesResult                     *result = NULL;
     QmiMessageNasGetTechnologyPreferenceOutput *output = NULL;
     GError                                     *error = NULL;
     MMModemMode                                 allowed;
     QmiNasRadioTechnologyPreference             preference_mask;
-
-    ctx = g_task_get_task_data (task);
 
     output = qmi_client_nas_get_technology_preference_finish (client, res, &error);
     if (!output || !qmi_message_nas_get_technology_preference_output_get_result (output, &error)) {
@@ -1226,14 +1365,11 @@ load_current_modes_system_selection_preference_ready (QmiClientNas *client,
                                                       GAsyncResult *res,
                                                       GTask        *task)
 {
-    LoadCurrentModesContext                         *ctx;
     LoadCurrentModesResult                          *result = NULL;
     QmiMessageNasGetSystemSelectionPreferenceOutput *output = NULL;
     GError                                          *error = NULL;
     QmiNasRatModePreference                          mode_preference_mask = 0;
     MMModemMode                                      allowed;
-
-    ctx = g_task_get_task_data (task);
 
     output = qmi_client_nas_get_system_selection_preference_finish (client, res, &error);
     if (!output || !qmi_message_nas_get_system_selection_preference_output_get_result (output, &error)) {
@@ -3992,12 +4128,13 @@ start_gps_engine (MMSharedQmi         *self,
 }
 
 /*****************************************************************************/
-/* Location: internal helper: select operation mode (assisted/standalone) */
+/* Location: internal helper: select operation mode (msa/msb/standalone) */
 
 typedef enum {
     GPS_OPERATION_MODE_UNKNOWN,
     GPS_OPERATION_MODE_STANDALONE,
-    GPS_OPERATION_MODE_ASSISTED,
+    GPS_OPERATION_MODE_AGPS_MSA,
+    GPS_OPERATION_MODE_AGPS_MSB,
 } GpsOperationMode;
 
 typedef struct {
@@ -4057,7 +4194,19 @@ pds_set_default_tracking_session_ready (QmiClientPds *client,
 
     qmi_message_pds_set_default_tracking_session_output_unref (output);
 
-    mm_dbg ("A-GPS %s", ctx->mode == GPS_OPERATION_MODE_ASSISTED ? "enabled" : "disabled");
+    switch (ctx->mode) {
+        case GPS_OPERATION_MODE_AGPS_MSA:
+            mm_dbg ("MSA A-GPS operation mode enabled");
+            break;
+        case GPS_OPERATION_MODE_AGPS_MSB:
+            mm_dbg ("MSB A-GPS operation mode enabled");
+            break;
+        case GPS_OPERATION_MODE_STANDALONE:
+            mm_dbg ("Standalone mode enabled (A-GPS disabled)");
+            break;
+        default:
+            g_assert_not_reached ();
+    }
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
@@ -4067,7 +4216,6 @@ pds_get_default_tracking_session_ready (QmiClientPds *client,
                                         GAsyncResult *res,
                                         GTask        *task)
 {
-    MMSharedQmi                                  *self;
     SetGpsOperationModeContext                   *ctx;
     QmiMessagePdsSetDefaultTrackingSessionInput  *input;
     QmiMessagePdsGetDefaultTrackingSessionOutput *output;
@@ -4093,7 +4241,6 @@ pds_get_default_tracking_session_ready (QmiClientPds *client,
         return;
     }
 
-    self = g_task_get_source_object (task);
     ctx  = g_task_get_task_data (task);
 
     qmi_message_pds_get_default_tracking_session_output_get_info (
@@ -4106,15 +4253,24 @@ pds_get_default_tracking_session_ready (QmiClientPds *client,
 
     qmi_message_pds_get_default_tracking_session_output_unref (output);
 
-    if (ctx->mode == GPS_OPERATION_MODE_ASSISTED) {
+    if (ctx->mode == GPS_OPERATION_MODE_AGPS_MSA) {
         if (session_operation == QMI_PDS_OPERATING_MODE_MS_ASSISTED) {
-            mm_dbg ("A-GPS already enabled");
+            mm_dbg ("MSA A-GPS already enabled");
             g_task_return_boolean (task, TRUE);
             g_object_unref (task);
             return;
         }
-        mm_dbg ("Need to enable A-GPS");
+        mm_dbg ("Need to enable MSA A-GPS");
         session_operation = QMI_PDS_OPERATING_MODE_MS_ASSISTED;
+    } else if (ctx->mode == GPS_OPERATION_MODE_AGPS_MSB) {
+        if (session_operation == QMI_PDS_OPERATING_MODE_MS_BASED) {
+            mm_dbg ("MSB A-GPS already enabled");
+            g_task_return_boolean (task, TRUE);
+            g_object_unref (task);
+            return;
+        }
+        mm_dbg ("Need to enable MSB A-GPS");
+        session_operation = QMI_PDS_OPERATING_MODE_MS_BASED;
     } else if (ctx->mode == GPS_OPERATION_MODE_STANDALONE) {
         if (session_operation == QMI_PDS_OPERATING_MODE_STANDALONE) {
             mm_dbg ("A-GPS already disabled");
@@ -4183,7 +4339,19 @@ loc_location_set_operation_mode_indication_cb (QmiClientLoc                     
         return;
     }
 
-    mm_dbg ("A-GPS %s", ctx->mode == GPS_OPERATION_MODE_ASSISTED ? "enabled" : "disabled");
+    switch (ctx->mode) {
+        case GPS_OPERATION_MODE_AGPS_MSA:
+            mm_dbg ("MSA A-GPS operation mode enabled");
+            break;
+        case GPS_OPERATION_MODE_AGPS_MSB:
+            mm_dbg ("MSB A-GPS operation mode enabled");
+            break;
+        case GPS_OPERATION_MODE_STANDALONE:
+            mm_dbg ("Standalone mode enabled (A-GPS disabled)");
+            break;
+        default:
+            g_assert_not_reached ();
+    }
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
@@ -4255,15 +4423,24 @@ loc_location_get_operation_mode_indication_cb (QmiClientLoc                     
 
     qmi_indication_loc_get_operation_mode_output_get_operation_mode (output, &mode, NULL);
 
-    if (ctx->mode == GPS_OPERATION_MODE_ASSISTED) {
+    if (ctx->mode == GPS_OPERATION_MODE_AGPS_MSA) {
         if (mode == QMI_LOC_OPERATION_MODE_MSA) {
-            mm_dbg ("A-GPS already enabled");
+            mm_dbg ("MSA A-GPS already enabled");
             g_task_return_boolean (task, TRUE);
             g_object_unref (task);
             return;
         }
-        mm_dbg ("Need to enable A-GPS");
+        mm_dbg ("Need to enable MSA A-GPS");
         mode = QMI_LOC_OPERATION_MODE_MSA;
+    } else if (ctx->mode == GPS_OPERATION_MODE_AGPS_MSB) {
+        if (mode == QMI_LOC_OPERATION_MODE_MSB) {
+            mm_dbg ("MSB A-GPS already enabled");
+            g_task_return_boolean (task, TRUE);
+            g_object_unref (task);
+            return;
+        }
+        mm_dbg ("Need to enable MSB A-GPS");
+        mode = QMI_LOC_OPERATION_MODE_MSB;
     } else if (ctx->mode == GPS_OPERATION_MODE_STANDALONE) {
         if (mode == QMI_LOC_OPERATION_MODE_STANDALONE) {
             mm_dbg ("A-GPS already disabled");
@@ -4432,8 +4609,9 @@ set_gps_operation_mode_standalone_ready (MMSharedQmi  *self,
                                          GAsyncResult *res,
                                          GTask        *task)
 {
-    GError  *error = NULL;
-    Private *priv;
+    MMModemLocationSource  source;
+    Private               *priv;
+    GError                *error = NULL;
 
     if (!set_gps_operation_mode_finish (self, res, &error)) {
         g_task_return_error (task, error);
@@ -4441,9 +4619,10 @@ set_gps_operation_mode_standalone_ready (MMSharedQmi  *self,
         return;
     }
 
+    source = (MMModemLocationSource) GPOINTER_TO_UINT (g_task_get_task_data (task));
     priv = get_private (self);
 
-    priv->enabled_sources &= ~MM_MODEM_LOCATION_SOURCE_AGPS;
+    priv->enabled_sources &= ~source;
 
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
@@ -4469,8 +4648,9 @@ mm_shared_qmi_disable_location_gathering (MMIfaceModemLocation  *_self,
     /* NOTE: no parent disable_location_gathering() implementation */
 
     if (!(source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
-                    MM_MODEM_LOCATION_SOURCE_GPS_RAW |
-                    MM_MODEM_LOCATION_SOURCE_AGPS))) {
+                    MM_MODEM_LOCATION_SOURCE_GPS_RAW  |
+                    MM_MODEM_LOCATION_SOURCE_AGPS_MSA |
+                    MM_MODEM_LOCATION_SOURCE_AGPS_MSB))) {
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
@@ -4479,7 +4659,7 @@ mm_shared_qmi_disable_location_gathering (MMIfaceModemLocation  *_self,
     g_assert (!(priv->pds_client && priv->loc_client));
 
     /* Disable A-GPS? */
-    if (source == MM_MODEM_LOCATION_SOURCE_AGPS) {
+    if (source == MM_MODEM_LOCATION_SOURCE_AGPS_MSA || source == MM_MODEM_LOCATION_SOURCE_AGPS_MSB) {
         set_gps_operation_mode (self,
                                 GPS_OPERATION_MODE_STANDALONE,
                                 (GAsyncReadyCallback)set_gps_operation_mode_standalone_ready,
@@ -4540,12 +4720,13 @@ start_gps_engine_ready (MMSharedQmi  *self,
 }
 
 static void
-set_gps_operation_mode_assisted_ready (MMSharedQmi  *self,
-                                       GAsyncResult *res,
-                                       GTask        *task)
+set_gps_operation_mode_agps_ready (MMSharedQmi  *self,
+                                   GAsyncResult *res,
+                                   GTask        *task)
 {
-    GError  *error = NULL;
-    Private *priv;
+    MMModemLocationSource  source;
+    Private               *priv;
+    GError                *error = NULL;
 
     if (!set_gps_operation_mode_finish (self, res, &error)) {
         g_task_return_error (task, error);
@@ -4553,9 +4734,10 @@ set_gps_operation_mode_assisted_ready (MMSharedQmi  *self,
         return;
     }
 
+    source = (MMModemLocationSource) GPOINTER_TO_UINT (g_task_get_task_data (task));
     priv = get_private (self);
 
-    priv->enabled_sources |= MM_MODEM_LOCATION_SOURCE_AGPS;
+    priv->enabled_sources |= source;
 
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
@@ -4584,17 +4766,27 @@ parent_enable_location_gathering_ready (MMIfaceModemLocation *_self,
     /* We only consider GPS related sources in this shared QMI implementation */
     if (!(source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
                     MM_MODEM_LOCATION_SOURCE_GPS_RAW  |
-                    MM_MODEM_LOCATION_SOURCE_AGPS))) {
+                    MM_MODEM_LOCATION_SOURCE_AGPS_MSA |
+                    MM_MODEM_LOCATION_SOURCE_AGPS_MSB))) {
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
     }
 
-    /* Enabling A-GPS? */
-    if (source == MM_MODEM_LOCATION_SOURCE_AGPS) {
+    /* Enabling MSA A-GPS? */
+    if (source == MM_MODEM_LOCATION_SOURCE_AGPS_MSA) {
         set_gps_operation_mode (self,
-                                GPS_OPERATION_MODE_ASSISTED,
-                                (GAsyncReadyCallback)set_gps_operation_mode_assisted_ready,
+                                GPS_OPERATION_MODE_AGPS_MSA,
+                                (GAsyncReadyCallback)set_gps_operation_mode_agps_ready,
+                                task);
+        return;
+    }
+
+    /* Enabling MSB A-GPS? */
+    if (source == MM_MODEM_LOCATION_SOURCE_AGPS_MSB) {
+        set_gps_operation_mode (self,
+                                GPS_OPERATION_MODE_AGPS_MSB,
+                                (GAsyncReadyCallback)set_gps_operation_mode_agps_ready,
                                 task);
         return;
     }
@@ -4677,17 +4869,13 @@ parent_load_capabilities_ready (MMIfaceModemLocation *self,
 
     /* Now our own checks */
 
-    /* If we have support for the PDS client, GPS and A-GPS location is supported */
-    if (mm_shared_qmi_peek_client (MM_SHARED_QMI (self), QMI_SERVICE_PDS, MM_PORT_QMI_FLAG_DEFAULT, NULL))
+    /* If we have support for the PDS or LOC client, GPS and A-GPS location is supported */
+    if ((mm_shared_qmi_peek_client (MM_SHARED_QMI (self), QMI_SERVICE_PDS, MM_PORT_QMI_FLAG_DEFAULT, NULL)) ||
+        (mm_shared_qmi_peek_client (MM_SHARED_QMI (self), QMI_SERVICE_LOC, MM_PORT_QMI_FLAG_DEFAULT, NULL)))
         sources |= (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
                     MM_MODEM_LOCATION_SOURCE_GPS_RAW |
-                    MM_MODEM_LOCATION_SOURCE_AGPS);
-
-    /* If we have support for the LOC client, GPS location is supported */
-    if (mm_shared_qmi_peek_client (MM_SHARED_QMI (self), QMI_SERVICE_LOC, MM_PORT_QMI_FLAG_DEFAULT, NULL))
-        sources |= (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
-                    MM_MODEM_LOCATION_SOURCE_GPS_RAW |
-                    MM_MODEM_LOCATION_SOURCE_AGPS);
+                    MM_MODEM_LOCATION_SOURCE_AGPS_MSA |
+                    MM_MODEM_LOCATION_SOURCE_AGPS_MSB);
 
     /* So we're done, complete */
     g_task_return_int (task, sources);

@@ -93,6 +93,7 @@ struct _MMPortProbePrivate {
     /* From udev tags */
     gboolean is_ignored;
     gboolean is_gps;
+    gboolean is_audio;
     gboolean maybe_at_primary;
     gboolean maybe_at_secondary;
     gboolean maybe_at_ppp;
@@ -1477,6 +1478,15 @@ mm_port_probe_run (MMPortProbe                *self,
         mm_port_probe_set_result_qcdm (self, FALSE);
     }
 
+    /* If this is a port flagged as an audio port, don't do any AT or QCDM probing */
+    if (self->priv->is_audio) {
+        mm_dbg ("(%s/%s) audio port detected",
+                mm_kernel_device_get_subsystem (self->priv->port),
+                mm_kernel_device_get_name (self->priv->port));
+        mm_port_probe_set_result_at (self, FALSE);
+        mm_port_probe_set_result_qcdm (self, FALSE);
+    }
+
     /* If this is a port flagged as being an AT port, don't do any QCDM probing */
     if (self->priv->maybe_at_primary || self->priv->maybe_at_secondary || self->priv->maybe_at_ppp) {
         mm_dbg ("(%s/%s) no QCDM probing in possible AT port",
@@ -1676,29 +1686,29 @@ MMPortType
 mm_port_probe_get_port_type (MMPortProbe *self)
 {
     const gchar *subsys;
-    const gchar *name;
 
     g_return_val_if_fail (MM_IS_PORT_PROBE (self), FALSE);
 
     subsys = mm_kernel_device_get_subsystem (self->priv->port);
-    name = mm_kernel_device_get_name (self->priv->port);
 
     if (g_str_equal (subsys, "net"))
         return MM_PORT_TYPE_NET;
 
-#if defined WITH_QMI
-    if (g_str_has_prefix (subsys, "usb") &&
-        g_str_has_prefix (name, "cdc-wdm") &&
-        self->priv->is_qmi)
-        return MM_PORT_TYPE_QMI;
-#endif
+    if (g_str_has_prefix (subsys, "usb")) {
+        const gchar *name;
 
-#if defined WITH_MBIM
-    if (g_str_has_prefix (subsys, "usb") &&
-        g_str_has_prefix (name, "cdc-wdm") &&
-        self->priv->is_mbim)
-        return MM_PORT_TYPE_MBIM;
+        name = mm_kernel_device_get_name (self->priv->port);
+        if (g_str_has_prefix (name, "cdc-wdm")) {
+#if defined WITH_QMI
+            if (self->priv->is_qmi)
+                return MM_PORT_TYPE_QMI;
 #endif
+#if defined WITH_MBIM
+            if (self->priv->is_mbim)
+                return MM_PORT_TYPE_MBIM;
+#endif
+        }
+    }
 
     if (self->priv->flags & MM_PORT_PROBE_QCDM &&
         self->priv->is_qcdm)
@@ -1710,6 +1720,9 @@ mm_port_probe_get_port_type (MMPortProbe *self)
 
     if (self->priv->is_gps)
         return MM_PORT_TYPE_GPS;
+
+    if (self->priv->is_audio)
+        return MM_PORT_TYPE_AUDIO;
 
     return MM_PORT_TYPE_UNKNOWN;
 }
@@ -1900,6 +1913,7 @@ set_property (GObject *object,
         self->priv->port = g_value_dup_object (value);
         self->priv->is_ignored = mm_kernel_device_get_property_as_boolean (self->priv->port, ID_MM_PORT_IGNORE);
         self->priv->is_gps = mm_kernel_device_get_property_as_boolean (self->priv->port, ID_MM_PORT_TYPE_GPS);
+        self->priv->is_audio = mm_kernel_device_get_property_as_boolean (self->priv->port, ID_MM_PORT_TYPE_AUDIO);
         self->priv->maybe_at_primary = mm_kernel_device_get_property_as_boolean (self->priv->port, ID_MM_PORT_TYPE_AT_PRIMARY);
         self->priv->maybe_at_secondary = mm_kernel_device_get_property_as_boolean (self->priv->port, ID_MM_PORT_TYPE_AT_SECONDARY);
         self->priv->maybe_at_ppp = mm_kernel_device_get_property_as_boolean (self->priv->port, ID_MM_PORT_TYPE_AT_PPP);

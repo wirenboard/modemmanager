@@ -8,7 +8,7 @@
 <link rel="up" href="ch03s02.html" title="Simple interface support">
 <link rel="prev" href="MMModemSimple.html" title="MMModemSimple">
 <link rel="next" href="MMSimpleStatus.html" title="MMSimpleStatus">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -36,8 +36,8 @@
 <a name="MMSimpleConnectProperties.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -193,8 +193,8 @@
 <a name="MMSimpleConnectProperties.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody><tr>
 <td class="datatype_keyword">struct</td>
@@ -227,6 +227,7 @@ mm_simple_connect_properties_new (<em class="parameter"><code><span class="type"
 <p>a <a class="link" href="MMSimpleConnectProperties.html" title="MMSimpleConnectProperties"><span class="type">MMSimpleConnectProperties</span></a>. The returned value should be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -251,10 +252,12 @@ mm_simple_connect_properties_get_pin (<em class="parameter"><code><a class="link
 </div>
 <div class="refsect3">
 <a name="mm-simple-connect-properties-get-pin.returns"></a><h4>Returns</h4>
-<p>the PIN, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if not set. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>the PIN, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if not set. Do not free the
+returned value, it is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -285,6 +288,7 @@ mm_simple_connect_properties_set_pin (<em class="parameter"><code><a class="link
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -310,10 +314,12 @@ mm_simple_connect_properties_get_operator_id
 </div>
 <div class="refsect3">
 <a name="mm-simple-connect-properties-get-operator-id.returns"></a><h4>Returns</h4>
-<p>the operator ID, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if not set. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>the operator ID, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if not set. Do not free
+the returned value, it is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -345,6 +351,7 @@ mm_simple_connect_properties_set_operator_id
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -369,10 +376,12 @@ mm_simple_connect_properties_get_apn (<em class="parameter"><code><a class="link
 </div>
 <div class="refsect3">
 <a name="mm-simple-connect-properties-get-apn.returns"></a><h4>Returns</h4>
-<p>the access point, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if not set. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>the access point, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if not set. Do not free
+the returned value, it is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -403,6 +412,7 @@ mm_simple_connect_properties_set_apn (<em class="parameter"><code><a class="link
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -428,8 +438,10 @@ mm_simple_connect_properties_get_allowed_auth
 </div>
 <div class="refsect3">
 <a name="mm-simple-connect-properties-get-allowed-auth.returns"></a><h4>Returns</h4>
-<p> a bitmask of <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMBearerAllowedAuth"><span class="type">MMBearerAllowedAuth</span></a> values, or <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-BEARER-ALLOWED-AUTH-UNKNOWN:CAPS"><code class="literal">MM_BEARER_ALLOWED_AUTH_UNKNOWN</code></a> to request the modem-default method.</p>
+<p> a bitmask of <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMBearerAllowedAuth"><span class="type">MMBearerAllowedAuth</span></a> values, or
+<a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-BEARER-ALLOWED-AUTH-UNKNOWN:CAPS"><code class="literal">MM_BEARER_ALLOWED_AUTH_UNKNOWN</code></a> to request the modem-default method.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -455,12 +467,14 @@ mm_simple_connect_properties_set_allowed_auth
 </tr>
 <tr>
 <td class="parameter_name"><p>allowed_auth</p></td>
-<td class="parameter_description"><p>a bitmask of <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMBearerAllowedAuth"><span class="type">MMBearerAllowedAuth</span></a> values. <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-BEARER-ALLOWED-AUTH-UNKNOWN:CAPS"><code class="literal">MM_BEARER_ALLOWED_AUTH_UNKNOWN</code></a> may be given to request the modem-default method.</p></td>
+<td class="parameter_description"><p>a bitmask of <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMBearerAllowedAuth"><span class="type">MMBearerAllowedAuth</span></a> values.
+<a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-BEARER-ALLOWED-AUTH-UNKNOWN:CAPS"><code class="literal">MM_BEARER_ALLOWED_AUTH_UNKNOWN</code></a> may be given to request the modem-default method.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -485,10 +499,12 @@ mm_simple_connect_properties_get_user (<em class="parameter"><code><a class="lin
 </div>
 <div class="refsect3">
 <a name="mm-simple-connect-properties-get-user.returns"></a><h4>Returns</h4>
-<p>the username, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if not set. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>the username, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if not set. Do not free the
+returned value, it is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -519,6 +535,7 @@ mm_simple_connect_properties_set_user (<em class="parameter"><code><a class="lin
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -544,10 +561,12 @@ mm_simple_connect_properties_get_password
 </div>
 <div class="refsect3">
 <a name="mm-simple-connect-properties-get-password.returns"></a><h4>Returns</h4>
-<p>the password, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if not set. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>the password, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if not set. Do not free the
+returned value, it is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -579,6 +598,7 @@ mm_simple_connect_properties_set_password
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -606,6 +626,7 @@ mm_simple_connect_properties_get_ip_type
 <a name="mm-simple-connect-properties-get-ip-type.returns"></a><h4>Returns</h4>
 <p> a <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMBearerIpFamily"><span class="type">MMBearerIpFamily</span></a>.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -637,6 +658,7 @@ mm_simple_connect_properties_set_ip_type
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -662,8 +684,9 @@ mm_simple_connect_properties_get_allow_roaming
 </div>
 <div class="refsect3">
 <a name="mm-simple-connect-properties-get-allow-roaming.returns"></a><h4>Returns</h4>
-<p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if roaming is allowed, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> otherwise..</p>
+<p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if roaming is allowed, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> otherwise.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -696,6 +719,7 @@ connection.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -726,10 +750,12 @@ it doesn't make sense to expose it in the ModemManager interface.</p>
 </div>
 <div class="refsect3">
 <a name="mm-simple-connect-properties-get-number.returns"></a><h4>Returns</h4>
-<p>the number, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if not set. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>the number, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if not set. Do not free the
+returned value, it is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -766,6 +792,7 @@ it doesn't make sense to expose it in the ModemManager interface.</p>
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 </div>
 <div class="refsect1">
@@ -779,6 +806,6 @@ only be accessed using the provided API.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

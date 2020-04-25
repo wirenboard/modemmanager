@@ -38,8 +38,9 @@
 #define MM_IFACE_MODEM_BEARER_LIST             "iface-modem-bearer-list"
 #define MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED  "iface-modem-sim-hot-swap-supported"
 #define MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED "iface-modem-sim-hot-swap-configured"
-#define MM_IFACE_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED "iface-modem-periodic-signal-check-disabled"
 #define MM_IFACE_MODEM_CARRIER_CONFIG_MAPPING  "iface-modem-carrier-config-mapping"
+#define MM_IFACE_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED      "iface-modem-periodic-signal-check-disabled"
+#define MM_IFACE_MODEM_PERIODIC_ACCESS_TECH_CHECK_DISABLED "iface-modem-periodic-access-tech-check-disabled"
 
 typedef struct _MMIfaceModem MMIfaceModem;
 
@@ -120,6 +121,7 @@ struct _MMIfaceModem {
 
     /* Loading of the UnlockRequired property */
     void (*load_unlock_required) (MMIfaceModem *self,
+                                  gboolean last_attempt,
                                   GAsyncReadyCallback callback,
                                   gpointer user_data);
     MMModemLock (*load_unlock_required_finish) (MMIfaceModem *self,
@@ -458,7 +460,8 @@ MMModemLock mm_iface_modem_update_lock_info_finish (MMIfaceModem *self,
                                                     GAsyncResult *res,
                                                     GError **error);
 
-MMUnlockRetries *mm_iface_modem_get_unlock_retries (MMIfaceModem *self);
+MMModemLock      mm_iface_modem_get_unlock_required (MMIfaceModem *self);
+MMUnlockRetries *mm_iface_modem_get_unlock_retries  (MMIfaceModem *self);
 
 void mm_iface_modem_update_unlock_retries (MMIfaceModem *self,
                                            MMUnlockRetries *unlock_retries);

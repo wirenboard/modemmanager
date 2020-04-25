@@ -8,7 +8,7 @@
 <link rel="up" href="ch04.html" title="The Bearer object">
 <link rel="prev" href="MMBearerProperties.html" title="MMBearerProperties">
 <link rel="next" href="MMBearerStats.html" title="MMBearerStats">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -36,8 +36,8 @@
 <a name="MMBearerIpConfig.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -92,8 +92,8 @@
 <a name="MMBearerIpConfig.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody><tr>
 <td class="datatype_keyword">struct</td>
@@ -141,6 +141,7 @@ mm_bearer_ip_config_get_method (<em class="parameter"><code><a class="link" href
 <a name="mm-bearer-ip-config-get-method.returns"></a><h4>Returns</h4>
 <p> a <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMBearerIpMethod"><span class="type">MMBearerIpMethod</span></a>.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -165,9 +166,11 @@ mm_bearer_ip_config_get_address (<em class="parameter"><code><a class="link" hre
 </div>
 <div class="refsect3">
 <a name="mm-bearer-ip-config-get-address.returns"></a><h4>Returns</h4>
-<p> a string with the IP address, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if unknown. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p> a string with the IP address, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if unknown. Do not free the
+returned value, it is owned by <em class="parameter"><code>self</code></em>
 .</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -194,6 +197,7 @@ mm_bearer_ip_config_get_prefix (<em class="parameter"><code><a class="link" href
 <a name="mm-bearer-ip-config-get-prefix.returns"></a><h4>Returns</h4>
 <p> the network prefix.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -218,10 +222,12 @@ mm_bearer_ip_config_get_dns (<em class="parameter"><code><a class="link" href="M
 </div>
 <div class="refsect3">
 <a name="mm-bearer-ip-config-get-dns.returns"></a><h4>Returns</h4>
-<p>a NULL-terminated array of strings. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>a <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>-terminated array
+of strings. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> zero-terminated=1]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -246,9 +252,11 @@ mm_bearer_ip_config_get_gateway (<em class="parameter"><code><a class="link" hre
 </div>
 <div class="refsect3">
 <a name="mm-bearer-ip-config-get-gateway.returns"></a><h4>Returns</h4>
-<p> a string with the IP address, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if unknown. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p> a string with the IP address, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if unknown. Do not free the
+returned value, it is owned by <em class="parameter"><code>self</code></em>
 .</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -275,6 +283,7 @@ mm_bearer_ip_config_get_mtu (<em class="parameter"><code><a class="link" href="M
 <a name="mm-bearer-ip-config-get-mtu.returns"></a><h4>Returns</h4>
 <p> the MTU.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-4.html#api-index-1.4">1.4</a></p>
 </div>
 </div>
 <div class="refsect1">
@@ -288,6 +297,6 @@ only be accessed using the provided API.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

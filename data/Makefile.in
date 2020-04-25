@@ -325,6 +325,7 @@ MM_LIBS = @MM_LIBS@
 MM_MAJOR_VERSION = @MM_MAJOR_VERSION@
 MM_MICRO_VERSION = @MM_MICRO_VERSION@
 MM_MINOR_VERSION = @MM_MINOR_VERSION@
+MM_POLKIT_SERVICE = @MM_POLKIT_SERVICE@
 MM_VERSION = @MM_VERSION@
 MSGFMT = @MSGFMT@
 MSGFMT_015 = @MSGFMT_015@
@@ -423,7 +424,8 @@ edit = @sed \
        -e 's|@sbindir[@]|$(sbindir)|g' \
        -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
        -e 's|@localstatedir[@]|$(localstatedir)|g' \
-       -e 's|@libexecdir[@]|$(libexecdir)|g'
+       -e 's|@libexecdir[@]|$(libexecdir)|g' \
+       -e 's|@MM_POLKIT_SERVICE[@]|$(MM_POLKIT_SERVICE)|g'
 
 
 # DBus Service file

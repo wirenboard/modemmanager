@@ -103,8 +103,9 @@ GVariant    *mm_common_bands_garray_to_variant (GArray *array);
 GVariant    *mm_common_build_bands_any     (void);
 GVariant    *mm_common_build_bands_unknown (void);
 
-gboolean     mm_common_bands_garray_cmp  (GArray *a, GArray *b);
-void         mm_common_bands_garray_sort (GArray *array);
+gboolean     mm_common_bands_garray_cmp    (GArray *a, GArray *b);
+void         mm_common_bands_garray_sort   (GArray *array);
+gboolean     mm_common_bands_garray_lookup (GArray *array, MMModemBand value);
 
 gboolean mm_common_band_is_gsm    (MMModemBand band);
 gboolean mm_common_band_is_utran  (MMModemBand band);
@@ -146,24 +147,31 @@ gboolean mm_common_parse_key_value_string (const gchar *str,
 
 /* Common parsers */
 gboolean  mm_get_int_from_str                    (const gchar *str,
-                                                  gint *out);
-gboolean  mm_get_int_from_match_info             (GMatchInfo *match_info,
-                                                  guint32 match_index,
-                                                  gint *out);
+                                                  gint        *out);
+gboolean  mm_get_int_from_match_info             (GMatchInfo  *match_info,
+                                                  guint32      match_index,
+                                                  gint        *out);
 gboolean  mm_get_uint_from_str                   (const gchar *str,
-                                                  guint *out);
+                                                  guint       *out);
+gboolean  mm_get_u64_from_str                    (const gchar *str,
+                                                  guint64     *out);
 gboolean  mm_get_uint_from_hex_str               (const gchar *str,
                                                   guint       *out);
-gboolean  mm_get_uint_from_match_info            (GMatchInfo *match_info,
-                                                  guint32 match_index,
-                                                  guint *out);
+gboolean  mm_get_u64_from_hex_str                (const gchar *str,
+                                                  guint64     *out);
+gboolean  mm_get_uint_from_match_info            (GMatchInfo  *match_info,
+                                                  guint32      match_index,
+                                                  guint       *out);
+gboolean  mm_get_u64_from_match_info             (GMatchInfo  *match_info,
+                                                  guint32      match_index,
+                                                  guint64     *out);
 gboolean  mm_get_double_from_str                 (const gchar *str,
-                                                  gdouble *out);
-gboolean  mm_get_double_from_match_info          (GMatchInfo *match_info,
-                                                  guint32 match_index,
-                                                  gdouble *out);
-gchar    *mm_get_string_unquoted_from_match_info (GMatchInfo *match_info,
-                                                  guint32 match_index);
+                                                  gdouble     *out);
+gboolean  mm_get_double_from_match_info          (GMatchInfo  *match_info,
+                                                  guint32      match_index,
+                                                  gdouble     *out);
+gchar    *mm_get_string_unquoted_from_match_info (GMatchInfo  *match_info,
+                                                  guint32      match_index);
 
 const gchar *mm_sms_delivery_state_get_string_extended (guint delivery_state);
 

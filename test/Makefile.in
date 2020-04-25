@@ -88,7 +88,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-noinst_PROGRAMS = $(am__EXEEXT_1) mmtty$(EXEEXT) mmrules$(EXEEXT)
+noinst_PROGRAMS = $(am__EXEEXT_1) mmtty$(EXEEXT) mmrules$(EXEEXT) \
+	mmsmspdu$(EXEEXT) mmsmsmonitor$(EXEEXT)
 
 ################################################################################
 # lsudev
@@ -129,6 +130,16 @@ am_mmrules_OBJECTS = mmrules-mmrules.$(OBJEXT)
 mmrules_OBJECTS = $(am_mmrules_OBJECTS)
 mmrules_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(top_builddir)/src/libkerneldevice.la
+am_mmsmsmonitor_OBJECTS = mmsmsmonitor-mmsmsmonitor.$(OBJEXT)
+mmsmsmonitor_OBJECTS = $(am_mmsmsmonitor_OBJECTS)
+mmsmsmonitor_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la
+am_mmsmspdu_OBJECTS = mmsmspdu-mmsmspdu.$(OBJEXT)
+mmsmspdu_OBJECTS = $(am_mmsmspdu_OBJECTS)
+mmsmspdu_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la
 am_mmtty_OBJECTS = mmtty-mmtty.$(OBJEXT)
 mmtty_OBJECTS = $(am_mmtty_OBJECTS)
 mmtty_DEPENDENCIES = $(am__DEPENDENCIES_1) \
@@ -149,7 +160,9 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/lsudev-lsudev.Po \
-	./$(DEPDIR)/mmrules-mmrules.Po ./$(DEPDIR)/mmtty-mmtty.Po
+	./$(DEPDIR)/mmrules-mmrules.Po \
+	./$(DEPDIR)/mmsmsmonitor-mmsmsmonitor.Po \
+	./$(DEPDIR)/mmsmspdu-mmsmspdu.Po ./$(DEPDIR)/mmtty-mmtty.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -169,9 +182,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(lsudev_SOURCES) $(mmrules_SOURCES) $(mmtty_SOURCES)
+SOURCES = $(lsudev_SOURCES) $(mmrules_SOURCES) $(mmsmsmonitor_SOURCES) \
+	$(mmsmspdu_SOURCES) $(mmtty_SOURCES)
 DIST_SOURCES = $(am__lsudev_SOURCES_DIST) $(mmrules_SOURCES) \
-	$(mmtty_SOURCES)
+	$(mmsmsmonitor_SOURCES) $(mmsmspdu_SOURCES) $(mmtty_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -297,6 +311,7 @@ MM_LIBS = @MM_LIBS@
 MM_MAJOR_VERSION = @MM_MAJOR_VERSION@
 MM_MICRO_VERSION = @MM_MICRO_VERSION@
 MM_MINOR_VERSION = @MM_MINOR_VERSION@
+MM_POLKIT_SERVICE = @MM_POLKIT_SERVICE@
 MM_VERSION = @MM_VERSION@
 MSGFMT = @MSGFMT@
 MSGFMT_015 = @MSGFMT_015@
@@ -432,6 +447,40 @@ mmrules_LDADD = \
 	$(top_builddir)/src/libkerneldevice.la \
 	$(NULL)
 
+mmsmspdu_SOURCES = mmsmspdu.c
+mmsmspdu_CPPFLAGS = \
+	$(MM_CFLAGS) \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/include \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/libmm-glib \
+	-I$(top_srcdir)/libmm-glib/generated \
+	-I$(top_builddir)/libmm-glib/generated
+
+mmsmspdu_LDADD = \
+	$(MM_LIBS) \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+mmsmsmonitor_SOURCES = mmsmsmonitor.c
+mmsmsmonitor_CPPFLAGS = \
+	$(MM_CFLAGS) \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/include \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/libmm-glib \
+	-I$(top_srcdir)/libmm-glib/generated \
+	-I$(top_builddir)/libmm-glib/generated
+
+mmsmsmonitor_LDADD = \
+	$(MM_LIBS) \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
 all: all-am
 
 .SUFFIXES:
@@ -483,6 +532,14 @@ mmrules$(EXEEXT): $(mmrules_OBJECTS) $(mmrules_DEPENDENCIES) $(EXTRA_mmrules_DEP
 	@rm -f mmrules$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(mmrules_OBJECTS) $(mmrules_LDADD) $(LIBS)
 
+mmsmsmonitor$(EXEEXT): $(mmsmsmonitor_OBJECTS) $(mmsmsmonitor_DEPENDENCIES) $(EXTRA_mmsmsmonitor_DEPENDENCIES) 
+	@rm -f mmsmsmonitor$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(mmsmsmonitor_OBJECTS) $(mmsmsmonitor_LDADD) $(LIBS)
+
+mmsmspdu$(EXEEXT): $(mmsmspdu_OBJECTS) $(mmsmspdu_DEPENDENCIES) $(EXTRA_mmsmspdu_DEPENDENCIES) 
+	@rm -f mmsmspdu$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(mmsmspdu_OBJECTS) $(mmsmspdu_LDADD) $(LIBS)
+
 mmtty$(EXEEXT): $(mmtty_OBJECTS) $(mmtty_DEPENDENCIES) $(EXTRA_mmtty_DEPENDENCIES) 
 	@rm -f mmtty$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(mmtty_OBJECTS) $(mmtty_LDADD) $(LIBS)
@@ -495,6 +552,8 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsudev-lsudev.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmrules-mmrules.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmsmsmonitor-mmsmsmonitor.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmsmspdu-mmsmspdu.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmtty-mmtty.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
@@ -554,6 +613,34 @@ mmrules-mmrules.obj: mmrules.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mmrules.c' object='mmrules-mmrules.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmrules_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mmrules-mmrules.obj `if test -f 'mmrules.c'; then $(CYGPATH_W) 'mmrules.c'; else $(CYGPATH_W) '$(srcdir)/mmrules.c'; fi`
+
+mmsmsmonitor-mmsmsmonitor.o: mmsmsmonitor.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmsmsmonitor_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mmsmsmonitor-mmsmsmonitor.o -MD -MP -MF $(DEPDIR)/mmsmsmonitor-mmsmsmonitor.Tpo -c -o mmsmsmonitor-mmsmsmonitor.o `test -f 'mmsmsmonitor.c' || echo '$(srcdir)/'`mmsmsmonitor.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mmsmsmonitor-mmsmsmonitor.Tpo $(DEPDIR)/mmsmsmonitor-mmsmsmonitor.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mmsmsmonitor.c' object='mmsmsmonitor-mmsmsmonitor.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmsmsmonitor_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mmsmsmonitor-mmsmsmonitor.o `test -f 'mmsmsmonitor.c' || echo '$(srcdir)/'`mmsmsmonitor.c
+
+mmsmsmonitor-mmsmsmonitor.obj: mmsmsmonitor.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmsmsmonitor_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mmsmsmonitor-mmsmsmonitor.obj -MD -MP -MF $(DEPDIR)/mmsmsmonitor-mmsmsmonitor.Tpo -c -o mmsmsmonitor-mmsmsmonitor.obj `if test -f 'mmsmsmonitor.c'; then $(CYGPATH_W) 'mmsmsmonitor.c'; else $(CYGPATH_W) '$(srcdir)/mmsmsmonitor.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mmsmsmonitor-mmsmsmonitor.Tpo $(DEPDIR)/mmsmsmonitor-mmsmsmonitor.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mmsmsmonitor.c' object='mmsmsmonitor-mmsmsmonitor.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmsmsmonitor_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mmsmsmonitor-mmsmsmonitor.obj `if test -f 'mmsmsmonitor.c'; then $(CYGPATH_W) 'mmsmsmonitor.c'; else $(CYGPATH_W) '$(srcdir)/mmsmsmonitor.c'; fi`
+
+mmsmspdu-mmsmspdu.o: mmsmspdu.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmsmspdu_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mmsmspdu-mmsmspdu.o -MD -MP -MF $(DEPDIR)/mmsmspdu-mmsmspdu.Tpo -c -o mmsmspdu-mmsmspdu.o `test -f 'mmsmspdu.c' || echo '$(srcdir)/'`mmsmspdu.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mmsmspdu-mmsmspdu.Tpo $(DEPDIR)/mmsmspdu-mmsmspdu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mmsmspdu.c' object='mmsmspdu-mmsmspdu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmsmspdu_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mmsmspdu-mmsmspdu.o `test -f 'mmsmspdu.c' || echo '$(srcdir)/'`mmsmspdu.c
+
+mmsmspdu-mmsmspdu.obj: mmsmspdu.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmsmspdu_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mmsmspdu-mmsmspdu.obj -MD -MP -MF $(DEPDIR)/mmsmspdu-mmsmspdu.Tpo -c -o mmsmspdu-mmsmspdu.obj `if test -f 'mmsmspdu.c'; then $(CYGPATH_W) 'mmsmspdu.c'; else $(CYGPATH_W) '$(srcdir)/mmsmspdu.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mmsmspdu-mmsmspdu.Tpo $(DEPDIR)/mmsmspdu-mmsmspdu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mmsmspdu.c' object='mmsmspdu-mmsmspdu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmsmspdu_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mmsmspdu-mmsmspdu.obj `if test -f 'mmsmspdu.c'; then $(CYGPATH_W) 'mmsmspdu.c'; else $(CYGPATH_W) '$(srcdir)/mmsmspdu.c'; fi`
 
 mmtty-mmtty.o: mmtty.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmtty_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mmtty-mmtty.o -MD -MP -MF $(DEPDIR)/mmtty-mmtty.Tpo -c -o mmtty-mmtty.o `test -f 'mmtty.c' || echo '$(srcdir)/'`mmtty.c
@@ -702,6 +789,8 @@ clean-am: clean-generic clean-libtool clean-noinstPROGRAMS \
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/lsudev-lsudev.Po
 	-rm -f ./$(DEPDIR)/mmrules-mmrules.Po
+	-rm -f ./$(DEPDIR)/mmsmsmonitor-mmsmsmonitor.Po
+	-rm -f ./$(DEPDIR)/mmsmspdu-mmsmspdu.Po
 	-rm -f ./$(DEPDIR)/mmtty-mmtty.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -750,6 +839,8 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/lsudev-lsudev.Po
 	-rm -f ./$(DEPDIR)/mmrules-mmrules.Po
+	-rm -f ./$(DEPDIR)/mmsmsmonitor-mmsmsmonitor.Po
+	-rm -f ./$(DEPDIR)/mmsmspdu-mmsmspdu.Po
 	-rm -f ./$(DEPDIR)/mmtty-mmtty.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
@@ -787,6 +878,8 @@ uninstall-am:
 
 .PRECIOUS: Makefile
 
+	$(NULL)
+	$(NULL)
 	$(NULL)
 	$(NULL)
 

@@ -12,6 +12,7 @@
  *
  * Copyright (C) 2014 Ammonit Measurement GmbH
  * Copyright (C) 2014 - 2018 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2019 Purism SPC
  */
 
 #include <config.h>
@@ -28,6 +29,7 @@
 #include "mm-base-modem.h"
 #include "mm-base-modem-at.h"
 #include "mm-shared-cinterion.h"
+#include "mm-modem-helpers-cinterion.h"
 
 /*****************************************************************************/
 /* Private data context */
@@ -42,16 +44,26 @@ typedef enum {
 } FeatureSupport;
 
 typedef struct {
+    /* location */
     MMIfaceModemLocation  *iface_modem_location_parent;
     MMModemLocationSource  supported_sources;
     MMModemLocationSource  enabled_sources;
     FeatureSupport         sgpss_support;
     FeatureSupport         sgpsc_support;
+    /* voice */
+    MMIfaceModemVoice     *iface_modem_voice_parent;
+    FeatureSupport         slcc_support;
+    GRegex                *slcc_regex;
+    /* time */
+    MMIfaceModemTime      *iface_modem_time_parent;
+    GRegex                *ctzu_regex;
 } Private;
 
 static void
 private_free (Private *ctx)
 {
+    g_regex_unref (ctx->ctzu_regex);
+    g_regex_unref (ctx->slcc_regex);
     g_slice_free (Private, ctx);
 }
 
@@ -71,10 +83,20 @@ get_private (MMSharedCinterion *self)
         priv->enabled_sources = MM_MODEM_LOCATION_SOURCE_NONE;
         priv->sgpss_support = FEATURE_SUPPORT_UNKNOWN;
         priv->sgpsc_support = FEATURE_SUPPORT_UNKNOWN;
+        priv->slcc_support = FEATURE_SUPPORT_UNKNOWN;
+        priv->slcc_regex = mm_cinterion_get_slcc_regex ();
+        priv->ctzu_regex = mm_cinterion_get_ctzu_regex ();
 
-        /* Setup parent class' MMIfaceModemLocation */
+        /* Setup parent class' MMIfaceModemLocation, MMIfaceModemVoice and MMIfaceModemTime */
+
         g_assert (MM_SHARED_CINTERION_GET_INTERFACE (self)->peek_parent_location_interface);
         priv->iface_modem_location_parent = MM_SHARED_CINTERION_GET_INTERFACE (self)->peek_parent_location_interface (self);
+
+        g_assert (MM_SHARED_CINTERION_GET_INTERFACE (self)->peek_parent_voice_interface);
+        priv->iface_modem_voice_parent = MM_SHARED_CINTERION_GET_INTERFACE (self)->peek_parent_voice_interface (self);
+
+        g_assert (MM_SHARED_CINTERION_GET_INTERFACE (self)->peek_parent_time_interface);
+        priv->iface_modem_time_parent = MM_SHARED_CINTERION_GET_INTERFACE (self)->peek_parent_time_interface (self);
 
         g_object_set_qdata_full (G_OBJECT (self), private_quark, priv, (GDestroyNotify)private_free);
     }
@@ -783,6 +805,729 @@ mm_shared_cinterion_enable_location_gathering (MMIfaceModemLocation  *self,
     g_task_set_task_data (task, ctx, (GDestroyNotify) enable_location_gathering_context_free);
 
     enable_location_gathering_context_gps_step (task);
+}
+
+/*****************************************************************************/
+
+MMBaseCall *
+mm_shared_cinterion_create_call (MMIfaceModemVoice *self,
+                                 MMCallDirection    direction,
+                                 const gchar       *number)
+{
+    Private *priv;
+
+    /* If ^SLCC is supported create a cinterion call object */
+    priv = get_private (MM_SHARED_CINTERION (self));
+    if (priv->slcc_support == FEATURE_SUPPORTED) {
+        mm_dbg ("Created new call with ^SLCC support");
+        return mm_base_call_new (MM_BASE_MODEM (self),
+                                 direction,
+                                 number,
+                                 /* When SLCC is supported we have support for detailed
+                                  * call list events via call list report URCs */
+                                 TRUE,   /* incoming timeout not required */
+                                 TRUE,   /* dialing->ringing supported */
+                                 TRUE);  /* ringing->active supported */
+    }
+
+    /* otherwise, run parent's generic base call logic */
+    g_assert (priv->iface_modem_voice_parent);
+    g_assert (priv->iface_modem_voice_parent->create_call);
+    return priv->iface_modem_voice_parent->create_call (self, direction, number);
+}
+
+/*****************************************************************************/
+/* Common enable/disable voice unsolicited events */
+
+typedef struct {
+    gboolean        enable;
+    MMPortSerialAt *primary;
+    MMPortSerialAt *secondary;
+    gchar          *slcc_command;
+    gboolean        slcc_primary_done;
+    gboolean        slcc_secondary_done;
+} VoiceUnsolicitedEventsContext;
+
+static void
+voice_unsolicited_events_context_free (VoiceUnsolicitedEventsContext *ctx)
+{
+    g_clear_object (&ctx->secondary);
+    g_clear_object (&ctx->primary);
+    g_free (ctx->slcc_command);
+    g_slice_free (VoiceUnsolicitedEventsContext, ctx);
+}
+
+static gboolean
+common_voice_enable_disable_unsolicited_events_finish (MMSharedCinterion  *self,
+                                                       GAsyncResult       *res,
+                                                       GError            **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void run_voice_enable_disable_unsolicited_events (GTask *task);
+
+static void
+slcc_command_ready (MMBaseModem  *self,
+                    GAsyncResult *res,
+                    GTask        *task)
+{
+    VoiceUnsolicitedEventsContext *ctx;
+    GError                        *error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    if (!mm_base_modem_at_command_finish (self, res, &error)) {
+        mm_dbg ("Couldn't %s ^SLCC reporting: '%s'",
+                ctx->enable ? "enable" : "disable",
+                error->message);
+        g_error_free (error);
+    }
+
+    /* Continue on next port */
+    run_voice_enable_disable_unsolicited_events (task);
+}
+
+static void
+run_voice_enable_disable_unsolicited_events (GTask *task)
+{
+    MMSharedCinterion             *self;
+    Private                       *priv;
+    VoiceUnsolicitedEventsContext *ctx;
+    MMPortSerialAt                *port = NULL;
+
+    self = MM_SHARED_CINTERION (g_task_get_source_object (task));
+    priv = get_private (self);
+    ctx  = g_task_get_task_data (task);
+
+    /* If not ^SLCC supported, we're done */
+    if (priv->slcc_support == FEATURE_NOT_SUPPORTED) {
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    if (!ctx->slcc_primary_done && ctx->primary) {
+        mm_dbg ("%s ^SLCC  extended list of current calls reporting in primary port...",
+                ctx->enable ? "Enabling" : "Disabling");
+        ctx->slcc_primary_done = TRUE;
+        port = ctx->primary;
+    } else if (!ctx->slcc_secondary_done && ctx->secondary) {
+        mm_dbg ("%s ^SLCC  extended list of current calls reporting in secondary port...",
+                ctx->enable ? "Enabling" : "Disabling");
+        ctx->slcc_secondary_done = TRUE;
+        port = ctx->secondary;
+    }
+
+    if (port) {
+        mm_base_modem_at_command_full (MM_BASE_MODEM (self),
+                                       port,
+                                       ctx->slcc_command,
+                                       3,
+                                       FALSE,
+                                       FALSE,
+                                       NULL,
+                                       (GAsyncReadyCallback)slcc_command_ready,
+                                       task);
+        return;
+    }
+
+    /* Fully done now */
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+common_voice_enable_disable_unsolicited_events (MMSharedCinterion   *self,
+                                                gboolean             enable,
+                                                GAsyncReadyCallback  callback,
+                                                gpointer             user_data)
+{
+    VoiceUnsolicitedEventsContext *ctx;
+    GTask                         *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    ctx = g_slice_new0 (VoiceUnsolicitedEventsContext);
+    ctx->enable = enable;
+    if (enable)
+        ctx->slcc_command = g_strdup ("^SLCC=1");
+    else
+        ctx->slcc_command = g_strdup ("^SLCC=0");
+    ctx->primary = mm_base_modem_get_port_primary (MM_BASE_MODEM (self));
+    ctx->secondary = mm_base_modem_get_port_secondary (MM_BASE_MODEM (self));
+    g_task_set_task_data (task, ctx, (GDestroyNotify) voice_unsolicited_events_context_free);
+
+    run_voice_enable_disable_unsolicited_events (task);
+}
+
+/*****************************************************************************/
+/* Disable unsolicited events (Voice interface) */
+
+gboolean
+mm_shared_cinterion_voice_disable_unsolicited_events_finish (MMIfaceModemVoice  *self,
+                                                             GAsyncResult       *res,
+                                                             GError            **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+parent_voice_disable_unsolicited_events_ready (MMIfaceModemVoice *self,
+                                               GAsyncResult      *res,
+                                               GTask             *task)
+{
+    GError  *error = NULL;
+    Private *priv;
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+
+    if (!priv->iface_modem_voice_parent->disable_unsolicited_events_finish (self, res, &error)) {
+        mm_warn ("Couldn't disable parent voice unsolicited events: %s", error->message);
+        g_error_free (error);
+    }
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+voice_disable_unsolicited_events_ready (MMSharedCinterion *self,
+                                        GAsyncResult      *res,
+                                        GTask             *task)
+{
+    Private *priv;
+    GError  *error = NULL;
+
+    if (!common_voice_enable_disable_unsolicited_events_finish (self, res, &error)) {
+        mm_warn ("Couldn't disable Cinterion-specific voice unsolicited events: %s", error->message);
+        g_error_free (error);
+    }
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+    g_assert (priv->iface_modem_voice_parent);
+    g_assert (priv->iface_modem_voice_parent->disable_unsolicited_events);
+    g_assert (priv->iface_modem_voice_parent->disable_unsolicited_events_finish);
+
+    /* Chain up parent's disable */
+    priv->iface_modem_voice_parent->disable_unsolicited_events (
+        MM_IFACE_MODEM_VOICE (self),
+        (GAsyncReadyCallback)parent_voice_disable_unsolicited_events_ready,
+        task);
+}
+
+void
+mm_shared_cinterion_voice_disable_unsolicited_events (MMIfaceModemVoice   *self,
+                                                      GAsyncReadyCallback  callback,
+                                                      gpointer             user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    /* our own disabling first */
+    common_voice_enable_disable_unsolicited_events (MM_SHARED_CINTERION (self),
+                                                    FALSE,
+                                                    (GAsyncReadyCallback) voice_disable_unsolicited_events_ready,
+                                                    task);
+}
+
+/*****************************************************************************/
+/* Enable unsolicited events (Voice interface) */
+
+gboolean
+mm_shared_cinterion_voice_enable_unsolicited_events_finish (MMIfaceModemVoice  *self,
+                                                            GAsyncResult       *res,
+                                                            GError            **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+voice_enable_unsolicited_events_ready (MMSharedCinterion *self,
+                                       GAsyncResult      *res,
+                                       GTask             *task)
+{
+    GError *error = NULL;
+
+    if (!common_voice_enable_disable_unsolicited_events_finish (self, res, &error)) {
+        mm_warn ("Couldn't enable Cinterion-specific voice unsolicited events: %s", error->message);
+        g_error_free (error);
+    }
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+parent_voice_enable_unsolicited_events_ready (MMIfaceModemVoice *self,
+                                              GAsyncResult      *res,
+                                              GTask             *task)
+{
+    GError  *error = NULL;
+    Private *priv;
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+
+    if (!priv->iface_modem_voice_parent->enable_unsolicited_events_finish (self, res, &error)) {
+        mm_warn ("Couldn't enable parent voice unsolicited events: %s", error->message);
+        g_error_free (error);
+    }
+
+    /* our own enabling next */
+    common_voice_enable_disable_unsolicited_events (MM_SHARED_CINTERION (self),
+                                                    TRUE,
+                                                    (GAsyncReadyCallback) voice_enable_unsolicited_events_ready,
+                                                    task);
+}
+
+void
+mm_shared_cinterion_voice_enable_unsolicited_events (MMIfaceModemVoice   *self,
+                                                     GAsyncReadyCallback  callback,
+                                                     gpointer             user_data)
+{
+    Private *priv;
+    GTask   *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+    g_assert (priv->iface_modem_voice_parent);
+    g_assert (priv->iface_modem_voice_parent->enable_unsolicited_events);
+    g_assert (priv->iface_modem_voice_parent->enable_unsolicited_events_finish);
+
+    /* chain up parent's enable first */
+    priv->iface_modem_voice_parent->enable_unsolicited_events (
+        self,
+        (GAsyncReadyCallback)parent_voice_enable_unsolicited_events_ready,
+        task);
+}
+
+/*****************************************************************************/
+/* Common setup/cleanup voice unsolicited events */
+
+static void
+slcc_received (MMPortSerialAt    *port,
+               GMatchInfo        *match_info,
+               MMSharedCinterion *self)
+{
+    gchar  *full;
+    GError *error = NULL;
+    GList  *call_info_list = NULL;
+
+    full = g_match_info_fetch (match_info, 0);
+
+    if (!mm_cinterion_parse_slcc_list (full, &call_info_list, &error)) {
+        mm_warn ("couldn't parse ^SLCC list: %s", error->message);
+        g_error_free (error);
+    } else
+        mm_iface_modem_voice_report_all_calls (MM_IFACE_MODEM_VOICE (self), call_info_list);
+
+    mm_cinterion_call_info_list_free (call_info_list);
+    g_free (full);
+}
+
+static void
+common_voice_setup_cleanup_unsolicited_events (MMSharedCinterion *self,
+                                               gboolean           enable)
+{
+    Private        *priv;
+    MMPortSerialAt *ports[2];
+    guint           i;
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+
+    ports[0] = mm_base_modem_peek_port_primary   (MM_BASE_MODEM (self));
+    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+
+    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
+        if (!ports[i])
+            continue;
+
+        mm_port_serial_at_add_unsolicited_msg_handler (ports[i],
+                                                       priv->slcc_regex,
+                                                       enable ? (MMPortSerialAtUnsolicitedMsgFn)slcc_received : NULL,
+                                                       enable ? self : NULL,
+                                                       NULL);
+    }
+}
+
+/*****************************************************************************/
+/* Cleanup unsolicited events (Voice interface) */
+
+gboolean
+mm_shared_cinterion_voice_cleanup_unsolicited_events_finish (MMIfaceModemVoice  *self,
+                                                             GAsyncResult       *res,
+                                                             GError            **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+parent_voice_cleanup_unsolicited_events_ready (MMIfaceModemVoice *self,
+                                               GAsyncResult      *res,
+                                               GTask             *task)
+{
+    GError  *error = NULL;
+    Private *priv;
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+
+    if (!priv->iface_modem_voice_parent->cleanup_unsolicited_events_finish (self, res, &error)) {
+        mm_warn ("Couldn't cleanup parent voice unsolicited events: %s", error->message);
+        g_error_free (error);
+    }
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+void
+mm_shared_cinterion_voice_cleanup_unsolicited_events (MMIfaceModemVoice   *self,
+                                                      GAsyncReadyCallback  callback,
+                                                      gpointer             user_data)
+{
+    Private *priv;
+    GTask   *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+    g_assert (priv->iface_modem_voice_parent);
+    g_assert (priv->iface_modem_voice_parent->cleanup_unsolicited_events);
+    g_assert (priv->iface_modem_voice_parent->cleanup_unsolicited_events_finish);
+
+    /* our own cleanup first */
+    common_voice_setup_cleanup_unsolicited_events (MM_SHARED_CINTERION (self), FALSE);
+
+    /* Chain up parent's cleanup */
+    priv->iface_modem_voice_parent->cleanup_unsolicited_events (
+        self,
+        (GAsyncReadyCallback)parent_voice_cleanup_unsolicited_events_ready,
+        task);
+}
+
+/*****************************************************************************/
+/* Setup unsolicited events (Voice interface) */
+
+gboolean
+mm_shared_cinterion_voice_setup_unsolicited_events_finish (MMIfaceModemVoice  *self,
+                                                           GAsyncResult       *res,
+                                                           GError            **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+parent_voice_setup_unsolicited_events_ready (MMIfaceModemVoice *self,
+                                             GAsyncResult      *res,
+                                             GTask             *task)
+{
+    GError  *error = NULL;
+    Private *priv;
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+
+    if (!priv->iface_modem_voice_parent->setup_unsolicited_events_finish (self, res, &error)) {
+        mm_warn ("Couldn't setup parent voice unsolicited events: %s", error->message);
+        g_error_free (error);
+    }
+
+    /* our own setup next */
+    common_voice_setup_cleanup_unsolicited_events (MM_SHARED_CINTERION (self), TRUE);
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+void
+mm_shared_cinterion_voice_setup_unsolicited_events (MMIfaceModemVoice   *self,
+                                                    GAsyncReadyCallback  callback,
+                                                    gpointer             user_data)
+{
+    Private *priv;
+    GTask   *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+    g_assert (priv->iface_modem_voice_parent);
+    g_assert (priv->iface_modem_voice_parent->setup_unsolicited_events);
+    g_assert (priv->iface_modem_voice_parent->setup_unsolicited_events_finish);
+
+    /* chain up parent's setup first */
+    priv->iface_modem_voice_parent->setup_unsolicited_events (
+        self,
+        (GAsyncReadyCallback)parent_voice_setup_unsolicited_events_ready,
+        task);
+}
+
+/*****************************************************************************/
+/* Check if Voice supported (Voice interface) */
+
+gboolean
+mm_shared_cinterion_voice_check_support_finish (MMIfaceModemVoice  *self,
+                                                GAsyncResult       *res,
+                                                GError            **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+slcc_format_check_ready (MMBroadbandModem *self,
+                         GAsyncResult     *res,
+                         GTask            *task)
+{
+    Private *priv;
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+
+    /* ^SLCC supported unless we got any error response */
+    priv->slcc_support = (!!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, NULL) ?
+                          FEATURE_SUPPORTED : FEATURE_NOT_SUPPORTED);
+
+    /* If ^SLCC supported we won't need polling in the parent */
+    g_object_set (self,
+                  MM_IFACE_MODEM_VOICE_PERIODIC_CALL_LIST_CHECK_DISABLED, (priv->slcc_support == FEATURE_SUPPORTED),
+                  NULL);
+
+    /* ^SLCC command is supported; assume we have full voice capabilities */
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+parent_voice_check_support_ready (MMIfaceModemVoice *self,
+                                  GAsyncResult      *res,
+                                  GTask             *task)
+{
+    Private *priv;
+    GError  *error = NULL;
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+    if (!priv->iface_modem_voice_parent->check_support_finish (self, res, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    /* voice is supported, check if ^SLCC is available */
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "^SLCC=?",
+                              3,
+                              /* Do NOT cache as the reply may be different if PIN locked
+                               * or unlocked. E.g. we may not support ^SLCC for emergency
+                               * voice calls. */
+                              FALSE,
+                              (GAsyncReadyCallback) slcc_format_check_ready,
+                              task);
+}
+
+void
+mm_shared_cinterion_voice_check_support (MMIfaceModemVoice   *self,
+                                         GAsyncReadyCallback  callback,
+                                         gpointer             user_data)
+{
+    Private *priv;
+    GTask   *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+    g_assert (priv->iface_modem_voice_parent);
+    g_assert (priv->iface_modem_voice_parent->check_support);
+    g_assert (priv->iface_modem_voice_parent->check_support_finish);
+
+    /* chain up parent's setup first */
+    priv->iface_modem_voice_parent->check_support (
+        self,
+        (GAsyncReadyCallback)parent_voice_check_support_ready,
+        task);
+}
+
+/*****************************************************************************/
+/* Common setup/cleanup time unsolicited events */
+
+static void
+ctzu_received (MMPortSerialAt    *port,
+               GMatchInfo        *match_info,
+               MMSharedCinterion *self)
+{
+    gchar             *iso8601 = NULL;
+    MMNetworkTimezone *tz = NULL;
+    GError            *error = NULL;
+
+    if (!mm_cinterion_parse_ctzu_urc (match_info, &iso8601, &tz, &error)) {
+        mm_dbg ("Couldn't process +CTZU URC: %s", error->message);
+        g_error_free (error);
+        return;
+    }
+
+    g_assert (iso8601);
+    mm_dbg ("+CTZU URC received: %s", iso8601);
+    mm_iface_modem_time_update_network_time (MM_IFACE_MODEM_TIME (self), iso8601);
+    g_free (iso8601);
+
+    g_assert (tz);
+    mm_iface_modem_time_update_network_timezone (MM_IFACE_MODEM_TIME (self), tz);
+    g_object_unref (tz);
+}
+
+static void
+common_time_setup_cleanup_unsolicited_events (MMSharedCinterion *self,
+                                              gboolean           enable)
+{
+    Private        *priv;
+    MMPortSerialAt *ports[2];
+    guint           i;
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+
+    ports[0] = mm_base_modem_peek_port_primary   (MM_BASE_MODEM (self));
+    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+
+    mm_dbg ("%s up time unsolicited events...",
+            enable ? "Setting" : "Cleaning");
+
+    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
+        if (!ports[i])
+            continue;
+
+        mm_port_serial_at_add_unsolicited_msg_handler (ports[i],
+                                                       priv->ctzu_regex,
+                                                       enable ? (MMPortSerialAtUnsolicitedMsgFn)ctzu_received : NULL,
+                                                       enable ? self : NULL,
+                                                       NULL);
+    }
+}
+
+/*****************************************************************************/
+/* Cleanup unsolicited events (Time interface) */
+
+gboolean
+mm_shared_cinterion_time_cleanup_unsolicited_events_finish (MMIfaceModemTime  *self,
+                                                            GAsyncResult      *res,
+                                                            GError           **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+parent_time_cleanup_unsolicited_events_ready (MMIfaceModemTime *self,
+                                              GAsyncResult     *res,
+                                              GTask            *task)
+{
+    GError  *error = NULL;
+    Private *priv;
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+
+    if (!priv->iface_modem_time_parent->cleanup_unsolicited_events_finish (self, res, &error)) {
+        mm_warn ("Couldn't cleanup parent time unsolicited events: %s", error->message);
+        g_error_free (error);
+    }
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+void
+mm_shared_cinterion_time_cleanup_unsolicited_events (MMIfaceModemTime    *self,
+                                                     GAsyncReadyCallback  callback,
+                                                     gpointer             user_data)
+{
+    Private *priv;
+    GTask   *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+    g_assert (priv->iface_modem_time_parent);
+
+    /* our own cleanup first */
+    common_time_setup_cleanup_unsolicited_events (MM_SHARED_CINTERION (self), FALSE);
+
+    if (priv->iface_modem_time_parent->cleanup_unsolicited_events &&
+        priv->iface_modem_time_parent->cleanup_unsolicited_events_finish) {
+        /* Chain up parent's cleanup */
+        priv->iface_modem_time_parent->cleanup_unsolicited_events (
+            self,
+            (GAsyncReadyCallback)parent_time_cleanup_unsolicited_events_ready,
+            task);
+        return;
+    }
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+/*****************************************************************************/
+/* Setup unsolicited events (Time interface) */
+
+gboolean
+mm_shared_cinterion_time_setup_unsolicited_events_finish (MMIfaceModemTime  *self,
+                                                          GAsyncResult      *res,
+                                                          GError           **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+own_time_setup_unsolicited_events (GTask *task)
+{
+    MMSharedCinterion *self;
+
+    self = g_task_get_source_object (task);
+
+    /* our own setup next */
+    common_time_setup_cleanup_unsolicited_events (MM_SHARED_CINTERION (self), TRUE);
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+parent_time_setup_unsolicited_events_ready (MMIfaceModemTime *self,
+                                            GAsyncResult     *res,
+                                            GTask            *task)
+{
+    GError  *error = NULL;
+    Private *priv;
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+
+    if (!priv->iface_modem_time_parent->cleanup_unsolicited_events_finish (self, res, &error)) {
+        mm_warn ("Couldn't cleanup parent time unsolicited events: %s", error->message);
+        g_error_free (error);
+    }
+
+    own_time_setup_unsolicited_events (task);
+}
+
+void
+mm_shared_cinterion_time_setup_unsolicited_events (MMIfaceModemTime    *self,
+                                                   GAsyncReadyCallback  callback,
+                                                   gpointer             user_data)
+{
+    Private *priv;
+    GTask   *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    priv = get_private (MM_SHARED_CINTERION (self));
+    g_assert (priv->iface_modem_time_parent);
+
+    if (priv->iface_modem_time_parent->setup_unsolicited_events &&
+        priv->iface_modem_time_parent->setup_unsolicited_events_finish) {
+        /* chain up parent's setup first */
+        priv->iface_modem_time_parent->setup_unsolicited_events (
+            self,
+            (GAsyncReadyCallback)parent_time_setup_unsolicited_events_ready,
+            task);
+        return;
+    }
+
+    own_time_setup_unsolicited_events (task);
 }
 
 /*****************************************************************************/

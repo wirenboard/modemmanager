@@ -47,6 +47,8 @@ struct _MMNetworkTimezonePrivate {
  * Gets the timezone offset (in minutes) reported by the network.
  *
  * Returns: the offset, or %MM_NETWORK_TIMEZONE_OFFSET_UNKNOWN if unknown.
+ *
+ * Since: 1.0
  */
 gint
 mm_network_timezone_get_offset (MMNetworkTimezone *self)
@@ -57,6 +59,9 @@ mm_network_timezone_get_offset (MMNetworkTimezone *self)
     return self->priv->offset;
 }
 
+/**
+ * mm_network_timezone_set_offset: (skip)
+ */
 void
 mm_network_timezone_set_offset (MMNetworkTimezone *self,
                                 gint offset)
@@ -76,6 +81,8 @@ mm_network_timezone_set_offset (MMNetworkTimezone *self,
  * the network.
  *
  * Returns: the offset, or %MM_NETWORK_TIMEZONE_OFFSET_UNKNOWN if unknown.
+ *
+ * Since: 1.0
  */
 gint
 mm_network_timezone_get_dst_offset (MMNetworkTimezone *self)
@@ -86,6 +93,9 @@ mm_network_timezone_get_dst_offset (MMNetworkTimezone *self)
     return self->priv->dst_offset;
 }
 
+/**
+ * mm_network_timezone_set_dst_offset: (skip)
+ */
 void
 mm_network_timezone_set_dst_offset (MMNetworkTimezone *self,
                                     gint dst_offset)
@@ -103,7 +113,10 @@ mm_network_timezone_set_dst_offset (MMNetworkTimezone *self,
  *
  * Gets the number of leap seconds (TAI-UTC), as reported by the network.
  *
- * Returns: the number of leap seconds, or %MM_NETWORK_TIMEZONE_LEAP_SECONDS_UNKNOWN if unknown.
+ * Returns: the number of leap seconds, or
+ * %MM_NETWORK_TIMEZONE_LEAP_SECONDS_UNKNOWN if unknown.
+ *
+ * Since: 1.0
  */
 gint
 mm_network_timezone_get_leap_seconds (MMNetworkTimezone *self)
@@ -114,6 +127,9 @@ mm_network_timezone_get_leap_seconds (MMNetworkTimezone *self)
     return self->priv->leap_seconds;
 }
 
+/**
+ * mm_network_timezone_set_leap_seconds: (skip)
+ */
 void
 mm_network_timezone_set_leap_seconds (MMNetworkTimezone *self,
                                       gint leap_seconds)
@@ -125,6 +141,9 @@ mm_network_timezone_set_leap_seconds (MMNetworkTimezone *self,
 
 /*****************************************************************************/
 
+/**
+ * mm_network_timezone_get_dictionary: (skip)
+ */
 GVariant *
 mm_network_timezone_get_dictionary (MMNetworkTimezone *self)
 {
@@ -161,6 +180,9 @@ mm_network_timezone_get_dictionary (MMNetworkTimezone *self)
 
 /*****************************************************************************/
 
+/**
+ * mm_network_timezone_new_from_dictionary: (skip)
+ */
 MMNetworkTimezone *
 mm_network_timezone_new_from_dictionary (GVariant *dictionary,
                                          GError **error)
@@ -226,6 +248,9 @@ mm_network_timezone_new_from_dictionary (GVariant *dictionary,
 
 /*****************************************************************************/
 
+/**
+ * mm_network_timezone_new: (skip)
+ */
 MMNetworkTimezone *
 mm_network_timezone_new (void)
 {
@@ -236,7 +261,7 @@ mm_network_timezone_new (void)
 static void
 mm_network_timezone_init (MMNetworkTimezone *self)
 {
-    self->priv = G_TYPE_INSTANCE_GET_PRIVATE ((self),
+    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
                                               MM_TYPE_NETWORK_TIMEZONE,
                                               MMNetworkTimezonePrivate);
 

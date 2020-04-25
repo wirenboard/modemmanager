@@ -122,7 +122,7 @@ change_pin (MMBaseSim *self,
     command = g_strdup_printf ("+CPWD=\"SC\",\"%s\",\"%s\"",
                                old_pin,
                                new_pin);
-    mm_base_modem_at_command (MM_BASE_MODEM (self->priv->modem),
+    mm_base_modem_at_command (self->priv->modem,
                               command,
                               3,
                               FALSE,
@@ -155,13 +155,13 @@ handle_change_pin_context_free (HandleChangePinContext *ctx)
 }
 
 static void
-after_change_update_lock_info_ready (MMIfaceModem *self,
+after_change_update_lock_info_ready (MMIfaceModem *modem,
                                      GAsyncResult *res,
                                      HandleChangePinContext *ctx)
 {
     /* We just want to ensure that we tried to update the unlock
      * retries, no big issue if it failed */
-    mm_iface_modem_update_lock_info_finish (self, res, NULL);
+    mm_iface_modem_update_lock_info_finish (modem, res, NULL);
 
     if (ctx->save_error) {
         g_dbus_method_invocation_take_error (ctx->invocation, ctx->save_error);
@@ -291,7 +291,7 @@ enable_pin (MMBaseSim *self,
     command = g_strdup_printf ("+CLCK=\"SC\",%d,\"%s\"",
                                enabled ? 1 : 0,
                                pin);
-    mm_base_modem_at_command (MM_BASE_MODEM (self->priv->modem),
+    mm_base_modem_at_command (self->priv->modem,
                               command,
                               3,
                               FALSE,
@@ -461,7 +461,7 @@ common_send_pin_puk (MMBaseSim *self,
                g_strdup_printf ("+CPIN=\"%s\",\"%s\"", puk, pin) :
                g_strdup_printf ("+CPIN=\"%s\"", pin));
 
-    mm_base_modem_at_command (MM_BASE_MODEM (self->priv->modem),
+    mm_base_modem_at_command (self->priv->modem,
                               command,
                               3,
                               FALSE,
@@ -491,17 +491,6 @@ send_pin (MMBaseSim *self,
 
 /*****************************************************************************/
 /* SEND PIN/PUK (common logic) */
-
-typedef struct {
-    GError *save_error;
-} SendPinPukContext;
-
-static void
-send_pin_puk_context_free (SendPinPukContext *ctx)
-{
-    g_clear_error (&ctx->save_error);
-    g_free (ctx);
-}
 
 static GError *
 error_for_unlock_check (MMModemLock lock)
@@ -536,17 +525,17 @@ error_for_unlock_check (MMModemLock lock)
 }
 
 gboolean
-mm_base_sim_send_pin_finish (MMBaseSim *self,
-                             GAsyncResult *res,
-                             GError **error)
+mm_base_sim_send_pin_finish (MMBaseSim     *self,
+                             GAsyncResult  *res,
+                             GError       **error)
 {
     return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 gboolean
-mm_base_sim_send_puk_finish (MMBaseSim *self,
-                             GAsyncResult *res,
-                             GError **error)
+mm_base_sim_send_puk_finish (MMBaseSim     *self,
+                             GAsyncResult  *res,
+                             GError       **error)
 {
     return g_task_propagate_boolean (G_TASK (res), error);
 }
@@ -554,13 +543,10 @@ mm_base_sim_send_puk_finish (MMBaseSim *self,
 static void
 update_lock_info_ready (MMIfaceModem *modem,
                         GAsyncResult *res,
-                        GTask *task)
+                        GTask        *task)
 {
-    SendPinPukContext *ctx;
-    GError *error = NULL;
-    MMModemLock lock;
-
-    ctx = g_task_get_task_data (task);
+    GError      *error = NULL;
+    MMModemLock  lock;
 
     lock = mm_iface_modem_update_lock_info_finish (modem, res, &error);
     /* Even if we may be SIM-PIN2/PUK2 locked, we don't consider this an error
@@ -568,15 +554,17 @@ update_lock_info_ready (MMIfaceModem *modem,
     if (lock != MM_MODEM_LOCK_NONE &&
         lock != MM_MODEM_LOCK_SIM_PIN2 &&
         lock != MM_MODEM_LOCK_SIM_PUK2) {
+        const GError *saved_error;
+
         /* Device is locked. Now:
          *   - If we got an error in the original send-pin action, report it.
          *   - If we got an error in the pin-check action, report it.
          *   - Otherwise, build our own error from the lock code.
          */
-        if (ctx->save_error) {
+        saved_error = g_task_get_task_data (task);
+        if (saved_error) {
             g_clear_error (&error);
-            error = ctx->save_error;
-            ctx->save_error = NULL;
+            error = g_error_copy (saved_error);
         } else if (!error)
             error = error_for_unlock_check (lock);
 
@@ -588,17 +576,16 @@ update_lock_info_ready (MMIfaceModem *modem,
 }
 
 static void
-send_pin_ready (MMBaseSim *self,
+send_pin_ready (MMBaseSim    *self,
                 GAsyncResult *res,
-                GTask *task)
+                GTask        *task)
 {
-    SendPinPukContext *ctx;
-    MMModemLock known_lock = MM_MODEM_LOCK_UNKNOWN;
+    GError      *error = NULL;
+    MMModemLock  known_lock = MM_MODEM_LOCK_UNKNOWN;
 
-    ctx = g_task_get_task_data (task);
-
-    if (!MM_BASE_SIM_GET_CLASS (self)->send_pin_finish (self, res, &ctx->save_error)) {
-        if (g_error_matches (ctx->save_error,
+    if (!MM_BASE_SIM_GET_CLASS (self)->send_pin_finish (self, res, &error)) {
+        g_task_set_task_data (task, error, (GDestroyNotify)g_error_free);
+        if (g_error_matches (error,
                              MM_MOBILE_EQUIPMENT_ERROR,
                              MM_MOBILE_EQUIPMENT_ERROR_SIM_PUK))
             known_lock = MM_MODEM_LOCK_SIM_PUK;
@@ -613,15 +600,14 @@ send_pin_ready (MMBaseSim *self,
 }
 
 static void
-send_puk_ready (MMBaseSim *self,
+send_puk_ready (MMBaseSim    *self,
                 GAsyncResult *res,
-                GTask *task)
+                GTask        *task)
 {
-    SendPinPukContext *ctx;
+    GError *error = NULL;
 
-    ctx = g_task_get_task_data (task);
-
-    MM_BASE_SIM_GET_CLASS (self)->send_puk_finish (self, res, &ctx->save_error);
+    if (!MM_BASE_SIM_GET_CLASS (self)->send_puk_finish (self, res, &error))
+        g_task_set_task_data (task, error, (GDestroyNotify)g_error_free);
 
     /* Once pin/puk has been sent, recheck lock */
     mm_iface_modem_update_lock_info (MM_IFACE_MODEM (self->priv->modem),
@@ -631,73 +617,71 @@ send_puk_ready (MMBaseSim *self,
 }
 
 void
-mm_base_sim_send_pin (MMBaseSim *self,
-                      const gchar *pin,
-                      GAsyncReadyCallback callback,
-                      gpointer user_data)
+mm_base_sim_send_pin (MMBaseSim           *self,
+                      const gchar         *pin,
+                      GAsyncReadyCallback  callback,
+                      gpointer             user_data)
 {
-    SendPinPukContext *ctx;
     GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
 
     /* If sending PIN is not implemented, report an error */
     if (!MM_BASE_SIM_GET_CLASS (self)->send_pin ||
         !MM_BASE_SIM_GET_CLASS (self)->send_pin_finish) {
-        g_task_report_new_error (self,
-                                 callback,
-                                 user_data,
-                                 mm_base_sim_send_pin,
-                                 MM_CORE_ERROR,
-                                 MM_CORE_ERROR_UNSUPPORTED,
-                                 "Cannot send PIN: "
-                                 "operation not supported");
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                 "Cannot send PIN: operation not supported");
+        g_object_unref (task);
         return;
     }
 
-    ctx = g_new0 (SendPinPukContext, 1);
-
-    task = g_task_new (self, NULL, callback, user_data);
-    g_task_set_task_data (task, ctx, (GDestroyNotify)send_pin_puk_context_free);
+    /* Only allow sending SIM-PIN if really SIM-PIN locked */
+    if (mm_iface_modem_get_unlock_required (MM_IFACE_MODEM (self->priv->modem)) != MM_MODEM_LOCK_SIM_PIN) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_WRONG_STATE,
+                                 "Cannot send PIN: device is not SIM-PIN locked");
+        g_object_unref (task);
+        return;
+    }
 
     MM_BASE_SIM_GET_CLASS (self)->send_pin (self,
-                                       pin,
-                                       (GAsyncReadyCallback)send_pin_ready,
-                                       task);
+                                            pin,
+                                            (GAsyncReadyCallback)send_pin_ready,
+                                            task);
 }
 
 void
-mm_base_sim_send_puk (MMBaseSim *self,
-                      const gchar *puk,
-                      const gchar *new_pin,
-                      GAsyncReadyCallback callback,
-                      gpointer user_data)
+mm_base_sim_send_puk (MMBaseSim           *self,
+                      const gchar         *puk,
+                      const gchar         *new_pin,
+                      GAsyncReadyCallback  callback,
+                      gpointer             user_data)
 {
-    SendPinPukContext *ctx;
     GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
 
     /* If sending PIN is not implemented, report an error */
     if (!MM_BASE_SIM_GET_CLASS (self)->send_puk ||
         !MM_BASE_SIM_GET_CLASS (self)->send_puk_finish) {
-        g_task_report_new_error (self,
-                                 callback,
-                                 user_data,
-                                 mm_base_sim_send_puk,
-                                 MM_CORE_ERROR,
-                                 MM_CORE_ERROR_UNSUPPORTED,
-                                 "Cannot send PUK: "
-                                 "operation not supported");
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                 "Cannot send PUK: operation not supported");
+        g_object_unref (task);
         return;
     }
 
-    ctx = g_new0 (SendPinPukContext, 1);
-
-    task = g_task_new (self, NULL, callback, user_data);
-    g_task_set_task_data (task, ctx, (GDestroyNotify)send_pin_puk_context_free);
+    /* Only allow sending SIM-PUK if really SIM-PUK locked */
+    if (mm_iface_modem_get_unlock_required (MM_IFACE_MODEM (self->priv->modem)) != MM_MODEM_LOCK_SIM_PUK) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_WRONG_STATE,
+                                 "Cannot send PUK: device is not SIM-PUK locked");
+        g_object_unref (task);
+        return;
+    }
 
     MM_BASE_SIM_GET_CLASS (self)->send_puk (self,
-                                       puk,
-                                       new_pin,
-                                       (GAsyncReadyCallback)send_puk_ready,
-                                       task);
+                                            puk,
+                                            new_pin,
+                                            (GAsyncReadyCallback)send_puk_ready,
+                                            task);
 }
 
 /*****************************************************************************/
@@ -953,6 +937,28 @@ mm_base_sim_get_path (MMBaseSim *self)
 
 /*****************************************************************************/
 
+gboolean
+mm_base_sim_is_emergency_number (MMBaseSim   *self,
+                                 const gchar *number)
+{
+    const gchar *const *emergency_numbers;
+    guint               i;
+
+    emergency_numbers = mm_gdbus_sim_get_emergency_numbers (MM_GDBUS_SIM (self));
+
+    if (!emergency_numbers)
+        return FALSE;
+
+    for (i = 0; emergency_numbers[i]; i++) {
+        if (g_strcmp0 (number, emergency_numbers[i]) == 0)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+/*****************************************************************************/
+
 #undef STR_REPLY_READY_FN
 #define STR_REPLY_READY_FN(NAME)                                        \
     static void                                                         \
@@ -973,7 +979,84 @@ mm_base_sim_get_path (MMBaseSim *self)
     }
 
 /*****************************************************************************/
-/* SIM IDENTIFIER */
+/* Emergency numbers */
+
+static GStrv
+parse_emergency_numbers (const gchar  *response,
+                         GError      **error)
+{
+    guint  sw1 = 0;
+    guint  sw2 = 0;
+    gchar *hex = 0;
+    GStrv  ret;
+
+    if (!mm_3gpp_parse_crsm_response (response, &sw1, &sw2, &hex, error))
+        return NULL;
+
+    if ((sw1 == 0x90 && sw2 == 0x00) ||
+        (sw1 == 0x91) ||
+        (sw1 == 0x92) ||
+        (sw1 == 0x9f)) {
+        ret = mm_3gpp_parse_emergency_numbers (hex, error);
+        g_free (hex);
+        return ret;
+    }
+
+    g_free (hex);
+    g_set_error (error,
+                 MM_CORE_ERROR,
+                 MM_CORE_ERROR_FAILED,
+                 "SIM failed to handle CRSM request (sw1 %d sw2 %d)",
+                 sw1, sw2);
+    return NULL;
+}
+
+static GStrv
+load_emergency_numbers_finish (MMBaseSim     *self,
+                               GAsyncResult  *res,
+                               GError       **error)
+{
+    gchar *result;
+    GStrv  emergency_numbers;
+    guint  i;
+
+    result = g_task_propagate_pointer (G_TASK (res), error);
+    if (!result)
+        return NULL;
+
+    emergency_numbers = parse_emergency_numbers (result, error);
+    g_free (result);
+
+    if (!emergency_numbers)
+        return NULL;
+
+    for (i = 0; emergency_numbers[i]; i++)
+        mm_dbg ("loaded emergency number: %s", emergency_numbers[i]);
+
+    return emergency_numbers;
+}
+
+STR_REPLY_READY_FN (load_emergency_numbers)
+
+static void
+load_emergency_numbers (MMBaseSim           *self,
+                        GAsyncReadyCallback  callback,
+                        gpointer             user_data)
+{
+    mm_dbg ("loading emergency numbers...");
+
+    /* READ BINARY of EF_ECC (Emergency Call Codes) ETSI TS 51.011 section 10.3.27 */
+    mm_base_modem_at_command (
+        self->priv->modem,
+        "+CRSM=176,28599,0,0,15",
+        20,
+        FALSE,
+        (GAsyncReadyCallback)load_emergency_numbers_command_ready,
+        g_task_new (self, NULL, callback, user_data));
+}
+
+/*****************************************************************************/
+/* ICCID */
 
 static gchar *
 parse_iccid (const gchar *response,
@@ -1041,7 +1124,7 @@ load_sim_identifier (MMBaseSim *self,
 
     /* READ BINARY of EFiccid (ICC Identification) ETSI TS 102.221 section 13.2 */
     mm_base_modem_at_command (
-        MM_BASE_MODEM (self->priv->modem),
+        self->priv->modem,
         "+CRSM=176,12258,0,0,10",
         20,
         FALSE,
@@ -1108,7 +1191,7 @@ load_imsi (MMBaseSim *self,
     mm_dbg ("loading IMSI...");
 
     mm_base_modem_at_command (
-        MM_BASE_MODEM (self->priv->modem),
+        self->priv->modem,
         "+CIMI",
         3,
         FALSE,
@@ -1227,7 +1310,7 @@ load_operator_identifier (MMBaseSim *self,
 
     /* READ BINARY of EFad (Administrative Data) ETSI 51.011 section 10.3.18 */
     mm_base_modem_at_command (
-        MM_BASE_MODEM (self->priv->modem),
+        self->priv->modem,
         "+CRSM=176,28589,0,0,4",
         10,
         FALSE,
@@ -1322,7 +1405,7 @@ load_operator_name (MMBaseSim *self,
 
     /* READ BINARY of EFspn (Service Provider Name) ETSI 51.011 section 10.3.11 */
     mm_base_modem_at_command (
-        MM_BASE_MODEM (self->priv->modem),
+        self->priv->modem,
         "+CRSM=176,28486,0,0,17",
         10,
         FALSE,
@@ -1341,6 +1424,7 @@ typedef enum {
     INITIALIZATION_STEP_IMSI,
     INITIALIZATION_STEP_OPERATOR_ID,
     INITIALIZATION_STEP_OPERATOR_NAME,
+    INITIALIZATION_STEP_EMERGENCY_NUMBERS,
     INITIALIZATION_STEP_LAST
 } InitializationStep;
 
@@ -1410,6 +1494,32 @@ init_load_sim_identifier_ready (MMBaseSim *self,
     g_free (simid);
 
     /* Go on to next step */
+    ctx->step++;
+    interface_initialization_step (task);
+}
+
+static void
+init_load_emergency_numbers_ready (MMBaseSim    *self,
+                                   GAsyncResult *res,
+                                   GTask        *task)
+{
+    InitAsyncContext *ctx;
+    GError           *error = NULL;
+    GStrv             str_list;
+
+    str_list = MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers_finish (self, res, &error);
+    if (error) {
+        mm_warn ("couldn't load list of Emergency Numbers: '%s'", error->message);
+        g_error_free (error);
+    }
+
+    if (str_list) {
+        mm_gdbus_sim_set_emergency_numbers (MM_GDBUS_SIM (self), (const gchar *const *) str_list);
+        g_strfreev (str_list);
+    }
+
+    /* Go on to next step */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
     interface_initialization_step (task);
 }
@@ -1521,6 +1631,22 @@ interface_initialization_step (GTask *task)
             MM_BASE_SIM_GET_CLASS (self)->load_operator_name (
                 self,
                 (GAsyncReadyCallback)init_load_operator_name_ready,
+                task);
+            return;
+        }
+        /* Fall down to next step */
+        ctx->step++;
+
+    case INITIALIZATION_STEP_EMERGENCY_NUMBERS:
+        /* Emergency Numbers are meant to be loaded only once during the whole
+         * lifetime of the modem. Therefore, if we already have them loaded,
+         * don't try to load them again. */
+        if (mm_gdbus_sim_get_emergency_numbers (MM_GDBUS_SIM (self)) == NULL &&
+            MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers &&
+            MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers_finish) {
+            MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers (
+                self,
+                (GAsyncReadyCallback)init_load_emergency_numbers_ready,
                 task);
             return;
         }
@@ -1741,6 +1867,8 @@ mm_base_sim_class_init (MMBaseSimClass *klass)
     klass->load_operator_identifier_finish = load_operator_identifier_finish;
     klass->load_operator_name = load_operator_name;
     klass->load_operator_name_finish = load_operator_name_finish;
+    klass->load_emergency_numbers = load_emergency_numbers;
+    klass->load_emergency_numbers_finish = load_emergency_numbers_finish;
     klass->send_pin = send_pin;
     klass->send_pin_finish = common_send_pin_puk_finish;
     klass->send_puk = send_puk;

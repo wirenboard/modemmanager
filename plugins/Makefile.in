@@ -95,15 +95,17 @@ host_triplet = @host@
 @WITH_MBIM_TRUE@am__append_3 = $(MBIM_CFLAGS)
 @WITH_MBIM_TRUE@am__append_4 = $(MBIM_LIBS)
 noinst_PROGRAMS = test-modem-helpers-icera$(EXEEXT) \
-	test-modem-helpers-mbm$(EXEEXT) \
 	test-modem-helpers-sierra$(EXEEXT) \
-	test-modem-helpers-xmm$(EXEEXT) test-service-generic$(EXEEXT) \
+	test-modem-helpers-xmm$(EXEEXT) \
+	test-modem-helpers-telit$(EXEEXT) \
+	test-service-generic$(EXEEXT) \
 	test-modem-helpers-huawei$(EXEEXT) \
+	test-modem-helpers-mbm$(EXEEXT) \
 	test-modem-helpers-linktop$(EXEEXT) \
+	test-modem-helpers-simtech$(EXEEXT) \
 	test-modem-helpers-cinterion$(EXEEXT) \
 	test-modem-helpers-thuraya$(EXEEXT) \
 	test-modem-helpers-altair-lte$(EXEEXT) \
-	test-modem-helpers-telit$(EXEEXT) \
 	test-modem-helpers-ublox$(EXEEXT) test-udev-rules$(EXEEXT) \
 	test-keyfiles$(EXEEXT)
 @WITH_MBIM_TRUE@am__append_5 = \
@@ -111,22 +113,27 @@ noinst_PROGRAMS = test-modem-helpers-icera$(EXEEXT) \
 @WITH_MBIM_TRUE@	xmm/mm-broadband-modem-mbim-xmm.c \
 @WITH_MBIM_TRUE@	$(NULL)
 
-@WITH_QMI_TRUE@am__append_6 = \
-@WITH_QMI_TRUE@	cinterion/mm-broadband-modem-qmi-cinterion.c \
-@WITH_QMI_TRUE@	cinterion/mm-broadband-modem-qmi-cinterion.h \
-@WITH_QMI_TRUE@	$(NULL)
-
-@WITH_MBIM_TRUE@am__append_7 = \
+@WITH_MBIM_TRUE@am__append_6 = \
 @WITH_MBIM_TRUE@	telit/mm-broadband-modem-mbim-telit.h \
 @WITH_MBIM_TRUE@	telit/mm-broadband-modem-mbim-telit.c \
 @WITH_MBIM_TRUE@	$(NULL)
 
-@WITH_MBIM_TRUE@am__append_8 = \
+@WITH_QMI_TRUE@am__append_7 = \
+@WITH_QMI_TRUE@	simtech/mm-broadband-modem-qmi-simtech.c \
+@WITH_QMI_TRUE@	simtech/mm-broadband-modem-qmi-simtech.h \
+@WITH_QMI_TRUE@	$(NULL)
+
+@WITH_QMI_TRUE@am__append_8 = \
+@WITH_QMI_TRUE@	cinterion/mm-broadband-modem-qmi-cinterion.c \
+@WITH_QMI_TRUE@	cinterion/mm-broadband-modem-qmi-cinterion.h \
+@WITH_QMI_TRUE@	$(NULL)
+
+@WITH_MBIM_TRUE@am__append_9 = \
 @WITH_MBIM_TRUE@	dell/mm-broadband-modem-dell-dw5821e.h \
 @WITH_MBIM_TRUE@	dell/mm-broadband-modem-dell-dw5821e.c \
 @WITH_MBIM_TRUE@	$(NULL)
 
-@WITH_QMI_TRUE@am__append_9 = \
+@WITH_QMI_TRUE@am__append_10 = \
 @WITH_QMI_TRUE@	quectel/mm-broadband-modem-qmi-quectel.c \
 @WITH_QMI_TRUE@	quectel/mm-broadband-modem-qmi-quectel.h \
 @WITH_QMI_TRUE@	$(NULL)
@@ -214,6 +221,10 @@ libhelpers_mbm_la_OBJECTS = $(am_libhelpers_mbm_la_OBJECTS)
 libhelpers_sierra_la_LIBADD =
 am_libhelpers_sierra_la_OBJECTS = sierra/mm-modem-helpers-sierra.lo
 libhelpers_sierra_la_OBJECTS = $(am_libhelpers_sierra_la_OBJECTS)
+libhelpers_simtech_la_LIBADD =
+am_libhelpers_simtech_la_OBJECTS =  \
+	simtech/mm-modem-helpers-simtech.lo
+libhelpers_simtech_la_OBJECTS = $(am_libhelpers_simtech_la_OBJECTS)
 libhelpers_telit_la_LIBADD =
 am_libhelpers_telit_la_OBJECTS =  \
 	telit/libhelpers_telit_la-mm-modem-helpers-telit.lo
@@ -283,11 +294,7 @@ libmm_plugin_cinterion_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_cinterion_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-am__DEPENDENCIES_1 = $(builddir)/libhelpers-telit.la \
-	$(builddir)/libmm-utils-telit.la
-libmm_plugin_dell_la_DEPENDENCIES = $(NOVATEL_COMMON_LIBADD_FLAGS) \
-	$(SIERRA_COMMON_LIBADD_FLAGS) $(am__DEPENDENCIES_1) \
-	$(XMM_COMMON_LIBADD_FLAGS) $(MBM_COMMON_LIBADD_FLAGS)
+libmm_plugin_dell_la_LIBADD =
 am__libmm_plugin_dell_la_SOURCES_DIST = dell/mm-plugin-dell.c \
 	dell/mm-plugin-dell.h dell/mm-broadband-modem-dell-dw5821e.h \
 	dell/mm-broadband-modem-dell-dw5821e.c
@@ -299,9 +306,20 @@ libmm_plugin_dell_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_dell_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
+libmm_plugin_dlink_la_LIBADD =
+am_libmm_plugin_dlink_la_OBJECTS =  \
+	dlink/libmm_plugin_dlink_la-mm-plugin-dlink.lo
+libmm_plugin_dlink_la_OBJECTS = $(am_libmm_plugin_dlink_la_OBJECTS)
+libmm_plugin_dlink_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_dlink_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
 libmm_plugin_ericsson_mbm_la_DEPENDENCIES =  \
-	$(MBM_COMMON_LIBADD_FLAGS)
+	$(builddir)/libhelpers-mbm.la
 am_libmm_plugin_ericsson_mbm_la_OBJECTS =  \
+	mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.lo \
+	mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.lo \
+	mbm/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.lo \
 	mbm/libmm_plugin_ericsson_mbm_la-mm-plugin-mbm.lo
 libmm_plugin_ericsson_mbm_la_OBJECTS =  \
 	$(am_libmm_plugin_ericsson_mbm_la_OBJECTS)
@@ -309,7 +327,7 @@ libmm_plugin_ericsson_mbm_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_ericsson_mbm_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-libmm_plugin_fibocom_la_DEPENDENCIES = $(XMM_COMMON_LIBADD_FLAGS)
+libmm_plugin_fibocom_la_LIBADD =
 am_libmm_plugin_fibocom_la_OBJECTS =  \
 	fibocom/libmm_plugin_fibocom_la-mm-plugin-fibocom.lo
 libmm_plugin_fibocom_la_OBJECTS =  \
@@ -340,7 +358,6 @@ libmm_plugin_huawei_la_DEPENDENCIES =  \
 am_libmm_plugin_huawei_la_OBJECTS =  \
 	huawei/libmm_plugin_huawei_la-mm-plugin-huawei.lo \
 	huawei/libmm_plugin_huawei_la-mm-sim-huawei.lo \
-	huawei/libmm_plugin_huawei_la-mm-call-huawei.lo \
 	huawei/libmm_plugin_huawei_la-mm-broadband-modem-huawei.lo \
 	huawei/libmm_plugin_huawei_la-mm-broadband-bearer-huawei.lo
 libmm_plugin_huawei_la_OBJECTS = $(am_libmm_plugin_huawei_la_OBJECTS)
@@ -400,8 +417,7 @@ libmm_plugin_mtk_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_mtk_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-libmm_plugin_nokia_icera_la_DEPENDENCIES =  \
-	$(ICERA_COMMON_LIBADD_FLAGS)
+libmm_plugin_nokia_icera_la_LIBADD =
 am_libmm_plugin_nokia_icera_la_OBJECTS =  \
 	nokia/libmm_plugin_nokia_icera_la-mm-plugin-nokia-icera.lo
 libmm_plugin_nokia_icera_la_OBJECTS =  \
@@ -432,7 +448,7 @@ libmm_plugin_novatel_lte_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_novatel_lte_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-libmm_plugin_novatel_la_DEPENDENCIES = $(NOVATEL_COMMON_LIBADD_FLAGS)
+libmm_plugin_novatel_la_LIBADD =
 am_libmm_plugin_novatel_la_OBJECTS =  \
 	novatel/libmm_plugin_novatel_la-mm-plugin-novatel.lo
 libmm_plugin_novatel_la_OBJECTS =  \
@@ -441,8 +457,7 @@ libmm_plugin_novatel_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_novatel_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-libmm_plugin_option_hso_la_DEPENDENCIES =  \
-	$(OPTION_COMMON_LIBADD_FLAGS)
+libmm_plugin_option_hso_la_LIBADD =
 am_libmm_plugin_option_hso_la_OBJECTS =  \
 	option/libmm_plugin_option_hso_la-mm-plugin-hso.lo \
 	option/libmm_plugin_option_hso_la-mm-broadband-bearer-hso.lo \
@@ -453,7 +468,7 @@ libmm_plugin_option_hso_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_option_hso_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-libmm_plugin_option_la_DEPENDENCIES = $(OPTION_COMMON_LIBADD_FLAGS)
+libmm_plugin_option_la_LIBADD =
 am_libmm_plugin_option_la_OBJECTS =  \
 	option/libmm_plugin_option_la-mm-plugin-option.lo
 libmm_plugin_option_la_OBJECTS = $(am_libmm_plugin_option_la_OBJECTS)
@@ -492,7 +507,7 @@ libmm_plugin_quectel_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_quectel_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-libmm_plugin_samsung_la_DEPENDENCIES = $(ICERA_COMMON_LIBADD_FLAGS)
+libmm_plugin_samsung_la_LIBADD =
 am_libmm_plugin_samsung_la_OBJECTS =  \
 	samsung/libmm_plugin_samsung_la-mm-plugin-samsung.lo \
 	samsung/libmm_plugin_samsung_la-mm-broadband-modem-samsung.lo
@@ -502,8 +517,7 @@ libmm_plugin_samsung_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_samsung_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-libmm_plugin_sierra_legacy_la_DEPENDENCIES =  \
-	$(ICERA_COMMON_LIBADD_FLAGS) $(SIERRA_COMMON_LIBADD_FLAGS)
+libmm_plugin_sierra_legacy_la_LIBADD =
 am_libmm_plugin_sierra_legacy_la_OBJECTS = sierra/libmm_plugin_sierra_legacy_la-mm-plugin-sierra-legacy.lo \
 	sierra/libmm_plugin_sierra_legacy_la-mm-broadband-modem-sierra-icera.lo
 libmm_plugin_sierra_legacy_la_OBJECTS =  \
@@ -520,17 +534,28 @@ libmm_plugin_sierra_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_sierra_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-libmm_plugin_simtech_la_LIBADD =
+libmm_plugin_simtech_la_DEPENDENCIES =  \
+	$(builddir)/libhelpers-simtech.la
+am__libmm_plugin_simtech_la_SOURCES_DIST =  \
+	simtech/mm-plugin-simtech.c simtech/mm-plugin-simtech.h \
+	simtech/mm-shared-simtech.c simtech/mm-shared-simtech.h \
+	simtech/mm-broadband-modem-simtech.h \
+	simtech/mm-broadband-modem-simtech.c \
+	simtech/mm-broadband-modem-qmi-simtech.c \
+	simtech/mm-broadband-modem-qmi-simtech.h
+@WITH_QMI_TRUE@am__objects_6 = simtech/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.lo
 am_libmm_plugin_simtech_la_OBJECTS =  \
 	simtech/libmm_plugin_simtech_la-mm-plugin-simtech.lo \
-	simtech/libmm_plugin_simtech_la-mm-broadband-modem-simtech.lo
+	simtech/libmm_plugin_simtech_la-mm-shared-simtech.lo \
+	simtech/libmm_plugin_simtech_la-mm-broadband-modem-simtech.lo \
+	$(am__objects_6)
 libmm_plugin_simtech_la_OBJECTS =  \
 	$(am_libmm_plugin_simtech_la_OBJECTS)
 libmm_plugin_simtech_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_simtech_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-libmm_plugin_telit_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+libmm_plugin_telit_la_LIBADD =
 am_libmm_plugin_telit_la_OBJECTS =  \
 	telit/libmm_plugin_telit_la-mm-plugin-telit.lo
 libmm_plugin_telit_la_OBJECTS = $(am_libmm_plugin_telit_la_OBJECTS)
@@ -549,10 +574,17 @@ libmm_plugin_thuraya_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_thuraya_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
+libmm_plugin_tplink_la_LIBADD =
+am_libmm_plugin_tplink_la_OBJECTS =  \
+	tplink/libmm_plugin_tplink_la-mm-plugin-tplink.lo
+libmm_plugin_tplink_la_OBJECTS = $(am_libmm_plugin_tplink_la_OBJECTS)
+libmm_plugin_tplink_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_tplink_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
 libmm_plugin_ublox_la_DEPENDENCIES = $(builddir)/libhelpers-ublox.la
 am_libmm_plugin_ublox_la_OBJECTS =  \
 	ublox/libmm_plugin_ublox_la-mm-plugin-ublox.lo \
-	ublox/libmm_plugin_ublox_la-mm-call-ublox.lo \
 	ublox/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.lo \
 	ublox/libmm_plugin_ublox_la-mm-broadband-modem-ublox.lo \
 	ublox/libmm_plugin_ublox_la-mm-sim-ublox.lo
@@ -589,7 +621,7 @@ libmm_plugin_x22x_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_x22x_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-libmm_plugin_zte_la_DEPENDENCIES = $(ICERA_COMMON_LIBADD_FLAGS)
+libmm_plugin_zte_la_LIBADD =
 am_libmm_plugin_zte_la_OBJECTS =  \
 	zte/libmm_plugin_zte_la-mm-plugin-zte.lo \
 	zte/libmm_plugin_zte_la-mm-common-zte.lo \
@@ -600,56 +632,92 @@ libmm_plugin_zte_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_zte_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
+libmm_shared_icera_la_DEPENDENCIES = $(builddir)/libhelpers-icera.la
+am_libmm_shared_icera_la_OBJECTS =  \
+	icera/libmm_shared_icera_la-mm-shared.lo \
+	icera/libmm_shared_icera_la-mm-broadband-modem-icera.lo \
+	icera/libmm_shared_icera_la-mm-broadband-bearer-icera.lo
+libmm_shared_icera_la_OBJECTS = $(am_libmm_shared_icera_la_OBJECTS)
+libmm_shared_icera_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libmm_shared_icera_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
+libmm_shared_novatel_la_LIBADD =
+am_libmm_shared_novatel_la_OBJECTS =  \
+	novatel/libmm_shared_novatel_la-mm-shared.lo \
+	novatel/libmm_shared_novatel_la-mm-common-novatel.lo \
+	novatel/libmm_shared_novatel_la-mm-broadband-modem-novatel.lo
+libmm_shared_novatel_la_OBJECTS =  \
+	$(am_libmm_shared_novatel_la_OBJECTS)
+libmm_shared_novatel_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libmm_shared_novatel_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
+libmm_shared_option_la_LIBADD =
+am_libmm_shared_option_la_OBJECTS =  \
+	option/libmm_shared_option_la-mm-shared.lo \
+	option/libmm_shared_option_la-mm-broadband-modem-option.lo
+libmm_shared_option_la_OBJECTS = $(am_libmm_shared_option_la_OBJECTS)
+libmm_shared_option_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libmm_shared_option_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
+libmm_shared_sierra_la_DEPENDENCIES =  \
+	$(builddir)/libhelpers-sierra.la
+am_libmm_shared_sierra_la_OBJECTS =  \
+	sierra/libmm_shared_sierra_la-mm-shared.lo \
+	sierra/libmm_shared_sierra_la-mm-common-sierra.lo \
+	sierra/libmm_shared_sierra_la-mm-sim-sierra.lo \
+	sierra/libmm_shared_sierra_la-mm-broadband-bearer-sierra.lo \
+	sierra/libmm_shared_sierra_la-mm-broadband-modem-sierra.lo
+libmm_shared_sierra_la_OBJECTS = $(am_libmm_shared_sierra_la_OBJECTS)
+libmm_shared_sierra_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libmm_shared_sierra_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
+libmm_shared_telit_la_DEPENDENCIES = $(builddir)/libhelpers-telit.la
+am__libmm_shared_telit_la_SOURCES_DIST = telit/mm-shared.c \
+	telit/mm-common-telit.c telit/mm-common-telit.h \
+	telit/mm-shared-telit.c telit/mm-shared-telit.h \
+	telit/mm-broadband-modem-telit.c \
+	telit/mm-broadband-modem-telit.h \
+	telit/mm-broadband-modem-mbim-telit.h \
+	telit/mm-broadband-modem-mbim-telit.c
+@WITH_MBIM_TRUE@am__objects_7 = telit/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.lo
+am_libmm_shared_telit_la_OBJECTS =  \
+	telit/libmm_shared_telit_la-mm-shared.lo \
+	telit/libmm_shared_telit_la-mm-common-telit.lo \
+	telit/libmm_shared_telit_la-mm-shared-telit.lo \
+	telit/libmm_shared_telit_la-mm-broadband-modem-telit.lo \
+	$(am__objects_7)
+libmm_shared_telit_la_OBJECTS = $(am_libmm_shared_telit_la_OBJECTS)
+libmm_shared_telit_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libmm_shared_telit_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
+libmm_shared_xmm_la_DEPENDENCIES = $(builddir)/libhelpers-xmm.la
+am__libmm_shared_xmm_la_SOURCES_DIST = xmm/mm-shared.c \
+	xmm/mm-shared-xmm.h xmm/mm-shared-xmm.c \
+	xmm/mm-broadband-modem-xmm.h xmm/mm-broadband-modem-xmm.c \
+	xmm/mm-broadband-modem-mbim-xmm.h \
+	xmm/mm-broadband-modem-mbim-xmm.c
+@WITH_MBIM_TRUE@am__objects_8 = xmm/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.lo
+am_libmm_shared_xmm_la_OBJECTS = xmm/libmm_shared_xmm_la-mm-shared.lo \
+	xmm/libmm_shared_xmm_la-mm-shared-xmm.lo \
+	xmm/libmm_shared_xmm_la-mm-broadband-modem-xmm.lo \
+	$(am__objects_8)
+libmm_shared_xmm_la_OBJECTS = $(am_libmm_shared_xmm_la_OBJECTS)
+libmm_shared_xmm_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libmm_shared_xmm_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
 libmm_test_common_la_DEPENDENCIES = ${top_builddir}/libmm-glib/generated/tests/libmm-test-generated.la \
 	$(top_builddir)/libmm-glib/libmm-glib.la
 am_libmm_test_common_la_OBJECTS =  \
 	tests/libmm_test_common_la-test-fixture.lo \
-	tests/libmm_test_common_la-test-port-context.lo
+	tests/libmm_test_common_la-test-port-context.lo \
+	tests/libmm_test_common_la-test-helpers.lo
 libmm_test_common_la_OBJECTS = $(am_libmm_test_common_la_OBJECTS)
-libmm_utils_icera_la_DEPENDENCIES = $(builddir)/libhelpers-icera.la
-am_libmm_utils_icera_la_OBJECTS = icera/mm-broadband-modem-icera.lo \
-	icera/mm-broadband-bearer-icera.lo
-libmm_utils_icera_la_OBJECTS = $(am_libmm_utils_icera_la_OBJECTS)
-libmm_utils_mbm_la_DEPENDENCIES = $(builddir)/libhelpers-mbm.la
-am_libmm_utils_mbm_la_OBJECTS = mbm/mm-broadband-modem-mbm.lo \
-	mbm/mm-broadband-bearer-mbm.lo mbm/mm-sim-mbm.lo
-libmm_utils_mbm_la_OBJECTS = $(am_libmm_utils_mbm_la_OBJECTS)
-libmm_utils_novatel_la_LIBADD =
-am_libmm_utils_novatel_la_OBJECTS = novatel/mm-common-novatel.lo \
-	novatel/mm-broadband-modem-novatel.lo
-libmm_utils_novatel_la_OBJECTS = $(am_libmm_utils_novatel_la_OBJECTS)
-libmm_utils_option_la_LIBADD =
-am_libmm_utils_option_la_OBJECTS =  \
-	option/mm-broadband-modem-option.lo
-libmm_utils_option_la_OBJECTS = $(am_libmm_utils_option_la_OBJECTS)
-libmm_utils_sierra_la_DEPENDENCIES = $(builddir)/libhelpers-sierra.la
-am_libmm_utils_sierra_la_OBJECTS = sierra/mm-common-sierra.lo \
-	sierra/mm-sim-sierra.lo sierra/mm-broadband-bearer-sierra.lo \
-	sierra/mm-broadband-modem-sierra.lo
-libmm_utils_sierra_la_OBJECTS = $(am_libmm_utils_sierra_la_OBJECTS)
-libmm_utils_telit_la_LIBADD =
-am__libmm_utils_telit_la_SOURCES_DIST = telit/mm-common-telit.c \
-	telit/mm-common-telit.h telit/mm-shared-telit.c \
-	telit/mm-shared-telit.h telit/mm-broadband-modem-telit.c \
-	telit/mm-broadband-modem-telit.h \
-	telit/mm-broadband-modem-mbim-telit.h \
-	telit/mm-broadband-modem-mbim-telit.c
-@WITH_MBIM_TRUE@am__objects_6 = telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo
-am_libmm_utils_telit_la_OBJECTS =  \
-	telit/libmm_utils_telit_la-mm-common-telit.lo \
-	telit/libmm_utils_telit_la-mm-shared-telit.lo \
-	telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo \
-	$(am__objects_6)
-libmm_utils_telit_la_OBJECTS = $(am_libmm_utils_telit_la_OBJECTS)
-libmm_utils_xmm_la_DEPENDENCIES = $(builddir)/libhelpers-xmm.la
-am__libmm_utils_xmm_la_SOURCES_DIST = xmm/mm-shared-xmm.h \
-	xmm/mm-shared-xmm.c xmm/mm-broadband-modem-xmm.h \
-	xmm/mm-broadband-modem-xmm.c xmm/mm-broadband-modem-mbim-xmm.h \
-	xmm/mm-broadband-modem-mbim-xmm.c
-@WITH_MBIM_TRUE@am__objects_7 = xmm/mm-broadband-modem-mbim-xmm.lo
-am_libmm_utils_xmm_la_OBJECTS = xmm/mm-shared-xmm.lo \
-	xmm/mm-broadband-modem-xmm.lo $(am__objects_7)
-libmm_utils_xmm_la_OBJECTS = $(am_libmm_utils_xmm_la_OBJECTS)
 am_test_keyfiles_OBJECTS = tests/test-keyfiles.$(OBJEXT)
 test_keyfiles_OBJECTS = $(am_test_keyfiles_OBJECTS)
 test_keyfiles_DEPENDENCIES = $(top_builddir)/libmm-glib/libmm-glib.la
@@ -700,10 +768,18 @@ test_modem_helpers_sierra_DEPENDENCIES =  \
 	$(builddir)/libhelpers-sierra.la \
 	$(top_builddir)/src/libhelpers.la \
 	$(top_builddir)/libmm-glib/libmm-glib.la
+am_test_modem_helpers_simtech_OBJECTS = simtech/tests/test_modem_helpers_simtech-test-modem-helpers-simtech.$(OBJEXT)
+test_modem_helpers_simtech_OBJECTS =  \
+	$(am_test_modem_helpers_simtech_OBJECTS)
+test_modem_helpers_simtech_DEPENDENCIES =  \
+	$(builddir)/libhelpers-simtech.la \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la
 am_test_modem_helpers_telit_OBJECTS = telit/tests/test_modem_helpers_telit-test-mm-modem-helpers-telit.$(OBJEXT)
 test_modem_helpers_telit_OBJECTS =  \
 	$(am_test_modem_helpers_telit_OBJECTS)
-test_modem_helpers_telit_DEPENDENCIES =  \
+am__DEPENDENCIES_1 = $(builddir)/libmm-test-common.la
+test_modem_helpers_telit_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(builddir)/libhelpers-telit.la \
 	$(top_builddir)/src/libhelpers.la \
 	$(top_builddir)/libmm-glib/libmm-glib.la
@@ -717,7 +793,7 @@ test_modem_helpers_thuraya_DEPENDENCIES =  \
 am_test_modem_helpers_ublox_OBJECTS = ublox/tests/test_modem_helpers_ublox-test-modem-helpers-ublox.$(OBJEXT)
 test_modem_helpers_ublox_OBJECTS =  \
 	$(am_test_modem_helpers_ublox_OBJECTS)
-test_modem_helpers_ublox_DEPENDENCIES =  \
+test_modem_helpers_ublox_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(builddir)/libhelpers-ublox.la \
 	$(top_builddir)/src/libhelpers.la \
 	$(top_builddir)/libmm-glib/libmm-glib.la
@@ -728,7 +804,8 @@ test_modem_helpers_xmm_DEPENDENCIES = $(builddir)/libhelpers-xmm.la \
 	$(top_builddir)/libmm-glib/libmm-glib.la
 am_test_service_generic_OBJECTS = generic/tests/test_service_generic-test-service-generic.$(OBJEXT)
 test_service_generic_OBJECTS = $(am_test_service_generic_OBJECTS)
-test_service_generic_DEPENDENCIES = $(TEST_COMMON_LIBADD_FLAGS)
+test_service_generic_DEPENDENCIES =  \
+	$(top_builddir)/libmm-glib/libmm-glib.la $(am__DEPENDENCIES_1)
 am_test_udev_rules_OBJECTS = tests/test-udev-rules.$(OBJEXT)
 test_udev_rules_OBJECTS = $(am_test_udev_rules_OBJECTS)
 test_udev_rules_DEPENDENCIES = $(top_builddir)/src/libkerneldevice.la \
@@ -764,19 +841,20 @@ am__depfiles_remade = altair/$(DEPDIR)/libmm_plugin_altair_lte_la-mm-broadband-b
 	cinterion/tests/$(DEPDIR)/test_modem_helpers_cinterion-test-modem-helpers-cinterion.Po \
 	dell/$(DEPDIR)/libmm_plugin_dell_la-mm-broadband-modem-dell-dw5821e.Plo \
 	dell/$(DEPDIR)/libmm_plugin_dell_la-mm-plugin-dell.Plo \
+	dlink/$(DEPDIR)/libmm_plugin_dlink_la-mm-plugin-dlink.Plo \
 	fibocom/$(DEPDIR)/libmm_plugin_fibocom_la-mm-plugin-fibocom.Plo \
 	generic/$(DEPDIR)/libmm_plugin_generic_la-mm-plugin-generic.Plo \
 	generic/tests/$(DEPDIR)/test_service_generic-test-service-generic.Po \
 	haier/$(DEPDIR)/libmm_plugin_haier_la-mm-plugin-haier.Plo \
 	huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-bearer-huawei.Plo \
 	huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-modem-huawei.Plo \
-	huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-call-huawei.Plo \
 	huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-plugin-huawei.Plo \
 	huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-sim-huawei.Plo \
 	huawei/$(DEPDIR)/mm-modem-helpers-huawei.Plo \
 	huawei/tests/$(DEPDIR)/test_modem_helpers_huawei-test-modem-helpers-huawei.Po \
-	icera/$(DEPDIR)/mm-broadband-bearer-icera.Plo \
-	icera/$(DEPDIR)/mm-broadband-modem-icera.Plo \
+	icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-bearer-icera.Plo \
+	icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-modem-icera.Plo \
+	icera/$(DEPDIR)/libmm_shared_icera_la-mm-shared.Plo \
 	icera/$(DEPDIR)/mm-modem-helpers-icera.Plo \
 	icera/tests/$(DEPDIR)/test_modem_helpers_icera-test-modem-helpers-icera.Po \
 	iridium/$(DEPDIR)/libmm_plugin_iridium_la-mm-bearer-iridium.Plo \
@@ -789,11 +867,11 @@ am__depfiles_remade = altair/$(DEPDIR)/libmm_plugin_altair_lte_la-mm-broadband-b
 	linktop/tests/$(DEPDIR)/test_modem_helpers_linktop-test-modem-helpers-linktop.Po \
 	longcheer/$(DEPDIR)/libmm_plugin_longcheer_la-mm-broadband-modem-longcheer.Plo \
 	longcheer/$(DEPDIR)/libmm_plugin_longcheer_la-mm-plugin-longcheer.Plo \
+	mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.Plo \
+	mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.Plo \
 	mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-plugin-mbm.Plo \
-	mbm/$(DEPDIR)/mm-broadband-bearer-mbm.Plo \
-	mbm/$(DEPDIR)/mm-broadband-modem-mbm.Plo \
+	mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.Plo \
 	mbm/$(DEPDIR)/mm-modem-helpers-mbm.Plo \
-	mbm/$(DEPDIR)/mm-sim-mbm.Plo \
 	mbm/tests/$(DEPDIR)/test_modem_helpers_mbm-test-modem-helpers-mbm.Po \
 	motorola/$(DEPDIR)/libmm_plugin_motorola_la-mm-broadband-modem-motorola.Plo \
 	motorola/$(DEPDIR)/libmm_plugin_motorola_la-mm-plugin-motorola.Plo \
@@ -808,13 +886,15 @@ am__depfiles_remade = altair/$(DEPDIR)/libmm_plugin_altair_lte_la-mm-broadband-b
 	novatel/$(DEPDIR)/libmm_plugin_novatel_lte_la-mm-broadband-modem-novatel-lte.Plo \
 	novatel/$(DEPDIR)/libmm_plugin_novatel_lte_la-mm-plugin-novatel-lte.Plo \
 	novatel/$(DEPDIR)/libmm_plugin_novatel_lte_la-mm-sim-novatel-lte.Plo \
-	novatel/$(DEPDIR)/mm-broadband-modem-novatel.Plo \
-	novatel/$(DEPDIR)/mm-common-novatel.Plo \
+	novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-broadband-modem-novatel.Plo \
+	novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-common-novatel.Plo \
+	novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-shared.Plo \
 	option/$(DEPDIR)/libmm_plugin_option_hso_la-mm-broadband-bearer-hso.Plo \
 	option/$(DEPDIR)/libmm_plugin_option_hso_la-mm-broadband-modem-hso.Plo \
 	option/$(DEPDIR)/libmm_plugin_option_hso_la-mm-plugin-hso.Plo \
 	option/$(DEPDIR)/libmm_plugin_option_la-mm-plugin-option.Plo \
-	option/$(DEPDIR)/mm-broadband-modem-option.Plo \
+	option/$(DEPDIR)/libmm_shared_option_la-mm-broadband-modem-option.Plo \
+	option/$(DEPDIR)/libmm_shared_option_la-mm-shared.Plo \
 	pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-broadband-modem-pantech.Plo \
 	pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-plugin-pantech.Plo \
 	pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-sim-pantech.Plo \
@@ -827,23 +907,30 @@ am__depfiles_remade = altair/$(DEPDIR)/libmm_plugin_altair_lte_la-mm-broadband-b
 	sierra/$(DEPDIR)/libmm_plugin_sierra_la-mm-plugin-sierra.Plo \
 	sierra/$(DEPDIR)/libmm_plugin_sierra_legacy_la-mm-broadband-modem-sierra-icera.Plo \
 	sierra/$(DEPDIR)/libmm_plugin_sierra_legacy_la-mm-plugin-sierra-legacy.Plo \
-	sierra/$(DEPDIR)/mm-broadband-bearer-sierra.Plo \
-	sierra/$(DEPDIR)/mm-broadband-modem-sierra.Plo \
-	sierra/$(DEPDIR)/mm-common-sierra.Plo \
+	sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-bearer-sierra.Plo \
+	sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-modem-sierra.Plo \
+	sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-common-sierra.Plo \
+	sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-shared.Plo \
+	sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-sim-sierra.Plo \
 	sierra/$(DEPDIR)/mm-modem-helpers-sierra.Plo \
-	sierra/$(DEPDIR)/mm-sim-sierra.Plo \
 	sierra/tests/$(DEPDIR)/test_modem_helpers_sierra-test-modem-helpers-sierra.Po \
+	simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.Plo \
 	simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-simtech.Plo \
 	simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-plugin-simtech.Plo \
+	simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-shared-simtech.Plo \
+	simtech/$(DEPDIR)/mm-modem-helpers-simtech.Plo \
+	simtech/tests/$(DEPDIR)/test_modem_helpers_simtech-test-modem-helpers-simtech.Po \
 	telit/$(DEPDIR)/libhelpers_telit_la-mm-modem-helpers-telit.Plo \
 	telit/$(DEPDIR)/libhelpers_telit_la-mm-telit-enums-types.Plo \
 	telit/$(DEPDIR)/libmm_plugin_telit_la-mm-plugin-telit.Plo \
-	telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Plo \
-	telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Plo \
-	telit/$(DEPDIR)/libmm_utils_telit_la-mm-common-telit.Plo \
-	telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Plo \
+	telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.Plo \
+	telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-telit.Plo \
+	telit/$(DEPDIR)/libmm_shared_telit_la-mm-common-telit.Plo \
+	telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared-telit.Plo \
+	telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared.Plo \
 	telit/tests/$(DEPDIR)/test_modem_helpers_telit-test-mm-modem-helpers-telit.Po \
 	tests/$(DEPDIR)/libmm_test_common_la-test-fixture.Plo \
+	tests/$(DEPDIR)/libmm_test_common_la-test-helpers.Plo \
 	tests/$(DEPDIR)/libmm_test_common_la-test-port-context.Plo \
 	tests/$(DEPDIR)/test-keyfiles.Po \
 	tests/$(DEPDIR)/test-udev-rules.Po \
@@ -851,11 +938,11 @@ am__depfiles_remade = altair/$(DEPDIR)/libmm_plugin_altair_lte_la-mm-broadband-b
 	thuraya/$(DEPDIR)/libmm_plugin_thuraya_la-mm-plugin-thuraya.Plo \
 	thuraya/$(DEPDIR)/mm-modem-helpers-thuraya.Plo \
 	thuraya/tests/$(DEPDIR)/test_modem_helpers_thuraya-test-mm-modem-helpers-thuraya.Po \
+	tplink/$(DEPDIR)/libmm_plugin_tplink_la-mm-plugin-tplink.Plo \
 	ublox/$(DEPDIR)/libhelpers_ublox_la-mm-modem-helpers-ublox.Plo \
 	ublox/$(DEPDIR)/libhelpers_ublox_la-mm-ublox-enums-types.Plo \
 	ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.Plo \
 	ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-broadband-modem-ublox.Plo \
-	ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-call-ublox.Plo \
 	ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-plugin-ublox.Plo \
 	ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-sim-ublox.Plo \
 	ublox/tests/$(DEPDIR)/test_modem_helpers_ublox-test-modem-helpers-ublox.Po \
@@ -865,10 +952,11 @@ am__depfiles_remade = altair/$(DEPDIR)/libmm_plugin_altair_lte_la-mm-broadband-b
 	wavecom/$(DEPDIR)/libmm_plugin_wavecom_la-mm-plugin-wavecom.Plo \
 	x22x/$(DEPDIR)/libmm_plugin_x22x_la-mm-broadband-modem-x22x.Plo \
 	x22x/$(DEPDIR)/libmm_plugin_x22x_la-mm-plugin-x22x.Plo \
-	xmm/$(DEPDIR)/mm-broadband-modem-mbim-xmm.Plo \
-	xmm/$(DEPDIR)/mm-broadband-modem-xmm.Plo \
+	xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.Plo \
+	xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-xmm.Plo \
+	xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared-xmm.Plo \
+	xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared.Plo \
 	xmm/$(DEPDIR)/mm-modem-helpers-xmm.Plo \
-	xmm/$(DEPDIR)/mm-shared-xmm.Plo \
 	xmm/tests/$(DEPDIR)/test_modem_helpers_xmm-test-modem-helpers-xmm.Po \
 	zte/$(DEPDIR)/libmm_plugin_zte_la-mm-broadband-modem-zte-icera.Plo \
 	zte/$(DEPDIR)/libmm_plugin_zte_la-mm-broadband-modem-zte.Plo \
@@ -897,7 +985,9 @@ SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(libhelpers_cinterion_la_SOURCES) \
 	$(libhelpers_huawei_la_SOURCES) $(libhelpers_icera_la_SOURCES) \
 	$(libhelpers_linktop_la_SOURCES) $(libhelpers_mbm_la_SOURCES) \
-	$(libhelpers_sierra_la_SOURCES) $(libhelpers_telit_la_SOURCES) \
+	$(libhelpers_sierra_la_SOURCES) \
+	$(libhelpers_simtech_la_SOURCES) \
+	$(libhelpers_telit_la_SOURCES) \
 	$(nodist_libhelpers_telit_la_SOURCES) \
 	$(libhelpers_thuraya_la_SOURCES) \
 	$(libhelpers_ublox_la_SOURCES) \
@@ -907,6 +997,7 @@ SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(libmm_plugin_anydata_la_SOURCES) \
 	$(libmm_plugin_cinterion_la_SOURCES) \
 	$(libmm_plugin_dell_la_SOURCES) \
+	$(libmm_plugin_dlink_la_SOURCES) \
 	$(libmm_plugin_ericsson_mbm_la_SOURCES) \
 	$(libmm_plugin_fibocom_la_SOURCES) \
 	$(libmm_plugin_generic_la_SOURCES) \
@@ -931,16 +1022,17 @@ SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(libmm_plugin_simtech_la_SOURCES) \
 	$(libmm_plugin_telit_la_SOURCES) \
 	$(libmm_plugin_thuraya_la_SOURCES) \
+	$(libmm_plugin_tplink_la_SOURCES) \
 	$(libmm_plugin_ublox_la_SOURCES) \
 	$(libmm_plugin_via_la_SOURCES) \
 	$(libmm_plugin_wavecom_la_SOURCES) \
 	$(libmm_plugin_x22x_la_SOURCES) $(libmm_plugin_zte_la_SOURCES) \
-	$(libmm_test_common_la_SOURCES) \
-	$(libmm_utils_icera_la_SOURCES) $(libmm_utils_mbm_la_SOURCES) \
-	$(libmm_utils_novatel_la_SOURCES) \
-	$(libmm_utils_option_la_SOURCES) \
-	$(libmm_utils_sierra_la_SOURCES) \
-	$(libmm_utils_telit_la_SOURCES) $(libmm_utils_xmm_la_SOURCES) \
+	$(libmm_shared_icera_la_SOURCES) \
+	$(libmm_shared_novatel_la_SOURCES) \
+	$(libmm_shared_option_la_SOURCES) \
+	$(libmm_shared_sierra_la_SOURCES) \
+	$(libmm_shared_telit_la_SOURCES) \
+	$(libmm_shared_xmm_la_SOURCES) $(libmm_test_common_la_SOURCES) \
 	$(test_keyfiles_SOURCES) \
 	$(test_modem_helpers_altair_lte_SOURCES) \
 	$(test_modem_helpers_cinterion_SOURCES) \
@@ -949,6 +1041,7 @@ SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(test_modem_helpers_linktop_SOURCES) \
 	$(test_modem_helpers_mbm_SOURCES) \
 	$(test_modem_helpers_sierra_SOURCES) \
+	$(test_modem_helpers_simtech_SOURCES) \
 	$(test_modem_helpers_telit_SOURCES) \
 	$(test_modem_helpers_thuraya_SOURCES) \
 	$(test_modem_helpers_ublox_SOURCES) \
@@ -958,13 +1051,16 @@ DIST_SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(libhelpers_cinterion_la_SOURCES) \
 	$(libhelpers_huawei_la_SOURCES) $(libhelpers_icera_la_SOURCES) \
 	$(libhelpers_linktop_la_SOURCES) $(libhelpers_mbm_la_SOURCES) \
-	$(libhelpers_sierra_la_SOURCES) $(libhelpers_telit_la_SOURCES) \
+	$(libhelpers_sierra_la_SOURCES) \
+	$(libhelpers_simtech_la_SOURCES) \
+	$(libhelpers_telit_la_SOURCES) \
 	$(libhelpers_thuraya_la_SOURCES) \
 	$(libhelpers_ublox_la_SOURCES) $(libhelpers_xmm_la_SOURCES) \
 	$(libmm_plugin_altair_lte_la_SOURCES) \
 	$(libmm_plugin_anydata_la_SOURCES) \
 	$(am__libmm_plugin_cinterion_la_SOURCES_DIST) \
 	$(am__libmm_plugin_dell_la_SOURCES_DIST) \
+	$(libmm_plugin_dlink_la_SOURCES) \
 	$(libmm_plugin_ericsson_mbm_la_SOURCES) \
 	$(libmm_plugin_fibocom_la_SOURCES) \
 	$(libmm_plugin_generic_la_SOURCES) \
@@ -986,21 +1082,21 @@ DIST_SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(libmm_plugin_samsung_la_SOURCES) \
 	$(libmm_plugin_sierra_legacy_la_SOURCES) \
 	$(libmm_plugin_sierra_la_SOURCES) \
-	$(libmm_plugin_simtech_la_SOURCES) \
+	$(am__libmm_plugin_simtech_la_SOURCES_DIST) \
 	$(libmm_plugin_telit_la_SOURCES) \
 	$(libmm_plugin_thuraya_la_SOURCES) \
+	$(libmm_plugin_tplink_la_SOURCES) \
 	$(libmm_plugin_ublox_la_SOURCES) \
 	$(libmm_plugin_via_la_SOURCES) \
 	$(libmm_plugin_wavecom_la_SOURCES) \
 	$(libmm_plugin_x22x_la_SOURCES) $(libmm_plugin_zte_la_SOURCES) \
-	$(libmm_test_common_la_SOURCES) \
-	$(libmm_utils_icera_la_SOURCES) $(libmm_utils_mbm_la_SOURCES) \
-	$(libmm_utils_novatel_la_SOURCES) \
-	$(libmm_utils_option_la_SOURCES) \
-	$(libmm_utils_sierra_la_SOURCES) \
-	$(am__libmm_utils_telit_la_SOURCES_DIST) \
-	$(am__libmm_utils_xmm_la_SOURCES_DIST) \
-	$(test_keyfiles_SOURCES) \
+	$(libmm_shared_icera_la_SOURCES) \
+	$(libmm_shared_novatel_la_SOURCES) \
+	$(libmm_shared_option_la_SOURCES) \
+	$(libmm_shared_sierra_la_SOURCES) \
+	$(am__libmm_shared_telit_la_SOURCES_DIST) \
+	$(am__libmm_shared_xmm_la_SOURCES_DIST) \
+	$(libmm_test_common_la_SOURCES) $(test_keyfiles_SOURCES) \
 	$(test_modem_helpers_altair_lte_SOURCES) \
 	$(test_modem_helpers_cinterion_SOURCES) \
 	$(test_modem_helpers_huawei_SOURCES) \
@@ -1008,6 +1104,7 @@ DIST_SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(test_modem_helpers_linktop_SOURCES) \
 	$(test_modem_helpers_mbm_SOURCES) \
 	$(test_modem_helpers_sierra_SOURCES) \
+	$(test_modem_helpers_simtech_SOURCES) \
 	$(test_modem_helpers_telit_SOURCES) \
 	$(test_modem_helpers_thuraya_SOURCES) \
 	$(test_modem_helpers_ublox_SOURCES) \
@@ -1140,6 +1237,7 @@ MM_LIBS = @MM_LIBS@
 MM_MAJOR_VERSION = @MM_MAJOR_VERSION@
 MM_MICRO_VERSION = @MM_MICRO_VERSION@
 MM_MINOR_VERSION = @MM_MINOR_VERSION@
+MM_POLKIT_SERVICE = @MM_POLKIT_SERVICE@
 MM_VERSION = @MM_VERSION@
 MSGFMT = @MSGFMT@
 MSGFMT_015 = @MSGFMT_015@
@@ -1265,9 +1363,21 @@ AM_CFLAGS = $(MM_CFLAGS) $(CODE_COVERAGE_CFLAGS) $(GUDEV_CFLAGS) \
 	-DTESTUDEVRULESDIR_HAIER=\"${srcdir}/haier\" \
 	-DTESTUDEVRULESDIR_DELL=\"${srcdir}/dell\" \
 	-DTESTKEYFILE_DELL_DW5821E=\"${srcdir}/dell/mm-dell-dw5821e-carrier-mapping.conf\" \
-	$(NULL) -DTESTUDEVRULESDIR_FIBOCOM=\"${srcdir}/fibocom\"
+	$(NULL) -DTESTUDEVRULESDIR_FIBOCOM=\"${srcdir}/fibocom\" \
+	-DTESTUDEVRULESDIR_DLINK=\"${srcdir}/dlink\" \
+	-DTESTUDEVRULESDIR_TPLINK=\"${srcdir}/tplink\"
 AM_LDFLAGS = $(MM_LIBS) $(CODE_COVERAGE_LDFLAGS) $(GUDEV_LIBS) $(NULL) \
 	$(am__append_2) $(am__append_4)
+
+# Common compiler/linker flags for shared utils
+SHARED_COMMON_COMPILER_FLAGS = \
+	$(NULL)
+
+SHARED_COMMON_LINKER_FLAGS = \
+	-module        \
+	-avoid-version \
+	$(NULL)
+
 
 # Common compiler/linker flags for plugins
 PLUGIN_COMMON_COMPILER_FLAGS = \
@@ -1308,7 +1418,9 @@ dist_udevrules_DATA = huawei/77-mm-huawei-net-port-types.rules \
 	ublox/77-mm-ublox-port-types.rules \
 	dell/77-mm-dell-port-types.rules \
 	quectel/77-mm-quectel-port-types.rules \
-	fibocom/77-mm-fibocom-port-types.rules
+	fibocom/77-mm-fibocom-port-types.rules \
+	dlink/77-mm-dlink-port-types.rules \
+	tplink/77-mm-tplink-port-types.rules
 
 # Helper libs
 
@@ -1321,22 +1433,8 @@ dist_udevrules_DATA = huawei/77-mm-huawei-net-port-types.rules \
 ################################################################################
 
 ################################################################################
-# common ericsson mbm support
-################################################################################
-
-################################################################################
 # common sierra support
 ################################################################################
-
-################################################################################
-# common option support
-################################################################################
-
-################################################################################
-# common novatel support
-################################################################################
-
-# Common Novatel modem support library
 
 ################################################################################
 # common xmm support
@@ -1347,7 +1445,15 @@ dist_udevrules_DATA = huawei/77-mm-huawei-net-port-types.rules \
 ################################################################################
 
 ################################################################################
+# plugin: ericsson mbm
+################################################################################
+
+################################################################################
 # plugin: linktop cdma
+################################################################################
+
+################################################################################
+# plugin: simtech
 ################################################################################
 
 ################################################################################
@@ -1361,18 +1467,26 @@ dist_udevrules_DATA = huawei/77-mm-huawei-net-port-types.rules \
 ################################################################################
 # plugin: altair lte
 ################################################################################
-
-# Common telit modem support library
 noinst_LTLIBRARIES = libmm-test-common.la libhelpers-icera.la \
-	libmm-utils-icera.la libhelpers-mbm.la libmm-utils-mbm.la \
-	libhelpers-sierra.la libmm-utils-sierra.la \
-	libmm-utils-option.la libmm-utils-novatel.la libhelpers-xmm.la \
-	libmm-utils-xmm.la libhelpers-huawei.la libhelpers-linktop.la \
-	libhelpers-cinterion.la libhelpers-thuraya.la \
-	libhelpers-altair-lte.la libhelpers-telit.la \
-	libmm-utils-telit.la libhelpers-ublox.la
+	libhelpers-sierra.la libhelpers-xmm.la libhelpers-telit.la \
+	libhelpers-huawei.la libhelpers-mbm.la libhelpers-linktop.la \
+	libhelpers-simtech.la libhelpers-cinterion.la \
+	libhelpers-thuraya.la libhelpers-altair-lte.la \
+	libhelpers-ublox.la
 
 # Plugins
+
+################################################################################
+# common option support
+################################################################################
+
+################################################################################
+# common novatel support
+################################################################################
+
+# Common Novatel modem support library
+
+# Common telit modem support library
 
 ################################################################################
 # plugin: generic
@@ -1380,10 +1494,6 @@ noinst_LTLIBRARIES = libmm-test-common.la libhelpers-icera.la \
 
 ################################################################################
 # plugin: motorola
-################################################################################
-
-################################################################################
-# plugin: ericsson mbm
 ################################################################################
 
 ################################################################################
@@ -1423,10 +1533,6 @@ noinst_LTLIBRARIES = libmm-test-common.la libhelpers-icera.la \
 ################################################################################
 
 ################################################################################
-# plugin: simtech
-################################################################################
-
-################################################################################
 # plugin: alcatel/TCT/JRD x220D and possibly others
 ################################################################################
 
@@ -1455,6 +1561,10 @@ noinst_LTLIBRARIES = libmm-test-common.la libhelpers-icera.la \
 ################################################################################
 
 ################################################################################
+# plugin: telit
+################################################################################
+
+################################################################################
 # plugin: mtk
 ################################################################################
 
@@ -1469,7 +1579,18 @@ noinst_LTLIBRARIES = libmm-test-common.la libhelpers-icera.la \
 ################################################################################
 # plugin: fibocom
 ################################################################################
-pkglib_LTLIBRARIES = libmm-plugin-generic.la libmm-plugin-motorola.la \
+
+################################################################################
+# plugin: dlink
+################################################################################
+
+################################################################################
+# plugin: tplink
+################################################################################
+pkglib_LTLIBRARIES = libmm-shared-icera.la libmm-shared-sierra.la \
+	libmm-shared-option.la libmm-shared-novatel.la \
+	libmm-shared-xmm.la libmm-shared-telit.la \
+	libmm-plugin-generic.la libmm-plugin-motorola.la \
 	libmm-plugin-huawei.la libmm-plugin-ericsson-mbm.la \
 	libmm-plugin-option.la libmm-plugin-option-hso.la \
 	libmm-plugin-sierra.la libmm-plugin-sierra-legacy.la \
@@ -1485,7 +1606,8 @@ pkglib_LTLIBRARIES = libmm-plugin-generic.la libmm-plugin-motorola.la \
 	libmm-plugin-telit.la libmm-plugin-mtk.la \
 	libmm-plugin-haier.la libmm-plugin-ublox.la \
 	libmm-plugin-dell.la libmm-plugin-quectel.la \
-	libmm-plugin-fibocom.la
+	libmm-plugin-fibocom.la libmm-plugin-dlink.la \
+	libmm-plugin-tplink.la
 
 # Built sources
 BUILT_SOURCES = $(TELIT_ENUMS_GENERATED) $(UBLOX_ENUMS_GENERATED)
@@ -1500,6 +1622,8 @@ libmm_test_common_la_SOURCES = \
 	tests/test-fixture.c \
 	tests/test-port-context.h \
 	tests/test-port-context.c \
+	tests/test-helpers.h \
+	tests/test-helpers.c \
 	$(NULL)
 
 libmm_test_common_la_CPPFLAGS = \
@@ -1520,11 +1644,12 @@ TEST_COMMON_COMPILER_FLAGS = \
 	-I$(top_srcdir)/libmm-glib/generated \
 	-I$(top_builddir)/libmm-glib/generated \
 	-I$(top_builddir)/libmm-glib/generated/tests \
-	-DCOMMON_GSM_PORT_CONF=\""$(abs_top_srcdir)/plugins/tests/gsm-port.conf"\"
+	-DCOMMON_GSM_PORT_CONF=\""$(abs_top_srcdir)/plugins/tests/gsm-port.conf"\" \
+	$(NULL)
 
 TEST_COMMON_LIBADD_FLAGS = \
 	$(builddir)/libmm-test-common.la \
-	$(top_builddir)/libmm-glib/libmm-glib.la
+	$(NULL)
 
 libhelpers_icera_la_SOURCES = \
 	icera/mm-modem-helpers-icera.c \
@@ -1545,53 +1670,21 @@ test_modem_helpers_icera_LDADD = \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
 	$(NULL)
 
-libmm_utils_icera_la_SOURCES = \
+libmm_shared_icera_la_SOURCES = \
+	icera/mm-shared.c \
 	icera/mm-broadband-modem-icera.h \
 	icera/mm-broadband-modem-icera.c \
 	icera/mm-broadband-bearer-icera.h \
 	icera/mm-broadband-bearer-icera.c \
 	$(NULL)
 
-libmm_utils_icera_la_LIBADD = \
+libmm_shared_icera_la_CPPFLAGS = $(SHARED_COMMON_COMPILER_FLAGS)
+libmm_shared_icera_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
+libmm_shared_icera_la_LIBADD = \
 	$(builddir)/libhelpers-icera.la \
 	$(NULL)
 
 ICERA_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/icera
-ICERA_COMMON_LIBADD_FLAGS = $(builddir)/libmm-utils-icera.la
-libhelpers_mbm_la_SOURCES = \
-	mbm/mm-modem-helpers-mbm.c \
-	mbm/mm-modem-helpers-mbm.h \
-	$(NULL)
-
-test_modem_helpers_mbm_SOURCES = \
-	mbm/tests/test-modem-helpers-mbm.c \
-	$(NULL)
-
-test_modem_helpers_mbm_CPPFLAGS = \
-	-I$(top_srcdir)/plugins/mbm \
-	$(NULL)
-
-test_modem_helpers_mbm_LDADD = \
-	$(builddir)/libhelpers-mbm.la \
-	$(top_builddir)/src/libhelpers.la \
-	$(top_builddir)/libmm-glib/libmm-glib.la \
-	$(NULL)
-
-libmm_utils_mbm_la_SOURCES = \
-	mbm/mm-broadband-modem-mbm.c \
-	mbm/mm-broadband-modem-mbm.h \
-	mbm/mm-broadband-bearer-mbm.c \
-	mbm/mm-broadband-bearer-mbm.h \
-	mbm/mm-sim-mbm.c \
-	mbm/mm-sim-mbm.h \
-	$(NULL)
-
-libmm_utils_mbm_la_LIBADD = \
-	$(builddir)/libhelpers-mbm.la \
-	$(NULL)
-
-MBM_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/mbm
-MBM_COMMON_LIBADD_FLAGS = $(builddir)/libmm-utils-mbm.la
 libhelpers_sierra_la_SOURCES = \
 	sierra/mm-modem-helpers-sierra.c \
 	sierra/mm-modem-helpers-sierra.h \
@@ -1611,7 +1704,8 @@ test_modem_helpers_sierra_LDADD = \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
 	$(NULL)
 
-libmm_utils_sierra_la_SOURCES = \
+libmm_shared_sierra_la_SOURCES = \
+	sierra/mm-shared.c \
 	sierra/mm-common-sierra.c \
 	sierra/mm-common-sierra.h \
 	sierra/mm-sim-sierra.c \
@@ -1622,28 +1716,33 @@ libmm_utils_sierra_la_SOURCES = \
 	sierra/mm-broadband-modem-sierra.h  \
 	$(NULL)
 
-libmm_utils_sierra_la_LIBADD = \
+libmm_shared_sierra_la_CPPFLAGS = $(SHARED_COMMON_COMPILER_FLAGS)
+libmm_shared_sierra_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
+libmm_shared_sierra_la_LIBADD = \
 	$(builddir)/libhelpers-sierra.la \
 	$(NULL)
 
 SIERRA_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/sierra
-SIERRA_COMMON_LIBADD_FLAGS = $(builddir)/libmm-utils-sierra.la
-libmm_utils_option_la_SOURCES = \
+libmm_shared_option_la_SOURCES = \
+	option/mm-shared.c \
 	option/mm-broadband-modem-option.c \
 	option/mm-broadband-modem-option.h \
 	$(NULL)
 
+libmm_shared_option_la_CPPFLAGS = $(SHARED_COMMON_COMPILER_FLAGS)
+libmm_shared_option_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
 OPTION_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/option
-OPTION_COMMON_LIBADD_FLAGS = $(builddir)/libmm-utils-option.la
-libmm_utils_novatel_la_SOURCES = \
+libmm_shared_novatel_la_SOURCES = \
+	novatel/mm-shared.c \
 	novatel/mm-common-novatel.c \
 	novatel/mm-common-novatel.h \
 	novatel/mm-broadband-modem-novatel.c \
 	novatel/mm-broadband-modem-novatel.h \
 	$(NULL)
 
+libmm_shared_novatel_la_CPPFLAGS = $(SHARED_COMMON_COMPILER_FLAGS)
+libmm_shared_novatel_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
 NOVATEL_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/novatel
-NOVATEL_COMMON_LIBADD_FLAGS = $(builddir)/libmm-utils-novatel.la
 libhelpers_xmm_la_SOURCES = \
 	xmm/mm-modem-helpers-xmm.c \
 	xmm/mm-modem-helpers-xmm.h \
@@ -1663,15 +1762,78 @@ test_modem_helpers_xmm_LDADD = \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
 	$(NULL)
 
-libmm_utils_xmm_la_SOURCES = xmm/mm-shared-xmm.h xmm/mm-shared-xmm.c \
-	xmm/mm-broadband-modem-xmm.h xmm/mm-broadband-modem-xmm.c \
-	$(NULL) $(am__append_5)
-libmm_utils_xmm_la_LIBADD = \
+libmm_shared_xmm_la_SOURCES = xmm/mm-shared.c xmm/mm-shared-xmm.h \
+	xmm/mm-shared-xmm.c xmm/mm-broadband-modem-xmm.h \
+	xmm/mm-broadband-modem-xmm.c $(NULL) $(am__append_5)
+libmm_shared_xmm_la_CPPFLAGS = $(SHARED_COMMON_COMPILER_FLAGS)
+libmm_shared_xmm_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
+libmm_shared_xmm_la_LIBADD = \
 	$(builddir)/libhelpers-xmm.la \
 	$(NULL)
 
 XMM_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/xmm
-XMM_COMMON_LIBADD_FLAGS = $(builddir)/libmm-utils-xmm.la
+
+################################################################################
+# common telit support
+################################################################################
+TELIT_ENUMS_INPUTS = \
+	$(top_srcdir)/plugins/telit/mm-modem-helpers-telit.h \
+	$(NULL)
+
+TELIT_ENUMS_GENERATED = \
+	telit/mm-telit-enums-types.h \
+	telit/mm-telit-enums-types.c \
+	$(NULL)
+
+libhelpers_telit_la_SOURCES = \
+	telit/mm-modem-helpers-telit.c \
+	telit/mm-modem-helpers-telit.h \
+	$(NULL)
+
+libhelpers_telit_la_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/telit \
+	-I$(top_builddir)/plugins/telit \
+	$(NULL)
+
+nodist_libhelpers_telit_la_SOURCES = $(TELIT_ENUMS_GENERATED)
+test_modem_helpers_telit_SOURCES = \
+	telit/tests/test-mm-modem-helpers-telit.c \
+	$(NULL)
+
+test_modem_helpers_telit_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/telit \
+	-I$(top_builddir)/plugins/telit \
+	$(TEST_COMMON_COMPILER_FLAGS) \
+	$(NULL)
+
+test_modem_helpers_telit_LDADD = \
+	$(TEST_COMMON_LIBADD_FLAGS) \
+	$(builddir)/libhelpers-telit.la \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+libmm_shared_telit_la_SOURCES = telit/mm-shared.c \
+	telit/mm-common-telit.c telit/mm-common-telit.h \
+	telit/mm-shared-telit.c telit/mm-shared-telit.h \
+	telit/mm-broadband-modem-telit.c \
+	telit/mm-broadband-modem-telit.h $(NULL) $(am__append_6)
+libmm_shared_telit_la_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/telit \
+	-I$(top_builddir)/plugins/telit \
+	$(SHARED_COMMON_COMPILER_FLAGS) \
+	$(NULL)
+
+libmm_shared_telit_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
+libmm_shared_telit_la_LIBADD = \
+	$(builddir)/libhelpers-telit.la \
+	$(NULL)
+
+TELIT_COMMON_COMPILER_FLAGS = \
+	-I$(top_srcdir)/plugins/telit \
+	-I$(top_builddir)/plugins/telit \
+	$(NULL)
+
 libmm_plugin_generic_la_SOURCES = \
 	generic/mm-plugin-generic.c \
 	generic/mm-plugin-generic.h \
@@ -1681,7 +1843,11 @@ libmm_plugin_generic_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_generic_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 test_service_generic_SOURCES = generic/tests/test-service-generic.c
 test_service_generic_CPPFLAGS = $(TEST_COMMON_COMPILER_FLAGS)
-test_service_generic_LDADD = $(TEST_COMMON_LIBADD_FLAGS)
+test_service_generic_LDADD = \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(TEST_COMMON_LIBADD_FLAGS) \
+	$(NULL)
+
 libmm_plugin_motorola_la_SOURCES = \
 	motorola/mm-plugin-motorola.c \
 	motorola/mm-plugin-motorola.h \
@@ -1715,8 +1881,6 @@ libmm_plugin_huawei_la_SOURCES = \
 	huawei/mm-plugin-huawei.h \
 	huawei/mm-sim-huawei.c \
 	huawei/mm-sim-huawei.h \
-	huawei/mm-call-huawei.c \
-	huawei/mm-call-huawei.h \
 	huawei/mm-broadband-modem-huawei.c \
 	huawei/mm-broadband-modem-huawei.h \
 	huawei/mm-broadband-bearer-huawei.c \
@@ -1726,14 +1890,39 @@ libmm_plugin_huawei_la_SOURCES = \
 libmm_plugin_huawei_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_huawei_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_huawei_la_LIBADD = $(builddir)/libhelpers-huawei.la
+libhelpers_mbm_la_SOURCES = \
+	mbm/mm-modem-helpers-mbm.c \
+	mbm/mm-modem-helpers-mbm.h \
+	$(NULL)
+
+test_modem_helpers_mbm_SOURCES = \
+	mbm/tests/test-modem-helpers-mbm.c \
+	$(NULL)
+
+test_modem_helpers_mbm_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/mbm \
+	$(NULL)
+
+test_modem_helpers_mbm_LDADD = \
+	$(builddir)/libhelpers-mbm.la \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
 libmm_plugin_ericsson_mbm_la_SOURCES = \
+	mbm/mm-broadband-modem-mbm.c \
+	mbm/mm-broadband-modem-mbm.h \
+	mbm/mm-broadband-bearer-mbm.c \
+	mbm/mm-broadband-bearer-mbm.h \
+	mbm/mm-sim-mbm.c \
+	mbm/mm-sim-mbm.h \
 	mbm/mm-plugin-mbm.c \
 	mbm/mm-plugin-mbm.h \
 	$(NULL)
 
-libmm_plugin_ericsson_mbm_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(MBM_COMMON_COMPILER_FLAGS)
+libmm_plugin_ericsson_mbm_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_ericsson_mbm_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_ericsson_mbm_la_LIBADD = $(MBM_COMMON_LIBADD_FLAGS)
+libmm_plugin_ericsson_mbm_la_LIBADD = $(builddir)/libhelpers-mbm.la
 libmm_plugin_option_la_SOURCES = \
 	option/mm-plugin-option.c \
 	option/mm-plugin-option.h \
@@ -1741,7 +1930,6 @@ libmm_plugin_option_la_SOURCES = \
 
 libmm_plugin_option_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(OPTION_COMMON_COMPILER_FLAGS)
 libmm_plugin_option_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_option_la_LIBADD = $(OPTION_COMMON_LIBADD_FLAGS)
 libmm_plugin_option_hso_la_SOURCES = \
 	option/mm-plugin-hso.c \
 	option/mm-plugin-hso.h \
@@ -1753,7 +1941,6 @@ libmm_plugin_option_hso_la_SOURCES = \
 
 libmm_plugin_option_hso_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(OPTION_COMMON_COMPILER_FLAGS)
 libmm_plugin_option_hso_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_option_hso_la_LIBADD = $(OPTION_COMMON_LIBADD_FLAGS)
 libmm_plugin_sierra_la_SOURCES = \
 	sierra/mm-plugin-sierra.c \
 	sierra/mm-plugin-sierra.h \
@@ -1770,7 +1957,6 @@ libmm_plugin_sierra_legacy_la_SOURCES = \
 
 libmm_plugin_sierra_legacy_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(ICERA_COMMON_COMPILER_FLAGS) $(SIERRA_COMMON_COMPILER_FLAGS)
 libmm_plugin_sierra_legacy_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_sierra_legacy_la_LIBADD = $(ICERA_COMMON_LIBADD_FLAGS) $(SIERRA_COMMON_LIBADD_FLAGS)
 libmm_plugin_wavecom_la_SOURCES = \
 	wavecom/mm-plugin-wavecom.c \
 	wavecom/mm-plugin-wavecom.h \
@@ -1798,7 +1984,6 @@ libmm_plugin_nokia_icera_la_SOURCES = \
 
 libmm_plugin_nokia_icera_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(ICERA_COMMON_COMPILER_FLAGS)
 libmm_plugin_nokia_icera_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_nokia_icera_la_LIBADD = $(ICERA_COMMON_LIBADD_FLAGS)
 libmm_plugin_zte_la_SOURCES = \
 	zte/mm-plugin-zte.c \
 	zte/mm-plugin-zte.h \
@@ -1812,7 +1997,6 @@ libmm_plugin_zte_la_SOURCES = \
 
 libmm_plugin_zte_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(ICERA_COMMON_COMPILER_FLAGS)
 libmm_plugin_zte_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_zte_la_LIBADD = $(ICERA_COMMON_LIBADD_FLAGS)
 libmm_plugin_longcheer_la_SOURCES = \
 	longcheer/mm-plugin-longcheer.c \
 	longcheer/mm-plugin-longcheer.h \
@@ -1860,15 +2044,33 @@ libmm_plugin_linktop_la_SOURCES = \
 libmm_plugin_linktop_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_linktop_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_linktop_la_LIBADD = $(builddir)/libhelpers-linktop.la
-libmm_plugin_simtech_la_SOURCES = \
-	simtech/mm-plugin-simtech.c \
-	simtech/mm-plugin-simtech.h \
-	simtech/mm-broadband-modem-simtech.h \
-	simtech/mm-broadband-modem-simtech.c \
+libhelpers_simtech_la_SOURCES = \
+	simtech/mm-modem-helpers-simtech.c \
+	simtech/mm-modem-helpers-simtech.h \
 	$(NULL)
 
+test_modem_helpers_simtech_SOURCES = \
+	simtech/tests/test-modem-helpers-simtech.c \
+	$(NULL)
+
+test_modem_helpers_simtech_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/simtech \
+	$(NULL)
+
+test_modem_helpers_simtech_LDADD = \
+	$(builddir)/libhelpers-simtech.la \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+libmm_plugin_simtech_la_SOURCES = simtech/mm-plugin-simtech.c \
+	simtech/mm-plugin-simtech.h simtech/mm-shared-simtech.c \
+	simtech/mm-shared-simtech.h \
+	simtech/mm-broadband-modem-simtech.h \
+	simtech/mm-broadband-modem-simtech.c $(NULL) $(am__append_7)
 libmm_plugin_simtech_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_simtech_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
+libmm_plugin_simtech_la_LIBADD = $(builddir)/libhelpers-simtech.la
 libmm_plugin_x22x_la_SOURCES = \
 	x22x/mm-plugin-x22x.c \
 	x22x/mm-plugin-x22x.h \
@@ -1898,7 +2100,6 @@ libmm_plugin_samsung_la_SOURCES = \
 
 libmm_plugin_samsung_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(ICERA_COMMON_COMPILER_FLAGS)
 libmm_plugin_samsung_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_samsung_la_LIBADD = $(ICERA_COMMON_LIBADD_FLAGS)
 libhelpers_cinterion_la_SOURCES = \
 	cinterion/mm-modem-helpers-cinterion.c \
 	cinterion/mm-modem-helpers-cinterion.h \
@@ -1926,7 +2127,7 @@ libmm_plugin_cinterion_la_SOURCES = cinterion/mm-plugin-cinterion.c \
 	cinterion/mm-broadband-modem-cinterion.h \
 	cinterion/mm-broadband-bearer-cinterion.c \
 	cinterion/mm-broadband-bearer-cinterion.h $(NULL) \
-	$(am__append_6)
+	$(am__append_8)
 libmm_plugin_cinterion_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_cinterion_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_cinterion_la_LIBADD = $(builddir)/libhelpers-cinterion.la
@@ -1993,7 +2194,6 @@ libmm_plugin_novatel_la_SOURCES = \
 
 libmm_plugin_novatel_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(NOVATEL_COMMON_COMPILER_FLAGS)
 libmm_plugin_novatel_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_novatel_la_LIBADD = $(NOVATEL_COMMON_LIBADD_FLAGS)
 libhelpers_altair_lte_la_SOURCES = \
 	altair/mm-modem-helpers-altair-lte.c \
 	altair/mm-modem-helpers-altair-lte.h \
@@ -2034,61 +2234,13 @@ libmm_plugin_via_la_SOURCES = \
 
 libmm_plugin_via_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_via_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-
-################################################################################
-# plugin: telit
-################################################################################
-PLUGIN_TELIT_COMPILER_FLAGS = \
-	-I$(top_srcdir)/plugins/telit \
-	-I$(top_builddir)/plugins/telit \
-	$(NULL)
-
-TELIT_ENUMS_INPUTS = \
-	$(top_srcdir)/plugins/telit/mm-modem-helpers-telit.h \
-	$(NULL)
-
-TELIT_ENUMS_GENERATED = \
-	telit/mm-telit-enums-types.h \
-	telit/mm-telit-enums-types.c \
-	$(NULL)
-
-libhelpers_telit_la_SOURCES = \
-	telit/mm-modem-helpers-telit.c \
-	telit/mm-modem-helpers-telit.h \
-	$(NULL)
-
-nodist_libhelpers_telit_la_SOURCES = $(TELIT_ENUMS_GENERATED)
-libhelpers_telit_la_CPPFLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
 libmm_plugin_telit_la_SOURCES = \
 	telit/mm-plugin-telit.c \
 	telit/mm-plugin-telit.h \
 	$(NULL)
 
-libmm_plugin_telit_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(PLUGIN_TELIT_COMPILER_FLAGS)
+libmm_plugin_telit_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(TELIT_COMMON_COMPILER_FLAGS)
 libmm_plugin_telit_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_telit_la_LIBADD = $(TELIT_COMMON_LIBADD_FLAGS)
-test_modem_helpers_telit_SOURCES = \
-	telit/tests/test-mm-modem-helpers-telit.c \
-	$(NULL)
-
-test_modem_helpers_telit_CPPFLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
-test_modem_helpers_telit_LDADD = \
-	$(builddir)/libhelpers-telit.la \
-	$(top_builddir)/src/libhelpers.la \
-	$(top_builddir)/libmm-glib/libmm-glib.la \
-	$(NULL)
-
-libmm_utils_telit_la_SOURCES = telit/mm-common-telit.c \
-	telit/mm-common-telit.h telit/mm-shared-telit.c \
-	telit/mm-shared-telit.h telit/mm-broadband-modem-telit.c \
-	telit/mm-broadband-modem-telit.h $(NULL) $(am__append_7)
-libmm_utils_telit_la_CPPFLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
-TELIT_COMMON_COMPILER_FLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
-TELIT_COMMON_LIBADD_FLAGS = \
-	$(builddir)/libhelpers-telit.la \
-	$(builddir)/libmm-utils-telit.la \
-	$(NULL)
-
 libmm_plugin_mtk_la_SOURCES = \
 	mtk/mm-plugin-mtk.c \
 	mtk/mm-plugin-mtk.h \
@@ -2130,8 +2282,13 @@ test_modem_helpers_ublox_SOURCES = \
 	ublox/tests/test-modem-helpers-ublox.c \
 	$(NULL)
 
-test_modem_helpers_ublox_CPPFLAGS = $(PLUGIN_UBLOX_COMPILER_FLAGS)
+test_modem_helpers_ublox_CPPFLAGS = \
+	$(PLUGIN_UBLOX_COMPILER_FLAGS) \
+	$(TEST_COMMON_COMPILER_FLAGS) \
+	$(NULL)
+
 test_modem_helpers_ublox_LDADD = \
+	$(TEST_COMMON_LIBADD_FLAGS) \
 	$(builddir)/libhelpers-ublox.la \
 	$(top_builddir)/src/libhelpers.la \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
@@ -2140,8 +2297,6 @@ test_modem_helpers_ublox_LDADD = \
 libmm_plugin_ublox_la_SOURCES = \
 	ublox/mm-plugin-ublox.c \
 	ublox/mm-plugin-ublox.h \
-	ublox/mm-call-ublox.c \
-	ublox/mm-call-ublox.h \
 	ublox/mm-broadband-bearer-ublox.h \
 	ublox/mm-broadband-bearer-ublox.c \
 	ublox/mm-broadband-modem-ublox.h \
@@ -2154,30 +2309,21 @@ libmm_plugin_ublox_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(PLUGIN_UBLOX_
 libmm_plugin_ublox_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_ublox_la_LIBADD = $(builddir)/libhelpers-ublox.la
 libmm_plugin_dell_la_SOURCES = dell/mm-plugin-dell.c \
-	dell/mm-plugin-dell.h $(NULL) $(am__append_8)
+	dell/mm-plugin-dell.h $(NULL) $(am__append_9)
 libmm_plugin_dell_la_CPPFLAGS = \
 	$(PLUGIN_COMMON_COMPILER_FLAGS) \
 	$(NOVATEL_COMMON_COMPILER_FLAGS) \
 	$(SIERRA_COMMON_COMPILER_FLAGS) \
 	$(TELIT_COMMON_COMPILER_FLAGS) \
 	$(XMM_COMMON_COMPILER_FLAGS) \
-	$(MBM_COMMON_COMPILER_FLAGS) \
 	$(NULL)
 
 libmm_plugin_dell_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_dell_la_LIBADD = \
-	$(NOVATEL_COMMON_LIBADD_FLAGS) \
-	$(SIERRA_COMMON_LIBADD_FLAGS) \
-	$(TELIT_COMMON_LIBADD_FLAGS) \
-	$(XMM_COMMON_LIBADD_FLAGS) \
-	$(MBM_COMMON_LIBADD_FLAGS) \
-	$(NULL)
-
 libmm_plugin_quectel_la_SOURCES = quectel/mm-plugin-quectel.c \
 	quectel/mm-plugin-quectel.h quectel/mm-shared-quectel.c \
 	quectel/mm-shared-quectel.h \
 	quectel/mm-broadband-modem-quectel.c \
-	quectel/mm-broadband-modem-quectel.h $(NULL) $(am__append_9)
+	quectel/mm-broadband-modem-quectel.h $(NULL) $(am__append_10)
 libmm_plugin_quectel_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_quectel_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_fibocom_la_SOURCES = \
@@ -2187,7 +2333,20 @@ libmm_plugin_fibocom_la_SOURCES = \
 
 libmm_plugin_fibocom_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(XMM_COMMON_COMPILER_FLAGS)
 libmm_plugin_fibocom_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_fibocom_la_LIBADD = $(XMM_COMMON_LIBADD_FLAGS)
+libmm_plugin_dlink_la_SOURCES = \
+	dlink/mm-plugin-dlink.c \
+	dlink/mm-plugin-dlink.h \
+	$(NULL)
+
+libmm_plugin_dlink_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
+libmm_plugin_dlink_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
+libmm_plugin_tplink_la_SOURCES = \
+	tplink/mm-plugin-tplink.c \
+	tplink/mm-plugin-tplink.h \
+	$(NULL)
+
+libmm_plugin_tplink_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
+libmm_plugin_tplink_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 test_udev_rules_SOURCES = \
 	tests/test-udev-rules.c \
 	$(NULL)
@@ -2372,6 +2531,17 @@ sierra/mm-modem-helpers-sierra.lo: sierra/$(am__dirstamp) \
 
 libhelpers-sierra.la: $(libhelpers_sierra_la_OBJECTS) $(libhelpers_sierra_la_DEPENDENCIES) $(EXTRA_libhelpers_sierra_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK)  $(libhelpers_sierra_la_OBJECTS) $(libhelpers_sierra_la_LIBADD) $(LIBS)
+simtech/$(am__dirstamp):
+	@$(MKDIR_P) simtech
+	@: > simtech/$(am__dirstamp)
+simtech/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) simtech/$(DEPDIR)
+	@: > simtech/$(DEPDIR)/$(am__dirstamp)
+simtech/mm-modem-helpers-simtech.lo: simtech/$(am__dirstamp) \
+	simtech/$(DEPDIR)/$(am__dirstamp)
+
+libhelpers-simtech.la: $(libhelpers_simtech_la_OBJECTS) $(libhelpers_simtech_la_DEPENDENCIES) $(EXTRA_libhelpers_simtech_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK)  $(libhelpers_simtech_la_OBJECTS) $(libhelpers_simtech_la_LIBADD) $(LIBS)
 telit/$(am__dirstamp):
 	@$(MKDIR_P) telit
 	@: > telit/$(am__dirstamp)
@@ -2468,6 +2638,23 @@ dell/libmm_plugin_dell_la-mm-broadband-modem-dell-dw5821e.lo:  \
 
 libmm-plugin-dell.la: $(libmm_plugin_dell_la_OBJECTS) $(libmm_plugin_dell_la_DEPENDENCIES) $(EXTRA_libmm_plugin_dell_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libmm_plugin_dell_la_LINK) -rpath $(pkglibdir) $(libmm_plugin_dell_la_OBJECTS) $(libmm_plugin_dell_la_LIBADD) $(LIBS)
+dlink/$(am__dirstamp):
+	@$(MKDIR_P) dlink
+	@: > dlink/$(am__dirstamp)
+dlink/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) dlink/$(DEPDIR)
+	@: > dlink/$(DEPDIR)/$(am__dirstamp)
+dlink/libmm_plugin_dlink_la-mm-plugin-dlink.lo: dlink/$(am__dirstamp) \
+	dlink/$(DEPDIR)/$(am__dirstamp)
+
+libmm-plugin-dlink.la: $(libmm_plugin_dlink_la_OBJECTS) $(libmm_plugin_dlink_la_DEPENDENCIES) $(EXTRA_libmm_plugin_dlink_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libmm_plugin_dlink_la_LINK) -rpath $(pkglibdir) $(libmm_plugin_dlink_la_OBJECTS) $(libmm_plugin_dlink_la_LIBADD) $(LIBS)
+mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.lo:  \
+	mbm/$(am__dirstamp) mbm/$(DEPDIR)/$(am__dirstamp)
+mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.lo:  \
+	mbm/$(am__dirstamp) mbm/$(DEPDIR)/$(am__dirstamp)
+mbm/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.lo: mbm/$(am__dirstamp) \
+	mbm/$(DEPDIR)/$(am__dirstamp)
 mbm/libmm_plugin_ericsson_mbm_la-mm-plugin-mbm.lo:  \
 	mbm/$(am__dirstamp) mbm/$(DEPDIR)/$(am__dirstamp)
 
@@ -2509,8 +2696,6 @@ libmm-plugin-haier.la: $(libmm_plugin_haier_la_OBJECTS) $(libmm_plugin_haier_la_
 huawei/libmm_plugin_huawei_la-mm-plugin-huawei.lo:  \
 	huawei/$(am__dirstamp) huawei/$(DEPDIR)/$(am__dirstamp)
 huawei/libmm_plugin_huawei_la-mm-sim-huawei.lo:  \
-	huawei/$(am__dirstamp) huawei/$(DEPDIR)/$(am__dirstamp)
-huawei/libmm_plugin_huawei_la-mm-call-huawei.lo:  \
 	huawei/$(am__dirstamp) huawei/$(DEPDIR)/$(am__dirstamp)
 huawei/libmm_plugin_huawei_la-mm-broadband-modem-huawei.lo:  \
 	huawei/$(am__dirstamp) huawei/$(DEPDIR)/$(am__dirstamp)
@@ -2701,15 +2886,13 @@ sierra/libmm_plugin_sierra_la-mm-plugin-sierra.lo:  \
 
 libmm-plugin-sierra.la: $(libmm_plugin_sierra_la_OBJECTS) $(libmm_plugin_sierra_la_DEPENDENCIES) $(EXTRA_libmm_plugin_sierra_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libmm_plugin_sierra_la_LINK) -rpath $(pkglibdir) $(libmm_plugin_sierra_la_OBJECTS) $(libmm_plugin_sierra_la_LIBADD) $(LIBS)
-simtech/$(am__dirstamp):
-	@$(MKDIR_P) simtech
-	@: > simtech/$(am__dirstamp)
-simtech/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) simtech/$(DEPDIR)
-	@: > simtech/$(DEPDIR)/$(am__dirstamp)
 simtech/libmm_plugin_simtech_la-mm-plugin-simtech.lo:  \
 	simtech/$(am__dirstamp) simtech/$(DEPDIR)/$(am__dirstamp)
+simtech/libmm_plugin_simtech_la-mm-shared-simtech.lo:  \
+	simtech/$(am__dirstamp) simtech/$(DEPDIR)/$(am__dirstamp)
 simtech/libmm_plugin_simtech_la-mm-broadband-modem-simtech.lo:  \
+	simtech/$(am__dirstamp) simtech/$(DEPDIR)/$(am__dirstamp)
+simtech/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.lo:  \
 	simtech/$(am__dirstamp) simtech/$(DEPDIR)/$(am__dirstamp)
 
 libmm-plugin-simtech.la: $(libmm_plugin_simtech_la_OBJECTS) $(libmm_plugin_simtech_la_DEPENDENCIES) $(EXTRA_libmm_plugin_simtech_la_DEPENDENCIES) 
@@ -2726,9 +2909,18 @@ thuraya/libmm_plugin_thuraya_la-mm-broadband-modem-thuraya.lo:  \
 
 libmm-plugin-thuraya.la: $(libmm_plugin_thuraya_la_OBJECTS) $(libmm_plugin_thuraya_la_DEPENDENCIES) $(EXTRA_libmm_plugin_thuraya_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libmm_plugin_thuraya_la_LINK) -rpath $(pkglibdir) $(libmm_plugin_thuraya_la_OBJECTS) $(libmm_plugin_thuraya_la_LIBADD) $(LIBS)
+tplink/$(am__dirstamp):
+	@$(MKDIR_P) tplink
+	@: > tplink/$(am__dirstamp)
+tplink/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) tplink/$(DEPDIR)
+	@: > tplink/$(DEPDIR)/$(am__dirstamp)
+tplink/libmm_plugin_tplink_la-mm-plugin-tplink.lo:  \
+	tplink/$(am__dirstamp) tplink/$(DEPDIR)/$(am__dirstamp)
+
+libmm-plugin-tplink.la: $(libmm_plugin_tplink_la_OBJECTS) $(libmm_plugin_tplink_la_DEPENDENCIES) $(EXTRA_libmm_plugin_tplink_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libmm_plugin_tplink_la_LINK) -rpath $(pkglibdir) $(libmm_plugin_tplink_la_OBJECTS) $(libmm_plugin_tplink_la_LIBADD) $(LIBS)
 ublox/libmm_plugin_ublox_la-mm-plugin-ublox.lo: ublox/$(am__dirstamp) \
-	ublox/$(DEPDIR)/$(am__dirstamp)
-ublox/libmm_plugin_ublox_la-mm-call-ublox.lo: ublox/$(am__dirstamp) \
 	ublox/$(DEPDIR)/$(am__dirstamp)
 ublox/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.lo:  \
 	ublox/$(am__dirstamp) ublox/$(DEPDIR)/$(am__dirstamp)
@@ -2795,6 +2987,68 @@ zte/libmm_plugin_zte_la-mm-broadband-modem-zte-icera.lo:  \
 
 libmm-plugin-zte.la: $(libmm_plugin_zte_la_OBJECTS) $(libmm_plugin_zte_la_DEPENDENCIES) $(EXTRA_libmm_plugin_zte_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libmm_plugin_zte_la_LINK) -rpath $(pkglibdir) $(libmm_plugin_zte_la_OBJECTS) $(libmm_plugin_zte_la_LIBADD) $(LIBS)
+icera/libmm_shared_icera_la-mm-shared.lo: icera/$(am__dirstamp) \
+	icera/$(DEPDIR)/$(am__dirstamp)
+icera/libmm_shared_icera_la-mm-broadband-modem-icera.lo:  \
+	icera/$(am__dirstamp) icera/$(DEPDIR)/$(am__dirstamp)
+icera/libmm_shared_icera_la-mm-broadband-bearer-icera.lo:  \
+	icera/$(am__dirstamp) icera/$(DEPDIR)/$(am__dirstamp)
+
+libmm-shared-icera.la: $(libmm_shared_icera_la_OBJECTS) $(libmm_shared_icera_la_DEPENDENCIES) $(EXTRA_libmm_shared_icera_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libmm_shared_icera_la_LINK) -rpath $(pkglibdir) $(libmm_shared_icera_la_OBJECTS) $(libmm_shared_icera_la_LIBADD) $(LIBS)
+novatel/libmm_shared_novatel_la-mm-shared.lo: novatel/$(am__dirstamp) \
+	novatel/$(DEPDIR)/$(am__dirstamp)
+novatel/libmm_shared_novatel_la-mm-common-novatel.lo:  \
+	novatel/$(am__dirstamp) novatel/$(DEPDIR)/$(am__dirstamp)
+novatel/libmm_shared_novatel_la-mm-broadband-modem-novatel.lo:  \
+	novatel/$(am__dirstamp) novatel/$(DEPDIR)/$(am__dirstamp)
+
+libmm-shared-novatel.la: $(libmm_shared_novatel_la_OBJECTS) $(libmm_shared_novatel_la_DEPENDENCIES) $(EXTRA_libmm_shared_novatel_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libmm_shared_novatel_la_LINK) -rpath $(pkglibdir) $(libmm_shared_novatel_la_OBJECTS) $(libmm_shared_novatel_la_LIBADD) $(LIBS)
+option/libmm_shared_option_la-mm-shared.lo: option/$(am__dirstamp) \
+	option/$(DEPDIR)/$(am__dirstamp)
+option/libmm_shared_option_la-mm-broadband-modem-option.lo:  \
+	option/$(am__dirstamp) option/$(DEPDIR)/$(am__dirstamp)
+
+libmm-shared-option.la: $(libmm_shared_option_la_OBJECTS) $(libmm_shared_option_la_DEPENDENCIES) $(EXTRA_libmm_shared_option_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libmm_shared_option_la_LINK) -rpath $(pkglibdir) $(libmm_shared_option_la_OBJECTS) $(libmm_shared_option_la_LIBADD) $(LIBS)
+sierra/libmm_shared_sierra_la-mm-shared.lo: sierra/$(am__dirstamp) \
+	sierra/$(DEPDIR)/$(am__dirstamp)
+sierra/libmm_shared_sierra_la-mm-common-sierra.lo:  \
+	sierra/$(am__dirstamp) sierra/$(DEPDIR)/$(am__dirstamp)
+sierra/libmm_shared_sierra_la-mm-sim-sierra.lo:  \
+	sierra/$(am__dirstamp) sierra/$(DEPDIR)/$(am__dirstamp)
+sierra/libmm_shared_sierra_la-mm-broadband-bearer-sierra.lo:  \
+	sierra/$(am__dirstamp) sierra/$(DEPDIR)/$(am__dirstamp)
+sierra/libmm_shared_sierra_la-mm-broadband-modem-sierra.lo:  \
+	sierra/$(am__dirstamp) sierra/$(DEPDIR)/$(am__dirstamp)
+
+libmm-shared-sierra.la: $(libmm_shared_sierra_la_OBJECTS) $(libmm_shared_sierra_la_DEPENDENCIES) $(EXTRA_libmm_shared_sierra_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libmm_shared_sierra_la_LINK) -rpath $(pkglibdir) $(libmm_shared_sierra_la_OBJECTS) $(libmm_shared_sierra_la_LIBADD) $(LIBS)
+telit/libmm_shared_telit_la-mm-shared.lo: telit/$(am__dirstamp) \
+	telit/$(DEPDIR)/$(am__dirstamp)
+telit/libmm_shared_telit_la-mm-common-telit.lo: telit/$(am__dirstamp) \
+	telit/$(DEPDIR)/$(am__dirstamp)
+telit/libmm_shared_telit_la-mm-shared-telit.lo: telit/$(am__dirstamp) \
+	telit/$(DEPDIR)/$(am__dirstamp)
+telit/libmm_shared_telit_la-mm-broadband-modem-telit.lo:  \
+	telit/$(am__dirstamp) telit/$(DEPDIR)/$(am__dirstamp)
+telit/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.lo:  \
+	telit/$(am__dirstamp) telit/$(DEPDIR)/$(am__dirstamp)
+
+libmm-shared-telit.la: $(libmm_shared_telit_la_OBJECTS) $(libmm_shared_telit_la_DEPENDENCIES) $(EXTRA_libmm_shared_telit_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libmm_shared_telit_la_LINK) -rpath $(pkglibdir) $(libmm_shared_telit_la_OBJECTS) $(libmm_shared_telit_la_LIBADD) $(LIBS)
+xmm/libmm_shared_xmm_la-mm-shared.lo: xmm/$(am__dirstamp) \
+	xmm/$(DEPDIR)/$(am__dirstamp)
+xmm/libmm_shared_xmm_la-mm-shared-xmm.lo: xmm/$(am__dirstamp) \
+	xmm/$(DEPDIR)/$(am__dirstamp)
+xmm/libmm_shared_xmm_la-mm-broadband-modem-xmm.lo:  \
+	xmm/$(am__dirstamp) xmm/$(DEPDIR)/$(am__dirstamp)
+xmm/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.lo:  \
+	xmm/$(am__dirstamp) xmm/$(DEPDIR)/$(am__dirstamp)
+
+libmm-shared-xmm.la: $(libmm_shared_xmm_la_OBJECTS) $(libmm_shared_xmm_la_DEPENDENCIES) $(EXTRA_libmm_shared_xmm_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libmm_shared_xmm_la_LINK) -rpath $(pkglibdir) $(libmm_shared_xmm_la_OBJECTS) $(libmm_shared_xmm_la_LIBADD) $(LIBS)
 tests/$(am__dirstamp):
 	@$(MKDIR_P) tests
 	@: > tests/$(am__dirstamp)
@@ -2805,67 +3059,11 @@ tests/libmm_test_common_la-test-fixture.lo: tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/libmm_test_common_la-test-port-context.lo:  \
 	tests/$(am__dirstamp) tests/$(DEPDIR)/$(am__dirstamp)
+tests/libmm_test_common_la-test-helpers.lo: tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
 
 libmm-test-common.la: $(libmm_test_common_la_OBJECTS) $(libmm_test_common_la_DEPENDENCIES) $(EXTRA_libmm_test_common_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK)  $(libmm_test_common_la_OBJECTS) $(libmm_test_common_la_LIBADD) $(LIBS)
-icera/mm-broadband-modem-icera.lo: icera/$(am__dirstamp) \
-	icera/$(DEPDIR)/$(am__dirstamp)
-icera/mm-broadband-bearer-icera.lo: icera/$(am__dirstamp) \
-	icera/$(DEPDIR)/$(am__dirstamp)
-
-libmm-utils-icera.la: $(libmm_utils_icera_la_OBJECTS) $(libmm_utils_icera_la_DEPENDENCIES) $(EXTRA_libmm_utils_icera_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libmm_utils_icera_la_OBJECTS) $(libmm_utils_icera_la_LIBADD) $(LIBS)
-mbm/mm-broadband-modem-mbm.lo: mbm/$(am__dirstamp) \
-	mbm/$(DEPDIR)/$(am__dirstamp)
-mbm/mm-broadband-bearer-mbm.lo: mbm/$(am__dirstamp) \
-	mbm/$(DEPDIR)/$(am__dirstamp)
-mbm/mm-sim-mbm.lo: mbm/$(am__dirstamp) mbm/$(DEPDIR)/$(am__dirstamp)
-
-libmm-utils-mbm.la: $(libmm_utils_mbm_la_OBJECTS) $(libmm_utils_mbm_la_DEPENDENCIES) $(EXTRA_libmm_utils_mbm_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libmm_utils_mbm_la_OBJECTS) $(libmm_utils_mbm_la_LIBADD) $(LIBS)
-novatel/mm-common-novatel.lo: novatel/$(am__dirstamp) \
-	novatel/$(DEPDIR)/$(am__dirstamp)
-novatel/mm-broadband-modem-novatel.lo: novatel/$(am__dirstamp) \
-	novatel/$(DEPDIR)/$(am__dirstamp)
-
-libmm-utils-novatel.la: $(libmm_utils_novatel_la_OBJECTS) $(libmm_utils_novatel_la_DEPENDENCIES) $(EXTRA_libmm_utils_novatel_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libmm_utils_novatel_la_OBJECTS) $(libmm_utils_novatel_la_LIBADD) $(LIBS)
-option/mm-broadband-modem-option.lo: option/$(am__dirstamp) \
-	option/$(DEPDIR)/$(am__dirstamp)
-
-libmm-utils-option.la: $(libmm_utils_option_la_OBJECTS) $(libmm_utils_option_la_DEPENDENCIES) $(EXTRA_libmm_utils_option_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libmm_utils_option_la_OBJECTS) $(libmm_utils_option_la_LIBADD) $(LIBS)
-sierra/mm-common-sierra.lo: sierra/$(am__dirstamp) \
-	sierra/$(DEPDIR)/$(am__dirstamp)
-sierra/mm-sim-sierra.lo: sierra/$(am__dirstamp) \
-	sierra/$(DEPDIR)/$(am__dirstamp)
-sierra/mm-broadband-bearer-sierra.lo: sierra/$(am__dirstamp) \
-	sierra/$(DEPDIR)/$(am__dirstamp)
-sierra/mm-broadband-modem-sierra.lo: sierra/$(am__dirstamp) \
-	sierra/$(DEPDIR)/$(am__dirstamp)
-
-libmm-utils-sierra.la: $(libmm_utils_sierra_la_OBJECTS) $(libmm_utils_sierra_la_DEPENDENCIES) $(EXTRA_libmm_utils_sierra_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libmm_utils_sierra_la_OBJECTS) $(libmm_utils_sierra_la_LIBADD) $(LIBS)
-telit/libmm_utils_telit_la-mm-common-telit.lo: telit/$(am__dirstamp) \
-	telit/$(DEPDIR)/$(am__dirstamp)
-telit/libmm_utils_telit_la-mm-shared-telit.lo: telit/$(am__dirstamp) \
-	telit/$(DEPDIR)/$(am__dirstamp)
-telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo:  \
-	telit/$(am__dirstamp) telit/$(DEPDIR)/$(am__dirstamp)
-telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo:  \
-	telit/$(am__dirstamp) telit/$(DEPDIR)/$(am__dirstamp)
-
-libmm-utils-telit.la: $(libmm_utils_telit_la_OBJECTS) $(libmm_utils_telit_la_DEPENDENCIES) $(EXTRA_libmm_utils_telit_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libmm_utils_telit_la_OBJECTS) $(libmm_utils_telit_la_LIBADD) $(LIBS)
-xmm/mm-shared-xmm.lo: xmm/$(am__dirstamp) \
-	xmm/$(DEPDIR)/$(am__dirstamp)
-xmm/mm-broadband-modem-xmm.lo: xmm/$(am__dirstamp) \
-	xmm/$(DEPDIR)/$(am__dirstamp)
-xmm/mm-broadband-modem-mbim-xmm.lo: xmm/$(am__dirstamp) \
-	xmm/$(DEPDIR)/$(am__dirstamp)
-
-libmm-utils-xmm.la: $(libmm_utils_xmm_la_OBJECTS) $(libmm_utils_xmm_la_DEPENDENCIES) $(EXTRA_libmm_utils_xmm_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libmm_utils_xmm_la_OBJECTS) $(libmm_utils_xmm_la_LIBADD) $(LIBS)
 tests/test-keyfiles.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
@@ -2962,6 +3160,19 @@ sierra/tests/test_modem_helpers_sierra-test-modem-helpers-sierra.$(OBJEXT):  \
 test-modem-helpers-sierra$(EXEEXT): $(test_modem_helpers_sierra_OBJECTS) $(test_modem_helpers_sierra_DEPENDENCIES) $(EXTRA_test_modem_helpers_sierra_DEPENDENCIES) 
 	@rm -f test-modem-helpers-sierra$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_modem_helpers_sierra_OBJECTS) $(test_modem_helpers_sierra_LDADD) $(LIBS)
+simtech/tests/$(am__dirstamp):
+	@$(MKDIR_P) simtech/tests
+	@: > simtech/tests/$(am__dirstamp)
+simtech/tests/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) simtech/tests/$(DEPDIR)
+	@: > simtech/tests/$(DEPDIR)/$(am__dirstamp)
+simtech/tests/test_modem_helpers_simtech-test-modem-helpers-simtech.$(OBJEXT):  \
+	simtech/tests/$(am__dirstamp) \
+	simtech/tests/$(DEPDIR)/$(am__dirstamp)
+
+test-modem-helpers-simtech$(EXEEXT): $(test_modem_helpers_simtech_OBJECTS) $(test_modem_helpers_simtech_DEPENDENCIES) $(EXTRA_test_modem_helpers_simtech_DEPENDENCIES) 
+	@rm -f test-modem-helpers-simtech$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_modem_helpers_simtech_OBJECTS) $(test_modem_helpers_simtech_LDADD) $(LIBS)
 telit/tests/$(am__dirstamp):
 	@$(MKDIR_P) telit/tests
 	@: > telit/tests/$(am__dirstamp)
@@ -3045,6 +3256,8 @@ mostlyclean-compile:
 	-rm -f cinterion/tests/*.$(OBJEXT)
 	-rm -f dell/*.$(OBJEXT)
 	-rm -f dell/*.lo
+	-rm -f dlink/*.$(OBJEXT)
+	-rm -f dlink/*.lo
 	-rm -f fibocom/*.$(OBJEXT)
 	-rm -f fibocom/*.lo
 	-rm -f generic/*.$(OBJEXT)
@@ -3089,6 +3302,7 @@ mostlyclean-compile:
 	-rm -f sierra/tests/*.$(OBJEXT)
 	-rm -f simtech/*.$(OBJEXT)
 	-rm -f simtech/*.lo
+	-rm -f simtech/tests/*.$(OBJEXT)
 	-rm -f telit/*.$(OBJEXT)
 	-rm -f telit/*.lo
 	-rm -f telit/tests/*.$(OBJEXT)
@@ -3097,6 +3311,8 @@ mostlyclean-compile:
 	-rm -f thuraya/*.$(OBJEXT)
 	-rm -f thuraya/*.lo
 	-rm -f thuraya/tests/*.$(OBJEXT)
+	-rm -f tplink/*.$(OBJEXT)
+	-rm -f tplink/*.lo
 	-rm -f ublox/*.$(OBJEXT)
 	-rm -f ublox/*.lo
 	-rm -f ublox/tests/*.$(OBJEXT)
@@ -3131,19 +3347,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@cinterion/tests/$(DEPDIR)/test_modem_helpers_cinterion-test-modem-helpers-cinterion.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@dell/$(DEPDIR)/libmm_plugin_dell_la-mm-broadband-modem-dell-dw5821e.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@dell/$(DEPDIR)/libmm_plugin_dell_la-mm-plugin-dell.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@dlink/$(DEPDIR)/libmm_plugin_dlink_la-mm-plugin-dlink.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@fibocom/$(DEPDIR)/libmm_plugin_fibocom_la-mm-plugin-fibocom.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@generic/$(DEPDIR)/libmm_plugin_generic_la-mm-plugin-generic.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@generic/tests/$(DEPDIR)/test_service_generic-test-service-generic.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@haier/$(DEPDIR)/libmm_plugin_haier_la-mm-plugin-haier.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-bearer-huawei.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-modem-huawei.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-call-huawei.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-plugin-huawei.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-sim-huawei.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@huawei/$(DEPDIR)/mm-modem-helpers-huawei.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@huawei/tests/$(DEPDIR)/test_modem_helpers_huawei-test-modem-helpers-huawei.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@icera/$(DEPDIR)/mm-broadband-bearer-icera.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@icera/$(DEPDIR)/mm-broadband-modem-icera.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-bearer-icera.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-modem-icera.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@icera/$(DEPDIR)/libmm_shared_icera_la-mm-shared.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@icera/$(DEPDIR)/mm-modem-helpers-icera.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@icera/tests/$(DEPDIR)/test_modem_helpers_icera-test-modem-helpers-icera.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@iridium/$(DEPDIR)/libmm_plugin_iridium_la-mm-bearer-iridium.Plo@am__quote@ # am--include-marker
@@ -3156,11 +3373,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@linktop/tests/$(DEPDIR)/test_modem_helpers_linktop-test-modem-helpers-linktop.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@longcheer/$(DEPDIR)/libmm_plugin_longcheer_la-mm-broadband-modem-longcheer.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@longcheer/$(DEPDIR)/libmm_plugin_longcheer_la-mm-plugin-longcheer.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-plugin-mbm.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@mbm/$(DEPDIR)/mm-broadband-bearer-mbm.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@mbm/$(DEPDIR)/mm-broadband-modem-mbm.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@mbm/$(DEPDIR)/mm-modem-helpers-mbm.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@mbm/$(DEPDIR)/mm-sim-mbm.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@mbm/tests/$(DEPDIR)/test_modem_helpers_mbm-test-modem-helpers-mbm.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@motorola/$(DEPDIR)/libmm_plugin_motorola_la-mm-broadband-modem-motorola.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@motorola/$(DEPDIR)/libmm_plugin_motorola_la-mm-plugin-motorola.Plo@am__quote@ # am--include-marker
@@ -3175,13 +3392,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@novatel/$(DEPDIR)/libmm_plugin_novatel_lte_la-mm-broadband-modem-novatel-lte.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@novatel/$(DEPDIR)/libmm_plugin_novatel_lte_la-mm-plugin-novatel-lte.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@novatel/$(DEPDIR)/libmm_plugin_novatel_lte_la-mm-sim-novatel-lte.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@novatel/$(DEPDIR)/mm-broadband-modem-novatel.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@novatel/$(DEPDIR)/mm-common-novatel.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-broadband-modem-novatel.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-common-novatel.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-shared.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@option/$(DEPDIR)/libmm_plugin_option_hso_la-mm-broadband-bearer-hso.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@option/$(DEPDIR)/libmm_plugin_option_hso_la-mm-broadband-modem-hso.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@option/$(DEPDIR)/libmm_plugin_option_hso_la-mm-plugin-hso.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@option/$(DEPDIR)/libmm_plugin_option_la-mm-plugin-option.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@option/$(DEPDIR)/mm-broadband-modem-option.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@option/$(DEPDIR)/libmm_shared_option_la-mm-broadband-modem-option.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@option/$(DEPDIR)/libmm_shared_option_la-mm-shared.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-broadband-modem-pantech.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-plugin-pantech.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-sim-pantech.Plo@am__quote@ # am--include-marker
@@ -3194,23 +3413,30 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/libmm_plugin_sierra_la-mm-plugin-sierra.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/libmm_plugin_sierra_legacy_la-mm-broadband-modem-sierra-icera.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/libmm_plugin_sierra_legacy_la-mm-plugin-sierra-legacy.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/mm-broadband-bearer-sierra.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/mm-broadband-modem-sierra.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/mm-common-sierra.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-bearer-sierra.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-modem-sierra.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-common-sierra.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-shared.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-sim-sierra.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/mm-modem-helpers-sierra.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/mm-sim-sierra.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@sierra/tests/$(DEPDIR)/test_modem_helpers_sierra-test-modem-helpers-sierra.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-simtech.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-plugin-simtech.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-shared-simtech.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@simtech/$(DEPDIR)/mm-modem-helpers-simtech.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@simtech/tests/$(DEPDIR)/test_modem_helpers_simtech-test-modem-helpers-simtech.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libhelpers_telit_la-mm-modem-helpers-telit.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libhelpers_telit_la-mm-telit-enums-types.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_plugin_telit_la-mm-plugin-telit.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_utils_telit_la-mm-common-telit.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-telit.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_shared_telit_la-mm-common-telit.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared-telit.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@telit/tests/$(DEPDIR)/test_modem_helpers_telit-test-mm-modem-helpers-telit.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/libmm_test_common_la-test-fixture.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/libmm_test_common_la-test-helpers.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/libmm_test_common_la-test-port-context.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test-keyfiles.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test-udev-rules.Po@am__quote@ # am--include-marker
@@ -3218,11 +3444,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@thuraya/$(DEPDIR)/libmm_plugin_thuraya_la-mm-plugin-thuraya.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@thuraya/$(DEPDIR)/mm-modem-helpers-thuraya.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@thuraya/tests/$(DEPDIR)/test_modem_helpers_thuraya-test-mm-modem-helpers-thuraya.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tplink/$(DEPDIR)/libmm_plugin_tplink_la-mm-plugin-tplink.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@ublox/$(DEPDIR)/libhelpers_ublox_la-mm-modem-helpers-ublox.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@ublox/$(DEPDIR)/libhelpers_ublox_la-mm-ublox-enums-types.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-broadband-modem-ublox.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-call-ublox.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-plugin-ublox.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-sim-ublox.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@ublox/tests/$(DEPDIR)/test_modem_helpers_ublox-test-modem-helpers-ublox.Po@am__quote@ # am--include-marker
@@ -3232,10 +3458,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@wavecom/$(DEPDIR)/libmm_plugin_wavecom_la-mm-plugin-wavecom.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@x22x/$(DEPDIR)/libmm_plugin_x22x_la-mm-broadband-modem-x22x.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@x22x/$(DEPDIR)/libmm_plugin_x22x_la-mm-plugin-x22x.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@xmm/$(DEPDIR)/mm-broadband-modem-mbim-xmm.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@xmm/$(DEPDIR)/mm-broadband-modem-xmm.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-xmm.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared-xmm.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@xmm/$(DEPDIR)/mm-modem-helpers-xmm.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@xmm/$(DEPDIR)/mm-shared-xmm.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@xmm/tests/$(DEPDIR)/test_modem_helpers_xmm-test-modem-helpers-xmm.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@zte/$(DEPDIR)/libmm_plugin_zte_la-mm-broadband-modem-zte-icera.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@zte/$(DEPDIR)/libmm_plugin_zte_la-mm-broadband-modem-zte.Plo@am__quote@ # am--include-marker
@@ -3384,6 +3611,34 @@ dell/libmm_plugin_dell_la-mm-broadband-modem-dell-dw5821e.lo: dell/mm-broadband-
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_dell_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dell/libmm_plugin_dell_la-mm-broadband-modem-dell-dw5821e.lo `test -f 'dell/mm-broadband-modem-dell-dw5821e.c' || echo '$(srcdir)/'`dell/mm-broadband-modem-dell-dw5821e.c
 
+dlink/libmm_plugin_dlink_la-mm-plugin-dlink.lo: dlink/mm-plugin-dlink.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_dlink_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dlink/libmm_plugin_dlink_la-mm-plugin-dlink.lo -MD -MP -MF dlink/$(DEPDIR)/libmm_plugin_dlink_la-mm-plugin-dlink.Tpo -c -o dlink/libmm_plugin_dlink_la-mm-plugin-dlink.lo `test -f 'dlink/mm-plugin-dlink.c' || echo '$(srcdir)/'`dlink/mm-plugin-dlink.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) dlink/$(DEPDIR)/libmm_plugin_dlink_la-mm-plugin-dlink.Tpo dlink/$(DEPDIR)/libmm_plugin_dlink_la-mm-plugin-dlink.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dlink/mm-plugin-dlink.c' object='dlink/libmm_plugin_dlink_la-mm-plugin-dlink.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_dlink_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dlink/libmm_plugin_dlink_la-mm-plugin-dlink.lo `test -f 'dlink/mm-plugin-dlink.c' || echo '$(srcdir)/'`dlink/mm-plugin-dlink.c
+
+mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.lo: mbm/mm-broadband-modem-mbm.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ericsson_mbm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.lo -MD -MP -MF mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.Tpo -c -o mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.lo `test -f 'mbm/mm-broadband-modem-mbm.c' || echo '$(srcdir)/'`mbm/mm-broadband-modem-mbm.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.Tpo mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mbm/mm-broadband-modem-mbm.c' object='mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ericsson_mbm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.lo `test -f 'mbm/mm-broadband-modem-mbm.c' || echo '$(srcdir)/'`mbm/mm-broadband-modem-mbm.c
+
+mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.lo: mbm/mm-broadband-bearer-mbm.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ericsson_mbm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.lo -MD -MP -MF mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.Tpo -c -o mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.lo `test -f 'mbm/mm-broadband-bearer-mbm.c' || echo '$(srcdir)/'`mbm/mm-broadband-bearer-mbm.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.Tpo mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mbm/mm-broadband-bearer-mbm.c' object='mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ericsson_mbm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mbm/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.lo `test -f 'mbm/mm-broadband-bearer-mbm.c' || echo '$(srcdir)/'`mbm/mm-broadband-bearer-mbm.c
+
+mbm/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.lo: mbm/mm-sim-mbm.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ericsson_mbm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mbm/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.lo -MD -MP -MF mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.Tpo -c -o mbm/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.lo `test -f 'mbm/mm-sim-mbm.c' || echo '$(srcdir)/'`mbm/mm-sim-mbm.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.Tpo mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mbm/mm-sim-mbm.c' object='mbm/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ericsson_mbm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mbm/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.lo `test -f 'mbm/mm-sim-mbm.c' || echo '$(srcdir)/'`mbm/mm-sim-mbm.c
+
 mbm/libmm_plugin_ericsson_mbm_la-mm-plugin-mbm.lo: mbm/mm-plugin-mbm.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ericsson_mbm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mbm/libmm_plugin_ericsson_mbm_la-mm-plugin-mbm.lo -MD -MP -MF mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-plugin-mbm.Tpo -c -o mbm/libmm_plugin_ericsson_mbm_la-mm-plugin-mbm.lo `test -f 'mbm/mm-plugin-mbm.c' || echo '$(srcdir)/'`mbm/mm-plugin-mbm.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-plugin-mbm.Tpo mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-plugin-mbm.Plo
@@ -3425,13 +3680,6 @@ huawei/libmm_plugin_huawei_la-mm-sim-huawei.lo: huawei/mm-sim-huawei.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='huawei/mm-sim-huawei.c' object='huawei/libmm_plugin_huawei_la-mm-sim-huawei.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_huawei_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o huawei/libmm_plugin_huawei_la-mm-sim-huawei.lo `test -f 'huawei/mm-sim-huawei.c' || echo '$(srcdir)/'`huawei/mm-sim-huawei.c
-
-huawei/libmm_plugin_huawei_la-mm-call-huawei.lo: huawei/mm-call-huawei.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_huawei_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT huawei/libmm_plugin_huawei_la-mm-call-huawei.lo -MD -MP -MF huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-call-huawei.Tpo -c -o huawei/libmm_plugin_huawei_la-mm-call-huawei.lo `test -f 'huawei/mm-call-huawei.c' || echo '$(srcdir)/'`huawei/mm-call-huawei.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-call-huawei.Tpo huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-call-huawei.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='huawei/mm-call-huawei.c' object='huawei/libmm_plugin_huawei_la-mm-call-huawei.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_huawei_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o huawei/libmm_plugin_huawei_la-mm-call-huawei.lo `test -f 'huawei/mm-call-huawei.c' || echo '$(srcdir)/'`huawei/mm-call-huawei.c
 
 huawei/libmm_plugin_huawei_la-mm-broadband-modem-huawei.lo: huawei/mm-broadband-modem-huawei.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_huawei_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT huawei/libmm_plugin_huawei_la-mm-broadband-modem-huawei.lo -MD -MP -MF huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-modem-huawei.Tpo -c -o huawei/libmm_plugin_huawei_la-mm-broadband-modem-huawei.lo `test -f 'huawei/mm-broadband-modem-huawei.c' || echo '$(srcdir)/'`huawei/mm-broadband-modem-huawei.c
@@ -3713,12 +3961,26 @@ simtech/libmm_plugin_simtech_la-mm-plugin-simtech.lo: simtech/mm-plugin-simtech.
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_simtech_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o simtech/libmm_plugin_simtech_la-mm-plugin-simtech.lo `test -f 'simtech/mm-plugin-simtech.c' || echo '$(srcdir)/'`simtech/mm-plugin-simtech.c
 
+simtech/libmm_plugin_simtech_la-mm-shared-simtech.lo: simtech/mm-shared-simtech.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_simtech_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT simtech/libmm_plugin_simtech_la-mm-shared-simtech.lo -MD -MP -MF simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-shared-simtech.Tpo -c -o simtech/libmm_plugin_simtech_la-mm-shared-simtech.lo `test -f 'simtech/mm-shared-simtech.c' || echo '$(srcdir)/'`simtech/mm-shared-simtech.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-shared-simtech.Tpo simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-shared-simtech.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simtech/mm-shared-simtech.c' object='simtech/libmm_plugin_simtech_la-mm-shared-simtech.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_simtech_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o simtech/libmm_plugin_simtech_la-mm-shared-simtech.lo `test -f 'simtech/mm-shared-simtech.c' || echo '$(srcdir)/'`simtech/mm-shared-simtech.c
+
 simtech/libmm_plugin_simtech_la-mm-broadband-modem-simtech.lo: simtech/mm-broadband-modem-simtech.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_simtech_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT simtech/libmm_plugin_simtech_la-mm-broadband-modem-simtech.lo -MD -MP -MF simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-simtech.Tpo -c -o simtech/libmm_plugin_simtech_la-mm-broadband-modem-simtech.lo `test -f 'simtech/mm-broadband-modem-simtech.c' || echo '$(srcdir)/'`simtech/mm-broadband-modem-simtech.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-simtech.Tpo simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-simtech.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simtech/mm-broadband-modem-simtech.c' object='simtech/libmm_plugin_simtech_la-mm-broadband-modem-simtech.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_simtech_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o simtech/libmm_plugin_simtech_la-mm-broadband-modem-simtech.lo `test -f 'simtech/mm-broadband-modem-simtech.c' || echo '$(srcdir)/'`simtech/mm-broadband-modem-simtech.c
+
+simtech/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.lo: simtech/mm-broadband-modem-qmi-simtech.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_simtech_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT simtech/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.lo -MD -MP -MF simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.Tpo -c -o simtech/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.lo `test -f 'simtech/mm-broadband-modem-qmi-simtech.c' || echo '$(srcdir)/'`simtech/mm-broadband-modem-qmi-simtech.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.Tpo simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simtech/mm-broadband-modem-qmi-simtech.c' object='simtech/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_simtech_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o simtech/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.lo `test -f 'simtech/mm-broadband-modem-qmi-simtech.c' || echo '$(srcdir)/'`simtech/mm-broadband-modem-qmi-simtech.c
 
 telit/libmm_plugin_telit_la-mm-plugin-telit.lo: telit/mm-plugin-telit.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_plugin_telit_la-mm-plugin-telit.lo -MD -MP -MF telit/$(DEPDIR)/libmm_plugin_telit_la-mm-plugin-telit.Tpo -c -o telit/libmm_plugin_telit_la-mm-plugin-telit.lo `test -f 'telit/mm-plugin-telit.c' || echo '$(srcdir)/'`telit/mm-plugin-telit.c
@@ -3741,19 +4003,19 @@ thuraya/libmm_plugin_thuraya_la-mm-broadband-modem-thuraya.lo: thuraya/mm-broadb
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_thuraya_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o thuraya/libmm_plugin_thuraya_la-mm-broadband-modem-thuraya.lo `test -f 'thuraya/mm-broadband-modem-thuraya.c' || echo '$(srcdir)/'`thuraya/mm-broadband-modem-thuraya.c
 
+tplink/libmm_plugin_tplink_la-mm-plugin-tplink.lo: tplink/mm-plugin-tplink.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_tplink_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tplink/libmm_plugin_tplink_la-mm-plugin-tplink.lo -MD -MP -MF tplink/$(DEPDIR)/libmm_plugin_tplink_la-mm-plugin-tplink.Tpo -c -o tplink/libmm_plugin_tplink_la-mm-plugin-tplink.lo `test -f 'tplink/mm-plugin-tplink.c' || echo '$(srcdir)/'`tplink/mm-plugin-tplink.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tplink/$(DEPDIR)/libmm_plugin_tplink_la-mm-plugin-tplink.Tpo tplink/$(DEPDIR)/libmm_plugin_tplink_la-mm-plugin-tplink.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tplink/mm-plugin-tplink.c' object='tplink/libmm_plugin_tplink_la-mm-plugin-tplink.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_tplink_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tplink/libmm_plugin_tplink_la-mm-plugin-tplink.lo `test -f 'tplink/mm-plugin-tplink.c' || echo '$(srcdir)/'`tplink/mm-plugin-tplink.c
+
 ublox/libmm_plugin_ublox_la-mm-plugin-ublox.lo: ublox/mm-plugin-ublox.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ublox_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ublox/libmm_plugin_ublox_la-mm-plugin-ublox.lo -MD -MP -MF ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-plugin-ublox.Tpo -c -o ublox/libmm_plugin_ublox_la-mm-plugin-ublox.lo `test -f 'ublox/mm-plugin-ublox.c' || echo '$(srcdir)/'`ublox/mm-plugin-ublox.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-plugin-ublox.Tpo ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-plugin-ublox.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ublox/mm-plugin-ublox.c' object='ublox/libmm_plugin_ublox_la-mm-plugin-ublox.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ublox_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ublox/libmm_plugin_ublox_la-mm-plugin-ublox.lo `test -f 'ublox/mm-plugin-ublox.c' || echo '$(srcdir)/'`ublox/mm-plugin-ublox.c
-
-ublox/libmm_plugin_ublox_la-mm-call-ublox.lo: ublox/mm-call-ublox.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ublox_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ublox/libmm_plugin_ublox_la-mm-call-ublox.lo -MD -MP -MF ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-call-ublox.Tpo -c -o ublox/libmm_plugin_ublox_la-mm-call-ublox.lo `test -f 'ublox/mm-call-ublox.c' || echo '$(srcdir)/'`ublox/mm-call-ublox.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-call-ublox.Tpo ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-call-ublox.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ublox/mm-call-ublox.c' object='ublox/libmm_plugin_ublox_la-mm-call-ublox.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ublox_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ublox/libmm_plugin_ublox_la-mm-call-ublox.lo `test -f 'ublox/mm-call-ublox.c' || echo '$(srcdir)/'`ublox/mm-call-ublox.c
 
 ublox/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.lo: ublox/mm-broadband-bearer-ublox.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_ublox_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ublox/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.lo -MD -MP -MF ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.Tpo -c -o ublox/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.lo `test -f 'ublox/mm-broadband-bearer-ublox.c' || echo '$(srcdir)/'`ublox/mm-broadband-bearer-ublox.c
@@ -3846,6 +4108,160 @@ zte/libmm_plugin_zte_la-mm-broadband-modem-zte-icera.lo: zte/mm-broadband-modem-
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_zte_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o zte/libmm_plugin_zte_la-mm-broadband-modem-zte-icera.lo `test -f 'zte/mm-broadband-modem-zte-icera.c' || echo '$(srcdir)/'`zte/mm-broadband-modem-zte-icera.c
 
+icera/libmm_shared_icera_la-mm-shared.lo: icera/mm-shared.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_icera_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT icera/libmm_shared_icera_la-mm-shared.lo -MD -MP -MF icera/$(DEPDIR)/libmm_shared_icera_la-mm-shared.Tpo -c -o icera/libmm_shared_icera_la-mm-shared.lo `test -f 'icera/mm-shared.c' || echo '$(srcdir)/'`icera/mm-shared.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) icera/$(DEPDIR)/libmm_shared_icera_la-mm-shared.Tpo icera/$(DEPDIR)/libmm_shared_icera_la-mm-shared.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='icera/mm-shared.c' object='icera/libmm_shared_icera_la-mm-shared.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_icera_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o icera/libmm_shared_icera_la-mm-shared.lo `test -f 'icera/mm-shared.c' || echo '$(srcdir)/'`icera/mm-shared.c
+
+icera/libmm_shared_icera_la-mm-broadband-modem-icera.lo: icera/mm-broadband-modem-icera.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_icera_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT icera/libmm_shared_icera_la-mm-broadband-modem-icera.lo -MD -MP -MF icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-modem-icera.Tpo -c -o icera/libmm_shared_icera_la-mm-broadband-modem-icera.lo `test -f 'icera/mm-broadband-modem-icera.c' || echo '$(srcdir)/'`icera/mm-broadband-modem-icera.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-modem-icera.Tpo icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-modem-icera.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='icera/mm-broadband-modem-icera.c' object='icera/libmm_shared_icera_la-mm-broadband-modem-icera.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_icera_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o icera/libmm_shared_icera_la-mm-broadband-modem-icera.lo `test -f 'icera/mm-broadband-modem-icera.c' || echo '$(srcdir)/'`icera/mm-broadband-modem-icera.c
+
+icera/libmm_shared_icera_la-mm-broadband-bearer-icera.lo: icera/mm-broadband-bearer-icera.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_icera_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT icera/libmm_shared_icera_la-mm-broadband-bearer-icera.lo -MD -MP -MF icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-bearer-icera.Tpo -c -o icera/libmm_shared_icera_la-mm-broadband-bearer-icera.lo `test -f 'icera/mm-broadband-bearer-icera.c' || echo '$(srcdir)/'`icera/mm-broadband-bearer-icera.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-bearer-icera.Tpo icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-bearer-icera.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='icera/mm-broadband-bearer-icera.c' object='icera/libmm_shared_icera_la-mm-broadband-bearer-icera.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_icera_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o icera/libmm_shared_icera_la-mm-broadband-bearer-icera.lo `test -f 'icera/mm-broadband-bearer-icera.c' || echo '$(srcdir)/'`icera/mm-broadband-bearer-icera.c
+
+novatel/libmm_shared_novatel_la-mm-shared.lo: novatel/mm-shared.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_novatel_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT novatel/libmm_shared_novatel_la-mm-shared.lo -MD -MP -MF novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-shared.Tpo -c -o novatel/libmm_shared_novatel_la-mm-shared.lo `test -f 'novatel/mm-shared.c' || echo '$(srcdir)/'`novatel/mm-shared.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-shared.Tpo novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-shared.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='novatel/mm-shared.c' object='novatel/libmm_shared_novatel_la-mm-shared.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_novatel_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o novatel/libmm_shared_novatel_la-mm-shared.lo `test -f 'novatel/mm-shared.c' || echo '$(srcdir)/'`novatel/mm-shared.c
+
+novatel/libmm_shared_novatel_la-mm-common-novatel.lo: novatel/mm-common-novatel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_novatel_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT novatel/libmm_shared_novatel_la-mm-common-novatel.lo -MD -MP -MF novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-common-novatel.Tpo -c -o novatel/libmm_shared_novatel_la-mm-common-novatel.lo `test -f 'novatel/mm-common-novatel.c' || echo '$(srcdir)/'`novatel/mm-common-novatel.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-common-novatel.Tpo novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-common-novatel.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='novatel/mm-common-novatel.c' object='novatel/libmm_shared_novatel_la-mm-common-novatel.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_novatel_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o novatel/libmm_shared_novatel_la-mm-common-novatel.lo `test -f 'novatel/mm-common-novatel.c' || echo '$(srcdir)/'`novatel/mm-common-novatel.c
+
+novatel/libmm_shared_novatel_la-mm-broadband-modem-novatel.lo: novatel/mm-broadband-modem-novatel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_novatel_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT novatel/libmm_shared_novatel_la-mm-broadband-modem-novatel.lo -MD -MP -MF novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-broadband-modem-novatel.Tpo -c -o novatel/libmm_shared_novatel_la-mm-broadband-modem-novatel.lo `test -f 'novatel/mm-broadband-modem-novatel.c' || echo '$(srcdir)/'`novatel/mm-broadband-modem-novatel.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-broadband-modem-novatel.Tpo novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-broadband-modem-novatel.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='novatel/mm-broadband-modem-novatel.c' object='novatel/libmm_shared_novatel_la-mm-broadband-modem-novatel.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_novatel_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o novatel/libmm_shared_novatel_la-mm-broadband-modem-novatel.lo `test -f 'novatel/mm-broadband-modem-novatel.c' || echo '$(srcdir)/'`novatel/mm-broadband-modem-novatel.c
+
+option/libmm_shared_option_la-mm-shared.lo: option/mm-shared.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_option_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT option/libmm_shared_option_la-mm-shared.lo -MD -MP -MF option/$(DEPDIR)/libmm_shared_option_la-mm-shared.Tpo -c -o option/libmm_shared_option_la-mm-shared.lo `test -f 'option/mm-shared.c' || echo '$(srcdir)/'`option/mm-shared.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) option/$(DEPDIR)/libmm_shared_option_la-mm-shared.Tpo option/$(DEPDIR)/libmm_shared_option_la-mm-shared.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='option/mm-shared.c' object='option/libmm_shared_option_la-mm-shared.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_option_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o option/libmm_shared_option_la-mm-shared.lo `test -f 'option/mm-shared.c' || echo '$(srcdir)/'`option/mm-shared.c
+
+option/libmm_shared_option_la-mm-broadband-modem-option.lo: option/mm-broadband-modem-option.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_option_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT option/libmm_shared_option_la-mm-broadband-modem-option.lo -MD -MP -MF option/$(DEPDIR)/libmm_shared_option_la-mm-broadband-modem-option.Tpo -c -o option/libmm_shared_option_la-mm-broadband-modem-option.lo `test -f 'option/mm-broadband-modem-option.c' || echo '$(srcdir)/'`option/mm-broadband-modem-option.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) option/$(DEPDIR)/libmm_shared_option_la-mm-broadband-modem-option.Tpo option/$(DEPDIR)/libmm_shared_option_la-mm-broadband-modem-option.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='option/mm-broadband-modem-option.c' object='option/libmm_shared_option_la-mm-broadband-modem-option.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_option_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o option/libmm_shared_option_la-mm-broadband-modem-option.lo `test -f 'option/mm-broadband-modem-option.c' || echo '$(srcdir)/'`option/mm-broadband-modem-option.c
+
+sierra/libmm_shared_sierra_la-mm-shared.lo: sierra/mm-shared.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_sierra_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sierra/libmm_shared_sierra_la-mm-shared.lo -MD -MP -MF sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-shared.Tpo -c -o sierra/libmm_shared_sierra_la-mm-shared.lo `test -f 'sierra/mm-shared.c' || echo '$(srcdir)/'`sierra/mm-shared.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-shared.Tpo sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-shared.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sierra/mm-shared.c' object='sierra/libmm_shared_sierra_la-mm-shared.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_sierra_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sierra/libmm_shared_sierra_la-mm-shared.lo `test -f 'sierra/mm-shared.c' || echo '$(srcdir)/'`sierra/mm-shared.c
+
+sierra/libmm_shared_sierra_la-mm-common-sierra.lo: sierra/mm-common-sierra.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_sierra_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sierra/libmm_shared_sierra_la-mm-common-sierra.lo -MD -MP -MF sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-common-sierra.Tpo -c -o sierra/libmm_shared_sierra_la-mm-common-sierra.lo `test -f 'sierra/mm-common-sierra.c' || echo '$(srcdir)/'`sierra/mm-common-sierra.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-common-sierra.Tpo sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-common-sierra.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sierra/mm-common-sierra.c' object='sierra/libmm_shared_sierra_la-mm-common-sierra.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_sierra_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sierra/libmm_shared_sierra_la-mm-common-sierra.lo `test -f 'sierra/mm-common-sierra.c' || echo '$(srcdir)/'`sierra/mm-common-sierra.c
+
+sierra/libmm_shared_sierra_la-mm-sim-sierra.lo: sierra/mm-sim-sierra.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_sierra_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sierra/libmm_shared_sierra_la-mm-sim-sierra.lo -MD -MP -MF sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-sim-sierra.Tpo -c -o sierra/libmm_shared_sierra_la-mm-sim-sierra.lo `test -f 'sierra/mm-sim-sierra.c' || echo '$(srcdir)/'`sierra/mm-sim-sierra.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-sim-sierra.Tpo sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-sim-sierra.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sierra/mm-sim-sierra.c' object='sierra/libmm_shared_sierra_la-mm-sim-sierra.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_sierra_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sierra/libmm_shared_sierra_la-mm-sim-sierra.lo `test -f 'sierra/mm-sim-sierra.c' || echo '$(srcdir)/'`sierra/mm-sim-sierra.c
+
+sierra/libmm_shared_sierra_la-mm-broadband-bearer-sierra.lo: sierra/mm-broadband-bearer-sierra.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_sierra_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sierra/libmm_shared_sierra_la-mm-broadband-bearer-sierra.lo -MD -MP -MF sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-bearer-sierra.Tpo -c -o sierra/libmm_shared_sierra_la-mm-broadband-bearer-sierra.lo `test -f 'sierra/mm-broadband-bearer-sierra.c' || echo '$(srcdir)/'`sierra/mm-broadband-bearer-sierra.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-bearer-sierra.Tpo sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-bearer-sierra.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sierra/mm-broadband-bearer-sierra.c' object='sierra/libmm_shared_sierra_la-mm-broadband-bearer-sierra.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_sierra_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sierra/libmm_shared_sierra_la-mm-broadband-bearer-sierra.lo `test -f 'sierra/mm-broadband-bearer-sierra.c' || echo '$(srcdir)/'`sierra/mm-broadband-bearer-sierra.c
+
+sierra/libmm_shared_sierra_la-mm-broadband-modem-sierra.lo: sierra/mm-broadband-modem-sierra.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_sierra_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sierra/libmm_shared_sierra_la-mm-broadband-modem-sierra.lo -MD -MP -MF sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-modem-sierra.Tpo -c -o sierra/libmm_shared_sierra_la-mm-broadband-modem-sierra.lo `test -f 'sierra/mm-broadband-modem-sierra.c' || echo '$(srcdir)/'`sierra/mm-broadband-modem-sierra.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-modem-sierra.Tpo sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-modem-sierra.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sierra/mm-broadband-modem-sierra.c' object='sierra/libmm_shared_sierra_la-mm-broadband-modem-sierra.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_sierra_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sierra/libmm_shared_sierra_la-mm-broadband-modem-sierra.lo `test -f 'sierra/mm-broadband-modem-sierra.c' || echo '$(srcdir)/'`sierra/mm-broadband-modem-sierra.c
+
+telit/libmm_shared_telit_la-mm-shared.lo: telit/mm-shared.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_shared_telit_la-mm-shared.lo -MD -MP -MF telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared.Tpo -c -o telit/libmm_shared_telit_la-mm-shared.lo `test -f 'telit/mm-shared.c' || echo '$(srcdir)/'`telit/mm-shared.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared.Tpo telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='telit/mm-shared.c' object='telit/libmm_shared_telit_la-mm-shared.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_shared_telit_la-mm-shared.lo `test -f 'telit/mm-shared.c' || echo '$(srcdir)/'`telit/mm-shared.c
+
+telit/libmm_shared_telit_la-mm-common-telit.lo: telit/mm-common-telit.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_shared_telit_la-mm-common-telit.lo -MD -MP -MF telit/$(DEPDIR)/libmm_shared_telit_la-mm-common-telit.Tpo -c -o telit/libmm_shared_telit_la-mm-common-telit.lo `test -f 'telit/mm-common-telit.c' || echo '$(srcdir)/'`telit/mm-common-telit.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/$(DEPDIR)/libmm_shared_telit_la-mm-common-telit.Tpo telit/$(DEPDIR)/libmm_shared_telit_la-mm-common-telit.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='telit/mm-common-telit.c' object='telit/libmm_shared_telit_la-mm-common-telit.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_shared_telit_la-mm-common-telit.lo `test -f 'telit/mm-common-telit.c' || echo '$(srcdir)/'`telit/mm-common-telit.c
+
+telit/libmm_shared_telit_la-mm-shared-telit.lo: telit/mm-shared-telit.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_shared_telit_la-mm-shared-telit.lo -MD -MP -MF telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared-telit.Tpo -c -o telit/libmm_shared_telit_la-mm-shared-telit.lo `test -f 'telit/mm-shared-telit.c' || echo '$(srcdir)/'`telit/mm-shared-telit.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared-telit.Tpo telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared-telit.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='telit/mm-shared-telit.c' object='telit/libmm_shared_telit_la-mm-shared-telit.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_shared_telit_la-mm-shared-telit.lo `test -f 'telit/mm-shared-telit.c' || echo '$(srcdir)/'`telit/mm-shared-telit.c
+
+telit/libmm_shared_telit_la-mm-broadband-modem-telit.lo: telit/mm-broadband-modem-telit.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_shared_telit_la-mm-broadband-modem-telit.lo -MD -MP -MF telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-telit.Tpo -c -o telit/libmm_shared_telit_la-mm-broadband-modem-telit.lo `test -f 'telit/mm-broadband-modem-telit.c' || echo '$(srcdir)/'`telit/mm-broadband-modem-telit.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-telit.Tpo telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-telit.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='telit/mm-broadband-modem-telit.c' object='telit/libmm_shared_telit_la-mm-broadband-modem-telit.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_shared_telit_la-mm-broadband-modem-telit.lo `test -f 'telit/mm-broadband-modem-telit.c' || echo '$(srcdir)/'`telit/mm-broadband-modem-telit.c
+
+telit/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.lo: telit/mm-broadband-modem-mbim-telit.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.lo -MD -MP -MF telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.Tpo -c -o telit/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.lo `test -f 'telit/mm-broadband-modem-mbim-telit.c' || echo '$(srcdir)/'`telit/mm-broadband-modem-mbim-telit.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.Tpo telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='telit/mm-broadband-modem-mbim-telit.c' object='telit/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.lo `test -f 'telit/mm-broadband-modem-mbim-telit.c' || echo '$(srcdir)/'`telit/mm-broadband-modem-mbim-telit.c
+
+xmm/libmm_shared_xmm_la-mm-shared.lo: xmm/mm-shared.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_xmm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xmm/libmm_shared_xmm_la-mm-shared.lo -MD -MP -MF xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared.Tpo -c -o xmm/libmm_shared_xmm_la-mm-shared.lo `test -f 'xmm/mm-shared.c' || echo '$(srcdir)/'`xmm/mm-shared.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared.Tpo xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xmm/mm-shared.c' object='xmm/libmm_shared_xmm_la-mm-shared.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_xmm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xmm/libmm_shared_xmm_la-mm-shared.lo `test -f 'xmm/mm-shared.c' || echo '$(srcdir)/'`xmm/mm-shared.c
+
+xmm/libmm_shared_xmm_la-mm-shared-xmm.lo: xmm/mm-shared-xmm.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_xmm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xmm/libmm_shared_xmm_la-mm-shared-xmm.lo -MD -MP -MF xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared-xmm.Tpo -c -o xmm/libmm_shared_xmm_la-mm-shared-xmm.lo `test -f 'xmm/mm-shared-xmm.c' || echo '$(srcdir)/'`xmm/mm-shared-xmm.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared-xmm.Tpo xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared-xmm.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xmm/mm-shared-xmm.c' object='xmm/libmm_shared_xmm_la-mm-shared-xmm.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_xmm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xmm/libmm_shared_xmm_la-mm-shared-xmm.lo `test -f 'xmm/mm-shared-xmm.c' || echo '$(srcdir)/'`xmm/mm-shared-xmm.c
+
+xmm/libmm_shared_xmm_la-mm-broadband-modem-xmm.lo: xmm/mm-broadband-modem-xmm.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_xmm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xmm/libmm_shared_xmm_la-mm-broadband-modem-xmm.lo -MD -MP -MF xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-xmm.Tpo -c -o xmm/libmm_shared_xmm_la-mm-broadband-modem-xmm.lo `test -f 'xmm/mm-broadband-modem-xmm.c' || echo '$(srcdir)/'`xmm/mm-broadband-modem-xmm.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-xmm.Tpo xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-xmm.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xmm/mm-broadband-modem-xmm.c' object='xmm/libmm_shared_xmm_la-mm-broadband-modem-xmm.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_xmm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xmm/libmm_shared_xmm_la-mm-broadband-modem-xmm.lo `test -f 'xmm/mm-broadband-modem-xmm.c' || echo '$(srcdir)/'`xmm/mm-broadband-modem-xmm.c
+
+xmm/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.lo: xmm/mm-broadband-modem-mbim-xmm.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_xmm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xmm/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.lo -MD -MP -MF xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.Tpo -c -o xmm/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.lo `test -f 'xmm/mm-broadband-modem-mbim-xmm.c' || echo '$(srcdir)/'`xmm/mm-broadband-modem-mbim-xmm.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.Tpo xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xmm/mm-broadband-modem-mbim-xmm.c' object='xmm/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_xmm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xmm/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.lo `test -f 'xmm/mm-broadband-modem-mbim-xmm.c' || echo '$(srcdir)/'`xmm/mm-broadband-modem-mbim-xmm.c
+
 tests/libmm_test_common_la-test-fixture.lo: tests/test-fixture.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_test_common_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests/libmm_test_common_la-test-fixture.lo -MD -MP -MF tests/$(DEPDIR)/libmm_test_common_la-test-fixture.Tpo -c -o tests/libmm_test_common_la-test-fixture.lo `test -f 'tests/test-fixture.c' || echo '$(srcdir)/'`tests/test-fixture.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/libmm_test_common_la-test-fixture.Tpo tests/$(DEPDIR)/libmm_test_common_la-test-fixture.Plo
@@ -3860,33 +4276,12 @@ tests/libmm_test_common_la-test-port-context.lo: tests/test-port-context.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_test_common_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests/libmm_test_common_la-test-port-context.lo `test -f 'tests/test-port-context.c' || echo '$(srcdir)/'`tests/test-port-context.c
 
-telit/libmm_utils_telit_la-mm-common-telit.lo: telit/mm-common-telit.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_utils_telit_la-mm-common-telit.lo -MD -MP -MF telit/$(DEPDIR)/libmm_utils_telit_la-mm-common-telit.Tpo -c -o telit/libmm_utils_telit_la-mm-common-telit.lo `test -f 'telit/mm-common-telit.c' || echo '$(srcdir)/'`telit/mm-common-telit.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/$(DEPDIR)/libmm_utils_telit_la-mm-common-telit.Tpo telit/$(DEPDIR)/libmm_utils_telit_la-mm-common-telit.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='telit/mm-common-telit.c' object='telit/libmm_utils_telit_la-mm-common-telit.lo' libtool=yes @AMDEPBACKSLASH@
+tests/libmm_test_common_la-test-helpers.lo: tests/test-helpers.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_test_common_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests/libmm_test_common_la-test-helpers.lo -MD -MP -MF tests/$(DEPDIR)/libmm_test_common_la-test-helpers.Tpo -c -o tests/libmm_test_common_la-test-helpers.lo `test -f 'tests/test-helpers.c' || echo '$(srcdir)/'`tests/test-helpers.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/libmm_test_common_la-test-helpers.Tpo tests/$(DEPDIR)/libmm_test_common_la-test-helpers.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests/test-helpers.c' object='tests/libmm_test_common_la-test-helpers.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_utils_telit_la-mm-common-telit.lo `test -f 'telit/mm-common-telit.c' || echo '$(srcdir)/'`telit/mm-common-telit.c
-
-telit/libmm_utils_telit_la-mm-shared-telit.lo: telit/mm-shared-telit.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_utils_telit_la-mm-shared-telit.lo -MD -MP -MF telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Tpo -c -o telit/libmm_utils_telit_la-mm-shared-telit.lo `test -f 'telit/mm-shared-telit.c' || echo '$(srcdir)/'`telit/mm-shared-telit.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Tpo telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='telit/mm-shared-telit.c' object='telit/libmm_utils_telit_la-mm-shared-telit.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_utils_telit_la-mm-shared-telit.lo `test -f 'telit/mm-shared-telit.c' || echo '$(srcdir)/'`telit/mm-shared-telit.c
-
-telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo: telit/mm-broadband-modem-telit.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo -MD -MP -MF telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Tpo -c -o telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo `test -f 'telit/mm-broadband-modem-telit.c' || echo '$(srcdir)/'`telit/mm-broadband-modem-telit.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Tpo telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='telit/mm-broadband-modem-telit.c' object='telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo `test -f 'telit/mm-broadband-modem-telit.c' || echo '$(srcdir)/'`telit/mm-broadband-modem-telit.c
-
-telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo: telit/mm-broadband-modem-mbim-telit.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo -MD -MP -MF telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Tpo -c -o telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo `test -f 'telit/mm-broadband-modem-mbim-telit.c' || echo '$(srcdir)/'`telit/mm-broadband-modem-mbim-telit.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Tpo telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='telit/mm-broadband-modem-mbim-telit.c' object='telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo `test -f 'telit/mm-broadband-modem-mbim-telit.c' || echo '$(srcdir)/'`telit/mm-broadband-modem-mbim-telit.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_test_common_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests/libmm_test_common_la-test-helpers.lo `test -f 'tests/test-helpers.c' || echo '$(srcdir)/'`tests/test-helpers.c
 
 altair/tests/test_modem_helpers_altair_lte-test-modem-helpers-altair-lte.o: altair/tests/test-modem-helpers-altair-lte.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_altair_lte_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT altair/tests/test_modem_helpers_altair_lte-test-modem-helpers-altair-lte.o -MD -MP -MF altair/tests/$(DEPDIR)/test_modem_helpers_altair_lte-test-modem-helpers-altair-lte.Tpo -c -o altair/tests/test_modem_helpers_altair_lte-test-modem-helpers-altair-lte.o `test -f 'altair/tests/test-modem-helpers-altair-lte.c' || echo '$(srcdir)/'`altair/tests/test-modem-helpers-altair-lte.c
@@ -3986,6 +4381,20 @@ sierra/tests/test_modem_helpers_sierra-test-modem-helpers-sierra.obj: sierra/tes
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_sierra_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sierra/tests/test_modem_helpers_sierra-test-modem-helpers-sierra.obj `if test -f 'sierra/tests/test-modem-helpers-sierra.c'; then $(CYGPATH_W) 'sierra/tests/test-modem-helpers-sierra.c'; else $(CYGPATH_W) '$(srcdir)/sierra/tests/test-modem-helpers-sierra.c'; fi`
 
+simtech/tests/test_modem_helpers_simtech-test-modem-helpers-simtech.o: simtech/tests/test-modem-helpers-simtech.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_simtech_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT simtech/tests/test_modem_helpers_simtech-test-modem-helpers-simtech.o -MD -MP -MF simtech/tests/$(DEPDIR)/test_modem_helpers_simtech-test-modem-helpers-simtech.Tpo -c -o simtech/tests/test_modem_helpers_simtech-test-modem-helpers-simtech.o `test -f 'simtech/tests/test-modem-helpers-simtech.c' || echo '$(srcdir)/'`simtech/tests/test-modem-helpers-simtech.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) simtech/tests/$(DEPDIR)/test_modem_helpers_simtech-test-modem-helpers-simtech.Tpo simtech/tests/$(DEPDIR)/test_modem_helpers_simtech-test-modem-helpers-simtech.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simtech/tests/test-modem-helpers-simtech.c' object='simtech/tests/test_modem_helpers_simtech-test-modem-helpers-simtech.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_simtech_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o simtech/tests/test_modem_helpers_simtech-test-modem-helpers-simtech.o `test -f 'simtech/tests/test-modem-helpers-simtech.c' || echo '$(srcdir)/'`simtech/tests/test-modem-helpers-simtech.c
+
+simtech/tests/test_modem_helpers_simtech-test-modem-helpers-simtech.obj: simtech/tests/test-modem-helpers-simtech.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_simtech_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT simtech/tests/test_modem_helpers_simtech-test-modem-helpers-simtech.obj -MD -MP -MF simtech/tests/$(DEPDIR)/test_modem_helpers_simtech-test-modem-helpers-simtech.Tpo -c -o simtech/tests/test_modem_helpers_simtech-test-modem-helpers-simtech.obj `if test -f 'simtech/tests/test-modem-helpers-simtech.c'; then $(CYGPATH_W) 'simtech/tests/test-modem-helpers-simtech.c'; else $(CYGPATH_W) '$(srcdir)/simtech/tests/test-modem-helpers-simtech.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) simtech/tests/$(DEPDIR)/test_modem_helpers_simtech-test-modem-helpers-simtech.Tpo simtech/tests/$(DEPDIR)/test_modem_helpers_simtech-test-modem-helpers-simtech.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simtech/tests/test-modem-helpers-simtech.c' object='simtech/tests/test_modem_helpers_simtech-test-modem-helpers-simtech.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_simtech_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o simtech/tests/test_modem_helpers_simtech-test-modem-helpers-simtech.obj `if test -f 'simtech/tests/test-modem-helpers-simtech.c'; then $(CYGPATH_W) 'simtech/tests/test-modem-helpers-simtech.c'; else $(CYGPATH_W) '$(srcdir)/simtech/tests/test-modem-helpers-simtech.c'; fi`
+
 telit/tests/test_modem_helpers_telit-test-mm-modem-helpers-telit.o: telit/tests/test-mm-modem-helpers-telit.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_telit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/tests/test_modem_helpers_telit-test-mm-modem-helpers-telit.o -MD -MP -MF telit/tests/$(DEPDIR)/test_modem_helpers_telit-test-mm-modem-helpers-telit.Tpo -c -o telit/tests/test_modem_helpers_telit-test-mm-modem-helpers-telit.o `test -f 'telit/tests/test-mm-modem-helpers-telit.c' || echo '$(srcdir)/'`telit/tests/test-mm-modem-helpers-telit.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/tests/$(DEPDIR)/test_modem_helpers_telit-test-mm-modem-helpers-telit.Tpo telit/tests/$(DEPDIR)/test_modem_helpers_telit-test-mm-modem-helpers-telit.Po
@@ -4065,6 +4474,7 @@ clean-libtool:
 	-rm -rf anydata/.libs anydata/_libs
 	-rm -rf cinterion/.libs cinterion/_libs
 	-rm -rf dell/.libs dell/_libs
+	-rm -rf dlink/.libs dlink/_libs
 	-rm -rf fibocom/.libs fibocom/_libs
 	-rm -rf generic/.libs generic/_libs
 	-rm -rf haier/.libs haier/_libs
@@ -4087,6 +4497,7 @@ clean-libtool:
 	-rm -rf telit/.libs telit/_libs
 	-rm -rf tests/.libs tests/_libs
 	-rm -rf thuraya/.libs thuraya/_libs
+	-rm -rf tplink/.libs tplink/_libs
 	-rm -rf ublox/.libs ublox/_libs
 	-rm -rf via/.libs via/_libs
 	-rm -rf wavecom/.libs wavecom/_libs
@@ -4270,6 +4681,8 @@ distclean-generic:
 	-rm -f cinterion/tests/$(am__dirstamp)
 	-rm -f dell/$(DEPDIR)/$(am__dirstamp)
 	-rm -f dell/$(am__dirstamp)
+	-rm -f dlink/$(DEPDIR)/$(am__dirstamp)
+	-rm -f dlink/$(am__dirstamp)
 	-rm -f fibocom/$(DEPDIR)/$(am__dirstamp)
 	-rm -f fibocom/$(am__dirstamp)
 	-rm -f generic/$(DEPDIR)/$(am__dirstamp)
@@ -4320,6 +4733,8 @@ distclean-generic:
 	-rm -f sierra/tests/$(am__dirstamp)
 	-rm -f simtech/$(DEPDIR)/$(am__dirstamp)
 	-rm -f simtech/$(am__dirstamp)
+	-rm -f simtech/tests/$(DEPDIR)/$(am__dirstamp)
+	-rm -f simtech/tests/$(am__dirstamp)
 	-rm -f telit/$(DEPDIR)/$(am__dirstamp)
 	-rm -f telit/$(am__dirstamp)
 	-rm -f telit/tests/$(DEPDIR)/$(am__dirstamp)
@@ -4330,6 +4745,8 @@ distclean-generic:
 	-rm -f thuraya/$(am__dirstamp)
 	-rm -f thuraya/tests/$(DEPDIR)/$(am__dirstamp)
 	-rm -f thuraya/tests/$(am__dirstamp)
+	-rm -f tplink/$(DEPDIR)/$(am__dirstamp)
+	-rm -f tplink/$(am__dirstamp)
 	-rm -f ublox/$(DEPDIR)/$(am__dirstamp)
 	-rm -f ublox/$(am__dirstamp)
 	-rm -f ublox/tests/$(DEPDIR)/$(am__dirstamp)
@@ -4373,19 +4790,20 @@ distclean: distclean-am
 	-rm -f cinterion/tests/$(DEPDIR)/test_modem_helpers_cinterion-test-modem-helpers-cinterion.Po
 	-rm -f dell/$(DEPDIR)/libmm_plugin_dell_la-mm-broadband-modem-dell-dw5821e.Plo
 	-rm -f dell/$(DEPDIR)/libmm_plugin_dell_la-mm-plugin-dell.Plo
+	-rm -f dlink/$(DEPDIR)/libmm_plugin_dlink_la-mm-plugin-dlink.Plo
 	-rm -f fibocom/$(DEPDIR)/libmm_plugin_fibocom_la-mm-plugin-fibocom.Plo
 	-rm -f generic/$(DEPDIR)/libmm_plugin_generic_la-mm-plugin-generic.Plo
 	-rm -f generic/tests/$(DEPDIR)/test_service_generic-test-service-generic.Po
 	-rm -f haier/$(DEPDIR)/libmm_plugin_haier_la-mm-plugin-haier.Plo
 	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-bearer-huawei.Plo
 	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-modem-huawei.Plo
-	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-call-huawei.Plo
 	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-plugin-huawei.Plo
 	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-sim-huawei.Plo
 	-rm -f huawei/$(DEPDIR)/mm-modem-helpers-huawei.Plo
 	-rm -f huawei/tests/$(DEPDIR)/test_modem_helpers_huawei-test-modem-helpers-huawei.Po
-	-rm -f icera/$(DEPDIR)/mm-broadband-bearer-icera.Plo
-	-rm -f icera/$(DEPDIR)/mm-broadband-modem-icera.Plo
+	-rm -f icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-bearer-icera.Plo
+	-rm -f icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-modem-icera.Plo
+	-rm -f icera/$(DEPDIR)/libmm_shared_icera_la-mm-shared.Plo
 	-rm -f icera/$(DEPDIR)/mm-modem-helpers-icera.Plo
 	-rm -f icera/tests/$(DEPDIR)/test_modem_helpers_icera-test-modem-helpers-icera.Po
 	-rm -f iridium/$(DEPDIR)/libmm_plugin_iridium_la-mm-bearer-iridium.Plo
@@ -4398,11 +4816,11 @@ distclean: distclean-am
 	-rm -f linktop/tests/$(DEPDIR)/test_modem_helpers_linktop-test-modem-helpers-linktop.Po
 	-rm -f longcheer/$(DEPDIR)/libmm_plugin_longcheer_la-mm-broadband-modem-longcheer.Plo
 	-rm -f longcheer/$(DEPDIR)/libmm_plugin_longcheer_la-mm-plugin-longcheer.Plo
+	-rm -f mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.Plo
+	-rm -f mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.Plo
 	-rm -f mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-plugin-mbm.Plo
-	-rm -f mbm/$(DEPDIR)/mm-broadband-bearer-mbm.Plo
-	-rm -f mbm/$(DEPDIR)/mm-broadband-modem-mbm.Plo
+	-rm -f mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.Plo
 	-rm -f mbm/$(DEPDIR)/mm-modem-helpers-mbm.Plo
-	-rm -f mbm/$(DEPDIR)/mm-sim-mbm.Plo
 	-rm -f mbm/tests/$(DEPDIR)/test_modem_helpers_mbm-test-modem-helpers-mbm.Po
 	-rm -f motorola/$(DEPDIR)/libmm_plugin_motorola_la-mm-broadband-modem-motorola.Plo
 	-rm -f motorola/$(DEPDIR)/libmm_plugin_motorola_la-mm-plugin-motorola.Plo
@@ -4417,13 +4835,15 @@ distclean: distclean-am
 	-rm -f novatel/$(DEPDIR)/libmm_plugin_novatel_lte_la-mm-broadband-modem-novatel-lte.Plo
 	-rm -f novatel/$(DEPDIR)/libmm_plugin_novatel_lte_la-mm-plugin-novatel-lte.Plo
 	-rm -f novatel/$(DEPDIR)/libmm_plugin_novatel_lte_la-mm-sim-novatel-lte.Plo
-	-rm -f novatel/$(DEPDIR)/mm-broadband-modem-novatel.Plo
-	-rm -f novatel/$(DEPDIR)/mm-common-novatel.Plo
+	-rm -f novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-broadband-modem-novatel.Plo
+	-rm -f novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-common-novatel.Plo
+	-rm -f novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-shared.Plo
 	-rm -f option/$(DEPDIR)/libmm_plugin_option_hso_la-mm-broadband-bearer-hso.Plo
 	-rm -f option/$(DEPDIR)/libmm_plugin_option_hso_la-mm-broadband-modem-hso.Plo
 	-rm -f option/$(DEPDIR)/libmm_plugin_option_hso_la-mm-plugin-hso.Plo
 	-rm -f option/$(DEPDIR)/libmm_plugin_option_la-mm-plugin-option.Plo
-	-rm -f option/$(DEPDIR)/mm-broadband-modem-option.Plo
+	-rm -f option/$(DEPDIR)/libmm_shared_option_la-mm-broadband-modem-option.Plo
+	-rm -f option/$(DEPDIR)/libmm_shared_option_la-mm-shared.Plo
 	-rm -f pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-broadband-modem-pantech.Plo
 	-rm -f pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-plugin-pantech.Plo
 	-rm -f pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-sim-pantech.Plo
@@ -4436,23 +4856,30 @@ distclean: distclean-am
 	-rm -f sierra/$(DEPDIR)/libmm_plugin_sierra_la-mm-plugin-sierra.Plo
 	-rm -f sierra/$(DEPDIR)/libmm_plugin_sierra_legacy_la-mm-broadband-modem-sierra-icera.Plo
 	-rm -f sierra/$(DEPDIR)/libmm_plugin_sierra_legacy_la-mm-plugin-sierra-legacy.Plo
-	-rm -f sierra/$(DEPDIR)/mm-broadband-bearer-sierra.Plo
-	-rm -f sierra/$(DEPDIR)/mm-broadband-modem-sierra.Plo
-	-rm -f sierra/$(DEPDIR)/mm-common-sierra.Plo
+	-rm -f sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-bearer-sierra.Plo
+	-rm -f sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-modem-sierra.Plo
+	-rm -f sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-common-sierra.Plo
+	-rm -f sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-shared.Plo
+	-rm -f sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-sim-sierra.Plo
 	-rm -f sierra/$(DEPDIR)/mm-modem-helpers-sierra.Plo
-	-rm -f sierra/$(DEPDIR)/mm-sim-sierra.Plo
 	-rm -f sierra/tests/$(DEPDIR)/test_modem_helpers_sierra-test-modem-helpers-sierra.Po
+	-rm -f simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.Plo
 	-rm -f simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-simtech.Plo
 	-rm -f simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-plugin-simtech.Plo
+	-rm -f simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-shared-simtech.Plo
+	-rm -f simtech/$(DEPDIR)/mm-modem-helpers-simtech.Plo
+	-rm -f simtech/tests/$(DEPDIR)/test_modem_helpers_simtech-test-modem-helpers-simtech.Po
 	-rm -f telit/$(DEPDIR)/libhelpers_telit_la-mm-modem-helpers-telit.Plo
 	-rm -f telit/$(DEPDIR)/libhelpers_telit_la-mm-telit-enums-types.Plo
 	-rm -f telit/$(DEPDIR)/libmm_plugin_telit_la-mm-plugin-telit.Plo
-	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Plo
-	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Plo
-	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-common-telit.Plo
-	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_shared_telit_la-mm-common-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared.Plo
 	-rm -f telit/tests/$(DEPDIR)/test_modem_helpers_telit-test-mm-modem-helpers-telit.Po
 	-rm -f tests/$(DEPDIR)/libmm_test_common_la-test-fixture.Plo
+	-rm -f tests/$(DEPDIR)/libmm_test_common_la-test-helpers.Plo
 	-rm -f tests/$(DEPDIR)/libmm_test_common_la-test-port-context.Plo
 	-rm -f tests/$(DEPDIR)/test-keyfiles.Po
 	-rm -f tests/$(DEPDIR)/test-udev-rules.Po
@@ -4460,11 +4887,11 @@ distclean: distclean-am
 	-rm -f thuraya/$(DEPDIR)/libmm_plugin_thuraya_la-mm-plugin-thuraya.Plo
 	-rm -f thuraya/$(DEPDIR)/mm-modem-helpers-thuraya.Plo
 	-rm -f thuraya/tests/$(DEPDIR)/test_modem_helpers_thuraya-test-mm-modem-helpers-thuraya.Po
+	-rm -f tplink/$(DEPDIR)/libmm_plugin_tplink_la-mm-plugin-tplink.Plo
 	-rm -f ublox/$(DEPDIR)/libhelpers_ublox_la-mm-modem-helpers-ublox.Plo
 	-rm -f ublox/$(DEPDIR)/libhelpers_ublox_la-mm-ublox-enums-types.Plo
 	-rm -f ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.Plo
 	-rm -f ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-broadband-modem-ublox.Plo
-	-rm -f ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-call-ublox.Plo
 	-rm -f ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-plugin-ublox.Plo
 	-rm -f ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-sim-ublox.Plo
 	-rm -f ublox/tests/$(DEPDIR)/test_modem_helpers_ublox-test-modem-helpers-ublox.Po
@@ -4474,10 +4901,11 @@ distclean: distclean-am
 	-rm -f wavecom/$(DEPDIR)/libmm_plugin_wavecom_la-mm-plugin-wavecom.Plo
 	-rm -f x22x/$(DEPDIR)/libmm_plugin_x22x_la-mm-broadband-modem-x22x.Plo
 	-rm -f x22x/$(DEPDIR)/libmm_plugin_x22x_la-mm-plugin-x22x.Plo
-	-rm -f xmm/$(DEPDIR)/mm-broadband-modem-mbim-xmm.Plo
-	-rm -f xmm/$(DEPDIR)/mm-broadband-modem-xmm.Plo
+	-rm -f xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.Plo
+	-rm -f xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-xmm.Plo
+	-rm -f xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared-xmm.Plo
+	-rm -f xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared.Plo
 	-rm -f xmm/$(DEPDIR)/mm-modem-helpers-xmm.Plo
-	-rm -f xmm/$(DEPDIR)/mm-shared-xmm.Plo
 	-rm -f xmm/tests/$(DEPDIR)/test_modem_helpers_xmm-test-modem-helpers-xmm.Po
 	-rm -f zte/$(DEPDIR)/libmm_plugin_zte_la-mm-broadband-modem-zte-icera.Plo
 	-rm -f zte/$(DEPDIR)/libmm_plugin_zte_la-mm-broadband-modem-zte.Plo
@@ -4544,19 +4972,20 @@ maintainer-clean: maintainer-clean-am
 	-rm -f cinterion/tests/$(DEPDIR)/test_modem_helpers_cinterion-test-modem-helpers-cinterion.Po
 	-rm -f dell/$(DEPDIR)/libmm_plugin_dell_la-mm-broadband-modem-dell-dw5821e.Plo
 	-rm -f dell/$(DEPDIR)/libmm_plugin_dell_la-mm-plugin-dell.Plo
+	-rm -f dlink/$(DEPDIR)/libmm_plugin_dlink_la-mm-plugin-dlink.Plo
 	-rm -f fibocom/$(DEPDIR)/libmm_plugin_fibocom_la-mm-plugin-fibocom.Plo
 	-rm -f generic/$(DEPDIR)/libmm_plugin_generic_la-mm-plugin-generic.Plo
 	-rm -f generic/tests/$(DEPDIR)/test_service_generic-test-service-generic.Po
 	-rm -f haier/$(DEPDIR)/libmm_plugin_haier_la-mm-plugin-haier.Plo
 	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-bearer-huawei.Plo
 	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-modem-huawei.Plo
-	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-call-huawei.Plo
 	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-plugin-huawei.Plo
 	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-sim-huawei.Plo
 	-rm -f huawei/$(DEPDIR)/mm-modem-helpers-huawei.Plo
 	-rm -f huawei/tests/$(DEPDIR)/test_modem_helpers_huawei-test-modem-helpers-huawei.Po
-	-rm -f icera/$(DEPDIR)/mm-broadband-bearer-icera.Plo
-	-rm -f icera/$(DEPDIR)/mm-broadband-modem-icera.Plo
+	-rm -f icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-bearer-icera.Plo
+	-rm -f icera/$(DEPDIR)/libmm_shared_icera_la-mm-broadband-modem-icera.Plo
+	-rm -f icera/$(DEPDIR)/libmm_shared_icera_la-mm-shared.Plo
 	-rm -f icera/$(DEPDIR)/mm-modem-helpers-icera.Plo
 	-rm -f icera/tests/$(DEPDIR)/test_modem_helpers_icera-test-modem-helpers-icera.Po
 	-rm -f iridium/$(DEPDIR)/libmm_plugin_iridium_la-mm-bearer-iridium.Plo
@@ -4569,11 +4998,11 @@ maintainer-clean: maintainer-clean-am
 	-rm -f linktop/tests/$(DEPDIR)/test_modem_helpers_linktop-test-modem-helpers-linktop.Po
 	-rm -f longcheer/$(DEPDIR)/libmm_plugin_longcheer_la-mm-broadband-modem-longcheer.Plo
 	-rm -f longcheer/$(DEPDIR)/libmm_plugin_longcheer_la-mm-plugin-longcheer.Plo
+	-rm -f mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-bearer-mbm.Plo
+	-rm -f mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-broadband-modem-mbm.Plo
 	-rm -f mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-plugin-mbm.Plo
-	-rm -f mbm/$(DEPDIR)/mm-broadband-bearer-mbm.Plo
-	-rm -f mbm/$(DEPDIR)/mm-broadband-modem-mbm.Plo
+	-rm -f mbm/$(DEPDIR)/libmm_plugin_ericsson_mbm_la-mm-sim-mbm.Plo
 	-rm -f mbm/$(DEPDIR)/mm-modem-helpers-mbm.Plo
-	-rm -f mbm/$(DEPDIR)/mm-sim-mbm.Plo
 	-rm -f mbm/tests/$(DEPDIR)/test_modem_helpers_mbm-test-modem-helpers-mbm.Po
 	-rm -f motorola/$(DEPDIR)/libmm_plugin_motorola_la-mm-broadband-modem-motorola.Plo
 	-rm -f motorola/$(DEPDIR)/libmm_plugin_motorola_la-mm-plugin-motorola.Plo
@@ -4588,13 +5017,15 @@ maintainer-clean: maintainer-clean-am
 	-rm -f novatel/$(DEPDIR)/libmm_plugin_novatel_lte_la-mm-broadband-modem-novatel-lte.Plo
 	-rm -f novatel/$(DEPDIR)/libmm_plugin_novatel_lte_la-mm-plugin-novatel-lte.Plo
 	-rm -f novatel/$(DEPDIR)/libmm_plugin_novatel_lte_la-mm-sim-novatel-lte.Plo
-	-rm -f novatel/$(DEPDIR)/mm-broadband-modem-novatel.Plo
-	-rm -f novatel/$(DEPDIR)/mm-common-novatel.Plo
+	-rm -f novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-broadband-modem-novatel.Plo
+	-rm -f novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-common-novatel.Plo
+	-rm -f novatel/$(DEPDIR)/libmm_shared_novatel_la-mm-shared.Plo
 	-rm -f option/$(DEPDIR)/libmm_plugin_option_hso_la-mm-broadband-bearer-hso.Plo
 	-rm -f option/$(DEPDIR)/libmm_plugin_option_hso_la-mm-broadband-modem-hso.Plo
 	-rm -f option/$(DEPDIR)/libmm_plugin_option_hso_la-mm-plugin-hso.Plo
 	-rm -f option/$(DEPDIR)/libmm_plugin_option_la-mm-plugin-option.Plo
-	-rm -f option/$(DEPDIR)/mm-broadband-modem-option.Plo
+	-rm -f option/$(DEPDIR)/libmm_shared_option_la-mm-broadband-modem-option.Plo
+	-rm -f option/$(DEPDIR)/libmm_shared_option_la-mm-shared.Plo
 	-rm -f pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-broadband-modem-pantech.Plo
 	-rm -f pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-plugin-pantech.Plo
 	-rm -f pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-sim-pantech.Plo
@@ -4607,23 +5038,30 @@ maintainer-clean: maintainer-clean-am
 	-rm -f sierra/$(DEPDIR)/libmm_plugin_sierra_la-mm-plugin-sierra.Plo
 	-rm -f sierra/$(DEPDIR)/libmm_plugin_sierra_legacy_la-mm-broadband-modem-sierra-icera.Plo
 	-rm -f sierra/$(DEPDIR)/libmm_plugin_sierra_legacy_la-mm-plugin-sierra-legacy.Plo
-	-rm -f sierra/$(DEPDIR)/mm-broadband-bearer-sierra.Plo
-	-rm -f sierra/$(DEPDIR)/mm-broadband-modem-sierra.Plo
-	-rm -f sierra/$(DEPDIR)/mm-common-sierra.Plo
+	-rm -f sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-bearer-sierra.Plo
+	-rm -f sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-broadband-modem-sierra.Plo
+	-rm -f sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-common-sierra.Plo
+	-rm -f sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-shared.Plo
+	-rm -f sierra/$(DEPDIR)/libmm_shared_sierra_la-mm-sim-sierra.Plo
 	-rm -f sierra/$(DEPDIR)/mm-modem-helpers-sierra.Plo
-	-rm -f sierra/$(DEPDIR)/mm-sim-sierra.Plo
 	-rm -f sierra/tests/$(DEPDIR)/test_modem_helpers_sierra-test-modem-helpers-sierra.Po
+	-rm -f simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.Plo
 	-rm -f simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-broadband-modem-simtech.Plo
 	-rm -f simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-plugin-simtech.Plo
+	-rm -f simtech/$(DEPDIR)/libmm_plugin_simtech_la-mm-shared-simtech.Plo
+	-rm -f simtech/$(DEPDIR)/mm-modem-helpers-simtech.Plo
+	-rm -f simtech/tests/$(DEPDIR)/test_modem_helpers_simtech-test-modem-helpers-simtech.Po
 	-rm -f telit/$(DEPDIR)/libhelpers_telit_la-mm-modem-helpers-telit.Plo
 	-rm -f telit/$(DEPDIR)/libhelpers_telit_la-mm-telit-enums-types.Plo
 	-rm -f telit/$(DEPDIR)/libmm_plugin_telit_la-mm-plugin-telit.Plo
-	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Plo
-	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Plo
-	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-common-telit.Plo
-	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_shared_telit_la-mm-broadband-modem-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_shared_telit_la-mm-common-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_shared_telit_la-mm-shared.Plo
 	-rm -f telit/tests/$(DEPDIR)/test_modem_helpers_telit-test-mm-modem-helpers-telit.Po
 	-rm -f tests/$(DEPDIR)/libmm_test_common_la-test-fixture.Plo
+	-rm -f tests/$(DEPDIR)/libmm_test_common_la-test-helpers.Plo
 	-rm -f tests/$(DEPDIR)/libmm_test_common_la-test-port-context.Plo
 	-rm -f tests/$(DEPDIR)/test-keyfiles.Po
 	-rm -f tests/$(DEPDIR)/test-udev-rules.Po
@@ -4631,11 +5069,11 @@ maintainer-clean: maintainer-clean-am
 	-rm -f thuraya/$(DEPDIR)/libmm_plugin_thuraya_la-mm-plugin-thuraya.Plo
 	-rm -f thuraya/$(DEPDIR)/mm-modem-helpers-thuraya.Plo
 	-rm -f thuraya/tests/$(DEPDIR)/test_modem_helpers_thuraya-test-mm-modem-helpers-thuraya.Po
+	-rm -f tplink/$(DEPDIR)/libmm_plugin_tplink_la-mm-plugin-tplink.Plo
 	-rm -f ublox/$(DEPDIR)/libhelpers_ublox_la-mm-modem-helpers-ublox.Plo
 	-rm -f ublox/$(DEPDIR)/libhelpers_ublox_la-mm-ublox-enums-types.Plo
 	-rm -f ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-broadband-bearer-ublox.Plo
 	-rm -f ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-broadband-modem-ublox.Plo
-	-rm -f ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-call-ublox.Plo
 	-rm -f ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-plugin-ublox.Plo
 	-rm -f ublox/$(DEPDIR)/libmm_plugin_ublox_la-mm-sim-ublox.Plo
 	-rm -f ublox/tests/$(DEPDIR)/test_modem_helpers_ublox-test-modem-helpers-ublox.Po
@@ -4645,10 +5083,11 @@ maintainer-clean: maintainer-clean-am
 	-rm -f wavecom/$(DEPDIR)/libmm_plugin_wavecom_la-mm-plugin-wavecom.Plo
 	-rm -f x22x/$(DEPDIR)/libmm_plugin_x22x_la-mm-broadband-modem-x22x.Plo
 	-rm -f x22x/$(DEPDIR)/libmm_plugin_x22x_la-mm-plugin-x22x.Plo
-	-rm -f xmm/$(DEPDIR)/mm-broadband-modem-mbim-xmm.Plo
-	-rm -f xmm/$(DEPDIR)/mm-broadband-modem-xmm.Plo
+	-rm -f xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.Plo
+	-rm -f xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-broadband-modem-xmm.Plo
+	-rm -f xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared-xmm.Plo
+	-rm -f xmm/$(DEPDIR)/libmm_shared_xmm_la-mm-shared.Plo
 	-rm -f xmm/$(DEPDIR)/mm-modem-helpers-xmm.Plo
-	-rm -f xmm/$(DEPDIR)/mm-shared-xmm.Plo
 	-rm -f xmm/tests/$(DEPDIR)/test_modem_helpers_xmm-test-modem-helpers-xmm.Po
 	-rm -f zte/$(DEPDIR)/libmm_plugin_zte_la-mm-broadband-modem-zte-icera.Plo
 	-rm -f zte/$(DEPDIR)/libmm_plugin_zte_la-mm-broadband-modem-zte.Plo

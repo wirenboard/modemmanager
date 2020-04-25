@@ -46,11 +46,14 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
-static gboolean info_flag; /* set when no action found */
-static gboolean start_flag;
-static gboolean accept_flag;
-static gboolean hangup_flag;
-static gchar *dtmf_request;
+static gboolean  info_flag; /* set when no action found */
+static gboolean  start_flag;
+static gboolean  accept_flag;
+static gchar    *deflect_str;
+static gboolean  join_multiparty_flag;
+static gboolean  leave_multiparty_flag;
+static gboolean  hangup_flag;
+static gchar    *dtmf_request;
 
 static GOptionEntry entries[] = {
     { "start", 0, 0, G_OPTION_ARG_NONE, &start_flag,
@@ -59,6 +62,18 @@ static GOptionEntry entries[] = {
     },
     { "accept", 0, 0, G_OPTION_ARG_NONE, &accept_flag,
       "Accept the incoming call",
+      NULL,
+    },
+    { "deflect", 0, 0, G_OPTION_ARG_STRING, &deflect_str,
+      "Deflect the incoming call",
+      "[NUMBER]",
+    },
+    { "join-multiparty", 0, 0, G_OPTION_ARG_NONE, &join_multiparty_flag,
+      "Join multiparty call",
+      NULL,
+    },
+    { "leave-multiparty", 0, 0, G_OPTION_ARG_NONE, &leave_multiparty_flag,
+      "Leave multiparty call",
       NULL,
     },
     { "hangup", 0, 0, G_OPTION_ARG_NONE, &hangup_flag,
@@ -99,6 +114,9 @@ mmcli_call_options_enabled (void)
 
     n_actions = (start_flag +
                  accept_flag +
+                 !!deflect_str +
+                 join_multiparty_flag +
+                 leave_multiparty_flag +
                  hangup_flag +
                  !!dtmf_request);
 
@@ -156,6 +174,7 @@ print_call_info (MMCall *call)
     mmcli_output_string (MMC_F_CALL_GENERAL_DBUS_PATH,       mm_call_get_path (call));
     mmcli_output_string (MMC_F_CALL_PROPERTIES_NUMBER,       mm_call_get_number (call));
     mmcli_output_string (MMC_F_CALL_PROPERTIES_DIRECTION,    mm_call_direction_get_string (mm_call_get_direction (call)));
+    mmcli_output_string (MMC_F_CALL_PROPERTIES_MULTIPARTY,   mm_call_get_multiparty (call) ? "yes" : "no");
     mmcli_output_string (MMC_F_CALL_PROPERTIES_STATE,        mm_call_state_get_string (mm_call_get_state (call)));
     mmcli_output_string (MMC_F_CALL_PROPERTIES_STATE_REASON, mm_call_state_reason_get_string (mm_call_get_state_reason (call)));
     mmcli_output_string (MMC_F_CALL_PROPERTIES_AUDIO_PORT,   mm_call_get_audio_port (call));
@@ -223,6 +242,87 @@ accept_ready (MMCall        *call,
 
     operation_result = mm_call_accept_finish (call, result, &error);
     accept_process_reply (operation_result, error);
+
+    mmcli_async_operation_done ();
+}
+
+static void
+deflect_process_reply (gboolean      result,
+                       const GError *error)
+{
+    if (!result) {
+        g_printerr ("error: couldn't deflect the call: '%s'\n",
+                    error ? error->message : "unknown error");
+        exit (EXIT_FAILURE);
+    }
+
+    g_print ("successfully deflected the call\n");
+}
+
+static void
+deflect_ready (MMCall        *call,
+               GAsyncResult *result,
+               gpointer      nothing)
+{
+    gboolean operation_result;
+    GError *error = NULL;
+
+    operation_result = mm_call_deflect_finish (call, result, &error);
+    deflect_process_reply (operation_result, error);
+
+    mmcli_async_operation_done ();
+}
+
+static void
+join_multiparty_process_reply (gboolean      result,
+                               const GError *error)
+{
+    if (!result) {
+        g_printerr ("error: couldn't join multiparty call: '%s'\n",
+                    error ? error->message : "unknown error");
+        exit (EXIT_FAILURE);
+    }
+
+    g_print ("successfully joined multiparty call\n");
+}
+
+static void
+join_multiparty_ready (MMCall        *call,
+                       GAsyncResult *result,
+                       gpointer      nothing)
+{
+    gboolean  operation_result;
+    GError   *error = NULL;
+
+    operation_result = mm_call_join_multiparty_finish (call, result, &error);
+    join_multiparty_process_reply (operation_result, error);
+
+    mmcli_async_operation_done ();
+}
+
+static void
+leave_multiparty_process_reply (gboolean      result,
+                                const GError *error)
+{
+    if (!result) {
+        g_printerr ("error: couldn't leave multiparty call: '%s'\n",
+                    error ? error->message : "unknown error");
+        exit (EXIT_FAILURE);
+    }
+
+    g_print ("successfully left multiparty call\n");
+}
+
+static void
+leave_multiparty_ready (MMCall        *call,
+                        GAsyncResult *result,
+                        gpointer      nothing)
+{
+    gboolean  operation_result;
+    GError   *error = NULL;
+
+    operation_result = mm_call_leave_multiparty_finish (call, result, &error);
+    leave_multiparty_process_reply (operation_result, error);
 
     mmcli_async_operation_done ();
 }
@@ -313,6 +413,34 @@ get_call_ready (GObject      *source,
         return;
     }
 
+    /* Requesting to deflect the call? */
+    if (deflect_str) {
+        mm_call_deflect (ctx->call,
+                         deflect_str,
+                         ctx->cancellable,
+                         (GAsyncReadyCallback)deflect_ready,
+                         NULL);
+        return;
+    }
+
+    /* Requesting to join multiparty call? */
+    if (join_multiparty_flag) {
+        mm_call_join_multiparty (ctx->call,
+                                 ctx->cancellable,
+                                 (GAsyncReadyCallback)join_multiparty_ready,
+                                 NULL);
+        return;
+    }
+
+    /* Requesting to leave multiparty call? */
+    if (leave_multiparty_flag) {
+        mm_call_leave_multiparty (ctx->call,
+                                  ctx->cancellable,
+                                  (GAsyncReadyCallback)leave_multiparty_ready,
+                                  NULL);
+        return;
+    }
+
     /* Requesting to hangup the call? */
     if (hangup_flag) {
         mm_call_hangup (ctx->call,
@@ -395,6 +523,40 @@ mmcli_call_run_synchronous (GDBusConnection *connection)
                                                 NULL,
                                                 &error);
         accept_process_reply (operation_result, error);
+        return;
+    }
+
+    /* Requesting to deflect the call? */
+    if (deflect_str) {
+        gboolean operation_result;
+
+        operation_result = mm_call_deflect_sync (ctx->call,
+                                                 deflect_str,
+                                                 NULL,
+                                                 &error);
+        deflect_process_reply (operation_result, error);
+        return;
+    }
+
+    /* Requesting to join multiparty call? */
+    if (join_multiparty_flag) {
+        gboolean operation_result;
+
+        operation_result = mm_call_join_multiparty_sync (ctx->call,
+                                                         NULL,
+                                                         &error);
+        join_multiparty_process_reply (operation_result, error);
+        return;
+    }
+
+    /* Requesting to leave multiparty call? */
+    if (leave_multiparty_flag) {
+        gboolean operation_result;
+
+        operation_result = mm_call_leave_multiparty_sync (ctx->call,
+                                                          NULL,
+                                                          &error);
+        leave_multiparty_process_reply (operation_result, error);
         return;
     }
 

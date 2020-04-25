@@ -53,6 +53,10 @@
 
     <allow send_destination="org.freedesktop.ModemManager1"
            send_interface="org.freedesktop.ModemManager1.Modem"
+           send_member="SetPowerState"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem"
            send_member="Reset"/>
 
     <allow send_destination="org.freedesktop.ModemManager1"
@@ -61,15 +65,29 @@
 
     <allow send_destination="org.freedesktop.ModemManager1"
            send_interface="org.freedesktop.ModemManager1.Modem"
-           send_member="SetAllowedModes"/>
+           send_member="SetCurrentCapabilities"/>
 
     <allow send_destination="org.freedesktop.ModemManager1"
            send_interface="org.freedesktop.ModemManager1.Modem"
-           send_member="SetBands"/>
+           send_member="SetCurrentModes"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem"
+           send_member="SetCurrentBands"/>
 
     <allow send_destination="org.freedesktop.ModemManager1"
            send_interface="org.freedesktop.ModemManager1.Modem"
            send_member="Command"/>
+
+    <!-- org.freedesktop.ModemManager1.Modem.Firmware.xml -->
+
+    <!-- Protected by the Device.Control policy rule -->
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Firmware"
+           send_member="List"/>
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Firmware"
+           send_member="Select"/>
 
     <!-- org.freedesktop.ModemManager1.Modem.Simple.xml -->
 
@@ -98,6 +116,14 @@
            send_interface="org.freedesktop.ModemManager1.Modem.Modem3gpp"
            send_member="Scan"/>
 
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Modem3gpp"
+           send_member="SetEpsUeModeOperation"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Modem3gpp"
+           send_member="SetInitialEpsBearerSettings"/>
+
     <!-- org.freedesktop.ModemManager1.Modem.ModemCdma.xml -->
 
     <!-- Protected by the Device.Control policy rule -->
@@ -108,6 +134,25 @@
     <allow send_destination="org.freedesktop.ModemManager1"
            send_interface="org.freedesktop.ModemManager1.Modem.ModemCdma"
            send_member="ActivateManual"/>
+
+    <!-- org.freedesktop.ModemManager1.Modem.Oma.xml -->
+
+    <!-- Protected by the Device.Control policy rule -->
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Oma"
+           send_member="Setup"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Oma"
+           send_member="StartClientInitiatedSession"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Oma"
+           send_member="AcceptNetworkInitiatedSession"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Oma"
+           send_member="CancelSession"/>
 
     <!-- org.freedesktop.ModemManager1.Sim.xml -->
 
@@ -167,6 +212,10 @@
 
     <allow send_destination="org.freedesktop.ModemManager1"
            send_interface="org.freedesktop.ModemManager1.Modem.Location"
+           send_member="InjectAssistanceData"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Location"
            send_member="SetGpsRefreshRate"/>
 
     <!-- Protected by the Location policy rule -->
@@ -217,6 +266,30 @@
            send_interface="org.freedesktop.ModemManager1.Modem.Voice"
            send_member="DeleteCall"/>
 
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Voice"
+           send_member="HoldAndAccept"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Voice"
+           send_member="HangupAndAccept"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Voice"
+           send_member="HangupAll"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Voice"
+           send_member="Transfer"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Voice"
+           send_member="CallWaitingSetup"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Voice"
+           send_member="CallWaitingQuery"/>
+
     <!-- org.freedesktop.ModemManager1.Call.xml -->
 
     <!-- Protected by the Voice policy rule -->
@@ -230,6 +303,18 @@
 
     <allow send_destination="org.freedesktop.ModemManager1"
            send_interface="org.freedesktop.ModemManager1.Call"
+           send_member="Deflect"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Call"
+           send_member="JoinMultiparty"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Call"
+           send_member="LeaveMultiparty"/>
+
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Call"
            send_member="Hangup"/>
 
     <allow send_destination="org.freedesktop.ModemManager1"
@@ -238,10 +323,17 @@
 
     <!-- org.freedesktop.ModemManager1.Modem.Signal.xml -->
 
-    <!-- Allowed for everyone -->
+    <!-- Protected by the Device.Control policy rule -->
     <allow send_destination="org.freedesktop.ModemManager1"
            send_interface="org.freedesktop.ModemManager1.Modem.Signal"
            send_member="Setup"/>
+
+    <!-- org.freedesktop.ModemManager1.Modem.Time.xml -->
+
+    <!-- Protected by the Time policy rule -->
+    <allow send_destination="org.freedesktop.ModemManager1"
+           send_interface="org.freedesktop.ModemManager1.Modem.Time"
+           send_member="GetNetworkTime"/>
 
   </policy>
 

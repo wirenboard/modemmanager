@@ -26,23 +26,6 @@
 #include "mm-sms-part-3gpp.h"
 #include "mm-log.h"
 
-/* If defined will print debugging traces */
-#ifdef TEST_SMS_PART_ENABLE_TRACE
-#define trace_pdu(pdu, pdu_len) do {      \
-        guint i;                          \
-                                          \
-        g_print ("\n        ");           \
-        for (i = 0; i < len; i++) {       \
-            g_print ("  0x%02X", pdu[i]); \
-            if (((i + 1) % 12) == 0)      \
-                g_print ("\n        ");   \
-        }                                 \
-        g_print ("\n");                   \
-    } while (0)
-#else
-#define trace_pdu(...)
-#endif
-
 /********************* PDU PARSER TESTS *********************/
 
 static void
@@ -136,7 +119,7 @@ test_pdu1 (void)
         pdu, sizeof (pdu),
         "+12404492164", /* smsc */
         "+16175927198", /* number */
-        "110228115050-05", /* timestamp */
+        "2011-02-28T11:50:50-05:00", /* timestamp */
         FALSE,
         "Here's a longer message [{with some extended characters}] "
         "thrown in, such as £ and ΩΠΨ and §¿ as well.", /* text */
@@ -157,7 +140,7 @@ test_pdu2 (void)
         pdu, sizeof (pdu),
         "+79037011111", /* smsc */
         "InternetSMS", /* number */
-        "110329192004+04", /* timestamp */
+        "2011-03-29T19:20:04+04:00", /* timestamp */
         FALSE,
         "тест", /* text */
         NULL, 0);
@@ -177,7 +160,7 @@ test_pdu3 (void)
         pdu, sizeof (pdu),
         "+12345678901", /* smsc */
         "+18005551212", /* number */
-        "110101123456+00", /* timestamp */
+        "2011-01-01T12:34:56+00:00", /* timestamp */
         FALSE,
         "hellohello", /* text */
         NULL, 0);
@@ -198,7 +181,7 @@ test_pdu3_nzpid (void)
         pdu, sizeof (pdu),
         "+12345678901", /* smsc */
         "+18005551212", /* number */
-        "110101123456+00", /* timestamp */
+        "2011-01-01T12:34:56+00:00", /* timestamp */
         FALSE,
         "hellohello", /* text */
         NULL, 0);
@@ -219,7 +202,7 @@ test_pdu3_mms (void)
         pdu, sizeof (pdu),
         "+12345678901", /* smsc */
         "+18005551212", /* number */
-        "110101123456+00", /* timestamp */
+        "2011-01-01T12:34:56+00:00", /* timestamp */
         FALSE,
         "hellohello", /* text */
         NULL, 0);
@@ -240,7 +223,7 @@ test_pdu3_natl (void)
         pdu, sizeof (pdu),
         "+12345678901", /* smsc */
         "18005551212", /* number, no plus */
-        "110101123456+00", /* timestamp */
+        "2011-01-01T12:34:56+00:00", /* timestamp */
         FALSE,
         "hellohello", /* text */
         NULL, 0);
@@ -262,7 +245,7 @@ test_pdu3_8bit (void)
         pdu, sizeof (pdu),
         "+12345678901", /* smsc */
         "+18005551212", /* number */
-        "110101123456+00", /* timestamp */
+        "2011-01-01T12:34:56+00:00", /* timestamp */
         FALSE,
         NULL, /* text */
         expected_data, /* data */
@@ -310,7 +293,7 @@ test_pdu_dcsf1 (void)
         pdu, sizeof (pdu),
         "+33609001390", /* smsc */
         "1800", /* number */
-        "110624130815+02", /* timestamp */
+        "2011-06-24T13:08:15+02:00", /* timestamp */
         FALSE,
         "Info SFR - Confidentiel, à ne jamais transmettre -\r\n"
         "Voici votre nouveau mot de passe : sw2ced pour gérer "
@@ -334,7 +317,7 @@ test_pdu_dcsf_8bit (void)
         pdu, sizeof (pdu),
         "+12345678901", /* smsc */
         "+18005551212", /* number */
-        "110101123456+00", /* timestamp */
+        "2011-01-01T12:34:56+00:00", /* timestamp */
         FALSE,
         NULL, /* text */
         expected_data, /* data */
@@ -380,7 +363,7 @@ test_pdu_udhi (void)
         hexpdu,
         "+31653131316", /* smsc */
         "1002", /* number */
-        "110629233219+02", /* timestamp */
+        "2011-06-29T23:32:19+02:00", /* timestamp */
         TRUE,
         "Welkom, bel om uw Voicemail te beluisteren naar +31612001233"
         " (PrePay: *100*1233#). Voicemail ontvangen is altijd gratis."
@@ -405,7 +388,7 @@ test_pdu_multipart (void)
         hexpdu1,
         "+12063130025", /* smsc */
         "+16175046925", /* number */
-        "120425195650-04", /* timestamp */
+        "2012-04-25T19:56:50-04:00", /* timestamp */
         TRUE, /* multipart! */
         "This is a very long test designed to exercise multi part capability. It should "
         "show up as one message, not as two, as the underlying encoding represents ", /* text */
@@ -415,7 +398,7 @@ test_pdu_multipart (void)
         hexpdu2,
         "+12063130026", /* smsc */
         "+16175046925", /* number */
-        "120425195651-04", /* timestamp */
+        "2012-04-25T19:56:51-04:00", /* timestamp */
         TRUE, /* multipart! */
         "that the parts are related to one another. ", /* text */
         NULL, 0);
@@ -448,7 +431,7 @@ test_pdu_not_stored (void)
         hexpdu1,
         "+34656000311", /* smsc */
         "639337937", /* number */
-        "120911074036+02", /* timestamp */
+        "2012-09-11T07:40:36+02:00", /* timestamp */
         FALSE, /* multipart! */
         NULL, /* text */
         NULL, 0);
@@ -509,6 +492,21 @@ test_address_encode_unknown (void)
 /********************* PDU CREATOR TESTS *********************/
 
 static void
+trace_pdu (const guint8 *pdu,
+           guint         len)
+{
+    guint i;
+
+    g_print ("n        ");
+    for (i = 0; i < len; i++) {
+        g_print ("  0x%02X", pdu[i]);
+        if (((i + 1) % 12) == 0)
+            g_print ("n        ");
+    }
+    g_print ("n");
+}
+
+static void
 common_test_create_pdu (const gchar *smsc,
                         const gchar *number,
                         const gchar *text,
@@ -549,7 +547,8 @@ common_test_create_pdu (const gchar *smsc,
                                            &error);
     mm_sms_part_free (part);
 
-    trace_pdu (pdu, len);
+    if (g_test_verbose ())
+        trace_pdu (pdu, len);
 
     g_assert_no_error (error);
     g_assert (pdu != NULL);
@@ -848,17 +847,17 @@ _mm_log (const char *loc,
          const char *fmt,
          ...)
 {
-#if defined ENABLE_TEST_MESSAGE_TRACES
-    /* Dummy log function */
     va_list args;
     gchar *msg;
+
+    if (!g_test_verbose ())
+        return;
 
     va_start (args, fmt);
     msg = g_strdup_vprintf (fmt, args);
     va_end (args);
     g_print ("%s\n", msg);
     g_free (msg);
-#endif
 }
 
 int main (int argc, char **argv)

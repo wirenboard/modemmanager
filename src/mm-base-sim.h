@@ -83,6 +83,14 @@ struct _MMBaseSimClass {
                                            GAsyncResult *res,
                                            GError **error);
 
+    /* Load emergency numbers (async) */
+    void  (* load_emergency_numbers)        (MMBaseSim *self,
+                                             GAsyncReadyCallback callback,
+                                             gpointer user_data);
+    GStrv (* load_emergency_numbers_finish) (MMBaseSim *self,
+                                             GAsyncResult *res,
+                                             GError **error);
+
     /* Change PIN (async) */
     void     (* change_pin)        (MMBaseSim *self,
                                     const gchar *old_pin,
@@ -171,5 +179,8 @@ void         mm_base_sim_load_sim_identifier        (MMBaseSim *self,
 gchar       *mm_base_sim_load_sim_identifier_finish (MMBaseSim *self,
                                                      GAsyncResult *res,
                                                      GError **error);
+
+gboolean     mm_base_sim_is_emergency_number (MMBaseSim   *self,
+                                              const gchar *number);
 
 #endif /* MM_BASE_SIM_H */

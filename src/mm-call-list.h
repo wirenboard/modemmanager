@@ -64,10 +64,20 @@ guint mm_call_list_get_count (MMCallList *self);
 void mm_call_list_add_call  (MMCallList *self,
                              MMBaseCall *call);
 
+MMBaseCall *mm_call_list_get_call (MMCallList   *self,
+                                   const gchar  *call_path);
+
 gboolean mm_call_list_delete_call (MMCallList   *self,
                                    const gchar  *call_path,
                                    GError      **error);
 
-MMBaseCall *mm_call_list_get_first_ringing_in_call (MMCallList *self);
+MMBaseCall *mm_call_list_get_first_incoming_call (MMCallList  *self,
+                                                  MMCallState  incoming_state);
+
+typedef void (* MMCallListForeachFunc) (MMBaseCall            *call,
+                                        gpointer               user_data);
+void            mm_call_list_foreach   (MMCallList            *self,
+                                        MMCallListForeachFunc  callback,
+                                        gpointer               user_data);
 
 #endif /* MM_CALL_LIST_H */

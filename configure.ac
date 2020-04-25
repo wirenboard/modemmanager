@@ -5,8 +5,8 @@ dnl Package and library versioning support
 dnl
 
 m4_define([mm_major_version], [1])
-m4_define([mm_minor_version], [10])
-m4_define([mm_micro_version], [4])
+m4_define([mm_minor_version], [12])
+m4_define([mm_micro_version], [6])
 m4_define([mm_version],
           [mm_major_version.mm_minor_version.mm_micro_version])
 
@@ -18,9 +18,9 @@ dnl        If the interface has grown (that is, the new library is compatible
 dnl            with old code), increment a.
 dnl        If the interface has changed in an incompatible way (that is,
 dnl            functions have changed or been removed), then zero a.
-m4_define([mm_glib_lt_current],  [4])
+m4_define([mm_glib_lt_current],  [5])
 m4_define([mm_glib_lt_revision], [0])
-m4_define([mm_glib_lt_age],      [4])
+m4_define([mm_glib_lt_age],      [5])
 
 dnl-----------------------------------------------------------------------------
 dnl autoconf, automake, libtool initialization
@@ -288,6 +288,7 @@ elif test "x$with_polkit" = "xyes"; then
     with_polkit=strict
 fi
 
+MM_POLKIT_SERVICE=""
 if test "x$with_polkit" != "xno"; then
 	if test "x$have_polkit" = "xno"; then
 		AC_MSG_ERROR(PolicyKit development headers are required)
@@ -296,9 +297,11 @@ if test "x$with_polkit" != "xno"; then
     case "x$with_polkit" in
         "xpermissive")
             MM_DEFAULT_USER_POLICY="yes"
+            MM_POLKIT_SERVICE="polkit.service"
             ;;
         "xstrict")
             MM_DEFAULT_USER_POLICY="auth_self_keep"
+            MM_POLKIT_SERVICE="polkit.service"
             ;;
         *)
             AC_MSG_ERROR([Wrong value for --with-polkit: $with_polkit])
@@ -311,7 +314,25 @@ if test "x$with_polkit" != "xno"; then
     AC_SUBST(MM_DEFAULT_USER_POLICY)
 fi
 
+AC_SUBST(MM_POLKIT_SERVICE)
 AM_CONDITIONAL(WITH_POLKIT, [test "x$with_polkit" != "xno"])
+
+dnl-----------------------------------------------------------------------------
+dnl AT command via DBus support (disabled by default unless running in --debug)
+dnl
+dnl It is suggested that this option is only enabled in custom built systems and
+dnl only if truly required.
+dnl
+
+AC_ARG_WITH(at_command_via_dbus,
+            AS_HELP_STRING([--with-at-command-via-dbus],
+                           [Build with Modem.Command() interface enabled always]),
+            [],
+            [with_at_command_via_dbus=no])
+
+if test "x$with_at_command_via_dbus" = "xyes"; then
+    AC_DEFINE(WITH_AT_COMMAND_VIA_DBUS, 1, [Define if you want to enable AT commands via DBus])
+fi
 
 dnl-----------------------------------------------------------------------------
 dnl MBIM support (enabled by default)
@@ -341,7 +362,7 @@ dnl-----------------------------------------------------------------------------
 dnl QMI support (enabled by default)
 dnl
 
-LIBQMI_VERSION=1.22.4
+LIBQMI_VERSION=1.24.0
 
 AC_ARG_WITH(qmi, AS_HELP_STRING([--without-qmi], [Build without QMI support]), [], [with_qmi=yes])
 AM_CONDITIONAL(WITH_QMI, test "x$with_qmi" = "xyes")
@@ -376,7 +397,6 @@ dnl Protocol libs
 dnl
 
 AM_CONDITIONAL(QCDM_STANDALONE, test "yes" = "no")
-AM_CONDITIONAL(WMC_STANDALONE, test "yes" = "no")
 
 dnl-----------------------------------------------------------------------------
 dnl Protocol libs
@@ -395,13 +415,9 @@ build-aux/Makefile
 libqcdm/Makefile
 libqcdm/src/Makefile
 libqcdm/tests/Makefile
-libwmc/Makefile
-libwmc/src/Makefile
-libwmc/tests/Makefile
 src/Makefile
 src/tests/Makefile
 plugins/Makefile
-uml290/Makefile
 test/Makefile
 introspection/Makefile
 introspection/tests/Makefile
@@ -423,6 +439,7 @@ examples/Makefile
 examples/modem-watcher-python/Makefile
 examples/modem-watcher-javascript/Makefile
 examples/sms-python/Makefile
+examples/network-scan-python/Makefile
 ])
 AC_OUTPUT
 
@@ -449,6 +466,7 @@ echo "
       qmi:                     ${with_qmi}
       systemd suspend/resume:  ${with_systemd_suspend_resume}
       systemd journal:         ${with_systemd_journal}
+      at command via dbus:     ${with_at_command_via_dbus}
 
     Miscellaneous:
       gobject introspection:   ${found_introspection}

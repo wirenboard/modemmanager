@@ -8,7 +8,7 @@
 <link rel="up" href="ch03.html#id-1.2.4.3" title="Generic interfaces">
 <link rel="prev" href="MMModemCdma.html" title="MMModemCdma">
 <link rel="next" href="MMUnlockRetries.html" title="MMUnlockRetries">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -36,8 +36,8 @@
 <a name="MMCdmaManualActivationProperties.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -185,8 +185,8 @@
 <a name="MMCdmaManualActivationProperties.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody><tr>
 <td class="datatype_keyword">struct</td>
@@ -215,9 +215,11 @@ mm_cdma_manual_activation_properties_new
 <p>Creates a new <a class="link" href="MMCdmaManualActivationProperties.html" title="MMCdmaManualActivationProperties"><span class="type">MMCdmaManualActivationProperties</span></a> object.</p>
 <div class="refsect3">
 <a name="mm-cdma-manual-activation-properties-new.returns"></a><h4>Returns</h4>
-<p>A <a class="link" href="MMCdmaManualActivationProperties.html" title="MMCdmaManualActivationProperties"><span class="type">MMCdmaManualActivationProperties</span></a>. The returned value should be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a>. </p>
+<p>A <a class="link" href="MMCdmaManualActivationProperties.html" title="MMCdmaManualActivationProperties"><span class="type">MMCdmaManualActivationProperties</span></a>. The returned
+value should be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -243,10 +245,12 @@ mm_cdma_manual_activation_properties_get_spc
 </div>
 <div class="refsect3">
 <a name="mm-cdma-manual-activation-properties-get-spc.returns"></a><h4>Returns</h4>
-<p>The SPC. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The SPC. Do not free the returned value, it is
+owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -289,6 +293,7 @@ mm_cdma_manual_activation_properties_set_spc
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the SPC was successfully set, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -316,6 +321,7 @@ mm_cdma_manual_activation_properties_get_sid
 <a name="mm-cdma-manual-activation-properties-get-sid.returns"></a><h4>Returns</h4>
 <p> The SID.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -347,6 +353,7 @@ mm_cdma_manual_activation_properties_set_sid
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -372,10 +379,12 @@ mm_cdma_manual_activation_properties_get_mdn
 </div>
 <div class="refsect3">
 <a name="mm-cdma-manual-activation-properties-get-mdn.returns"></a><h4>Returns</h4>
-<p>The MDN. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The MDN. Do not free the returned value, it is
+owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -418,6 +427,7 @@ mm_cdma_manual_activation_properties_set_mdn
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the MDN was successfully set, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -443,10 +453,12 @@ mm_cdma_manual_activation_properties_get_min
 </div>
 <div class="refsect3">
 <a name="mm-cdma-manual-activation-properties-get-min.returns"></a><h4>Returns</h4>
-<p>The MIN. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The MIN. Do not free the returned value, it is
+owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -489,6 +501,7 @@ mm_cdma_manual_activation_properties_set_min
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the MIN was successfully set, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -514,10 +527,12 @@ mm_cdma_manual_activation_properties_get_mn_ha_key
 </div>
 <div class="refsect3">
 <a name="mm-cdma-manual-activation-properties-get-mn-ha-key.returns"></a><h4>Returns</h4>
-<p>The MN-HA key. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The MN-HA key. Do not free the returned value, it
+is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -560,6 +575,7 @@ mm_cdma_manual_activation_properties_set_mn_ha_key
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the MN-HA key was successfully set, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -585,10 +601,12 @@ mm_cdma_manual_activation_properties_get_mn_aaa_key
 </div>
 <div class="refsect3">
 <a name="mm-cdma-manual-activation-properties-get-mn-aaa-key.returns"></a><h4>Returns</h4>
-<p>The MN-AAA key. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The MN-AAA key. Do not free the returned value, it
+is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -629,8 +647,10 @@ mm_cdma_manual_activation_properties_set_mn_aaa_key
 <div class="refsect3">
 <a name="mm-cdma-manual-activation-properties-set-mn-aaa-key.returns"></a><h4>Returns</h4>
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the MN-AAA key was successfully set, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
-is set.</p>
+is
+set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -664,10 +684,12 @@ mm_cdma_manual_activation_properties_get_prl
 </div>
 <div class="refsect3">
 <a name="mm-cdma-manual-activation-properties-get-prl.returns"></a><h4>Returns</h4>
-<p>The PRL. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>The PRL. Do not free the returned value, it is
+owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -693,10 +715,12 @@ mm_cdma_manual_activation_properties_peek_prl_bytearray
 </div>
 <div class="refsect3">
 <a name="mm-cdma-manual-activation-properties-peek-prl-bytearray.returns"></a><h4>Returns</h4>
-<p>A <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#GByteArray"><span class="type">GByteArray</span></a> with the PRL, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
+<p>A <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#GByteArray"><span class="type">GByteArray</span></a> with the PRL, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't
+contain any. Do not free the returned value, it is owned by <em class="parameter"><code>self</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -722,9 +746,11 @@ mm_cdma_manual_activation_properties_get_prl_bytearray
 </div>
 <div class="refsect3">
 <a name="mm-cdma-manual-activation-properties-get-prl-bytearray.returns"></a><h4>Returns</h4>
-<p>A <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#GByteArray"><span class="type">GByteArray</span></a> with the PRL, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#g-byte-array-unref"><code class="function">g_byte_array_unref()</code></a>. </p>
+<p>A <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#GByteArray"><span class="type">GByteArray</span></a> with the PRL, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't
+contain any. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#g-byte-array-unref"><code class="function">g_byte_array_unref()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -774,6 +800,7 @@ mm_cdma_manual_activation_properties_set_prl
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the PRL was successfully set, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -800,7 +827,8 @@ mm_cdma_manual_activation_properties_set_prl_bytearray
 </tr>
 <tr>
 <td class="parameter_name"><p>prl</p></td>
-<td class="parameter_description"><p>A <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#GByteArray"><span class="type">GByteArray</span></a> with the PRL to set. This method takes a new reference of <em class="parameter"><code>prl</code></em>
+<td class="parameter_description"><p>A <a href="https://developer.gnome.org/glib/unstable/glib-Byte-Arrays.html#GByteArray"><span class="type">GByteArray</span></a> with the PRL to set. This method takes a new reference
+of <em class="parameter"><code>prl</code></em>
 .</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
@@ -817,6 +845,7 @@ mm_cdma_manual_activation_properties_set_prl_bytearray
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the PRL was successfully set, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 </div>
 <div class="refsect1">
@@ -830,6 +859,6 @@ using the provided API.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

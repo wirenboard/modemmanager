@@ -26,8 +26,10 @@
  * Identifier for an unknown longitude value.
  *
  * Proper longitude values fall in the [-180,180] range.
+ *
+ * Since: 1.0
  */
-#define MM_LOCATION_LONGITUDE_UNKNOWN G_MINDOUBLE
+#define MM_LOCATION_LONGITUDE_UNKNOWN -G_MAXDOUBLE
 
 /**
  * MM_LOCATION_LATITUDE_UNKNOWN:
@@ -35,14 +37,18 @@
  * Identifier for an unknown latitude value.
  *
  * Proper latitude values fall in the [-90,90] range.
+ *
+ * Since: 1.0
  */
-#define MM_LOCATION_LATITUDE_UNKNOWN  G_MINDOUBLE
+#define MM_LOCATION_LATITUDE_UNKNOWN  -G_MAXDOUBLE
 
 /**
  * MM_LOCATION_ALTITUDE_UNKNOWN:
  *
  * Identifier for an unknown altitude value.
+ *
+ * Since: 1.0
  */
-#define MM_LOCATION_ALTITUDE_UNKNOWN  G_MINDOUBLE
+#define MM_LOCATION_ALTITUDE_UNKNOWN  -G_MAXDOUBLE
 
 #endif /* MM_LOCATION_COMMON_H */

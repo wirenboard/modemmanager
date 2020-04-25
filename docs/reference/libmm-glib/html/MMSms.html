@@ -8,7 +8,7 @@
 <link rel="up" href="ch06.html" title="The SMS object">
 <link rel="prev" href="ch06.html" title="The SMS object">
 <link rel="next" href="MMSmsProperties.html" title="MMSmsProperties">
-<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -37,8 +37,8 @@
 <a name="MMSms.functions"></a><h2>Functions</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="functions_return">
-<col class="functions_name">
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
 </colgroup>
 <tbody>
 <tr>
@@ -289,8 +289,8 @@
 <a name="MMSms.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
 <colgroup>
-<col width="150px" class="name">
-<col class="description">
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
 </colgroup>
 <tbody><tr>
 <td class="datatype_keyword">struct</td>
@@ -346,6 +346,7 @@ mm_sms_get_path (<em class="parameter"><code><a class="link" href="MMSms.html" t
 <p>The DBus path of the <a class="link" href="MMSms.html" title="MMSms"><span class="type">MMSms</span></a> object. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -370,9 +371,11 @@ mm_sms_dup_path (<em class="parameter"><code><a class="link" href="MMSms.html" t
 </div>
 <div class="refsect3">
 <a name="mm-sms-dup-path.returns"></a><h4>Returns</h4>
-<p>The DBus path of the <a class="link" href="MMSms.html" title="MMSms"><span class="type">MMSms</span></a> object. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
+<p>The DBus path of the <a class="link" href="MMSms.html" title="MMSms"><span class="type">MMSms</span></a> object. The returned
+value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -399,6 +402,7 @@ mm_sms_get_state (<em class="parameter"><code><a class="link" href="MMSms.html" 
 <a name="mm-sms-get-state.returns"></a><h4>Returns</h4>
 <p> A <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMSmsState"><span class="type">MMSmsState</span></a> specifying the state.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -425,6 +429,7 @@ mm_sms_get_pdu_type (<em class="parameter"><code><a class="link" href="MMSms.htm
 <a name="mm-sms-get-pdu-type.returns"></a><h4>Returns</h4>
 <p> A <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMSmsPduType"><span class="type">MMSmsPduType</span></a> specifying the PDU type.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -451,6 +456,7 @@ mm_sms_get_storage (<em class="parameter"><code><a class="link" href="MMSms.html
 <a name="mm-sms-get-storage.returns"></a><h4>Returns</h4>
 <p> A <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMSmsStorage"><span class="type">MMSmsStorage</span></a> specifying the storage.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -458,10 +464,9 @@ mm_sms_get_storage (<em class="parameter"><code><a class="link" href="MMSms.html
 <pre class="programlisting">const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *
 mm_sms_get_text (<em class="parameter"><code><a class="link" href="MMSms.html" title="MMSms"><span class="type">MMSms</span></a> *self</code></em>);</pre>
 <p>Gets the message text, in UTF-8.</p>
-<div class="warning">The returned value is only valid until the property changes so
-it is only safe to use this function on the thread where
-<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMSms.html#mm-sms-dup-text" title="mm_sms_dup_text ()"><code class="function">mm_sms_dup_text()</code></a> if on another
-thread.</div>
+<div class="warning">The returned value is only valid until the property changes so it is
+only safe to use this function on the thread where <em class="parameter"><code>self</code></em> was constructed. Use
+<a class="link" href="MMSms.html#mm-sms-dup-text" title="mm_sms_dup_text ()"><code class="function">mm_sms_dup_text()</code></a> if on another thread.</div>
 <div class="refsect3">
 <a name="mm-sms-get-text.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -479,9 +484,11 @@ thread.</div>
 </div>
 <div class="refsect3">
 <a name="mm-sms-get-text.returns"></a><h4>Returns</h4>
-<p>The message text, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any (e.g. contains data instead). </p>
+<p>The message text, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain
+any (e.g. contains data instead). </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -506,9 +513,12 @@ mm_sms_dup_text (<em class="parameter"><code><a class="link" href="MMSms.html" t
 </div>
 <div class="refsect3">
 <a name="mm-sms-dup-text.returns"></a><h4>Returns</h4>
-<p>The message text, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any (e.g. contains data instead). The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
+<p>The message text, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain
+any (e.g. contains data instead). The returned value should be freed with
+<a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -541,9 +551,12 @@ mm_sms_get_data (<em class="parameter"><code><a class="link" href="MMSms.html" t
 </div>
 <div class="refsect3">
 <a name="mm-sms-get-data.returns"></a><h4>Returns</h4>
-<p>The message data, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any (e.g. contains text instead). </p>
+<p>The
+message data, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any (e.g. contains text
+instead). </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> length=data_len][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> guint8]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -576,9 +589,12 @@ mm_sms_dup_data (<em class="parameter"><code><a class="link" href="MMSms.html" t
 </div>
 <div class="refsect3">
 <a name="mm-sms-dup-data.returns"></a><h4>Returns</h4>
-<p>The message data, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any (e.g. contains text instead). The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
+<p>The
+message data, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't contain any (e.g. contains text
+instead). The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>][<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> length=data_len][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> guint8]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -586,10 +602,9 @@ mm_sms_dup_data (<em class="parameter"><code><a class="link" href="MMSms.html" t
 <pre class="programlisting">const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *
 mm_sms_get_number (<em class="parameter"><code><a class="link" href="MMSms.html" title="MMSms"><span class="type">MMSms</span></a> *self</code></em>);</pre>
 <p>Gets the number to which the message is addressed.</p>
-<div class="warning">The returned value is only valid until the property changes so
-it is only safe to use this function on the thread where
-<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMSms.html#mm-sms-dup-number" title="mm_sms_dup_number ()"><code class="function">mm_sms_dup_number()</code></a> if on another
-thread.</div>
+<div class="warning">The returned value is only valid until the property changes so it is
+only safe to use this function on the thread where <em class="parameter"><code>self</code></em> was constructed. Use
+<a class="link" href="MMSms.html#mm-sms-dup-number" title="mm_sms_dup_number ()"><code class="function">mm_sms_dup_number()</code></a> if on another thread.</div>
 <div class="refsect3">
 <a name="mm-sms-get-number.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -610,6 +625,7 @@ thread.</div>
 <p>The number, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -634,9 +650,11 @@ mm_sms_dup_number (<em class="parameter"><code><a class="link" href="MMSms.html"
 </div>
 <div class="refsect3">
 <a name="mm-sms-dup-number.returns"></a><h4>Returns</h4>
-<p>The number, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
+<p>The number, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved.
+The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -644,10 +662,9 @@ mm_sms_dup_number (<em class="parameter"><code><a class="link" href="MMSms.html"
 <pre class="programlisting">const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *
 mm_sms_get_smsc (<em class="parameter"><code><a class="link" href="MMSms.html" title="MMSms"><span class="type">MMSms</span></a> *self</code></em>);</pre>
 <p>Gets the SMS service center number.</p>
-<div class="warning">The returned value is only valid until the property changes so
-it is only safe to use this function on the thread where
-<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMSms.html#mm-sms-dup-smsc" title="mm_sms_dup_smsc ()"><code class="function">mm_sms_dup_smsc()</code></a> if on another
-thread.</div>
+<div class="warning">The returned value is only valid until the property changes so it is
+only safe to use this function on the thread where <em class="parameter"><code>self</code></em> was constructed. Use
+<a class="link" href="MMSms.html#mm-sms-dup-smsc" title="mm_sms_dup_smsc ()"><code class="function">mm_sms_dup_smsc()</code></a> if on another thread.</div>
 <div class="refsect3">
 <a name="mm-sms-get-smsc.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -665,9 +682,11 @@ thread.</div>
 </div>
 <div class="refsect3">
 <a name="mm-sms-get-smsc.returns"></a><h4>Returns</h4>
-<p>The number of the SMSC, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved. </p>
+<p>The number of the SMSC, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be
+retrieved. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -692,9 +711,11 @@ mm_sms_dup_smsc (<em class="parameter"><code><a class="link" href="MMSms.html" t
 </div>
 <div class="refsect3">
 <a name="mm-sms-dup-smsc.returns"></a><h4>Returns</h4>
-<p>The number of the SMSC, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
+<p>The number of the SMSC, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be
+retrieved. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -723,6 +744,7 @@ message reference of the PDU associated to the status report.</p>
 <a name="mm-sms-get-message-reference.returns"></a><h4>Returns</h4>
 <p> The message reference.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -749,6 +771,7 @@ mm_sms_get_class (<em class="parameter"><code><a class="link" href="MMSms.html" 
 <a name="mm-sms-get-class.returns"></a><h4>Returns</h4>
 <p> the message class, or -1 for invalid/unset class.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -775,6 +798,7 @@ mm_sms_get_teleservice_id (<em class="parameter"><code><a class="link" href="MMS
 <a name="mm-sms-get-teleservice-id.returns"></a><h4>Returns</h4>
 <p> a <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMSmsCdmaTeleserviceId"><span class="type">MMSmsCdmaTeleserviceId</span></a>.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -801,6 +825,7 @@ mm_sms_get_service_category (<em class="parameter"><code><a class="link" href="M
 <a name="mm-sms-get-service-category.returns"></a><h4>Returns</h4>
 <p> a <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMSmsCdmaServiceCategory"><span class="type">MMSmsCdmaServiceCategory</span></a>.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -827,6 +852,7 @@ mm_sms_get_validity_type (<em class="parameter"><code><a class="link" href="MMSm
 <a name="mm-sms-get-validity-type.returns"></a><h4>Returns</h4>
 <p> the validity type or <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-VALIDITY-TYPE-UNKNOWN:CAPS"><span class="type">MM_SMS_VALIDITY_TYPE_UNKNOWN</span></a>.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -854,6 +880,7 @@ mm_sms_get_validity_relative (<em class="parameter"><code><a class="link" href="
 <a name="mm-sms-get-validity-relative.returns"></a><h4>Returns</h4>
 <p> the length of the validity period, or 0 if unknown.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -864,10 +891,9 @@ mm_sms_get_timestamp (<em class="parameter"><code><a class="link" href="MMSms.ht
 <a class="ulink" href="http://en.wikipedia.org/wiki/ISO_8601" target="_top">ISO8601</a><p>format.</p>
 <p>This field is only applicable if the PDU type is <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-PDU-TYPE-DELIVER:CAPS"><code class="literal">MM_SMS_PDU_TYPE_DELIVER</code></a> or
 <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><code class="literal">MM_SMS_PDU_TYPE_STATUS_REPORT</code></a>.</p>
-<div class="warning">The returned value is only valid until the property changes so
-it is only safe to use this function on the thread where
-<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMSms.html#mm-sms-dup-timestamp" title="mm_sms_dup_timestamp ()"><code class="function">mm_sms_dup_timestamp()</code></a> if on another
-thread.</div>
+<div class="warning">The returned value is only valid until the property changes so it is
+only safe to use this function on the thread where <em class="parameter"><code>self</code></em> was constructed. Use
+<a class="link" href="MMSms.html#mm-sms-dup-timestamp" title="mm_sms_dup_timestamp ()"><code class="function">mm_sms_dup_timestamp()</code></a> if on another thread.</div>
 <div class="refsect3">
 <a name="mm-sms-get-timestamp.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -885,9 +911,11 @@ thread.</div>
 </div>
 <div class="refsect3">
 <a name="mm-sms-get-timestamp.returns"></a><h4>Returns</h4>
-<p>The timestamp, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved. </p>
+<p>The timestamp, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be
+retrieved. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -915,9 +943,11 @@ mm_sms_dup_timestamp (<em class="parameter"><code><a class="link" href="MMSms.ht
 </div>
 <div class="refsect3">
 <a name="mm-sms-dup-timestamp.returns"></a><h4>Returns</h4>
-<p>The timestamp, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
+<p>The timestamp, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be
+retrieved. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -926,11 +956,11 @@ mm_sms_dup_timestamp (<em class="parameter"><code><a class="link" href="MMSms.ht
 mm_sms_get_discharge_timestamp (<em class="parameter"><code><a class="link" href="MMSms.html" title="MMSms"><span class="type">MMSms</span></a> *self</code></em>);</pre>
 <p>Gets the time when the first PDU of the SMS message left the SMSC, in</p>
 <a class="ulink" href="http://en.wikipedia.org/wiki/ISO_8601" target="_top">ISO8601</a><p>format.</p>
-<p>This field is only applicable if the PDU type is <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><code class="literal">MM_SMS_PDU_TYPE_STATUS_REPORT</code></a>.</p>
-<div class="warning">The returned value is only valid until the property changes so
-it is only safe to use this function on the thread where
-<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMSms.html#mm-sms-dup-discharge-timestamp" title="mm_sms_dup_discharge_timestamp ()"><code class="function">mm_sms_dup_discharge_timestamp()</code></a> if on another
-thread.</div>
+<p>This field is only applicable if the PDU type is
+<a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><code class="literal">MM_SMS_PDU_TYPE_STATUS_REPORT</code></a>.</p>
+<div class="warning">The returned value is only valid until the property changes so it is
+only safe to use this function on the thread where <em class="parameter"><code>self</code></em> was constructed. Use
+<a class="link" href="MMSms.html#mm-sms-dup-discharge-timestamp" title="mm_sms_dup_discharge_timestamp ()"><code class="function">mm_sms_dup_discharge_timestamp()</code></a> if on another thread.</div>
 <div class="refsect3">
 <a name="mm-sms-get-discharge-timestamp.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -948,9 +978,11 @@ thread.</div>
 </div>
 <div class="refsect3">
 <a name="mm-sms-get-discharge-timestamp.returns"></a><h4>Returns</h4>
-<p>The timestamp, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved. </p>
+<p>The timestamp, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be
+retrieved. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -959,7 +991,8 @@ thread.</div>
 mm_sms_dup_discharge_timestamp (<em class="parameter"><code><a class="link" href="MMSms.html" title="MMSms"><span class="type">MMSms</span></a> *self</code></em>);</pre>
 <p>Gets the time when the first PDU of the SMS message left the SMSC, in</p>
 <a class="ulink" href="http://en.wikipedia.org/wiki/ISO_8601" target="_top">ISO8601</a><p>format.</p>
-<p>This field is only applicable if the PDU type is <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><code class="literal">MM_SMS_PDU_TYPE_STATUS_REPORT</code></a>.</p>
+<p>This field is only applicable if the PDU type is
+<a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><code class="literal">MM_SMS_PDU_TYPE_STATUS_REPORT</code></a>.</p>
 <div class="refsect3">
 <a name="mm-sms-dup-discharge-timestamp.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -977,9 +1010,11 @@ mm_sms_dup_discharge_timestamp (<em class="parameter"><code><a class="link" href
 </div>
 <div class="refsect3">
 <a name="mm-sms-dup-discharge-timestamp.returns"></a><h4>Returns</h4>
-<p>The timestamp, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
+<p>The timestamp, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be
+retrieved. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
 <p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -987,7 +1022,8 @@ mm_sms_dup_discharge_timestamp (<em class="parameter"><code><a class="link" href
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>
 mm_sms_get_delivery_state (<em class="parameter"><code><a class="link" href="MMSms.html" title="MMSms"><span class="type">MMSms</span></a> *self</code></em>);</pre>
 <p>Gets the delivery state of this SMS.</p>
-<p>This field is only applicable if the PDU type is <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><code class="literal">MM_SMS_PDU_TYPE_STATUS_REPORT</code></a>.</p>
+<p>This field is only applicable if the PDU type is
+<a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><code class="literal">MM_SMS_PDU_TYPE_STATUS_REPORT</code></a>.</p>
 <div class="refsect3">
 <a name="mm-sms-get-delivery-state.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -1007,6 +1043,7 @@ mm_sms_get_delivery_state (<em class="parameter"><code><a class="link" href="MMS
 <a name="mm-sms-get-delivery-state.returns"></a><h4>Returns</h4>
 <p> A <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMSmsDeliveryState"><span class="type">MMSmsDeliveryState</span></a> specifying the delivery state.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -1033,6 +1070,7 @@ mm_sms_get_delivery_report_request (<em class="parameter"><code><a class="link" 
 <a name="mm-sms-get-delivery-report-request.returns"></a><h4>Returns</h4>
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if delivery report is requested, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> otherwise.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -1045,8 +1083,9 @@ mm_sms_send (<em class="parameter"><code><a class="link" href="MMSms.html" title
 <p>Asynchronously requests to queue the message for delivery.</p>
 <p>SMS objects can only be sent once.</p>
 <p>When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
-You can then call <a class="link" href="MMSms.html#mm-sms-send-finish" title="mm_sms_send_finish ()"><code class="function">mm_sms_send_finish()</code></a> to get the result of the operation.</p>
+ will be invoked in the</p>
+<a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a><p>of the thread you are calling this method from. You can then call
+<a class="link" href="MMSms.html#mm-sms-send-finish" title="mm_sms_send_finish ()"><code class="function">mm_sms_send_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MMSms.html#mm-sms-send-sync" title="mm_sms_send_sync ()"><code class="function">mm_sms_send_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
 <a name="mm-sms-send.parameters"></a><h4>Parameters</h4>
@@ -1069,7 +1108,8 @@ You can then call <a class="link" href="MMSms.html#mm-sms-send-finish" title="mm
 </tr>
 <tr>
 <td class="parameter_name"><p>callback</p></td>
-<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
+<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or
+<a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -1081,6 +1121,7 @@ You can then call <a class="link" href="MMSms.html#mm-sms-send-finish" title="mm
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -1106,7 +1147,8 @@ mm_sms_send_finish (<em class="parameter"><code><a class="link" href="MMSms.html
 </tr>
 <tr>
 <td class="parameter_name"><p>res</p></td>
-<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to <a class="link" href="MMSms.html#mm-sms-send" title="mm_sms_send ()"><code class="function">mm_sms_send()</code></a>.</p></td>
+<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to
+<a class="link" href="MMSms.html#mm-sms-send" title="mm_sms_send ()"><code class="function">mm_sms_send()</code></a>.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -1119,9 +1161,10 @@ mm_sms_send_finish (<em class="parameter"><code><a class="link" href="MMSms.html
 </div>
 <div class="refsect3">
 <a name="mm-sms-send-finish.returns"></a><h4>Returns</h4>
-<p>  <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the operation succeeded, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
+<p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the operation succeeded, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -1132,8 +1175,8 @@ mm_sms_send_sync (<em class="parameter"><code><a class="link" href="MMSms.html" 
                   <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>Synchronously requests to queue the message for delivery.</p>
 <p>SMS objects can only be sent once.</p>
-<p>The calling thread is blocked until a reply is received.
-See <a class="link" href="MMSms.html#mm-sms-send" title="mm_sms_send ()"><code class="function">mm_sms_send()</code></a> for the asynchronous version of this method.</p>
+<p>The calling thread is blocked until a reply is received. See <a class="link" href="MMSms.html#mm-sms-send" title="mm_sms_send ()"><code class="function">mm_sms_send()</code></a>
+for the asynchronous version of this method.</p>
 <div class="refsect3">
 <a name="mm-sms-send-sync.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -1166,6 +1209,7 @@ See <a class="link" href="MMSms.html#mm-sms-send" title="mm_sms_send ()"><code 
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the operation succeeded, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -1179,8 +1223,9 @@ mm_sms_store (<em class="parameter"><code><a class="link" href="MMSms.html" titl
 <p>Asynchronoulsy requests to store the message in the device if not already done.</p>
 <p>SMS objects can only be stored once.</p>
 <p>When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
-You can then call <a class="link" href="MMSms.html#mm-sms-store-finish" title="mm_sms_store_finish ()"><code class="function">mm_sms_store_finish()</code></a> to get the result of the operation.</p>
+ will be invoked in the</p>
+<a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a><p>of the thread you are calling this method from. You can then call
+<a class="link" href="MMSms.html#mm-sms-store-finish" title="mm_sms_store_finish ()"><code class="function">mm_sms_store_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MMSms.html#mm-sms-store-sync" title="mm_sms_store_sync ()"><code class="function">mm_sms_store_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
 <a name="mm-sms-store.parameters"></a><h4>Parameters</h4>
@@ -1198,7 +1243,8 @@ You can then call <a class="link" href="MMSms.html#mm-sms-store-finish" title="m
 </tr>
 <tr>
 <td class="parameter_name"><p>storage</p></td>
-<td class="parameter_description"><p>A <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMSmsStorage"><span class="type">MMSmsStorage</span></a> specifying where to store the SMS, or <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-STORAGE-UNKNOWN:CAPS"><span class="type">MM_SMS_STORAGE_UNKNOWN</span></a> to use the default.</p></td>
+<td class="parameter_description"><p>A <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMSmsStorage"><span class="type">MMSmsStorage</span></a> specifying where to store the SMS, or
+<a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-STORAGE-UNKNOWN:CAPS"><code class="literal">MM_SMS_STORAGE_UNKNOWN</code></a> to use the default.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -1208,7 +1254,8 @@ You can then call <a class="link" href="MMSms.html#mm-sms-store-finish" title="m
 </tr>
 <tr>
 <td class="parameter_name"><p>callback</p></td>
-<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
+<td class="parameter_description"><p>A <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> to call when the request is satisfied or
+<a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -1220,6 +1267,7 @@ You can then call <a class="link" href="MMSms.html#mm-sms-store-finish" title="m
 </tbody>
 </table></div>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -1245,7 +1293,8 @@ mm_sms_store_finish (<em class="parameter"><code><a class="link" href="MMSms.htm
 </tr>
 <tr>
 <td class="parameter_name"><p>res</p></td>
-<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to <a class="link" href="MMSms.html#mm-sms-store" title="mm_sms_store ()"><code class="function">mm_sms_store()</code></a>.</p></td>
+<td class="parameter_description"><p>The <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> obtained from the <a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> passed to
+<a class="link" href="MMSms.html#mm-sms-store" title="mm_sms_store ()"><code class="function">mm_sms_store()</code></a>.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -1261,6 +1310,7 @@ mm_sms_store_finish (<em class="parameter"><code><a class="link" href="MMSms.htm
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the operation succeeded, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -1270,10 +1320,11 @@ mm_sms_store_sync (<em class="parameter"><code><a class="link" href="MMSms.html"
                    <em class="parameter"><code><a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMSmsStorage"><span class="type">MMSmsStorage</span></a> storage</code></em>,
                    <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> *cancellable</code></em>,
                    <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);</pre>
-<p>Synchronoulsy requests to store the message in the device if not already done.</p>
+<p>Synchronoulsy requests to store the message in the device if not already
+done.</p>
 <p>SMS objects can only be stored once.</p>
-<p>The calling thread is blocked until a reply is received.
-See <a class="link" href="MMSms.html#mm-sms-store" title="mm_sms_store ()"><code class="function">mm_sms_store()</code></a> for the asynchronous version of this method.</p>
+<p>The calling thread is blocked until a reply is received. See <a class="link" href="MMSms.html#mm-sms-store" title="mm_sms_store ()"><code class="function">mm_sms_store()</code></a>
+for the asynchronous version of this method.</p>
 <div class="refsect3">
 <a name="mm-sms-store-sync.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -1290,7 +1341,8 @@ See <a class="link" href="MMSms.html#mm-sms-store" title="mm_sms_store ()"><cod
 </tr>
 <tr>
 <td class="parameter_name"><p>storage</p></td>
-<td class="parameter_description"><p>A <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMSmsStorage"><span class="type">MMSmsStorage</span></a> specifying where to store the SMS, or <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-STORAGE-UNKNOWN:CAPS"><span class="type">MM_SMS_STORAGE_UNKNOWN</span></a> to use the default.</p></td>
+<td class="parameter_description"><p>A <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MMSmsStorage"><span class="type">MMSmsStorage</span></a> specifying where to store the SMS, or
+<a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumerations.html#MM-SMS-STORAGE-UNKNOWN:CAPS"><code class="literal">MM_SMS_STORAGE_UNKNOWN</code></a> to use the default.</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -1311,6 +1363,7 @@ See <a class="link" href="MMSms.html#mm-sms-store" title="mm_sms_store ()"><cod
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the operation succeeded, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set.</p>
 </div>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 </div>
 <div class="refsect1">
@@ -1324,6 +1377,6 @@ using the provided API.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.30</div>
+<hr>Generated by GTK-Doc V1.32</div>
 </body>
 </html>

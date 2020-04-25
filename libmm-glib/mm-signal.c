@@ -60,6 +60,8 @@ struct _MMSignalPrivate {
  * Gets the RSSI (Received Signal Strength Indication), in dBm.
  *
  * Returns: the RSSI, or %MM_SIGNAL_UNKNOWN if unknown.
+ *
+ * Since: 1.2
  */
 gdouble
 mm_signal_get_rssi (MMSignal *self)
@@ -69,6 +71,9 @@ mm_signal_get_rssi (MMSignal *self)
     return self->priv->rssi;
 }
 
+/**
+ * mm_signal_set_rssi: (skip)
+ */
 void
 mm_signal_set_rssi (MMSignal *self,
                     gdouble value)
@@ -87,6 +92,8 @@ mm_signal_set_rssi (MMSignal *self,
  * Gets the RSCP (Received Signal Code Power), in dBm.
  *
  * Returns: the RSCP, or %MM_SIGNAL_UNKNOWN if unknown.
+ *
+ * Since: 1.2
  */
 gdouble
 mm_signal_get_rscp (MMSignal *self)
@@ -96,6 +103,9 @@ mm_signal_get_rscp (MMSignal *self)
     return self->priv->rscp;
 }
 
+/**
+ * mm_signal_set_rscp: (skip)
+ */
 void
 mm_signal_set_rscp (MMSignal *self,
                     gdouble value)
@@ -116,6 +126,8 @@ mm_signal_set_rscp (MMSignal *self,
  * Only applicable to CDMA1x, CDMA EV-DO and UMTS (WCDMA).
  *
  * Returns: the ECIO, or %MM_SIGNAL_UNKNOWN if unknown.
+ *
+ * Since: 1.2
  */
 gdouble
 mm_signal_get_ecio (MMSignal *self)
@@ -125,6 +137,9 @@ mm_signal_get_ecio (MMSignal *self)
     return self->priv->ecio;
 }
 
+/**
+ * mm_signal_set_ecio: (skip)
+ */
 void
 mm_signal_set_ecio (MMSignal *self,
                     gdouble value)
@@ -145,6 +160,8 @@ mm_signal_set_ecio (MMSignal *self,
  * Only applicable to CDMA EV-DO.
  *
  * Returns: the SINR, or %MM_SIGNAL_UNKNOWN if unknown.
+ *
+ * Since: 1.2
  */
 gdouble
 mm_signal_get_sinr (MMSignal *self)
@@ -154,6 +171,9 @@ mm_signal_get_sinr (MMSignal *self)
     return self->priv->sinr;
 }
 
+/**
+ * mm_signal_set_sinr: (skip)
+ */
 void
 mm_signal_set_sinr (MMSignal *self,
                     gdouble value)
@@ -174,6 +194,8 @@ mm_signal_set_sinr (MMSignal *self,
  * Only applicable to CDMA EV-DO.
  *
  * Returns: the Io, or %MM_SIGNAL_UNKNOWN if unknown.
+ *
+ * Since: 1.2
  */
 gdouble
 mm_signal_get_io (MMSignal *self)
@@ -183,6 +205,9 @@ mm_signal_get_io (MMSignal *self)
     return self->priv->io;
 }
 
+/**
+ * mm_signal_set_io: (skip)
+ */
 void
 mm_signal_set_io (MMSignal *self,
                     gdouble value)
@@ -203,6 +228,8 @@ mm_signal_set_io (MMSignal *self,
  * Only applicable to LTE.
  *
  * Returns: the RSRP, or %MM_SIGNAL_UNKNOWN if unknown.
+ *
+ * Since: 1.2
  */
 gdouble
 mm_signal_get_rsrp (MMSignal *self)
@@ -212,6 +239,9 @@ mm_signal_get_rsrp (MMSignal *self)
     return self->priv->rsrp;
 }
 
+/**
+ * mm_signal_set_rsrp: (skip)
+ */
 void
 mm_signal_set_rsrp (MMSignal *self,
                     gdouble value)
@@ -232,6 +262,8 @@ mm_signal_set_rsrp (MMSignal *self,
  * Only applicable to LTE.
  *
  * Returns: the RSRQ, or %MM_SIGNAL_UNKNOWN if unknown.
+ *
+ * Since: 1.2
  */
 gdouble
 mm_signal_get_rsrq (MMSignal *self)
@@ -241,6 +273,9 @@ mm_signal_get_rsrq (MMSignal *self)
     return self->priv->rsrq;
 }
 
+/**
+ * mm_signal_set_rsrq: (skip)
+ */
 void
 mm_signal_set_rsrq (MMSignal *self,
                     gdouble value)
@@ -261,6 +296,8 @@ mm_signal_set_rsrq (MMSignal *self,
  * Only applicable to LTE.
  *
  * Returns: the S/R ratio, or %MM_SIGNAL_UNKNOWN if unknown.
+ *
+ * Since: 1.2
  */
 gdouble
 mm_signal_get_snr (MMSignal *self)
@@ -270,6 +307,9 @@ mm_signal_get_snr (MMSignal *self)
     return self->priv->snr;
 }
 
+/**
+ * mm_signal_set_snr: (skip)
+ */
 void
 mm_signal_set_snr (MMSignal *self,
                    gdouble value)
@@ -282,12 +322,7 @@ mm_signal_set_snr (MMSignal *self,
 /*****************************************************************************/
 
 /**
- * mm_signal_get_dictionary:
- * @self: A #MMSignal.
- *
- * Gets a variant dictionary with the contents of @self.
- *
- * Returns: (transfer full): A dictionary with the signal values. The returned value should be freed with g_variant_unref().
+ * mm_signal_get_dictionary: (skip)
  */
 GVariant *
 mm_signal_get_dictionary (MMSignal *self)
@@ -391,14 +426,7 @@ consume_variant (MMSignal *self,
 }
 
 /**
- * mm_signal_new_from_dictionary:
- * @dictionary: A variant dictionary with the signal information.
- * @error: Return location for error or %NULL.
- *
- * Creates a new #MMSignal object with the values exposed in
- * the dictionary.
- *
- * Returns: (transfer full): A #MMSignal or %NULL if @error is set. The returned value should be freed with g_object_unref().
+ * mm_signal_new_from_dictionary: (skip)
  */
 MMSignal *
 mm_signal_new_from_dictionary (GVariant *dictionary,
@@ -450,6 +478,9 @@ mm_signal_new_from_dictionary (GVariant *dictionary,
 
 /*****************************************************************************/
 
+/**
+ * mm_signal_new: (skip)
+ */
 MMSignal *
 mm_signal_new (void)
 {
