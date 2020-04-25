@@ -8,7 +8,7 @@
 <link rel="up" href="pt02.html" title="Part II. Low level API">
 <link rel="prev" href="MmGdbusObjectSkeleton.html" title="MmGdbusObjectSkeleton">
 <link rel="next" href="MmGdbusModemProxy.html" title="MmGdbusModemProxy">
-<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -1078,7 +1078,8 @@ mm_gdbus_modem_get_access_technologies
 mm_gdbus_modem_get_bearers (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers">"Bearers"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-bearers" title="mm_gdbus_modem_dup_bearers ()"><code class="function">mm_gdbus_modem_dup_bearers()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-bearers" title="mm_gdbus_modem_dup_bearers ()"><code class="function">mm_gdbus_modem_dup_bearers()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-bearers.parameters"></a><h4>Parameters</h4>
@@ -1138,7 +1139,8 @@ mm_gdbus_modem_dup_bearers (<em class="parameter"><code><a class="link" href="Mm
 mm_gdbus_modem_get_current_modes (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentModes">"CurrentModes"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-current-modes" title="mm_gdbus_modem_dup_current_modes ()"><code class="function">mm_gdbus_modem_dup_current_modes()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-current-modes" title="mm_gdbus_modem_dup_current_modes ()"><code class="function">mm_gdbus_modem_dup_current_modes()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-current-modes.parameters"></a><h4>Parameters</h4>
@@ -1198,7 +1200,8 @@ mm_gdbus_modem_dup_current_modes (<em class="parameter"><code><a class="link" hr
 mm_gdbus_modem_get_current_bands (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentBands">"CurrentBands"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-current-bands" title="mm_gdbus_modem_dup_current_bands ()"><code class="function">mm_gdbus_modem_dup_current_bands()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-current-bands" title="mm_gdbus_modem_dup_current_bands ()"><code class="function">mm_gdbus_modem_dup_current_bands()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-current-bands.parameters"></a><h4>Parameters</h4>
@@ -1287,7 +1290,8 @@ mm_gdbus_modem_get_current_capabilities
 mm_gdbus_modem_get_device (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Device">"Device"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-device" title="mm_gdbus_modem_dup_device ()"><code class="function">mm_gdbus_modem_dup_device()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-device" title="mm_gdbus_modem_dup_device ()"><code class="function">mm_gdbus_modem_dup_device()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-device.parameters"></a><h4>Parameters</h4>
@@ -1347,7 +1351,8 @@ mm_gdbus_modem_dup_device (<em class="parameter"><code><a class="link" href="MmG
 mm_gdbus_modem_get_device_identifier (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.DeviceIdentifier">"DeviceIdentifier"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-device-identifier" title="mm_gdbus_modem_dup_device_identifier ()"><code class="function">mm_gdbus_modem_dup_device_identifier()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-device-identifier" title="mm_gdbus_modem_dup_device_identifier ()"><code class="function">mm_gdbus_modem_dup_device_identifier()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-device-identifier.parameters"></a><h4>Parameters</h4>
@@ -1407,7 +1412,8 @@ mm_gdbus_modem_dup_device_identifier (<em class="parameter"><code><a class="link
 mm_gdbus_modem_get_drivers (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Drivers">"Drivers"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-drivers" title="mm_gdbus_modem_dup_drivers ()"><code class="function">mm_gdbus_modem_dup_drivers()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-drivers" title="mm_gdbus_modem_dup_drivers ()"><code class="function">mm_gdbus_modem_dup_drivers()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-drivers.parameters"></a><h4>Parameters</h4>
@@ -1468,7 +1474,8 @@ mm_gdbus_modem_get_equipment_identifier
                                (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.EquipmentIdentifier">"EquipmentIdentifier"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-equipment-identifier" title="mm_gdbus_modem_dup_equipment_identifier ()"><code class="function">mm_gdbus_modem_dup_equipment_identifier()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-equipment-identifier" title="mm_gdbus_modem_dup_equipment_identifier ()"><code class="function">mm_gdbus_modem_dup_equipment_identifier()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-equipment-identifier.parameters"></a><h4>Parameters</h4>
@@ -1529,7 +1536,8 @@ mm_gdbus_modem_dup_equipment_identifier
 mm_gdbus_modem_get_manufacturer (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Manufacturer">"Manufacturer"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-manufacturer" title="mm_gdbus_modem_dup_manufacturer ()"><code class="function">mm_gdbus_modem_dup_manufacturer()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-manufacturer" title="mm_gdbus_modem_dup_manufacturer ()"><code class="function">mm_gdbus_modem_dup_manufacturer()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-manufacturer.parameters"></a><h4>Parameters</h4>
@@ -1645,7 +1653,8 @@ mm_gdbus_modem_get_max_bearers (<em class="parameter"><code><a class="link" href
 mm_gdbus_modem_get_model (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Model">"Model"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-model" title="mm_gdbus_modem_dup_model ()"><code class="function">mm_gdbus_modem_dup_model()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-model" title="mm_gdbus_modem_dup_model ()"><code class="function">mm_gdbus_modem_dup_model()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-model.parameters"></a><h4>Parameters</h4>
@@ -1705,7 +1714,8 @@ mm_gdbus_modem_dup_model (<em class="parameter"><code><a class="link" href="MmGd
 mm_gdbus_modem_get_own_numbers (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.OwnNumbers">"OwnNumbers"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-own-numbers" title="mm_gdbus_modem_dup_own_numbers ()"><code class="function">mm_gdbus_modem_dup_own_numbers()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-own-numbers" title="mm_gdbus_modem_dup_own_numbers ()"><code class="function">mm_gdbus_modem_dup_own_numbers()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-own-numbers.parameters"></a><h4>Parameters</h4>
@@ -1765,7 +1775,8 @@ mm_gdbus_modem_dup_own_numbers (<em class="parameter"><code><a class="link" href
 mm_gdbus_modem_get_plugin (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Plugin">"Plugin"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-plugin" title="mm_gdbus_modem_dup_plugin ()"><code class="function">mm_gdbus_modem_dup_plugin()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-plugin" title="mm_gdbus_modem_dup_plugin ()"><code class="function">mm_gdbus_modem_dup_plugin()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-plugin.parameters"></a><h4>Parameters</h4>
@@ -1853,7 +1864,8 @@ mm_gdbus_modem_get_power_state (<em class="parameter"><code><a class="link" href
 mm_gdbus_modem_get_primary_port (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.PrimaryPort">"PrimaryPort"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-primary-port" title="mm_gdbus_modem_dup_primary_port ()"><code class="function">mm_gdbus_modem_dup_primary_port()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-primary-port" title="mm_gdbus_modem_dup_primary_port ()"><code class="function">mm_gdbus_modem_dup_primary_port()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-primary-port.parameters"></a><h4>Parameters</h4>
@@ -1913,7 +1925,8 @@ mm_gdbus_modem_dup_primary_port (<em class="parameter"><code><a class="link" hre
 mm_gdbus_modem_get_ports (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Ports">"Ports"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-ports" title="mm_gdbus_modem_dup_ports ()"><code class="function">mm_gdbus_modem_dup_ports()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-ports" title="mm_gdbus_modem_dup_ports ()"><code class="function">mm_gdbus_modem_dup_ports()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-ports.parameters"></a><h4>Parameters</h4>
@@ -1973,7 +1986,8 @@ mm_gdbus_modem_dup_ports (<em class="parameter"><code><a class="link" href="MmGd
 mm_gdbus_modem_get_revision (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Revision">"Revision"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-revision" title="mm_gdbus_modem_dup_revision ()"><code class="function">mm_gdbus_modem_dup_revision()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-revision" title="mm_gdbus_modem_dup_revision ()"><code class="function">mm_gdbus_modem_dup_revision()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-revision.parameters"></a><h4>Parameters</h4>
@@ -2034,7 +2048,8 @@ mm_gdbus_modem_get_carrier_configuration
                                (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfiguration">"CarrierConfiguration"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-carrier-configuration" title="mm_gdbus_modem_dup_carrier_configuration ()"><code class="function">mm_gdbus_modem_dup_carrier_configuration()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-carrier-configuration" title="mm_gdbus_modem_dup_carrier_configuration ()"><code class="function">mm_gdbus_modem_dup_carrier_configuration()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-carrier-configuration.parameters"></a><h4>Parameters</h4>
@@ -2096,7 +2111,8 @@ mm_gdbus_modem_get_carrier_configuration_revision
                                (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfigurationRevision">"CarrierConfigurationRevision"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-carrier-configuration-revision" title="mm_gdbus_modem_dup_carrier_configuration_revision ()"><code class="function">mm_gdbus_modem_dup_carrier_configuration_revision()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-carrier-configuration-revision" title="mm_gdbus_modem_dup_carrier_configuration_revision ()"><code class="function">mm_gdbus_modem_dup_carrier_configuration_revision()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-carrier-configuration-revision.parameters"></a><h4>Parameters</h4>
@@ -2157,7 +2173,8 @@ mm_gdbus_modem_dup_carrier_configuration_revision
 mm_gdbus_modem_get_hardware_revision (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.HardwareRevision">"HardwareRevision"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-hardware-revision" title="mm_gdbus_modem_dup_hardware_revision ()"><code class="function">mm_gdbus_modem_dup_hardware_revision()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-hardware-revision" title="mm_gdbus_modem_dup_hardware_revision ()"><code class="function">mm_gdbus_modem_dup_hardware_revision()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-hardware-revision.parameters"></a><h4>Parameters</h4>
@@ -2217,7 +2234,8 @@ mm_gdbus_modem_dup_hardware_revision (<em class="parameter"><code><a class="link
 mm_gdbus_modem_get_signal_quality (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SignalQuality">"SignalQuality"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-signal-quality" title="mm_gdbus_modem_dup_signal_quality ()"><code class="function">mm_gdbus_modem_dup_signal_quality()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-signal-quality" title="mm_gdbus_modem_dup_signal_quality ()"><code class="function">mm_gdbus_modem_dup_signal_quality()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-signal-quality.parameters"></a><h4>Parameters</h4>
@@ -2277,7 +2295,8 @@ mm_gdbus_modem_dup_signal_quality (<em class="parameter"><code><a class="link" h
 mm_gdbus_modem_get_sim (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Sim">"Sim"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-sim" title="mm_gdbus_modem_dup_sim ()"><code class="function">mm_gdbus_modem_dup_sim()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-sim" title="mm_gdbus_modem_dup_sim ()"><code class="function">mm_gdbus_modem_dup_sim()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-sim.parameters"></a><h4>Parameters</h4>
@@ -2338,7 +2357,8 @@ mm_gdbus_modem_get_supported_capabilities
                                (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities">"SupportedCapabilities"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-supported-capabilities" title="mm_gdbus_modem_dup_supported_capabilities ()"><code class="function">mm_gdbus_modem_dup_supported_capabilities()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-supported-capabilities" title="mm_gdbus_modem_dup_supported_capabilities ()"><code class="function">mm_gdbus_modem_dup_supported_capabilities()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-supported-capabilities.parameters"></a><h4>Parameters</h4>
@@ -2456,7 +2476,8 @@ mm_gdbus_modem_get_state_failed_reason
 mm_gdbus_modem_get_supported_bands (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedBands">"SupportedBands"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-supported-bands" title="mm_gdbus_modem_dup_supported_bands ()"><code class="function">mm_gdbus_modem_dup_supported_bands()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-supported-bands" title="mm_gdbus_modem_dup_supported_bands ()"><code class="function">mm_gdbus_modem_dup_supported_bands()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-supported-bands.parameters"></a><h4>Parameters</h4>
@@ -2545,7 +2566,8 @@ mm_gdbus_modem_get_supported_ip_families
 mm_gdbus_modem_get_supported_modes (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedModes">"SupportedModes"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-supported-modes" title="mm_gdbus_modem_dup_supported_modes ()"><code class="function">mm_gdbus_modem_dup_supported_modes()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-supported-modes" title="mm_gdbus_modem_dup_supported_modes ()"><code class="function">mm_gdbus_modem_dup_supported_modes()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-supported-modes.parameters"></a><h4>Parameters</h4>
@@ -2633,7 +2655,8 @@ mm_gdbus_modem_get_unlock_required (<em class="parameter"><code><a class="link" 
 mm_gdbus_modem_get_unlock_retries (<em class="parameter"><code><a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><span class="type">MmGdbusModem</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.UnlockRetries">"UnlockRetries"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-unlock-retries" title="mm_gdbus_modem_dup_unlock_retries ()"><code class="function">mm_gdbus_modem_dup_unlock_retries()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-dup-unlock-retries" title="mm_gdbus_modem_dup_unlock_retries ()"><code class="function">mm_gdbus_modem_dup_unlock_retries()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem-get-unlock-retries.parameters"></a><h4>Parameters</h4>
@@ -2698,7 +2721,7 @@ mm_gdbus_modem_call_enable (<em class="parameter"><code><a class="link" href="Mm
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.Enable"><GTKDOCLINK HREF="Enable"><code class="function">Enable()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-enable-finish" title="mm_gdbus_modem_call_enable_finish ()"><code class="function">mm_gdbus_modem_call_enable_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-enable-sync" title="mm_gdbus_modem_call_enable_sync ()"><code class="function">mm_gdbus_modem_call_enable_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -2844,7 +2867,7 @@ mm_gdbus_modem_call_set_power_state (<em class="parameter"><code><a class="link"
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.SetPowerState"><GTKDOCLINK HREF="SetPowerState"><code class="function">SetPowerState()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-set-power-state-finish" title="mm_gdbus_modem_call_set_power_state_finish ()"><code class="function">mm_gdbus_modem_call_set_power_state_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-set-power-state-sync" title="mm_gdbus_modem_call_set_power_state_sync ()"><code class="function">mm_gdbus_modem_call_set_power_state_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -2992,7 +3015,7 @@ mm_gdbus_modem_call_create_bearer (<em class="parameter"><code><a class="link" h
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.CreateBearer"><GTKDOCLINK HREF="CreateBearer"><code class="function">CreateBearer()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-create-bearer-finish" title="mm_gdbus_modem_call_create_bearer_finish ()"><code class="function">mm_gdbus_modem_call_create_bearer_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-create-bearer-sync" title="mm_gdbus_modem_call_create_bearer_sync ()"><code class="function">mm_gdbus_modem_call_create_bearer_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -3152,7 +3175,7 @@ mm_gdbus_modem_call_delete_bearer (<em class="parameter"><code><a class="link" h
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.DeleteBearer"><GTKDOCLINK HREF="DeleteBearer"><code class="function">DeleteBearer()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-delete-bearer-finish" title="mm_gdbus_modem_call_delete_bearer_finish ()"><code class="function">mm_gdbus_modem_call_delete_bearer_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-delete-bearer-sync" title="mm_gdbus_modem_call_delete_bearer_sync ()"><code class="function">mm_gdbus_modem_call_delete_bearer_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -3299,7 +3322,7 @@ mm_gdbus_modem_call_list_bearers (<em class="parameter"><code><a class="link" hr
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.ListBearers"><GTKDOCLINK HREF="ListBearers"><code class="function">ListBearers()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-list-bearers-finish" title="mm_gdbus_modem_call_list_bearers_finish ()"><code class="function">mm_gdbus_modem_call_list_bearers_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-list-bearers-sync" title="mm_gdbus_modem_call_list_bearers_sync ()"><code class="function">mm_gdbus_modem_call_list_bearers_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -3446,7 +3469,7 @@ mm_gdbus_modem_call_reset (<em class="parameter"><code><a class="link" href="MmG
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.Reset"><GTKDOCLINK HREF="Reset"><code class="function">Reset()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-reset-finish" title="mm_gdbus_modem_call_reset_finish ()"><code class="function">mm_gdbus_modem_call_reset_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-reset-sync" title="mm_gdbus_modem_call_reset_sync ()"><code class="function">mm_gdbus_modem_call_reset_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -3581,7 +3604,7 @@ mm_gdbus_modem_call_factory_reset (<em class="parameter"><code><a class="link" h
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.FactoryReset"><GTKDOCLINK HREF="FactoryReset"><code class="function">FactoryReset()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-factory-reset-finish" title="mm_gdbus_modem_call_factory_reset_finish ()"><code class="function">mm_gdbus_modem_call_factory_reset_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-factory-reset-sync" title="mm_gdbus_modem_call_factory_reset_sync ()"><code class="function">mm_gdbus_modem_call_factory_reset_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -3729,7 +3752,7 @@ mm_gdbus_modem_call_set_current_modes (<em class="parameter"><code><a class="lin
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.SetCurrentModes"><GTKDOCLINK HREF="SetCurrentModes"><code class="function">SetCurrentModes()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-set-current-modes-finish" title="mm_gdbus_modem_call_set_current_modes_finish ()"><code class="function">mm_gdbus_modem_call_set_current_modes_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-set-current-modes-sync" title="mm_gdbus_modem_call_set_current_modes_sync ()"><code class="function">mm_gdbus_modem_call_set_current_modes_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -3877,7 +3900,7 @@ mm_gdbus_modem_call_set_current_bands (<em class="parameter"><code><a class="lin
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.SetCurrentBands"><GTKDOCLINK HREF="SetCurrentBands"><code class="function">SetCurrentBands()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-set-current-bands-finish" title="mm_gdbus_modem_call_set_current_bands_finish ()"><code class="function">mm_gdbus_modem_call_set_current_bands_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-set-current-bands-sync" title="mm_gdbus_modem_call_set_current_bands_sync ()"><code class="function">mm_gdbus_modem_call_set_current_bands_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -4026,7 +4049,7 @@ mm_gdbus_modem_call_set_current_capabilities
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.SetCurrentCapabilities"><GTKDOCLINK HREF="SetCurrentCapabilities"><code class="function">SetCurrentCapabilities()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-set-current-capabilities-finish" title="mm_gdbus_modem_call_set_current_capabilities_finish ()"><code class="function">mm_gdbus_modem_call_set_current_capabilities_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-set-current-capabilities-sync" title="mm_gdbus_modem_call_set_current_capabilities_sync ()"><code class="function">mm_gdbus_modem_call_set_current_capabilities_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -4175,7 +4198,7 @@ mm_gdbus_modem_call_command (<em class="parameter"><code><a class="link" href="M
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.Command"><GTKDOCLINK HREF="Command"><code class="function">Command()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-command-finish" title="mm_gdbus_modem_call_command_finish ()"><code class="function">mm_gdbus_modem_call_command_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem.html#mm-gdbus-modem-call-command-sync" title="mm_gdbus_modem_call_command_sync ()"><code class="function">mm_gdbus_modem_call_command_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -5625,6 +5648,6 @@ user_function (<a class="link" href="MmGdbusModem.html" title="MmGdbusModem"><sp
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.32</div>
+<hr>Generated by GTK-Doc V1.32.1</div>
 </body>
 </html>

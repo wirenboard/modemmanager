@@ -8,7 +8,7 @@
 <link rel="up" href="pt02.html" title="Part II. Low level API">
 <link rel="prev" href="MmGdbusModem3gppSkeleton.html" title="MmGdbusModem3gppSkeleton">
 <link rel="next" href="MmGdbusModem3gppUssdProxy.html" title="MmGdbusModem3gppUssdProxy">
-<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -291,7 +291,8 @@ mm_gdbus_modem3gpp_ussd_get_network_request
                                (<em class="parameter"><code><a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd"><span class="type">MmGdbusModem3gppUssd</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.NetworkRequest">"NetworkRequest"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-dup-network-request" title="mm_gdbus_modem3gpp_ussd_dup_network_request ()"><code class="function">mm_gdbus_modem3gpp_ussd_dup_network_request()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-dup-network-request" title="mm_gdbus_modem3gpp_ussd_dup_network_request ()"><code class="function">mm_gdbus_modem3gpp_ussd_dup_network_request()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem3gpp-ussd-get-network-request.parameters"></a><h4>Parameters</h4>
@@ -353,7 +354,8 @@ mm_gdbus_modem3gpp_ussd_get_network_notification
                                (<em class="parameter"><code><a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd"><span class="type">MmGdbusModem3gppUssd</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.NetworkNotification">"NetworkNotification"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-dup-network-notification" title="mm_gdbus_modem3gpp_ussd_dup_network_notification ()"><code class="function">mm_gdbus_modem3gpp_ussd_dup_network_notification()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-dup-network-notification" title="mm_gdbus_modem3gpp_ussd_dup_network_notification ()"><code class="function">mm_gdbus_modem3gpp_ussd_dup_network_notification()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-modem3gpp-ussd-get-network-notification.parameters"></a><h4>Parameters</h4>
@@ -419,7 +421,7 @@ mm_gdbus_modem3gpp_ussd_call_initiate (<em class="parameter"><code><a class="lin
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Initiate"><GTKDOCLINK HREF="Initiate"><code class="function">Initiate()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-call-initiate-finish" title="mm_gdbus_modem3gpp_ussd_call_initiate_finish ()"><code class="function">mm_gdbus_modem3gpp_ussd_call_initiate_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-call-initiate-sync" title="mm_gdbus_modem3gpp_ussd_call_initiate_sync ()"><code class="function">mm_gdbus_modem3gpp_ussd_call_initiate_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -579,7 +581,7 @@ mm_gdbus_modem3gpp_ussd_call_respond (<em class="parameter"><code><a class="link
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Respond"><GTKDOCLINK HREF="Respond"><code class="function">Respond()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-call-respond-finish" title="mm_gdbus_modem3gpp_ussd_call_respond_finish ()"><code class="function">mm_gdbus_modem3gpp_ussd_call_respond_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-call-respond-sync" title="mm_gdbus_modem3gpp_ussd_call_respond_sync ()"><code class="function">mm_gdbus_modem3gpp_ussd_call_respond_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -738,7 +740,7 @@ mm_gdbus_modem3gpp_ussd_call_cancel (<em class="parameter"><code><a class="link"
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Cancel"><GTKDOCLINK HREF="Cancel"><code class="function">Cancel()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-call-cancel-finish" title="mm_gdbus_modem3gpp_ussd_call_cancel_finish ()"><code class="function">mm_gdbus_modem3gpp_ussd_call_cancel_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-call-cancel-sync" title="mm_gdbus_modem3gpp_ussd_call_cancel_sync ()"><code class="function">mm_gdbus_modem3gpp_ussd_call_cancel_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -1125,6 +1127,6 @@ user_function (<a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusMo
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.32</div>
+<hr>Generated by GTK-Doc V1.32.1</div>
 </body>
 </html>

@@ -8,7 +8,7 @@
 <link rel="up" href="pt02.html" title="Part II. Low level API">
 <link rel="prev" href="MmGdbusBearerSkeleton.html" title="MmGdbusBearerSkeleton">
 <link rel="next" href="MmGdbusSimProxy.html" title="MmGdbusSimProxy">
-<meta name="generator" content="GTK-Doc V1.32 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.32.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -340,7 +340,8 @@ MmGdbusSim is implemented by
 mm_gdbus_sim_get_imsi (<em class="parameter"><code><a class="link" href="MmGdbusSim.html" title="MmGdbusSim"><span class="type">MmGdbusSim</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.Imsi">"Imsi"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-imsi" title="mm_gdbus_sim_dup_imsi ()"><code class="function">mm_gdbus_sim_dup_imsi()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-imsi" title="mm_gdbus_sim_dup_imsi ()"><code class="function">mm_gdbus_sim_dup_imsi()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-sim-get-imsi.parameters"></a><h4>Parameters</h4>
@@ -400,7 +401,8 @@ mm_gdbus_sim_dup_imsi (<em class="parameter"><code><a class="link" href="MmGdbus
 mm_gdbus_sim_get_sim_identifier (<em class="parameter"><code><a class="link" href="MmGdbusSim.html" title="MmGdbusSim"><span class="type">MmGdbusSim</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.SimIdentifier">"SimIdentifier"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-sim-identifier" title="mm_gdbus_sim_dup_sim_identifier ()"><code class="function">mm_gdbus_sim_dup_sim_identifier()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-sim-identifier" title="mm_gdbus_sim_dup_sim_identifier ()"><code class="function">mm_gdbus_sim_dup_sim_identifier()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-sim-get-sim-identifier.parameters"></a><h4>Parameters</h4>
@@ -460,7 +462,8 @@ mm_gdbus_sim_dup_sim_identifier (<em class="parameter"><code><a class="link" hre
 mm_gdbus_sim_get_operator_identifier (<em class="parameter"><code><a class="link" href="MmGdbusSim.html" title="MmGdbusSim"><span class="type">MmGdbusSim</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorIdentifier">"OperatorIdentifier"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-operator-identifier" title="mm_gdbus_sim_dup_operator_identifier ()"><code class="function">mm_gdbus_sim_dup_operator_identifier()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-operator-identifier" title="mm_gdbus_sim_dup_operator_identifier ()"><code class="function">mm_gdbus_sim_dup_operator_identifier()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-sim-get-operator-identifier.parameters"></a><h4>Parameters</h4>
@@ -520,7 +523,8 @@ mm_gdbus_sim_dup_operator_identifier (<em class="parameter"><code><a class="link
 mm_gdbus_sim_get_operator_name (<em class="parameter"><code><a class="link" href="MmGdbusSim.html" title="MmGdbusSim"><span class="type">MmGdbusSim</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorName">"OperatorName"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-operator-name" title="mm_gdbus_sim_dup_operator_name ()"><code class="function">mm_gdbus_sim_dup_operator_name()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-operator-name" title="mm_gdbus_sim_dup_operator_name ()"><code class="function">mm_gdbus_sim_dup_operator_name()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-sim-get-operator-name.parameters"></a><h4>Parameters</h4>
@@ -580,7 +584,8 @@ mm_gdbus_sim_dup_operator_name (<em class="parameter"><code><a class="link" href
 mm_gdbus_sim_get_emergency_numbers (<em class="parameter"><code><a class="link" href="MmGdbusSim.html" title="MmGdbusSim"><span class="type">MmGdbusSim</span></a> *object</code></em>);</pre>
 <p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers">"EmergencyNumbers"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
-<div class="warning">The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em> was constructed. Use <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-emergency-numbers" title="mm_gdbus_sim_dup_emergency_numbers ()"><code class="function">mm_gdbus_sim_dup_emergency_numbers()</code></a> if on another thread.</div>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-dup-emergency-numbers" title="mm_gdbus_sim_dup_emergency_numbers ()"><code class="function">mm_gdbus_sim_dup_emergency_numbers()</code></a> if on another thread.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
 <a name="mm-gdbus-sim-get-emergency-numbers.parameters"></a><h4>Parameters</h4>
@@ -645,7 +650,7 @@ mm_gdbus_sim_call_send_pin (<em class="parameter"><code><a class="link" href="Mm
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.SendPin"><GTKDOCLINK HREF="SendPin"><code class="function">SendPin()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-call-send-pin-finish" title="mm_gdbus_sim_call_send_pin_finish ()"><code class="function">mm_gdbus_sim_call_send_pin_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-call-send-pin-sync" title="mm_gdbus_sim_call_send_pin_sync ()"><code class="function">mm_gdbus_sim_call_send_pin_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -792,7 +797,7 @@ mm_gdbus_sim_call_send_puk (<em class="parameter"><code><a class="link" href="Mm
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.SendPuk"><GTKDOCLINK HREF="SendPuk"><code class="function">SendPuk()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-call-send-puk-finish" title="mm_gdbus_sim_call_send_puk_finish ()"><code class="function">mm_gdbus_sim_call_send_puk_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-call-send-puk-sync" title="mm_gdbus_sim_call_send_puk_sync ()"><code class="function">mm_gdbus_sim_call_send_puk_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -950,7 +955,7 @@ mm_gdbus_sim_call_enable_pin (<em class="parameter"><code><a class="link" href="
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.EnablePin"><GTKDOCLINK HREF="EnablePin"><code class="function">EnablePin()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-call-enable-pin-finish" title="mm_gdbus_sim_call_enable_pin_finish ()"><code class="function">mm_gdbus_sim_call_enable_pin_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-call-enable-pin-sync" title="mm_gdbus_sim_call_enable_pin_sync ()"><code class="function">mm_gdbus_sim_call_enable_pin_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -1108,7 +1113,7 @@ mm_gdbus_sim_call_change_pin (<em class="parameter"><code><a class="link" href="
 <p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.ChangePin"><GTKDOCLINK HREF="ChangePin"><code class="function">ChangePin()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
- will be invoked in the <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default">thread-default main loop</a> of the thread you are calling this method from.
+ will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
 You can then call <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-call-change-pin-finish" title="mm_gdbus_sim_call_change_pin_finish ()"><code class="function">mm_gdbus_sim_call_change_pin_finish()</code></a> to get the result of the operation.</p>
 <p>See <a class="link" href="MmGdbusSim.html#mm-gdbus-sim-call-change-pin-sync" title="mm_gdbus_sim_call_change_pin_sync ()"><code class="function">mm_gdbus_sim_call_change_pin_sync()</code></a> for the synchronous, blocking version of this method.</p>
 <div class="refsect3">
@@ -1635,6 +1640,6 @@ user_function (<a class="link" href="MmGdbusSim.html" title="MmGdbusSim"><span c
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.32</div>
+<hr>Generated by GTK-Doc V1.32.1</div>
 </body>
 </html>

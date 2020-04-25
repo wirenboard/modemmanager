@@ -1,3 +1,303 @@
+commit a0e4e73c79ee125f499e4aa433183d293c75ef13
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Mar 14 09:59:13 2020 +0100
+
+    release: bump version to 1.12.8
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit bfe831eda23fd439856bd9c6a01bef69cba66498
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Mar 14 09:58:46 2020 +0100
+
+    NEWS: update for 1.12.8
+
+ NEWS | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+commit 96414cc3b26d5af20024836e8336c5f10c192f3a
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Feb 20 16:11:42 2020 +0100
+
+    kerneldevice,udev: don't assume interface is the direct parent object
+
+    E.g. it may be one more layer up:
+
+      looking at device
+      '/devices/pci0000:00/0000:00:14.0/usb1/1-8/1-8.4/1-8.4:1.1/ttyUSB1/tty/ttyUSB1':
+        KERNEL=="ttyUSB1"
+        SUBSYSTEM=="tty"
+        DRIVER==""
+
+      looking at parent device
+      '/devices/pci0000:00/0000:00:14.0/usb1/1-8/1-8.4/1-8.4:1.1/ttyUSB1':
+        KERNELS=="ttyUSB1"
+        SUBSYSTEMS=="usb-serial"
+        DRIVERS=="option1"
+        ATTRS{port_number}=="0"
+
+      looking at parent device
+      '/devices/pci0000:00/0000:00:14.0/usb1/1-8/1-8.4/1-8.4:1.1':
+        KERNELS=="1-8.4:1.1"
+        SUBSYSTEMS=="usb"
+        DRIVERS=="option"
+        ATTRS{bNumEndpoints}=="02"
+        ATTRS{supports_autosuspend}=="1"
+        ATTRS{bInterfaceNumber}=="01"
+        ATTRS{bAlternateSetting}==" 0"
+        ATTRS{bInterfaceSubClass}=="06"
+        ATTRS{bInterfaceProtocol}=="13"
+        ATTRS{interface}=="Huawei Mobile Connect - Application"
+        ATTRS{bInterfaceClass}=="ff"
+        ATTRS{authorized}=="1"
+
+    (cherry picked from commit b9e6f30ba835f5019db55d98631f6571fdc575ef)
+
+ src/kerneldevice/mm-kernel-device-udev.c | 62
+ +++++++++++++++++++++++---------
+ 1 file changed, 46 insertions(+), 16 deletions(-)
+
+commit 593a942a63a5a61fdb7146ed41dd24ec390fa197
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Jan 21 12:21:28 2020 +0100
+
+    huawei: only tag GETPORTMODE supported if it was really used
+
+    E.g. do nothing if the response is empty:
+
+     <debug> (ttyUSB1): -->'AT^GETPORTMODE<CR>'
+     <debug> (ttyUSB1): <--'<CR><LF>^GETPORTMODE: TYPE: WCDMA: Huawei
+     Technologies Co.,Ltd.,<CR><LF><CR><LF>OK<CR><LF>'
+
+    (cherry picked from commit 6eabfd27bf3c4c53d7779722b46e7261d22c1d92)
+
+ plugins/huawei/mm-plugin-huawei.c | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
+
+commit a9966e2e59959a50204f0e2a5959ffcca909f466
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Dec 27 22:47:36 2019 +0100
+
+    huawei: try to read port type hints from interface descriptions
+
+    So far, we're really only interested in the "modem" and "pcui" ports.
+
+      root@9d52738:/sys/devices/platform/soc/3f980000.usb/usb1/1-1/1-1.4#
+      find . -name interface|sort
+      ./1-1.4:2.0/interface
+      ./1-1.4:2.1/interface
+      ./1-1.4:2.2/interface
+      ./1-1.4:2.3/interface
+      ./1-1.4:2.4/interface
+      ./1-1.4:2.5/interface
+      ./1-1.4:2.6/interface
+
+      root@9d52738:/sys/devices/platform/soc/3f980000.usb/usb1/1-1/1-1.4#
+      find . -name interface|sort|xargs cat
+      CDC Ethernet Control Model (ECM)
+      CDC Ethernet Data
+      Huawei Mobile Connect - Modem
+      Huawei Mobile Connect - Application
+      Huawei Mobile Connect - Pcui
+      Huawei Mobile Connect - Ctrl
+      Huawei Mobile Connect - Serial B
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/issues/170
+
+    (cherry picked from commit 353e27065dc9d8cf95e0ad81e14aae61648e2c85)
+
+ plugins/huawei/mm-plugin-huawei.c | 63
+ +++++++++++++++++++++++++++------------
+ 1 file changed, 44 insertions(+), 19 deletions(-)
+
+commit 50622a4182b74971c6feec5ee0bf5b26ee48b828
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Dec 27 22:24:24 2019 +0100
+
+    kerneldevice: support reading interface 'description'
+
+    (cherry picked from commit 9ef84d2cff27e99c2e805d636528d1740bc4985a)
+
+ src/kerneldevice/mm-kernel-device-generic.c | 93
+ ++++++++++++++++++-----------
+ src/kerneldevice/mm-kernel-device-udev.c    | 13 ++++
+ src/kerneldevice/mm-kernel-device.c         | 10 ++++
+ src/kerneldevice/mm-kernel-device.h         | 18 +++---
+ 4 files changed, 90 insertions(+), 44 deletions(-)
+
+commit a77a449cd8c5638d4de0e52e2ff045751c67bc32
+Author: Bob Ham <bob.ham@puri.sm>
+Date:   Tue Feb 4 11:21:34 2020 +0000
+
+    broadband-modem: add optional extra carriage return to in-call
+    URC regex
+
+    The BroadMobi BM818 has inconsitent line endings and the in-call URC
+    regex can miss events, particularly NO CARRIER, because the regex
+    doesn't match.  To fix this we add an optional carriage return to the
+    regex.  This will match for the BM818's output.
+
+    (cherry picked from commit a7a8fc909abeb0abe092feb2603d27216f0e1325)
+
+ src/mm-broadband-modem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 506fdb65ca21907e528565335db2ad5e8c9f437b
+Author: Bob Ham <bob.ham@puri.sm>
+Date:   Tue Feb 4 11:09:45 2020 +0000
+
+    broadband-modem: add secondary AT port to in-call port context
+
+    The BroadMobi BM818 sends URCs on the secondary port which are
+    currently missed.  To fix this, we include the secondary port in the
+    port context.
+
+    (cherry picked from commit 38d7cc6683008394f51cadc6b66446ba96c5f388)
+
+ src/mm-broadband-modem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 8db4669a114210c5c004e1e950d6a4787d07f175
+Author: Bob Ham <bob.ham@puri.sm>
+Date:   Tue Feb 4 11:05:07 2020 +0000
+
+    iface-modem-voice: report calls only if +CLCC was successful
+
+    The BroadMobi BM818 can time out with +CLCC calls.  When this happens,
+    active calls are terminated due to reporting an empty list.  To fix
+    this, we only report the call list if the +CLCC didn't result in an
+    error.
+
+    (cherry picked from commit e128210a27e78b7d421993a610a12871ed922e19)
+
+ src/mm-iface-modem-voice.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+commit 448d93bebc8ef7062548edc62bc9e19659bd870a
+Author: Bob Ham <bob.ham@puri.sm>
+Date:   Thu Feb 6 15:08:17 2020 +0000
+
+    iface-modem-voice: log details when ending call missing from call list
+
+    If a call is missing from the +CLCC call list and terminated because
+    of that, add a debugging statement to log the call details.
+
+    (cherry picked from commit 2c9760af66454e492f601b9f12d3ad87de93765b)
+
+ src/mm-iface-modem-voice.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+commit b405dfabb1c207a333a47d88880701be0a1503b9
+Author: Bob Ham <bob.ham@puri.sm>
+Date:   Mon Feb 3 15:31:30 2020 +0000
+
+    iface-modem-voice: match calls in call list by number
+
+    Outgoing calls which ring before the first +CLCC response cannot match
+    on the direction/state and are terminated, at least on the BroadMobi
+    BM818.  For example:
+
+    <debug> 1 calls being established: call list polling required
+    <debug> (ttyUSB1) device open count is 3 (open)
+    <debug> (ttyUSB1): --> 'AT+CLCC<CR>'
+    <debug> (ttyUSB1): <-- '<CR><LF>+CLCC: 1,1,0,1,0,"",128<CR><LF>+CLCC:
+    2,0,3,0,0,"07763578094",129<CR><LF><CR><LF>OK<CR><LF>'
+    <debug> Reported 2 ongoing calls
+    <debug> call at index 1: direction incoming, state active, number n/a
+    <debug> call at index 2: direction outgoing, state ringing-out,
+    number 07763578094
+    <info>  Call state changed: dialing -> terminated (unknown)
+    <warn>  unexpected incoming call to number 'n/a' reported in call
+    list: state active
+    <warn>  unexpected outgoing call to number '07763578094' reported
+    in call list: state ringing-out
+
+    To fix this, we match calls in a +CLCC call list by number as
+    well.
+
+    (cherry picked from commit b5d4f045d888e94831b06624a15130c0b181219b)
+
+ src/mm-iface-modem-voice.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+commit 6be1f4d3f1b9e1a2c9471e060ccd2f5fae7f8b29
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Nov 13 15:16:42 2019 +0100
+
+    plugin-manager: allow new ports up to 1500ms since last port added
+
+    Until now we had only a 2500ms timeout initialized since the first
+    port was exposed until we decided we were ready to consider all ports
+    notified by the kernel.
+
+    With this new logic, we add an additional condition: even if the
+    2500ms initial timeout has elapsed already, we leave an additional
+    1500ms since the last port addition for new ports to appear.
+
+    This new logic is useful when relying on the ReportKernelEvent() DBus
+    method, as it is the user the one responsible for reporting the kernel
+    events instead of udev. Now, the user is not forced to make sure all
+    ports are exposed in 2500ms; instead, we also allow ports to be
+    reported in more than 2500ms as long as the time between port
+    additions reported is less than 1500ms.
+
+    Note that this does not mean that the whole probing time will now
+    always be 4000ms. On well behaved systems (like when based on udev)
+    this new 'extra' probing timeout may expire long before the 'min'
+    probing timeout we already had as well.
+
+    E.g. in this setup, the reporting of the NET port was done 1100ms
+    later than the last ttyUSB3, and that was already too late as the
+    original 2500ms threshold had already expired.
+
+     [1573536994.593874] (tty/ttyUSB0): first port in device
+     /sys/devices/platform/ehci-platform/usb1/1-1
+     [1573536994.596659] [plugin manager] task 1: port grabbed: ttyUSB0
+     [1573536995.093579] (tty/ttyUSB1): additional port in device
+     /sys/devices/platform/ehci-platform/usb1/1-1
+     [1573536995.094172] [plugin manager] task 1: port grabbed: ttyUSB1
+     [1573536995.603206] (tty/ttyUSB2): additional port in device
+     /sys/devices/platform/ehci-platform/usb1/1-1
+     [1573536995.603822] [plugin manager] task 1: port grabbed: ttyUSB2
+     [1573536996.111564] (tty/ttyUSB3): additional port in device
+     /sys/devices/platform/ehci-platform/usb1/1-1
+     [1573536996.112257] [plugin manager] task 1: port grabbed: ttyUSB3
+     [1573536996.814816] [device
+     /sys/devices/platform/ehci-platform/usb1/1-1] creating modem with
+     plugin 'Quectel' and '4' ports
+     [1573536997.265820] (net/wwan0): additional port in device
+     /sys/devices/platform/ehci-platform/usb1/1-1
+     [1573536997.296935] (usbmisc/cdc-wdm0): additional port in device
+     /sys/devices/platform/ehci-platform/usb1/1-1
+
+    (cherry picked from commit b4dcb76d5a924d0f49850a2115a377cd8ae6ccf5)
+
+ src/mm-plugin-manager.c | 52
+ +++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 48 insertions(+), 4 deletions(-)
+
+commit 5750a88e011904c122cb76045a8e52b8eb59d3f4
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Feb 26 13:12:20 2020 +0100
+
+    huawei: avoid attempting to complete GTask twice
+
+    (cherry picked from commit 5da33df35b3266f8905578c56a43a56d79726602)
+
+ plugins/huawei/mm-plugin-huawei.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+commit 18b7f3d8cb7123a5bf9eb98096516e2fe50fdb7a
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Feb 12 11:20:11 2020 +0100
+
+    build: post-release version bump to 1.12.7
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 commit 79e61482840f27c894c4deaace9ca282bd4823af
 Author: Aleksander Morgado <aleksander@aleksander.es>
 Date:   Wed Feb 12 11:09:00 2020 +0100
