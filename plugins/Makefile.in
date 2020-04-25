@@ -104,7 +104,8 @@ noinst_PROGRAMS = test-modem-helpers-icera$(EXEEXT) \
 	test-modem-helpers-thuraya$(EXEEXT) \
 	test-modem-helpers-altair-lte$(EXEEXT) \
 	test-modem-helpers-telit$(EXEEXT) \
-	test-modem-helpers-ublox$(EXEEXT) test-udev-rules$(EXEEXT)
+	test-modem-helpers-ublox$(EXEEXT) test-udev-rules$(EXEEXT) \
+	test-keyfiles$(EXEEXT)
 @WITH_MBIM_TRUE@am__append_5 = \
 @WITH_MBIM_TRUE@	xmm/mm-broadband-modem-mbim-xmm.h \
 @WITH_MBIM_TRUE@	xmm/mm-broadband-modem-mbim-xmm.c \
@@ -116,11 +117,16 @@ noinst_PROGRAMS = test-modem-helpers-icera$(EXEEXT) \
 @WITH_QMI_TRUE@	$(NULL)
 
 @WITH_MBIM_TRUE@am__append_7 = \
+@WITH_MBIM_TRUE@	telit/mm-broadband-modem-mbim-telit.h \
+@WITH_MBIM_TRUE@	telit/mm-broadband-modem-mbim-telit.c \
+@WITH_MBIM_TRUE@	$(NULL)
+
+@WITH_MBIM_TRUE@am__append_8 = \
 @WITH_MBIM_TRUE@	dell/mm-broadband-modem-dell-dw5821e.h \
 @WITH_MBIM_TRUE@	dell/mm-broadband-modem-dell-dw5821e.c \
 @WITH_MBIM_TRUE@	$(NULL)
 
-@WITH_QMI_TRUE@am__append_8 = \
+@WITH_QMI_TRUE@am__append_9 = \
 @WITH_QMI_TRUE@	quectel/mm-broadband-modem-qmi-quectel.c \
 @WITH_QMI_TRUE@	quectel/mm-broadband-modem-qmi-quectel.h \
 @WITH_QMI_TRUE@	$(NULL)
@@ -140,8 +146,8 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_code_coverage.m4 \
 	$(top_srcdir)/m4/vapigen.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-DIST_COMMON = $(srcdir)/Makefile.am $(dist_udevrules_DATA) \
-	$(am__DIST_COMMON)
+DIST_COMMON = $(srcdir)/Makefile.am $(dist_pkgdata_DATA) \
+	$(dist_udevrules_DATA) $(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
@@ -174,7 +180,8 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(udevrulesdir)"
+am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(pkgdatadir)" \
+	"$(DESTDIR)$(udevrulesdir)"
 LTLIBRARIES = $(noinst_LTLIBRARIES) $(pkglib_LTLIBRARIES)
 libhelpers_altair_lte_la_LIBADD =
 am__dirstamp = $(am__leading_dot)dirstamp
@@ -621,19 +628,31 @@ am_libmm_utils_sierra_la_OBJECTS = sierra/mm-common-sierra.lo \
 	sierra/mm-broadband-modem-sierra.lo
 libmm_utils_sierra_la_OBJECTS = $(am_libmm_utils_sierra_la_OBJECTS)
 libmm_utils_telit_la_LIBADD =
+am__libmm_utils_telit_la_SOURCES_DIST = telit/mm-common-telit.c \
+	telit/mm-common-telit.h telit/mm-shared-telit.c \
+	telit/mm-shared-telit.h telit/mm-broadband-modem-telit.c \
+	telit/mm-broadband-modem-telit.h \
+	telit/mm-broadband-modem-mbim-telit.h \
+	telit/mm-broadband-modem-mbim-telit.c
+@WITH_MBIM_TRUE@am__objects_6 = telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo
 am_libmm_utils_telit_la_OBJECTS =  \
 	telit/libmm_utils_telit_la-mm-common-telit.lo \
-	telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo
+	telit/libmm_utils_telit_la-mm-shared-telit.lo \
+	telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo \
+	$(am__objects_6)
 libmm_utils_telit_la_OBJECTS = $(am_libmm_utils_telit_la_OBJECTS)
 libmm_utils_xmm_la_DEPENDENCIES = $(builddir)/libhelpers-xmm.la
 am__libmm_utils_xmm_la_SOURCES_DIST = xmm/mm-shared-xmm.h \
 	xmm/mm-shared-xmm.c xmm/mm-broadband-modem-xmm.h \
 	xmm/mm-broadband-modem-xmm.c xmm/mm-broadband-modem-mbim-xmm.h \
 	xmm/mm-broadband-modem-mbim-xmm.c
-@WITH_MBIM_TRUE@am__objects_6 = xmm/mm-broadband-modem-mbim-xmm.lo
+@WITH_MBIM_TRUE@am__objects_7 = xmm/mm-broadband-modem-mbim-xmm.lo
 am_libmm_utils_xmm_la_OBJECTS = xmm/mm-shared-xmm.lo \
-	xmm/mm-broadband-modem-xmm.lo $(am__objects_6)
+	xmm/mm-broadband-modem-xmm.lo $(am__objects_7)
 libmm_utils_xmm_la_OBJECTS = $(am_libmm_utils_xmm_la_OBJECTS)
+am_test_keyfiles_OBJECTS = tests/test-keyfiles.$(OBJEXT)
+test_keyfiles_OBJECTS = $(am_test_keyfiles_OBJECTS)
+test_keyfiles_DEPENDENCIES = $(top_builddir)/libmm-glib/libmm-glib.la
 am_test_modem_helpers_altair_lte_OBJECTS = altair/tests/test_modem_helpers_altair_lte-test-modem-helpers-altair-lte.$(OBJEXT)
 test_modem_helpers_altair_lte_OBJECTS =  \
 	$(am_test_modem_helpers_altair_lte_OBJECTS)
@@ -819,11 +838,14 @@ am__depfiles_remade = altair/$(DEPDIR)/libmm_plugin_altair_lte_la-mm-broadband-b
 	telit/$(DEPDIR)/libhelpers_telit_la-mm-modem-helpers-telit.Plo \
 	telit/$(DEPDIR)/libhelpers_telit_la-mm-telit-enums-types.Plo \
 	telit/$(DEPDIR)/libmm_plugin_telit_la-mm-plugin-telit.Plo \
+	telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Plo \
 	telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Plo \
 	telit/$(DEPDIR)/libmm_utils_telit_la-mm-common-telit.Plo \
+	telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Plo \
 	telit/tests/$(DEPDIR)/test_modem_helpers_telit-test-mm-modem-helpers-telit.Po \
 	tests/$(DEPDIR)/libmm_test_common_la-test-fixture.Plo \
 	tests/$(DEPDIR)/libmm_test_common_la-test-port-context.Plo \
+	tests/$(DEPDIR)/test-keyfiles.Po \
 	tests/$(DEPDIR)/test-udev-rules.Po \
 	thuraya/$(DEPDIR)/libmm_plugin_thuraya_la-mm-broadband-modem-thuraya.Plo \
 	thuraya/$(DEPDIR)/libmm_plugin_thuraya_la-mm-plugin-thuraya.Plo \
@@ -919,6 +941,7 @@ SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(libmm_utils_option_la_SOURCES) \
 	$(libmm_utils_sierra_la_SOURCES) \
 	$(libmm_utils_telit_la_SOURCES) $(libmm_utils_xmm_la_SOURCES) \
+	$(test_keyfiles_SOURCES) \
 	$(test_modem_helpers_altair_lte_SOURCES) \
 	$(test_modem_helpers_cinterion_SOURCES) \
 	$(test_modem_helpers_huawei_SOURCES) \
@@ -975,8 +998,9 @@ DIST_SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(libmm_utils_novatel_la_SOURCES) \
 	$(libmm_utils_option_la_SOURCES) \
 	$(libmm_utils_sierra_la_SOURCES) \
-	$(libmm_utils_telit_la_SOURCES) \
+	$(am__libmm_utils_telit_la_SOURCES_DIST) \
 	$(am__libmm_utils_xmm_la_SOURCES_DIST) \
+	$(test_keyfiles_SOURCES) \
 	$(test_modem_helpers_altair_lte_SOURCES) \
 	$(test_modem_helpers_cinterion_SOURCES) \
 	$(test_modem_helpers_huawei_SOURCES) \
@@ -994,7 +1018,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-DATA = $(dist_udevrules_DATA)
+DATA = $(dist_pkgdata_DATA) $(dist_udevrules_DATA)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
@@ -1222,7 +1246,8 @@ TEST_PROGS = $(noinst_PROGRAMS)
 # common
 ################################################################################
 AM_CFLAGS = $(MM_CFLAGS) $(CODE_COVERAGE_CFLAGS) $(GUDEV_CFLAGS) \
-	-I$(top_srcdir) -I$(top_srcdir)/src -I$(top_builddir)/src \
+	-DPKGDATADIR=\"${pkgdatadir}\" -I$(top_srcdir) \
+	-I$(top_srcdir)/src -I$(top_builddir)/src \
 	-I$(top_srcdir)/src/kerneldevice -I$(top_srcdir)/include \
 	-I$(top_builddir)/include -I$(top_srcdir)/libmm-glib \
 	-I$(top_srcdir)/libmm-glib/generated \
@@ -1239,7 +1264,8 @@ AM_CFLAGS = $(MM_CFLAGS) $(CODE_COVERAGE_CFLAGS) $(GUDEV_CFLAGS) \
 	-DTESTUDEVRULESDIR_MTK=\"${srcdir}/mtk\" \
 	-DTESTUDEVRULESDIR_HAIER=\"${srcdir}/haier\" \
 	-DTESTUDEVRULESDIR_DELL=\"${srcdir}/dell\" \
-	-DTESTUDEVRULESDIR_FIBOCOM=\"${srcdir}/fibocom\"
+	-DTESTKEYFILE_DELL_DW5821E=\"${srcdir}/dell/mm-dell-dw5821e-carrier-mapping.conf\" \
+	$(NULL) -DTESTUDEVRULESDIR_FIBOCOM=\"${srcdir}/fibocom\"
 AM_LDFLAGS = $(MM_LIBS) $(CODE_COVERAGE_LDFLAGS) $(GUDEV_LIBS) $(NULL) \
 	$(am__append_2) $(am__append_4)
 
@@ -1264,6 +1290,10 @@ udevrulesdir = $(UDEV_BASE_DIR)/rules.d
 ################################################################################
 # plugin: u-blox
 ################################################################################
+
+################################################################################
+# plugin: quectel
+################################################################################
 dist_udevrules_DATA = huawei/77-mm-huawei-net-port-types.rules \
 	mbm/77-mm-ericsson-mbm.rules sierra/77-mm-sierra.rules \
 	nokia/77-mm-nokia-port-types.rules \
@@ -1277,6 +1307,7 @@ dist_udevrules_DATA = huawei/77-mm-huawei-net-port-types.rules \
 	haier/77-mm-haier-port-types.rules \
 	ublox/77-mm-ublox-port-types.rules \
 	dell/77-mm-dell-port-types.rules \
+	quectel/77-mm-quectel-port-types.rules \
 	fibocom/77-mm-fibocom-port-types.rules
 
 # Helper libs
@@ -1436,10 +1467,6 @@ noinst_LTLIBRARIES = libmm-test-common.la libhelpers-icera.la \
 ################################################################################
 
 ################################################################################
-# plugin: quectel
-################################################################################
-
-################################################################################
 # plugin: fibocom
 ################################################################################
 pkglib_LTLIBRARIES = libmm-plugin-generic.la libmm-plugin-motorola.la \
@@ -1465,6 +1492,9 @@ BUILT_SOURCES = $(TELIT_ENUMS_GENERATED) $(UBLOX_ENUMS_GENERATED)
 
 # Clean files
 CLEANFILES = $(TELIT_ENUMS_GENERATED) $(UBLOX_ENUMS_GENERATED)
+
+# Data files
+dist_pkgdata_DATA = dell/mm-dell-dw5821e-carrier-mapping.conf
 libmm_test_common_la_SOURCES = \
 	tests/test-fixture.h \
 	tests/test-fixture.c \
@@ -2048,13 +2078,10 @@ test_modem_helpers_telit_LDADD = \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
 	$(NULL)
 
-libmm_utils_telit_la_SOURCES = \
-	telit/mm-common-telit.c \
-	telit/mm-common-telit.h \
-	telit/mm-broadband-modem-telit.c \
-	telit/mm-broadband-modem-telit.h \
-	$(NULL)
-
+libmm_utils_telit_la_SOURCES = telit/mm-common-telit.c \
+	telit/mm-common-telit.h telit/mm-shared-telit.c \
+	telit/mm-shared-telit.h telit/mm-broadband-modem-telit.c \
+	telit/mm-broadband-modem-telit.h $(NULL) $(am__append_7)
 libmm_utils_telit_la_CPPFLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
 TELIT_COMMON_COMPILER_FLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
 TELIT_COMMON_LIBADD_FLAGS = \
@@ -2127,7 +2154,7 @@ libmm_plugin_ublox_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(PLUGIN_UBLOX_
 libmm_plugin_ublox_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_ublox_la_LIBADD = $(builddir)/libhelpers-ublox.la
 libmm_plugin_dell_la_SOURCES = dell/mm-plugin-dell.c \
-	dell/mm-plugin-dell.h $(NULL) $(am__append_7)
+	dell/mm-plugin-dell.h $(NULL) $(am__append_8)
 libmm_plugin_dell_la_CPPFLAGS = \
 	$(PLUGIN_COMMON_COMPILER_FLAGS) \
 	$(NOVATEL_COMMON_COMPILER_FLAGS) \
@@ -2150,7 +2177,7 @@ libmm_plugin_quectel_la_SOURCES = quectel/mm-plugin-quectel.c \
 	quectel/mm-plugin-quectel.h quectel/mm-shared-quectel.c \
 	quectel/mm-shared-quectel.h \
 	quectel/mm-broadband-modem-quectel.c \
-	quectel/mm-broadband-modem-quectel.h $(NULL) $(am__append_8)
+	quectel/mm-broadband-modem-quectel.h $(NULL) $(am__append_9)
 libmm_plugin_quectel_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_quectel_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_fibocom_la_SOURCES = \
@@ -2167,6 +2194,14 @@ test_udev_rules_SOURCES = \
 
 test_udev_rules_LDADD = \
 	$(top_builddir)/src/libkerneldevice.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+test_keyfiles_SOURCES = \
+	tests/test-keyfiles.c \
+	$(NULL)
+
+test_keyfiles_LDADD = \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
 	$(NULL)
 
@@ -2813,7 +2848,11 @@ libmm-utils-sierra.la: $(libmm_utils_sierra_la_OBJECTS) $(libmm_utils_sierra_la_
 	$(AM_V_CCLD)$(LINK)  $(libmm_utils_sierra_la_OBJECTS) $(libmm_utils_sierra_la_LIBADD) $(LIBS)
 telit/libmm_utils_telit_la-mm-common-telit.lo: telit/$(am__dirstamp) \
 	telit/$(DEPDIR)/$(am__dirstamp)
+telit/libmm_utils_telit_la-mm-shared-telit.lo: telit/$(am__dirstamp) \
+	telit/$(DEPDIR)/$(am__dirstamp)
 telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo:  \
+	telit/$(am__dirstamp) telit/$(DEPDIR)/$(am__dirstamp)
+telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo:  \
 	telit/$(am__dirstamp) telit/$(DEPDIR)/$(am__dirstamp)
 
 libmm-utils-telit.la: $(libmm_utils_telit_la_OBJECTS) $(libmm_utils_telit_la_DEPENDENCIES) $(EXTRA_libmm_utils_telit_la_DEPENDENCIES) 
@@ -2827,6 +2866,12 @@ xmm/mm-broadband-modem-mbim-xmm.lo: xmm/$(am__dirstamp) \
 
 libmm-utils-xmm.la: $(libmm_utils_xmm_la_OBJECTS) $(libmm_utils_xmm_la_DEPENDENCIES) $(EXTRA_libmm_utils_xmm_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK)  $(libmm_utils_xmm_la_OBJECTS) $(libmm_utils_xmm_la_LIBADD) $(LIBS)
+tests/test-keyfiles.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+test-keyfiles$(EXEEXT): $(test_keyfiles_OBJECTS) $(test_keyfiles_DEPENDENCIES) $(EXTRA_test_keyfiles_DEPENDENCIES) 
+	@rm -f test-keyfiles$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_keyfiles_OBJECTS) $(test_keyfiles_LDADD) $(LIBS)
 altair/tests/$(am__dirstamp):
 	@$(MKDIR_P) altair/tests
 	@: > altair/tests/$(am__dirstamp)
@@ -3160,11 +3205,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libhelpers_telit_la-mm-modem-helpers-telit.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libhelpers_telit_la-mm-telit-enums-types.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_plugin_telit_la-mm-plugin-telit.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_utils_telit_la-mm-common-telit.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@telit/tests/$(DEPDIR)/test_modem_helpers_telit-test-mm-modem-helpers-telit.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/libmm_test_common_la-test-fixture.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/libmm_test_common_la-test-port-context.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test-keyfiles.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test-udev-rules.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@thuraya/$(DEPDIR)/libmm_plugin_thuraya_la-mm-broadband-modem-thuraya.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@thuraya/$(DEPDIR)/libmm_plugin_thuraya_la-mm-plugin-thuraya.Plo@am__quote@ # am--include-marker
@@ -3819,12 +3867,26 @@ telit/libmm_utils_telit_la-mm-common-telit.lo: telit/mm-common-telit.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_utils_telit_la-mm-common-telit.lo `test -f 'telit/mm-common-telit.c' || echo '$(srcdir)/'`telit/mm-common-telit.c
 
+telit/libmm_utils_telit_la-mm-shared-telit.lo: telit/mm-shared-telit.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_utils_telit_la-mm-shared-telit.lo -MD -MP -MF telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Tpo -c -o telit/libmm_utils_telit_la-mm-shared-telit.lo `test -f 'telit/mm-shared-telit.c' || echo '$(srcdir)/'`telit/mm-shared-telit.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Tpo telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='telit/mm-shared-telit.c' object='telit/libmm_utils_telit_la-mm-shared-telit.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_utils_telit_la-mm-shared-telit.lo `test -f 'telit/mm-shared-telit.c' || echo '$(srcdir)/'`telit/mm-shared-telit.c
+
 telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo: telit/mm-broadband-modem-telit.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo -MD -MP -MF telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Tpo -c -o telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo `test -f 'telit/mm-broadband-modem-telit.c' || echo '$(srcdir)/'`telit/mm-broadband-modem-telit.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Tpo telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='telit/mm-broadband-modem-telit.c' object='telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_utils_telit_la-mm-broadband-modem-telit.lo `test -f 'telit/mm-broadband-modem-telit.c' || echo '$(srcdir)/'`telit/mm-broadband-modem-telit.c
+
+telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo: telit/mm-broadband-modem-mbim-telit.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo -MD -MP -MF telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Tpo -c -o telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo `test -f 'telit/mm-broadband-modem-mbim-telit.c' || echo '$(srcdir)/'`telit/mm-broadband-modem-mbim-telit.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Tpo telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='telit/mm-broadband-modem-mbim-telit.c' object='telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_utils_telit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o telit/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.lo `test -f 'telit/mm-broadband-modem-mbim-telit.c' || echo '$(srcdir)/'`telit/mm-broadband-modem-mbim-telit.c
 
 altair/tests/test_modem_helpers_altair_lte-test-modem-helpers-altair-lte.o: altair/tests/test-modem-helpers-altair-lte.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_altair_lte_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT altair/tests/test_modem_helpers_altair_lte-test-modem-helpers-altair-lte.o -MD -MP -MF altair/tests/$(DEPDIR)/test_modem_helpers_altair_lte-test-modem-helpers-altair-lte.Tpo -c -o altair/tests/test_modem_helpers_altair_lte-test-modem-helpers-altair-lte.o `test -f 'altair/tests/test-modem-helpers-altair-lte.c' || echo '$(srcdir)/'`altair/tests/test-modem-helpers-altair-lte.c
@@ -4031,6 +4093,27 @@ clean-libtool:
 	-rm -rf x22x/.libs x22x/_libs
 	-rm -rf xmm/.libs xmm/_libs
 	-rm -rf zte/.libs zte/_libs
+install-dist_pkgdataDATA: $(dist_pkgdata_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(dist_pkgdata_DATA)'; test -n "$(pkgdatadir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgdatadir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(pkgdatadir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pkgdatadir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pkgdatadir)" || exit $$?; \
+	done
+
+uninstall-dist_pkgdataDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_pkgdata_DATA)'; test -n "$(pkgdatadir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(pkgdatadir)'; $(am__uninstall_files_from_dir)
 install-dist_udevrulesDATA: $(dist_udevrules_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(dist_udevrules_DATA)'; test -n "$(udevrulesdir)" || list=; \
@@ -4144,7 +4227,7 @@ check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(PROGRAMS) $(LTLIBRARIES) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(udevrulesdir)"; do \
+	for dir in "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(pkgdatadir)" "$(DESTDIR)$(udevrulesdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -4364,11 +4447,14 @@ distclean: distclean-am
 	-rm -f telit/$(DEPDIR)/libhelpers_telit_la-mm-modem-helpers-telit.Plo
 	-rm -f telit/$(DEPDIR)/libhelpers_telit_la-mm-telit-enums-types.Plo
 	-rm -f telit/$(DEPDIR)/libmm_plugin_telit_la-mm-plugin-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Plo
 	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Plo
 	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-common-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Plo
 	-rm -f telit/tests/$(DEPDIR)/test_modem_helpers_telit-test-mm-modem-helpers-telit.Po
 	-rm -f tests/$(DEPDIR)/libmm_test_common_la-test-fixture.Plo
 	-rm -f tests/$(DEPDIR)/libmm_test_common_la-test-port-context.Plo
+	-rm -f tests/$(DEPDIR)/test-keyfiles.Po
 	-rm -f tests/$(DEPDIR)/test-udev-rules.Po
 	-rm -f thuraya/$(DEPDIR)/libmm_plugin_thuraya_la-mm-broadband-modem-thuraya.Plo
 	-rm -f thuraya/$(DEPDIR)/libmm_plugin_thuraya_la-mm-plugin-thuraya.Plo
@@ -4413,7 +4499,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_udevrulesDATA
+install-data-am: install-dist_pkgdataDATA install-dist_udevrulesDATA
 
 install-dvi: install-dvi-am
 
@@ -4532,11 +4618,14 @@ maintainer-clean: maintainer-clean-am
 	-rm -f telit/$(DEPDIR)/libhelpers_telit_la-mm-modem-helpers-telit.Plo
 	-rm -f telit/$(DEPDIR)/libhelpers_telit_la-mm-telit-enums-types.Plo
 	-rm -f telit/$(DEPDIR)/libmm_plugin_telit_la-mm-plugin-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-mbim-telit.Plo
 	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-broadband-modem-telit.Plo
 	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-common-telit.Plo
+	-rm -f telit/$(DEPDIR)/libmm_utils_telit_la-mm-shared-telit.Plo
 	-rm -f telit/tests/$(DEPDIR)/test_modem_helpers_telit-test-mm-modem-helpers-telit.Po
 	-rm -f tests/$(DEPDIR)/libmm_test_common_la-test-fixture.Plo
 	-rm -f tests/$(DEPDIR)/libmm_test_common_la-test-port-context.Plo
+	-rm -f tests/$(DEPDIR)/test-keyfiles.Po
 	-rm -f tests/$(DEPDIR)/test-udev-rules.Po
 	-rm -f thuraya/$(DEPDIR)/libmm_plugin_thuraya_la-mm-broadband-modem-thuraya.Plo
 	-rm -f thuraya/$(DEPDIR)/libmm_plugin_thuraya_la-mm-plugin-thuraya.Plo
@@ -4581,7 +4670,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-dist_udevrulesDATA uninstall-pkglibLTLIBRARIES
+uninstall-am: uninstall-dist_pkgdataDATA uninstall-dist_udevrulesDATA \
+	uninstall-pkglibLTLIBRARIES
 
 .MAKE: all check check-am install install-am install-strip
 
@@ -4592,15 +4682,16 @@ uninstall-am: uninstall-dist_udevrulesDATA uninstall-pkglibLTLIBRARIES
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am \
-	install-dist_udevrulesDATA install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-pkglibLTLIBRARIES install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-dist_udevrulesDATA \
+	install-dist_pkgdataDATA install-dist_udevrulesDATA \
+	install-dvi install-dvi-am install-exec install-exec-am \
+	install-html install-html-am install-info install-info-am \
+	install-man install-pdf install-pdf-am \
+	install-pkglibLTLIBRARIES install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags tags-am uninstall uninstall-am \
+	uninstall-dist_pkgdataDATA uninstall-dist_udevrulesDATA \
 	uninstall-pkglibLTLIBRARIES
 
 .PRECIOUS: Makefile

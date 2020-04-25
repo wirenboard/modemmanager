@@ -35,36 +35,38 @@
   <refsect1 role="properties">
     <title role="properties.title">Properties</title>
     <synopsis>
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Sim">Sim</link>                    readable   o
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers">Bearers</link>                readable   ao
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities">SupportedCapabilities</link>  readable   au
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentCapabilities">CurrentCapabilities</link>    readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxBearers">MaxBearers</link>             readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveBearers">MaxActiveBearers</link>       readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Manufacturer">Manufacturer</link>           readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Model">Model</link>                  readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Revision">Revision</link>               readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.HardwareRevision">HardwareRevision</link>       readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.DeviceIdentifier">DeviceIdentifier</link>       readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Device">Device</link>                 readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Drivers">Drivers</link>                readable   as
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Plugin">Plugin</link>                 readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.PrimaryPort">PrimaryPort</link>            readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Ports">Ports</link>                  readable   a(su)
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.EquipmentIdentifier">EquipmentIdentifier</link>    readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.UnlockRequired">UnlockRequired</link>         readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.UnlockRetries">UnlockRetries</link>          readable   a{uu}
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.State">State</link>                  readable   i
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.StateFailedReason">StateFailedReason</link>      readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.AccessTechnologies">AccessTechnologies</link>     readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SignalQuality">SignalQuality</link>          readable   (ub)
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.OwnNumbers">OwnNumbers</link>             readable   as
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.PowerState">PowerState</link>             readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedModes">SupportedModes</link>         readable   a(uu)
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentModes">CurrentModes</link>           readable   (uu)
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedBands">SupportedBands</link>         readable   au
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentBands">CurrentBands</link>           readable   au
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedIpFamilies">SupportedIpFamilies</link>    readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Sim">Sim</link>                           readable   o
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers">Bearers</link>                       readable   ao
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities">SupportedCapabilities</link>         readable   au
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentCapabilities">CurrentCapabilities</link>           readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxBearers">MaxBearers</link>                    readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveBearers">MaxActiveBearers</link>              readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Manufacturer">Manufacturer</link>                  readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Model">Model</link>                         readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Revision">Revision</link>                      readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfiguration">CarrierConfiguration</link>          readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfigurationRevision">CarrierConfigurationRevision</link>  readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.HardwareRevision">HardwareRevision</link>              readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.DeviceIdentifier">DeviceIdentifier</link>              readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Device">Device</link>                        readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Drivers">Drivers</link>                       readable   as
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Plugin">Plugin</link>                        readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.PrimaryPort">PrimaryPort</link>                   readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Ports">Ports</link>                         readable   a(su)
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.EquipmentIdentifier">EquipmentIdentifier</link>           readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.UnlockRequired">UnlockRequired</link>                readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.UnlockRetries">UnlockRetries</link>                 readable   a{uu}
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.State">State</link>                         readable   i
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.StateFailedReason">StateFailedReason</link>             readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.AccessTechnologies">AccessTechnologies</link>            readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SignalQuality">SignalQuality</link>                 readable   (ub)
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.OwnNumbers">OwnNumbers</link>                    readable   as
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.PowerState">PowerState</link>                    readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedModes">SupportedModes</link>                readable   a(uu)
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentModes">CurrentModes</link>                  readable   (uu)
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedBands">SupportedBands</link>                readable   au
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentBands">CurrentBands</link>                  readable   au
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedIpFamilies">SupportedIpFamilies</link>           readable   u
 </synopsis>
   </refsect1>
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Modem">
@@ -425,6 +427,24 @@ Model  readable   s
 Revision  readable   s
 </programlisting>
 <para>        The revision identification of the software, as reported by the modem.
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfiguration">
+  <title>The "CarrierConfiguration" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfiguration"><primary sortas="Modem:CarrierConfiguration">org.freedesktop.ModemManager1.Modem:CarrierConfiguration</primary></indexterm>
+<programlisting>
+CarrierConfiguration  readable   s
+</programlisting>
+<para>        The description of the carrier-specific configuration (MCFG) in use by the modem.
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfigurationRevision">
+  <title>The "CarrierConfigurationRevision" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfigurationRevision"><primary sortas="Modem:CarrierConfigurationRevision">org.freedesktop.ModemManager1.Modem:CarrierConfigurationRevision</primary></indexterm>
+<programlisting>
+CarrierConfigurationRevision  readable   s
+</programlisting>
+<para>        The revision identification of the carrier-specific configuration (MCFG) in use by the modem.
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.HardwareRevision">

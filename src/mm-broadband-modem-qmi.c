@@ -8235,9 +8235,19 @@ enabling_started (MMBroadbandModem *self,
 /*****************************************************************************/
 /* First initialization step */
 
+static const QmiService qmi_services[] = {
+    QMI_SERVICE_DMS,
+    QMI_SERVICE_NAS,
+    QMI_SERVICE_WMS,
+    QMI_SERVICE_PDS,
+    QMI_SERVICE_OMA,
+    QMI_SERVICE_UIM,
+    QMI_SERVICE_LOC,
+    QMI_SERVICE_PDC,
+};
+
 typedef struct {
     MMPortQmi *qmi;
-    QmiService services[32];
     guint service_index;
 } InitializationStartedContext;
 
@@ -8355,7 +8365,7 @@ qmi_port_allocate_client_ready (MMPortQmi *qmi,
 
     if (!mm_port_qmi_allocate_client_finish (qmi, res, &error)) {
         mm_dbg ("Couldn't allocate client for service '%s': %s",
-                qmi_service_get_string (ctx->services[ctx->service_index]),
+                qmi_service_get_string (qmi_services[ctx->service_index]),
                 error->message);
         g_error_free (error);
     }
@@ -8373,7 +8383,7 @@ allocate_next_client (GTask *task)
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
 
-    if (ctx->services[ctx->service_index] == QMI_SERVICE_UNKNOWN) {
+    if (ctx->service_index == G_N_ELEMENTS (qmi_services)) {
         /* Done we are, track device removal and launch parent's callback */
         track_qmi_device_removed (self, ctx->qmi);
         parent_initialization_started (task);
@@ -8382,7 +8392,7 @@ allocate_next_client (GTask *task)
 
     /* Otherwise, allocate next client */
     mm_port_qmi_allocate_client (ctx->qmi,
-                                 ctx->services[ctx->service_index],
+                                 qmi_services[ctx->service_index],
                                  MM_PORT_QMI_FLAG_DEFAULT,
                                  NULL,
                                  (GAsyncReadyCallback)qmi_port_allocate_client_ready,
@@ -8422,6 +8432,8 @@ qmi_port_open_ready (MMPortQmi *qmi,
          * try without it.  The qmi_wwan driver will fix up any issues that
          * the device might have between raw-ip and 802.3 mode anyway.
          */
+        mm_dbg ("Couldn't open QMI port with data format update: %s", error->message);
+        g_error_free (error);
         mm_port_qmi_open (ctx->qmi,
                           FALSE,
                           NULL,
@@ -8439,7 +8451,7 @@ initialization_started (MMBroadbandModem *self,
                         gpointer user_data)
 {
     InitializationStartedContext *ctx;
-    GTask *task;
+    GTask                        *task;
 
     ctx = g_new0 (InitializationStartedContext, 1);
     ctx->qmi = mm_base_modem_get_port_qmi (MM_BASE_MODEM (self));
@@ -8464,16 +8476,6 @@ initialization_started (MMBroadbandModem *self,
         parent_initialization_started (task);
         return;
     }
-
-    /* Setup services to open */
-    ctx->services[0] = QMI_SERVICE_DMS;
-    ctx->services[1] = QMI_SERVICE_NAS;
-    ctx->services[2] = QMI_SERVICE_WMS;
-    ctx->services[3] = QMI_SERVICE_PDS;
-    ctx->services[4] = QMI_SERVICE_OMA;
-    ctx->services[5] = QMI_SERVICE_UIM;
-    ctx->services[6] = QMI_SERVICE_LOC;
-    ctx->services[7] = QMI_SERVICE_UNKNOWN;
 
     /* Now open our QMI port */
     mm_port_qmi_open (ctx->qmi,
@@ -8585,6 +8587,10 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_power_state_finish = load_power_state_finish;
     iface->load_supported_ip_families = modem_load_supported_ip_families;
     iface->load_supported_ip_families_finish = modem_load_supported_ip_families_finish;
+    iface->load_carrier_config = mm_shared_qmi_load_carrier_config;
+    iface->load_carrier_config_finish = mm_shared_qmi_load_carrier_config_finish;
+    iface->setup_carrier_config = mm_shared_qmi_setup_carrier_config;
+    iface->setup_carrier_config_finish = mm_shared_qmi_setup_carrier_config_finish;
 
     /* Enabling/disabling */
     iface->modem_power_up = modem_power_up;

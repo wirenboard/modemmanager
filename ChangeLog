@@ -1,3 +1,751 @@
+commit 4fc7296b09300985be1aff7a4fca17416c819fb6
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jul 4 14:16:09 2019 +0200
+
+    release: bump version to 1.10.4
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 890d392860c77e1edb57ae8f08d011afd5b19fa2
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jul 4 14:15:57 2019 +0200
+
+    NEWS: update for 1.10.4
+
+ NEWS | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+commit 34025593f72fcd00444c92293087620bd0f5272b
+Author: Lech Perczak <l.perczak@camlintechnologies.com>
+Date:   Thu Mar 21 16:43:49 2019 +0000
+
+    broadband-modem-mbim: parse nw_error in register_state_set_ready
+    only if MBIM_STATUS_FAILURE
+
+    Some modems (Namely: Telit LE910 V2) report nonzero NwError code,
+    outside of 3GPP TS 24.008 - in "register-state set command-done"
+    response,
+    while status code equals MBIM_STATUS_ERROR_NONE.
+    In such cases network is operational.
+    According to MBIM specification 1.0 table 10.5.9.8 "Status codes",
+    NwError shall be nonzero only if Status Code equals
+    MBIM_STATUS_FAILURE,
+    and client shall parse NwError only in such cases.
+    Also, MBIM specification does not explicitly state that 'NwError ==
+    0' equals
+    no error, rather than that it is unknown error, hence raise an error
+    unconditionally if MBIM status code is MBIM_STATUS_FAILURE.
+
+    Therefore, check NwError IFF MBIM response status code equals
+    MBIM_STATUS_FAILURE, instead of MBIM_STATUS_SUCCESS.
+
+    Fixes: 854c371c8aa9 ("broadband-modem-mbim: implement 3GPP
+    registration request")
+    Signed-off-by: Lech Perczak <l.perczak@camlintechnologies.com>
+    (cherry picked from commit 7a6e92727f1034f17d5d21f631f3e904b8a6011a)
+
+ src/mm-broadband-modem-mbim.c | 47
+ +++++++++++++++++++++++++++++--------------
+ 1 file changed, 32 insertions(+), 15 deletions(-)
+
+commit fae089b752bfe6a3b754a0b4d21b81d7a9f12062
+Author: Lubomir Rintel <lkundrak@v3.sk>
+Date:   Fri May 3 18:07:33 2019 +0200
+
+    bearer-qmi: do not call cleanup_event_report_unsolicited_events()
+    w/o indication_id
+
+    If a disconnection fails (because stop_network() failed), base-bearer
+    flips the state back to CONNECTED. Oops. At that point something is
+    clearly messed up, but it seems correct to assume the bearer is
+    connected.
+
+    Nevertheless, we will have already have unhooked the unsolicited
+    events
+    reporting. A subsequent attempt to disconnect the bearer will trip the
+    assertion:
+
+      #0  0x00007ffff75f2eb5 in __GI_raise (sig=sig@entry=6) at
+      ../sysdeps/unix/sysv/linux/raise.c:50
+      #1  0x00007ffff75dd895 in __GI_abort () at abort.c:79
+      #2  0x00007ffff77beb53 in g_assertion_message
+          (domain=<optimized out>, file=<optimized out>,
+          line=<optimized out>, func=0x5088e0 <__FUNCTION__.56253>
+          "cleanup_event_report_unsolicited_events", message=<optimized
+          out>) at ../glib/gtestutils.c:2878
+      #3  0x00007ffff781a96f in g_assertion_message_expr
+          (domain=domain@entry=0x0, file=file@entry=0x507aad
+          "mm-bearer-qmi.c", line=line@entry=1138,
+          func=func@entry=0x5088e0 <__FUNCTION__.56253>
+          "cleanup_event_report_unsolicited_events",
+          expr=expr@entry=0x507ae5 "*indication_id != 0") at
+          ../glib/gtestutils.c:2904
+      #4  0x00000000004a0c49 in cleanup_event_report_unsolicited_events
+      (client=<optimized out>, indication_id=0x5bb30c, self=<optimized
+      out>)
+          at mm-bearer-qmi.c:1138
+      #5  0x00000000004a0c49 in cleanup_event_report_unsolicited_events
+          (client=<optimized out>,
+          indication_id=indication_id@entry=0x5bb30c, self=0x5bb420
+          [MMBearerQmi]) at mm-bearer-qmi.c:1132
+      #6  0x00000000004a0ee3 in disconnect_context_step
+      (task=0x7fffe8012100 [GTask]) at mm-bearer-qmi.c:1854
+      #7  0x000000000046e889 in disconnect_auth_ready (self=<optimized
+      out>, res=<optimized out>, ctx=ctx@entry=0x654630)
+          at mm-iface-modem-simple.c:865
+      #8  0x00007ffff79cfa9a in g_task_return_now (task=0x7fffe8012640
+      [GTask]) at ../gio/gtask.c:1209
+      ...
+
+    Add checks for indication_id to calls to
+    cleanup_event_report_unsolicited_events() on
+    DISCONNECT_STEP_STOP_NETWORK_IPV4 or
+    DISCONNECT_STEP_STOP_NETWORK_IPV6, as
+    is done elsewhere.
+
+    (cherry picked from commit 50fc46c17089fbb55595327a5c3fc82d83f792fd)
+
+ src/mm-bearer-qmi.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+commit 819b3c781e0e11de62820e96c05e09bb30f13945
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jun 24 10:41:14 2019 +0200
+
+    iface-modem-3gpp: use correct finish() method to complete user
+    registration
+
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/issues/131
+    (cherry picked from commit d1b716abaf4fca0a31498ce77b17fbc7216a5936)
+
+ src/mm-iface-modem-3gpp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit d9e492395dbe9e25db73486537fb5eea3c62c028
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jun 13 11:28:26 2019 +0200
+
+    ublox,tests: expect error if empty band list when parsing UACT?
+
+    (cherry picked from commit ca5f2e8b3e0e7fbe27b14ff8e51748364969e4e1)
+
+ plugins/ublox/tests/test-modem-helpers-ublox.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+commit 6e0a32bfb59d0eb115234b12666c1d682270f576
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jun 13 10:25:38 2019 +0200
+
+    ublox: return error when no bands are parsed
+
+    If load_current_bands_finish() returns a NULL GArray, we must set the
+    GError or otherwise the daemon will segfault when the caller
+    dereferences the GError:
+
+        current_bands = MM_IFACE_MODEM_GET_INTERFACE
+        (self)->load_current_bands_finish (self, res, &error);
+        if (!current_bands) {
+            /* Errors when getting current bands won't be critical */
+            mm_warn ("couldn't load current Bands: '%s'", error->message);
+            g_error_free (error);
+        }
+
+    This may happen with an empty but balid +UACT response, e.g.:
+       AT+UACT?
+       +UACT: ,,,
+       OK
+
+    Or when it replies a full empty string:
+       AT+UACT?
+       OK
+
+    (cherry picked from commit 20c5d7fd922bfbf5d611c5c5b6cf78cb438437e0)
+
+ plugins/ublox/mm-modem-helpers-ublox.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+commit 74fe63455e03f09bd84b4e1b5c2b93c79a205ab7
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jun 10 18:46:08 2019 +0200
+
+    build: post-release version bump to 1.10.3
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 81446203ed8f5a0982b24764689bf3e80f4470bb
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jun 10 18:22:11 2019 +0200
+
+    release: bump version to 1.10.2
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 2a47cb918747369abf415765026a067f3c9446b3
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jun 10 18:20:20 2019 +0200
+
+    NEWS: update for 1.10.2
+
+ NEWS | 72
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 72 insertions(+)
+
+commit f44df5110215283fc231b45b5a93d7b8b3b298b9
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu May 30 17:25:48 2019 +0200
+
+    quectel: add port type hints for the Quectel LTE-A EG06
+
+     ttyUSB0 (if #0): QCDM/DIAG port
+     ttyUSB1 (if #1): GPS data port
+     ttyUSB2 (if #2): AT primary port
+     ttyUSB3 (if #3): AT secondary port
+
+    (cherry picked from commit 8ec9789e3c611f8156e0a95ce7b8306862b3030b)
+
+ plugins/Makefile.am                            |  2 ++
+ plugins/quectel/77-mm-quectel-port-types.rules | 20 ++++++++++++++++++++
+ 2 files changed, 22 insertions(+)
+
+commit 5da06d6764981004d7d0e3af15786622496b7afb
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu May 16 18:18:01 2019 +0200
+
+    port-serial-at: raw commands always run next
+
+    We use the raw commands exclusively when we're sending SMS data to the
+    device. Until this change, all raw commands were added at the tail of
+    the queue of pending commands, and that meant that if any unrelated AT
+    command was interleaved between e.g. our AT+CGMS and the actual SMS
+    data sent, the operation would have failed.
+
+    With this fix, we're making sure that all raw commands are added at
+    the head of the queue, so we're making sure that the next command
+    picked after e.g. CGMS is actually the raw SMS data to be sent.
+
+    We would be avoiding issues like this one, where an outgoing voice
+    call attempt gets in the way before we send the SMS data:
+
+      [1556246081.786284] (ttyACM2): --> 'AT+CMGS=70<CR>'
+      [1556246081.814861] (ttyACM2): <-- '<CR><LF>> '
+      [1556246081.819382] (ttyACM2): --> 'ATD1234567890;<CR>'
+      [1556246081.839685] (ttyACM2): <-- '<CR><LF>> '
+      [1556246081.840123] Couldn't start call : 'Couldn't start the call:
+      Unhandled response '> ''
+      [1556246081.856254] (ttyACM2): --> '0001000D810..............
+      [1556246081.922470] (ttyACM2): <-- '<CR><LF>+CME ERROR: 4<CR><LF>'
+
+    (cherry picked from commit 72bdb1b36576f21533b93222ac950734c04ca03f)
+
+ src/mm-base-sms.c       | 13 +++++++++++--
+ src/mm-port-serial-at.c |  2 +-
+ 2 files changed, 12 insertions(+), 3 deletions(-)
+
+commit c4346342d7ea7102417a244387a3cbbb856827dd
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu May 16 18:12:01 2019 +0200
+
+    port-serial: allow deciding whether the command is queued last or
+    run next
+
+    By default all the commands we were sending through the serial port
+    were added at the tail of the pending queue, but we may want to queue
+    them at the head in very specific cases (e.g. while sending an SMS).
+
+    (cherry picked from commit 8092e301fc55c84a5523a8cb3f75461b53ac2e9a)
+
+ plugins/mbm/mm-broadband-modem-mbm.c | 3 ++-
+ src/mm-port-serial-at.c              | 1 +
+ src/mm-port-serial-qcdm.c            | 1 +
+ src/mm-port-serial.c                 | 8 +++++++-
+ src/mm-port-serial.h                 | 1 +
+ 5 files changed, 12 insertions(+), 2 deletions(-)
+
+commit 50b9cc2df6ed67ffc76b06019daae9403b3d2f36
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed May 8 20:26:03 2019 +0200
+
+    iface-modem-messaging: flush sms list update before notifying
+    added/removed
+
+    So that clients are able to have the full updated list before the list
+    update notification.
+
+    (cherry picked from commit 7753eb0013ecd8cb2c906969c6064cccf6bf473d)
+
+ src/mm-iface-modem-messaging.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit 29b1e36081d692050bf29d029ef2c9a09d4096c0
+Author: yparitcher <y@paritcher.com>
+Date:   Wed May 1 15:36:32 2019 -0500
+
+    mm-broadband-modem: fix error propagation in cdma service status
+
+    (cherry picked from commit d56bc301dd6b65fce56affa55ddd86b4e3ff335f)
+
+ src/mm-broadband-modem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit a81c1742ea2ca9b1c6390d650032cc09063dc73f
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Apr 15 10:43:57 2019 +0200
+
+    shared-qmi: config list may be empty
+
+    Reported by: Enrico Mioso <mrkiko.rs@gmail.com>
+
+    (cherry picked from commit de1ae549fa469b771704b2fb06eeb98a9eca110b)
+
+ src/mm-shared-qmi.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+commit a41e99255b6c36495ecaa43a005b776b4d4bab06
+Author: Ben Chan <benchan@chromium.org>
+Date:   Wed Apr 3 10:57:14 2019 -0700
+
+    via: fix memory leak in parent_setup_registration_checks_ready
+
+    This patch fixes a potential memory leak in
+    parent_setup_registration_checks_ready() where the allocated
+    SetupRegistrationChecksResults may be leaked when the MMIfaceModemCdma
+    parent's setup_registration_checks() fails.
+
+    (cherry picked from commit 7f78ef50100f7f125ddcd47a721676d80e86d1fe)
+
+ plugins/via/mm-broadband-modem-via.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit 74aba85600fa292bada6bfc197da6a125b3c7838
+Author: Ben Chan <benchan@chromium.org>
+Date:   Wed Apr 3 10:53:01 2019 -0700
+
+    modem-helpers: fix memory leak in mm_3gpp_parse_pdu_cmgl_response
+
+    This patch fixes a potential memory leak in
+    mm_3gpp_parse_pdu_cmgl_response() where the allocated MM3gppPduInfo
+    may
+    be leaked when failing to parse the +CMGL response.
+
+    (cherry picked from commit 84fe52a1e6f1521ecc95666c5a17e37a4937b22a)
+
+ src/mm-modem-helpers.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit 77cd5ef022003ef0e7ff684c6048eb1fb3e0860b
+Author: Sven Schwermer <sven.schwermer@disruptive-technologies.com>
+Date:   Wed Apr 3 13:17:19 2019 +0200
+
+    ublox: add LISA/SARA-U2 alternative port types
+
+    When configuring these modems with AT+UUSBCONF=2, i.e. CDC-ECM + 4x
+    CDC-ACM, they also enumerate with a different PID on the USB. We
+    need to
+    adjust the udev rules for that case in order to ignore the non-AT
+    ports.
+
+    Signed-off-by: Sven Schwermer
+    <sven.schwermer@disruptive-technologies.com>
+    (cherry picked from commit 7e4a8d9566b178de09618c7c5272565ac185e3d1)
+
+ plugins/ublox/77-mm-ublox-port-types.rules | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+commit fb5e56f23c0f3b9dc953a0cbacccedd4be051d98
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Mar 13 10:57:43 2019 +0100
+
+    dell,dw5821e: firmware update support only if QMI is enabled
+
+    (cherry picked from commit 5ef3c8eeb1f8efac06a3f5a03bd886a7a5f0583a)
+
+ plugins/dell/mm-broadband-modem-dell-dw5821e.c | 32
+ +++++++++++++++++++++-----
+ 1 file changed, 26 insertions(+), 6 deletions(-)
+
+commit fdafe853aaffc06c54fda3261e487b6b1e6ee0c5
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Mon Feb 25 14:55:13 2019 +0100
+
+    telit: add Telit MBIM broadband modem
+
+    Modes and band support are added through AT commands.
+
+    (cherry picked from commit c7be4af542b8d68b7b76a835093bb73fe234570d)
+
+ plugins/Makefile.am                           |   7 +
+ plugins/telit/mm-broadband-modem-mbim-telit.c | 181
+ ++++++++++++++++++++++++++
+ plugins/telit/mm-broadband-modem-mbim-telit.h |  47 +++++++
+ plugins/telit/mm-plugin-telit.c               |  12 +-
+ 4 files changed, 241 insertions(+), 6 deletions(-)
+
+commit efaaa7c9346465e14a37d3b0fd8d908a1316aead
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Mon Feb 25 14:11:14 2019 +0100
+
+    telit: move shared functions to mm-shared-telit
+
+    (cherry picked from commit 3921c120b3683e8e27fa76b78a3ed4a1537c26d8)
+
+ plugins/Makefile.am                      |   2 +
+ plugins/telit/mm-broadband-modem-telit.c | 457
+ ++-----------------------------
+ plugins/telit/mm-modem-helpers-telit.c   |  44 +++
+ plugins/telit/mm-modem-helpers-telit.h   |   1 +
+ plugins/telit/mm-shared-telit.c          | 451
+ ++++++++++++++++++++++++++++++
+ plugins/telit/mm-shared-telit.h          |  86 ++++++
+ 6 files changed, 604 insertions(+), 437 deletions(-)
+
+commit 242e73c8f75b9572bfaf9402a6a3549ccba75cdb
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Mar 3 13:26:01 2019 +0100
+
+    shared-qmi: always use newest carrier config if more than one found
+
+    (cherry picked from commit 093174c84da265059eda2591cf79593abb567f3a)
+
+ src/mm-shared-qmi.c | 57
+ +++++++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 51 insertions(+), 6 deletions(-)
+
+commit a534d595c0a28c5c59e67ba4f35a896b818903b8
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Feb 26 14:57:40 2019 +0100
+
+    shared-qmi: if requested config not installed, fallback to generic
+
+    If there is a known match for a specific config, but the config is not
+    available in the module, we should fallback to the generic
+    configuration.
+
+    (cherry picked from commit c09e8c8a2a27d8eea9ad4bb7d1b24028b6e99b51)
+
+ src/mm-shared-qmi.c | 70
+ ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 40 insertions(+), 30 deletions(-)
+
+commit 70869813e70c52f8f5162b2d91a4f9796da9a83d
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Jan 30 13:09:38 2019 +0100
+
+    shared-qmi: no active carrier config means default is in use
+
+    In addition to any installed MCFG file, the firmware itself as a
+    'default' config that will be selected when no carrier config is
+    installed.
+
+    So it is not an error if 'QMI PDC Get Selected Config' doesn't return
+    the 'Active ID' TLV, it just means the default one is selected.
+
+    (cherry picked from commit 0029f846cd2ec5794edf9aec2498229efbc8d05b)
+
+ src/mm-shared-qmi.c | 59
+ ++++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 38 insertions(+), 21 deletions(-)
+
+commit ca8eaf506c17773081ab9226bfb97640bbf1b0d4
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Dec 18 16:57:07 2018 +0100
+
+    api,modem: new 'CarrierConfigurationRevision' property
+
+    Which reports the version of the currently active carrier
+    configuration.
+
+    We also update the firmware 'version' reported in the firmware
+    settings so that carrier-specific upgrades can be performed (e.g. when
+    the firmware stays the same but the MCFG is updated).
+
+    (cherry picked from commit 52b67dc7c3a2b432f6c64b8e4d56b7f2e4d28066)
+
+ cli/mmcli-modem.c                                  |  3 +-
+ cli/mmcli-output.c                                 |  5 +--
+ cli/mmcli-output.h                                 |  3 +-
+ docs/reference/libmm-glib/libmm-glib-sections.txt  |  5 +++
+ .../org.freedesktop.ModemManager1.Modem.xml        |  7 ++++
+ libmm-glib/mm-modem.c                              | 41
+ ++++++++++++++++++++++
+ libmm-glib/mm-modem.h                              |  6 ++--
+ src/mm-iface-modem-firmware.c                      | 22 ++++++++----
+ src/mm-iface-modem.c                               | 33 +++++++++--------
+ src/mm-iface-modem.h                               | 12 ++++---
+ src/mm-shared-qmi.c                                | 25 +++++++++----
+ src/mm-shared-qmi.h                                |  4 ++-
+ 12 files changed, 128 insertions(+), 38 deletions(-)
+
+commit 58209ced858d52c111547cce4eb97914f114926d
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Dec 18 16:22:52 2018 +0100
+
+    firmware: export a device id containing the carrier info
+
+    In order to support different per-carrier upgrade paths in fwupd.
+
+    (cherry picked from commit c479d036f7717adbc922e52ba305df8a304bd690)
+
+ src/mm-iface-modem-firmware.c | 11 +++++++++++
+ src/mm-iface-modem.c          | 18 ++++++++++++++++++
+ src/mm-iface-modem.h          |  5 +++--
+ 3 files changed, 32 insertions(+), 2 deletions(-)
+
+commit 2484077ebc0cfe7136bf65ad345447ed130e16a1
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Dec 16 13:23:34 2018 +0100
+
+    plugins,test: setup new simple keyfile tester
+
+    (cherry picked from commit 147facd2ec780ef54d12fe7ad49286ea68c81e52)
+
+ .gitignore                    |  1 +
+ plugins/Makefile.am           | 17 ++++++++-
+ plugins/tests/test-keyfiles.c | 82
+ +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 99 insertions(+), 1 deletion(-)
+
+commit 39b753d784acee6cacf2b1974943b59f61e37edd
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Dec 16 12:39:10 2018 +0100
+
+    dell,dw5821e: install carrier config mapping
+
+    (cherry picked from commit 2719265cbde280e5ebbbde9ab98e8b369d516463)
+
+ plugins/Makefile.am                               |   6 +
+ plugins/dell/mm-broadband-modem-dell-dw5821e.c    |   5 +-
+ plugins/dell/mm-dell-dw5821e-carrier-mapping.conf | 281
+ ++++++++++++++++++++++
+ 3 files changed, 290 insertions(+), 2 deletions(-)
+
+commit 15791a5d2a91405951b57574c01668571292ff8c
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Dec 18 14:53:05 2018 +0100
+
+    shared-qmi: implement QMI PDC based carrier config support
+
+    We implement both loading the current configuration in use, as well as
+    automatically switching to a different one if a mapping file is
+    available.
+
+    (cherry picked from commit b4b6dc9e650ddb869a4577f3afa269d2aeb231cc)
+
+ src/mm-broadband-modem-mbim.c |   5 +
+ src/mm-broadband-modem-qmi.c  |   5 +
+ src/mm-broadband-modem.c      |  14 +
+ src/mm-shared-qmi.c           | 918
+ ++++++++++++++++++++++++++++++++++++++++++
+ src/mm-shared-qmi.h           |  14 +
+ 5 files changed, 956 insertions(+)
+
+commit eca4b382b353a88f89c50507de53b0313d2d63a0
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Dec 18 14:52:44 2018 +0100
+
+    iface-modem: new carrier config support
+
+    During initialization phase we will allow querying the modem for the
+    details of which carrier-specific configuration is being used, and
+    will expose a description string in the API.
+
+    In addition to showing the current configuration, we will also allow
+    automatically switching the configuration based on the SIM card
+    detected in the device. In order to allow this, plugins/modems will
+    need to provide the expected mapping between carrier config
+    description and MCCMNC. This mapping cannot be generic, because
+    different manufacturers may use different description strings.
+
+    (cherry picked from commit 94cf7f0ceb8c00a413d279a1fbdb491c01240d81)
+
+ cli/mmcli-modem.c                                  |   1 +
+ cli/mmcli-output.c                                 |   1 +
+ cli/mmcli-output.h                                 |   1 +
+ docs/reference/libmm-glib/libmm-glib-sections.txt  |   5 +
+ .../org.freedesktop.ModemManager1.Modem.xml        |   7 ++
+ libmm-glib/mm-modem.c                              |  41 ++++++++
+ libmm-glib/mm-modem.h                              |   3 +
+ src/mm-iface-modem.c                               | 113
+ +++++++++++++++++++++
+ src/mm-iface-modem.h                               |  19 ++++
+ 9 files changed, 191 insertions(+)
+
+commit 31a6d118a7890cf0a3e257701dd13d15c24d92f0
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Dec 16 17:41:57 2018 +0100
+
+    broadband-modem-mbim: static array to define used QMI services
+
+    (cherry picked from commit b8daedd3c015e150955d2063b9e79589640693e5)
+
+ src/mm-broadband-modem-mbim.c | 25 +++++++++++--------------
+ 1 file changed, 11 insertions(+), 14 deletions(-)
+
+commit 2514254b83478fcf6347620cfd27ae88979c39e2
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Dec 16 14:00:59 2018 +0100
+
+    broadband-modem-qmi: static array to define used QMI services
+
+    (cherry picked from commit 51a5b628ad5daadbeea3254100f5485785ba6833)
+
+ src/mm-broadband-modem-qmi.c | 29 ++++++++++++++---------------
+ 1 file changed, 14 insertions(+), 15 deletions(-)
+
+commit 70a1b7bb9db76b0004f9f85ee64bc078e5dadbcc
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Feb 26 17:05:42 2019 +0100
+
+    dell,dw5821e: use DMS extension method to load properly formatted
+    firmware version
+
+    And require libqmi 1.22.4.
+
+    (cherry picked from commit 1093c124b4cb0185f97de65ecce15901ec8ec9d8)
+
+ configure.ac                                   |  2 +-
+ plugins/dell/mm-broadband-modem-dell-dw5821e.c | 67
+ +++++++++++++++++++++++---
+ 2 files changed, 61 insertions(+), 8 deletions(-)
+
+commit a73b13b67cd1987431f92ea6a4ccc2cb85c51cc7
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Fri Feb 22 13:44:29 2019 +0100
+
+    port-qmi: increase qmi_device_open retries
+
+    Telit modems LM940/960 need more time for becoming responsive
+    to qmi requests after device appearance.
+
+    (cherry picked from commit 301bdcfef7e3407a675b37b99d2c57ddb249baa8)
+
+ src/mm-port-qmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 04c5294aaf3ff01bb1430bf718b0aa1c73555f10
+Author: Beniamino Galvani <bgalvani@redhat.com>
+Date:   Thu Feb 14 15:57:58 2019 +0100
+
+    broadband-modem-qmi: log reason of QMI port open failure
+
+    If ModemManager fails to open a QMI port with data format update, it
+    retries without update. It would be useful to log the reason why the
+    first try failed; for example on RHEL 7.6 ModemManager fails to write
+    to sysfs due to SELinux. With this commit, the following message would
+    be logged:
+
+     <debug> QMI port open operation finished
+     <debug> Couldn't open QMI port with data format update: Expected data
+     format not updated properly: Failed to open file
+     '/sys/class/net/wwp0s29u1u2i8/qmi/raw_ip' for R/W: Permission denied
+     <debug> Opening QMI device...
+
+    instead of just:
+
+     <debug> QMI port open operation finished
+     <debug> Opening QMI device...
+
+    While at it, also fix the GError leak.
+
+    (cherry picked from commit 35d84ac840dca47ae4bcca54d8ce4fed764be8b4)
+
+ src/mm-broadband-modem-qmi.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit 7285d79dc3781c43bd1b568b1da02683646edf49
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Apr 12 17:30:22 2019 +0200
+
+    ci: test MM 1.10.x branch with libmbim 1.18.x and libqmi 1.22.x
+
+ .gitlab-ci.yml | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+commit 0d460567341670256c173c7b5a4f45bbfbb9ebea
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Mar 13 13:27:30 2019 +0100
+
+    ci: run distcheck on default build
+
+    (cherry picked from commit 0a5d63872685691d43a87a27c0b700a327cf5098)
+
+ .gitlab-ci.yml | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+commit a445c3adec733f08d1b0f215afa0a4addcad8d17
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Mar 13 10:58:16 2019 +0100
+
+    ci: include builds without qmi and/or without mbim
+
+    (cherry picked from commit 8fba3a23189779f36f5e0fdeff78385ee395a9b3)
+
+ .gitlab-ci.yml | 80
+ +++++++++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 62 insertions(+), 18 deletions(-)
+
+commit 58ab2eee8a2808c5da0b14a8b0e0c77681a30105
+Author: Eric Caruso <ejcaruso@chromium.org>
+Date:   Wed Feb 13 13:54:36 2019 -0800
+
+    Add .gitlab-ci.yml
+
+    This allows us to run unit tests on every commit to the gitlab
+    instance.
+
+    (cherry picked from commit bf0b5a07ca2dab3c42749644d97f5faed6f58654)
+
+ .gitlab-ci.yml | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+commit 5a07e690230544f790d0d3c3e61a883fdd131df5
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Apr 8 12:38:47 2019 +0200
+
+    plugins,dell: port type hints for the DW5820e module
+
+    (cherry picked from commit 210dc0be47825fac059911863ee56b1de5f5629b)
+
+ plugins/dell/77-mm-dell-port-types.rules | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+commit 920a1342f1974ba3ed56f408ea3dd09509e32c83
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Apr 2 00:40:57 2019 +0200
+
+    base-manager: fix inhibition alloc/dealloc mixup
+
+    (cherry picked from commit 5bbcfa831818f12cba77679ca7bbe4d8ca0a5f7d)
+
+ src/mm-base-manager.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 802b0b00ec338bfad8c99d2fedfa741f63399e92
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Feb 11 15:04:53 2019 +0100
+
+    cli: report modem removal in --monitor-state
+
+    If the modem ends up not being managed by ModemManager, detect it
+    during the '--monitor-state' mmcli operation and report it.
+
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/issues/106
+    (cherry picked from commit de81520c4347f5203a179eeedb9f5188d89ab7c6)
+
+ cli/mmcli-modem.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+commit 6776530acbe8875f38029e446ac4586cff5b823b
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jan 17 16:36:57 2019 +0100
+
+    build: post release version bump to 1.10.1
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 commit 9268d4f9ef445ca7c9bf731fe125f432cf6385ac
 Author: Aleksander Morgado <aleksander@aleksander.es>
 Date:   Thu Jan 17 16:14:25 2019 +0100

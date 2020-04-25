@@ -8,7 +8,7 @@
 <link rel="up" href="ref-dbus-object-modem.html" title="The /org/freedesktop/ModemManager/Modems objects">
 <link rel="prev" href="ref-dbus-object-modem.html" title="The /org/freedesktop/ModemManager/Modems objects">
 <link rel="next" href="gdbus-org.freedesktop.ModemManager1.Modem.Simple.html" title="org.freedesktop.ModemManager1.Modem.Simple">
-<meta name="generator" content="GTK-Doc V1.29 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.30 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -63,36 +63,38 @@
 <div class="refsect1">
 <a name="id-1.5.5.6.5"></a><h2>Properties</h2>
 <pre class="synopsis">
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Sim" title='The "Sim" property'>Sim</a>                    readable   o
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers" title='The "Bearers" property'>Bearers</a>                readable   ao
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities" title='The "SupportedCapabilities" property'>SupportedCapabilities</a>  readable   au
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentCapabilities" title='The "CurrentCapabilities" property'>CurrentCapabilities</a>    readable   u
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.MaxBearers" title='The "MaxBearers" property'>MaxBearers</a>             readable   u
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveBearers" title='The "MaxActiveBearers" property'>MaxActiveBearers</a>       readable   u
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Manufacturer" title='The "Manufacturer" property'>Manufacturer</a>           readable   s
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Model" title='The "Model" property'>Model</a>                  readable   s
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Revision" title='The "Revision" property'>Revision</a>               readable   s
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.HardwareRevision" title='The "HardwareRevision" property'>HardwareRevision</a>       readable   s
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.DeviceIdentifier" title='The "DeviceIdentifier" property'>DeviceIdentifier</a>       readable   s
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Device" title='The "Device" property'>Device</a>                 readable   s
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Drivers" title='The "Drivers" property'>Drivers</a>                readable   as
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Plugin" title='The "Plugin" property'>Plugin</a>                 readable   s
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.PrimaryPort" title='The "PrimaryPort" property'>PrimaryPort</a>            readable   s
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Ports" title='The "Ports" property'>Ports</a>                  readable   a(su)
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.EquipmentIdentifier" title='The "EquipmentIdentifier" property'>EquipmentIdentifier</a>    readable   s
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.UnlockRequired" title='The "UnlockRequired" property'>UnlockRequired</a>         readable   u
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.UnlockRetries" title='The "UnlockRetries" property'>UnlockRetries</a>          readable   a{uu}
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.State" title='The "State" property'>State</a>                  readable   i
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.StateFailedReason" title='The "StateFailedReason" property'>StateFailedReason</a>      readable   u
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.AccessTechnologies" title='The "AccessTechnologies" property'>AccessTechnologies</a>     readable   u
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SignalQuality" title='The "SignalQuality" property'>SignalQuality</a>          readable   (ub)
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.OwnNumbers" title='The "OwnNumbers" property'>OwnNumbers</a>             readable   as
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.PowerState" title='The "PowerState" property'>PowerState</a>             readable   u
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedModes" title='The "SupportedModes" property'>SupportedModes</a>         readable   a(uu)
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentModes" title='The "CurrentModes" property'>CurrentModes</a>           readable   (uu)
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedBands" title='The "SupportedBands" property'>SupportedBands</a>         readable   au
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentBands" title='The "CurrentBands" property'>CurrentBands</a>           readable   au
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedIpFamilies" title='The "SupportedIpFamilies" property'>SupportedIpFamilies</a>    readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Sim" title='The "Sim" property'>Sim</a>                           readable   o
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers" title='The "Bearers" property'>Bearers</a>                       readable   ao
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities" title='The "SupportedCapabilities" property'>SupportedCapabilities</a>         readable   au
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentCapabilities" title='The "CurrentCapabilities" property'>CurrentCapabilities</a>           readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.MaxBearers" title='The "MaxBearers" property'>MaxBearers</a>                    readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveBearers" title='The "MaxActiveBearers" property'>MaxActiveBearers</a>              readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Manufacturer" title='The "Manufacturer" property'>Manufacturer</a>                  readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Model" title='The "Model" property'>Model</a>                         readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Revision" title='The "Revision" property'>Revision</a>                      readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfiguration" title='The "CarrierConfiguration" property'>CarrierConfiguration</a>          readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfigurationRevision" title='The "CarrierConfigurationRevision" property'>CarrierConfigurationRevision</a>  readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.HardwareRevision" title='The "HardwareRevision" property'>HardwareRevision</a>              readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.DeviceIdentifier" title='The "DeviceIdentifier" property'>DeviceIdentifier</a>              readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Device" title='The "Device" property'>Device</a>                        readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Drivers" title='The "Drivers" property'>Drivers</a>                       readable   as
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Plugin" title='The "Plugin" property'>Plugin</a>                        readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.PrimaryPort" title='The "PrimaryPort" property'>PrimaryPort</a>                   readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Ports" title='The "Ports" property'>Ports</a>                         readable   a(su)
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.EquipmentIdentifier" title='The "EquipmentIdentifier" property'>EquipmentIdentifier</a>           readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.UnlockRequired" title='The "UnlockRequired" property'>UnlockRequired</a>                readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.UnlockRetries" title='The "UnlockRetries" property'>UnlockRetries</a>                 readable   a{uu}
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.State" title='The "State" property'>State</a>                         readable   i
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.StateFailedReason" title='The "StateFailedReason" property'>StateFailedReason</a>             readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.AccessTechnologies" title='The "AccessTechnologies" property'>AccessTechnologies</a>            readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SignalQuality" title='The "SignalQuality" property'>SignalQuality</a>                 readable   (ub)
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.OwnNumbers" title='The "OwnNumbers" property'>OwnNumbers</a>                    readable   as
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.PowerState" title='The "PowerState" property'>PowerState</a>                    readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedModes" title='The "SupportedModes" property'>SupportedModes</a>                readable   a(uu)
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentModes" title='The "CurrentModes" property'>CurrentModes</a>                  readable   (uu)
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedBands" title='The "SupportedBands" property'>SupportedBands</a>                readable   au
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentBands" title='The "CurrentBands" property'>CurrentBands</a>                  readable   au
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedIpFamilies" title='The "SupportedIpFamilies" property'>SupportedIpFamilies</a>           readable   u
 </pre>
 </div>
 <div class="refsect1">
@@ -544,6 +546,24 @@ Revision  readable   s
 </div>
 <hr>
 <div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfiguration"></a><h3>The "CarrierConfiguration" property</h3>
+<pre class="programlisting">
+CarrierConfiguration  readable   s
+</pre>
+<p>        The description of the carrier-specific configuration (MCFG) in use by the modem.
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfigurationRevision"></a><h3>The "CarrierConfigurationRevision" property</h3>
+<pre class="programlisting">
+CarrierConfigurationRevision  readable   s
+</pre>
+<p>        The revision identification of the carrier-specific configuration (MCFG) in use by the modem.
+</p>
+</div>
+<hr>
+<div class="refsect2">
 <a name="gdbus-property-org-freedesktop-ModemManager1-Modem.HardwareRevision"></a><h3>The "HardwareRevision" property</h3>
 <pre class="programlisting">
 HardwareRevision  readable   s
@@ -826,6 +846,6 @@ SupportedIpFamilies  readable   u
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.29</div>
+<hr>Generated by GTK-Doc V1.30</div>
 </body>
 </html>

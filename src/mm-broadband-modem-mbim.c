@@ -1874,8 +1874,7 @@ enabling_started (MMBroadbandModem *self,
 typedef struct {
     MMPortMbim *mbim;
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-    QmiService qmi_services[32];
-    guint      qmi_service_index;
+    guint       qmi_service_index;
 #endif
 } InitializationStartedContext;
 
@@ -1933,6 +1932,14 @@ parent_initialization_started (GTask *task)
 
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
 
+static const QmiService qmi_services[] = {
+    QMI_SERVICE_DMS,
+    QMI_SERVICE_NAS,
+    QMI_SERVICE_PDS,
+    QMI_SERVICE_LOC,
+    QMI_SERVICE_PDC,
+};
+
 static void allocate_next_qmi_client (GTask *task);
 
 static void
@@ -1947,7 +1954,7 @@ mbim_port_allocate_qmi_client_ready (MMPortMbim   *mbim,
 
     if (!mm_port_mbim_allocate_qmi_client_finish (mbim, res, &error)) {
         mm_dbg ("Couldn't allocate QMI client for service '%s': %s",
-                qmi_service_get_string (ctx->qmi_services[ctx->qmi_service_index]),
+                qmi_service_get_string (qmi_services[ctx->qmi_service_index]),
                 error->message);
         g_error_free (error);
     }
@@ -1965,14 +1972,14 @@ allocate_next_qmi_client (GTask *task)
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
 
-    if (ctx->qmi_services[ctx->qmi_service_index] == QMI_SERVICE_UNKNOWN) {
+    if (ctx->qmi_service_index == G_N_ELEMENTS (qmi_services)) {
         parent_initialization_started (task);
         return;
     }
 
     /* Otherwise, allocate next client */
     mm_port_mbim_allocate_qmi_client (ctx->mbim,
-                                      ctx->qmi_services[ctx->qmi_service_index],
+                                      qmi_services[ctx->qmi_service_index],
                                       NULL,
                                       (GAsyncReadyCallback)mbim_port_allocate_qmi_client_ready,
                                       task);
@@ -2186,15 +2193,6 @@ initialization_started (MMBroadbandModem    *self,
         query_device_services (task);
         return;
     }
-
-#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-    /* Setup services to open */
-    ctx->qmi_services[0] = QMI_SERVICE_DMS;
-    ctx->qmi_services[1] = QMI_SERVICE_NAS;
-    ctx->qmi_services[2] = QMI_SERVICE_PDS;
-    ctx->qmi_services[3] = QMI_SERVICE_LOC;
-    ctx->qmi_services[4] = QMI_SERVICE_UNKNOWN;
-#endif
 
     /* Now open our MBIM port */
     mm_port_mbim_open (ctx->mbim,
@@ -3944,24 +3942,41 @@ register_state_set_ready (MbimDevice *device,
 {
     MbimMessage *response;
     GError *error = NULL;
-    MbimNwError nw_error;
 
     response = mbim_device_command_finish (device, res, &error);
+    /* According to Mobile Broadband Interface Model specification 1.0,
+     * Errata 1, table 10.5.9.8: Status codes for MBIM_CID_REGISTER_STATE,
+     * NwError field of MBIM_REGISTRATION_STATE_INFO structure is valid
+     * if and only if MBIM_SET_REGISTRATION_STATE response status code equals
+     * MBIM_STATUS_FAILURE.
+     * Therefore it only makes sense to parse this value if MBIM_STATUS_FAILURE
+     * result is returned in response, contrary to usual "success" code.
+     * However, some modems do not set this value to 0 when registered,
+     * causing ModemManager to drop to idle state, while modem itself is
+     * registered.
+     * Also NwError "0" is defined in 3GPP TS 24.008 as "Unknown error",
+     * not "No error", making it unsuitable as condition for registration check.
+     */
     if (response &&
-        mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error) &&
-        mbim_message_register_state_response_parse (
-            response,
-            &nw_error,
-            NULL, /* &register_state */
-            NULL, /* register_mode */
-            NULL, /* available_data_classes */
-            NULL, /* current_cellular_class */
-            NULL, /* provider_id */
-            NULL, /* provider_name */
-            NULL, /* roaming_text */
-            NULL, /* registration_flag */
-            NULL)) {
-        if (nw_error)
+        !mbim_message_response_get_result (response,
+                                           MBIM_MESSAGE_TYPE_COMMAND_DONE,
+                                           &error) &&
+        g_error_matches (error, MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_FAILURE)) {
+        MbimNwError nw_error;
+
+        g_clear_error (&error);
+        if (mbim_message_register_state_response_parse (
+                response,
+                &nw_error,
+                NULL, /* &register_state */
+                NULL, /* register_mode */
+                NULL, /* available_data_classes */
+                NULL, /* current_cellular_class */
+                NULL, /* provider_id */
+                NULL, /* provider_name */
+                NULL, /* roaming_text */
+                NULL, /* registration_flag */
+                &error))
             error = mm_mobile_equipment_error_from_mbim_nw_error (nw_error);
     }
 
@@ -5234,6 +5249,10 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_supported_ip_families_finish = modem_load_supported_ip_families_finish;
 
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+    iface->load_carrier_config = mm_shared_qmi_load_carrier_config;
+    iface->load_carrier_config_finish = mm_shared_qmi_load_carrier_config_finish;
+    iface->setup_carrier_config = mm_shared_qmi_setup_carrier_config;
+    iface->setup_carrier_config_finish = mm_shared_qmi_setup_carrier_config_finish;
     iface->load_supported_bands = mm_shared_qmi_load_supported_bands;
     iface->load_supported_bands_finish = mm_shared_qmi_load_supported_bands_finish;
     iface->load_current_bands = mm_shared_qmi_load_current_bands;

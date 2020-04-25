@@ -254,6 +254,10 @@
     <keyword type="function" name="mm_modem_dup_model ()" link="MMModem.html#mm-modem-dup-model"/>
     <keyword type="function" name="mm_modem_get_revision ()" link="MMModem.html#mm-modem-get-revision"/>
     <keyword type="function" name="mm_modem_dup_revision ()" link="MMModem.html#mm-modem-dup-revision"/>
+    <keyword type="function" name="mm_modem_get_carrier_configuration ()" link="MMModem.html#mm-modem-get-carrier-configuration"/>
+    <keyword type="function" name="mm_modem_dup_carrier_configuration ()" link="MMModem.html#mm-modem-dup-carrier-configuration"/>
+    <keyword type="function" name="mm_modem_get_carrier_configuration_revision ()" link="MMModem.html#mm-modem-get-carrier-configuration-revision"/>
+    <keyword type="function" name="mm_modem_dup_carrier_configuration_revision ()" link="MMModem.html#mm-modem-dup-carrier-configuration-revision"/>
     <keyword type="function" name="mm_modem_get_hardware_revision ()" link="MMModem.html#mm-modem-get-hardware-revision"/>
     <keyword type="function" name="mm_modem_dup_hardware_revision ()" link="MMModem.html#mm-modem-dup-hardware-revision"/>
     <keyword type="function" name="mm_modem_get_drivers ()" link="MMModem.html#mm-modem-get-drivers"/>
@@ -967,6 +971,10 @@
     <keyword type="function" name="mm_gdbus_modem_dup_ports ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-ports"/>
     <keyword type="function" name="mm_gdbus_modem_get_revision ()" link="MmGdbusModem.html#mm-gdbus-modem-get-revision"/>
     <keyword type="function" name="mm_gdbus_modem_dup_revision ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-revision"/>
+    <keyword type="function" name="mm_gdbus_modem_get_carrier_configuration ()" link="MmGdbusModem.html#mm-gdbus-modem-get-carrier-configuration"/>
+    <keyword type="function" name="mm_gdbus_modem_dup_carrier_configuration ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-carrier-configuration"/>
+    <keyword type="function" name="mm_gdbus_modem_get_carrier_configuration_revision ()" link="MmGdbusModem.html#mm-gdbus-modem-get-carrier-configuration-revision"/>
+    <keyword type="function" name="mm_gdbus_modem_dup_carrier_configuration_revision ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-carrier-configuration-revision"/>
     <keyword type="function" name="mm_gdbus_modem_get_hardware_revision ()" link="MmGdbusModem.html#mm-gdbus-modem-get-hardware-revision"/>
     <keyword type="function" name="mm_gdbus_modem_dup_hardware_revision ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-hardware-revision"/>
     <keyword type="function" name="mm_gdbus_modem_get_signal_quality ()" link="MmGdbusModem.html#mm-gdbus-modem-get-signal-quality"/>
@@ -1022,6 +1030,8 @@
     <keyword type="struct" name="struct MmGdbusModemIface" link="MmGdbusModem.html#MmGdbusModemIface"/>
     <keyword type="property" name="The “access-technologies” property" link="MmGdbusModem.html#MmGdbusModem--access-technologies"/>
     <keyword type="property" name="The “bearers” property" link="MmGdbusModem.html#MmGdbusModem--bearers"/>
+    <keyword type="property" name="The “carrier-configuration” property" link="MmGdbusModem.html#MmGdbusModem--carrier-configuration"/>
+    <keyword type="property" name="The “carrier-configuration-revision” property" link="MmGdbusModem.html#MmGdbusModem--carrier-configuration-revision"/>
     <keyword type="property" name="The “current-bands” property" link="MmGdbusModem.html#MmGdbusModem--current-bands"/>
     <keyword type="property" name="The “current-capabilities” property" link="MmGdbusModem.html#MmGdbusModem--current-capabilities"/>
     <keyword type="property" name="The “current-modes” property" link="MmGdbusModem.html#MmGdbusModem--current-modes"/>
@@ -1645,6 +1655,8 @@
     <keyword type="member" name="MmGdbusModemIface.handle-set-power-state" link="MmGdbusModem.html#MmGdbusModemIface.handle-set-power-state"/>
     <keyword type="member" name="MmGdbusModemIface.get-access-technologies" link="MmGdbusModem.html#MmGdbusModemIface.get-access-technologies"/>
     <keyword type="member" name="MmGdbusModemIface.get-bearers" link="MmGdbusModem.html#MmGdbusModemIface.get-bearers"/>
+    <keyword type="member" name="MmGdbusModemIface.get-carrier-configuration" link="MmGdbusModem.html#MmGdbusModemIface.get-carrier-configuration"/>
+    <keyword type="member" name="MmGdbusModemIface.get-carrier-configuration-revision" link="MmGdbusModem.html#MmGdbusModemIface.get-carrier-configuration-revision"/>
     <keyword type="member" name="MmGdbusModemIface.get-current-bands" link="MmGdbusModem.html#MmGdbusModemIface.get-current-bands"/>
     <keyword type="member" name="MmGdbusModemIface.get-current-capabilities" link="MmGdbusModem.html#MmGdbusModemIface.get-current-capabilities"/>
     <keyword type="member" name="MmGdbusModemIface.get-current-modes" link="MmGdbusModem.html#MmGdbusModemIface.get-current-modes"/>

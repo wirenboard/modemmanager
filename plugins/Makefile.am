@@ -9,6 +9,7 @@ AM_CFLAGS = \
 	$(MM_CFLAGS) \
 	$(CODE_COVERAGE_CFLAGS) \
 	$(GUDEV_CFLAGS)	\
+	-DPKGDATADIR=\"${pkgdatadir}\" \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/src \
@@ -63,6 +64,9 @@ BUILT_SOURCES =
 
 # Clean files
 CLEANFILES =
+
+# Data files
+dist_pkgdata_DATA =
 
 ################################################################################
 # common service test support
@@ -905,10 +909,19 @@ noinst_LTLIBRARIES += libmm-utils-telit.la
 libmm_utils_telit_la_SOURCES = \
 	telit/mm-common-telit.c \
 	telit/mm-common-telit.h \
+	telit/mm-shared-telit.c \
+	telit/mm-shared-telit.h \
 	telit/mm-broadband-modem-telit.c \
 	telit/mm-broadband-modem-telit.h \
 	$(NULL)
 libmm_utils_telit_la_CPPFLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
+
+if WITH_MBIM
+libmm_utils_telit_la_SOURCES += \
+	telit/mm-broadband-modem-mbim-telit.h \
+	telit/mm-broadband-modem-mbim-telit.c \
+	$(NULL)
+endif
 
 TELIT_COMMON_COMPILER_FLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
 TELIT_COMMON_LIBADD_FLAGS   = \
@@ -1065,11 +1078,18 @@ libmm_plugin_dell_la_LIBADD = \
 
 dist_udevrules_DATA += dell/77-mm-dell-port-types.rules
 
-AM_CFLAGS += -DTESTUDEVRULESDIR_DELL=\"${srcdir}/dell\"
+dist_pkgdata_DATA += dell/mm-dell-dw5821e-carrier-mapping.conf
+
+AM_CFLAGS += \
+	-DTESTUDEVRULESDIR_DELL=\"${srcdir}/dell\" \
+	-DTESTKEYFILE_DELL_DW5821E=\"${srcdir}/dell/mm-dell-dw5821e-carrier-mapping.conf\" \
+	$(NULL)
 
 ################################################################################
 # plugin: quectel
 ################################################################################
+
+dist_udevrules_DATA += quectel/77-mm-quectel-port-types.rules
 
 pkglib_LTLIBRARIES += libmm-plugin-quectel.la
 libmm_plugin_quectel_la_SOURCES = \
@@ -1116,6 +1136,18 @@ test_udev_rules_SOURCES = \
 	$(NULL)
 test_udev_rules_LDADD = \
 	$(top_builddir)/src/libkerneldevice.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+################################################################################
+# keyfile tester
+################################################################################
+
+noinst_PROGRAMS += test-keyfiles
+test_keyfiles_SOURCES = \
+	tests/test-keyfiles.c \
+	$(NULL)
+test_keyfiles_LDADD = \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
 	$(NULL)
 
