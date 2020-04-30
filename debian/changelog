@@ -1,3 +1,11 @@
+modemmanager (1.12.8-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Update Vcs-* to salsa.
+  * Use Rules-Requires-Root: no
+
+ -- Martin <debacle@debian.org>  Thu, 30 Apr 2020 00:44:37 +0000
+
 modemmanager (1.12.8-1) unstable; urgency=medium
 
   * New upstream version
