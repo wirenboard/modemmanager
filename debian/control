@@ -20,6 +20,7 @@ Build-Depends: debhelper (>= 10),
                valac (>= 0.22),
                dbus
 Standards-Version: 4.2.1
+Rules-Requires-Root: no
 Vcs-Git: https://salsa.debian.org/debian/modemmanager.git
 Vcs-Browser: https://salsa.debian.org/debian/modemmanager
 Homepage: https://www.freedesktop.org/wiki/Software/ModemManager/
