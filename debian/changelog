@@ -1,3 +1,10 @@
+modemmanager (1.12.10-0.2) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Apply upstream patch to fix problem with wavecom modems.
+
+ -- Martin <debacle@debian.org>  Sun, 07 Jun 2020 11:01:26 +0000
+
 modemmanager (1.12.10-0.1) unstable; urgency=medium
 
   * Non-maintainer upload.
