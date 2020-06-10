@@ -223,7 +223,7 @@ CreateBearer (IN  a{sv} properties,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">IN a{sv} <em class="parameter"><code>properties</code></em></code>:</span></p></td>
-<td><p>List of properties to assign to the bearer after creating it.</p></td>
+<td><p>Dictionary of properties needed to get the bearer connected.</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">OUT o <em class="parameter"><code>path</code></em></code>:</span></p></td>
@@ -317,7 +317,12 @@ SetPowerState (IN  u state);
 <pre class="programlisting">
 SetCurrentCapabilities (IN  u capabilities);
 </pre>
-<p>        Set the capabilities of the device. A restart of the modem may be required.
+<p>        Set the capabilities of the device.
+</p>
+<p>        The given bitmask should be supported by the modem, as specified in the
+        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities" title='The "SupportedCapabilities" property'>"SupportedCapabilities"</a> property.
+</p>
+<p>        This command may power-cycle the device.
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -381,7 +386,12 @@ Command (IN  s cmd,
          IN  u timeout,
          OUT s response);
 </pre>
-<p></p>
+<p>       Send an arbitrary AT command to a modem and get the response.
+</p>
+<p>       Note that using this interface call is only allowed when running
+       ModemManager in debug mode or if the project was built using
+       the <code class="literal">with-at-command-via-dbus</code> configure option.
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -390,15 +400,15 @@ Command (IN  s cmd,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>cmd</code></em></code>:</span></p></td>
-<td><p></p></td>
+<td><p>The command string, e.g. "AT+GCAP" or "+GCAP" (leading AT is inserted if necessary).</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">IN u <em class="parameter"><code>timeout</code></em></code>:</span></p></td>
-<td><p></p></td>
+<td><p>The number of seconds to wait for a response.</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">OUT s <em class="parameter"><code>response</code></em></code>:</span></p></td>
-<td><p></p></td>
+<td><p>The modem's response.</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -467,12 +477,16 @@ Bearers  readable   ao
 SupportedCapabilities  readable   au
 </pre>
 <p>        List of <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCapability" title="enum MMModemCapability">MMModemCapability</a>
-        values, specifying the combinations of generic family of access
+        bitmasks, specifying the combinations of generic family of access
         technologies the modem supports.
 </p>
-<p>        If the modem doesn't allow changing the current capabilities, a single entry with
-        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-MODEM-CAPABILITY-ANY:CAPS"><code class="constant">MM_MODEM_CAPABILITY_ANY</code></a>
-        will be given.
+<p>        If the modem doesn't allow changing the current capabilities, the
+        list will report one single entry with the same bitmask as in
+        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentCapabilities" title='The "CurrentCapabilities" property'>"CurrentCapabilities"</a>.
+</p>
+<p>        Only multimode devices implementing both 3GPP (GSM/UMTS/LTE/5GNR) and
+        3GPP2 (CDMA/EVDO) specs will report more than one combination of
+        capabilities.
 </p>
 </div>
 <hr>
@@ -482,8 +496,11 @@ SupportedCapabilities  readable   au
 CurrentCapabilities  readable   u
 </pre>
 <p>        Bitmask of <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCapability" title="enum MMModemCapability">MMModemCapability</a>
-        values, specifying the  generic family of access technologies the modem
-        currently supports without a firmware reload or reinitialization.
+        values, specifying the currently used generic family of access
+        technologies.
+</p>
+<p>        This bitmask will be one of the ones listed in
+        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities" title='The "SupportedCapabilities" property'>"SupportedCapabilities"</a>.
 </p>
 </div>
 <hr>

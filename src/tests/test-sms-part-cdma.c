@@ -23,7 +23,7 @@
 #include <libmm-glib.h>
 
 #include "mm-sms-part-cdma.h"
-#include "mm-log.h"
+#include "mm-log-test.h"
 
 /********************* PDU PARSER TESTS *********************/
 
@@ -38,8 +38,7 @@ common_test_part_from_hexpdu (const gchar *hexpdu,
     MMSmsPart *part;
     GError *error = NULL;
 
-    mm_dbg (" ");
-    part = mm_sms_part_cdma_new_from_pdu (0, hexpdu, &error);
+    part = mm_sms_part_cdma_new_from_pdu (0, hexpdu, NULL, &error);
     g_assert_no_error (error);
     g_assert (part != NULL);
 
@@ -88,8 +87,7 @@ common_test_invalid_part_from_hexpdu (const gchar *hexpdu)
     MMSmsPart *part;
     GError *error = NULL;
 
-    mm_dbg (" ");
-    part = mm_sms_part_cdma_new_from_pdu (0, hexpdu, &error);
+    part = mm_sms_part_cdma_new_from_pdu (0, hexpdu, NULL, &error);
     g_assert (part == NULL);
     /* We don't care for the specific error type */
     g_assert (error != NULL);
@@ -396,7 +394,7 @@ common_test_create_pdu (MMSmsCdmaTeleserviceId teleservice_id,
         mm_sms_part_take_data (part, data_bytearray);
     }
 
-    pdu = mm_sms_part_cdma_get_submit_pdu (part, &len, &error);
+    pdu = mm_sms_part_cdma_get_submit_pdu (part, &len, NULL, &error);
     mm_sms_part_free (part);
 
     if (g_test_verbose ())
@@ -503,26 +501,6 @@ test_create_pdu_text_unicode_encoding (void)
 }
 
 /************************************************************/
-
-void
-_mm_log (const char *loc,
-         const char *func,
-         guint32 level,
-         const char *fmt,
-         ...)
-{
-    va_list args;
-    gchar *msg;
-
-    if (!g_test_verbose ())
-        return;
-
-    va_start (args, fmt);
-    msg = g_strdup_vprintf (fmt, args);
-    va_end (args);
-    g_print ("%s\n", msg);
-    g_free (msg);
-}
 
 int main (int argc, char **argv)
 {

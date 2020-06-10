@@ -31,12 +31,14 @@
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-3gpp.h"
 #include "mm-iface-modem-messaging.h"
-#include "mm-log.h"
+#include "mm-log-object.h"
 #include "mm-modem-helpers.h"
 #include "mm-serial-parsers.h"
 
 static void iface_modem_init (MMIfaceModem *iface);
 static void iface_modem_3gpp_init (MMIfaceModem3gpp *iface);
+
+static MMIfaceModem3gpp *iface_modem_3gpp_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemNovatelLte, mm_broadband_modem_novatel_lte, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -221,25 +223,25 @@ response_processor_nwmdn_ignore_at_errors (MMBaseModem *self,
                                            GVariant **result,
                                            GError **result_error)
 {
-    GArray *array;
-    GStrv own_numbers;
-    gchar *mdn;
+    g_auto(GStrv)  own_numbers = NULL;
+    GPtrArray     *array;
+    gchar         *mdn;
 
     if (error) {
         /* Ignore AT errors (ie, ERROR or CMx ERROR) */
         if (error->domain != MM_MOBILE_EQUIPMENT_ERROR || last_command)
             *result_error = g_error_copy (error);
-
         return FALSE;
     }
 
     mdn = g_strdup (mm_strip_tag (response, "$NWMDN:"));
-    array = g_array_new (TRUE, TRUE, sizeof (gchar *));
-    g_array_append_val (array, mdn);
-    own_numbers = (GStrv) g_array_free (array, FALSE);
+
+    array = g_ptr_array_new ();
+    g_ptr_array_add (array, mdn);
+    g_ptr_array_add (array, NULL);
+    own_numbers = (GStrv) g_ptr_array_free (array, FALSE);
 
     *result = g_variant_new_strv ((const gchar *const *) own_numbers, -1);
-    g_strfreev (own_numbers);
     return TRUE;
 }
 
@@ -254,7 +256,6 @@ load_own_numbers (MMIfaceModem *self,
                   GAsyncReadyCallback callback,
                   gpointer user_data)
 {
-    mm_dbg ("loading (Novatel LTE) own numbers...");
     mm_base_modem_at_sequence (
         MM_BASE_MODEM (self),
         own_numbers_commands,
@@ -363,7 +364,6 @@ load_current_bands_done (MMIfaceModem *self,
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
-        mm_dbg ("Couldn't query supported bands: '%s'", error->message);
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -422,7 +422,6 @@ load_unlock_retries_ready (MMBaseModem *self,
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
-        mm_dbg ("Couldn't query unlock retries: '%s'", error->message);
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -497,7 +496,6 @@ load_access_technologies_ready (MMIfaceModem *self,
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
-        mm_dbg ("Couldn't query access technology: '%s'", error->message);
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -571,31 +569,20 @@ scan_networks_finish (MMIfaceModem3gpp *self,
 }
 
 static void
-cops_query_ready (MMBroadbandModemNovatelLte *self,
-                  GAsyncResult *res,
-                  GTask *task)
+parent_scan_networks_ready (MMIfaceModem3gpp *self,
+                            GAsyncResult     *res,
+                            GTask            *task)
 {
-    const gchar *response;
     GError *error = NULL;
-    GList *scan_result;
+    GList  *scan_result;
 
-    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
-    if (error) {
+    scan_result = iface_modem_3gpp_parent->scan_networks_finish (self, res, &error);
+    if (!scan_result)
         g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    scan_result = mm_3gpp_parse_cops_test_response (response, &error);
-    if (error) {
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    g_task_return_pointer (task,
-                           scan_result,
-                           (GDestroyNotify)mm_3gpp_network_info_list_free);
+    else
+        g_task_return_pointer (task,
+                               scan_result,
+                               (GDestroyNotify)mm_3gpp_network_info_list_free);
     g_object_unref (task);
 }
 
@@ -607,36 +594,33 @@ scan_networks (MMIfaceModem3gpp *self,
     GTask *task;
     MMModemAccessTechnology access_tech;
 
-    mm_dbg ("scanning for networks (Novatel LTE)...");
+    mm_obj_dbg (self, "scanning for networks (Novatel LTE)...");
 
     task = g_task_new (self, NULL, callback, user_data);
 
-    access_tech = mm_iface_modem_get_access_technologies (MM_IFACE_MODEM (self));
     /* The Novatel LTE modem does not properly support AT+COPS=? in LTE mode.
      * Thus, do not try to scan networks when the current access technologies
      * include LTE.
      */
+    access_tech = mm_iface_modem_get_access_technologies (MM_IFACE_MODEM (self));
     if (access_tech & MM_MODEM_ACCESS_TECHNOLOGY_LTE) {
-        gchar *access_tech_string;
+        g_autofree gchar *access_tech_string = NULL;
 
         access_tech_string = mm_modem_access_technology_build_string_from_mask (access_tech);
-        mm_warn ("Couldn't scan for networks with access technologies: %s", access_tech_string);
+        mm_obj_warn (self, "couldn't scan for networks with access technologies: %s", access_tech_string);
         g_task_return_new_error (task,
                                  MM_CORE_ERROR,
                                  MM_CORE_ERROR_UNSUPPORTED,
                                  "Couldn't scan for networks with access technologies: %s",
                                  access_tech_string);
         g_object_unref (task);
-        g_free (access_tech_string);
         return;
     }
 
-    mm_base_modem_at_command (MM_BASE_MODEM (self),
-                              "+COPS=?",
-                              300,
-                              FALSE,
-                              (GAsyncReadyCallback)cops_query_ready,
-                              task);
+    /* Otherwise, just fallback to the generic scan method */
+    iface_modem_3gpp_parent->scan_networks (self,
+                                            (GAsyncReadyCallback)parent_scan_networks_ready,
+                                            task);
 }
 
 /*****************************************************************************/
@@ -691,6 +675,8 @@ iface_modem_init (MMIfaceModem *iface)
 static void
 iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
 {
+    iface_modem_3gpp_parent = g_type_interface_peek_parent (iface);
+
     iface->scan_networks = scan_networks;
     iface->scan_networks_finish = scan_networks_finish;
 }

@@ -23,7 +23,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#include <mm-log.h>
+#include <mm-log-test.h>
 #include <mm-kernel-device-generic-rules.h>
 
 #define PROGRAM_NAME    "mmrules"
@@ -49,26 +49,6 @@ static GOptionEntry main_entries[] = {
     },
     { NULL }
 };
-
-void
-_mm_log (const char *loc,
-         const char *func,
-         guint32 level,
-         const char *fmt,
-         ...)
-{
-    va_list args;
-    gchar *msg;
-
-    if (!verbose_flag)
-        return;
-
-    va_start (args, fmt);
-    msg = g_strdup_vprintf (fmt, args);
-    va_end (args);
-    g_print ("%s\n", msg);
-    g_free (msg);
-}
 
 static void
 print_version_and_exit (void)
@@ -104,6 +84,7 @@ print_rule (MMUdevRule *rule)
                          i, rule_match->parameter, rule_match->value);
                 break;
             case MM_UDEV_RULE_MATCH_TYPE_UNKNOWN:
+            default:
                 g_assert_not_reached ();
             }
         }
@@ -123,6 +104,7 @@ print_rule (MMUdevRule *rule)
         break;
     case MM_UDEV_RULE_RESULT_TYPE_GOTO_TAG:
     case MM_UDEV_RULE_RESULT_TYPE_UNKNOWN:
+    default:
         g_assert_not_reached ();
     }
 }

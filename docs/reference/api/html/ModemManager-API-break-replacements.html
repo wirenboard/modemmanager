@@ -303,6 +303,10 @@
 <td class="define_keyword">#define</td>
 <td class="function_name"><a class="link" href="ModemManager-API-break-replacements.html#MM-MODEM-LOCATION-SOURCE-AGPS:CAPS" title="MM_MODEM_LOCATION_SOURCE_AGPS">MM_MODEM_LOCATION_SOURCE_AGPS</a></td>
 </tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="ModemManager-API-break-replacements.html#MM-MODEM-CAPABILITY-LTE-ADVANCED:CAPS" title="MM_MODEM_CAPABILITY_LTE_ADVANCED">MM_MODEM_CAPABILITY_LTE_ADVANCED</a></td>
+</tr>
 </tbody>
 </table></div>
 </div>
@@ -1108,6 +1112,17 @@ avoid unnecessary API/ABI breaks.</p>
 </div>
 <p>A-GPS location requested.</p>
 <p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MM-MODEM-CAPABILITY-LTE-ADVANCED:CAPS"></a><h3>MM_MODEM_CAPABILITY_LTE_ADVANCED</h3>
+<pre class="programlisting">#define MM_MODEM_CAPABILITY_LTE_ADVANCED ((MMModemCapabilityDeprecated)(1 &lt;&lt; 4))
+</pre>
+<div class="warning"><p><code class="literal">MM_MODEM_CAPABILITY_LTE_ADVANCED</code> has been deprecated since version 1.14.0. and should not be used in newly-written code.</p></div>
+<p>Modem has LTE Advanced data capability.</p>
+<p>This value is deprecated because it is not used anywhere. LTE Advanced
+capable devices are reported as LTE capable.</p>
+<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
 </div>
 </div>

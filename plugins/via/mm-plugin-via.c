@@ -27,7 +27,6 @@
 
 #include "mm-broadband-modem-via.h"
 #include "mm-plugin-via.h"
-#include "mm-log.h"
 
 G_DEFINE_TYPE (MMPluginVia, mm_plugin_via, MM_TYPE_PLUGIN)
 
@@ -56,13 +55,13 @@ G_MODULE_EXPORT MMPlugin *
 mm_plugin_create (void)
 {
     static const gchar *subsystems[] = { "tty", NULL };
-    static const mm_str_pair product_strings[] = { { "via",    "cbp7" },
-                                                   { "fusion", "2770p" },
-                                                   { NULL,     NULL } };
+    static const mm_str_pair product_strings[] = { { (gchar *) "via",    (gchar *) "cbp7" },
+                                                   { (gchar *) "fusion", (gchar *) "2770p" },
+                                                   { NULL, NULL } };
 
     return MM_PLUGIN (
         g_object_new (MM_TYPE_PLUGIN_VIA,
-                      MM_PLUGIN_NAME,                    "Via CBP7",
+                      MM_PLUGIN_NAME,                    MM_MODULE_NAME,
                       MM_PLUGIN_ALLOWED_SUBSYSTEMS,      subsystems,
                       MM_PLUGIN_ALLOWED_PRODUCT_STRINGS, product_strings,
                       MM_PLUGIN_ALLOWED_AT,              TRUE,

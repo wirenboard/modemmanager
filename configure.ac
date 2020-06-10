@@ -5,8 +5,8 @@ dnl Package and library versioning support
 dnl
 
 m4_define([mm_major_version], [1])
-m4_define([mm_minor_version], [12])
-m4_define([mm_micro_version], [10])
+m4_define([mm_minor_version], [13])
+m4_define([mm_micro_version], [900])
 m4_define([mm_version],
           [mm_major_version.mm_minor_version.mm_micro_version])
 
@@ -46,9 +46,39 @@ AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
 
+AC_CHECK_PROG(XSLTPROC_CHECK,xsltproc,yes)
+AS_IF([test x"$XSLTPROC_CHECK" != x"yes"], [AC_MSG_ERROR([Please install xsltproc before configuring.])])
+
 dnl Initialize libtool
 LT_PREREQ([2.2])
 LT_INIT([disable-static])
+
+dnl-----------------------------------------------------------------------------
+dnl Compiler warnings
+dnl
+
+dnl Make sure autoconf-archive is available
+m4_pattern_forbid([^AX_(COMPILER_FLAGS|COMPILER_FLAGS_(CFLAGS|GIR|LDFLAGS))\b],
+  [Unexpanded AX_ macro found. Please install GNU autoconf-archive])
+
+dnl Detect git or release builds
+AX_IS_RELEASE([git-directory])
+
+dnl Function type cast disabled: used throughout the code especially to
+dnl cast GAsyncReadyCallbacks with the real object type instead of GObject
+DISABLED_WARNINGS="${DISABLED_WARNINGS} -Wno-cast-function-type"
+
+dnl All message protocol structs are packed, never complain about it
+DISABLED_WARNINGS="${DISABLED_WARNINGS} -Wno-packed"
+
+dnl Setup compiler checks
+AX_COMPILER_FLAGS()
+AX_COMPILER_FLAGS_CFLAGS(,,,[${DISABLED_WARNINGS}])
+
+dnl Specify gnu89 mode
+if test "$GCC" = "yes"; then
+   CFLAGS="$CFLAGS -std=gnu89"
+fi
 
 dnl-----------------------------------------------------------------------------
 dnl Version definitions
@@ -93,8 +123,10 @@ dnl-----------------------------------------------------------------------------
 dnl Build dependencies
 dnl
 
-GLIB_MIN_VERSION=2.36.0
-GLIB_BUILD_SYMBOLS="-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_36 -DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_36 -DGLIB_DISABLE_DEPRECATION_WARNINGS"
+# NOTE! If using glib < 2.55.1, make sure you have backported the following patch to avoid
+# the daemon leaking a lot: https://gitlab.gnome.org/GNOME/glib/commit/37d9b0c6995f97ea0f744650aaf5179081f878ba
+GLIB_MIN_VERSION=2.48.0
+GLIB_BUILD_SYMBOLS="-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_48 -DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_48 -DGLIB_DISABLE_DEPRECATION_WARNINGS"
 
 PKG_CHECK_MODULES(MM,
                   glib-2.0 >= $GLIB_MIN_VERSION
@@ -338,7 +370,7 @@ dnl-----------------------------------------------------------------------------
 dnl MBIM support (enabled by default)
 dnl
 
-LIBMBIM_VERSION=1.18.0
+LIBMBIM_VERSION=1.23.900
 
 AC_ARG_WITH(mbim, AS_HELP_STRING([--without-mbim], [Build without MBIM support]), [], [with_mbim=yes])
 AM_CONDITIONAL(WITH_MBIM, test "x$with_mbim" = "xyes")
@@ -362,7 +394,7 @@ dnl-----------------------------------------------------------------------------
 dnl QMI support (enabled by default)
 dnl
 
-LIBQMI_VERSION=1.24.0
+LIBQMI_VERSION=1.25.900
 
 AC_ARG_WITH(qmi, AS_HELP_STRING([--without-qmi], [Build without QMI support]), [], [with_qmi=yes])
 AM_CONDITIONAL(WITH_QMI, test "x$with_qmi" = "xyes")
@@ -382,8 +414,6 @@ case $with_qmi in
         ;;
 esac
 
-NM_COMPILER_WARNINGS
-
 dnl-----------------------------------------------------------------------------
 dnl Distribution version string
 dnl
@@ -399,7 +429,89 @@ dnl
 AM_CONDITIONAL(QCDM_STANDALONE, test "yes" = "no")
 
 dnl-----------------------------------------------------------------------------
-dnl Protocol libs
+dnl Plugins
+dnl
+dnl By default all plugins are built and installed. If the user wants to build only
+dnl some specific plugins, this can be done by disabling all first and then enabling
+dnl only the ones required, e.g.:
+dnl   $ ./configure               \
+dnl       --disable-all-plugins   \
+dnl       --enable-plugin-generic \
+dnl       --enable-plugin-zte ...
+dnl
+dnl If the user wants all plugins except for some specific ones, those can be
+dnl explicitly disabled, e.g.:
+dnl   $ ./configure \
+dnl       --disable-plugin-generic \
+dnl       --disable-plugin-zte ...
+dnl
+
+MM_ENABLE_ALL_PLUGINS
+
+MM_ENABLE_PLUGIN([generic])
+MM_ENABLE_PLUGIN([altair-lte])
+MM_ENABLE_PLUGIN([anydata])
+MM_ENABLE_PLUGIN([broadmobi])
+MM_ENABLE_PLUGIN([cinterion])
+MM_ENABLE_PLUGIN([dell],
+                 [with_shared_sierra,
+                  with_shared_novatel,
+                  with_shared_xmm,
+                  with_shared_telit,
+                  with_shared_foxconn])
+MM_ENABLE_PLUGIN([dlink])
+MM_ENABLE_PLUGIN([fibocom],
+                 [with_shared_xmm])
+MM_ENABLE_PLUGIN([foxconn],
+                 [with_shared_foxconn])
+MM_ENABLE_PLUGIN([haier])
+MM_ENABLE_PLUGIN([huawei])
+MM_ENABLE_PLUGIN([iridium])
+MM_ENABLE_PLUGIN([linktop])
+MM_ENABLE_PLUGIN([longcheer])
+MM_ENABLE_PLUGIN([mbm])
+MM_ENABLE_PLUGIN([motorola])
+MM_ENABLE_PLUGIN([mtk])
+MM_ENABLE_PLUGIN([nokia])
+MM_ENABLE_PLUGIN([nokia-icera],
+                 [with_shared_icera])
+MM_ENABLE_PLUGIN([novatel],
+                 [with_shared_novatel])
+MM_ENABLE_PLUGIN([novatel-lte])
+MM_ENABLE_PLUGIN([option],
+                 [with_shared_option])
+MM_ENABLE_PLUGIN([option-hso],
+                 [with_shared_option])
+MM_ENABLE_PLUGIN([pantech])
+MM_ENABLE_PLUGIN([quectel])
+MM_ENABLE_PLUGIN([samsung],
+                 [with_shared_icera])
+MM_ENABLE_PLUGIN([sierra-legacy],
+                 [with_shared_icera,
+                  with_shared_sierra])
+MM_ENABLE_PLUGIN([sierra])
+MM_ENABLE_PLUGIN([simtech])
+MM_ENABLE_PLUGIN([telit],
+                 [with_shared_telit])
+MM_ENABLE_PLUGIN([thuraya])
+MM_ENABLE_PLUGIN([tplink])
+MM_ENABLE_PLUGIN([ublox])
+MM_ENABLE_PLUGIN([via])
+MM_ENABLE_PLUGIN([wavecom])
+MM_ENABLE_PLUGIN([x22x])
+MM_ENABLE_PLUGIN([zte],
+                 [with_shared_icera])
+
+MM_BUILD_SHARED([icera])
+MM_BUILD_SHARED([sierra])
+MM_BUILD_SHARED([option])
+MM_BUILD_SHARED([novatel])
+MM_BUILD_SHARED([xmm])
+MM_BUILD_SHARED([telit])
+MM_BUILD_SHARED([foxconn])
+
+dnl-----------------------------------------------------------------------------
+dnl Output
 dnl
 
 AC_CONFIG_FILES([
@@ -451,7 +563,10 @@ echo "
       compiler:                ${CC}
       cflags:                  ${CFLAGS}
       ldflags:                 ${LDFLAGS}
+      warn cflags:             ${WARN_CFLAGS}
+      warn ldflags:            ${WARN_LDFLAGS}
       maintainer mode:         ${USE_MAINTAINER_MODE}
+      release:                 ${ax_is_release}
 
     System paths:
       prefix:                  ${prefix}
@@ -467,6 +582,54 @@ echo "
       systemd suspend/resume:  ${with_systemd_suspend_resume}
       systemd journal:         ${with_systemd_journal}
       at command via dbus:     ${with_at_command_via_dbus}
+
+    Shared utils:
+      icera:                   ${with_shared_icera}
+      sierra:                  ${with_shared_sierra}
+      option:                  ${with_shared_option}
+      novatel:                 ${with_shared_novatel}
+      xmm:                     ${with_shared_xmm}
+      telit:                   ${with_shared_telit}
+      foxconn:                 ${with_shared_foxconn}
+
+    Plugins:
+      generic:                 ${enable_plugin_generic}
+      altair lte:              ${enable_plugin_altair_lte}
+      anydata:                 ${enable_plugin_anydata}
+      broadmobi:               ${enable_plugin_broadmobi}
+      cinterion:               ${enable_plugin_cinterion}
+      dell:                    ${enable_plugin_dell}
+      dlink:                   ${enable_plugin_dlink}
+      fibocom:                 ${enable_plugin_fibocom}
+      foxconn:                 ${enable_plugin_foxconn}
+      haier:                   ${enable_plugin_haier}
+      huawei:                  ${enable_plugin_huawei}
+      iridium:                 ${enable_plugin_iridium}
+      linktop:                 ${enable_plugin_linktop}
+      longcheer:               ${enable_plugin_longcheer}
+      mbm:                     ${enable_plugin_mbm}
+      motorola:                ${enable_plugin_motorola}
+      mtk:                     ${enable_plugin_mtk}
+      nokia:                   ${enable_plugin_nokia}
+      nokia icera:             ${enable_plugin_nokia_icera}
+      novatel:                 ${enable_plugin_novatel}
+      novatel lte:             ${enable_plugin_novatel_lte}
+      option:                  ${enable_plugin_option}
+      option hso:              ${enable_plugin_option_hso}
+      pantech:                 ${enable_plugin_pantech}
+      quectel:                 ${enable_plugin_quectel}
+      samsung:                 ${enable_plugin_samsung}
+      sierra legacy:           ${enable_plugin_sierra_legacy}
+      sierra:                  ${enable_plugin_sierra}
+      simtech:                 ${enable_plugin_simtech}
+      telit:                   ${enable_plugin_telit}
+      thuraya:                 ${enable_plugin_thuraya}
+      tplink:                  ${enable_plugin_tplink}
+      ublox:                   ${enable_plugin_ublox}
+      via:                     ${enable_plugin_via}
+      wavecom:                 ${enable_plugin_wavecom}
+      x22x:                    ${enable_plugin_x22x}
+      zte:                     ${enable_plugin_zte}
 
     Miscellaneous:
       gobject introspection:   ${found_introspection}

@@ -18,11 +18,11 @@
 #include <glib.h>
 
 #include "mm-port-serial-at.h"
-#include "mm-log.h"
+#include "mm-log-test.h"
 
 typedef struct {
-    gchar *original;
-    gchar *without_echo;
+    const gchar *original;
+    const gchar *without_echo;
 } EchoRemovalTest;
 
 static const EchoRemovalTest echo_removal_tests[] = {
@@ -62,26 +62,6 @@ at_serial_echo_removal (void)
 
         g_byte_array_unref (ba);
     }
-}
-
-void
-_mm_log (const char *loc,
-         const char *func,
-         guint32 level,
-         const char *fmt,
-         ...)
-{
-    va_list args;
-    gchar *msg;
-
-    if (!g_test_verbose ())
-        return;
-
-    va_start (args, fmt);
-    msg = g_strdup_vprintf (fmt, args);
-    va_end (args);
-    g_print ("%s\n", msg);
-    g_free (msg);
 }
 
 int main (int argc, char **argv)

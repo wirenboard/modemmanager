@@ -92,14 +92,14 @@ host_triplet = @host@
 subdir = libmm-glib/generated
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_code_coverage.m4 \
-	$(top_srcdir)/m4/compiler_warnings.m4 \
 	$(top_srcdir)/m4/gettext.m4 $(top_srcdir)/m4/gtk-doc.m4 \
 	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
 	$(top_srcdir)/m4/introspection.m4 $(top_srcdir)/m4/lib-ld.m4 \
 	$(top_srcdir)/m4/lib-link.m4 $(top_srcdir)/m4/lib-prefix.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/nls.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/m4/mm-enable-plugin.m4 $(top_srcdir)/m4/nls.m4 \
 	$(top_srcdir)/m4/po.m4 $(top_srcdir)/m4/progtest.m4 \
 	$(top_srcdir)/m4/vapigen.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -110,8 +110,7 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-am__DEPENDENCIES_1 =
-libmm_generated_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+libmm_generated_la_LIBADD =
 am__objects_1 =
 am__objects_2 = libmm_generated_la-mm-enums-types.lo \
 	libmm_generated_la-mm-errors-types.lo \
@@ -128,6 +127,10 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+libmm_generated_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(libmm_generated_la_CFLAGS) $(CFLAGS) \
+	$(libmm_generated_la_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -409,9 +412,13 @@ VAPIGEN = @VAPIGEN@
 VAPIGEN_MAKEFILE = @VAPIGEN_MAKEFILE@
 VAPIGEN_VAPIDIR = @VAPIGEN_VAPIDIR@
 VERSION = @VERSION@
+WARN_CFLAGS = @WARN_CFLAGS@
+WARN_LDFLAGS = @WARN_LDFLAGS@
+WARN_SCANNERFLAGS = @WARN_SCANNERFLAGS@
 XGETTEXT = @XGETTEXT@
 XGETTEXT_015 = @XGETTEXT_015@
 XGETTEXT_EXTRA_OPTIONS = @XGETTEXT_EXTRA_OPTIONS@
+XSLTPROC_CHECK = @XSLTPROC_CHECK@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -617,7 +624,15 @@ libmm_generated_la_CPPFLAGS = \
 	-Wno-shadow \
 	$(NULL)
 
-libmm_generated_la_LIBADD = $(LIBMM_GLIB_LIBS)
+libmm_generated_la_CFLAGS = \
+	$(WARN_CFLAGS) \
+	$(NULL)
+
+libmm_generated_la_LDFLAGS = \
+	$(WARN_LDFLAGS) \
+	$(LIBMM_GLIB_LIBS) \
+	$(NULL)
+
 nodist_include_HEADERS = $(GENERATED_H)
 CLEANFILES = $(GENERATED_H) $(GENERATED_C) $(GENERATED_DOC)
 all: $(BUILT_SOURCES)
@@ -667,7 +682,7 @@ clean-noinstLTLIBRARIES:
 	}
 
 libmm-generated.la: $(libmm_generated_la_OBJECTS) $(libmm_generated_la_DEPENDENCIES) $(EXTRA_libmm_generated_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libmm_generated_la_OBJECTS) $(libmm_generated_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(libmm_generated_la_LINK)  $(libmm_generated_la_OBJECTS) $(libmm_generated_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -716,67 +731,67 @@ am--depfiles: $(am__depfiles_remade)
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
 libmm_generated_la-mm-enums-types.lo: mm-enums-types.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-enums-types.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-enums-types.Tpo -c -o libmm_generated_la-mm-enums-types.lo `test -f 'mm-enums-types.c' || echo '$(srcdir)/'`mm-enums-types.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-enums-types.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-enums-types.Tpo -c -o libmm_generated_la-mm-enums-types.lo `test -f 'mm-enums-types.c' || echo '$(srcdir)/'`mm-enums-types.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_generated_la-mm-enums-types.Tpo $(DEPDIR)/libmm_generated_la-mm-enums-types.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-enums-types.c' object='libmm_generated_la-mm-enums-types.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-enums-types.lo `test -f 'mm-enums-types.c' || echo '$(srcdir)/'`mm-enums-types.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-enums-types.lo `test -f 'mm-enums-types.c' || echo '$(srcdir)/'`mm-enums-types.c
 
 libmm_generated_la-mm-errors-types.lo: mm-errors-types.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-errors-types.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-errors-types.Tpo -c -o libmm_generated_la-mm-errors-types.lo `test -f 'mm-errors-types.c' || echo '$(srcdir)/'`mm-errors-types.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-errors-types.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-errors-types.Tpo -c -o libmm_generated_la-mm-errors-types.lo `test -f 'mm-errors-types.c' || echo '$(srcdir)/'`mm-errors-types.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_generated_la-mm-errors-types.Tpo $(DEPDIR)/libmm_generated_la-mm-errors-types.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-errors-types.c' object='libmm_generated_la-mm-errors-types.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-errors-types.lo `test -f 'mm-errors-types.c' || echo '$(srcdir)/'`mm-errors-types.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-errors-types.lo `test -f 'mm-errors-types.c' || echo '$(srcdir)/'`mm-errors-types.c
 
 libmm_generated_la-mm-errors-quarks.lo: mm-errors-quarks.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-errors-quarks.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-errors-quarks.Tpo -c -o libmm_generated_la-mm-errors-quarks.lo `test -f 'mm-errors-quarks.c' || echo '$(srcdir)/'`mm-errors-quarks.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-errors-quarks.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-errors-quarks.Tpo -c -o libmm_generated_la-mm-errors-quarks.lo `test -f 'mm-errors-quarks.c' || echo '$(srcdir)/'`mm-errors-quarks.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_generated_la-mm-errors-quarks.Tpo $(DEPDIR)/libmm_generated_la-mm-errors-quarks.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-errors-quarks.c' object='libmm_generated_la-mm-errors-quarks.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-errors-quarks.lo `test -f 'mm-errors-quarks.c' || echo '$(srcdir)/'`mm-errors-quarks.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-errors-quarks.lo `test -f 'mm-errors-quarks.c' || echo '$(srcdir)/'`mm-errors-quarks.c
 
 libmm_generated_la-mm-gdbus-manager.lo: mm-gdbus-manager.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-gdbus-manager.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-gdbus-manager.Tpo -c -o libmm_generated_la-mm-gdbus-manager.lo `test -f 'mm-gdbus-manager.c' || echo '$(srcdir)/'`mm-gdbus-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-gdbus-manager.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-gdbus-manager.Tpo -c -o libmm_generated_la-mm-gdbus-manager.lo `test -f 'mm-gdbus-manager.c' || echo '$(srcdir)/'`mm-gdbus-manager.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_generated_la-mm-gdbus-manager.Tpo $(DEPDIR)/libmm_generated_la-mm-gdbus-manager.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-gdbus-manager.c' object='libmm_generated_la-mm-gdbus-manager.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-gdbus-manager.lo `test -f 'mm-gdbus-manager.c' || echo '$(srcdir)/'`mm-gdbus-manager.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-gdbus-manager.lo `test -f 'mm-gdbus-manager.c' || echo '$(srcdir)/'`mm-gdbus-manager.c
 
 libmm_generated_la-mm-gdbus-sim.lo: mm-gdbus-sim.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-gdbus-sim.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-gdbus-sim.Tpo -c -o libmm_generated_la-mm-gdbus-sim.lo `test -f 'mm-gdbus-sim.c' || echo '$(srcdir)/'`mm-gdbus-sim.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-gdbus-sim.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-gdbus-sim.Tpo -c -o libmm_generated_la-mm-gdbus-sim.lo `test -f 'mm-gdbus-sim.c' || echo '$(srcdir)/'`mm-gdbus-sim.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_generated_la-mm-gdbus-sim.Tpo $(DEPDIR)/libmm_generated_la-mm-gdbus-sim.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-gdbus-sim.c' object='libmm_generated_la-mm-gdbus-sim.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-gdbus-sim.lo `test -f 'mm-gdbus-sim.c' || echo '$(srcdir)/'`mm-gdbus-sim.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-gdbus-sim.lo `test -f 'mm-gdbus-sim.c' || echo '$(srcdir)/'`mm-gdbus-sim.c
 
 libmm_generated_la-mm-gdbus-sms.lo: mm-gdbus-sms.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-gdbus-sms.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-gdbus-sms.Tpo -c -o libmm_generated_la-mm-gdbus-sms.lo `test -f 'mm-gdbus-sms.c' || echo '$(srcdir)/'`mm-gdbus-sms.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-gdbus-sms.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-gdbus-sms.Tpo -c -o libmm_generated_la-mm-gdbus-sms.lo `test -f 'mm-gdbus-sms.c' || echo '$(srcdir)/'`mm-gdbus-sms.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_generated_la-mm-gdbus-sms.Tpo $(DEPDIR)/libmm_generated_la-mm-gdbus-sms.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-gdbus-sms.c' object='libmm_generated_la-mm-gdbus-sms.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-gdbus-sms.lo `test -f 'mm-gdbus-sms.c' || echo '$(srcdir)/'`mm-gdbus-sms.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-gdbus-sms.lo `test -f 'mm-gdbus-sms.c' || echo '$(srcdir)/'`mm-gdbus-sms.c
 
 libmm_generated_la-mm-gdbus-call.lo: mm-gdbus-call.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-gdbus-call.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-gdbus-call.Tpo -c -o libmm_generated_la-mm-gdbus-call.lo `test -f 'mm-gdbus-call.c' || echo '$(srcdir)/'`mm-gdbus-call.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-gdbus-call.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-gdbus-call.Tpo -c -o libmm_generated_la-mm-gdbus-call.lo `test -f 'mm-gdbus-call.c' || echo '$(srcdir)/'`mm-gdbus-call.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_generated_la-mm-gdbus-call.Tpo $(DEPDIR)/libmm_generated_la-mm-gdbus-call.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-gdbus-call.c' object='libmm_generated_la-mm-gdbus-call.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-gdbus-call.lo `test -f 'mm-gdbus-call.c' || echo '$(srcdir)/'`mm-gdbus-call.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-gdbus-call.lo `test -f 'mm-gdbus-call.c' || echo '$(srcdir)/'`mm-gdbus-call.c
 
 libmm_generated_la-mm-gdbus-bearer.lo: mm-gdbus-bearer.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-gdbus-bearer.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-gdbus-bearer.Tpo -c -o libmm_generated_la-mm-gdbus-bearer.lo `test -f 'mm-gdbus-bearer.c' || echo '$(srcdir)/'`mm-gdbus-bearer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-gdbus-bearer.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-gdbus-bearer.Tpo -c -o libmm_generated_la-mm-gdbus-bearer.lo `test -f 'mm-gdbus-bearer.c' || echo '$(srcdir)/'`mm-gdbus-bearer.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_generated_la-mm-gdbus-bearer.Tpo $(DEPDIR)/libmm_generated_la-mm-gdbus-bearer.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-gdbus-bearer.c' object='libmm_generated_la-mm-gdbus-bearer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-gdbus-bearer.lo `test -f 'mm-gdbus-bearer.c' || echo '$(srcdir)/'`mm-gdbus-bearer.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-gdbus-bearer.lo `test -f 'mm-gdbus-bearer.c' || echo '$(srcdir)/'`mm-gdbus-bearer.c
 
 libmm_generated_la-mm-gdbus-modem.lo: mm-gdbus-modem.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-gdbus-modem.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-gdbus-modem.Tpo -c -o libmm_generated_la-mm-gdbus-modem.lo `test -f 'mm-gdbus-modem.c' || echo '$(srcdir)/'`mm-gdbus-modem.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -MT libmm_generated_la-mm-gdbus-modem.lo -MD -MP -MF $(DEPDIR)/libmm_generated_la-mm-gdbus-modem.Tpo -c -o libmm_generated_la-mm-gdbus-modem.lo `test -f 'mm-gdbus-modem.c' || echo '$(srcdir)/'`mm-gdbus-modem.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_generated_la-mm-gdbus-modem.Tpo $(DEPDIR)/libmm_generated_la-mm-gdbus-modem.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-gdbus-modem.c' object='libmm_generated_la-mm-gdbus-modem.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-gdbus-modem.lo `test -f 'mm-gdbus-modem.c' || echo '$(srcdir)/'`mm-gdbus-modem.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_generated_la_CPPFLAGS) $(CPPFLAGS) $(libmm_generated_la_CFLAGS) $(CFLAGS) -c -o libmm_generated_la-mm-gdbus-modem.lo `test -f 'mm-gdbus-modem.c' || echo '$(srcdir)/'`mm-gdbus-modem.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

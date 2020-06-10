@@ -121,7 +121,6 @@ log_handler (const gchar *log_domain,
         break;
 
     case G_LOG_LEVEL_CRITICAL:
-    case G_LOG_FLAG_FATAL:
     case G_LOG_LEVEL_ERROR:
         log_level_str = "-Error **";
         break;
@@ -130,9 +129,16 @@ log_handler (const gchar *log_domain,
         log_level_str = "[Debug]";
         break;
 
-    default:
+    case G_LOG_LEVEL_MESSAGE:
+    case G_LOG_LEVEL_INFO:
         log_level_str = "";
         break;
+
+    case G_LOG_FLAG_FATAL:
+    case G_LOG_LEVEL_MASK:
+    case G_LOG_FLAG_RECURSION:
+    default:
+        g_assert_not_reached ();
     }
 
     g_print ("[%s] %s %s\n", time_str, log_level_str, message);
@@ -141,9 +147,8 @@ log_handler (const gchar *log_domain,
 static void
 print_version_and_exit (void)
 {
-    g_print ("\n"
-             PROGRAM_NAME " " PROGRAM_VERSION "\n"
-             "Copyright (2011 - 2019) Aleksander Morgado\n"
+    g_print (PROGRAM_NAME " " PROGRAM_VERSION "\n"
+             "Copyright (2011 - 2020) Aleksander Morgado\n"
              "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl-2.0.html>\n"
              "This is free software: you are free to change and redistribute it.\n"
              "There is NO WARRANTY, to the extent permitted by law.\n"

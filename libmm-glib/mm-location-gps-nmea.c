@@ -153,6 +153,44 @@ mm_location_gps_nmea_get_trace (MMLocationGpsNmea *self,
 /*****************************************************************************/
 
 static void
+build_all_foreach (const gchar  *trace_type,
+                   const gchar  *trace,
+                   GPtrArray   **built)
+{
+    if (*built == NULL)
+        *built = g_ptr_array_new ();
+    g_ptr_array_add (*built, g_strdup (trace));
+}
+
+/**
+ * mm_location_gps_nmea_get_traces:
+ * @self: a #MMLocationGpsNmea.
+ *
+ * Gets all cached traces.
+ *
+ * Returns: (transfer full): The list of traces, or %NULL if none available. The returned value should be freed with g_strfreev().
+ * Since: 1.14
+ */
+gchar **
+mm_location_gps_nmea_get_traces (MMLocationGpsNmea *self)
+{
+    GPtrArray *built = NULL;
+
+    g_hash_table_foreach (self->priv->traces,
+                          (GHFunc)build_all_foreach,
+                          &built);
+    if (!built)
+        return NULL;
+
+    g_ptr_array_add (built, NULL);
+    return (gchar **) g_ptr_array_free (built, FALSE);
+}
+
+/*****************************************************************************/
+
+#ifndef MM_DISABLE_DEPRECATED
+
+static void
 build_full_foreach (const gchar *trace_type,
                     const gchar *trace,
                     GString **built)
@@ -167,12 +205,15 @@ build_full_foreach (const gchar *trace_type,
  * mm_location_gps_nmea_build_full:
  * @self: a #MMLocationGpsNmea.
  *
- * Gets a compilation of all cached traces.
+ * Gets a compilation of all cached traces, in a single string.
+ * Traces are separated by '\r\n'.
  *
  * Returns: (transfer full): a string containing all traces, or #NULL if none
  * available. The returned value should be freed with g_free().
  *
  * Since: 1.0
+ * Deprecated: 1.14: user should use mm_location_gps_nmea_get_traces() instead,
+ * which provides a much more generic interface to the full list of traces.
  */
 gchar *
 mm_location_gps_nmea_build_full (MMLocationGpsNmea *self)
@@ -186,6 +227,8 @@ mm_location_gps_nmea_build_full (MMLocationGpsNmea *self)
     return g_string_free (built, FALSE);
 }
 
+#endif
+
 /*****************************************************************************/
 
 /**
@@ -194,16 +237,14 @@ mm_location_gps_nmea_build_full (MMLocationGpsNmea *self)
 GVariant *
 mm_location_gps_nmea_get_string_variant (MMLocationGpsNmea *self)
 {
-    GVariant *variant = NULL;
-    gchar *built;
+    g_autofree gchar *built = NULL;
+    g_auto (GStrv)    traces = NULL;
 
     g_return_val_if_fail (MM_IS_LOCATION_GPS_NMEA (self), NULL);
 
-    built = mm_location_gps_nmea_build_full (self);
-    variant = g_variant_ref_sink (g_variant_new_string (built));
-    g_free (built);
-
-    return variant;
+    traces = mm_location_gps_nmea_get_traces (self);
+    built = g_strjoinv ("\r\n", traces);
+    return g_variant_ref_sink (g_variant_new_string (built));
 }
 
 /*****************************************************************************/

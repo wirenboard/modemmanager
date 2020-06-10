@@ -70,7 +70,7 @@ mmcli_modem_cdma_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("cdma",
-                                "CDMA options",
+                                "CDMA options:",
                                 "Show CDMA related options",
                                 NULL,
                                 NULL);
@@ -107,7 +107,7 @@ mmcli_modem_cdma_options_enabled (void)
 }
 
 static void
-context_free (Context *ctx)
+context_free (void)
 {
     if (!ctx)
         return;
@@ -142,7 +142,7 @@ ensure_modem_cdma (void)
 void
 mmcli_modem_cdma_shutdown (void)
 {
-    context_free (ctx);
+    context_free ();
 }
 
 static void

@@ -24,7 +24,6 @@
 #include <ctype.h>
 
 #include "ModemManager.h"
-#include "mm-log.h"
 #include "mm-errors-types.h"
 #include "mm-modem-helpers.h"
 #include "mm-base-modem-at.h"
@@ -70,7 +69,6 @@ load_unlock_retries_ready (MMBaseModem *self,
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
-        mm_dbg ("Couldn't query unlock retries: '%s'", error->message);
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -303,7 +301,7 @@ parent_load_supported_modes_ready (MMIfaceModem *self,
     }
 
     /* Filter out those unsupported modes */
-    filtered = mm_filter_supported_modes (all, combinations);
+    filtered = mm_filter_supported_modes (all, combinations, self);
     g_array_unref (all);
     g_array_unref (combinations);
 

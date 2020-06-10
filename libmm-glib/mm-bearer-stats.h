@@ -56,14 +56,16 @@ struct _MMBearerStatsClass {
 };
 
 GType mm_bearer_stats_get_type (void);
-
-#if GLIB_CHECK_VERSION(2, 44, 0)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (MMBearerStats, g_object_unref)
-#endif
 
-guint   mm_bearer_stats_get_duration (MMBearerStats *self);
-guint64 mm_bearer_stats_get_rx_bytes (MMBearerStats *self);
-guint64 mm_bearer_stats_get_tx_bytes (MMBearerStats *self);
+guint   mm_bearer_stats_get_duration        (MMBearerStats *self);
+guint64 mm_bearer_stats_get_rx_bytes        (MMBearerStats *self);
+guint64 mm_bearer_stats_get_tx_bytes        (MMBearerStats *self);
+guint   mm_bearer_stats_get_attempts        (MMBearerStats *self);
+guint   mm_bearer_stats_get_failed_attempts (MMBearerStats *self);
+guint   mm_bearer_stats_get_total_duration  (MMBearerStats *self);
+guint64 mm_bearer_stats_get_total_rx_bytes  (MMBearerStats *self);
+guint64 mm_bearer_stats_get_total_tx_bytes  (MMBearerStats *self);
 
 /*****************************************************************************/
 /* ModemManager/libmm-glib/mmcli specific methods */
@@ -76,9 +78,14 @@ MMBearerStats *mm_bearer_stats_new (void);
 MMBearerStats *mm_bearer_stats_new_from_dictionary (GVariant *dictionary,
                                                     GError **error);
 
-void mm_bearer_stats_set_duration (MMBearerStats *self, guint duration);
-void mm_bearer_stats_set_rx_bytes (MMBearerStats *self, guint64 rx_bytes);
-void mm_bearer_stats_set_tx_bytes (MMBearerStats *self, guint64 tx_bytes);
+void mm_bearer_stats_set_duration             (MMBearerStats *self, guint   duration);
+void mm_bearer_stats_set_rx_bytes             (MMBearerStats *self, guint64 rx_bytes);
+void mm_bearer_stats_set_tx_bytes             (MMBearerStats *self, guint64 tx_bytes);
+void mm_bearer_stats_set_attempts             (MMBearerStats *self, guint   attempts);
+void mm_bearer_stats_set_failed_attempts      (MMBearerStats *self, guint   failed_attempts);
+void mm_bearer_stats_set_total_duration       (MMBearerStats *self, guint   duration);
+void mm_bearer_stats_set_total_rx_bytes       (MMBearerStats *self, guint64 rx_bytes);
+void mm_bearer_stats_set_total_tx_bytes       (MMBearerStats *self, guint64 tx_bytes);
 
 GVariant *mm_bearer_stats_get_dictionary (MMBearerStats *self);
 

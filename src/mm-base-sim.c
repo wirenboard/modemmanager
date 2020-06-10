@@ -30,14 +30,15 @@
 #include "mm-base-sim.h"
 #include "mm-base-modem-at.h"
 #include "mm-base-modem.h"
-#include "mm-log.h"
+#include "mm-log-object.h"
 #include "mm-modem-helpers.h"
 
 static void async_initable_iface_init (GAsyncInitableIface *iface);
+static void log_object_iface_init     (MMLogObjectInterface *iface);
 
 G_DEFINE_TYPE_EXTENDED (MMBaseSim, mm_base_sim, MM_GDBUS_TYPE_SIM_SKELETON, 0,
-                        G_IMPLEMENT_INTERFACE (G_TYPE_ASYNC_INITABLE,
-                                               async_initable_iface_init))
+                        G_IMPLEMENT_INTERFACE (G_TYPE_ASYNC_INITABLE, async_initable_iface_init)
+                        G_IMPLEMENT_INTERFACE (MM_TYPE_LOG_OBJECT, log_object_iface_init))
 
 enum {
     PROP_0,
@@ -57,6 +58,8 @@ static GParamSpec *properties[PROP_LAST];
 struct _MMBaseSimPrivate {
     /* The connection to the system bus */
     GDBusConnection *connection;
+    guint            dbus_id;
+
     /* The modem which owns this SIM */
     MMBaseModem *modem;
     /* The path where the SIM object is exported */
@@ -70,10 +73,9 @@ static guint signals[SIGNAL_LAST] = { 0 };
 void
 mm_base_sim_export (MMBaseSim *self)
 {
-    static guint id = 0;
     gchar *path;
 
-    path = g_strdup_printf (MM_DBUS_SIM_PREFIX "/%d", id++);
+    path = g_strdup_printf (MM_DBUS_SIM_PREFIX "/%d", self->priv->dbus_id);
     g_object_set (self,
                   MM_BASE_SIM_PATH, path,
                   NULL);
@@ -912,9 +914,7 @@ sim_dbus_export (MMBaseSim *self)
                                            self->priv->connection,
                                            self->priv->path,
                                            &error)) {
-        mm_warn ("couldn't export SIM at '%s': '%s'",
-                 self->priv->path,
-                 error->message);
+        mm_obj_warn (self, "couldn't export SIM: %s", error->message);
         g_error_free (error);
     }
 }
@@ -1031,7 +1031,7 @@ load_emergency_numbers_finish (MMBaseSim     *self,
         return NULL;
 
     for (i = 0; emergency_numbers[i]; i++)
-        mm_dbg ("loaded emergency number: %s", emergency_numbers[i]);
+        mm_obj_dbg (self, "loaded emergency number: %s", emergency_numbers[i]);
 
     return emergency_numbers;
 }
@@ -1043,7 +1043,7 @@ load_emergency_numbers (MMBaseSim           *self,
                         GAsyncReadyCallback  callback,
                         gpointer             user_data)
 {
-    mm_dbg ("loading emergency numbers...");
+    mm_obj_dbg (self, "loading emergency numbers...");
 
     /* READ BINARY of EF_ECC (Emergency Call Codes) ETSI TS 51.011 section 10.3.27 */
     mm_base_modem_at_command (
@@ -1109,7 +1109,7 @@ load_sim_identifier_finish (MMBaseSim *self,
     if (!sim_identifier)
         return NULL;
 
-    mm_dbg ("loaded SIM identifier: %s", sim_identifier);
+    mm_obj_dbg (self, "loaded SIM identifier: %s", sim_identifier);
     return sim_identifier;
 }
 
@@ -1120,7 +1120,7 @@ load_sim_identifier (MMBaseSim *self,
                      GAsyncReadyCallback callback,
                      gpointer user_data)
 {
-    mm_dbg ("loading SIM identifier...");
+    mm_obj_dbg (self, "loading SIM identifier...");
 
     /* READ BINARY of EFiccid (ICC Identification) ETSI TS 102.221 section 13.2 */
     mm_base_modem_at_command (
@@ -1177,7 +1177,7 @@ load_imsi_finish (MMBaseSim *self,
     if (!imsi)
         return NULL;
 
-    mm_dbg ("loaded IMSI: %s", imsi);
+    mm_obj_dbg (self, "loaded IMSI: %s", imsi);
     return imsi;
 }
 
@@ -1188,7 +1188,7 @@ load_imsi (MMBaseSim *self,
            GAsyncReadyCallback callback,
            gpointer user_data)
 {
-    mm_dbg ("loading IMSI...");
+    mm_obj_dbg (self, "loading IMSI...");
 
     mm_base_modem_at_command (
         self->priv->modem,
@@ -1306,7 +1306,7 @@ load_operator_identifier (MMBaseSim *self,
                           GAsyncReadyCallback callback,
                           gpointer user_data)
 {
-    mm_dbg ("loading Operator ID...");
+    mm_obj_dbg (self, "loading operator ID...");
 
     /* READ BINARY of EFad (Administrative Data) ETSI 51.011 section 10.3.18 */
     mm_base_modem_at_command (
@@ -1401,7 +1401,7 @@ load_operator_name (MMBaseSim *self,
                     GAsyncReadyCallback callback,
                     gpointer user_data)
 {
-    mm_dbg ("loading Operator Name...");
+    mm_obj_dbg (self, "loading operator name...");
 
     /* READ BINARY of EFspn (Service Provider Name) ETSI 51.011 section 10.3.11 */
     mm_base_modem_at_command (
@@ -1485,8 +1485,7 @@ init_load_sim_identifier_ready (MMBaseSim *self,
             return;
         }
 
-        mm_warn ("couldn't load SIM identifier: '%s'",
-                 error ? error->message : "unknown error");
+        mm_obj_warn (self, "couldn't load SIM identifier: %s", error ? error->message : "unknown error");
         g_clear_error (&error);
     }
 
@@ -1509,7 +1508,7 @@ init_load_emergency_numbers_ready (MMBaseSim    *self,
 
     str_list = MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers_finish (self, res, &error);
     if (error) {
-        mm_warn ("couldn't load list of Emergency Numbers: '%s'", error->message);
+        mm_obj_warn (self, "couldn't load list of emergency numbers: %s", error->message);
         g_error_free (error);
     }
 
@@ -1540,7 +1539,7 @@ init_load_emergency_numbers_ready (MMBaseSim    *self,
         g_free (val);                                                   \
                                                                         \
         if (error) {                                                    \
-            mm_warn ("couldn't load %s: '%s'", DISPLAY, error->message); \
+            mm_obj_warn (self, "couldn't load %s: %s", DISPLAY, error->message); \
             g_error_free (error);                                       \
         }                                                               \
                                                                         \
@@ -1551,8 +1550,8 @@ init_load_emergency_numbers_ready (MMBaseSim    *self,
     }
 
 STR_REPLY_READY_FN (imsi, "IMSI")
-STR_REPLY_READY_FN (operator_identifier, "Operator identifier")
-STR_REPLY_READY_FN (operator_name, "Operator name")
+STR_REPLY_READY_FN (operator_identifier, "operator identifier")
+STR_REPLY_READY_FN (operator_name, "operator name")
 
 static void
 interface_initialization_step (GTask *task)
@@ -1570,8 +1569,8 @@ interface_initialization_step (GTask *task)
 
     switch (ctx->step) {
     case INITIALIZATION_STEP_FIRST:
-        /* Fall down to next step */
         ctx->step++;
+        /* Fall through */
 
     case INITIALIZATION_STEP_SIM_IDENTIFIER:
         /* SIM ID is meant to be loaded only once during the whole
@@ -1586,8 +1585,8 @@ interface_initialization_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* Fall through */
 
     case INITIALIZATION_STEP_IMSI:
         /* IMSI is meant to be loaded only once during the whole
@@ -1602,8 +1601,8 @@ interface_initialization_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* Fall through */
 
     case INITIALIZATION_STEP_OPERATOR_ID:
         /* Operator ID is meant to be loaded only once during the whole
@@ -1618,8 +1617,8 @@ interface_initialization_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* Fall through */
 
     case INITIALIZATION_STEP_OPERATOR_NAME:
         /* Operator Name is meant to be loaded only once during the whole
@@ -1634,8 +1633,8 @@ interface_initialization_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* Fall through */
 
     case INITIALIZATION_STEP_EMERGENCY_NUMBERS:
         /* Emergency Numbers are meant to be loaded only once during the whole
@@ -1650,14 +1649,17 @@ interface_initialization_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* Fall through */
 
     case INITIALIZATION_STEP_LAST:
         /* We are done without errors! */
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();
@@ -1736,6 +1738,19 @@ mm_base_sim_initialize (MMBaseSim *self,
                        user_data);
 }
 
+/*****************************************************************************/
+
+static gchar *
+log_object_build_id (MMLogObject *_self)
+{
+    MMBaseSim *self;
+
+    self = MM_BASE_SIM (_self);
+    return g_strdup_printf ("sim%u", self->priv->dbus_id);
+}
+
+/*****************************************************************************/
+
 static void
 set_property (GObject *object,
               guint prop_id,
@@ -1768,6 +1783,8 @@ set_property (GObject *object,
         g_clear_object (&self->priv->modem);
         self->priv->modem = g_value_dup_object (value);
         if (self->priv->modem) {
+            /* Set owner ID */
+            mm_log_object_set_owner_id (MM_LOG_OBJECT (self), mm_log_object_get_id (MM_LOG_OBJECT (self->priv->modem)));
             /* Bind the modem's connection (which is set when it is exported,
              * and unset when unexported) to the SIM's connection */
             g_object_bind_property (self->priv->modem, MM_BASE_MODEM_CONNECTION,
@@ -1808,8 +1825,13 @@ get_property (GObject *object,
 static void
 mm_base_sim_init (MMBaseSim *self)
 {
+    static guint id = 0;
+
     /* Initialize private data */
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, MM_TYPE_BASE_SIM, MMBaseSimPrivate);
+
+    /* Each SIM is given a unique id to build its own DBus path */
+    self->priv->dbus_id = id++;
 }
 
 static void
@@ -1844,6 +1866,12 @@ async_initable_iface_init (GAsyncInitableIface *iface)
 {
     iface->init_async = initable_init_async;
     iface->init_finish = initable_init_finish;
+}
+
+static void
+log_object_iface_init (MMLogObjectInterface *iface)
+{
+    iface->build_id = log_object_build_id;
 }
 
 static void

@@ -28,7 +28,7 @@
 
 #include <mm-gdbus-modem.h>
 
-#include "mm-auth.h"
+#include "mm-auth-provider.h"
 #include "mm-port.h"
 #include "mm-kernel-device.h"
 #include "mm-port-serial-at.h"
@@ -104,6 +104,8 @@ struct _MMBaseModemClass {
 };
 
 GType mm_base_modem_get_type (void);
+
+guint     mm_base_modem_get_dbus_id  (MMBaseModem *self);
 
 gboolean  mm_base_modem_grab_port    (MMBaseModem         *self,
                                       MMKernelDevice      *kernel_device,

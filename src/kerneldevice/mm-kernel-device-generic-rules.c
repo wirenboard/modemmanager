@@ -48,6 +48,7 @@ udev_rule_clear (MMUdevRule *rule)
         break;
     case MM_UDEV_RULE_RESULT_TYPE_GOTO_INDEX:
     case MM_UDEV_RULE_RESULT_TYPE_UNKNOWN:
+    default:
         break;
     }
 
@@ -315,7 +316,6 @@ load_rules_from_file (GArray       *rules,
     gchar            *line;
     guint             first_rule_index;
 
-    mm_dbg ("[rules] loading rules from: %s", path);
     first_rule_index = rules->len;
 
     file = g_file_new_for_path (path);
@@ -405,8 +405,6 @@ mm_kernel_device_generic_rules_load (const gchar  *rules_dir,
     GArray *rules;
     GError *inner_error = NULL;
 
-    mm_dbg ("[rules] rules directory set to '%s'...", rules_dir);
-
     rules = g_array_new (FALSE, FALSE, sizeof (MMUdevRule));
     g_array_set_clear_func (rules, (GDestroyNotify) udev_rule_clear);
 
@@ -429,8 +427,6 @@ mm_kernel_device_generic_rules_load (const gchar  *rules_dir,
         inner_error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "No rules loaded");
         goto out;
     }
-
-    mm_dbg ("[rules] %u loaded", rules->len);
 
 out:
     if (rule_files)

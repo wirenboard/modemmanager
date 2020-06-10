@@ -227,6 +227,11 @@ static FieldInfo field_infos[] = {
     [MMC_F_BEARER_STATS_DURATION]             = { "bearer.stats.duration",                           "duration",                 MMC_S_BEARER_STATS,            },
     [MMC_F_BEARER_STATS_BYTES_RX]             = { "bearer.stats.bytes-rx",                           "bytes rx",                 MMC_S_BEARER_STATS,            },
     [MMC_F_BEARER_STATS_BYTES_TX]             = { "bearer.stats.bytes-tx",                           "bytes tx",                 MMC_S_BEARER_STATS,            },
+    [MMC_F_BEARER_STATS_ATTEMPTS]             = { "bearer.stats.attempts",                           "attempts",                 MMC_S_BEARER_STATS,            },
+    [MMC_F_BEARER_STATS_FAILED_ATTEMPTS]      = { "bearer.stats.failed-attempts",                    "attempts",                 MMC_S_BEARER_STATS,            },
+    [MMC_F_BEARER_STATS_TOTAL_DURATION]       = { "bearer.stats.total-duration",                     "total-duration",           MMC_S_BEARER_STATS,            },
+    [MMC_F_BEARER_STATS_TOTAL_BYTES_RX]       = { "bearer.stats.total-bytes-rx",                     "total-bytes rx",           MMC_S_BEARER_STATS,            },
+    [MMC_F_BEARER_STATS_TOTAL_BYTES_TX]       = { "bearer.stats.total-bytes-tx",                     "total-bytes tx",           MMC_S_BEARER_STATS,            },
     [MMC_F_CALL_GENERAL_DBUS_PATH]            = { "call.dbus-path",                                  "dbus path",                MMC_S_CALL_GENERAL,            },
     [MMC_F_CALL_PROPERTIES_NUMBER]            = { "call.properties.number",                          "number",                   MMC_S_CALL_PROPERTIES,         },
     [MMC_F_CALL_PROPERTIES_DIRECTION]         = { "call.properties.direction",                       "direction",                MMC_S_CALL_PROPERTIES,         },
@@ -333,6 +338,8 @@ output_item_free (OutputItem *item)
             g_free (((OutputItemListitem *)item)->value);
             g_free (((OutputItemListitem *)item)->extra);
             break;
+        default:
+            g_assert_not_reached ();
     }
 }
 
@@ -1218,6 +1225,8 @@ mmcli_output_dump (void)
     case MMC_OUTPUT_TYPE_JSON:
         dump_output_json ();
         break;
+    default:
+        g_assert_not_reached ();
     }
 
     g_list_free_full (output_items, (GDestroyNotify) output_item_free);
@@ -1241,6 +1250,8 @@ mmcli_output_list_dump (MmcF field)
     case MMC_OUTPUT_TYPE_JSON:
         dump_output_list_json (field);
         break;
+    default:
+        g_assert_not_reached ();
     }
 
     g_list_free_full (output_items, (GDestroyNotify) output_item_free);

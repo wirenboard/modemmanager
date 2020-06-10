@@ -24,9 +24,11 @@
 /*****************************************************************************/
 /* QMI/DMS to MM translations */
 
-MMModemCapability mm_modem_capability_from_qmi_radio_interface (QmiDmsRadioInterface network);
+MMModemCapability mm_modem_capability_from_qmi_radio_interface (QmiDmsRadioInterface network,
+                                                                gpointer             log_object);
 
-MMModemMode mm_modem_mode_from_qmi_radio_interface (QmiDmsRadioInterface network);
+MMModemMode mm_modem_mode_from_qmi_radio_interface (QmiDmsRadioInterface network,
+                                                    gpointer             log_object);
 
 MMModemLock mm_modem_lock_from_qmi_uim_pin_status (QmiDmsUimPinStatus status,
                                                        gboolean pin1);
@@ -34,9 +36,10 @@ MMModemLock mm_modem_lock_from_qmi_uim_pin_status (QmiDmsUimPinStatus status,
 gboolean mm_pin_enabled_from_qmi_uim_pin_status (QmiDmsUimPinStatus status);
 QmiDmsUimFacility mm_3gpp_facility_to_qmi_uim_facility (MMModem3gppFacility mm);
 
-GArray *mm_modem_bands_from_qmi_band_capabilities (QmiDmsBandCapability qmi_bands,
-                                                   QmiDmsLteBandCapability qmi_lte_bands,
-                                                   GArray *extended_qmi_lte_bands);
+GArray *mm_modem_bands_from_qmi_band_capabilities (QmiDmsBandCapability     qmi_bands,
+                                                   QmiDmsLteBandCapability  qmi_lte_bands,
+                                                   GArray                  *extended_qmi_lte_bands,
+                                                   gpointer                 log_object);
 
 /*****************************************************************************/
 /* QMI/NAS to MM translations */
@@ -72,20 +75,24 @@ QmiNasRadioTechnologyPreference mm_modem_capability_to_qmi_radio_technology_pref
 
 MMModemCapability mm_modem_capability_from_qmi_band_preference (QmiNasBandPreference qmi);
 
-MMModemMode mm_modem_mode_from_qmi_gsm_wcdma_acquisition_order_preference (QmiNasGsmWcdmaAcquisitionOrderPreference qmi);
-QmiNasGsmWcdmaAcquisitionOrderPreference mm_modem_mode_to_qmi_gsm_wcdma_acquisition_order_preference (MMModemMode mode);
+MMModemMode mm_modem_mode_from_qmi_gsm_wcdma_acquisition_order_preference (QmiNasGsmWcdmaAcquisitionOrderPreference qmi,
+                                                                           gpointer                                 log_object);
+QmiNasGsmWcdmaAcquisitionOrderPreference mm_modem_mode_to_qmi_gsm_wcdma_acquisition_order_preference (MMModemMode mode,
+                                                                                                      gpointer    log_object);
 
 GArray *mm_modem_bands_from_qmi_rf_band_information_array (GArray *info_array);
 
-GArray *mm_modem_bands_from_qmi_band_preference (QmiNasBandPreference qmi_bands,
-                                                 QmiNasLteBandPreference qmi_lte_bands,
-                                                 const guint64 *extended_qmi_lte_bands,
-                                                 guint extended_qmi_lte_bands_size);
-void mm_modem_bands_to_qmi_band_preference (GArray *mm_bands,
-                                            QmiNasBandPreference *qmi_bands,
+GArray *mm_modem_bands_from_qmi_band_preference (QmiNasBandPreference     qmi_bands,
+                                                 QmiNasLteBandPreference  qmi_lte_bands,
+                                                 const guint64           *extended_qmi_lte_bands,
+                                                 guint                    extended_qmi_lte_bands_size,
+                                                 gpointer                 log_object);
+void mm_modem_bands_to_qmi_band_preference (GArray                  *mm_bands,
+                                            QmiNasBandPreference    *qmi_bands,
                                             QmiNasLteBandPreference *qmi_lte_bands,
-                                            guint64 *extended_qmi_lte_bands,
-                                            guint extended_qmi_lte_bands_size);
+                                            guint64                 *extended_qmi_lte_bands,
+                                            guint                    extended_qmi_lte_bands_size,
+                                            gpointer                 log_object);
 
 MMModem3gppRegistrationState mm_modem_3gpp_registration_state_from_qmi_registration_state (QmiNasAttachState attach_state,
                                                                                            QmiNasRegistrationState registration_state,
@@ -136,7 +143,8 @@ typedef struct {
     MMModemCapability dms_capabilities;
 } MMQmiCapabilitiesContext;
 
-MMModemCapability mm_modem_capability_from_qmi_capabilities_context (MMQmiCapabilitiesContext *ctx);
+MMModemCapability mm_modem_capability_from_qmi_capabilities_context (MMQmiCapabilitiesContext *ctx,
+                                                                     gpointer                  log_object);
 
 /*****************************************************************************/
 /* QMI unique id manipulation */

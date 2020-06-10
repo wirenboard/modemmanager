@@ -26,7 +26,7 @@
 #include "mm-iface-modem-3gpp-ussd.h"
 #include "mm-base-modem.h"
 #include "mm-modem-helpers.h"
-#include "mm-log.h"
+#include "mm-log-object.h"
 
 #define SUPPORT_CHECKED_TAG "3gpp-ussd-support-checked-tag"
 #define SUPPORTED_TAG       "3gpp-ussd-supported-tag"
@@ -89,6 +89,10 @@ ensure_enabled (MMBaseModem *self,
     case MM_MODEM_STATE_CONNECTING:
     case MM_MODEM_STATE_CONNECTED:
         break;
+
+    default:
+        g_assert_not_reached ();
+        return FALSE;
     }
 
     return TRUE;
@@ -522,7 +526,7 @@ disable_unsolicited_events_ready (MMIfaceModem3gppUssd *self,
     MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->disable_unsolicited_events_finish (self, res, &error);
     if (error) {
         /* This error shouldn't be treated as critical */
-        mm_dbg ("Couldn't disable unsolicited USSD events: '%s'", error->message);
+        mm_obj_dbg (self, "couldn't disable unsolicited USSD events: %s", error->message);
         g_error_free (error);
     }
 
@@ -543,7 +547,7 @@ cleanup_unsolicited_events_ready (MMIfaceModem3gppUssd *self,
     MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->cleanup_unsolicited_events_finish (self, res, &error);
     if (error) {
         /* This error shouldn't be treated as critical */
-        mm_dbg ("Couldn't cleanup unsolicited USSD events: '%s'", error->message);
+        mm_obj_dbg (self, "couldn't cleanup unsolicited USSD events: %s", error->message);
         g_error_free (error);
     }
 
@@ -564,8 +568,8 @@ interface_disabling_step (GTask *task)
 
     switch (ctx->step) {
     case DISABLING_STEP_FIRST:
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case DISABLING_STEP_DISABLE_UNSOLICITED_EVENTS:
         MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->disable_unsolicited_events (
@@ -588,6 +592,9 @@ interface_disabling_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();
@@ -666,7 +673,7 @@ setup_unsolicited_events_ready (MMIfaceModem3gppUssd *self,
     MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->setup_unsolicited_events_finish (self, res, &error);
     if (error) {
         /* This error shouldn't be treated as critical */
-        mm_dbg ("Couldn't setup unsolicited USSD events: '%s'", error->message);
+        mm_obj_dbg (self, "couldn't setup unsolicited USSD events: %s", error->message);
         g_error_free (error);
     }
 
@@ -687,7 +694,7 @@ enable_unsolicited_events_ready (MMIfaceModem3gppUssd *self,
     MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->enable_unsolicited_events_finish (self, res, &error);
     if (error) {
         /* This error shouldn't be treated as critical */
-        mm_dbg ("Couldn't enable unsolicited USSD events: '%s'", error->message);
+        mm_obj_dbg (self, "couldn't enable unsolicited USSD events: %s", error->message);
         g_error_free (error);
     }
 
@@ -708,8 +715,8 @@ interface_enabling_step (GTask *task)
 
     switch (ctx->step) {
     case ENABLING_STEP_FIRST:
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case ENABLING_STEP_SETUP_UNSOLICITED_EVENTS:
         MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->setup_unsolicited_events (
@@ -732,6 +739,9 @@ interface_enabling_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();
@@ -803,7 +813,7 @@ check_support_ready (MMIfaceModem3gppUssd *self,
                                                                               &error)) {
         if (error) {
             /* This error shouldn't be treated as critical */
-            mm_dbg ("USSD support check failed: '%s'", error->message);
+            mm_obj_dbg (self, "USSD support check failed: %s", error->message);
             g_error_free (error);
         }
     } else {
@@ -838,8 +848,8 @@ interface_initialization_step (GTask *task)
             supported_quark = (g_quark_from_static_string (
                                    SUPPORTED_TAG));
 
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_CHECK_SUPPORT:
         if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
@@ -866,8 +876,8 @@ interface_initialization_step (GTask *task)
              * support it. */
         }
 
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_FAIL_IF_UNSUPPORTED:
         if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
@@ -880,8 +890,8 @@ interface_initialization_step (GTask *task)
             return;
         }
 
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_LAST:
         /* We are done without errors! */
@@ -907,6 +917,9 @@ interface_initialization_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();

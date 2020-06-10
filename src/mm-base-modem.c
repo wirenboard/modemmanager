@@ -31,12 +31,15 @@
 #include "mm-context.h"
 #include "mm-base-modem.h"
 
-#include "mm-log.h"
+#include "mm-log-object.h"
 #include "mm-port-enums-types.h"
 #include "mm-serial-parsers.h"
 #include "mm-modem-helpers.h"
 
-G_DEFINE_ABSTRACT_TYPE (MMBaseModem, mm_base_modem, MM_GDBUS_TYPE_OBJECT_SKELETON);
+static void log_object_iface_init (MMLogObjectInterface *iface);
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (MMBaseModem, mm_base_modem, MM_GDBUS_TYPE_OBJECT_SKELETON,
+                                  G_IMPLEMENT_INTERFACE (MM_TYPE_LOG_OBJECT, log_object_iface_init))
 
 /* If we get 10 consecutive timeouts in a serial port, we consider the modem
  * invalid and we request re-probing. */
@@ -61,6 +64,7 @@ static GParamSpec *properties[PROP_LAST];
 struct _MMBaseModemPrivate {
     /* The connection to the system bus */
     GDBusConnection *connection;
+    guint            dbus_id;
 
     /* Modem-wide cancellable. If it ever gets cancelled, no further operations
      * should be done by the modem. */
@@ -113,6 +117,12 @@ struct _MMBaseModemPrivate {
 #endif
 };
 
+guint
+mm_base_modem_get_dbus_id (MMBaseModem *self)
+{
+    return self->priv->dbus_id;
+}
+
 static gchar *
 get_hash_key (const gchar *subsys,
               const gchar *name)
@@ -127,22 +137,17 @@ serial_port_timed_out_cb (MMPortSerial *port,
 {
     /* If reached the maximum number of timeouts, invalidate modem */
     if (n_consecutive_timeouts >= self->priv->max_timeouts) {
-        mm_err ("(%s/%s) %s port timed out %u consecutive times, marking modem '%s' as invalid",
-                 mm_port_subsys_get_string (mm_port_get_subsys (MM_PORT (port))),
-                 mm_port_get_device (MM_PORT (port)),
-                 mm_port_type_get_string (mm_port_get_port_type (MM_PORT (port))),
-                 n_consecutive_timeouts,
-                 g_dbus_object_get_object_path (G_DBUS_OBJECT (self)));
+        mm_obj_err (self, "port %s timed out %u consecutive times, marking modem as invalid",
+                    mm_port_get_device (MM_PORT (port)),
+                    n_consecutive_timeouts);
         g_cancellable_cancel (self->priv->cancellable);
         return;
     }
 
     if (n_consecutive_timeouts > 1)
-        mm_warn ("(%s/%s) %s port timed out %u consecutive times",
-                 mm_port_subsys_get_string (mm_port_get_subsys (MM_PORT (port))),
-                 mm_port_get_device (MM_PORT (port)),
-                 mm_port_type_get_string (mm_port_get_port_type (MM_PORT (port))),
-                 n_consecutive_timeouts);
+        mm_obj_warn (self, "port %s timed out %u consecutive times",
+                     mm_port_get_device (MM_PORT (port)),
+                     n_consecutive_timeouts);
 }
 
 gboolean
@@ -221,13 +226,13 @@ mm_base_modem_grab_port (MMBaseModem         *self,
             /* Prefer plugin-provided flags to the generic ones */
             if (at_pflags == MM_PORT_SERIAL_AT_FLAG_NONE) {
                 if (mm_kernel_device_get_property_as_boolean (kernel_device, ID_MM_PORT_TYPE_AT_PRIMARY)) {
-                    mm_dbg ("AT port '%s/%s' flagged as primary", subsys, name);
+                    mm_obj_dbg (self, "AT port '%s/%s' flagged as primary", subsys, name);
                     at_pflags = MM_PORT_SERIAL_AT_FLAG_PRIMARY;
                 } else if (mm_kernel_device_get_property_as_boolean (kernel_device, ID_MM_PORT_TYPE_AT_SECONDARY)) {
-                    mm_dbg ("AT port '%s/%s' flagged as secondary", subsys, name);
+                    mm_obj_dbg (self, "AT port '%s/%s' flagged as secondary", subsys, name);
                     at_pflags = MM_PORT_SERIAL_AT_FLAG_SECONDARY;
                 } else if (mm_kernel_device_get_property_as_boolean (kernel_device, ID_MM_PORT_TYPE_AT_PPP)) {
-                    mm_dbg ("AT port '%s/%s' flagged as PPP", subsys, name);
+                    mm_obj_dbg (self, "AT port '%s/%s' flagged as PPP", subsys, name);
                     at_pflags = MM_PORT_SERIAL_AT_FLAG_PPP;
                 }
             }
@@ -269,8 +274,8 @@ mm_base_modem_grab_port (MMBaseModem         *self,
 
             flow_control = mm_flow_control_from_string (flow_control_tag, &inner_error);
             if (flow_control == MM_FLOW_CONTROL_UNKNOWN) {
-                mm_warn ("(%s/%s) unsupported flow control settings in port: %s",
-                         subsys, name, inner_error->message);
+                mm_obj_warn (self, "unsupported flow control settings in port %s: %s",
+                             name, inner_error->message);
                 g_error_free (inner_error);
             } else {
                 g_object_set (port,
@@ -339,10 +344,7 @@ mm_base_modem_grab_port (MMBaseModem         *self,
         /* We already filter out before all non-tty, non-net, non-cdc-wdm ports */
         g_assert_not_reached ();
 
-    mm_dbg ("(%s) type '%s' claimed by %s",
-            name,
-            mm_port_type_get_string (ptype),
-            mm_base_modem_get_device (self));
+    mm_obj_dbg (self, "grabbed port '%s/%s'", name, mm_port_type_get_string (ptype));
 
     /* Add it to the tracking HT.
      * Note: 'key' and 'port' now owned by the HT. */
@@ -352,6 +354,9 @@ mm_base_modem_grab_port (MMBaseModem         *self,
     g_object_set (port,
                   MM_PORT_KERNEL_DEVICE, kernel_device,
                   NULL);
+
+    /* Set owner ID */
+    mm_log_object_set_owner_id (MM_LOG_OBJECT (port), mm_log_object_get_id (MM_LOG_OBJECT (self)));
 
     return TRUE;
 }
@@ -1015,7 +1020,7 @@ initialize_ready (MMBaseModem *self,
     GError *error = NULL;
 
     if (mm_base_modem_initialize_finish (self, res, &error)) {
-        mm_dbg ("modem properly initialized");
+        mm_obj_dbg (self, "modem initialized");
         mm_base_modem_set_valid (self, TRUE);
         return;
     }
@@ -1025,8 +1030,7 @@ initialize_ready (MMBaseModem *self,
         /* Even with initialization errors, we do set the state to valid, so
          * that the modem gets exported and the failure notified to the user.
          */
-        mm_dbg ("Couldn't finish initialization in the current state: '%s'",
-                error->message);
+        mm_obj_dbg (self, "couldn't finish initialization in the current state: '%s'", error->message);
         g_error_free (error);
         mm_base_modem_set_valid (self, TRUE);
         return;
@@ -1034,7 +1038,7 @@ initialize_ready (MMBaseModem *self,
 
     /* Really fatal, we cannot even export the failed modem (e.g. error before
      * even trying to enable the Modem interface */
-    mm_warn ("couldn't initialize the modem: '%s'", error->message);
+    mm_obj_warn (self, "couldn't initialize: '%s'", error->message);
     g_error_free (error);
 }
 
@@ -1042,11 +1046,10 @@ static inline void
 log_port (MMBaseModem *self, MMPort *port, const char *desc)
 {
     if (port) {
-        mm_dbg ("(%s) %s/%s %s",
-                self->priv->device,
-                mm_port_subsys_get_string (mm_port_get_subsys (port)),
-                mm_port_get_device (port),
-                desc);
+        mm_obj_dbg (self, "%s/%s %s",
+                    mm_port_subsys_get_string (mm_port_get_subsys (port)),
+                    mm_port_get_device (port),
+                    desc);
     }
 }
 
@@ -1181,6 +1184,14 @@ mm_base_modem_organize_ports (MMBaseModem *self,
             break;
 #endif
 
+        case MM_PORT_TYPE_UNKNOWN:
+        case MM_PORT_TYPE_IGNORED:
+#if !defined WITH_MBIM
+        case MM_PORT_TYPE_MBIM:
+#endif
+#if !defined WITH_QMI
+        case MM_PORT_TYPE_QMI:
+#endif
         default:
             /* Ignore port */
             break;
@@ -1459,9 +1470,9 @@ static void
 cleanup_modem_port (MMBaseModem *self,
                     MMPort      *port)
 {
-    mm_dbg ("cleaning up port '%s/%s'...",
-            mm_port_subsys_get_string (mm_port_get_subsys (MM_PORT (port))),
-            mm_port_get_device (MM_PORT (port)));
+    mm_obj_dbg (self, "cleaning up port '%s/%s'...",
+                mm_port_subsys_get_string (mm_port_get_subsys (MM_PORT (port))),
+                mm_port_get_device (MM_PORT (port)));
 
     /* Cleanup for serial ports */
     if (MM_IS_PORT_SERIAL (port)) {
@@ -1483,7 +1494,7 @@ cleanup_modem_port (MMBaseModem *self,
      * allocating too many newer allocations will fail with client-ids-exhausted
      * errors. */
     if (MM_IS_PORT_QMI (port)) {
-        mm_port_qmi_close (MM_PORT_QMI (port));
+        mm_port_qmi_close (MM_PORT_QMI (port), NULL, NULL);
         return;
     }
 #endif
@@ -1502,8 +1513,18 @@ teardown_ports_table (MMBaseModem *self)
     g_hash_table_iter_init (&iter, self->priv->ports);
     while (g_hash_table_iter_next (&iter, &key, &value))
         cleanup_modem_port (self, MM_PORT (value));
-    g_hash_table_destroy (self->priv->ports);
-    self->priv->ports = NULL;
+    g_hash_table_destroy (g_steal_pointer (&self->priv->ports));
+}
+
+/*****************************************************************************/
+
+static gchar *
+log_object_build_id (MMLogObject *_self)
+{
+    MMBaseModem *self;
+
+    self = MM_BASE_MODEM (_self);
+    return g_strdup_printf ("modem%u", self->priv->dbus_id);
 }
 
 /*****************************************************************************/
@@ -1511,13 +1532,18 @@ teardown_ports_table (MMBaseModem *self)
 static void
 mm_base_modem_init (MMBaseModem *self)
 {
+    static guint id = 0;
+
     /* Initialize private data */
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
                                               MM_TYPE_BASE_MODEM,
                                               MMBaseModemPrivate);
 
+    /* Each modem is given a unique id to build its own DBus path */
+    self->priv->dbus_id = id++;
+
     /* Setup authorization provider */
-    self->priv->authp = mm_auth_get_provider ();
+    self->priv->authp = mm_auth_provider_get ();
     self->priv->authp_cancellable = g_cancellable_new ();
 
     /* Setup modem-wide cancellable */
@@ -1633,9 +1659,7 @@ finalize (GObject *object)
     g_assert (!self->priv->enable_tasks);
     g_assert (!self->priv->disable_tasks);
 
-    mm_dbg ("Modem (%s) '%s' completely disposed",
-            self->priv->plugin,
-            self->priv->device);
+    mm_obj_dbg (self, "completely disposed");
 
     g_free (self->priv->device);
     g_strfreev (self->priv->drivers);
@@ -1652,7 +1676,8 @@ dispose (GObject *object)
     /* Cancel all ongoing auth requests */
     g_cancellable_cancel (self->priv->authp_cancellable);
     g_clear_object (&self->priv->authp_cancellable);
-    g_clear_object (&self->priv->authp);
+
+    /* note: authp is a singleton, we don't keep a full reference */
 
     /* Ensure we cancel any ongoing operation, but before
      * disconnect our own signal handler, or we'll end up with
@@ -1664,19 +1689,16 @@ dispose (GObject *object)
 
     g_clear_object (&self->priv->primary);
     g_clear_object (&self->priv->secondary);
-    g_list_free_full (self->priv->data, g_object_unref);
-    self->priv->data = NULL;
+    g_list_free_full (g_steal_pointer (&self->priv->data), g_object_unref);
     g_clear_object (&self->priv->qcdm);
     g_clear_object (&self->priv->gps_control);
     g_clear_object (&self->priv->gps);
     g_clear_object (&self->priv->audio);
 #if defined WITH_QMI
-    g_list_free_full (self->priv->qmi, g_object_unref);
-    self->priv->qmi = NULL;
+    g_list_free_full (g_steal_pointer (&self->priv->qmi), g_object_unref);
 #endif
 #if defined WITH_MBIM
-    g_list_free_full (self->priv->mbim, g_object_unref);
-    self->priv->mbim = NULL;
+    g_list_free_full (g_steal_pointer (&self->priv->mbim), g_object_unref);
 #endif
 
     teardown_ports_table (self);
@@ -1684,6 +1706,12 @@ dispose (GObject *object)
     g_clear_object (&self->priv->connection);
 
     G_OBJECT_CLASS (mm_base_modem_parent_class)->dispose (object);
+}
+
+static void
+log_object_iface_init (MMLogObjectInterface *iface)
+{
+    iface->build_id = log_object_build_id;
 }
 
 static void
