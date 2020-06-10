@@ -57,6 +57,7 @@ Description: D-Bus service for managing modems - development files
 Package: modemmanager-doc
 Section: doc
 Architecture: all
+Multi-Arch: foreign
 Depends: ${misc:Depends}
 Suggests: devhelp
 Description: D-Bus service for managing modems - documentation files
@@ -109,6 +110,7 @@ Description: D-Bus service for managing modems - library development files
 
 Package: libmm-glib-doc
 Architecture: all
+Multi-Arch: foreign
 Section: doc
 Depends: ${misc:Depends}
 Suggests: devhelp
