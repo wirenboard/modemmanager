@@ -1,176 +1,141 @@
 
-ModemManager 1.12.10
+ModemManager 1.14.0
 -------------------------------------------
-This is a new bugfix release of ModemManager.
-
-The list of changes in this version includes:
-
- * mmcli:
-   ** Add missing 'allowed-auth' bearer property in the output.
-   ** Remove non-existent --list-bearers option from manpage.
-
- * introspection:
-   ** Use the correct node name for the ModemManager1 object.
-
- * Modem interface:
-   ** Allow Command() while in Failed state.
-
- * MBIM:
-   ** Fix segfault when loading capabilities.
-
- * Plugins:
-   ** huawei: updated HCSQ regex to match unquoted response.
-
-
-ModemManager 1.12.8
--------------------------------------------
-This is a new bugfix release of ModemManager.
-
-The list of changes in this version includes:
-
- * Plugin manager:
-   ** Updated logic to allow new ports added to a device up to 1500ms since last
-      port was added.
-
- * Voice interface:
-   ** Match calls in call list by number.
-   ** Don't report an empty list if +CLCC for any reason fails.
-   ** Expect in-call URCs also in secondary port.
-   ** Allow optional extra CR in in-call URCs.
-
- * Kernel device:
-   ** Fix looking up for interface details in udev-based builds.
-
- * Huawei:
-   ** Allow reading port type hints from USB interface descriptions.
-   ** Fix segfault if device is removed while probing is ongoing.
-
- * Several other minor fixes.
-
-
-ModemManager 1.12.6
--------------------------------------------
-This is a new bugfix release of ModemManager.
-
-The list of changes in this version includes:
-
- * SIM:
-   ** Updated logic to avoid sending PIN/PUK to the SIM card when not required
-      (e.g. if already unlocked).
-
- * Simple interface:
-   ** Avoid aborting connection if SIM-PUK2 locked, as PIN2/PUK2 doesn't
-      prevent us from getting connected.
-
- * Location interface:
-   ** Fixed memory leak happening as soon as a position fix was obtained and
-      gps-raw location source was enabled.
-
- * Core:
-   ** Fixed handling of 0x00 bytes at the end of GSM encoded strings.
-   ** Fixed cleaning up 'timed-out' signal on the serial port objects.
-   ** Fixed logic that closes MBIM ports during cleanup.
-
- * Several other minor fixes and memory leak plugs.
-
-
-ModemManager 1.12.4
--------------------------------------------
-This is a new bugfix release of ModemManager.
-
-This release breaks the API of the bindings supporting the MMModem3gppNetwork
-type, used as result when a Modem3gpp.Scan() operation finishes. This type is
-now a boxed type with explicit copy/free info, so the interpreter using the
-bindings is now able to cleanly dispose these variables (it would make the
-program crash otherwise, so the change is well justified).
-
-The getters for the MMModem3gppNetwork type now look like this:
-
-    E.g. instead of:
-      ModemManager.Modem3gpp.network_get_operator_code(network)
-    We should now do:
-      network.get_operator_code()
-
-A new example python application using the Modem3gpp.Scan() operation is
-provided in the sources, under examples/network-scan-python.
-
-There is no API/ABI break in libmm-glib itself.
-
-The list of additional changes in this version includes:
-
- * Core:
-   ** Added missing ME error codes when building GError variables for the
-      MM_MOBILE_EQUIPMENT_ERROR domain.
-
- * Bearer:
-   ** Avoid connection checks or stats updates while disconnecting.
-
- * Serial port:
-   ** Fix segfault when port flash operation gets cancelled.
-
- * Simple interface:
-   ** Fix the ongoing connection cancellable handling.
-
- * Voice interface:
-   ** Fix segfault when voice support check fails.
-
- * QMI:
-   ** Fixed several memory leaks, including a severe one happening when multiple
-      GPS sources (e.g. raw and nmea) were enabled at the same time.
-
- * Plugins:
-   ** ublox: ignore errors when attempting to disconnect last bearer.
-
- * mmcli:
-   ** Allow "yes" and "no" as boolean strings.
-
- * Several other minor fixes and memory leak plugs.
-
-
-ModemManager 1.12.2
--------------------------------------------
-This is a new bugfix release of ModemManager.
+This is a new stable release of ModemManager.
 
 The following notes are directed to package maintainers:
 
- * This version splits all common logic from different plugins into separate
-   shared libraries that are loaded before the plugins. This means that in
-   addition to 'libmm-plugin-*.so' files, a new set of 'libmm-shared-*.so'
-   files will also be installed in ${libdir}/ModemManager.
+ * This version requires:
+   ** GLib/GObject/GIO >= 2.48.0
+   ** libmbim >= 1.24.0 (for the optional MBIM support)
+   ** libqmi >= 1.26.0 (for the optional QMI support)
 
-The list of changes in this version includes:
+ * Build updated with several improvements:
+   ** The build has been updated to use by default all warnings enabled by
+      AX_COMPILER_FLAGS(), and therefore when building the release from a git
+      checkout, autoconf-archive >= 2017.03.21 is now required. This new build
+      dependency isn't required when building from the release tarball.
+   ** Also when building from a git checkout, beware because by default
+      --enable-compile-warnings=error is enabled, which implies -Werror. If
+      you'd like to build from git and avoid -Werror, you should explicitly use
+      --enable-compile-warnings=yes (to keep the warnings but without being
+      errors), --enable-compile-warnings=no (to disable all the extra warnings
+      enabled by default) or --disable-Werror (to unconditionally make all
+      compiler warnings non-fatal).
+   ** Users can now preselect which plugins to build and install during
+      configure, with the --enable-plugin-[PLUGIN-NAME] options. The user can
+      also build and install all except for some, just by using the
+      --enable-all-plugins option followed by --disable-plugin-[PLUGIN-NAME].
+      By default all plugins are enabled, so all of them built and installed.
+      This new set of options are useful for users building custom systems
+      where they already know what kind of devices they're going to have, it
+      isn't recommended for standard distributions.
 
- * Simple interface:
-   ** Avoid assertion on the ongoing connect cancellable.
+The only updates in the public API are the following:
 
- * Plugin manager:
-   ** Fix waiting the minimum probing time.
-   ** Explicitly cancel timeouts when device probing is cancelled.
-   ** Disable lazy plugin loading, we now require all missing symbols to be
-      resolved at loading time for a plugin to correctly be loaded.
+ * Modem interface:
+   ** Added support for AT-based and/or QMI-based 5G devices, which will report
+      the new MM_MODEM_CAPABILITY_5GNR capability.
+   ** Deprecated the MM_MODEM_CAPABILITY_LTE_ADVANCED capability, as it was
+      never used in any implementation.
 
- * Bearer:
-   ** Avoid reporting disconnection error if trying to disconnect a bearer that
-      is already disconnected.
+ * Bearer interface:
+   ** Added additional 'attempts', 'failed-attempts', 'total-rx-bytes',
+      'total-tx-bytes' and 'total-duration' values in the 'Stats' property
+      exposed by the Bearer objects.
 
- * MBIM:
-   ** Completely skip LTE attach config/status if unsupported.
+The most important features and changes in this release are the following:
+
+ * The daemon switched to 'STRICT' filter mode by default. The old 'DEFAULT'
+   mode is renamed to 'LEGACY' and is considered now deprecated. Under the
+   'STRICT' filter mode, the TTY blacklist and greylist are ignored, and the
+   port probing mechanism uses its own heuristics to guess whether a given TTY
+   is owned by a modem or not.
+
+ * Added a new implicit whitelist rules applicable in 'STRICT' filter mode, so
+   that all devices with a USB vid matching one of the vids allowed by the
+   different installed plugins are implicitly allowed.
+
+ * Updated daemon logging so that we always prefix the messages with a string
+   identifying which modem the log refers to, making it easy to grep logs for
+   one specific device if the system has more than one.
+
+ * Updated the probing logic to make sure we don't attempt a re-probe when the
+   device is gone.
+
+ * Probing logic now allows new ports detected up to 1500ms since last port
+   added, useful on OpenWrt setups where ports are notified one by one via
+   hotplug events.
+
+ * AT:
+   ** Moved the charset definition logic to the initialization phase instead of
+      the enabling phase, because the feature support checks may already require
+      string processing based on the current charset.
+   ** Updated manual registration operation to attempt using current charset
+      (e.g. UCS2) if ASCII fails.
 
  * QMI:
-   ** Make current settings mandatory when using 'static' addressing.
-   ** Handle disconnection indications during connection attempt.
-   ** Explicitly close QMI port during disconnection if it was opened during a
-      connection attempt.
+   ** Devices using the LOC service for GNSS will now also setup the list of
+      required NMEA traces before starting the engine.
+   ** Implemented 3GPP USSD support using the Voice service.
+   ** Update carrier code if registration changes from one roaming operator to
+      another.
+   ** Explicitly disable autoconnect during modem enabling phase, because it
+      interferes with our connection management logic.
+   ** Fallback to raw-ip if WDA Get Data Format requests arguments, as in most
+      new 5G devices.
+   ** Updated to always use the asynchronous close() operation.
+   ** Handle disconnection indications during connection attempts.
 
- * Plugins:
-   ** huawei: avoid using QCDM port during a voice call.
-   ** sierra: added port type hints for the EM7565.
-   ** dell,dw5821e: added support for the DW5821e with eSIM variant.
+ * MBIM:
+   ** Update carrier code if registration changes from one roaming operator to
+      another.
+   ** Implement reset in Intel-based and Qualcomm-based devices.
+   ** Avoid LTE attach config/status if unsupported.
+   ** Updated to make sure all allocated QMI CIDs are released during shutdown.
+
+ * SIM interface:
+   ** Don't allow sending PIN/PUK if not required.
+
+ * 3GPP interface:
+   ** Fixed manual re-registration to the same operator.
+
+ * CDMA interface:
+   ** Don't allow multiple concurrent activation attempts.
+   ** Disallow empty carrier code in automatic activation.
+
+ * Bearer interface:
+   ** Updated to avoid connection checks or stats updates while disconnecting.
+
+ * libmm-glib:
+   ** New 'mm_location_gps_nmea_get_traces()' method to retrieve a NULL
+      terminated array of strings with all cached NMEA traces.
+   ** Deprecated the 'mm_location_gps_nmea_build_full()' method.
 
  * mmcli:
-   ** Fix printing empty value lists in human-friendly output.
+   ** Added a new 'any' lookup keyword for the --modem and --sim options, useful
+      when the system is only expected to have one single device.
 
- * Several other minor fixes and memory leak plugs.
+ * Plugins:
+   ** broadmobi: new plugin, right now just with port type hints for the BM818.
+   ** foxconn: new plugin to support the T77W968 (both with and without eSIM).
+   ** dell,dw5821e: added support for the DW5821e with eSIM variant.
+   ** huawei: don't delay reporting network initiated disconnects.
+   ** huawei: try to read port type hints from interface descriptions.
+   ** huawei: avoid using the QCDM port during a voice call.
+   ** cinterion: skip sim ready check for modules that don't support it.
+   ** cinterion: implemented radio/band handling for LTE modems.
+   ** cinterion: added Signal interface support bsaed on AT^SMONI.
+   ** quectel: updated to detect SIM hot swap via +QUSIM URCs.
+   ** fibocom: added support for QMI based devices like the FM150.
+   ** ublox: ignore error when disconnecting last LTE bearer.
+   ** ublox: implement support to enable and detect +UUDTMF URCs.
+   ** ublox: added blacklist rules for GPS modules in the plugin itself.
+   ** sierra: implement manual and automatic CDMA activation.
+   ** novatel: implement manual and automatic CDMA activation.
+
+All the features and fixes which were backported to 1.12.x releases are also
+present in ModemManager 1.14.0.
 
 
 ModemManager 1.12.0

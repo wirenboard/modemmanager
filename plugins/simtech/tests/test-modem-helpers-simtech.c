@@ -21,7 +21,7 @@
 #define _LIBMM_INSIDE_MM
 #include <libmm-glib.h>
 
-#include "mm-log.h"
+#include "mm-log-test.h"
 #include "mm-modem-helpers.h"
 #include "mm-modem-helpers-simtech.h"
 
@@ -52,7 +52,7 @@ common_test_clcc_urc (const gchar      *urc,
     str = g_match_info_fetch (match_info, 0);
     g_assert (str);
 
-    result = mm_simtech_parse_clcc_list (str, &call_info_list, &error);
+    result = mm_simtech_parse_clcc_list (str, NULL, &call_info_list, &error);
     g_assert_no_error (error);
     g_assert (result);
 
@@ -95,7 +95,7 @@ static void
 test_clcc_urc_single (void)
 {
     static const MMCallInfo expected_call_info_list[] = {
-        { 1, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE, "123456789" }
+        { 1, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE, (gchar *) "123456789" }
     };
 
     const gchar *urc =
@@ -109,9 +109,9 @@ static void
 test_clcc_urc_multiple (void)
 {
     static const MMCallInfo expected_call_info_list[] = {
-        { 1, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  NULL        },
-        { 2, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  "123456789" },
-        { 3, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  "987654321" },
+        { 1, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  NULL                  },
+        { 2, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  (gchar *) "123456789" },
+        { 3, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  (gchar *) "987654321" },
     };
 
     const gchar *urc =
@@ -127,8 +127,8 @@ static void
 test_clcc_urc_complex (void)
 {
     static const MMCallInfo expected_call_info_list[] = {
-        { 1, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  "123456789" },
-        { 2, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_WAITING, "987654321" },
+        { 1, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  (gchar *) "123456789" },
+        { 2, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_WAITING, (gchar *) "987654321" },
     };
 
     const gchar *urc =
@@ -316,26 +316,6 @@ test_rxdtmf_urc_one_cr (void)
 }
 
 /*****************************************************************************/
-
-void
-_mm_log (const char *loc,
-         const char *func,
-         guint32 level,
-         const char *fmt,
-         ...)
-{
-    va_list args;
-    gchar *msg;
-
-    if (!g_test_verbose ())
-        return;
-
-    va_start (args, fmt);
-    msg = g_strdup_vprintf (fmt, args);
-    va_end (args);
-    g_print ("%s\n", msg);
-    g_free (msg);
-}
 
 int main (int argc, char **argv)
 {

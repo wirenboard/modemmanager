@@ -25,7 +25,7 @@
 
 #include "ModemManager.h"
 #include "mm-modem-helpers.h"
-#include "mm-log.h"
+#include "mm-log-object.h"
 #include "mm-errors-types.h"
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-3gpp.h"
@@ -111,7 +111,7 @@ modem_create_bearer (MMIfaceModem *self,
 
     if (mm_bearer_properties_get_ip_type (properties) &
         (MM_BEARER_IP_FAMILY_IPV6 | MM_BEARER_IP_FAMILY_IPV4V6)) {
-        mm_dbg ("Creating generic bearer (IPv6 requested)...");
+        mm_obj_dbg (self, "creating generic bearer (IPv6 requested)...");
         mm_broadband_bearer_new (MM_BROADBAND_MODEM (self),
                                  properties,
                                  NULL, /* cancellable */
@@ -120,7 +120,7 @@ modem_create_bearer (MMIfaceModem *self,
         return;
     }
 
-    mm_dbg ("Creating HSO bearer...");
+    mm_obj_dbg (self, "creating HSO bearer...");
     mm_broadband_bearer_hso_new (MM_BROADBAND_MODEM_HSO (self),
                                  properties,
                                  NULL, /* cancellable */
@@ -150,7 +150,6 @@ load_unlock_retries_ready (MMBaseModem *self,
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
-        mm_dbg ("Couldn't query unlock retries: '%s'", error->message);
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -629,31 +628,10 @@ enable_location_gathering (MMIfaceModemLocation *self,
 /* Setup ports (Broadband modem class) */
 
 static void
-trace_received (MMPortSerialGps *port,
-                const gchar *trace,
+trace_received (MMPortSerialGps      *port,
+                const gchar          *trace,
                 MMIfaceModemLocation *self)
 {
-    /* Helper to debug GPS location related issues. Don't depend on a real GPS
-     * fix for debugging, just use some random values to update */
-#if 0
-    if (g_str_has_prefix (trace, "$GPGGA")) {
-        GString *str;
-        GDateTime *now;
-
-        now = g_date_time_new_now_utc ();
-        str = g_string_new ("");
-        g_string_append_printf (str,
-                                "$GPGGA,%02u%02u%02u,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47",
-                                g_date_time_get_hour (now),
-                                g_date_time_get_minute (now),
-                                g_date_time_get_second (now));
-        mm_iface_modem_location_gps_update (self, str->str);
-        g_string_free (str, TRUE);
-        g_date_time_unref (now);
-        return;
-    }
-#endif
-
     mm_iface_modem_location_gps_update (self, trace);
 }
 

@@ -346,12 +346,16 @@ Ip6Config  readable   a{sv}
 <pre class="programlisting">
 Stats  readable   a{sv}
 </pre>
-<p>        If the modem supports it, this property will show statistics of the
-        ongoing connection.
+<p>        If the modem supports it, this property will show statistics associated
+        to the bearer.
+</p>
+<p>        There are two main different statistic types reported: either applicable
+        to the ongoing connection, or otherwise compiled for all connections
+        that have been done on this bearer object.
 </p>
 <p>        When the connection is disconnected automatically or explicitly by the
-        user, the values in this property will show the last values cached.
-        The statistics are reset
+        user, the values applicable to the ongoing connection will show the last
+        values cached.
 </p>
 <p>        The following items may appear in the list of statistics:
         </p>
@@ -364,19 +368,63 @@ Stats  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"rx-bytes"</code></span></p></td>
 <td>
-              Number of bytes received without error, given as an unsigned 64-bit integer value (signature <code class="literal">"t"</code>).
+              Number of bytes received without error in the ongoing connection,
+              given as an unsigned 64-bit integer value (signature
+              <code class="literal">"t"</code>).
             </td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"tx-bytes"</code></span></p></td>
 <td>
-              Number bytes transmitted without error, given as an unsigned 64-bit integer value (signature <code class="literal">"t"</code>).
+              Number of bytes transmitted without error in the ongoing
+              connection, given as an unsigned 64-bit integer value (signature
+              <code class="literal">"t"</code>).
             </td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"duration"</code></span></p></td>
 <td>
-              Duration of the connection, in seconds, given as an unsigned integer value (signature <code class="literal">"u"</code>).
+              Duration of the ongoing connection, in seconds, given as an
+              unsigned integer value (signature <code class="literal">"u"</code>).
+            </td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">"attempts"</code></span></p></td>
+<td>
+              Total number of connection attempts done with this bearer, given
+              as an unsigned integer value (signature <code class="literal">"u"</code>).
+            </td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">"failed-attempts"</code></span></p></td>
+<td>
+              Number of failed connection attempts done with this bearer,
+              given as an unsigned integer value (signature
+              <code class="literal">"u"</code>).
+            </td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">"total-rx-bytes"</code></span></p></td>
+<td>
+              Total number of bytes received without error in all the successful
+              connection establishments, given as an unsigned 64-bit integer
+              value (signature <code class="literal">"t"</code>).
+            </td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">"total-tx-bytes"</code></span></p></td>
+<td>
+              Total number of bytes transmitted without error in all the
+              successful connection establishments, given as an unsigned 64-bit
+              integer value (signature <code class="literal">"t"</code>).
+            </td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">"total-duration"</code></span></p></td>
+<td>
+              Total duration of all the successful connection establishments, in
+              seconds, given as an unsigned integer value (signature
+              <code class="literal">"u"</code>).
             </td>
 </tr>
 </tbody>

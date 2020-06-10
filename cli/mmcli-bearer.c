@@ -68,7 +68,7 @@ mmcli_bearer_get_option_group (void)
 
     /* Status options */
     group = g_option_group_new ("bearer",
-                                "Bearer options",
+                                "Bearer options:",
                                 "Show bearer options",
                                 NULL,
                                 NULL);
@@ -108,7 +108,7 @@ mmcli_bearer_options_enabled (void)
 }
 
 static void
-context_free (Context *ctx)
+context_free (void)
 {
     if (!ctx)
         return;
@@ -127,7 +127,7 @@ context_free (Context *ctx)
 void
 mmcli_bearer_shutdown (void)
 {
-    context_free (ctx);
+    context_free ();
 }
 
 static void
@@ -251,6 +251,11 @@ print_bearer_info (MMBearer *bearer)
         gchar *duration = NULL;
         gchar *bytes_rx = NULL;
         gchar *bytes_tx = NULL;
+        gchar *attempts = NULL;
+        gchar *failed_attempts = NULL;
+        gchar *total_duration = NULL;
+        gchar *total_bytes_rx = NULL;
+        gchar *total_bytes_tx = NULL;
 
         if (stats) {
             guint64 val;
@@ -264,11 +269,31 @@ print_bearer_info (MMBearer *bearer)
             val = mm_bearer_stats_get_tx_bytes (stats);
             if (val)
                 bytes_tx = g_strdup_printf ("%" G_GUINT64_FORMAT, val);
+            val = mm_bearer_stats_get_attempts (stats);
+            if (val)
+                attempts = g_strdup_printf ("%" G_GUINT64_FORMAT, val);
+            val = mm_bearer_stats_get_failed_attempts (stats);
+            if (val)
+                failed_attempts = g_strdup_printf ("%" G_GUINT64_FORMAT, val);
+            val = mm_bearer_stats_get_total_duration (stats);
+            if (val)
+                total_duration = g_strdup_printf ("%" G_GUINT64_FORMAT, val);
+            val = mm_bearer_stats_get_total_rx_bytes (stats);
+            if (val)
+                total_bytes_rx = g_strdup_printf ("%" G_GUINT64_FORMAT, val);
+            val = mm_bearer_stats_get_total_tx_bytes (stats);
+            if (val)
+                total_bytes_tx = g_strdup_printf ("%" G_GUINT64_FORMAT, val);
         }
 
-        mmcli_output_string_take (MMC_F_BEARER_STATS_DURATION, duration);
-        mmcli_output_string_take (MMC_F_BEARER_STATS_BYTES_RX, bytes_rx);
-        mmcli_output_string_take (MMC_F_BEARER_STATS_BYTES_TX, bytes_tx);
+        mmcli_output_string_take (MMC_F_BEARER_STATS_DURATION,        duration);
+        mmcli_output_string_take (MMC_F_BEARER_STATS_BYTES_RX,        bytes_rx);
+        mmcli_output_string_take (MMC_F_BEARER_STATS_BYTES_TX,        bytes_tx);
+        mmcli_output_string_take (MMC_F_BEARER_STATS_ATTEMPTS,        attempts);
+        mmcli_output_string_take (MMC_F_BEARER_STATS_FAILED_ATTEMPTS, failed_attempts);
+        mmcli_output_string_take (MMC_F_BEARER_STATS_TOTAL_DURATION,  total_duration);
+        mmcli_output_string_take (MMC_F_BEARER_STATS_TOTAL_BYTES_RX,  total_bytes_rx);
+        mmcli_output_string_take (MMC_F_BEARER_STATS_TOTAL_BYTES_TX,  total_bytes_tx);
     }
 
     mmcli_output_dump ();

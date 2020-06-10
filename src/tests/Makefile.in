@@ -101,14 +101,14 @@ noinst_PROGRAMS = test-modem-helpers$(EXEEXT) test-charsets$(EXEEXT) \
 subdir = src/tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_code_coverage.m4 \
-	$(top_srcdir)/m4/compiler_warnings.m4 \
 	$(top_srcdir)/m4/gettext.m4 $(top_srcdir)/m4/gtk-doc.m4 \
 	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
 	$(top_srcdir)/m4/introspection.m4 $(top_srcdir)/m4/lib-ld.m4 \
 	$(top_srcdir)/m4/lib-link.m4 $(top_srcdir)/m4/lib-prefix.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/nls.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/m4/mm-enable-plugin.m4 $(top_srcdir)/m4/nls.m4 \
 	$(top_srcdir)/m4/po.m4 $(top_srcdir)/m4/progtest.m4 \
 	$(top_srcdir)/m4/vapigen.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -395,9 +395,13 @@ VAPIGEN = @VAPIGEN@
 VAPIGEN_MAKEFILE = @VAPIGEN_MAKEFILE@
 VAPIGEN_VAPIDIR = @VAPIGEN_VAPIDIR@
 VERSION = @VERSION@
+WARN_CFLAGS = @WARN_CFLAGS@
+WARN_LDFLAGS = @WARN_LDFLAGS@
+WARN_SCANNERFLAGS = @WARN_SCANNERFLAGS@
 XGETTEXT = @XGETTEXT@
 XGETTEXT_015 = @XGETTEXT_015@
 XGETTEXT_EXTRA_OPTIONS = @XGETTEXT_EXTRA_OPTIONS@
+XSLTPROC_CHECK = @XSLTPROC_CHECK@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -460,9 +464,10 @@ TEST_PROGS = $(noinst_PROGRAMS)
 ################################################################################
 # common
 ################################################################################
-AM_CFLAGS = $(MM_CFLAGS) $(CODE_COVERAGE_CFLAGS) -I$(top_srcdir) \
-	-I$(top_srcdir)/include -I$(top_builddir)/include \
-	-I$(top_srcdir)/libqcdm/src -I$(top_srcdir)/libmm-glib \
+AM_CFLAGS = $(WARN_CFLAGS) $(MM_CFLAGS) $(CODE_COVERAGE_CFLAGS) \
+	-I$(top_srcdir) -I$(top_srcdir)/include \
+	-I$(top_builddir)/include -I$(top_srcdir)/libqcdm/src \
+	-I$(top_srcdir)/libmm-glib \
 	-I${top_builddir}/libmm-glib/generated -I${top_srcdir}/src/ \
 	-I${top_builddir}/src/ -I${top_srcdir}/src/kerneldevice \
 	-DTESTUDEVRULESDIR=\"${top_srcdir}/src/\" $(NULL) \
@@ -473,8 +478,8 @@ LDADD = \
 	$(top_builddir)/src/libkerneldevice.la \
 	$(NULL)
 
-AM_LDFLAGS = $(MM_LIBS) $(CODE_COVERAGE_LDFLAGS) -lutil $(NULL) \
-	$(am__append_2) $(am__append_4)
+AM_LDFLAGS = $(WARN_LDFLAGS) $(MM_LIBS) $(CODE_COVERAGE_LDFLAGS) \
+	-lutil $(NULL) $(am__append_2) $(am__append_4)
 all: all-am
 
 .SUFFIXES:

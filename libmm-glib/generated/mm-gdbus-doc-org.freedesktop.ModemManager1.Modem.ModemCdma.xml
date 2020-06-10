@@ -157,7 +157,7 @@ ActivationStateChanged (u     activation_state,
 </varlistentry>
 <varlistentry>
   <term><literal>a{sv} <parameter>status_changes</parameter></literal>:</term>
-  <listitem><para>Properties that have changed as a result of this activation state chage, including <literal>"mdn"</literal> and <literal>"min"</literal>. The dictionary may be empty if the changed properties are unknown.</para></listitem>
+  <listitem><para>Properties that have changed as a result of this activation state change, including <literal>"mdn"</literal> and <literal>"min"</literal>. The dictionary may be empty if the changed properties are unknown.</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>

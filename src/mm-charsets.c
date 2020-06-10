@@ -112,29 +112,26 @@ charset_iconv_from (MMModemCharset charset)
 }
 
 gboolean
-mm_modem_charset_byte_array_append (GByteArray *array,
-                                    const char *utf8,
-                                    gboolean quoted,
-                                    MMModemCharset charset)
+mm_modem_charset_byte_array_append (GByteArray      *array,
+                                    const gchar     *utf8,
+                                    gboolean         quoted,
+                                    MMModemCharset   charset,
+                                    GError         **error)
 {
-    const char *iconv_to;
-    char *converted;
-    GError *error = NULL;
-    gsize written = 0;
+    g_autofree gchar *converted = NULL;
+    const gchar      *iconv_to;
+    gsize             written = 0;
 
     g_return_val_if_fail (array != NULL, FALSE);
     g_return_val_if_fail (utf8 != NULL, FALSE);
 
     iconv_to = charset_iconv_to (charset);
-    g_return_val_if_fail (iconv_to != NULL, FALSE);
+    g_assert (iconv_to);
 
-    converted = g_convert (utf8, -1, iconv_to, "UTF-8", NULL, &written, &error);
+    converted = g_convert (utf8, -1, iconv_to, "UTF-8", NULL, &written, error);
     if (!converted) {
-        if (error) {
-            mm_warn ("failed to convert '%s' to %s character set: (%d) %s",
-                     utf8, iconv_to, error->code, error->message);
-            g_error_free (error);
-        }
+        g_prefix_error (error, "Failed to convert '%s' to %s character set",
+                        utf8, iconv_to);
         return FALSE;
     }
 
@@ -144,7 +141,6 @@ mm_modem_charset_byte_array_append (GByteArray *array,
     if (quoted)
         g_byte_array_append (array, (const guint8 *) "\"", 1);
 
-    g_free (converted);
     return TRUE;
 }
 
@@ -411,7 +407,7 @@ utf8_to_gsm_ext_char (const char *utf8, guint32 len, guint8 *out_gsm)
 guint8 *
 mm_charset_gsm_unpacked_to_utf8 (const guint8 *gsm, guint32 len)
 {
-    int i;
+    guint i;
     GByteArray *utf8;
 
     g_return_val_if_fail (gsm != NULL, NULL);
@@ -462,7 +458,8 @@ mm_charset_gsm_unpacked_to_utf8 (const guint8 *gsm, guint32 len)
             g_byte_array_append (utf8, (guint8 *) "?", 1);
     }
 
-    g_byte_array_append (utf8, (guint8 *) "\0", 1);  /* NULL terminator */
+    /* Always make sure returned string is NUL terminated */
+    g_byte_array_append (utf8, (guint8 *) "\0", 1);
     return g_byte_array_free (utf8, FALSE);
 }
 
@@ -475,7 +472,6 @@ mm_charset_utf8_to_unpacked_gsm (const char *utf8, guint32 *out_len)
     int i = 0;
 
     g_return_val_if_fail (utf8 != NULL, NULL);
-    g_return_val_if_fail (out_len != NULL, NULL);
     g_return_val_if_fail (g_utf8_validate (utf8, -1, NULL), NULL);
 
     /* worst case initial length */
@@ -484,7 +480,8 @@ mm_charset_utf8_to_unpacked_gsm (const char *utf8, guint32 *out_len)
     if (*utf8 == 0x00) {
         /* Zero-length string */
         g_byte_array_append (gsm, (guint8 *) "\0", 1);
-        *out_len = 0;
+        if (out_len)
+            *out_len = 0;
         return g_byte_array_free (gsm, FALSE);
     }
 
@@ -505,7 +502,12 @@ mm_charset_utf8_to_unpacked_gsm (const char *utf8, guint32 *out_len)
         i++;
     }
 
-    *out_len = gsm->len;
+    /* Output length doesn't consider terminating NUL byte */
+    if (out_len)
+        *out_len = gsm->len;
+
+    /* Always make sure returned string is NUL terminated */
+    g_byte_array_append (gsm, (guint8 *) "\0", 1);
     return g_byte_array_free (gsm, FALSE);
 }
 
@@ -559,7 +561,7 @@ pccp437_is_subset (gunichar c, const char *utf8, gsize ulen)
         0x2321, 0x00f7, 0x2248, 0x00b0, 0x2219, 0x00b7, 0x221a, 0x207f, 0x00b2,
         0x25a0, 0x00a0
     };
-    int i;
+    guint i;
 
     if (c <= 0x7F)
         return TRUE;
@@ -590,7 +592,7 @@ pcdn_is_subset (gunichar c, const char *utf8, gsize ulen)
         0x00a7, 0x00f7, 0x00b8, 0x00b0, 0x00a8, 0x00b7, 0x00b9, 0x00b3, 0x00b2,
         0x25a0, 0x00a0
     };
-    int i;
+    guint i;
 
     if (c <= 0x7F)
         return TRUE;
@@ -672,7 +674,7 @@ mm_charset_gsm_unpack (const guint8 *gsm,
                        guint32 *out_unpacked_len)
 {
     GByteArray *unpacked;
-    int i;
+    guint i;
 
     unpacked = g_byte_array_sized_new (num_septets + 1);
 
@@ -709,7 +711,7 @@ mm_charset_gsm_pack (const guint8 *src,
 {
     guint8 *packed;
     guint octet = 0, lshift, plen;
-    int i = 0;
+    guint i = 0;
 
     g_return_val_if_fail (start_offset < 8, NULL);
 
@@ -761,6 +763,10 @@ mm_charset_take_and_convert_to_utf8 (gchar *str, MMModemCharset charset)
         break;
 
     case MM_MODEM_CHARSET_GSM:
+        utf8 = (gchar *) mm_charset_gsm_unpacked_to_utf8 ((const guint8 *) str, strlen (str));
+        g_free (str);
+        break;
+
     case MM_MODEM_CHARSET_8859_1:
     case MM_MODEM_CHARSET_PCCP437:
     case MM_MODEM_CHARSET_PCDN: {
@@ -838,6 +844,9 @@ mm_charset_take_and_convert_to_utf8 (gchar *str, MMModemCharset charset)
     case MM_MODEM_CHARSET_UTF8:
         utf8 = str;
         break;
+
+    default:
+        g_assert_not_reached ();
     }
 
     /* Validate UTF-8 always before returning. This result will be exposed in DBus
@@ -878,12 +887,14 @@ mm_utf8_take_and_convert_to_charset (gchar *str,
         break;
 
     case MM_MODEM_CHARSET_HEX:
-        /* FIXME: What encoding is this? */
-        g_warn_if_reached ();
         encoded = str;
         break;
 
     case MM_MODEM_CHARSET_GSM:
+        encoded = (gchar *) mm_charset_utf8_to_unpacked_gsm (str, NULL);
+        g_free (str);
+        break;
+
     case MM_MODEM_CHARSET_8859_1:
     case MM_MODEM_CHARSET_PCCP437:
     case MM_MODEM_CHARSET_PCDN: {
@@ -932,6 +943,9 @@ mm_utf8_take_and_convert_to_charset (gchar *str,
     case MM_MODEM_CHARSET_UTF8:
         encoded = str;
         break;
+
+    default:
+        g_assert_not_reached ();
     }
 
     return encoded;

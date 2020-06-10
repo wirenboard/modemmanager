@@ -12,6 +12,7 @@ BUILT_SOURCES =
 CLEANFILES =
 
 AM_CFLAGS = \
+	$(WARN_CFLAGS) \
 	$(MM_CFLAGS) \
 	$(CODE_COVERAGE_CFLAGS) \
 	$(GUDEV_CFLAGS) \
@@ -26,6 +27,7 @@ AM_CFLAGS = \
 	$(NULL)
 
 AM_LDFLAGS = \
+	$(WARN_LDFLAGS) \
 	$(MM_LIBS) \
 	$(CODE_COVERAGE_LDFLAGS) \
 	$(GUDEV_LIBS) \
@@ -95,6 +97,11 @@ mm-helper-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-template.c
 		$(HELPER_ENUMS_INPUTS) > $@
 
 libhelpers_la_SOURCES = \
+	mm-log-object.h \
+	mm-log-object.c \
+	mm-log.c \
+	mm-log.h \
+	mm-log-test.h \
 	mm-error-helpers.c \
 	mm-error-helpers.h \
 	mm-modem-helpers.c \
@@ -129,7 +136,6 @@ endif
 BUILT_SOURCES += $(HELPER_ENUMS_GENERATED)
 CLEANFILES    += $(HELPER_ENUMS_GENERATED)
 
-
 ################################################################################
 # kerneldevice library
 ################################################################################
@@ -158,6 +164,7 @@ endif
 
 libkerneldevice_la_LIBADD = \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(builddir)/libhelpers.la \
 	$(NULL)
 
 ################################################################################
@@ -223,7 +230,6 @@ endif
 libport_la_LIBADD = \
 	$(top_builddir)/libqcdm/src/libqcdm.la \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
-	$(builddir)/libhelpers.la \
 	$(builddir)/libkerneldevice.la \
 	$(NULL)
 
@@ -281,13 +287,9 @@ ModemManager_SOURCES = \
 	main.c \
 	mm-context.h \
 	mm-context.c \
-	mm-log.c \
-	mm-log.h \
 	mm-utils.h \
 	mm-private-boxed-types.h \
 	mm-private-boxed-types.c \
-	mm-auth.h \
-	mm-auth.c \
 	mm-auth-provider.h \
 	mm-auth-provider.c \
 	mm-filter.h \
@@ -354,11 +356,6 @@ ModemManager_SOURCES = \
 	$(NULL)
 
 nodist_ModemManager_SOURCES = $(DAEMON_ENUMS_GENERATED)
-
-# Additional Polkit support
-if WITH_POLKIT
-ModemManager_SOURCES += mm-auth-provider-polkit.h mm-auth-provider-polkit.c
-endif
 
 # Additional suspend/resume support via systemd
 if WITH_SYSTEMD_SUSPEND_RESUME

@@ -25,7 +25,7 @@
 
 #include "ModemManager.h"
 #include "mm-serial-parsers.h"
-#include "mm-log.h"
+#include "mm-log-object.h"
 #include "mm-modem-helpers.h"
 #include "mm-errors-types.h"
 #include "mm-iface-modem.h"
@@ -71,38 +71,38 @@ struct _MMBroadbandModemIceraPrivate {
 /* Load supported modes (Modem interface) */
 
 static void
-add_supported_mode (GArray **combinations,
-                    guint mode)
+add_supported_mode (MMBroadbandModemIcera  *self,
+                    GArray                **combinations,
+                    guint                   mode)
 {
     MMModemModeCombination combination;
 
     switch (mode) {
     case 0:
-        mm_dbg ("Modem supports 2G-only mode");
+        mm_obj_dbg (self, "2G-only mode supported");
         combination.allowed = MM_MODEM_MODE_2G;
         combination.preferred = MM_MODEM_MODE_NONE;
         break;
     case 1:
-        mm_dbg ("Modem supports 3G-only mode");
+        mm_obj_dbg (self, "3G-only mode supported");
         combination.allowed = MM_MODEM_MODE_3G;
         combination.preferred = MM_MODEM_MODE_NONE;
         break;
     case 2:
-        mm_dbg ("Modem supports 2G/3G mode with 2G preferred");
+        mm_obj_dbg (self, "2G/3G mode with 2G preferred supported");
         combination.allowed = (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G);
         combination.preferred = MM_MODEM_MODE_2G;
         break;
     case 3:
-        mm_dbg ("Modem supports 2G/3G mode with 3G preferred");
+        mm_obj_dbg (self, "2G/3G mode with 3G preferred supported");
         combination.allowed = (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G);
         combination.preferred = MM_MODEM_MODE_3G;
         break;
     case 5:
-        mm_dbg ("Modem supports 'any', but not explicitly listing it");
         /* Any, no need to add it to the list */
         return;
     default:
-        mm_warn ("Unsupported Icera mode found: %u", mode);
+        mm_obj_warn (self, "unsupported mode found in %%IPSYS=?: %u", mode);
         return;
     }
 
@@ -182,18 +182,18 @@ load_supported_modes_finish (MMIfaceModem *self,
                 guint j;
 
                 for (j = modefirst; j <= modelast; j++)
-                    add_supported_mode (&combinations, j);
+                    add_supported_mode (MM_BROADBAND_MODEM_ICERA (self), &combinations, j);
             } else
-                mm_warn ("Couldn't parse mode interval (%s) in %%IPSYS=? response", split[i]);
+                mm_obj_warn (self, "couldn't parse mode interval in %%IPSYS=? response: %s", split[i]);
             g_free (first);
         } else {
             guint mode;
 
             /* Add single */
             if (mm_get_uint_from_str (split[i], &mode))
-                add_supported_mode (&combinations, mode);
+                add_supported_mode (MM_BROADBAND_MODEM_ICERA (self), &combinations, mode);
             else
-                mm_warn ("Couldn't parse mode (%s) in %%IPSYS=? response", split[i]);
+                mm_obj_warn (self, "couldn't parse mode in %%IPSYS=? response: %s", split[i]);
         }
     }
 
@@ -441,7 +441,7 @@ ipdpact_received (MMPortSerialAt *port,
         ctx.status = MM_BEARER_CONNECTION_STATUS_CONNECTION_FAILED;
         break;
     default:
-        mm_warn ("Unknown Icera connect status %d", status);
+        mm_obj_warn (self, "unknown %%IPDPACT connect status %d", status);
         break;
     }
 
@@ -614,10 +614,9 @@ nwstate_query_ready (MMBroadbandModemIcera *self,
     GError *error = NULL;
 
     mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
-    if (error) {
-        mm_dbg ("Couldn't query access technology: '%s'", error->message);
+    if (error)
         g_task_return_error (task, error);
-    } else {
+    else {
         /*
          * The unsolicited message handler will already have run and
          * removed the NWSTATE response, so we use the result from there.
@@ -869,10 +868,10 @@ broadband_bearer_new_ready (GObject *source,
 }
 
 static void
-modem_create_bearer (MMIfaceModem *self,
-                     MMBearerProperties *properties,
-                     GAsyncReadyCallback callback,
-                     gpointer user_data)
+modem_create_bearer (MMIfaceModem        *self,
+                     MMBearerProperties  *props,
+                     GAsyncReadyCallback  callback,
+                     gpointer             user_data)
 {
     GTask *task;
 
@@ -883,7 +882,7 @@ modem_create_bearer (MMIfaceModem *self,
         mm_broadband_bearer_icera_new (
             MM_BROADBAND_MODEM (self),
             MM_BROADBAND_MODEM_ICERA (self)->priv->default_ip_method,
-            properties,
+            props,
             NULL, /* cancellable */
             (GAsyncReadyCallback)broadband_bearer_icera_new_ready,
             task);
@@ -893,7 +892,7 @@ modem_create_bearer (MMIfaceModem *self,
     /* Otherwise, plain generic broadband bearer */
     mm_broadband_bearer_new (
         MM_BROADBAND_MODEM (self),
-        properties,
+        props,
         NULL, /* cancellable */
         (GAsyncReadyCallback)broadband_bearer_new_ready,
         task);
@@ -1022,7 +1021,6 @@ load_unlock_retries_ready (MMBaseModem *self,
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
-        mm_dbg ("Couldn't query unlock retries: '%s'", error->message);
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -1079,20 +1077,20 @@ band_free (Band *b)
 
 static const Band modem_bands[] = {
     /* Sort 3G first since it's preferred */
-    { MM_MODEM_BAND_UTRAN_1, "FDD_BAND_I",    FALSE },
-    { MM_MODEM_BAND_UTRAN_2, "FDD_BAND_II",   FALSE },
-    { MM_MODEM_BAND_UTRAN_3, "FDD_BAND_III",  FALSE },
-    { MM_MODEM_BAND_UTRAN_4, "FDD_BAND_IV",   FALSE },
-    { MM_MODEM_BAND_UTRAN_5, "FDD_BAND_V",    FALSE },
-    { MM_MODEM_BAND_UTRAN_6, "FDD_BAND_VI",   FALSE },
-    { MM_MODEM_BAND_UTRAN_8, "FDD_BAND_VIII", FALSE },
+    { MM_MODEM_BAND_UTRAN_1, (gchar *) "FDD_BAND_I",    FALSE },
+    { MM_MODEM_BAND_UTRAN_2, (gchar *) "FDD_BAND_II",   FALSE },
+    { MM_MODEM_BAND_UTRAN_3, (gchar *) "FDD_BAND_III",  FALSE },
+    { MM_MODEM_BAND_UTRAN_4, (gchar *) "FDD_BAND_IV",   FALSE },
+    { MM_MODEM_BAND_UTRAN_5, (gchar *) "FDD_BAND_V",    FALSE },
+    { MM_MODEM_BAND_UTRAN_6, (gchar *) "FDD_BAND_VI",   FALSE },
+    { MM_MODEM_BAND_UTRAN_8, (gchar *) "FDD_BAND_VIII", FALSE },
     /* 2G second */
-    { MM_MODEM_BAND_G850,    "G850",          FALSE },
-    { MM_MODEM_BAND_DCS,     "DCS",           FALSE },
-    { MM_MODEM_BAND_EGSM,    "EGSM",          FALSE },
-    { MM_MODEM_BAND_PCS,     "PCS",           FALSE },
+    { MM_MODEM_BAND_G850,    (gchar *) "G850",          FALSE },
+    { MM_MODEM_BAND_DCS,     (gchar *) "DCS",           FALSE },
+    { MM_MODEM_BAND_EGSM,    (gchar *) "EGSM",          FALSE },
+    { MM_MODEM_BAND_PCS,     (gchar *) "PCS",           FALSE },
     /* And ANY last since it's most inclusive */
-    { MM_MODEM_BAND_ANY,     "ANY",           FALSE },
+    { MM_MODEM_BAND_ANY,     (gchar *) "ANY",           FALSE },
 };
 
 static const guint modem_band_any_bit = 1 << (G_N_ELEMENTS (modem_bands) - 1);
@@ -1100,7 +1098,7 @@ static const guint modem_band_any_bit = 1 << (G_N_ELEMENTS (modem_bands) - 1);
 static MMModemBand
 icera_band_to_mm (const char *icera)
 {
-    int i;
+    guint i;
 
     for (i = 0 ; i < G_N_ELEMENTS (modem_bands); i++) {
         if (g_strcmp0 (icera, modem_bands[i].name) == 0)
@@ -1161,7 +1159,7 @@ parse_bands (const gchar *response, guint32 *out_len)
 /* Load supported bands (Modem interface) */
 
 typedef struct {
-    MMBaseModemAtCommand *cmds;
+    MMBaseModemAtCommandAlloc *cmds;
     GSList *check_bands;
     GSList *enabled_bands;
     guint32 idx;
@@ -1173,7 +1171,7 @@ supported_bands_context_free (SupportedBandsContext *ctx)
     guint i;
 
     for (i = 0; ctx->cmds[i].command; i++)
-        g_free (ctx->cmds[i].command);
+        mm_base_modem_at_command_alloc_clear (&ctx->cmds[i]);
     g_free (ctx->cmds);
     g_slist_free_full (ctx->check_bands, (GDestroyNotify) band_free);
     g_slist_free_full (ctx->enabled_bands, (GDestroyNotify) band_free);
@@ -1260,7 +1258,6 @@ load_supported_bands_get_current_bands_ready (MMIfaceModem *self,
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
-        mm_dbg ("Couldn't query current bands: '%s'", error->message);
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -1272,7 +1269,7 @@ load_supported_bands_get_current_bands_ready (MMIfaceModem *self,
      * to its current enabled/disabled state.
      */
     iter = ctx->check_bands = parse_bands (response, &len);
-    ctx->cmds = g_new0 (MMBaseModemAtCommand, len + 1);
+    ctx->cmds = g_new0 (MMBaseModemAtCommandAlloc, len + 1);
 
     while (iter) {
         Band *b = iter->data;
@@ -1296,7 +1293,7 @@ load_supported_bands_get_current_bands_ready (MMIfaceModem *self,
     }
 
     mm_base_modem_at_sequence (MM_BASE_MODEM (self),
-                               ctx->cmds,
+                               (const MMBaseModemAtCommand *)ctx->cmds,
                                ctx,
                                (GDestroyNotify) supported_bands_context_free,
                                (GAsyncReadyCallback) load_supported_bands_ready,
@@ -1346,7 +1343,6 @@ load_current_bands_ready (MMIfaceModem *self,
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (!response) {
-        mm_dbg ("Couldn't query current bands: '%s'", error->message);
         g_task_return_error (task, error);
     } else {
         /* Parse bands from Icera response into MM band numbers */
@@ -1413,7 +1409,6 @@ set_current_bands_next (MMIfaceModem *self,
     GError *error = NULL;
 
     if (!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error)) {
-        mm_dbg ("Couldn't set current bands: '%s'", error->message);
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -1448,15 +1443,15 @@ set_one_band (MMIfaceModem *self,
 
     /* Note that ffs() returning 2 corresponds to 1 << 1, not 1 << 2 */
     band--;
-    mm_dbg("1. enablebits %x disablebits %x band %d enable %d",
-           ctx->enablebits, ctx->disablebits, band, enable);
+    mm_obj_dbg (self, "preparing %%IPBM command (1/2): enablebits %x, disablebits %x, band %d, enable %d",
+                ctx->enablebits, ctx->disablebits, band, enable);
 
     if (enable)
         ctx->enablebits &= ~(1 << band);
     else
         ctx->disablebits &= ~(1 << band);
-    mm_dbg("2. enablebits %x disablebits %x",
-           ctx->enablebits, ctx->disablebits);
+    mm_obj_dbg (self, "preparing %%IPBM command (2/2): enablebits %x, disablebits %x",
+                ctx->enablebits, ctx->disablebits);
 
     command = g_strdup_printf ("%%IPBM=\"%s\",%d",
                                modem_bands[band].name,

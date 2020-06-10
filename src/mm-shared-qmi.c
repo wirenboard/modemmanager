@@ -25,7 +25,7 @@
 
 #include <libqmi-glib.h>
 
-#include "mm-log.h"
+#include "mm-log-object.h"
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-3gpp.h"
 #include "mm-iface-modem-location.h"
@@ -637,6 +637,9 @@ set_current_capabilities_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        g_assert_not_reached ();
     }
 }
 
@@ -758,7 +761,7 @@ load_current_capabilities_get_capabilities_ready (QmiClientDms *client,
 
     for (i = 0; i < radio_interface_list->len; i++)
         ctx->capabilities_context.dms_capabilities |=
-            mm_modem_capability_from_qmi_radio_interface (g_array_index (radio_interface_list, QmiDmsRadioInterface, i));
+            mm_modem_capability_from_qmi_radio_interface (g_array_index (radio_interface_list, QmiDmsRadioInterface, i), self);
 
 out:
     if (output)
@@ -792,11 +795,11 @@ load_current_capabilities_get_technology_preference_ready (QmiClientNas *client,
 
     output = qmi_client_nas_get_technology_preference_finish (client, res, &error);
     if (!output) {
-        mm_dbg ("QMI operation failed: %s", error->message);
+        mm_obj_dbg (self, "QMI operation failed: %s", error->message);
         g_error_free (error);
         priv->feature_nas_technology_preference = FEATURE_UNSUPPORTED;
     } else if (!qmi_message_nas_get_technology_preference_output_get_result (output, &error)) {
-        mm_dbg ("Couldn't get technology preference: %s", error->message);
+        mm_obj_dbg (self, "couldn't get technology preference: %s", error->message);
         g_error_free (error);
         priv->feature_nas_technology_preference = FEATURE_SUPPORTED;
     } else {
@@ -832,11 +835,11 @@ load_current_capabilities_get_system_selection_preference_ready (QmiClientNas *c
 
     output = qmi_client_nas_get_system_selection_preference_finish (client, res, &error);
     if (!output) {
-        mm_dbg ("QMI operation failed: %s", error->message);
+        mm_obj_dbg (self, "QMI operation failed: %s", error->message);
         g_error_free (error);
         priv->feature_nas_system_selection_preference = FEATURE_UNSUPPORTED;
     } else if (!qmi_message_nas_get_system_selection_preference_output_get_result (output, &error)) {
-        mm_dbg ("Couldn't get system selection preference: %s", error->message);
+        mm_obj_dbg (self, "couldn't get system selection preference: %s", error->message);
         g_error_free (error);
         priv->feature_nas_system_selection_preference = FEATURE_SUPPORTED;
     } else {
@@ -894,10 +897,13 @@ load_current_capabilities_step (GTask *task)
     case LOAD_CURRENT_CAPABILITIES_STEP_LAST:
         g_assert (priv->feature_nas_technology_preference       != FEATURE_UNKNOWN);
         g_assert (priv->feature_nas_system_selection_preference != FEATURE_UNKNOWN);
-        priv->current_capabilities = mm_modem_capability_from_qmi_capabilities_context (&ctx->capabilities_context);
+        priv->current_capabilities = mm_modem_capability_from_qmi_capabilities_context (&ctx->capabilities_context, self);
         g_task_return_int (task, priv->current_capabilities);
         g_object_unref (task);
         return;
+
+    default:
+        g_assert_not_reached ();
     }
 }
 
@@ -991,7 +997,7 @@ mm_shared_qmi_load_supported_capabilities (MMIfaceModem        *self,
     /* Build mask with all supported capabilities */
     mask = MM_MODEM_CAPABILITY_NONE;
     for (i = 0; i < priv->supported_radio_interfaces->len; i++)
-        mask |= mm_modem_capability_from_qmi_radio_interface (g_array_index (priv->supported_radio_interfaces, QmiDmsRadioInterface, i));
+        mask |= mm_modem_capability_from_qmi_radio_interface (g_array_index (priv->supported_radio_interfaces, QmiDmsRadioInterface, i), self);
 
     supported_combinations = g_array_sized_new (FALSE, FALSE, sizeof (MMModemCapability), 3);
 
@@ -1186,7 +1192,7 @@ set_current_modes_system_selection_preference (GTask *task)
         if (mm_iface_modem_is_3gpp (self) && ((ctx->allowed & (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G)) == (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G))) {
             QmiNasGsmWcdmaAcquisitionOrderPreference order;
 
-            order = mm_modem_mode_to_qmi_gsm_wcdma_acquisition_order_preference (ctx->preferred);
+            order = mm_modem_mode_to_qmi_gsm_wcdma_acquisition_order_preference (ctx->preferred, self);
             qmi_message_nas_set_system_selection_preference_input_set_gsm_wcdma_acquisition_order_preference (input, order, NULL);
         }
     }
@@ -1365,11 +1371,14 @@ load_current_modes_system_selection_preference_ready (QmiClientNas *client,
                                                       GAsyncResult *res,
                                                       GTask        *task)
 {
+    MMSharedQmi                                     *self;
     LoadCurrentModesResult                          *result = NULL;
     QmiMessageNasGetSystemSelectionPreferenceOutput *output = NULL;
     GError                                          *error = NULL;
     QmiNasRatModePreference                          mode_preference_mask = 0;
     MMModemMode                                      allowed;
+
+    self = g_task_get_source_object (task);
 
     output = qmi_client_nas_get_system_selection_preference_finish (client, res, &error);
     if (!output || !qmi_message_nas_get_system_selection_preference_output_get_result (output, &error)) {
@@ -1410,7 +1419,7 @@ load_current_modes_system_selection_preference_ready (QmiClientNas *client,
                 output,
                 &gsm_or_wcdma,
                 NULL))
-            result->preferred = mm_modem_mode_from_qmi_gsm_wcdma_acquisition_order_preference (gsm_or_wcdma);
+            result->preferred = mm_modem_mode_from_qmi_gsm_wcdma_acquisition_order_preference (gsm_or_wcdma, self);
     }
     /* Otherwise, rely on the acquisition order array TLV */
     else {
@@ -1535,7 +1544,7 @@ mm_shared_qmi_load_supported_modes (MMIfaceModem        *self,
     /* Build all, based on the supported radio interfaces */
     mask_all = MM_MODEM_MODE_NONE;
     for (i = 0; i < priv->supported_radio_interfaces->len; i++)
-        mask_all |= mm_modem_mode_from_qmi_radio_interface (g_array_index (priv->supported_radio_interfaces, QmiDmsRadioInterface, i));
+        mask_all |= mm_modem_mode_from_qmi_radio_interface (g_array_index (priv->supported_radio_interfaces, QmiDmsRadioInterface, i), self);
     mode.allowed = mask_all;
     mode.preferred = MM_MODEM_MODE_NONE;
     all = g_array_sized_new (FALSE, FALSE, sizeof (MMModemModeCombination), 1);
@@ -1548,77 +1557,72 @@ mm_shared_qmi_load_supported_modes (MMIfaceModem        *self,
         return;
     }
 
-    combinations = g_array_sized_new (FALSE, FALSE, sizeof (MMModemModeCombination), 5);
+    combinations = g_array_new (FALSE, FALSE, sizeof (MMModemModeCombination));
+
+#define ADD_MODE_PREFERENCE(MODE1, MODE2, MODE3, MODE4) do {            \
+        mode.allowed = MODE1;                                           \
+        if (MODE2 != MM_MODEM_MODE_NONE) {                              \
+            mode.allowed |= MODE2;                                      \
+            if (MODE3 != MM_MODEM_MODE_NONE) {                          \
+                mode.allowed |= MODE3;                                  \
+                if (MODE4 != MM_MODEM_MODE_NONE)                        \
+                    mode.allowed |= MODE4;                              \
+            }                                                           \
+            if (priv->feature_nas_system_selection_preference != FEATURE_UNSUPPORTED) { \
+                if (MODE3 != MM_MODEM_MODE_NONE) {                      \
+                    if (MODE4 != MM_MODEM_MODE_NONE) {                  \
+                        mode.preferred = MODE4;                         \
+                        g_array_append_val (combinations, mode);        \
+                    }                                                   \
+                    mode.preferred = MODE3;                             \
+                    g_array_append_val (combinations, mode);            \
+                }                                                       \
+                mode.preferred = MODE2;                                 \
+                g_array_append_val (combinations, mode);                \
+                mode.preferred = MODE1;                                 \
+                g_array_append_val (combinations, mode);                \
+            } else {                                                    \
+                mode.preferred = MM_MODEM_MODE_NONE;                    \
+                g_array_append_val (combinations, mode);                \
+            }                                                           \
+        } else {                                                        \
+            mode.allowed = MODE1;                                       \
+            mode.preferred = MM_MODEM_MODE_NONE;                        \
+            g_array_append_val (combinations, mode);                    \
+        }                                                               \
+    } while (0)
 
     /* 2G-only, 3G-only */
-    mode.allowed = MM_MODEM_MODE_2G;
-    mode.preferred = MM_MODEM_MODE_NONE;
-    g_array_append_val (combinations, mode);
-    mode.allowed = MM_MODEM_MODE_3G;
-    mode.preferred = MM_MODEM_MODE_NONE;
-    g_array_append_val (combinations, mode);
+    ADD_MODE_PREFERENCE (MM_MODEM_MODE_2G, MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE);
+    ADD_MODE_PREFERENCE (MM_MODEM_MODE_3G, MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE);
 
     /* 4G-only mode is not possible in multimode GSM/UMTS+CDMA/EVDO+LTE
      * devices. This configuration may be selected as "LTE only" capability
      * instead. */
-    if (!priv->disable_4g_only_mode) {
-        mode.allowed = MM_MODEM_MODE_4G;
-        mode.preferred = MM_MODEM_MODE_NONE;
-        g_array_append_val (combinations, mode);
-    }
+    if (!priv->disable_4g_only_mode)
+        ADD_MODE_PREFERENCE (MM_MODEM_MODE_4G, MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE);
 
-    /* 2G+3G */
-    mode.allowed = (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G);
-    if (priv->feature_nas_system_selection_preference != FEATURE_UNSUPPORTED) {
-        mode.preferred = MM_MODEM_MODE_3G;
-        g_array_append_val (combinations, mode);
-        mode.preferred = MM_MODEM_MODE_2G;
-        g_array_append_val (combinations, mode);
-    } else {
-        mode.preferred = MM_MODEM_MODE_NONE;
-        g_array_append_val (combinations, mode);
-    }
+    /* 2G, 3G, 4G combinations */
+    ADD_MODE_PREFERENCE (MM_MODEM_MODE_2G, MM_MODEM_MODE_3G, MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE);
+    ADD_MODE_PREFERENCE (MM_MODEM_MODE_2G, MM_MODEM_MODE_4G, MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE);
+    ADD_MODE_PREFERENCE (MM_MODEM_MODE_3G, MM_MODEM_MODE_4G, MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE);
+    ADD_MODE_PREFERENCE (MM_MODEM_MODE_2G, MM_MODEM_MODE_3G, MM_MODEM_MODE_4G,   MM_MODEM_MODE_NONE);
 
-    /* 2G+4G */
-    mode.allowed = (MM_MODEM_MODE_2G | MM_MODEM_MODE_4G);
+    /* 5G related mode combinations are only supported when NAS SSP is supported,
+     * as there is no 5G support in NAS TP. */
     if (priv->feature_nas_system_selection_preference != FEATURE_UNSUPPORTED) {
-        mode.preferred = MM_MODEM_MODE_4G;
-        g_array_append_val (combinations, mode);
-        mode.preferred = MM_MODEM_MODE_2G;
-        g_array_append_val (combinations, mode);
-    } else {
-        mode.preferred = MM_MODEM_MODE_NONE;
-        g_array_append_val (combinations, mode);
-    }
-
-    /* 3G+4G */
-    mode.allowed = (MM_MODEM_MODE_3G | MM_MODEM_MODE_4G);
-    if (priv->feature_nas_system_selection_preference != FEATURE_UNSUPPORTED) {
-        mode.preferred = MM_MODEM_MODE_3G;
-        g_array_append_val (combinations, mode);
-        mode.preferred = MM_MODEM_MODE_4G;
-        g_array_append_val (combinations, mode);
-    } else {
-        mode.preferred = MM_MODEM_MODE_NONE;
-        g_array_append_val (combinations, mode);
-    }
-
-    /* 2G+3G+4G */
-    mode.allowed = (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G | MM_MODEM_MODE_4G);
-    if (priv->feature_nas_system_selection_preference != FEATURE_UNSUPPORTED) {
-        mode.preferred = MM_MODEM_MODE_4G;
-        g_array_append_val (combinations, mode);
-        mode.preferred = MM_MODEM_MODE_3G;
-        g_array_append_val (combinations, mode);
-        mode.preferred = MM_MODEM_MODE_2G;
-        g_array_append_val (combinations, mode);
-    } else {
-        mode.preferred = MM_MODEM_MODE_NONE;
-        g_array_append_val (combinations, mode);
+        ADD_MODE_PREFERENCE (MM_MODEM_MODE_5G, MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE);
+        ADD_MODE_PREFERENCE (MM_MODEM_MODE_2G, MM_MODEM_MODE_5G,   MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE);
+        ADD_MODE_PREFERENCE (MM_MODEM_MODE_3G, MM_MODEM_MODE_5G,   MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE);
+        ADD_MODE_PREFERENCE (MM_MODEM_MODE_4G, MM_MODEM_MODE_5G,   MM_MODEM_MODE_NONE, MM_MODEM_MODE_NONE);
+        ADD_MODE_PREFERENCE (MM_MODEM_MODE_2G, MM_MODEM_MODE_3G,   MM_MODEM_MODE_5G,   MM_MODEM_MODE_NONE);
+        ADD_MODE_PREFERENCE (MM_MODEM_MODE_2G, MM_MODEM_MODE_4G,   MM_MODEM_MODE_5G,   MM_MODEM_MODE_NONE);
+        ADD_MODE_PREFERENCE (MM_MODEM_MODE_3G, MM_MODEM_MODE_4G,   MM_MODEM_MODE_5G,   MM_MODEM_MODE_NONE);
+        ADD_MODE_PREFERENCE (MM_MODEM_MODE_2G, MM_MODEM_MODE_3G,   MM_MODEM_MODE_4G,   MM_MODEM_MODE_5G);
     }
 
     /* Filter out unsupported modes */
-    filtered = mm_filter_supported_modes (all, combinations);
+    filtered = mm_filter_supported_modes (all, combinations, self);
     g_array_unref (all);
     g_array_unref (combinations);
 
@@ -1673,7 +1677,7 @@ dms_get_band_capabilities_ready (QmiClientDms *client,
         &extended_qmi_lte_bands,
         NULL);
 
-    mm_bands = mm_modem_bands_from_qmi_band_capabilities (qmi_bands, qmi_lte_bands, extended_qmi_lte_bands);
+    mm_bands = mm_modem_bands_from_qmi_band_capabilities (qmi_bands, qmi_lte_bands, extended_qmi_lte_bands, self);
     if (mm_bands->len == 0) {
         g_clear_pointer (&mm_bands, g_array_unref);
         error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
@@ -1781,7 +1785,8 @@ load_bands_get_system_selection_preference_ready (QmiClientNas *client,
     mm_bands = mm_modem_bands_from_qmi_band_preference (band_preference_mask,
                                                         lte_band_preference_mask,
                                                         extended_lte_band_preference_size ? extended_lte_band_preference : NULL,
-                                                        extended_lte_band_preference_size);
+                                                        extended_lte_band_preference_size,
+                                                        self);
 
     if (mm_bands->len == 0) {
         g_clear_pointer (&mm_bands, g_array_unref);
@@ -1896,7 +1901,8 @@ mm_shared_qmi_set_current_bands (MMIfaceModem        *self,
                                            &qmi_bands,
                                            &qmi_lte_bands,
                                            priv->feature_extended_lte_band_preference == FEATURE_SUPPORTED ? extended_qmi_lte_bands : NULL,
-                                           G_N_ELEMENTS (extended_qmi_lte_bands));
+                                           G_N_ELEMENTS (extended_qmi_lte_bands),
+                                           self);
 
     input = qmi_message_nas_set_system_selection_preference_input_new ();
     qmi_message_nas_set_system_selection_preference_input_set_band_preference (input, qmi_bands, NULL);
@@ -1940,14 +1946,17 @@ reset_set_operating_mode_reset_ready (QmiClientDms *client,
                                       GAsyncResult *res,
                                       GTask *task)
 {
+    MMSharedQmi                         *self;
     QmiMessageDmsSetOperatingModeOutput *output;
-    GError *error = NULL;
+    GError                              *error = NULL;
+
+    self = g_task_get_source_object (task);
 
     output = qmi_client_dms_set_operating_mode_finish (client, res, &error);
     if (!output || !qmi_message_dms_set_operating_mode_output_get_result (output, &error)) {
         g_task_return_error (task, error);
     } else {
-        mm_info ("Modem is being rebooted now");
+        mm_obj_info (self, "rebooting now");
         g_task_return_boolean (task, TRUE);
     }
 
@@ -2087,7 +2096,7 @@ mm_shared_qmi_factory_reset (MMIfaceModem        *self,
         return;
     }
 
-    mm_dbg ("performing a factory reset...");
+    mm_obj_dbg (self, "performing a factory reset...");
     qmi_client_dms_restore_factory_defaults (QMI_CLIENT_DMS (client),
                                              input,
                                              10,
@@ -2375,7 +2384,7 @@ find_requested_carrier_config (GTask *task)
 
     /* Match generic configuration */
     config_fallback = g_key_file_get_string (ctx->keyfile, group, GENERIC_CONFIG_FALLBACK, NULL);
-    mm_dbg ("Fallback carrier configuration %sfound in group '%s'", config_fallback ? "" : "not ", group);
+    mm_obj_dbg (self, "fallback carrier configuration %sfound in group '%s'", config_fallback ? "" : "not ", group);
 
     /* First, try to match 6 MCCMNC digits (3-digit MNCs) */
     strncpy (mccmnc, ctx->imsi, 6);
@@ -2386,8 +2395,8 @@ find_requested_carrier_config (GTask *task)
         mccmnc[5] = '\0';
         ctx->config_requested = g_key_file_get_string (ctx->keyfile, group, mccmnc, NULL);
     }
-    mm_dbg ("Requested carrier configuration %sfound for '%s' in group '%s': %s",
-            ctx->config_requested ? "" : "not ", mccmnc, group, ctx->config_requested ? ctx->config_requested : "n/a");
+    mm_obj_dbg (self, "requested carrier configuration %sfound for '%s' in group '%s': %s",
+                ctx->config_requested ? "" : "not ", mccmnc, group, ctx->config_requested ? ctx->config_requested : "n/a");
 
     if (!ctx->config_requested && !config_fallback) {
         setup_carrier_config_abort (task, g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
@@ -2404,16 +2413,16 @@ find_requested_carrier_config (GTask *task)
 
             config = &g_array_index (priv->config_list, ConfigInfo, i);
             if (ctx->config_requested && !g_strcmp0 (ctx->config_requested, config->description)) {
-                mm_dbg ("Requested carrier configuration '%s' is available (version 0x%08x, size %u bytes)",
-                        config->description, config->version, config->total_size);
+                mm_obj_dbg (self, "requested carrier configuration '%s' is available (version 0x%08x, size %u bytes)",
+                            config->description, config->version, config->total_size);
                 if (ctx->config_requested_i < 0)
                     ctx->config_requested_i = i;
                 else
                     ctx->config_requested_i = select_newest_carrier_config (self, ctx->config_requested_i, i);
             }
             if (config_fallback && !g_strcmp0 (config_fallback, config->description)) {
-                mm_dbg ("Fallback carrier configuration '%s' is available (version 0x%08x, size %u bytes)",
-                        config->description, config->version, config->total_size);
+                mm_obj_dbg (self, "fallback carrier configuration '%s' is available (version 0x%08x, size %u bytes)",
+                            config->description, config->version, config->total_size);
                 if (config_fallback_i < 0)
                     config_fallback_i = i;
                 else
@@ -2438,8 +2447,8 @@ find_requested_carrier_config (GTask *task)
         g_assert (config_fallback_i >= 0);
 
         config = &g_array_index (priv->config_list, ConfigInfo, config_fallback_i);
-        mm_info ("Using fallback carrier configuration '%s' (version 0x%08x, size %u bytes)",
-                        config->description, config->version, config->total_size);
+        mm_obj_info (self, "using fallback carrier configuration '%s' (version 0x%08x, size %u bytes)",
+                     config->description, config->version, config->total_size);
 
         g_free (ctx->config_requested);
         ctx->config_requested = config_fallback;
@@ -2449,8 +2458,8 @@ find_requested_carrier_config (GTask *task)
         ConfigInfo *config;
 
         config = &g_array_index (priv->config_list, ConfigInfo, ctx->config_requested_i);
-        mm_dbg ("Using requested carrier configuration '%s' (version 0x%08x, size %u bytes)",
-                config->description, config->version, config->total_size);
+        mm_obj_dbg (self, "using requested carrier configuration '%s' (version 0x%08x, size %u bytes)",
+                    config->description, config->version, config->total_size);
     }
 
     ctx->step++;
@@ -2464,11 +2473,13 @@ out:
 static void
 setup_carrier_config_step (GTask *task)
 {
+    MMSharedQmi               *self;
     SetupCarrierConfigContext *ctx;
     Private                   *priv;
 
-    ctx = g_task_get_task_data (task);
-    priv = get_private (g_task_get_source_object (task));
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
+    priv = get_private (self);
 
     switch (ctx->step) {
     case SETUP_CARRIER_CONFIG_STEP_FIRST:
@@ -2483,7 +2494,7 @@ setup_carrier_config_step (GTask *task)
         g_assert (ctx->config_requested_i >= 0);
         g_assert (priv->config_active_i >= 0 || priv->config_active_default);
         if (ctx->config_requested_i == priv->config_active_i) {
-            mm_info ("Carrier config switching not needed: already using '%s'", ctx->config_requested);
+            mm_obj_info (self, "carrier config switching not needed: already using '%s'", ctx->config_requested);
             ctx->step = SETUP_CARRIER_CONFIG_STEP_LAST;
             setup_carrier_config_step (task);
             return;
@@ -2500,8 +2511,8 @@ setup_carrier_config_step (GTask *task)
 
         requested_config = &g_array_index (priv->config_list, ConfigInfo, ctx->config_requested_i);
         active_config = (priv->config_active_default ? NULL : &g_array_index (priv->config_list, ConfigInfo, priv->config_active_i));
-        mm_warn ("Carrier config switching needed: '%s' -> '%s'",
-                 active_config ? active_config->description : DEFAULT_CONFIG_DESCRIPTION, requested_config->description);
+        mm_obj_warn (self, "carrier config switching needed: '%s' -> '%s'",
+                     active_config ? active_config->description : DEFAULT_CONFIG_DESCRIPTION, requested_config->description);
 
         type_and_id.config_type = requested_config->config_type;;
         type_and_id.id = requested_config->id;
@@ -2542,6 +2553,9 @@ setup_carrier_config_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         break;
+
+    default:
+        g_assert_not_reached ();
     }
 }
 
@@ -2721,13 +2735,15 @@ get_selected_config_indication (QmiClientPdc                            *client,
                                 QmiIndicationPdcGetSelectedConfigOutput *output,
                                 GTask                                   *task)
 {
+    MMSharedQmi              *self;
     LoadCarrierConfigContext *ctx;
     GArray                   *active_id = NULL;
     GError                   *error = NULL;
     guint16                   error_code = 0;
     guint                     i;
 
-    ctx = g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
 
     if (!qmi_indication_pdc_get_selected_config_output_get_indication_result (output, &error_code, &error)) {
         load_carrier_config_abort (task, error);
@@ -2744,7 +2760,7 @@ get_selected_config_indication (QmiClientPdc                            *client,
 
     qmi_indication_pdc_get_selected_config_output_get_active_id (output, &active_id, NULL);
     if (!active_id) {
-        mm_dbg ("no carrier config currently selected (default in use)");
+        mm_obj_dbg (self, "no carrier config currently selected (default in use)");
         ctx->config_active_default = TRUE;
         goto next;
     }
@@ -2817,7 +2833,7 @@ get_config_info_indication (QmiClientPdc                        *client,
     ConfigInfo               *current_config = NULL;
     guint32                   token;
     const gchar              *description;
-    int                       i;
+    guint                     i;
     guint16                   error_code = 0;
 
     ctx = g_task_get_task_data (task);
@@ -2880,13 +2896,15 @@ list_configs_indication (QmiClientPdc                      *client,
                          QmiIndicationPdcListConfigsOutput *output,
                          GTask                             *task)
 {
+    MMSharedQmi              *self;
     LoadCarrierConfigContext *ctx;
     GError                   *error = NULL;
     GArray                   *configs = NULL;
-    int                       i;
+    guint                     i;
     guint16                   error_code = 0;
 
-    ctx = g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
 
     if (!qmi_indication_pdc_list_configs_output_get_indication_result (output, &error_code, &error)) {
         load_carrier_config_abort (task, error);
@@ -2914,7 +2932,7 @@ list_configs_indication (QmiClientPdc                      *client,
     }
 
     /* Preallocate config list and request details for each */
-    mm_dbg ("found %u carrier configurations...", configs->len);
+    mm_obj_dbg (self, "found %u carrier configurations...", configs->len);
     ctx->config_list = g_array_sized_new (FALSE, TRUE, sizeof (ConfigInfo), configs->len);
     g_array_set_size (ctx->config_list, configs->len);
     g_array_set_clear_func (ctx->config_list, (GDestroyNotify) config_info_clear);
@@ -3034,6 +3052,9 @@ load_carrier_config_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         break;
+
+    default:
+        g_assert_not_reached ();
     }
 }
 
@@ -3816,15 +3837,15 @@ pds_location_event_report_indication_cb (QmiClientPds                      *clie
             output,
             &session_status,
             NULL)) {
-        mm_dbg ("[GPS] session status changed: '%s'",
-                qmi_pds_position_session_status_get_string (session_status));
+        mm_obj_dbg (self, "[GPS] session status changed: '%s'",
+                    qmi_pds_position_session_status_get_string (session_status));
     }
 
     if (qmi_indication_pds_event_report_output_get_nmea_position (
             output,
             &nmea,
             NULL)) {
-        mm_dbg ("[NMEA] %s", nmea);
+        mm_obj_dbg (self, "[NMEA] %s", nmea);
         mm_iface_modem_location_gps_update (MM_IFACE_MODEM_LOCATION (self), nmea);
     }
 }
@@ -3840,8 +3861,232 @@ loc_location_nmea_indication_cb (QmiClientLoc               *client,
     if (!nmea)
         return;
 
-    mm_dbg ("[NMEA] %s", nmea);
+    mm_obj_dbg (self, "[NMEA] %s", nmea);
     mm_iface_modem_location_gps_update (MM_IFACE_MODEM_LOCATION (self), nmea);
+}
+
+/*****************************************************************************/
+/* Location: internal helper: setup minimum required NMEA traces */
+
+typedef struct {
+    QmiClientLoc *client;
+    guint         timeout_id;
+    gulong        indication_id;
+} SetupRequiredNmeaTracesContext;
+
+static void
+setup_required_nmea_traces_cleanup_action (SetupRequiredNmeaTracesContext *ctx)
+{
+    if (ctx->indication_id) {
+        g_signal_handler_disconnect (ctx->client, ctx->indication_id);
+        ctx->indication_id = 0;
+    }
+    if (ctx->timeout_id) {
+        g_source_remove (ctx->timeout_id);
+        ctx->timeout_id = 0;
+    }
+}
+
+static void
+setup_required_nmea_traces_context_free (SetupRequiredNmeaTracesContext *ctx)
+{
+    setup_required_nmea_traces_cleanup_action (ctx);
+    g_clear_object (&ctx->client);
+    g_slice_free (SetupRequiredNmeaTracesContext, ctx);
+}
+
+static gboolean
+setup_required_nmea_traces_finish (MMSharedQmi   *self,
+                                   GAsyncResult  *res,
+                                   GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static gboolean
+setup_required_nmea_traces_timeout (GTask *task)
+{
+    SetupRequiredNmeaTracesContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+    g_assert (ctx->timeout_id);
+    setup_required_nmea_traces_cleanup_action (ctx);
+
+    g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_ABORTED,
+                             "Operation timed out");
+    g_object_unref (task);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+loc_set_nmea_types_indication_cb (QmiClientLoc                       *client,
+                                  QmiIndicationLocSetNmeaTypesOutput *output,
+                                  GTask                              *task)
+{
+    SetupRequiredNmeaTracesContext *ctx;
+    QmiLocIndicationStatus          status;
+    GError                         *error = NULL;
+
+    ctx = g_task_get_task_data (task);
+    g_assert (ctx->indication_id);
+    setup_required_nmea_traces_cleanup_action (ctx);
+
+    if (!qmi_indication_loc_set_nmea_types_output_get_indication_status (output, &status, &error) ||
+        !mm_error_from_qmi_loc_indication_status (status, &error))
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+loc_set_nmea_types_ready (QmiClientLoc *client,
+                          GAsyncResult *res,
+                          GTask        *task)
+{
+    SetupRequiredNmeaTracesContext             *ctx;
+    GError                                     *error = NULL;
+    g_autoptr(QmiMessageLocSetNmeaTypesOutput)  output = NULL;
+
+    output = qmi_client_loc_set_nmea_types_finish (client, res, &error);
+    if (!output || !qmi_message_loc_set_nmea_types_output_get_result (output, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    /* The task ownership is shared between signal and timeout; the one which is
+     * scheduled first will cancel the other. */
+    ctx = g_task_get_task_data (task);
+    g_assert (!ctx->indication_id);
+    ctx->indication_id = g_signal_connect (ctx->client,
+                                           "set-nmea-types",
+                                           G_CALLBACK (loc_set_nmea_types_indication_cb),
+                                           task);
+    g_assert (!ctx->timeout_id);
+    ctx->timeout_id = g_timeout_add_seconds (10,
+                                             (GSourceFunc)setup_required_nmea_traces_timeout,
+                                             task);
+}
+
+static void
+loc_get_nmea_types_indication_cb (QmiClientLoc                       *client,
+                                  QmiIndicationLocGetNmeaTypesOutput *output,
+                                  GTask                              *task)
+{
+    SetupRequiredNmeaTracesContext            *ctx;
+    QmiLocIndicationStatus                     status;
+    QmiLocNmeaType                             nmea_types_mask = 0;
+    QmiLocNmeaType                             desired_nmea_types_mask = (QMI_LOC_NMEA_TYPE_GGA | QMI_LOC_NMEA_TYPE_GSA | QMI_LOC_NMEA_TYPE_GSV);
+    GError                                    *error = NULL;
+    g_autoptr(QmiMessageLocSetNmeaTypesInput)  input = NULL;
+
+    ctx = g_task_get_task_data (task);
+    g_assert (ctx->indication_id);
+    setup_required_nmea_traces_cleanup_action (ctx);
+
+    if (!qmi_indication_loc_get_nmea_types_output_get_indication_status (output, &status, &error) ||
+        !mm_error_from_qmi_loc_indication_status (status, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    qmi_indication_loc_get_nmea_types_output_get_nmea_types (output, &nmea_types_mask, NULL);
+
+    /* If the configured NMEA types already include GGA, GSV and GSA, we're fine. For raw
+     * GPS sources GGA is the only required one, the other two are given for completeness */
+    if ((nmea_types_mask & desired_nmea_types_mask) == desired_nmea_types_mask) {
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    input = qmi_message_loc_set_nmea_types_input_new ();
+    qmi_message_loc_set_nmea_types_input_set_nmea_types (input, (nmea_types_mask | desired_nmea_types_mask), NULL);
+    qmi_client_loc_set_nmea_types (ctx->client,
+                                   input,
+                                   10,
+                                   NULL,
+                                   (GAsyncReadyCallback)loc_set_nmea_types_ready,
+                                   task);
+}
+
+static void
+loc_get_nmea_types_ready (QmiClientLoc *client,
+                          GAsyncResult *res,
+                          GTask        *task)
+{
+    SetupRequiredNmeaTracesContext             *ctx;
+    GError                                     *error = NULL;
+    g_autoptr(QmiMessageLocGetNmeaTypesOutput)  output = NULL;
+
+    output = qmi_client_loc_get_nmea_types_finish (client, res, &error);
+    if (!output || !qmi_message_loc_get_nmea_types_output_get_result (output, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    /* The task ownership is shared between signal and timeout; the one which is
+     * scheduled first will cancel the other. */
+    ctx = g_task_get_task_data (task);
+    g_assert (!ctx->indication_id);
+    ctx->indication_id = g_signal_connect (ctx->client,
+                                           "get-nmea-types",
+                                           G_CALLBACK (loc_get_nmea_types_indication_cb),
+                                           task);
+    g_assert (!ctx->timeout_id);
+    ctx->timeout_id = g_timeout_add_seconds (10,
+                                             (GSourceFunc)setup_required_nmea_traces_timeout,
+                                             task);
+}
+
+static void
+setup_required_nmea_traces (MMSharedQmi         *self,
+                            GAsyncReadyCallback  callback,
+                            gpointer             user_data)
+{
+    QmiClient *client;
+    GTask     *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    /* If using PDS, no further setup required */
+    client = mm_shared_qmi_peek_client (MM_SHARED_QMI (self),
+                                        QMI_SERVICE_PDS,
+                                        MM_PORT_QMI_FLAG_DEFAULT,
+                                        NULL);
+    if (client) {
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    /* Otherwise LOC */
+    client = mm_shared_qmi_peek_client (MM_SHARED_QMI (self),
+                                        QMI_SERVICE_LOC,
+                                        MM_PORT_QMI_FLAG_DEFAULT,
+                                        NULL);
+    if (client) {
+        SetupRequiredNmeaTracesContext *ctx;
+
+        ctx = g_slice_new0 (SetupRequiredNmeaTracesContext);
+        ctx->client = g_object_ref (client);
+        g_task_set_task_data (task, ctx, (GDestroyNotify)setup_required_nmea_traces_context_free);
+
+        qmi_client_loc_get_nmea_types (ctx->client,
+                                       NULL,
+                                       10,
+                                       NULL,
+                                       (GAsyncReadyCallback)loc_get_nmea_types_ready,
+                                       task);
+        return;
+    }
+
+    g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                             "Couldn't find any PDS/LOC client");
+    g_object_unref (task);
 }
 
 /*****************************************************************************/
@@ -4170,11 +4415,13 @@ pds_set_default_tracking_session_ready (QmiClientPds *client,
                                         GAsyncResult *res,
                                         GTask        *task)
 {
+    MMSharedQmi                                  *self;
     SetGpsOperationModeContext                   *ctx;
     QmiMessagePdsSetDefaultTrackingSessionOutput *output;
     GError                                       *error = NULL;
 
-    ctx = g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
 
     output = qmi_client_pds_set_default_tracking_session_finish (client, res, &error);
     if (!output) {
@@ -4196,14 +4443,15 @@ pds_set_default_tracking_session_ready (QmiClientPds *client,
 
     switch (ctx->mode) {
         case GPS_OPERATION_MODE_AGPS_MSA:
-            mm_dbg ("MSA A-GPS operation mode enabled");
+            mm_obj_dbg (self, "MSA A-GPS operation mode enabled");
             break;
         case GPS_OPERATION_MODE_AGPS_MSB:
-            mm_dbg ("MSB A-GPS operation mode enabled");
+            mm_obj_dbg (self, "MSB A-GPS operation mode enabled");
             break;
         case GPS_OPERATION_MODE_STANDALONE:
-            mm_dbg ("Standalone mode enabled (A-GPS disabled)");
+            mm_obj_dbg (self, "standalone mode enabled (A-GPS disabled)");
             break;
+        case GPS_OPERATION_MODE_UNKNOWN:
         default:
             g_assert_not_reached ();
     }
@@ -4216,6 +4464,7 @@ pds_get_default_tracking_session_ready (QmiClientPds *client,
                                         GAsyncResult *res,
                                         GTask        *task)
 {
+    MMSharedQmi                                  *self;
     SetGpsOperationModeContext                   *ctx;
     QmiMessagePdsSetDefaultTrackingSessionInput  *input;
     QmiMessagePdsGetDefaultTrackingSessionOutput *output;
@@ -4224,6 +4473,9 @@ pds_get_default_tracking_session_ready (QmiClientPds *client,
     guint8                                        data_timeout;
     guint32                                       interval;
     guint32                                       accuracy_threshold;
+
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
 
     output = qmi_client_pds_get_default_tracking_session_finish (client, res, &error);
     if (!output) {
@@ -4241,8 +4493,6 @@ pds_get_default_tracking_session_ready (QmiClientPds *client,
         return;
     }
 
-    ctx  = g_task_get_task_data (task);
-
     qmi_message_pds_get_default_tracking_session_output_get_info (
         output,
         &session_operation,
@@ -4255,30 +4505,30 @@ pds_get_default_tracking_session_ready (QmiClientPds *client,
 
     if (ctx->mode == GPS_OPERATION_MODE_AGPS_MSA) {
         if (session_operation == QMI_PDS_OPERATING_MODE_MS_ASSISTED) {
-            mm_dbg ("MSA A-GPS already enabled");
+            mm_obj_dbg (self, "MSA A-GPS already enabled");
             g_task_return_boolean (task, TRUE);
             g_object_unref (task);
             return;
         }
-        mm_dbg ("Need to enable MSA A-GPS");
+        mm_obj_dbg (self, "need to enable MSA A-GPS");
         session_operation = QMI_PDS_OPERATING_MODE_MS_ASSISTED;
     } else if (ctx->mode == GPS_OPERATION_MODE_AGPS_MSB) {
         if (session_operation == QMI_PDS_OPERATING_MODE_MS_BASED) {
-            mm_dbg ("MSB A-GPS already enabled");
+            mm_obj_dbg (self, "MSB A-GPS already enabled");
             g_task_return_boolean (task, TRUE);
             g_object_unref (task);
             return;
         }
-        mm_dbg ("Need to enable MSB A-GPS");
+        mm_obj_dbg (self, "need to enable MSB A-GPS");
         session_operation = QMI_PDS_OPERATING_MODE_MS_BASED;
     } else if (ctx->mode == GPS_OPERATION_MODE_STANDALONE) {
         if (session_operation == QMI_PDS_OPERATING_MODE_STANDALONE) {
-            mm_dbg ("A-GPS already disabled");
+            mm_obj_dbg (self, "A-GPS already disabled");
             g_task_return_boolean (task, TRUE);
             g_object_unref (task);
             return;
         }
-        mm_dbg ("Need to disable A-GPS");
+        mm_obj_dbg (self, "need to disable A-GPS");
         session_operation = QMI_PDS_OPERATING_MODE_STANDALONE;
     } else
         g_assert_not_reached ();
@@ -4320,11 +4570,13 @@ loc_location_set_operation_mode_indication_cb (QmiClientLoc                     
                                                QmiIndicationLocSetOperationModeOutput *output,
                                                GTask                                  *task)
 {
+    MMSharedQmi                *self;
     SetGpsOperationModeContext *ctx;
     QmiLocIndicationStatus      status;
     GError                     *error = NULL;
 
-    ctx = g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
 
     if (!qmi_indication_loc_set_operation_mode_output_get_indication_status (output, &status, &error)) {
         g_prefix_error (&error, "QMI operation failed: ");
@@ -4341,14 +4593,15 @@ loc_location_set_operation_mode_indication_cb (QmiClientLoc                     
 
     switch (ctx->mode) {
         case GPS_OPERATION_MODE_AGPS_MSA:
-            mm_dbg ("MSA A-GPS operation mode enabled");
+            mm_obj_dbg (self, "MSA A-GPS operation mode enabled");
             break;
         case GPS_OPERATION_MODE_AGPS_MSB:
-            mm_dbg ("MSB A-GPS operation mode enabled");
+            mm_obj_dbg (self, "MSB A-GPS operation mode enabled");
             break;
         case GPS_OPERATION_MODE_STANDALONE:
-            mm_dbg ("Standalone mode enabled (A-GPS disabled)");
+            mm_obj_dbg (self, "standalone mode enabled (A-GPS disabled)");
             break;
+        case GPS_OPERATION_MODE_UNKNOWN:
         default:
             g_assert_not_reached ();
     }
@@ -4400,13 +4653,15 @@ loc_location_get_operation_mode_indication_cb (QmiClientLoc                     
                                                QmiIndicationLocGetOperationModeOutput *output,
                                                GTask                                  *task)
 {
+    MMSharedQmi                        *self;
     SetGpsOperationModeContext         *ctx;
     QmiLocIndicationStatus              status;
     GError                             *error = NULL;
     QmiLocOperationMode                 mode = QMI_LOC_OPERATION_MODE_DEFAULT;
     QmiMessageLocSetOperationModeInput *input;
 
-    ctx = g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
 
     if (!qmi_indication_loc_get_operation_mode_output_get_indication_status (output, &status, &error)) {
         g_prefix_error (&error, "QMI operation failed: ");
@@ -4425,30 +4680,30 @@ loc_location_get_operation_mode_indication_cb (QmiClientLoc                     
 
     if (ctx->mode == GPS_OPERATION_MODE_AGPS_MSA) {
         if (mode == QMI_LOC_OPERATION_MODE_MSA) {
-            mm_dbg ("MSA A-GPS already enabled");
+            mm_obj_dbg (self, "MSA A-GPS already enabled");
             g_task_return_boolean (task, TRUE);
             g_object_unref (task);
             return;
         }
-        mm_dbg ("Need to enable MSA A-GPS");
+        mm_obj_dbg (self, "need to enable MSA A-GPS");
         mode = QMI_LOC_OPERATION_MODE_MSA;
     } else if (ctx->mode == GPS_OPERATION_MODE_AGPS_MSB) {
         if (mode == QMI_LOC_OPERATION_MODE_MSB) {
-            mm_dbg ("MSB A-GPS already enabled");
+            mm_obj_dbg (self, "MSB A-GPS already enabled");
             g_task_return_boolean (task, TRUE);
             g_object_unref (task);
             return;
         }
-        mm_dbg ("Need to enable MSB A-GPS");
+        mm_obj_dbg (self, "need to enable MSB A-GPS");
         mode = QMI_LOC_OPERATION_MODE_MSB;
     } else if (ctx->mode == GPS_OPERATION_MODE_STANDALONE) {
         if (mode == QMI_LOC_OPERATION_MODE_STANDALONE) {
-            mm_dbg ("A-GPS already disabled");
+            mm_obj_dbg (self, "A-GPS already disabled");
             g_task_return_boolean (task, TRUE);
             g_object_unref (task);
             return;
         }
-        mm_dbg ("Need to disable A-GPS");
+        mm_obj_dbg (self, "need to disable A-GPS");
         mode = QMI_LOC_OPERATION_MODE_STANDALONE;
     } else
         g_assert_not_reached ();
@@ -4720,6 +4975,22 @@ start_gps_engine_ready (MMSharedQmi  *self,
 }
 
 static void
+setup_required_nmea_traces_ready (MMSharedQmi  *self,
+                                  GAsyncResult *res,
+                                  GTask        *task)
+{
+    g_autoptr(GError) error = NULL;
+
+    /* don't treat this error as fatal */
+    if (!setup_required_nmea_traces_finish (self, res, &error))
+        mm_obj_warn (self, "couldn't setup required NMEA traces: %s", error->message);
+
+    start_gps_engine (self,
+                      (GAsyncReadyCallback)start_gps_engine_ready,
+                      task);
+}
+
+static void
 set_gps_operation_mode_agps_ready (MMSharedQmi  *self,
                                    GAsyncResult *res,
                                    GTask        *task)
@@ -4791,11 +5062,11 @@ parent_enable_location_gathering_ready (MMIfaceModemLocation *_self,
         return;
     }
 
-    /* Only start GPS engine if not done already */
+    /* Only setup NMEA traces and start GPS engine if not done already */
     if (!(priv->enabled_sources & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA | MM_MODEM_LOCATION_SOURCE_GPS_RAW))) {
-        start_gps_engine (self,
-                          (GAsyncReadyCallback)start_gps_engine_ready,
-                          task);
+        setup_required_nmea_traces (self,
+                                    (GAsyncReadyCallback)setup_required_nmea_traces_ready,
+                                    task);
         return;
     }
 
@@ -5240,13 +5511,15 @@ out:
 static void
 inject_xtra_data_next (GTask *task)
 {
+    MMSharedQmi                      *self;
     QmiMessageLocInjectXtraDataInput *input;
     InjectAssistanceDataContext      *ctx;
     goffset                           total_bytes_left;
     gsize                             count;
     GArray                           *data;
 
-    ctx = g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
 
     g_assert (ctx->data_size >= ctx->i);
     total_bytes_left = ctx->data_size - ctx->i;
@@ -5281,8 +5554,8 @@ inject_xtra_data_next (GTask *task)
 
     ctx->i += count;
 
-    mm_info ("injecting xtra data: %" G_GSIZE_FORMAT " bytes (%u/%u)",
-             count, (guint) ctx->n_part, (guint) ctx->total_parts);
+    mm_obj_info (self, "injecting xtra data: %" G_GSIZE_FORMAT " bytes (%u/%u)",
+                 count, (guint) ctx->n_part, (guint) ctx->total_parts);
     qmi_client_loc_inject_xtra_data (ctx->client,
                                      input,
                                      10,
@@ -5387,13 +5660,15 @@ out:
 static void
 inject_assistance_data_next (GTask *task)
 {
+    MMSharedQmi                                 *self;
     QmiMessageLocInjectPredictedOrbitsDataInput *input;
     InjectAssistanceDataContext                 *ctx;
     goffset                                      total_bytes_left;
     gsize                                        count;
     GArray                                      *data;
 
-    ctx = g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
 
     g_assert (ctx->data_size >= ctx->i);
     total_bytes_left = ctx->data_size - ctx->i;
@@ -5432,8 +5707,8 @@ inject_assistance_data_next (GTask *task)
 
     ctx->i += count;
 
-    mm_info ("injecting predicted orbits data: %" G_GSIZE_FORMAT " bytes (%u/%u)",
-             count, (guint) ctx->n_part, (guint) ctx->total_parts);
+    mm_obj_info (self, "injecting predicted orbits data: %" G_GSIZE_FORMAT " bytes (%u/%u)",
+                 count, (guint) ctx->n_part, (guint) ctx->total_parts);
     qmi_client_loc_inject_predicted_orbits_data (ctx->client,
                                                  input,
                                                  10,
@@ -5484,7 +5759,7 @@ mm_shared_qmi_location_inject_assistance_data (MMIfaceModemLocation *self,
         ctx->total_parts++;
     g_assert (ctx->total_parts <= G_MAXUINT16);
 
-    mm_dbg ("Injecting gpsOneXTRA data (%" G_GOFFSET_FORMAT " bytes)...", ctx->data_size);
+    mm_obj_dbg (self, "injecting gpsOneXTRA data (%" G_GOFFSET_FORMAT " bytes)...", ctx->data_size);
 
     inject_assistance_data_next (task);
 }

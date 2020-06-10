@@ -22,7 +22,7 @@
 #define _LIBMM_INSIDE_MM
 #include <libmm-glib.h>
 
-#include "mm-log.h"
+#include "mm-log-object.h"
 #include "mm-plugin-sierra.h"
 #include "mm-broadband-modem.h"
 
@@ -52,7 +52,7 @@ create_modem (MMPlugin *self,
 {
 #if defined WITH_QMI
     if (mm_port_probe_list_has_qmi_port (probes)) {
-        mm_dbg ("QMI-powered Sierra modem found...");
+        mm_obj_dbg (self, "QMI-powered Sierra modem found...");
         return MM_BASE_MODEM (mm_broadband_modem_qmi_new (uid,
                                                           drivers,
                                                           mm_plugin_get_name (self),
@@ -63,7 +63,7 @@ create_modem (MMPlugin *self,
 
 #if defined WITH_MBIM
     if (mm_port_probe_list_has_mbim_port (probes)) {
-        mm_dbg ("MBIM-powered Sierra modem found...");
+        mm_obj_dbg (self, "MBIM-powered Sierra modem found...");
         return MM_BASE_MODEM (mm_broadband_modem_mbim_new (uid,
                                                            drivers,
                                                            mm_plugin_get_name (self),
@@ -91,7 +91,7 @@ mm_plugin_create (void)
 
     return MM_PLUGIN (
         g_object_new (MM_TYPE_PLUGIN_SIERRA,
-                      MM_PLUGIN_NAME,               "Sierra",
+                      MM_PLUGIN_NAME,               MM_MODULE_NAME,
                       MM_PLUGIN_ALLOWED_SUBSYSTEMS, subsystems,
                       MM_PLUGIN_ALLOWED_VENDOR_IDS, vendor_ids,
                       MM_PLUGIN_ALLOWED_DRIVERS,    drivers,

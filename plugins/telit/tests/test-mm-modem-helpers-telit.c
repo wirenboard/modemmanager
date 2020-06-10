@@ -23,7 +23,7 @@
 #define _LIBMM_INSIDE_MM
 #include <libmm-glib.h>
 
-#include "mm-log.h"
+#include "mm-log-test.h"
 #include "mm-modem-helpers.h"
 #include "mm-modem-helpers-telit.h"
 
@@ -34,7 +34,7 @@
 #define MAX_BANDS_LIST_LEN 17
 
 typedef struct {
-    gchar       *response;
+    const gchar *response;
     gboolean     modem_is_2g;
     gboolean     modem_is_3g;
     gboolean     modem_is_4g;
@@ -170,6 +170,7 @@ test_parse_supported_bands_response (void)
                                                   supported_band_mapping_tests[i].modem_is_3g,
                                                   supported_band_mapping_tests[i].modem_is_4g,
                                                   supported_band_mapping_tests[i].modem_alternate_3g_bands,
+                                                  NULL,
                                                   &error);
         g_assert_no_error (error);
         g_assert (bands);
@@ -278,6 +279,7 @@ test_parse_current_bands_response (void)
                                                    current_band_mapping_tests[i].modem_is_3g,
                                                    current_band_mapping_tests[i].modem_is_4g,
                                                    current_band_mapping_tests[i].modem_alternate_3g_bands,
+                                                   NULL,
                                                    &error);
         g_assert_no_error (error);
         g_assert (bands);
@@ -316,10 +318,11 @@ test_common_bnd_cmd (const gchar *expected_cmd,
 #define test_common_bnd_cmd_4g(EXPECTED_CMD, BANDS_ARRAY) test_common_bnd_cmd (EXPECTED_CMD, FALSE, FALSE, TRUE, FALSE, BANDS_ARRAY)
 
 static void
-test_common_bnd_cmd_invalid (gboolean  modem_is_2g,
-                             gboolean  modem_is_3g,
-                             gboolean  modem_is_4g,
-                             GArray   *bands_array)
+test_common_bnd_cmd_error (gboolean     modem_is_2g,
+                           gboolean     modem_is_3g,
+                           gboolean     modem_is_4g,
+                           GArray      *bands_array,
+                           MMCoreError  expected_error)
 {
     gchar  *cmd;
     GError *error = NULL;
@@ -328,13 +331,16 @@ test_common_bnd_cmd_invalid (gboolean  modem_is_2g,
                                       modem_is_2g, modem_is_3g, modem_is_4g,
                                       FALSE,
                                       &error);
-    g_assert_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED);
+    g_assert_error (error, MM_CORE_ERROR, (gint)expected_error);
     g_assert (!cmd);
 }
 
-#define test_common_bnd_cmd_2g_invalid(BANDS_ARRAY) test_common_bnd_cmd_invalid (TRUE, FALSE, FALSE, BANDS_ARRAY)
-#define test_common_bnd_cmd_3g_invalid(BANDS_ARRAY) test_common_bnd_cmd_invalid (FALSE, TRUE, FALSE, BANDS_ARRAY)
-#define test_common_bnd_cmd_4g_invalid(BANDS_ARRAY) test_common_bnd_cmd_invalid (FALSE, FALSE, TRUE, BANDS_ARRAY)
+#define test_common_bnd_cmd_2g_invalid(BANDS_ARRAY) test_common_bnd_cmd_error (TRUE, FALSE, FALSE, BANDS_ARRAY, MM_CORE_ERROR_FAILED)
+#define test_common_bnd_cmd_3g_invalid(BANDS_ARRAY) test_common_bnd_cmd_error (FALSE, TRUE, FALSE, BANDS_ARRAY, MM_CORE_ERROR_FAILED)
+#define test_common_bnd_cmd_4g_invalid(BANDS_ARRAY) test_common_bnd_cmd_error (FALSE, FALSE, TRUE, BANDS_ARRAY, MM_CORE_ERROR_FAILED)
+#define test_common_bnd_cmd_2g_not_found(BANDS_ARRAY) test_common_bnd_cmd_error (TRUE, FALSE, FALSE, BANDS_ARRAY, MM_CORE_ERROR_NOT_FOUND)
+#define test_common_bnd_cmd_3g_not_found(BANDS_ARRAY) test_common_bnd_cmd_error (FALSE, TRUE, FALSE, BANDS_ARRAY, MM_CORE_ERROR_NOT_FOUND)
+#define test_common_bnd_cmd_4g_not_found(BANDS_ARRAY) test_common_bnd_cmd_error (FALSE, FALSE, TRUE, BANDS_ARRAY, MM_CORE_ERROR_NOT_FOUND)
 
 static void
 test_telit_get_2g_bnd_flag (void)
@@ -344,6 +350,8 @@ test_telit_get_2g_bnd_flag (void)
     MMModemBand  dcs  = MM_MODEM_BAND_DCS;
     MMModemBand  pcs  = MM_MODEM_BAND_PCS;
     MMModemBand  g850 = MM_MODEM_BAND_G850;
+    MMModemBand  u2100 = MM_MODEM_BAND_UTRAN_1;
+    MMModemBand  eutran_i = MM_MODEM_BAND_EUTRAN_1;
 
     /* Test Flag 0 */
     bands_array = g_array_sized_new (FALSE, FALSE, sizeof (MMModemBand), 2);
@@ -379,6 +387,13 @@ test_telit_get_2g_bnd_flag (void)
     g_array_append_val (bands_array, egsm);
     test_common_bnd_cmd_2g_invalid (bands_array);
     g_array_unref (bands_array);
+
+    /* Test unmatched band array */
+    bands_array = g_array_sized_new (FALSE, FALSE, sizeof (MMModemBand), 2);
+    g_array_append_val (bands_array, u2100);
+    g_array_append_val (bands_array, eutran_i);
+    test_common_bnd_cmd_2g_not_found (bands_array);
+    g_array_unref (bands_array);
 }
 
 static void
@@ -393,6 +408,8 @@ test_telit_get_3g_bnd_flag (void)
     MMModemBand  u900  = MM_MODEM_BAND_UTRAN_8;
     MMModemBand  u17iv = MM_MODEM_BAND_UTRAN_4;
     MMModemBand  u17ix = MM_MODEM_BAND_UTRAN_9;
+    MMModemBand  egsm = MM_MODEM_BAND_EGSM;
+    MMModemBand  eutran_i = MM_MODEM_BAND_EUTRAN_1;
 
     /* Test flag 0 */
     bands_array = g_array_sized_new (FALSE, FALSE, sizeof (MMModemBand), 1);
@@ -474,6 +491,13 @@ test_telit_get_3g_bnd_flag (void)
     g_array_append_val (bands_array, u17ix);
     test_common_bnd_cmd_3g_invalid (bands_array);
     g_array_unref (bands_array);
+
+    /* Test unmatched band array */
+    bands_array = g_array_sized_new (FALSE, FALSE, sizeof (MMModemBand), 2);
+    g_array_append_val (bands_array, egsm);
+    g_array_append_val (bands_array, eutran_i);
+    test_common_bnd_cmd_3g_not_found (bands_array);
+    g_array_unref (bands_array);
 }
 
 static void
@@ -482,6 +506,7 @@ test_telit_get_4g_bnd_flag (void)
     GArray      *bands_array;
     MMModemBand  eutran_i = MM_MODEM_BAND_EUTRAN_1;
     MMModemBand  eutran_ii = MM_MODEM_BAND_EUTRAN_2;
+    MMModemBand  u2100 = MM_MODEM_BAND_UTRAN_1;
     MMModemBand  egsm = MM_MODEM_BAND_EGSM;
 
     /* Test flag 1 */
@@ -497,10 +522,11 @@ test_telit_get_4g_bnd_flag (void)
     test_common_bnd_cmd_4g ("#BND=0,0,3", bands_array);
     g_array_unref (bands_array);
 
-    /* Test invalid bands array */
-    bands_array = g_array_sized_new (FALSE, FALSE, sizeof (MMModemBand), 1);
+    /* Test unmatched band array */
+    bands_array = g_array_sized_new (FALSE, FALSE, sizeof (MMModemBand), 2);
     g_array_append_val (bands_array, egsm);
-    test_common_bnd_cmd_4g_invalid (bands_array);
+    g_array_append_val (bands_array, u2100);
+    test_common_bnd_cmd_4g_not_found (bands_array);
     g_array_unref (bands_array);
 }
 
@@ -545,26 +571,6 @@ test_telit_parse_qss_query (void)
 }
 
 /******************************************************************************/
-
-void
-_mm_log (const char *loc,
-         const char *func,
-         guint32 level,
-         const char *fmt,
-         ...)
-{
-    va_list args;
-    gchar *msg;
-
-    if (!g_test_verbose ())
-        return;
-
-    va_start (args, fmt);
-    msg = g_strdup_vprintf (fmt, args);
-    va_end (args);
-    g_print ("%s\n", msg);
-    g_free (msg);
-}
 
 int main (int argc, char **argv)
 {

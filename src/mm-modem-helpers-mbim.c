@@ -17,7 +17,7 @@
 #include "mm-modem-helpers.h"
 #include "mm-enums-types.h"
 #include "mm-errors-types.h"
-#include "mm-log.h"
+#include "mm-log-object.h"
 
 /*****************************************************************************/
 
@@ -47,9 +47,6 @@ MMModemLock
 mm_modem_lock_from_mbim_pin_type (MbimPinType pin_type)
 {
     switch (pin_type) {
-    case MBIM_PIN_TYPE_UNKNOWN:
-    case MBIM_PIN_TYPE_CUSTOM:
-        break;
     case MBIM_PIN_TYPE_PIN1:
         return MM_MODEM_LOCK_SIM_PIN;
     case MBIM_PIN_TYPE_PIN2:
@@ -82,6 +79,10 @@ mm_modem_lock_from_mbim_pin_type (MbimPinType pin_type)
         return MM_MODEM_LOCK_PH_SP_PIN;
     case MBIM_PIN_TYPE_CORPORATE_PUK:
         return MM_MODEM_LOCK_PH_CORP_PUK;
+    case MBIM_PIN_TYPE_UNKNOWN:
+    case MBIM_PIN_TYPE_CUSTOM:
+    default:
+        break;
     }
 
     return MM_MODEM_LOCK_UNKNOWN;
@@ -200,6 +201,8 @@ mm_3gpp_network_info_list_from_mbim_providers (const MbimProvider *const *provid
 GError *
 mm_mobile_equipment_error_from_mbim_nw_error (MbimNwError nw_error)
 {
+    const gchar *msg;
+
     switch (nw_error) {
     case MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR:
         return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
@@ -305,11 +308,41 @@ mm_mobile_equipment_error_from_mbim_nw_error (MbimNwError nw_error)
         return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
                             MM_MOBILE_EQUIPMENT_ERROR_GPRS_REQUESTED_APN_NOT_SUPPORTED,
                             "Requested APN not supported");
+
+    case MBIM_NW_ERROR_SEMANTICALLY_INCORRECT_MESSAGE:
+        return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
+                            MM_MOBILE_EQUIPMENT_ERROR_GPRS_SEMANTICALLY_INCORRECT_MESSAGE,
+                            "Semantically incorrect message");
+
+    case MBIM_NW_ERROR_PROTOCOL_ERROR_UNSPECIFIED:
+        return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
+                            MM_MOBILE_EQUIPMENT_ERROR_GPRS_UNSPECIFIED_PROTOCOL_ERROR,
+                            "Unspecified protocol error");
+
+    case MBIM_NW_ERROR_IMEI_NOT_ACCEPTED:
+    case MBIM_NW_ERROR_MS_IDENTITY_NOT_DERIVED_BY_NETWORK:
+    case MBIM_NW_ERROR_IMPLICITLY_DETACHED:
+    case MBIM_NW_ERROR_MSC_TEMPORARILY_NOT_REACHABLE:
+    case MBIM_NW_ERROR_MAC_FAILURE:
+    case MBIM_NW_ERROR_SYNCH_FAILURE:
+    case MBIM_NW_ERROR_NO_PDP_CONTEXT_ACTIVATED:
+    case MBIM_NW_ERROR_PDP_TYPE_IPV4_ONLY_ALLOWED:
+    case MBIM_NW_ERROR_PDP_TYPE_IPV6_ONLY_ALLOWED:
+    case MBIM_NW_ERROR_INVALID_MANDATORY_INFORMATION:
+    case MBIM_NW_ERROR_MESSAGE_TYPE_NON_EXISTENT_OR_NOT_IMPLEMENTED:
+    case MBIM_NW_ERROR_MESSAGE_TYPE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE:
+    case MBIM_NW_ERROR_INFORMATION_ELEMENT_NON_EXISTENT_OR_NOT_IMPLEMENTED:
+    case MBIM_NW_ERROR_CONDITIONAL_IE_ERROR:
+    case MBIM_NW_ERROR_MESSAGE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE:
+    case MBIM_NW_ERROR_APN_RESTRICTION_VALUE_INCOMPATIBLE_WITH_ACTIVE_PDP_CONTEXT:
+    case MBIM_NW_ERROR_MULTIPLE_ACCESSES_TO_A_PDN_CONNECTION_NOT_ALLOWED:
+    case MBIM_NW_ERROR_UNKNOWN:
     default:
+        msg = mbim_nw_error_get_string (nw_error);
         return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
                             MM_MOBILE_EQUIPMENT_ERROR_GPRS_UNKNOWN,
-                            "Unknown error (%u)",
-                            nw_error);
+                            "Unsupported error (%u): %s",
+                            nw_error, msg ? msg : "unknown");
     }
 }
 
@@ -334,6 +367,7 @@ mm_bearer_allowed_auth_from_mbim_auth_protocol (MbimAuthProtocol auth_protocol)
 
 MbimAuthProtocol
 mm_bearer_allowed_auth_to_mbim_auth_protocol (MMBearerAllowedAuth   bearer_auth,
+                                              gpointer              log_object,
                                               GError              **error)
 {
     gchar *str;
@@ -341,7 +375,7 @@ mm_bearer_allowed_auth_to_mbim_auth_protocol (MMBearerAllowedAuth   bearer_auth,
     /* NOTE: the input is a BITMASK, so we try to find a "best match" */
 
     if (bearer_auth == MM_BEARER_ALLOWED_AUTH_UNKNOWN) {
-        mm_dbg ("Using default (PAP) authentication method");
+        mm_obj_dbg (log_object, "using default (PAP) authentication method");
         return MBIM_AUTH_PROTOCOL_PAP;
     }
     if (bearer_auth & MM_BEARER_ALLOWED_AUTH_PAP)
@@ -377,6 +411,7 @@ mm_bearer_ip_family_from_mbim_context_ip_type (MbimContextIpType ip_type)
         return MM_BEARER_IP_FAMILY_IPV4V6;
     case MBIM_CONTEXT_IP_TYPE_IPV4_AND_IPV6:
         return MM_BEARER_IP_FAMILY_IPV4 | MM_BEARER_IP_FAMILY_IPV6;
+    case MBIM_CONTEXT_IP_TYPE_DEFAULT:
     default:
         return MM_BEARER_IP_FAMILY_NONE;
     }
@@ -431,6 +466,8 @@ mm_sms_state_from_mbim_message_status (MbimSmsStatus status)
         return MM_SMS_STATE_STORED;
     case MBIM_SMS_STATUS_SENT:
         return MM_SMS_STATE_SENT;
+    default:
+        break;
     }
 
     return MM_SMS_STATE_UNKNOWN;

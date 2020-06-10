@@ -10,18 +10,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details:
  *
- * Copyright (C) 2010 - 2012 Red Hat, Inc.
- * Copyright (C) 2012 Google, Inc.
+ * Copyright (C) 2019 Aleksander Morgado <aleksander@aleksander.es>
  */
 
-#ifndef MM_AUTH_H
-#define MM_AUTH_H
+#include "mm-shared.h"
 
-#include "mm-auth-provider.h"
-
-/* Get the default provider */
-MMAuthProvider *mm_auth_get_provider (void);
-
-void mm_auth_shutdown (void);
-
-#endif /* MM_AUTH_H */
+MM_SHARED_DEFINE_MAJOR_VERSION
+MM_SHARED_DEFINE_MINOR_VERSION
+MM_SHARED_DEFINE_NAME(Foxconn)

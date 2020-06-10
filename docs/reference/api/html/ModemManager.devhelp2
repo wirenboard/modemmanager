@@ -418,6 +418,7 @@
     <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC18_US_PS_700" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC18-US-PS-700:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC18 instead." since="1.0"/>
     <keyword type="macro" name="MM_MODEM_BAND_CDMA_BC19_US_LOWER_700" link="ModemManager-API-break-replacements.html#MM-MODEM-BAND-CDMA-BC19-US-LOWER-700:CAPS" deprecated="1.8: Use #MM_MODEM_BAND_CDMA_BC19 instead." since="1.0"/>
     <keyword type="macro" name="MM_MODEM_LOCATION_SOURCE_AGPS" link="ModemManager-API-break-replacements.html#MM-MODEM-LOCATION-SOURCE-AGPS:CAPS" deprecated="1.12.0: Use #MM_MODEM_LOCATION_SOURCE_AGPS_MSA instead." since="1.6"/>
+    <keyword type="macro" name="MM_MODEM_CAPABILITY_LTE_ADVANCED" link="ModemManager-API-break-replacements.html#MM-MODEM-CAPABILITY-LTE-ADVANCED:CAPS" deprecated="1.14.0." since="1.0"/>
     <keyword type="constant" name="MM_BEARER_TYPE_UNKNOWN" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-UNKNOWN:CAPS"/>
     <keyword type="constant" name="MM_BEARER_TYPE_DEFAULT" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-DEFAULT:CAPS"/>
     <keyword type="constant" name="MM_BEARER_TYPE_DEFAULT_ATTACH" link="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-DEFAULT-ATTACH:CAPS"/>
@@ -490,6 +491,7 @@
     <keyword type="constant" name="MM_MODEM_3GPP_REGISTRATION_STATE_EMERGENCY_ONLY" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-3GPP-REGISTRATION-STATE-EMERGENCY-ONLY:CAPS"/>
     <keyword type="constant" name="MM_MODEM_3GPP_REGISTRATION_STATE_HOME_CSFB_NOT_PREFERRED" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-3GPP-REGISTRATION-STATE-HOME-CSFB-NOT-PREFERRED:CAPS"/>
     <keyword type="constant" name="MM_MODEM_3GPP_REGISTRATION_STATE_ROAMING_CSFB_NOT_PREFERRED" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-3GPP-REGISTRATION-STATE-ROAMING-CSFB-NOT-PREFERRED:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_3GPP_REGISTRATION_STATE_ATTACHED_RLOS" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-3GPP-REGISTRATION-STATE-ATTACHED-RLOS:CAPS"/>
     <keyword type="constant" name="MM_MODEM_3GPP_USSD_SESSION_STATE_UNKNOWN" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-3GPP-USSD-SESSION-STATE-UNKNOWN:CAPS"/>
     <keyword type="constant" name="MM_MODEM_3GPP_USSD_SESSION_STATE_IDLE" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-3GPP-USSD-SESSION-STATE-IDLE:CAPS"/>
     <keyword type="constant" name="MM_MODEM_3GPP_USSD_SESSION_STATE_ACTIVE" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-3GPP-USSD-SESSION-STATE-ACTIVE:CAPS"/>
@@ -515,6 +517,7 @@
     <keyword type="constant" name="MM_MODEM_ACCESS_TECHNOLOGY_EVDOA" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-ACCESS-TECHNOLOGY-EVDOA:CAPS"/>
     <keyword type="constant" name="MM_MODEM_ACCESS_TECHNOLOGY_EVDOB" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-ACCESS-TECHNOLOGY-EVDOB:CAPS"/>
     <keyword type="constant" name="MM_MODEM_ACCESS_TECHNOLOGY_LTE" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-ACCESS-TECHNOLOGY-LTE:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_ACCESS_TECHNOLOGY_5GNR" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-ACCESS-TECHNOLOGY-5GNR:CAPS"/>
     <keyword type="constant" name="MM_MODEM_ACCESS_TECHNOLOGY_ANY" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-ACCESS-TECHNOLOGY-ANY:CAPS"/>
     <keyword type="constant" name="MM_MODEM_BAND_UNKNOWN" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-UNKNOWN:CAPS"/>
     <keyword type="constant" name="MM_MODEM_BAND_EGSM" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-EGSM:CAPS"/>
@@ -644,8 +647,8 @@
     <keyword type="constant" name="MM_MODEM_CAPABILITY_CDMA_EVDO" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-CAPABILITY-CDMA-EVDO:CAPS"/>
     <keyword type="constant" name="MM_MODEM_CAPABILITY_GSM_UMTS" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-CAPABILITY-GSM-UMTS:CAPS"/>
     <keyword type="constant" name="MM_MODEM_CAPABILITY_LTE" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-CAPABILITY-LTE:CAPS"/>
-    <keyword type="constant" name="MM_MODEM_CAPABILITY_LTE_ADVANCED" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-CAPABILITY-LTE-ADVANCED:CAPS"/>
     <keyword type="constant" name="MM_MODEM_CAPABILITY_IRIDIUM" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-CAPABILITY-IRIDIUM:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_CAPABILITY_5GNR" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-CAPABILITY-5GNR:CAPS"/>
     <keyword type="constant" name="MM_MODEM_CAPABILITY_ANY" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-CAPABILITY-ANY:CAPS"/>
     <keyword type="constant" name="MM_MODEM_CDMA_ACTIVATION_STATE_UNKNOWN" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-CDMA-ACTIVATION-STATE-UNKNOWN:CAPS"/>
     <keyword type="constant" name="MM_MODEM_CDMA_ACTIVATION_STATE_NOT_ACTIVATED" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-CDMA-ACTIVATION-STATE-NOT-ACTIVATED:CAPS"/>
@@ -698,6 +701,7 @@
     <keyword type="constant" name="MM_MODEM_MODE_2G" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-MODE-2G:CAPS"/>
     <keyword type="constant" name="MM_MODEM_MODE_3G" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-MODE-3G:CAPS"/>
     <keyword type="constant" name="MM_MODEM_MODE_4G" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-MODE-4G:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_MODE_5G" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-MODE-5G:CAPS"/>
     <keyword type="constant" name="MM_MODEM_MODE_ANY" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-MODE-ANY:CAPS"/>
     <keyword type="constant" name="MM_MODEM_STATE_FAILED" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-STATE-FAILED:CAPS"/>
     <keyword type="constant" name="MM_MODEM_STATE_UNKNOWN" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-STATE-UNKNOWN:CAPS"/>

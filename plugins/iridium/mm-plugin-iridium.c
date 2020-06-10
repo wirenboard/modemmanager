@@ -29,7 +29,6 @@
 #include "mm-plugin-iridium.h"
 #include "mm-broadband-modem-iridium.h"
 #include "mm-private-boxed-types.h"
-#include "mm-log.h"
 
 G_DEFINE_TYPE (MMPluginIridium, mm_plugin_iridium, MM_TYPE_PLUGIN)
 
@@ -61,12 +60,12 @@ mm_plugin_create (void)
     static const guint16 vendor_ids[] = { 0x1edd, 0 };
     static const gchar *vendor_strings[] = { "iridium", NULL };
     /* Also support motorola-branded Iridium modems */
-    static const mm_str_pair product_strings[] = {{"motorola", "satellite" },
+    static const mm_str_pair product_strings[] = {{(gchar *)"motorola", (gchar *)"satellite" },
                                                   { NULL, NULL }};
 
     return MM_PLUGIN (
         g_object_new (MM_TYPE_PLUGIN_IRIDIUM,
-                      MM_PLUGIN_NAME,                    "Iridium",
+                      MM_PLUGIN_NAME,                    MM_MODULE_NAME,
                       MM_PLUGIN_ALLOWED_SUBSYSTEMS,      subsystems,
                       MM_PLUGIN_ALLOWED_VENDOR_STRINGS,  vendor_strings,
                       MM_PLUGIN_ALLOWED_PRODUCT_STRINGS, product_strings,

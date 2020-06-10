@@ -34,6 +34,7 @@
 #define MM_IFACE_MODEM_3GPP_CS_NETWORK_SUPPORTED    "iface-modem-3gpp-cs-network-supported"
 #define MM_IFACE_MODEM_3GPP_PS_NETWORK_SUPPORTED    "iface-modem-3gpp-ps-network-supported"
 #define MM_IFACE_MODEM_3GPP_EPS_NETWORK_SUPPORTED   "iface-modem-3gpp-eps-network-supported"
+#define MM_IFACE_MODEM_3GPP_5GS_NETWORK_SUPPORTED   "iface-modem-3gpp-5gs-network-supported"
 #define MM_IFACE_MODEM_3GPP_IGNORED_FACILITY_LOCKS  "iface-modem-3gpp-ignored-facility-locks"
 #define MM_IFACE_MODEM_3GPP_INITIAL_EPS_BEARER      "iface-modem-3gpp-initial-eps-bearer"
 
@@ -47,7 +48,8 @@
      MM_MODEM_ACCESS_TECHNOLOGY_HSUPA |                     \
      MM_MODEM_ACCESS_TECHNOLOGY_HSPA |                      \
      MM_MODEM_ACCESS_TECHNOLOGY_HSPA_PLUS |                 \
-     MM_MODEM_ACCESS_TECHNOLOGY_LTE)
+     MM_MODEM_ACCESS_TECHNOLOGY_LTE |                       \
+     MM_MODEM_ACCESS_TECHNOLOGY_5GNR)
 
 typedef struct _MMIfaceModem3gpp MMIfaceModem3gpp;
 
@@ -167,13 +169,14 @@ struct _MMIfaceModem3gpp {
     MMBaseBearer * (*create_initial_eps_bearer) (MMIfaceModem3gpp   *self,
                                                  MMBearerProperties *properties);
 
-    /* Run CS/PS/EPS registration state checks..
+    /* Run CS/PS/EPS/5GS registration state checks..
      * Note that no registration state is returned, implementations should call
      * mm_iface_modem_3gpp_update_registration_state(). */
     void (* run_registration_checks) (MMIfaceModem3gpp *self,
-                                      gboolean cs_supported,
-                                      gboolean ps_supported,
-                                      gboolean eps_supported,
+                                      gboolean is_cs_supported,
+                                      gboolean is_ps_supported,
+                                      gboolean is_eps_supported,
+                                      gboolean is_5gs_supported,
                                       GAsyncReadyCallback callback,
                                       gpointer user_data);
     gboolean (*run_registration_checks_finish) (MMIfaceModem3gpp *self,
@@ -274,6 +277,8 @@ void mm_iface_modem_3gpp_update_ps_registration_state (MMIfaceModem3gpp *self,
                                                        MMModem3gppRegistrationState state);
 void mm_iface_modem_3gpp_update_eps_registration_state (MMIfaceModem3gpp *self,
                                                         MMModem3gppRegistrationState state);
+void mm_iface_modem_3gpp_update_5gs_registration_state (MMIfaceModem3gpp *self,
+                                                        MMModem3gppRegistrationState state);
 void mm_iface_modem_3gpp_update_subscription_state (MMIfaceModem3gpp *self,
                                                     MMModem3gppSubscriptionState state);
 void mm_iface_modem_3gpp_update_access_technologies (MMIfaceModem3gpp *self,
@@ -305,14 +310,23 @@ gboolean mm_iface_modem_3gpp_reload_current_registration_info_finish (MMIfaceMod
 void     mm_iface_modem_3gpp_clear_current_operator                  (MMIfaceModem3gpp *self);
 
 /* Allow registering in the network */
-gboolean mm_iface_modem_3gpp_register_in_network_finish (MMIfaceModem3gpp *self,
-                                                         GAsyncResult *res,
-                                                         GError **error);
-void     mm_iface_modem_3gpp_register_in_network        (MMIfaceModem3gpp *self,
-                                                         const gchar *operator_id,
-                                                         guint max_registration_time,
-                                                         GAsyncReadyCallback callback,
-                                                         gpointer user_data);
+void     mm_iface_modem_3gpp_register_in_network        (MMIfaceModem3gpp    *self,
+                                                         const gchar         *operator_id,
+                                                         gboolean             force_registration,
+                                                         guint                max_registration_time,
+                                                         GAsyncReadyCallback  callback,
+                                                         gpointer             user_data);
+gboolean mm_iface_modem_3gpp_register_in_network_finish (MMIfaceModem3gpp    *self,
+                                                         GAsyncResult        *res,
+                                                         GError             **error);
+
+/* Allow re-registering in the network with last settings */
+void     mm_iface_modem_3gpp_reregister_in_network        (MMIfaceModem3gpp     *self,
+                                                           GAsyncReadyCallback   callback,
+                                                           gpointer              user_data);
+gboolean mm_iface_modem_3gpp_reregister_in_network_finish (MMIfaceModem3gpp     *self,
+                                                           GAsyncResult         *res,
+                                                           GError              **error);
 
 /* Bind properties for simple GetStatus() */
 void mm_iface_modem_3gpp_bind_simple_status (MMIfaceModem3gpp *self,

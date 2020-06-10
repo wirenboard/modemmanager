@@ -250,7 +250,24 @@ EpsUeModeOperation  readable   u
 <programlisting>
 Pco  readable   a(ubay)
 </programlisting>
-<para>        The raw PCOs received from the network.
+<para>        The raw PCOs received from the network, given as array of PCO
+        elements (signature <literal>"a(ubay)"</literal>).
+</para><para>        Each PCO is defined as a sequence of 3 fields:
+        <orderedlist>
+          <listitem>
+            The session ID associated with the PCO, given as an
+            unsigned integer value (signature <literal>"u"</literal>).
+          </listitem>
+          <listitem>
+            The flag that indicates whether the PCO data contains the
+            complete PCO structure received from the network, given as
+            a boolean value (signature <literal>"b"</literal>).
+          </listitem>
+          <listitem>
+            The raw  PCO data, given as an array of bytes (signature
+            <literal>"ay"</literal>).
+          </listitem>
+        </orderedlist>
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer">
@@ -272,8 +289,9 @@ InitialEpsBearerSettings  readable   a{sv}
         LTE network attach procedure.
 </para><para>        The network may decide to use different settings during the actual device attach
         procedure, e.g. if the device is roaming or no explicit settings were requested,
-        so the properties shown in the <link linkend="gdbus-interface-org-freedesktop-ModemManager1-Modem-Modem3gpp.top_of_page">org.freedesktop.ModemManager1.Modem.Modem3gpp</link>.InitialEpsBearer:InitialEpsBearer
-        may be totally different.
+        so the values shown in the
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer">"InitialEpsBearer"</link>
+        bearer object may be totally different.
 </para><para>        This is a read-only property, updating these settings should be done using the
         <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings">SetInitialEpsBearerSettings()</link>
         method.

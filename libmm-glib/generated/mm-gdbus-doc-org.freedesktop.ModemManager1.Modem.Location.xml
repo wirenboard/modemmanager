@@ -51,17 +51,23 @@ Setup (IN  u sources,
        IN  b signal_location);
 </programlisting>
 <para>        Configure the location sources to use when gathering location
-        information. Also enable or disable location information gathering.
-        This method may require the client to authenticate itself.
-</para><para>        When signals are emitted, any client application (including malicious
-        ones!) can listen for location updates unless D-Bus permissions restrict
-        these signals from certain users. If further security is desired, the
+        information. Adding new location sources may require to enable them
+        in the device (e.g. the GNSS engine will need to be started explicitly
+        if a GPS source is requested by the user). In the same way, removing
+        location sources may require to disable them in the device (e.g. when
+        no GPS sources are requested by the user, the GNSS engine will need
+        to be stopped explicitly).
+</para><para>        This method may require the client to authenticate itself.
+</para><para>        When location signaling is enabled by the user, any client application (including
+        malicious ones!) would be able to use the <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Location">"Location"</link>
+        property to receive location updates. If further security is desired, the
         <parameter>signal_location</parameter> argument can be set to <constant>FALSE</constant> to disable location
         updates via D-Bus signals and require applications to call
-        authenticated APIs (like
-        <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.GetLocation">GetLocation()</link>
-        ) to get
-        location information.
+        authenticated APIs (like <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.GetLocation">GetLocation()</link>)
+        to get the location information.
+</para><para>        By default location signaling is disabled, and therefore the
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Location">"Location"</link> property will not
+        be usable until explicitly enabled by the user.
 </para><para>        The optional
         <link linkend="MM-MODEM-LOCATION-SOURCE-AGPS-MSA:CAPS">MM_MODEM_LOCATION_SOURCE_AGPS_MSA</link>
         and
@@ -127,11 +133,16 @@ SetSuplServer (IN  s supl);
 <programlisting>
 InjectAssistanceData (IN  ay data);
 </programlisting>
-<para>        Inject assistance data to the GNSS module.
-        The data files should be downloaded using external means from the URLs specified in
-        the <link linkend="AssistanceDataServers">AssistanceDataServers</link> property.
-</para><para>        The user does not need to specify the assistance data type being given.
+<para>        Inject assistance data to the GNSS module, which will allow it to have a more
+        accurate positioning information.
+</para><para>        The data files should be downloaded using external means from the URLs specified in
+        the <link linkend="AssistanceDataServers">AssistanceDataServers</link> property. The
+        user does not need to specify the assistance data type being given.
 </para><para>        There is no maximum <parameter>data</parameter> size limit specified, default DBus system bus limits apply.
+</para><para>        This method may be used when the device does not have a mobile network connection by
+        itself, and therefore it cannot use any A-GPS server to improve the accuracy of the
+        position. In this case, the user can instead download the assistance data files using
+        a WiFi or LAN network, and inject them to the GNSS engine manually.
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -214,9 +225,16 @@ Location  readable   a{uv}
 <para>        Dictionary of available location information when location information
         gathering is enabled. If the modem supports multiple location types it
         may return more than one here.
-</para><para>        Note that if the device was told not to emit updated location
-        information when location information gathering was initially enabled,
-        this property may not return any location information for security reasons.
+</para><para>        For security reasons, the location information updates via this
+        property are disabled by default. Users can use this property to monitor
+        location updates only if the location signals are enabled with
+        <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.Setup">Setup()</link>,
+        but considering that enabling the location signals would allow all users
+        to receive property updates as well, not just the process that enabled them.
+        For a finer grained access control, the user can use the
+        <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.GetLocation">GetLocation()</link>
+        method instead, which may require the client to authenticate itself on every
+        call.
 </para><para>        This dictionary is composed of a
         <link linkend="MMModemLocationSource">MMModemLocationSource</link>
         key, with an associated data which contains type-specific location

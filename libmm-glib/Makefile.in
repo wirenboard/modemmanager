@@ -94,14 +94,14 @@ host_triplet = @host@
 subdir = libmm-glib
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_code_coverage.m4 \
-	$(top_srcdir)/m4/compiler_warnings.m4 \
 	$(top_srcdir)/m4/gettext.m4 $(top_srcdir)/m4/gtk-doc.m4 \
 	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
 	$(top_srcdir)/m4/introspection.m4 $(top_srcdir)/m4/lib-ld.m4 \
 	$(top_srcdir)/m4/lib-link.m4 $(top_srcdir)/m4/lib-prefix.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/nls.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/m4/mm-enable-plugin.m4 $(top_srcdir)/m4/nls.m4 \
 	$(top_srcdir)/m4/po.m4 $(top_srcdir)/m4/progtest.m4 \
 	$(top_srcdir)/m4/vapigen.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -142,10 +142,8 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(girdir)" \
 	"$(DESTDIR)$(typelibdir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-am__DEPENDENCIES_1 =
 libmm_glib_la_DEPENDENCIES =  \
-	${top_builddir}/libmm-glib/generated/libmm-generated.la \
-	$(am__DEPENDENCIES_1)
+	${top_builddir}/libmm-glib/generated/libmm-generated.la
 am_libmm_glib_la_OBJECTS = libmm_glib_la-mm-helper-types.lo \
 	libmm_glib_la-mm-manager.lo libmm_glib_la-mm-object.lo \
 	libmm_glib_la-mm-modem.lo libmm_glib_la-mm-modem-3gpp.lo \
@@ -185,8 +183,8 @@ am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
 libmm_glib_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libmm_glib_la_CFLAGS) \
-	$(CFLAGS) $(libmm_glib_la_LDFLAGS) $(LDFLAGS) -o $@
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(libmm_glib_la_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -472,9 +470,13 @@ VAPIGEN = @VAPIGEN@
 VAPIGEN_MAKEFILE = @VAPIGEN_MAKEFILE@
 VAPIGEN_VAPIDIR = @VAPIGEN_VAPIDIR@
 VERSION = @VERSION@
+WARN_CFLAGS = @WARN_CFLAGS@
+WARN_LDFLAGS = @WARN_LDFLAGS@
+WARN_SCANNERFLAGS = @WARN_SCANNERFLAGS@
 XGETTEXT = @XGETTEXT@
 XGETTEXT_015 = @XGETTEXT_015@
 XGETTEXT_EXTRA_OPTIONS = @XGETTEXT_EXTRA_OPTIONS@
+XSLTPROC_CHECK = @XSLTPROC_CHECK@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -618,6 +620,7 @@ libmm_glib_la_SOURCES = \
 	$(NULL)
 
 libmm_glib_la_CPPFLAGS = \
+	$(LIBMM_GLIB_CFLAGS) \
 	-I$(srcdir) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
@@ -626,22 +629,20 @@ libmm_glib_la_CPPFLAGS = \
 	-I${top_srcdir}/libmm-glib/generated \
 	-I${top_builddir}/libmm-glib/generated \
 	-DLIBMM_GLIB_COMPILATION \
-	$(AM_CPPFLAGS) \
 	$(NULL)
 
-libmm_glib_la_CFLAGS = \
-	$(LIBMM_GLIB_CFLAGS) \
-	$(AM_CFLAGS) \
+libmm_glib_gla_CFLAGS = \
+	$(WARN_CFLAGS) \
 	$(NULL)
 
 libmm_glib_la_LIBADD = \
 	${top_builddir}/libmm-glib/generated/libmm-generated.la \
-	$(LIBMM_GLIB_LIBS) \
 	$(NULL)
 
 libmm_glib_la_LDFLAGS = \
 	-version-info $(MM_GLIB_LT_CURRENT):$(MM_GLIB_LT_REVISION):$(MM_GLIB_LT_AGE) \
-	$(AM_LDFLAGS) \
+	$(WARN_LDFLAGS) \
+	$(LIBMM_GLIB_LIBS) \
 	$(NULL)
 
 include_HEADERS = \
@@ -724,6 +725,7 @@ CLEANFILES = $(am__append_1)
 @HAVE_INTROSPECTION_TRUE@ModemManager_1_0_gir_LIBS = libmm-glib.la
 @HAVE_INTROSPECTION_TRUE@ModemManager_1_0_gir_EXPORT_PACKAGES = libmm-glib
 @HAVE_INTROSPECTION_TRUE@ModemManager_1_0_gir_SCANNERFLAGS = \
+@HAVE_INTROSPECTION_TRUE@	$(WARN_SCANNERFLAGS) \
 @HAVE_INTROSPECTION_TRUE@	--c-include "libmm-glib.h" \
 @HAVE_INTROSPECTION_TRUE@	--identifier-prefix=MM \
 @HAVE_INTROSPECTION_TRUE@	--identifier-prefix=Mm \
@@ -893,284 +895,284 @@ am--depfiles: $(am__depfiles_remade)
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
 libmm_glib_la-mm-helper-types.lo: mm-helper-types.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-helper-types.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-helper-types.Tpo -c -o libmm_glib_la-mm-helper-types.lo `test -f 'mm-helper-types.c' || echo '$(srcdir)/'`mm-helper-types.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-helper-types.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-helper-types.Tpo -c -o libmm_glib_la-mm-helper-types.lo `test -f 'mm-helper-types.c' || echo '$(srcdir)/'`mm-helper-types.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-helper-types.Tpo $(DEPDIR)/libmm_glib_la-mm-helper-types.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-helper-types.c' object='libmm_glib_la-mm-helper-types.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-helper-types.lo `test -f 'mm-helper-types.c' || echo '$(srcdir)/'`mm-helper-types.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-helper-types.lo `test -f 'mm-helper-types.c' || echo '$(srcdir)/'`mm-helper-types.c
 
 libmm_glib_la-mm-manager.lo: mm-manager.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-manager.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-manager.Tpo -c -o libmm_glib_la-mm-manager.lo `test -f 'mm-manager.c' || echo '$(srcdir)/'`mm-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-manager.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-manager.Tpo -c -o libmm_glib_la-mm-manager.lo `test -f 'mm-manager.c' || echo '$(srcdir)/'`mm-manager.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-manager.Tpo $(DEPDIR)/libmm_glib_la-mm-manager.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-manager.c' object='libmm_glib_la-mm-manager.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-manager.lo `test -f 'mm-manager.c' || echo '$(srcdir)/'`mm-manager.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-manager.lo `test -f 'mm-manager.c' || echo '$(srcdir)/'`mm-manager.c
 
 libmm_glib_la-mm-object.lo: mm-object.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-object.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-object.Tpo -c -o libmm_glib_la-mm-object.lo `test -f 'mm-object.c' || echo '$(srcdir)/'`mm-object.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-object.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-object.Tpo -c -o libmm_glib_la-mm-object.lo `test -f 'mm-object.c' || echo '$(srcdir)/'`mm-object.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-object.Tpo $(DEPDIR)/libmm_glib_la-mm-object.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-object.c' object='libmm_glib_la-mm-object.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-object.lo `test -f 'mm-object.c' || echo '$(srcdir)/'`mm-object.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-object.lo `test -f 'mm-object.c' || echo '$(srcdir)/'`mm-object.c
 
 libmm_glib_la-mm-modem.lo: mm-modem.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem.Tpo -c -o libmm_glib_la-mm-modem.lo `test -f 'mm-modem.c' || echo '$(srcdir)/'`mm-modem.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem.Tpo -c -o libmm_glib_la-mm-modem.lo `test -f 'mm-modem.c' || echo '$(srcdir)/'`mm-modem.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem.Tpo $(DEPDIR)/libmm_glib_la-mm-modem.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem.c' object='libmm_glib_la-mm-modem.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem.lo `test -f 'mm-modem.c' || echo '$(srcdir)/'`mm-modem.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem.lo `test -f 'mm-modem.c' || echo '$(srcdir)/'`mm-modem.c
 
 libmm_glib_la-mm-modem-3gpp.lo: mm-modem-3gpp.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-3gpp.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-3gpp.Tpo -c -o libmm_glib_la-mm-modem-3gpp.lo `test -f 'mm-modem-3gpp.c' || echo '$(srcdir)/'`mm-modem-3gpp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-3gpp.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-3gpp.Tpo -c -o libmm_glib_la-mm-modem-3gpp.lo `test -f 'mm-modem-3gpp.c' || echo '$(srcdir)/'`mm-modem-3gpp.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem-3gpp.Tpo $(DEPDIR)/libmm_glib_la-mm-modem-3gpp.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-3gpp.c' object='libmm_glib_la-mm-modem-3gpp.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-3gpp.lo `test -f 'mm-modem-3gpp.c' || echo '$(srcdir)/'`mm-modem-3gpp.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-3gpp.lo `test -f 'mm-modem-3gpp.c' || echo '$(srcdir)/'`mm-modem-3gpp.c
 
 libmm_glib_la-mm-modem-3gpp-ussd.lo: mm-modem-3gpp-ussd.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-3gpp-ussd.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-3gpp-ussd.Tpo -c -o libmm_glib_la-mm-modem-3gpp-ussd.lo `test -f 'mm-modem-3gpp-ussd.c' || echo '$(srcdir)/'`mm-modem-3gpp-ussd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-3gpp-ussd.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-3gpp-ussd.Tpo -c -o libmm_glib_la-mm-modem-3gpp-ussd.lo `test -f 'mm-modem-3gpp-ussd.c' || echo '$(srcdir)/'`mm-modem-3gpp-ussd.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem-3gpp-ussd.Tpo $(DEPDIR)/libmm_glib_la-mm-modem-3gpp-ussd.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-3gpp-ussd.c' object='libmm_glib_la-mm-modem-3gpp-ussd.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-3gpp-ussd.lo `test -f 'mm-modem-3gpp-ussd.c' || echo '$(srcdir)/'`mm-modem-3gpp-ussd.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-3gpp-ussd.lo `test -f 'mm-modem-3gpp-ussd.c' || echo '$(srcdir)/'`mm-modem-3gpp-ussd.c
 
 libmm_glib_la-mm-modem-cdma.lo: mm-modem-cdma.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-cdma.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-cdma.Tpo -c -o libmm_glib_la-mm-modem-cdma.lo `test -f 'mm-modem-cdma.c' || echo '$(srcdir)/'`mm-modem-cdma.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-cdma.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-cdma.Tpo -c -o libmm_glib_la-mm-modem-cdma.lo `test -f 'mm-modem-cdma.c' || echo '$(srcdir)/'`mm-modem-cdma.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem-cdma.Tpo $(DEPDIR)/libmm_glib_la-mm-modem-cdma.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-cdma.c' object='libmm_glib_la-mm-modem-cdma.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-cdma.lo `test -f 'mm-modem-cdma.c' || echo '$(srcdir)/'`mm-modem-cdma.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-cdma.lo `test -f 'mm-modem-cdma.c' || echo '$(srcdir)/'`mm-modem-cdma.c
 
 libmm_glib_la-mm-modem-simple.lo: mm-modem-simple.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-simple.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-simple.Tpo -c -o libmm_glib_la-mm-modem-simple.lo `test -f 'mm-modem-simple.c' || echo '$(srcdir)/'`mm-modem-simple.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-simple.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-simple.Tpo -c -o libmm_glib_la-mm-modem-simple.lo `test -f 'mm-modem-simple.c' || echo '$(srcdir)/'`mm-modem-simple.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem-simple.Tpo $(DEPDIR)/libmm_glib_la-mm-modem-simple.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-simple.c' object='libmm_glib_la-mm-modem-simple.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-simple.lo `test -f 'mm-modem-simple.c' || echo '$(srcdir)/'`mm-modem-simple.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-simple.lo `test -f 'mm-modem-simple.c' || echo '$(srcdir)/'`mm-modem-simple.c
 
 libmm_glib_la-mm-modem-location.lo: mm-modem-location.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-location.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-location.Tpo -c -o libmm_glib_la-mm-modem-location.lo `test -f 'mm-modem-location.c' || echo '$(srcdir)/'`mm-modem-location.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-location.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-location.Tpo -c -o libmm_glib_la-mm-modem-location.lo `test -f 'mm-modem-location.c' || echo '$(srcdir)/'`mm-modem-location.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem-location.Tpo $(DEPDIR)/libmm_glib_la-mm-modem-location.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-location.c' object='libmm_glib_la-mm-modem-location.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-location.lo `test -f 'mm-modem-location.c' || echo '$(srcdir)/'`mm-modem-location.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-location.lo `test -f 'mm-modem-location.c' || echo '$(srcdir)/'`mm-modem-location.c
 
 libmm_glib_la-mm-modem-time.lo: mm-modem-time.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-time.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-time.Tpo -c -o libmm_glib_la-mm-modem-time.lo `test -f 'mm-modem-time.c' || echo '$(srcdir)/'`mm-modem-time.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-time.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-time.Tpo -c -o libmm_glib_la-mm-modem-time.lo `test -f 'mm-modem-time.c' || echo '$(srcdir)/'`mm-modem-time.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem-time.Tpo $(DEPDIR)/libmm_glib_la-mm-modem-time.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-time.c' object='libmm_glib_la-mm-modem-time.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-time.lo `test -f 'mm-modem-time.c' || echo '$(srcdir)/'`mm-modem-time.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-time.lo `test -f 'mm-modem-time.c' || echo '$(srcdir)/'`mm-modem-time.c
 
 libmm_glib_la-mm-modem-firmware.lo: mm-modem-firmware.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-firmware.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-firmware.Tpo -c -o libmm_glib_la-mm-modem-firmware.lo `test -f 'mm-modem-firmware.c' || echo '$(srcdir)/'`mm-modem-firmware.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-firmware.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-firmware.Tpo -c -o libmm_glib_la-mm-modem-firmware.lo `test -f 'mm-modem-firmware.c' || echo '$(srcdir)/'`mm-modem-firmware.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem-firmware.Tpo $(DEPDIR)/libmm_glib_la-mm-modem-firmware.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-firmware.c' object='libmm_glib_la-mm-modem-firmware.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-firmware.lo `test -f 'mm-modem-firmware.c' || echo '$(srcdir)/'`mm-modem-firmware.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-firmware.lo `test -f 'mm-modem-firmware.c' || echo '$(srcdir)/'`mm-modem-firmware.c
 
 libmm_glib_la-mm-modem-signal.lo: mm-modem-signal.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-signal.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-signal.Tpo -c -o libmm_glib_la-mm-modem-signal.lo `test -f 'mm-modem-signal.c' || echo '$(srcdir)/'`mm-modem-signal.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-signal.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-signal.Tpo -c -o libmm_glib_la-mm-modem-signal.lo `test -f 'mm-modem-signal.c' || echo '$(srcdir)/'`mm-modem-signal.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem-signal.Tpo $(DEPDIR)/libmm_glib_la-mm-modem-signal.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-signal.c' object='libmm_glib_la-mm-modem-signal.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-signal.lo `test -f 'mm-modem-signal.c' || echo '$(srcdir)/'`mm-modem-signal.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-signal.lo `test -f 'mm-modem-signal.c' || echo '$(srcdir)/'`mm-modem-signal.c
 
 libmm_glib_la-mm-modem-oma.lo: mm-modem-oma.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-oma.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-oma.Tpo -c -o libmm_glib_la-mm-modem-oma.lo `test -f 'mm-modem-oma.c' || echo '$(srcdir)/'`mm-modem-oma.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-oma.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-oma.Tpo -c -o libmm_glib_la-mm-modem-oma.lo `test -f 'mm-modem-oma.c' || echo '$(srcdir)/'`mm-modem-oma.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem-oma.Tpo $(DEPDIR)/libmm_glib_la-mm-modem-oma.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-oma.c' object='libmm_glib_la-mm-modem-oma.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-oma.lo `test -f 'mm-modem-oma.c' || echo '$(srcdir)/'`mm-modem-oma.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-oma.lo `test -f 'mm-modem-oma.c' || echo '$(srcdir)/'`mm-modem-oma.c
 
 libmm_glib_la-mm-sim.lo: mm-sim.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-sim.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-sim.Tpo -c -o libmm_glib_la-mm-sim.lo `test -f 'mm-sim.c' || echo '$(srcdir)/'`mm-sim.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-sim.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-sim.Tpo -c -o libmm_glib_la-mm-sim.lo `test -f 'mm-sim.c' || echo '$(srcdir)/'`mm-sim.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-sim.Tpo $(DEPDIR)/libmm_glib_la-mm-sim.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-sim.c' object='libmm_glib_la-mm-sim.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-sim.lo `test -f 'mm-sim.c' || echo '$(srcdir)/'`mm-sim.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-sim.lo `test -f 'mm-sim.c' || echo '$(srcdir)/'`mm-sim.c
 
 libmm_glib_la-mm-sms.lo: mm-sms.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-sms.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-sms.Tpo -c -o libmm_glib_la-mm-sms.lo `test -f 'mm-sms.c' || echo '$(srcdir)/'`mm-sms.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-sms.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-sms.Tpo -c -o libmm_glib_la-mm-sms.lo `test -f 'mm-sms.c' || echo '$(srcdir)/'`mm-sms.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-sms.Tpo $(DEPDIR)/libmm_glib_la-mm-sms.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-sms.c' object='libmm_glib_la-mm-sms.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-sms.lo `test -f 'mm-sms.c' || echo '$(srcdir)/'`mm-sms.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-sms.lo `test -f 'mm-sms.c' || echo '$(srcdir)/'`mm-sms.c
 
 libmm_glib_la-mm-modem-messaging.lo: mm-modem-messaging.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-messaging.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-messaging.Tpo -c -o libmm_glib_la-mm-modem-messaging.lo `test -f 'mm-modem-messaging.c' || echo '$(srcdir)/'`mm-modem-messaging.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-messaging.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-messaging.Tpo -c -o libmm_glib_la-mm-modem-messaging.lo `test -f 'mm-modem-messaging.c' || echo '$(srcdir)/'`mm-modem-messaging.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem-messaging.Tpo $(DEPDIR)/libmm_glib_la-mm-modem-messaging.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-messaging.c' object='libmm_glib_la-mm-modem-messaging.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-messaging.lo `test -f 'mm-modem-messaging.c' || echo '$(srcdir)/'`mm-modem-messaging.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-messaging.lo `test -f 'mm-modem-messaging.c' || echo '$(srcdir)/'`mm-modem-messaging.c
 
 libmm_glib_la-mm-modem-voice.lo: mm-modem-voice.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-voice.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-voice.Tpo -c -o libmm_glib_la-mm-modem-voice.lo `test -f 'mm-modem-voice.c' || echo '$(srcdir)/'`mm-modem-voice.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-voice.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-voice.Tpo -c -o libmm_glib_la-mm-modem-voice.lo `test -f 'mm-modem-voice.c' || echo '$(srcdir)/'`mm-modem-voice.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem-voice.Tpo $(DEPDIR)/libmm_glib_la-mm-modem-voice.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-voice.c' object='libmm_glib_la-mm-modem-voice.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-voice.lo `test -f 'mm-modem-voice.c' || echo '$(srcdir)/'`mm-modem-voice.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-voice.lo `test -f 'mm-modem-voice.c' || echo '$(srcdir)/'`mm-modem-voice.c
 
 libmm_glib_la-mm-call.lo: mm-call.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-call.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-call.Tpo -c -o libmm_glib_la-mm-call.lo `test -f 'mm-call.c' || echo '$(srcdir)/'`mm-call.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-call.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-call.Tpo -c -o libmm_glib_la-mm-call.lo `test -f 'mm-call.c' || echo '$(srcdir)/'`mm-call.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-call.Tpo $(DEPDIR)/libmm_glib_la-mm-call.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-call.c' object='libmm_glib_la-mm-call.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-call.lo `test -f 'mm-call.c' || echo '$(srcdir)/'`mm-call.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-call.lo `test -f 'mm-call.c' || echo '$(srcdir)/'`mm-call.c
 
 libmm_glib_la-mm-bearer.lo: mm-bearer.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-bearer.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-bearer.Tpo -c -o libmm_glib_la-mm-bearer.lo `test -f 'mm-bearer.c' || echo '$(srcdir)/'`mm-bearer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-bearer.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-bearer.Tpo -c -o libmm_glib_la-mm-bearer.lo `test -f 'mm-bearer.c' || echo '$(srcdir)/'`mm-bearer.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-bearer.Tpo $(DEPDIR)/libmm_glib_la-mm-bearer.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-bearer.c' object='libmm_glib_la-mm-bearer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-bearer.lo `test -f 'mm-bearer.c' || echo '$(srcdir)/'`mm-bearer.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-bearer.lo `test -f 'mm-bearer.c' || echo '$(srcdir)/'`mm-bearer.c
 
 libmm_glib_la-mm-common-helpers.lo: mm-common-helpers.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-common-helpers.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-common-helpers.Tpo -c -o libmm_glib_la-mm-common-helpers.lo `test -f 'mm-common-helpers.c' || echo '$(srcdir)/'`mm-common-helpers.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-common-helpers.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-common-helpers.Tpo -c -o libmm_glib_la-mm-common-helpers.lo `test -f 'mm-common-helpers.c' || echo '$(srcdir)/'`mm-common-helpers.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-common-helpers.Tpo $(DEPDIR)/libmm_glib_la-mm-common-helpers.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-common-helpers.c' object='libmm_glib_la-mm-common-helpers.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-common-helpers.lo `test -f 'mm-common-helpers.c' || echo '$(srcdir)/'`mm-common-helpers.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-common-helpers.lo `test -f 'mm-common-helpers.c' || echo '$(srcdir)/'`mm-common-helpers.c
 
 libmm_glib_la-mm-simple-status.lo: mm-simple-status.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-simple-status.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-simple-status.Tpo -c -o libmm_glib_la-mm-simple-status.lo `test -f 'mm-simple-status.c' || echo '$(srcdir)/'`mm-simple-status.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-simple-status.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-simple-status.Tpo -c -o libmm_glib_la-mm-simple-status.lo `test -f 'mm-simple-status.c' || echo '$(srcdir)/'`mm-simple-status.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-simple-status.Tpo $(DEPDIR)/libmm_glib_la-mm-simple-status.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-simple-status.c' object='libmm_glib_la-mm-simple-status.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-simple-status.lo `test -f 'mm-simple-status.c' || echo '$(srcdir)/'`mm-simple-status.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-simple-status.lo `test -f 'mm-simple-status.c' || echo '$(srcdir)/'`mm-simple-status.c
 
 libmm_glib_la-mm-simple-connect-properties.lo: mm-simple-connect-properties.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-simple-connect-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-simple-connect-properties.Tpo -c -o libmm_glib_la-mm-simple-connect-properties.lo `test -f 'mm-simple-connect-properties.c' || echo '$(srcdir)/'`mm-simple-connect-properties.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-simple-connect-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-simple-connect-properties.Tpo -c -o libmm_glib_la-mm-simple-connect-properties.lo `test -f 'mm-simple-connect-properties.c' || echo '$(srcdir)/'`mm-simple-connect-properties.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-simple-connect-properties.Tpo $(DEPDIR)/libmm_glib_la-mm-simple-connect-properties.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-simple-connect-properties.c' object='libmm_glib_la-mm-simple-connect-properties.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-simple-connect-properties.lo `test -f 'mm-simple-connect-properties.c' || echo '$(srcdir)/'`mm-simple-connect-properties.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-simple-connect-properties.lo `test -f 'mm-simple-connect-properties.c' || echo '$(srcdir)/'`mm-simple-connect-properties.c
 
 libmm_glib_la-mm-bearer-properties.lo: mm-bearer-properties.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-bearer-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-bearer-properties.Tpo -c -o libmm_glib_la-mm-bearer-properties.lo `test -f 'mm-bearer-properties.c' || echo '$(srcdir)/'`mm-bearer-properties.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-bearer-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-bearer-properties.Tpo -c -o libmm_glib_la-mm-bearer-properties.lo `test -f 'mm-bearer-properties.c' || echo '$(srcdir)/'`mm-bearer-properties.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-bearer-properties.Tpo $(DEPDIR)/libmm_glib_la-mm-bearer-properties.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-bearer-properties.c' object='libmm_glib_la-mm-bearer-properties.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-bearer-properties.lo `test -f 'mm-bearer-properties.c' || echo '$(srcdir)/'`mm-bearer-properties.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-bearer-properties.lo `test -f 'mm-bearer-properties.c' || echo '$(srcdir)/'`mm-bearer-properties.c
 
 libmm_glib_la-mm-sms-properties.lo: mm-sms-properties.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-sms-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-sms-properties.Tpo -c -o libmm_glib_la-mm-sms-properties.lo `test -f 'mm-sms-properties.c' || echo '$(srcdir)/'`mm-sms-properties.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-sms-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-sms-properties.Tpo -c -o libmm_glib_la-mm-sms-properties.lo `test -f 'mm-sms-properties.c' || echo '$(srcdir)/'`mm-sms-properties.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-sms-properties.Tpo $(DEPDIR)/libmm_glib_la-mm-sms-properties.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-sms-properties.c' object='libmm_glib_la-mm-sms-properties.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-sms-properties.lo `test -f 'mm-sms-properties.c' || echo '$(srcdir)/'`mm-sms-properties.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-sms-properties.lo `test -f 'mm-sms-properties.c' || echo '$(srcdir)/'`mm-sms-properties.c
 
 libmm_glib_la-mm-call-properties.lo: mm-call-properties.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-call-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-call-properties.Tpo -c -o libmm_glib_la-mm-call-properties.lo `test -f 'mm-call-properties.c' || echo '$(srcdir)/'`mm-call-properties.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-call-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-call-properties.Tpo -c -o libmm_glib_la-mm-call-properties.lo `test -f 'mm-call-properties.c' || echo '$(srcdir)/'`mm-call-properties.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-call-properties.Tpo $(DEPDIR)/libmm_glib_la-mm-call-properties.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-call-properties.c' object='libmm_glib_la-mm-call-properties.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-call-properties.lo `test -f 'mm-call-properties.c' || echo '$(srcdir)/'`mm-call-properties.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-call-properties.lo `test -f 'mm-call-properties.c' || echo '$(srcdir)/'`mm-call-properties.c
 
 libmm_glib_la-mm-bearer-ip-config.lo: mm-bearer-ip-config.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-bearer-ip-config.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-bearer-ip-config.Tpo -c -o libmm_glib_la-mm-bearer-ip-config.lo `test -f 'mm-bearer-ip-config.c' || echo '$(srcdir)/'`mm-bearer-ip-config.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-bearer-ip-config.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-bearer-ip-config.Tpo -c -o libmm_glib_la-mm-bearer-ip-config.lo `test -f 'mm-bearer-ip-config.c' || echo '$(srcdir)/'`mm-bearer-ip-config.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-bearer-ip-config.Tpo $(DEPDIR)/libmm_glib_la-mm-bearer-ip-config.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-bearer-ip-config.c' object='libmm_glib_la-mm-bearer-ip-config.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-bearer-ip-config.lo `test -f 'mm-bearer-ip-config.c' || echo '$(srcdir)/'`mm-bearer-ip-config.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-bearer-ip-config.lo `test -f 'mm-bearer-ip-config.c' || echo '$(srcdir)/'`mm-bearer-ip-config.c
 
 libmm_glib_la-mm-bearer-stats.lo: mm-bearer-stats.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-bearer-stats.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-bearer-stats.Tpo -c -o libmm_glib_la-mm-bearer-stats.lo `test -f 'mm-bearer-stats.c' || echo '$(srcdir)/'`mm-bearer-stats.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-bearer-stats.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-bearer-stats.Tpo -c -o libmm_glib_la-mm-bearer-stats.lo `test -f 'mm-bearer-stats.c' || echo '$(srcdir)/'`mm-bearer-stats.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-bearer-stats.Tpo $(DEPDIR)/libmm_glib_la-mm-bearer-stats.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-bearer-stats.c' object='libmm_glib_la-mm-bearer-stats.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-bearer-stats.lo `test -f 'mm-bearer-stats.c' || echo '$(srcdir)/'`mm-bearer-stats.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-bearer-stats.lo `test -f 'mm-bearer-stats.c' || echo '$(srcdir)/'`mm-bearer-stats.c
 
 libmm_glib_la-mm-location-3gpp.lo: mm-location-3gpp.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-location-3gpp.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-location-3gpp.Tpo -c -o libmm_glib_la-mm-location-3gpp.lo `test -f 'mm-location-3gpp.c' || echo '$(srcdir)/'`mm-location-3gpp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-location-3gpp.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-location-3gpp.Tpo -c -o libmm_glib_la-mm-location-3gpp.lo `test -f 'mm-location-3gpp.c' || echo '$(srcdir)/'`mm-location-3gpp.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-location-3gpp.Tpo $(DEPDIR)/libmm_glib_la-mm-location-3gpp.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-location-3gpp.c' object='libmm_glib_la-mm-location-3gpp.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-location-3gpp.lo `test -f 'mm-location-3gpp.c' || echo '$(srcdir)/'`mm-location-3gpp.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-location-3gpp.lo `test -f 'mm-location-3gpp.c' || echo '$(srcdir)/'`mm-location-3gpp.c
 
 libmm_glib_la-mm-location-gps-raw.lo: mm-location-gps-raw.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-location-gps-raw.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-location-gps-raw.Tpo -c -o libmm_glib_la-mm-location-gps-raw.lo `test -f 'mm-location-gps-raw.c' || echo '$(srcdir)/'`mm-location-gps-raw.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-location-gps-raw.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-location-gps-raw.Tpo -c -o libmm_glib_la-mm-location-gps-raw.lo `test -f 'mm-location-gps-raw.c' || echo '$(srcdir)/'`mm-location-gps-raw.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-location-gps-raw.Tpo $(DEPDIR)/libmm_glib_la-mm-location-gps-raw.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-location-gps-raw.c' object='libmm_glib_la-mm-location-gps-raw.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-location-gps-raw.lo `test -f 'mm-location-gps-raw.c' || echo '$(srcdir)/'`mm-location-gps-raw.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-location-gps-raw.lo `test -f 'mm-location-gps-raw.c' || echo '$(srcdir)/'`mm-location-gps-raw.c
 
 libmm_glib_la-mm-location-gps-nmea.lo: mm-location-gps-nmea.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-location-gps-nmea.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-location-gps-nmea.Tpo -c -o libmm_glib_la-mm-location-gps-nmea.lo `test -f 'mm-location-gps-nmea.c' || echo '$(srcdir)/'`mm-location-gps-nmea.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-location-gps-nmea.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-location-gps-nmea.Tpo -c -o libmm_glib_la-mm-location-gps-nmea.lo `test -f 'mm-location-gps-nmea.c' || echo '$(srcdir)/'`mm-location-gps-nmea.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-location-gps-nmea.Tpo $(DEPDIR)/libmm_glib_la-mm-location-gps-nmea.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-location-gps-nmea.c' object='libmm_glib_la-mm-location-gps-nmea.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-location-gps-nmea.lo `test -f 'mm-location-gps-nmea.c' || echo '$(srcdir)/'`mm-location-gps-nmea.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-location-gps-nmea.lo `test -f 'mm-location-gps-nmea.c' || echo '$(srcdir)/'`mm-location-gps-nmea.c
 
 libmm_glib_la-mm-location-cdma-bs.lo: mm-location-cdma-bs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-location-cdma-bs.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-location-cdma-bs.Tpo -c -o libmm_glib_la-mm-location-cdma-bs.lo `test -f 'mm-location-cdma-bs.c' || echo '$(srcdir)/'`mm-location-cdma-bs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-location-cdma-bs.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-location-cdma-bs.Tpo -c -o libmm_glib_la-mm-location-cdma-bs.lo `test -f 'mm-location-cdma-bs.c' || echo '$(srcdir)/'`mm-location-cdma-bs.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-location-cdma-bs.Tpo $(DEPDIR)/libmm_glib_la-mm-location-cdma-bs.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-location-cdma-bs.c' object='libmm_glib_la-mm-location-cdma-bs.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-location-cdma-bs.lo `test -f 'mm-location-cdma-bs.c' || echo '$(srcdir)/'`mm-location-cdma-bs.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-location-cdma-bs.lo `test -f 'mm-location-cdma-bs.c' || echo '$(srcdir)/'`mm-location-cdma-bs.c
 
 libmm_glib_la-mm-unlock-retries.lo: mm-unlock-retries.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-unlock-retries.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-unlock-retries.Tpo -c -o libmm_glib_la-mm-unlock-retries.lo `test -f 'mm-unlock-retries.c' || echo '$(srcdir)/'`mm-unlock-retries.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-unlock-retries.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-unlock-retries.Tpo -c -o libmm_glib_la-mm-unlock-retries.lo `test -f 'mm-unlock-retries.c' || echo '$(srcdir)/'`mm-unlock-retries.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-unlock-retries.Tpo $(DEPDIR)/libmm_glib_la-mm-unlock-retries.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-unlock-retries.c' object='libmm_glib_la-mm-unlock-retries.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-unlock-retries.lo `test -f 'mm-unlock-retries.c' || echo '$(srcdir)/'`mm-unlock-retries.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-unlock-retries.lo `test -f 'mm-unlock-retries.c' || echo '$(srcdir)/'`mm-unlock-retries.c
 
 libmm_glib_la-mm-network-timezone.lo: mm-network-timezone.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-network-timezone.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-network-timezone.Tpo -c -o libmm_glib_la-mm-network-timezone.lo `test -f 'mm-network-timezone.c' || echo '$(srcdir)/'`mm-network-timezone.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-network-timezone.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-network-timezone.Tpo -c -o libmm_glib_la-mm-network-timezone.lo `test -f 'mm-network-timezone.c' || echo '$(srcdir)/'`mm-network-timezone.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-network-timezone.Tpo $(DEPDIR)/libmm_glib_la-mm-network-timezone.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-network-timezone.c' object='libmm_glib_la-mm-network-timezone.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-network-timezone.lo `test -f 'mm-network-timezone.c' || echo '$(srcdir)/'`mm-network-timezone.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-network-timezone.lo `test -f 'mm-network-timezone.c' || echo '$(srcdir)/'`mm-network-timezone.c
 
 libmm_glib_la-mm-firmware-properties.lo: mm-firmware-properties.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-firmware-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-firmware-properties.Tpo -c -o libmm_glib_la-mm-firmware-properties.lo `test -f 'mm-firmware-properties.c' || echo '$(srcdir)/'`mm-firmware-properties.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-firmware-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-firmware-properties.Tpo -c -o libmm_glib_la-mm-firmware-properties.lo `test -f 'mm-firmware-properties.c' || echo '$(srcdir)/'`mm-firmware-properties.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-firmware-properties.Tpo $(DEPDIR)/libmm_glib_la-mm-firmware-properties.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-firmware-properties.c' object='libmm_glib_la-mm-firmware-properties.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-firmware-properties.lo `test -f 'mm-firmware-properties.c' || echo '$(srcdir)/'`mm-firmware-properties.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-firmware-properties.lo `test -f 'mm-firmware-properties.c' || echo '$(srcdir)/'`mm-firmware-properties.c
 
 libmm_glib_la-mm-firmware-update-settings.lo: mm-firmware-update-settings.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-firmware-update-settings.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-firmware-update-settings.Tpo -c -o libmm_glib_la-mm-firmware-update-settings.lo `test -f 'mm-firmware-update-settings.c' || echo '$(srcdir)/'`mm-firmware-update-settings.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-firmware-update-settings.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-firmware-update-settings.Tpo -c -o libmm_glib_la-mm-firmware-update-settings.lo `test -f 'mm-firmware-update-settings.c' || echo '$(srcdir)/'`mm-firmware-update-settings.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-firmware-update-settings.Tpo $(DEPDIR)/libmm_glib_la-mm-firmware-update-settings.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-firmware-update-settings.c' object='libmm_glib_la-mm-firmware-update-settings.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-firmware-update-settings.lo `test -f 'mm-firmware-update-settings.c' || echo '$(srcdir)/'`mm-firmware-update-settings.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-firmware-update-settings.lo `test -f 'mm-firmware-update-settings.c' || echo '$(srcdir)/'`mm-firmware-update-settings.c
 
 libmm_glib_la-mm-cdma-manual-activation-properties.lo: mm-cdma-manual-activation-properties.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-cdma-manual-activation-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-cdma-manual-activation-properties.Tpo -c -o libmm_glib_la-mm-cdma-manual-activation-properties.lo `test -f 'mm-cdma-manual-activation-properties.c' || echo '$(srcdir)/'`mm-cdma-manual-activation-properties.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-cdma-manual-activation-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-cdma-manual-activation-properties.Tpo -c -o libmm_glib_la-mm-cdma-manual-activation-properties.lo `test -f 'mm-cdma-manual-activation-properties.c' || echo '$(srcdir)/'`mm-cdma-manual-activation-properties.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-cdma-manual-activation-properties.Tpo $(DEPDIR)/libmm_glib_la-mm-cdma-manual-activation-properties.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-cdma-manual-activation-properties.c' object='libmm_glib_la-mm-cdma-manual-activation-properties.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-cdma-manual-activation-properties.lo `test -f 'mm-cdma-manual-activation-properties.c' || echo '$(srcdir)/'`mm-cdma-manual-activation-properties.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-cdma-manual-activation-properties.lo `test -f 'mm-cdma-manual-activation-properties.c' || echo '$(srcdir)/'`mm-cdma-manual-activation-properties.c
 
 libmm_glib_la-mm-signal.lo: mm-signal.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-signal.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-signal.Tpo -c -o libmm_glib_la-mm-signal.lo `test -f 'mm-signal.c' || echo '$(srcdir)/'`mm-signal.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-signal.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-signal.Tpo -c -o libmm_glib_la-mm-signal.lo `test -f 'mm-signal.c' || echo '$(srcdir)/'`mm-signal.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-signal.Tpo $(DEPDIR)/libmm_glib_la-mm-signal.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-signal.c' object='libmm_glib_la-mm-signal.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-signal.lo `test -f 'mm-signal.c' || echo '$(srcdir)/'`mm-signal.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-signal.lo `test -f 'mm-signal.c' || echo '$(srcdir)/'`mm-signal.c
 
 libmm_glib_la-mm-kernel-event-properties.lo: mm-kernel-event-properties.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-kernel-event-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-kernel-event-properties.Tpo -c -o libmm_glib_la-mm-kernel-event-properties.lo `test -f 'mm-kernel-event-properties.c' || echo '$(srcdir)/'`mm-kernel-event-properties.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-kernel-event-properties.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-kernel-event-properties.Tpo -c -o libmm_glib_la-mm-kernel-event-properties.lo `test -f 'mm-kernel-event-properties.c' || echo '$(srcdir)/'`mm-kernel-event-properties.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-kernel-event-properties.Tpo $(DEPDIR)/libmm_glib_la-mm-kernel-event-properties.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-kernel-event-properties.c' object='libmm_glib_la-mm-kernel-event-properties.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-kernel-event-properties.lo `test -f 'mm-kernel-event-properties.c' || echo '$(srcdir)/'`mm-kernel-event-properties.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-kernel-event-properties.lo `test -f 'mm-kernel-event-properties.c' || echo '$(srcdir)/'`mm-kernel-event-properties.c
 
 libmm_glib_la-mm-pco.lo: mm-pco.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-pco.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-pco.Tpo -c -o libmm_glib_la-mm-pco.lo `test -f 'mm-pco.c' || echo '$(srcdir)/'`mm-pco.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-pco.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-pco.Tpo -c -o libmm_glib_la-mm-pco.lo `test -f 'mm-pco.c' || echo '$(srcdir)/'`mm-pco.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-pco.Tpo $(DEPDIR)/libmm_glib_la-mm-pco.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-pco.c' object='libmm_glib_la-mm-pco.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-pco.lo `test -f 'mm-pco.c' || echo '$(srcdir)/'`mm-pco.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-pco.lo `test -f 'mm-pco.c' || echo '$(srcdir)/'`mm-pco.c
 
 libmm_glib_la-mm-call-audio-format.lo: mm-call-audio-format.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-call-audio-format.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-call-audio-format.Tpo -c -o libmm_glib_la-mm-call-audio-format.lo `test -f 'mm-call-audio-format.c' || echo '$(srcdir)/'`mm-call-audio-format.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-call-audio-format.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-call-audio-format.Tpo -c -o libmm_glib_la-mm-call-audio-format.lo `test -f 'mm-call-audio-format.c' || echo '$(srcdir)/'`mm-call-audio-format.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-call-audio-format.Tpo $(DEPDIR)/libmm_glib_la-mm-call-audio-format.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-call-audio-format.c' object='libmm_glib_la-mm-call-audio-format.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(libmm_glib_la_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-call-audio-format.lo `test -f 'mm-call-audio-format.c' || echo '$(srcdir)/'`mm-call-audio-format.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-call-audio-format.lo `test -f 'mm-call-audio-format.c' || echo '$(srcdir)/'`mm-call-audio-format.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

@@ -71,8 +71,8 @@ gchar *
 mm_altair_parse_ceer_response (const gchar *response,
                                GError **error)
 {
-    mm_autoptr(GRegex) r = NULL;
-    mm_autoptr(GMatchInfo) match_info = NULL;
+    g_autoptr(GRegex) r = NULL;
+    g_autoptr(GMatchInfo) match_info = NULL;
     gchar *ceer_response = NULL;
 
 
@@ -108,18 +108,17 @@ mm_altair_parse_ceer_response (const gchar *response,
 /*****************************************************************************/
 /* %CGINFO="cid",1 response parser */
 
-guint
+gint
 mm_altair_parse_cid (const gchar *response, GError **error)
 {
-    mm_autoptr(GRegex) regex = NULL;
-    mm_autoptr(GMatchInfo) match_info = NULL;
+    g_autoptr(GRegex) regex = NULL;
+    g_autoptr(GMatchInfo) match_info = NULL;
     guint cid = -1;
 
     regex = g_regex_new ("\\%CGINFO:\\s*(\\d+)", G_REGEX_RAW, 0, NULL);
     g_assert (regex);
-    if (!g_regex_match_full (regex, response, strlen (response), 0, 0, &match_info, error)) {
+    if (!g_regex_match_full (regex, response, strlen (response), 0, 0, &match_info, error))
         return -1;
-    }
 
     if (!mm_get_uint_from_match_info (match_info, 1, &cid))
         g_set_error (error,
@@ -136,8 +135,8 @@ mm_altair_parse_cid (const gchar *response, GError **error)
 MMPco *
 mm_altair_parse_vendor_pco_info (const gchar *pco_info, GError **error)
 {
-    mm_autoptr(GRegex) regex = NULL;
-    mm_autoptr(GMatchInfo) match_info = NULL;
+    g_autoptr(GRegex) regex = NULL;
+    g_autoptr(GMatchInfo) match_info = NULL;
     MMPco *pco = NULL;
     gint num_matches;
 
