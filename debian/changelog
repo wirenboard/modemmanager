@@ -1,3 +1,13 @@
+modemmanager (1.13.900-0.1) experimental; urgency=medium
+
+  * Non-maintainer upload.
+  * New upstream version.
+  * debian/libmm-glib0.symbols: 13 additional symbols,
+    mm_common_build_capability_combinations_any was not part of API,
+    no soname bump necessary.
+
+ -- Martin <debacle@debian.org>  Fri, 12 Jun 2020 08:23:35 +0000
+
 modemmanager (1.12.10-0.2) unstable; urgency=medium
 
   * Non-maintainer upload.
