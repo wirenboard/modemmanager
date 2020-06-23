@@ -22,7 +22,7 @@
 #define _LIBMM_INSIDE_MM
 #include <libmm-glib.h>
 #include "mm-modem-helpers.h"
-#include "mm-log.h"
+#include "mm-log-test.h"
 
 #define g_assert_cmpfloat_tolerance(val1, val2, tolerance)  \
     g_assert_cmpfloat (fabs (val1 - val2), <, tolerance)
@@ -37,7 +37,7 @@ test_ifc_response (const gchar         *str,
     MMFlowControl  mask;
     GError        *error = NULL;
 
-    mask = mm_parse_ifc_test_response (str, &error);
+    mask = mm_parse_ifc_test_response (str, NULL, &error);
     g_assert_no_error (error);
     g_assert_cmpuint (mask, ==, expected);
 }
@@ -291,7 +291,7 @@ test_cmgl_response_generic (void *f, gpointer d)
         {
             .index = 0,
             .status = 1,
-            .pdu = "07914306073011F00405812261F700003130916191314095C27"
+            .pdu = (gchar *) "07914306073011F00405812261F700003130916191314095C27"
             "4D96D2FBBD3E437280CB2BEC961F3DB5D76818EF2F0381D9E83E06F39A8CC2E9FD372F"
             "77BEE0249CBE37A594E0E83E2F532085E2F93CB73D0B93CA7A7DFEEB01C447F93DF731"
             "0BD3E07CDCB727B7A9C7ECF41E432C8FC96B7C32079189E26874179D0F8DD7E93C3A0B"
@@ -326,7 +326,7 @@ test_cmgl_response_generic_multiple (void *f, gpointer d)
         {
             .index = 0,
             .status = 1,
-            .pdu = "07914306073011F00405812261F700003130916191314095C27"
+            .pdu = (gchar *) "07914306073011F00405812261F700003130916191314095C27"
             "4D96D2FBBD3E437280CB2BEC961F3DB5D76818EF2F0381D9E83E06F39A8CC2E9FD372F"
             "77BEE0249CBE37A594E0E83E2F532085E2F93CB73D0B93CA7A7DFEEB01C447F93DF731"
             "0BD3E07CDCB727B7A9C7ECF41E432C8FC96B7C32079189E26874179D0F8DD7E93C3A0B"
@@ -335,7 +335,7 @@ test_cmgl_response_generic_multiple (void *f, gpointer d)
         {
             .index = 1,
             .status = 1,
-            .pdu = "07914306073011F00405812261F700003130916191314095C27"
+            .pdu = (gchar *) "07914306073011F00405812261F700003130916191314095C27"
             "4D96D2FBBD3E437280CB2BEC961F3DB5D76818EF2F0381D9E83E06F39A8CC2E9FD372F"
             "77BEE0249CBE37A594E0E83E2F532085E2F93CB73D0B93CA7A7DFEEB01C447F93DF731"
             "0BD3E07CDCB727B7A9C7ECF41E432C8FC96B7C32079189E26874179D0F8DD7E93C3A0B"
@@ -344,7 +344,7 @@ test_cmgl_response_generic_multiple (void *f, gpointer d)
         {
             .index = 2,
             .status = 1,
-            .pdu = "07914306073011F00405812261F700003130916191314095C27"
+            .pdu = (gchar *) "07914306073011F00405812261F700003130916191314095C27"
             "4D96D2FBBD3E437280CB2BEC961F3DB5D76818EF2F0381D9E83E06F39A8CC2E9FD372F"
             "77BEE0249CBE37A594E0E83E2F532085E2F93CB73D0B93CA7A7DFEEB01C447F93DF731"
             "0BD3E07CDCB727B7A9C7ECF41E432C8FC96B7C32079189E26874179D0F8DD7E93C3A0B"
@@ -365,7 +365,7 @@ test_cmgl_response_pantech (void *f, gpointer d)
         {
             .index = 17,
             .status = 3,
-            .pdu = "079100F40D1101000F001000B917118336058F300001954747A0E4ACF41F27298CDCE83C6EF371B0402814020"
+            .pdu = (gchar *) "079100F40D1101000F001000B917118336058F300001954747A0E4ACF41F27298CDCE83C6EF371B0402814020"
         }
     };
 
@@ -385,22 +385,22 @@ test_cmgl_response_pantech_multiple (void *f, gpointer d)
         {
             .index = 17,
             .status = 3,
-            .pdu = "079100F40D1101000F001000B917118336058F300001954747A0E4ACF41F27298CDCE83C6EF371B0402814020"
+            .pdu = (gchar *) "079100F40D1101000F001000B917118336058F300001954747A0E4ACF41F27298CDCE83C6EF371B0402814020"
         },
         {
             .index = 15,
             .status = 3,
-            .pdu = "079100F40D1101000F001000B917118336058F300001954747A0E4ACF41F27298CDCE83C6EF371B0402814020"
+            .pdu = (gchar *) "079100F40D1101000F001000B917118336058F300001954747A0E4ACF41F27298CDCE83C6EF371B0402814020"
         },
         {
             .index = 13,
             .status = 3,
-            .pdu = "079100F40D1101000F001000B917118336058F300001954747A0E4ACF41F27298CDCE83C6EF371B0402814020"
+            .pdu = (gchar *) "079100F40D1101000F001000B917118336058F300001954747A0E4ACF41F27298CDCE83C6EF371B0402814020"
         },
         {
             .index = 11,
             .status = 3,
-            .pdu = "079100F40D1101000F001000B917118336058F300"
+            .pdu = (gchar *) "079100F40D1101000F001000B917118336058F300"
         }
     };
 
@@ -441,7 +441,7 @@ test_cmgr_response_generic (void *f, gpointer d)
     const MM3gppPduInfo expected = {
         .index = 0,
         .status = 1,
-        .pdu = "07914306073011F00405812261F700003130916191314095C27"
+        .pdu = (gchar *) "07914306073011F00405812261F700003130916191314095C27"
         "4D96D2FBBD3E437280CB2BEC961F3DB5D76818EF2F0381D9E83E06F39A8CC2E9FD372F"
         "77BEE0249CBE37A594E0E83E2F532085E2F93CB73D0B93CA7A7DFEEB01C447F93DF731"
         "0BD3E07CDCB727B7A9C7ECF41E432C8FC96B7C32079189E26874179D0F8DD7E93C3A0B"
@@ -463,7 +463,7 @@ test_cmgr_response_telit (void *f, gpointer d)
     const MM3gppPduInfo expected = {
         .index = 0,
         .status = 0,
-        .pdu = "07916163838428F9040B916121021021F7000051905141642"
+        .pdu = (gchar *) "07916163838428F9040B916121021021F7000051905141642"
         "20A23C4B0BCFD5E8740C4B0BCFD5E83C26E3248196687C9A0301D440DBBC3677918"
     };
 
@@ -476,6 +476,7 @@ test_cmgr_response_telit (void *f, gpointer d)
 static void
 test_cops_results (const gchar *desc,
                    const gchar *reply,
+                   MMModemCharset cur_charset,
                    MM3gppNetworkInfo *expected_results,
                    guint32 expected_results_len)
 {
@@ -485,7 +486,7 @@ test_cops_results (const gchar *desc,
 
     g_debug ("Testing %s +COPS response...", desc);
 
-    results = mm_3gpp_parse_cops_test_response (reply, &error);
+    results = mm_3gpp_parse_cops_test_response (reply, cur_charset, NULL, &error);
     g_assert (results);
     g_assert_no_error (error);
     g_assert_cmpuint (g_list_length (results), ==, expected_results_len);
@@ -494,6 +495,7 @@ test_cops_results (const gchar *desc,
         MM3gppNetworkInfo *info = l->data;
         gboolean found = FALSE;
         guint i;
+        gchar *access_tech_str;
 
         for (i = 0; !found && i < expected_results_len; i++) {
             MM3gppNetworkInfo *expected;
@@ -514,10 +516,17 @@ test_cops_results (const gchar *desc,
                     g_assert_cmpstr (info->operator_short, ==, expected->operator_short);
                 else
                     g_assert (info->operator_short == NULL);
-
-                g_debug ("info: %s, expected: %s", info->operator_code, expected->operator_code);
             }
         }
+
+        access_tech_str = mm_modem_access_technology_build_string_from_mask (info->access_tech);
+        g_debug ("info: [%s,%s,%s,%s] %sfound in expected results",
+                 info->operator_long ? info->operator_long : "",
+                 info->operator_short ? info->operator_short : "",
+                 info->operator_code,
+                 access_tech_str,
+                 found ? "" : "not ");
+        g_free (access_tech_str);
 
         g_assert (found == TRUE);
     }
@@ -530,12 +539,12 @@ test_cops_response_tm506 (void *f, gpointer d)
 {
     const gchar *reply = "+COPS: (2,\"\",\"T-Mobile\",\"31026\",0),(2,\"T - Mobile\",\"T - Mobile\",\"310260\"),2),(1,\"AT&T\",\"AT&T\",\"310410\"),0)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, NULL, "T-Mobile", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T - Mobile", "T - Mobile", "310260", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM }
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   NULL,                   (gchar *) "T-Mobile",   (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T - Mobile", (gchar *) "T - Mobile", (gchar *) "310260", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",       (gchar *) "AT&T",       (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  }
     };
 
-    test_cops_results ("TM-506", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("TM-506", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -543,11 +552,11 @@ test_cops_response_gt3gplus (void *f, gpointer d)
 {
     const char *reply = "+COPS: (1,\"T-Mobile US\",\"TMO US\",\"31026\",0),(1,\"Cingular\",\"Cingular\",\"310410\",0),,(0, 1, 3),(0-2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "T-Mobile US", "TMO US", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "Cingular", "Cingular", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "T-Mobile US", (gchar *) "TMO US",   (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "Cingular",    (gchar *) "Cingular", (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
-    test_cops_results ("GlobeTrotter 3G+ (nozomi)", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("GlobeTrotter 3G+ (nozomi)", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -555,12 +564,12 @@ test_cops_response_ac881 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (1,\"T-Mobile\",\"TMO\",\"31026\",0),(1,\"AT&T\",\"AT&T\",\"310410\",2),(1,\"AT&T\",\"AT&T\",\"310410\",0),,(0,1,2,3,4),)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "T-Mobile", "TMO", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "T-Mobile", (gchar *) "TMO",  (gchar *) "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM   },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",     (gchar *) "AT&T", (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",     (gchar *) "AT&T", (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
     };
 
-    test_cops_results ("Sierra AirCard 881", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Sierra AirCard 881", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -568,12 +577,12 @@ test_cops_response_gtmax36 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T-Mobile US\",\"TMO US\",\"31026\",0),(1,\"AT&T\",\"AT&T\",\"310410\",2),(1,\"AT&T\",\"AT&T\",\"310410\",0),,(0, 1,)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T-Mobile US", "TMO US", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T-Mobile US", (gchar *) "TMO US", (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",        (gchar *) "AT&T",   (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",        (gchar *) "AT&T",   (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
     };
 
-    test_cops_results ("Option GlobeTrotter MAX 3.6", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Option GlobeTrotter MAX 3.6", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -581,12 +590,12 @@ test_cops_response_ac860 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T-Mobile\",\"TMO\",\"31026\",0),(1,\"Cingular\",\"Cinglr\",\"310410\",2),(1,\"Cingular\",\"Cinglr\",\"310410\",0),,)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T-Mobile", "TMO", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "Cingular", "Cinglr", "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "Cingular", "Cinglr", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *)  "T-Mobile", (gchar *)  "TMO",    (gchar *)  "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM   },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *)  "Cingular", (gchar *)  "Cinglr", (gchar *)  "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *)  "Cingular", (gchar *)  "Cinglr", (gchar *)  "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
     };
 
-    test_cops_results ("Sierra AirCard 860", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Sierra AirCard 860", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -594,12 +603,12 @@ test_cops_response_gtm378 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T-Mobile\",\"T-Mobile\",\"31026\",0),(1,\"AT&T\",\"AT&T\",\"310410\",2),(1,\"AT&T\",\"AT&T\",\"310410\",0),,(0, 1, 3),(0-2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T-Mobile", "T-Mobile", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T-Mobile", (gchar *) "T-Mobile", (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",     (gchar *) "AT&T",     (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",     (gchar *) "AT&T",     (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
     };
 
-    test_cops_results ("Option GTM378", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Option GTM378", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -607,23 +616,23 @@ test_cops_response_motoc (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T-Mobile\",\"\",\"310260\"),(0,\"Cingular Wireless\",\"\",\"310410\")";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T-Mobile", NULL, "310260", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_UNKNOWN, "Cingular Wireless", NULL, "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, (gchar *) "T-Mobile",          NULL, (gchar *) "310260", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_UNKNOWN, (gchar *) "Cingular Wireless", NULL, (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
-    test_cops_results ("BUSlink SCWi275u (Motorola C-series)", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("BUSlink SCWi275u (Motorola C-series)", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
 test_cops_response_mf627a (void *f, gpointer d)
 {
-    const char *reply = "+COPS: (2,\"AT&T@\",\"AT&TD\",\"310410\",0),(3,\"Voicestream Wireless Corporation\",\"VSTREAM\",\"31026\",0),";
+    const char *reply = "+COPS: (2,\"AT&T@\",\"AT&TD\",\"310410\",0),(3,\"Vstream Wireless\",\"VSTREAM\",\"31026\",0),";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "AT&T@", "AT&TD", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, "Voicestream Wireless Corporation", "VSTREAM", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "AT&T@",            (gchar *) "AT&TD",   (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, (gchar *) "Vstream Wireless", (gchar *) "VSTREAM", (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
-    test_cops_results ("ZTE MF627 (A)", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("ZTE MF627 (A)", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -631,11 +640,11 @@ test_cops_response_mf627b (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"AT&Tp\",\"AT&T@\",\"310410\",0),(3,\"\",\"\",\"31026\",0),";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "AT&Tp", "AT&T@", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL, NULL, "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "AT&Tp", (gchar *) "AT&T@", (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL,              NULL,              (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
-    test_cops_results ("ZTE MF627 (B)", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("ZTE MF627 (B)", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -643,11 +652,11 @@ test_cops_response_e160g (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T-Mobile\",\"TMO\",\"31026\",0),(1,\"AT&T\",\"AT&T\",\"310410\",0),,(0,1,2,3,4),(0,1,2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T-Mobile", "TMO", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T-Mobile", (gchar *) "TMO",  (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",     (gchar *) "AT&T", (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
-    test_cops_results ("Huawei E160G", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Huawei E160G", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -655,12 +664,12 @@ test_cops_response_mercury (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"\",\"\",\"310410\",2),(1,\"AT&T\",\"AT&T\",\"310410\",0),(1,\"T-Mobile\",\"TMO\",\"31026\",0),,(0,1,2,3,4),(0,1,2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, NULL, NULL, "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "T-Mobile", "TMO", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   NULL,                 NULL,             (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",     (gchar *) "AT&T", (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "T-Mobile", (gchar *) "TMO",  (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
     };
 
-    test_cops_results ("Sierra AT&T USBConnect Mercury", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Sierra AT&T USBConnect Mercury", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -668,12 +677,12 @@ test_cops_response_quicksilver (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"AT&T\",\"\",\"310410\",0),(2,\"\",\"\",\"3104100\",2),(1,\"AT&T\",\"\",\"310260\",0),,(0-4),(0-2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "AT&T", NULL, "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, NULL, NULL, "3104100", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", NULL, "310260", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "AT&T", NULL, (gchar *) "310410",  MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   NULL,             NULL, (gchar *) "3104100", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T", NULL, (gchar *) "310260",  MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
     };
 
-    test_cops_results ("Option AT&T Quicksilver", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Option AT&T Quicksilver", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -681,11 +690,11 @@ test_cops_response_icon225 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T-Mobile US\",\"TMO US\",\"31026\",0),(1,\"AT&T\",\"AT&T\",\"310410\",0),,(0, 1, 3),(0-2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T-Mobile US", "TMO US", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T-Mobile US", (gchar *) "TMO US", (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",        (gchar *) "AT&T",   (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
-    test_cops_results ("Option iCON 225", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Option iCON 225", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -693,13 +702,13 @@ test_cops_response_icon452 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (1,\"T-Mobile US\",\"TMO US\",\"31026\",0),(2,\"T-Mobile\",\"T-Mobile\",\"310260\",2),(1,\"AT&T\",\"AT&T\",\"310410\",2),(1,\"AT&T\",\"AT&T\",\"310410\",0),,(0,1,2,3,4),(0,1,2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "T-Mobile US", "TMO US", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T-Mobile", "T-Mobile", "310260", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM }
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "T-Mobile US", (gchar *) "TMO US",   (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T-Mobile",    (gchar *) "T-Mobile", (gchar *) "310260", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",        (gchar *) "AT&T",     (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",        (gchar *) "AT&T",     (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  }
     };
 
-    test_cops_results ("Option iCON 452", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Option iCON 452", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -707,12 +716,12 @@ test_cops_response_f3507g (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T - Mobile\",\"T - Mobile\",\"31026\",0),(1,\"AT&T\",\"AT&T\",\"310410\",0),(1,\"AT&T\",\"AT&T\",\"310410\",2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T - Mobile", "T - Mobile", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS }
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T - Mobile", (gchar *) "T - Mobile", (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",       (gchar *) "AT&T",       (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",       (gchar *) "AT&T",       (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS }
     };
 
-    test_cops_results ("Ericsson F3507g", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Ericsson F3507g", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -720,12 +729,12 @@ test_cops_response_f3607gw (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T - Mobile\",\"T - Mobile\",\"31026\",0),(1,\"AT&T\",\"AT&T\",\"310410\"),2),(1,\"AT&T\",\"AT&T\",\"310410\"),0)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T - Mobile", "T - Mobile", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM }
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T - Mobile", (gchar *) "T - Mobile", (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",       (gchar *) "AT&T",       (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",       (gchar *) "AT&T",       (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  }
     };
 
-    test_cops_results ("Ericsson F3607gw", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Ericsson F3607gw", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -733,12 +742,12 @@ test_cops_response_mc8775 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T-Mobile\",\"T-Mobile\",\"31026\",0),(1,\"AT&T\",\"AT&T\",\"310410\",2),(1,\"AT&T\",\"AT&T\",\"310410\",0),,(0,1,2,3,4),(0,1,2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T-Mobile", "T-Mobile", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM }
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T-Mobile", (gchar *) "T-Mobile", (gchar *) "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM   },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",     (gchar *) "AT&T",     (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",     (gchar *) "AT&T",     (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  }
     };
 
-    test_cops_results ("Sierra MC8775", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Sierra MC8775", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -746,12 +755,12 @@ test_cops_response_n80 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T - Mobile\",,\"31026\"),(1,\"Einstein PCS\",,\"31064\"),(1,\"Cingular\",,\"31041\"),,(0,1,3),(0,2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T - Mobile", NULL, "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "Einstein PCS", NULL, "31064", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "Cingular", NULL, "31041", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T - Mobile",   NULL, (gchar *) "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "Einstein PCS", NULL, (gchar *) "31064", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "Cingular",     NULL, (gchar *) "31041", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
-    test_cops_results ("Nokia N80", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Nokia N80", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -759,11 +768,11 @@ test_cops_response_e1550 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T-Mobile\",\"TMO\",\"31026\",0),(1,\"AT&T\",\"AT&T\",\"310410\",0),,(0,1,2,3,4),(0,1,2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T-Mobile", "TMO", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T-Mobile", (gchar *) "TMO",  (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",     (gchar *) "AT&T", (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
-    test_cops_results ("Huawei E1550", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Huawei E1550", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -771,11 +780,11 @@ test_cops_response_mf622 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T-Mobile\",\"T-Mobile\",\"31026\",0),(1,\"\",\"\",\"310410\",0),";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T-Mobile", "T-Mobile", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, NULL, NULL, "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T-Mobile", (gchar *) "T-Mobile", (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, NULL,                 NULL,                 (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
-    test_cops_results ("ZTE MF622", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("ZTE MF622", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -783,12 +792,12 @@ test_cops_response_e226 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (1,\"\",\"\",\"31026\",0),(1,\"\",\"\",\"310410\",2),(1,\"\",\"\",\"310410\",0),,(0,1,3,4),(0,1,2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, NULL, NULL, "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, NULL, NULL, "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, NULL, NULL, "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, NULL, NULL, (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, NULL, NULL, (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, NULL, NULL, (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
     };
 
-    test_cops_results ("Huawei E226", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Huawei E226", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -796,12 +805,12 @@ test_cops_response_xu870 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (0,\"AT&T MicroCell\",\"AT&T MicroCell\",\"310410\",2)\r\n+COPS: (1,\"AT&T MicroCell\",\"AT&T MicroCell\",\"310410\",0)\r\n+COPS: (1,\"T-Mobile\",\"TMO\",\"31026\",0)\r\n";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_UNKNOWN, "AT&T MicroCell", "AT&T MicroCell", "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T MicroCell", "AT&T MicroCell", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "T-Mobile", "TMO", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_UNKNOWN,   (gchar *) "AT&T MicroCell", (gchar *) "AT&T MicroCell", (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T MicroCell", (gchar *) "AT&T MicroCell", (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "T-Mobile",       (gchar *) "TMO",            (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
     };
 
-    test_cops_results ("Novatel XU870", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Novatel XU870", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -809,12 +818,12 @@ test_cops_response_gtultraexpress (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T-Mobile US\",\"TMO US\",\"31026\",0),(1,\"AT&T\",\"AT&T\",\"310410\",2),(1,\"AT&T\",\"AT&T\",\"310410\",0),,(0,1,2,3,4),(0,1,2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T-Mobile US", "TMO US", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T-Mobile US", (gchar *) "TMO US", (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",        (gchar *) "AT&T",   (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",        (gchar *) "AT&T",   (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
     };
 
-    test_cops_results ("Option GlobeTrotter Ultra Express", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Option GlobeTrotter Ultra Express", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -822,11 +831,11 @@ test_cops_response_n2720 (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T - Mobile\",,\"31026\",0),\r\n(1,\"AT&T\",,\"310410\",0),,(0,1,3),(0,2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T - Mobile", NULL, "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", NULL, "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T - Mobile", NULL, (gchar *)"31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",       NULL, (gchar *)"310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
-    test_cops_results ("Nokia 2720", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Nokia 2720", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -834,12 +843,12 @@ test_cops_response_gobi (void *f, gpointer d)
 {
     const char *reply = "+COPS: (2,\"T-Mobile\",\"T-Mobile\",\"31026\",0),(1,\"AT&T\",\"AT&T\",\"310410\",2),(1,\"AT&T\",\"AT&T\",\"310410\",0),,(0,1,2,3,4),(0,1,2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "T-Mobile", "T-Mobile", "31026", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "T-Mobile", (gchar *) "T-Mobile", (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",     (gchar *) "AT&T",     (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_UMTS },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",     (gchar *) "AT&T",     (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM  },
     };
 
-    test_cops_results ("Qualcomm Gobi", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Qualcomm Gobi", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -851,16 +860,16 @@ test_cops_response_sek600i (void *f, gpointer d)
      */
     const char *reply = "+COPS: (2,\"blau\",\"\",\"26203\"),(2,\"blau\",\"\",\"26203\"),(3,\"\",\"\",\"26201\"),(3,\"\",\"\",\"26202\"),(3,\"\",\"\",\"26207\"),(3,\"\",\"\",\"26201\"),(3,\"\",\"\",\"26207\")";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "blau", NULL, "26203", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT, "blau", NULL, "26203", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL, NULL, "26201", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL, NULL, "26202", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL, NULL, "26207", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL, NULL, "26201", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL, NULL, "26207", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "blau", NULL, (gchar *) "26203", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "blau", NULL, (gchar *) "26203", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL,             NULL, (gchar *) "26201", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL,             NULL, (gchar *) "26202", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL,             NULL, (gchar *) "26207", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL,             NULL, (gchar *) "26201", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL,             NULL, (gchar *) "26207", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
-    test_cops_results ("Sony-Ericsson K600i", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Sony-Ericsson K600i", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -869,11 +878,35 @@ test_cops_response_samsung_z810 (void *f, gpointer d)
     /* Ensure commas within quotes don't trip up the parser */
     const char *reply = "+COPS: (1,\"T-Mobile USA, In\",\"T-Mobile\",\"310260\",0),(1,\"AT&T\",\"AT&T\",\"310410\",0),,(0,1,2,3,4),(0,1,2)";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "T-Mobile USA, In", "T-Mobile", "310260", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, "AT&T", "AT&T", "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "T-Mobile USA, In", (gchar *) "T-Mobile", (gchar *) "310260", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "AT&T",             (gchar *) "AT&T",     (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
-    test_cops_results ("Samsung Z810", reply, &expected[0], G_N_ELEMENTS (expected));
+    test_cops_results ("Samsung Z810", reply, MM_MODEM_CHARSET_GSM, &expected[0], G_N_ELEMENTS (expected));
+}
+
+static void
+test_cops_response_ublox_lara (void *f, gpointer d)
+{
+    /* strings in UCS2 */
+    const char *reply =
+        "+COPS: "
+        "(2,\"004D006F007600690073007400610072\",\"004D006F007600690073007400610072\",\"00320031003400300037\",7),"
+        "(1,\"0059004F00490047004F\",\"0059004F00490047004F\",\"00320031003400300034\",7),"
+        "(1,\"0076006F006400610066006F006E0065002000450053\",\"0076006F00640061002000450053\",\"00320031003400300031\",7),"
+        "(1,\"004F00720061006E00670065002000530050\",\"00450053005000520054\",\"00320031003400300033\",0),"
+        "(1,\"0076006F006400610066006F006E0065002000450053\",\"0076006F00640061002000450053\",\"00320031003400300031\",0),"
+        "(1,\"004F00720061006E00670065002000530050\",\"00450053005000520054\",\"00320031003400300033\",7)";
+    static MM3gppNetworkInfo expected[] = {
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "Movistar",    (gchar *) "Movistar", (gchar *) "21407", MM_MODEM_ACCESS_TECHNOLOGY_LTE },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "YOIGO",       (gchar *) "YOIGO",    (gchar *) "21404", MM_MODEM_ACCESS_TECHNOLOGY_LTE },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "vodafone ES", (gchar *) "voda ES",  (gchar *) "21401", MM_MODEM_ACCESS_TECHNOLOGY_LTE },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "Orange SP",   (gchar *) "ESPRT",    (gchar *) "21403", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "vodafone ES", (gchar *) "voda ES",  (gchar *) "21401", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_AVAILABLE, (gchar *) "Orange SP",   (gchar *) "ESPRT",    (gchar *) "21403", MM_MODEM_ACCESS_TECHNOLOGY_LTE },
+    };
+
+    test_cops_results ("u-blox LARA", reply, MM_MODEM_CHARSET_UCS2, &expected[0], G_N_ELEMENTS (expected));
 }
 
 static void
@@ -883,7 +916,7 @@ test_cops_response_gsm_invalid (void *f, gpointer d)
     GList *results;
     GError *error = NULL;
 
-    results = mm_3gpp_parse_cops_test_response (reply, &error);
+    results = mm_3gpp_parse_cops_test_response (reply, MM_MODEM_CHARSET_GSM, NULL, &error);
     g_assert (results == NULL);
     g_assert_no_error (error);
 }
@@ -895,7 +928,7 @@ test_cops_response_umts_invalid (void *f, gpointer d)
    GList *results;
     GError *error = NULL;
 
-    results = mm_3gpp_parse_cops_test_response (reply, &error);
+    results = mm_3gpp_parse_cops_test_response (reply, MM_MODEM_CHARSET_GSM, NULL, &error);
     g_assert (results == NULL);
     g_assert_no_error (error);
 }
@@ -1061,6 +1094,7 @@ typedef struct {
     guint regex_num;
     gboolean cgreg;
     gboolean cereg;
+    gboolean c5greg;
 } CregResult;
 
 static void
@@ -1070,13 +1104,13 @@ test_creg_match (const char *test,
                  RegTestData *data,
                  const CregResult *result)
 {
-    int i;
+    guint i;
     GMatchInfo *info  = NULL;
     MMModem3gppRegistrationState state = MM_MODEM_3GPP_REGISTRATION_STATE_UNKNOWN;
     MMModemAccessTechnology access_tech = MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN;
     gulong lac = 0, ci = 0;
     GError *error = NULL;
-    gboolean success, cgreg = FALSE, cereg = FALSE;
+    gboolean success, cgreg = FALSE, cereg = FALSE, c5greg = FALSE;
     guint regex_num = 0;
     GPtrArray *array;
 
@@ -1096,7 +1130,7 @@ test_creg_match (const char *test,
 
         if (g_regex_match (r, reply, 0, &info)) {
             g_debug ("  matched with %d", i);
-            regex_num = i + 1;
+            regex_num = i;
             break;
         }
         g_match_info_free (info);
@@ -1110,19 +1144,18 @@ test_creg_match (const char *test,
     g_assert (info != NULL);
     g_assert_cmpuint (regex_num, ==, result->regex_num);
 
-    success = mm_3gpp_parse_creg_response (info, &state, &lac, &ci, &access_tech, &cgreg, &cereg, &error);
+    success = mm_3gpp_parse_creg_response (info, NULL, &state, &lac, &ci, &access_tech, &cgreg, &cereg, &c5greg, &error);
+
     g_match_info_free (info);
     g_assert (success);
     g_assert_no_error (error);
     g_assert_cmpuint (state, ==, result->state);
-    g_assert (lac == result->lac);
-    g_assert (ci == result->ci);
-
-    g_debug ("  access_tech (%d) == result->act (%d)",
-             access_tech, result->act);
+    g_assert_cmpuint (lac, ==, result->lac);
+    g_assert_cmpuint (ci, ==, result->ci);
     g_assert_cmpuint (access_tech, ==, result->act);
     g_assert_cmpuint (cgreg, ==, result->cgreg);
     g_assert_cmpuint (cereg, ==, result->cereg);
+    g_assert_cmpuint (c5greg, ==, result->c5greg);
 }
 
 static void
@@ -1130,7 +1163,7 @@ test_creg1_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "+CREG: 1,3";
-    const CregResult result = { 3, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 2, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_DENIED, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 1, FALSE, FALSE, FALSE };
 
     test_creg_match ("CREG=1", TRUE, reply, data, &result);
 }
@@ -1140,7 +1173,7 @@ test_creg1_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CREG: 3\r\n";
-    const CregResult result = { 3, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 1, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_DENIED, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 0, FALSE, FALSE, FALSE };
 
     test_creg_match ("CREG=1", FALSE, reply, data, &result);
 }
@@ -1149,8 +1182,8 @@ static void
 test_creg2_mercury_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
-    const char *reply = "+CREG: 0,1,84CD,00D30173";
-    const CregResult result = { 1, 0x84cd, 0xd30173, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 4, FALSE, FALSE };
+    const char *reply = "+CREG: 1,1,84CD,00D30173";
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x84cd, 0xd30173, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 3, FALSE, FALSE, FALSE };
 
     test_creg_match ("Sierra Mercury CREG=2", TRUE, reply, data, &result);
 }
@@ -1160,7 +1193,7 @@ test_creg2_mercury_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CREG: 1,84CD,00D30156\r\n";
-    const CregResult result = { 1, 0x84cd, 0xd30156, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 3, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x84cd, 0xd30156, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 2, FALSE, FALSE, FALSE };
 
     test_creg_match ("Sierra Mercury CREG=2", FALSE, reply, data, &result);
 }
@@ -1170,7 +1203,7 @@ test_creg2_sek850i_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "+CREG: 2,1,\"CE00\",\"01CEAD8F\"";
-    const CregResult result = { 1, 0xce00, 0x01cead8f, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 4, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0xce00, 0x01cead8f, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 3, FALSE, FALSE, FALSE };
 
     test_creg_match ("Sony Ericsson K850i CREG=2", TRUE, reply, data, &result);
 }
@@ -1180,7 +1213,7 @@ test_creg2_sek850i_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CREG: 1,\"CE00\",\"00005449\"\r\n";
-    const CregResult result = { 1, 0xce00, 0x5449, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 3, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0xce00, 0x5449, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 2, FALSE, FALSE, FALSE };
 
     test_creg_match ("Sony Ericsson K850i CREG=2", FALSE, reply, data, &result);
 }
@@ -1190,7 +1223,7 @@ test_creg2_e160g_solicited_unregistered (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "+CREG: 2,0,00,0";
-    const CregResult result = { 0, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 4, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_IDLE, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 3, FALSE, FALSE, FALSE };
 
     test_creg_match ("Huawei E160G unregistered CREG=2", TRUE, reply, data, &result);
 }
@@ -1200,7 +1233,7 @@ test_creg2_e160g_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "+CREG: 2,1,8BE3,2BAF";
-    const CregResult result = { 1, 0x8be3, 0x2baf, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 4, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x8be3, 0x2baf, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 3, FALSE, FALSE, FALSE };
 
     test_creg_match ("Huawei E160G CREG=2", TRUE, reply, data, &result);
 }
@@ -1209,8 +1242,8 @@ static void
 test_creg2_e160g_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
-    const char *reply = "\r\n+CREG: 2,8BE3,2BAF\r\n";
-    const CregResult result = { 2, 0x8be3, 0x2baf, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 3, FALSE, FALSE };
+    const char *reply = "\r\n+CREG: 1,8BE3,2BAF\r\n";
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x8be3, 0x2baf, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 2, FALSE, FALSE, FALSE };
 
     test_creg_match ("Huawei E160G CREG=2", FALSE, reply, data, &result);
 }
@@ -1220,7 +1253,7 @@ test_creg2_tm506_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "+CREG: 2,1,\"8BE3\",\"00002BAF\"";
-    const CregResult result = { 1, 0x8BE3, 0x2BAF, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 4, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x8BE3, 0x2BAF, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 3, FALSE, FALSE, FALSE };
 
     /* Test leading zeros in the CI */
     test_creg_match ("Sony Ericsson TM-506 CREG=2", TRUE, reply, data, &result);
@@ -1231,7 +1264,7 @@ test_creg2_xu870_unsolicited_unregistered (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CREG: 2,,\r\n";
-    const CregResult result = { 2, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 3, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_SEARCHING, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 2, FALSE, FALSE, FALSE };
 
     test_creg_match ("Novatel XU870 unregistered CREG=2", FALSE, reply, data, &result);
 }
@@ -1241,7 +1274,7 @@ test_creg2_iridium_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "+CREG:002,001,\"18d8\",\"ffff\"";
-    const CregResult result = { 1, 0x18D8, 0xFFFF, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 5, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x18D8, 0xFFFF, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 4, FALSE, FALSE, FALSE };
 
     test_creg_match ("Iridium, CREG=2", TRUE, reply, data, &result);
 }
@@ -1251,7 +1284,7 @@ test_creg2_no_leading_zeros_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "+CREG:2,1,0001,0010";
-    const CregResult result = { 1, 0x0001, 0x0010, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 4, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x0001, 0x0010, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 3, FALSE, FALSE, FALSE };
 
     test_creg_match ("solicited CREG=2 with no leading zeros in integer fields", TRUE, reply, data, &result);
 }
@@ -1261,7 +1294,7 @@ test_creg2_leading_zeros_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "+CREG:002,001,\"0001\",\"0010\"";
-    const CregResult result = { 1, 0x0001, 0x0010, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 5, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x0001, 0x0010, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 4, FALSE, FALSE, FALSE };
 
     test_creg_match ("solicited CREG=2 with leading zeros in integer fields", TRUE, reply, data, &result);
 }
@@ -1271,7 +1304,7 @@ test_creg2_no_leading_zeros_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CREG: 1,0001,0010,0\r\n";
-    const CregResult result = { 1, 0x0001, 0x0010, MM_MODEM_ACCESS_TECHNOLOGY_GSM, 6, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x0001, 0x0010, MM_MODEM_ACCESS_TECHNOLOGY_GSM, 5, FALSE, FALSE, FALSE };
 
     test_creg_match ("unsolicited CREG=2 with no leading zeros in integer fields", FALSE, reply, data, &result);
 }
@@ -1281,7 +1314,7 @@ test_creg2_leading_zeros_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CREG: 001,\"0001\",\"0010\",000\r\n";
-    const CregResult result = { 1, 0x0001, 0x0010, MM_MODEM_ACCESS_TECHNOLOGY_GSM, 7, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x0001, 0x0010, MM_MODEM_ACCESS_TECHNOLOGY_GSM, 6, FALSE, FALSE, FALSE };
 
     test_creg_match ("unsolicited CREG=2 with leading zeros in integer fields", FALSE, reply, data, &result);
 }
@@ -1291,8 +1324,7 @@ test_creg2_ublox_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const gchar *reply = "\r\n+CREG: 2,6,\"8B37\",\"0A265185\",7\r\n";
-    /* NOTE: '6' means registered for "SMS only", home network; we just assume UNKNOWN in this case */
-    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME_SMS_ONLY, 0x8B37, 0x0A265185, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 8, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME_SMS_ONLY, 0x8B37, 0x0A265185, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 7, FALSE, FALSE, FALSE };
 
     test_creg_match ("Ublox Toby-L2 solicited while on LTE", TRUE, reply, data, &result);
 }
@@ -1302,8 +1334,7 @@ test_creg2_ublox_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const gchar *reply = "\r\n+CREG: 6,\"8B37\",\"0A265185\",7\r\n";
-    /* NOTE: '6' means registered for "SMS only", home network; we just assume UNKNOWN in this case */
-    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME_SMS_ONLY, 0x8B37, 0x0A265185, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 6, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME_SMS_ONLY, 0x8B37, 0x0A265185, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 5, FALSE, FALSE, FALSE };
 
     test_creg_match ("Ublox Toby-L2 unsolicited while on LTE", FALSE, reply, data, &result);
 }
@@ -1313,7 +1344,7 @@ test_cgreg1_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "+CGREG: 1,3";
-    const CregResult result = { 3, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 2, TRUE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_DENIED, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 1, TRUE, FALSE, FALSE };
 
     test_creg_match ("CGREG=1", TRUE, reply, data, &result);
 }
@@ -1323,7 +1354,7 @@ test_cgreg1_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CGREG: 3\r\n";
-    const CregResult result = { 3, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 1, TRUE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_DENIED, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 0, TRUE, FALSE, FALSE };
 
     test_creg_match ("CGREG=1", FALSE, reply, data, &result);
 }
@@ -1333,7 +1364,7 @@ test_cgreg2_f3607gw_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "+CGREG: 2,1,\"8BE3\",\"00002B5D\",3";
-    const CregResult result = { 1, 0x8BE3, 0x2B5D, MM_MODEM_ACCESS_TECHNOLOGY_EDGE, 8, TRUE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x8BE3, 0x2B5D, MM_MODEM_ACCESS_TECHNOLOGY_EDGE, 7, TRUE, FALSE, FALSE };
 
     test_creg_match ("Ericsson F3607gw CGREG=2", TRUE, reply, data, &result);
 }
@@ -1343,7 +1374,7 @@ test_cgreg2_f3607gw_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CGREG: 1,\"8BE3\",\"00002B5D\",3\r\n";
-    const CregResult result = { 1, 0x8BE3, 0x2B5D, MM_MODEM_ACCESS_TECHNOLOGY_EDGE, 6, TRUE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x8BE3, 0x2B5D, MM_MODEM_ACCESS_TECHNOLOGY_EDGE, 5, TRUE, FALSE, FALSE };
 
     test_creg_match ("Ericsson F3607gw CGREG=2", FALSE, reply, data, &result);
 }
@@ -1353,7 +1384,7 @@ test_creg2_md400_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CREG: 2,5,\"0502\",\"0404736D\"\r\n";
-    const CregResult result = { 5, 0x0502, 0x0404736D, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 4, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_ROAMING, 0x0502, 0x0404736D, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 3, FALSE, FALSE, FALSE };
 
     test_creg_match ("Sony-Ericsson MD400 CREG=2", FALSE, reply, data, &result);
 }
@@ -1363,7 +1394,7 @@ test_cgreg2_md400_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CGREG: 5,\"0502\",\"0404736D\",2\r\n";
-    const CregResult result = { 5, 0x0502, 0x0404736D, MM_MODEM_ACCESS_TECHNOLOGY_UMTS, 6, TRUE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_ROAMING, 0x0502, 0x0404736D, MM_MODEM_ACCESS_TECHNOLOGY_UMTS, 5, TRUE, FALSE, FALSE };
 
     test_creg_match ("Sony-Ericsson MD400 CGREG=2", FALSE, reply, data, &result);
 }
@@ -1373,7 +1404,7 @@ test_creg_cgreg_multi_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CREG: 5\r\n\r\n+CGREG: 0\r\n";
-    const CregResult result = { 5, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 1, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_ROAMING, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 0, FALSE, FALSE, FALSE };
 
     test_creg_match ("Multi CREG/CGREG", FALSE, reply, data, &result);
 }
@@ -1383,7 +1414,7 @@ test_creg_cgreg_multi2_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CGREG: 0\r\n\r\n+CREG: 5\r\n";
-    const CregResult result = { 0, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 1, TRUE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_IDLE, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 0, TRUE, FALSE, FALSE };
 
     test_creg_match ("Multi CREG/CGREG #2", FALSE, reply, data, &result);
 }
@@ -1393,7 +1424,7 @@ test_cgreg2_x220_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CGREG: 2,1, 81ED, 1A9CEB\r\n";
-    const CregResult result = { 1, 0x81ED, 0x1A9CEB, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 4, TRUE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x81ED, 0x1A9CEB, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 3, TRUE, FALSE, FALSE };
 
     /* Tests random spaces in response */
     test_creg_match ("Alcatel One-Touch X220D CGREG=2", FALSE, reply, data, &result);
@@ -1404,7 +1435,7 @@ test_creg2_s8500_wave_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CREG: 2,1,000B,2816, B, C2816\r\n";
-    const CregResult result = { 1, 0x000B, 0x2816, MM_MODEM_ACCESS_TECHNOLOGY_GSM, 9, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x000B, 0x2816, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 8, FALSE, FALSE, FALSE };
 
     test_creg_match ("Samsung Wave S8500 CREG=2", FALSE, reply, data, &result);
 }
@@ -1414,7 +1445,7 @@ test_creg2_gobi_weird_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CREG: 2,1,  0 5, 2715\r\n";
-    const CregResult result = { 1, 0x0000, 0x2715, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 4, FALSE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x0000, 0x2715, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 3, FALSE, FALSE, FALSE };
 
     test_creg_match ("Qualcomm Gobi 1000 CREG=2", TRUE, reply, data, &result);
 }
@@ -1424,7 +1455,7 @@ test_cgreg2_unsolicited_with_rac (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CGREG: 1,\"1422\",\"00000142\",3,\"00\"\r\n";
-    const CregResult result = { 1, 0x1422, 0x0142, MM_MODEM_ACCESS_TECHNOLOGY_EDGE, 10, TRUE, FALSE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x1422, 0x0142, MM_MODEM_ACCESS_TECHNOLOGY_EDGE, 9, TRUE, FALSE, FALSE };
 
     test_creg_match ("CGREG=2 with RAC", FALSE, reply, data, &result);
 }
@@ -1434,7 +1465,7 @@ test_cereg1_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "+CEREG: 1,3";
-    const CregResult result = { 3, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 2, FALSE, TRUE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_DENIED, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 1, FALSE, TRUE, FALSE };
 
     test_creg_match ("CEREG=1", TRUE, reply, data, &result);
 }
@@ -1444,7 +1475,7 @@ test_cereg1_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CEREG: 3\r\n";
-    const CregResult result = { 3, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN , 1, FALSE, TRUE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_DENIED, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 0, FALSE, TRUE, FALSE };
 
     test_creg_match ("CEREG=1", FALSE, reply, data, &result);
 }
@@ -1454,7 +1485,7 @@ test_cereg2_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CEREG: 2,1, 1F00, 79D903 ,7\r\n";
-    const CregResult result = { 1, 0x1F00, 0x79D903, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 8, FALSE, TRUE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x1F00, 0x79D903, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 7, FALSE, TRUE, FALSE };
 
     test_creg_match ("CEREG=2", TRUE, reply, data, &result);
 }
@@ -1464,7 +1495,7 @@ test_cereg2_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CEREG: 1, 1F00, 79D903 ,7\r\n";
-    const CregResult result = { 1, 0x1F00, 0x79D903, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 6, FALSE, TRUE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x1F00, 0x79D903, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 5, FALSE, TRUE, FALSE };
 
     test_creg_match ("CEREG=2", FALSE, reply, data, &result);
 }
@@ -1474,7 +1505,7 @@ test_cereg2_altair_lte_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CEREG: 1, 2, 0001, 00000100, 7\r\n";
-    const CregResult result = { 2, 0x0001, 0x00000100, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 8, FALSE, TRUE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_SEARCHING, 0x0001, 0x00000100, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 7, FALSE, TRUE, FALSE };
 
     test_creg_match ("Altair LTE CEREG=2", FALSE, reply, data, &result);
 }
@@ -1484,7 +1515,7 @@ test_cereg2_altair_lte_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CEREG: 2, 0001, 00000100, 7\r\n";
-    const CregResult result = { 2, 0x0001, 0x00000100, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 6, FALSE, TRUE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_SEARCHING, 0x0001, 0x00000100, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 5, FALSE, TRUE, FALSE };
 
     test_creg_match ("Altair LTE CEREG=2", FALSE, reply, data, &result);
 }
@@ -1494,7 +1525,7 @@ test_cereg2_novatel_lte_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CEREG: 2,1, 1F00, 20 ,79D903 ,7\r\n";
-    const CregResult result = { 1, 0x1F00, 0x79D903, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 13, FALSE, TRUE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x1F00, 0x79D903, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 11, FALSE, TRUE, FALSE };
 
     test_creg_match ("Novatel LTE E362 CEREG=2", TRUE, reply, data, &result);
 }
@@ -1504,7 +1535,7 @@ test_cereg2_novatel_lte_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
     const char *reply = "\r\n+CEREG: 1, 1F00, 20 ,79D903 ,7\r\n";
-    const CregResult result = { 1, 0x1F00, 0x79D903, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 12, FALSE, TRUE };
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x1F00, 0x79D903, MM_MODEM_ACCESS_TECHNOLOGY_LTE, 10, FALSE, TRUE, FALSE };
 
     test_creg_match ("Novatel LTE E362 CEREG=2", FALSE, reply, data, &result);
 }
@@ -1513,8 +1544,8 @@ static void
 test_cgreg2_thuraya_solicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
-    const char *reply = "+CGREG: 1, \"0426\", \"F0,0F\"";
-    const CregResult result = { 1, 0x0426, 0x00F0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 11, TRUE, FALSE };
+    const char *reply = "+CGREG: 2, 1, \"0426\", \"F00F\"";
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x0426, 0xF00F, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 3, TRUE, FALSE, FALSE };
 
     test_creg_match ("Thuraya solicited CREG=2", TRUE, reply, data, &result);
 }
@@ -1523,10 +1554,50 @@ static void
 test_cgreg2_thuraya_unsolicited (void *f, gpointer d)
 {
     RegTestData *data = (RegTestData *) d;
-    const char *reply = "\r\n+CGREG: 1, \"0426\", \"F0,0F\"\r\n";
-    const CregResult result = { 1, 0x0426, 0x00F0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 11, TRUE, FALSE };
+    const char *reply = "\r\n+CGREG: 1, \"0426\", \"F00F\"\r\n";
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x0426, 0xF00F, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 2, TRUE, FALSE, FALSE };
 
     test_creg_match ("Thuraya unsolicited CREG=2", FALSE, reply, data, &result);
+}
+
+static void
+test_c5greg1_solicited (void *f, gpointer d)
+{
+    RegTestData *data = (RegTestData *) d;
+    const char *reply = "+C5GREG: 1,3";
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_DENIED, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 1, FALSE, FALSE, TRUE };
+
+    test_creg_match ("C5GREG=1", TRUE, reply, data, &result);
+}
+
+static void
+test_c5greg1_unsolicited (void *f, gpointer d)
+{
+    RegTestData *data = (RegTestData *) d;
+    const char *reply = "\r\n+C5GREG: 3\r\n";
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_DENIED, 0, 0, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN, 0, FALSE, FALSE, TRUE };
+
+    test_creg_match ("C5GREG=1", FALSE, reply, data, &result);
+}
+
+static void
+test_c5greg2_solicited (void *f, gpointer d)
+{
+    RegTestData *data = (RegTestData *) d;
+    const char *reply = "+C5GREG: 2,1,1F00,79D903,11,6,ABCDEF";
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x1F00, 0x79D903, MM_MODEM_ACCESS_TECHNOLOGY_5GNR, 13, FALSE, FALSE, TRUE };
+
+    test_creg_match ("C5GREG=2", TRUE, reply, data, &result);
+}
+
+static void
+test_c5greg2_unsolicited (void *f, gpointer d)
+{
+    RegTestData *data = (RegTestData *) d;
+    const char *reply = "\r\n+C5GREG: 1,1F00,79D903,11,6,ABCDEF\r\n";
+    const CregResult result = { MM_MODEM_3GPP_REGISTRATION_STATE_HOME, 0x1F00, 0x79D903, MM_MODEM_ACCESS_TECHNOLOGY_5GNR, 12, FALSE, FALSE, TRUE };
+
+    test_creg_match ("C5GREG=2", FALSE, reply, data, &result);
 }
 
 /*****************************************************************************/
@@ -1597,8 +1668,8 @@ test_cscs_blackberry_support_response (void *f, gpointer d)
 /* Test Device Identifier builders */
 
 typedef struct {
-    char *devid;
-    char *desc;
+    const char *devid;
+    const char *desc;
     guint vid;
     guint pid;
     const char *ati;
@@ -1878,6 +1949,7 @@ test_devid_item (void *f, gpointer d)
     g_debug ("%s... ", item->desc);
     devid = mm_create_device_identifier (item->vid,
                                          item->pid,
+                                         NULL,
                                          item->ati,
                                          item->ati1,
                                          item->gsn,
@@ -1904,7 +1976,7 @@ test_cmer_response (const gchar    *str,
     MM3gppCmerInd   inds = MM_3GPP_CMER_IND_NONE;
     GError         *error = NULL;
 
-    ret = mm_3gpp_parse_cmer_test_response (str, &modes, &inds, &error);
+    ret = mm_3gpp_parse_cmer_test_response (str, NULL, &modes, &inds, &error);
     g_assert_no_error (error);
     g_assert (ret);
 
@@ -2130,6 +2202,7 @@ test_cgev_indication (const CgevIndicationTest *t)
         g_debug ("[%u] type: %u", i, type);
 
         switch (type) {
+        case MM_3GPP_CGEV_UNKNOWN:
         case MM_3GPP_CGEV_NW_DETACH:
         case MM_3GPP_CGEV_ME_DETACH:
             break;
@@ -2405,7 +2478,7 @@ test_cgdcont_test_results (const gchar *desc,
 
     g_debug ("Testing %s +CGDCONT test response...", desc);
 
-    results = mm_3gpp_parse_cgdcont_test_response (reply, &error);
+    results = mm_3gpp_parse_cgdcont_test_response (reply, NULL, &error);
     g_assert (results);
     g_assert_no_error (error);
     g_assert_cmpuint (g_list_length (results), ==, expected_results_len);
@@ -2580,9 +2653,9 @@ test_cgdcont_read_response_samsung (void *f, gpointer d)
         "+CGDCONT: 2,\"IP\",\"epc.tmobile.com\",\"\",0,0\r\n"
         "+CGDCONT: 3,\"IP\",\"MAXROAM.com\",\"\",0,0\r\n";
     static MM3gppPdpContext expected[] = {
-        { 1, MM_BEARER_IP_FAMILY_IPV4, "nate.sktelecom.com" },
-        { 2, MM_BEARER_IP_FAMILY_IPV4, "epc.tmobile.com"    },
-        { 3, MM_BEARER_IP_FAMILY_IPV4, "MAXROAM.com"        }
+        { 1, MM_BEARER_IP_FAMILY_IPV4, (gchar *) "nate.sktelecom.com" },
+        { 2, MM_BEARER_IP_FAMILY_IPV4, (gchar *) "epc.tmobile.com"    },
+        { 3, MM_BEARER_IP_FAMILY_IPV4, (gchar *) "MAXROAM.com"        }
     };
 
     test_cgdcont_read_results ("Samsung", reply, &expected[0], G_N_ELEMENTS (expected));
@@ -2824,11 +2897,12 @@ test_cid_selection (void)
 
         test = &cid_selection_tests[i];
 
-        context_format_list = test->cgdcont_test ? mm_3gpp_parse_cgdcont_test_response (test->cgdcont_test, NULL) : NULL;
+        context_format_list = test->cgdcont_test ? mm_3gpp_parse_cgdcont_test_response (test->cgdcont_test, NULL, NULL) : NULL;
         context_list = test->cgdcont_query ? mm_3gpp_parse_cgdcont_read_response (test->cgdcont_query, NULL) : NULL;
 
         cid = mm_3gpp_select_best_cid (test->apn, test->ip_family,
                                        context_list, context_format_list,
+                                       NULL,
                                        &cid_reused, &cid_overwritten);
 
         g_assert_cmpuint (cid, ==, test->expected_cid);
@@ -2865,10 +2939,12 @@ test_cpms_response_cinterion (void *f, gpointer d)
     GArray *mem1 = NULL;
     GArray *mem2 = NULL;
     GArray *mem3 = NULL;
+    GError *error = NULL;
 
     g_debug ("Testing Cinterion +CPMS=? response...");
 
-    g_assert (mm_3gpp_parse_cpms_test_response (reply, &mem1, &mem2, &mem3));
+    g_assert (mm_3gpp_parse_cpms_test_response (reply, &mem1, &mem2, &mem3, &error));
+    g_assert_no_error (error);
     g_assert_cmpuint (mem1->len, ==, 2);
     g_assert (is_storage_supported (mem1, MM_SMS_STORAGE_ME));
     g_assert (is_storage_supported (mem1, MM_SMS_STORAGE_MT));
@@ -2893,10 +2969,12 @@ test_cpms_response_huawei_mu609 (void *f, gpointer d)
     GArray *mem1 = NULL;
     GArray *mem2 = NULL;
     GArray *mem3 = NULL;
+    GError *error = NULL;
 
     g_debug ("Testing Huawei MU609 +CPMS=? response...");
 
-    g_assert (mm_3gpp_parse_cpms_test_response (reply, &mem1, &mem2, &mem3));
+    g_assert (mm_3gpp_parse_cpms_test_response (reply, &mem1, &mem2, &mem3, &error));
+    g_assert_no_error (error);
     g_assert_cmpuint (mem1->len, ==, 1);
     g_assert (is_storage_supported (mem1, MM_SMS_STORAGE_ME));
     g_assert_cmpuint (mem2->len, ==, 1);
@@ -2917,10 +2995,12 @@ test_cpms_response_nokia_c6 (void *f, gpointer d)
     GArray *mem1 = NULL;
     GArray *mem2 = NULL;
     GArray *mem3 = NULL;
+    GError *error = NULL;
 
     g_debug ("Testing Nokia C6 response...");
 
-    g_assert (mm_3gpp_parse_cpms_test_response (reply, &mem1, &mem2, &mem3));
+    g_assert (mm_3gpp_parse_cpms_test_response (reply, &mem1, &mem2, &mem3, &error));
+    g_assert_no_error (error);
     g_assert_cmpuint (mem1->len, ==, 0);
     g_assert_cmpuint (mem2->len, ==, 0);
     g_assert_cmpuint (mem3->len, ==, 0);
@@ -2942,10 +3022,12 @@ test_cpms_response_mixed (void *f, gpointer d)
     GArray *mem1 = NULL;
     GArray *mem2 = NULL;
     GArray *mem3 = NULL;
+    GError *error = NULL;
 
     g_debug ("Testing mixed +CPMS=? response...");
 
-    g_assert (mm_3gpp_parse_cpms_test_response (reply, &mem1, &mem2, &mem3));
+    g_assert (mm_3gpp_parse_cpms_test_response (reply, &mem1, &mem2, &mem3, &error));
+    g_assert_no_error (error);
     g_assert_cmpuint (mem1->len, ==, 2);
     g_assert (is_storage_supported (mem1, MM_SMS_STORAGE_ME));
     g_assert (is_storage_supported (mem1, MM_SMS_STORAGE_MT));
@@ -2967,10 +3049,12 @@ test_cpms_response_mixed_spaces (void *f, gpointer d)
     GArray *mem1 = NULL;
     GArray *mem2 = NULL;
     GArray *mem3 = NULL;
+    GError *error = NULL;
 
     g_debug ("Testing mixed +CPMS=? response with spaces...");
 
-    g_assert (mm_3gpp_parse_cpms_test_response (reply, &mem1, &mem2, &mem3));
+    g_assert (mm_3gpp_parse_cpms_test_response (reply, &mem1, &mem2, &mem3, &error));
+    g_assert_no_error (error);
     g_assert_cmpuint (mem1->len, ==, 2);
     g_assert (is_storage_supported (mem1, MM_SMS_STORAGE_ME));
     g_assert (is_storage_supported (mem1, MM_SMS_STORAGE_MT));
@@ -2996,10 +3080,12 @@ test_cpms_response_empty_fields (void *f, gpointer d)
     GArray *mem1 = NULL;
     GArray *mem2 = NULL;
     GArray *mem3 = NULL;
+    GError *error = NULL;
 
     g_debug ("Testing mixed +CPMS=? response...");
 
-    g_assert (mm_3gpp_parse_cpms_test_response (reply, &mem1, &mem2, &mem3));
+    g_assert (mm_3gpp_parse_cpms_test_response (reply, &mem1, &mem2, &mem3, &error));
+    g_assert_no_error (error);
     g_assert_cmpuint (mem1->len, ==, 0);
     g_assert_cmpuint (mem2->len, ==, 0);
     g_assert_cmpuint (mem3->len, ==, 0);
@@ -3388,7 +3474,7 @@ test_supported_mode_filter (void *f, gpointer d)
 
     /* Only 2G supported */
     all = build_mode_all (MM_MODEM_MODE_2G);
-    filtered = mm_filter_supported_modes (all, combinations);
+    filtered = mm_filter_supported_modes (all, combinations, NULL);
     g_assert_cmpuint (filtered->len, ==, 1);
     g_assert (find_mode_combination (filtered, MM_MODEM_MODE_2G, MM_MODEM_MODE_NONE));
     g_array_unref (filtered);
@@ -3396,7 +3482,7 @@ test_supported_mode_filter (void *f, gpointer d)
 
     /* Only 3G supported */
     all = build_mode_all (MM_MODEM_MODE_3G);
-    filtered = mm_filter_supported_modes (all, combinations);
+    filtered = mm_filter_supported_modes (all, combinations, NULL);
     g_assert_cmpuint (filtered->len, ==, 1);
     g_assert (find_mode_combination (filtered, MM_MODEM_MODE_3G, MM_MODEM_MODE_NONE));
     g_array_unref (filtered);
@@ -3404,7 +3490,7 @@ test_supported_mode_filter (void *f, gpointer d)
 
     /* 2G and 3G supported */
     all = build_mode_all (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G);
-    filtered = mm_filter_supported_modes (all, combinations);
+    filtered = mm_filter_supported_modes (all, combinations, NULL);
     g_assert_cmpuint (filtered->len, ==, 3);
     g_assert (find_mode_combination (filtered, MM_MODEM_MODE_2G, MM_MODEM_MODE_NONE));
     g_assert (find_mode_combination (filtered, MM_MODEM_MODE_3G, MM_MODEM_MODE_NONE));
@@ -3414,7 +3500,7 @@ test_supported_mode_filter (void *f, gpointer d)
 
     /* 3G and 4G supported */
     all = build_mode_all (MM_MODEM_MODE_3G | MM_MODEM_MODE_4G);
-    filtered = mm_filter_supported_modes (all, combinations);
+    filtered = mm_filter_supported_modes (all, combinations, NULL);
     g_assert_cmpuint (filtered->len, ==, 3);
     g_assert (find_mode_combination (filtered, MM_MODEM_MODE_3G, MM_MODEM_MODE_NONE));
     g_assert (find_mode_combination (filtered, MM_MODEM_MODE_4G, MM_MODEM_MODE_NONE));
@@ -3424,7 +3510,7 @@ test_supported_mode_filter (void *f, gpointer d)
 
     /* 2G, 3G and 4G supported */
     all = build_mode_all (MM_MODEM_MODE_2G | MM_MODEM_MODE_3G | MM_MODEM_MODE_4G);
-    filtered = mm_filter_supported_modes (all, combinations);
+    filtered = mm_filter_supported_modes (all, combinations, NULL);
     g_assert_cmpuint (filtered->len, ==, 6);
     g_assert (find_mode_combination (filtered, MM_MODEM_MODE_2G, MM_MODEM_MODE_NONE));
     g_assert (find_mode_combination (filtered, MM_MODEM_MODE_3G, MM_MODEM_MODE_NONE));
@@ -3439,98 +3525,6 @@ test_supported_mode_filter (void *f, gpointer d)
 }
 
 /*****************************************************************************/
-
-static gboolean
-find_capability_combination (GArray *capabilities,
-                             MMModemCapability capability)
-{
-    guint i;
-
-    for (i = 0; i < capabilities->len; i++) {
-        MMModemCapability capability_i;
-
-        capability_i = g_array_index (capabilities, MMModemCapability, i);
-        if (capability_i == capability)
-            return TRUE;
-    }
-
-    return FALSE;
-}
-
-static void
-test_supported_capability_filter (void *f, gpointer d)
-{
-    MMModemCapability capability;
-    GArray *combinations;
-    GArray *filtered;
-
-    combinations = g_array_sized_new (FALSE, FALSE, sizeof (MMModemCapability), 6);
-
-    /* GSM/UMTS only */
-    capability = MM_MODEM_CAPABILITY_GSM_UMTS;
-    g_array_append_val (combinations, capability);
-    /* CDMA/EVDO only */
-    capability = MM_MODEM_CAPABILITY_CDMA_EVDO;
-    g_array_append_val (combinations, capability);
-    /* GSM/UMTS and CDMA/EVDO */
-    capability = (MM_MODEM_CAPABILITY_CDMA_EVDO | MM_MODEM_CAPABILITY_GSM_UMTS);
-    g_array_append_val (combinations, capability);
-    /* GSM/UMTS+LTE */
-    capability = (MM_MODEM_CAPABILITY_GSM_UMTS | MM_MODEM_CAPABILITY_LTE);
-    g_array_append_val (combinations, capability);
-    /* CDMA/EVDO+LTE */
-    capability = (MM_MODEM_CAPABILITY_CDMA_EVDO | MM_MODEM_CAPABILITY_LTE);
-    g_array_append_val (combinations, capability);
-    /* GSM/UMTS+CDMA/EVDO+LTE */
-    capability = (MM_MODEM_CAPABILITY_GSM_UMTS | MM_MODEM_CAPABILITY_CDMA_EVDO | MM_MODEM_CAPABILITY_LTE);
-    g_array_append_val (combinations, capability);
-
-    /* Only GSM-UMTS supported */
-    filtered = mm_filter_supported_capabilities (MM_MODEM_CAPABILITY_GSM_UMTS, combinations);
-    g_assert_cmpuint (filtered->len, ==, 1);
-    g_assert (find_capability_combination (filtered, MM_MODEM_CAPABILITY_GSM_UMTS));
-    g_array_unref (filtered);
-
-    /* Only CDMA-EVDO supported */
-    filtered = mm_filter_supported_capabilities (MM_MODEM_CAPABILITY_CDMA_EVDO, combinations);
-    g_assert_cmpuint (filtered->len, ==, 1);
-    g_assert (find_capability_combination (filtered, MM_MODEM_CAPABILITY_CDMA_EVDO));
-    g_array_unref (filtered);
-
-    /* GSM-UMTS and CDMA-EVDO supported */
-    filtered = mm_filter_supported_capabilities ((MM_MODEM_CAPABILITY_CDMA_EVDO |
-                                                  MM_MODEM_CAPABILITY_GSM_UMTS),
-                                                 combinations);
-    g_assert_cmpuint (filtered->len, ==, 3);
-    g_assert (find_capability_combination (filtered, MM_MODEM_CAPABILITY_CDMA_EVDO));
-    g_assert (find_capability_combination (filtered, MM_MODEM_CAPABILITY_GSM_UMTS));
-    g_assert (find_capability_combination (filtered, (MM_MODEM_CAPABILITY_GSM_UMTS |
-                                                      MM_MODEM_CAPABILITY_CDMA_EVDO)));
-    g_array_unref (filtered);
-
-    /* GSM-UMTS, CDMA-EVDO and LTE supported */
-    filtered = mm_filter_supported_capabilities ((MM_MODEM_CAPABILITY_CDMA_EVDO |
-                                                  MM_MODEM_CAPABILITY_GSM_UMTS |
-                                                  MM_MODEM_CAPABILITY_LTE),
-                                                 combinations);
-    g_assert_cmpuint (filtered->len, ==, 6);
-    g_assert (find_capability_combination (filtered, MM_MODEM_CAPABILITY_CDMA_EVDO));
-    g_assert (find_capability_combination (filtered, MM_MODEM_CAPABILITY_GSM_UMTS));
-    g_assert (find_capability_combination (filtered, (MM_MODEM_CAPABILITY_GSM_UMTS |
-                                                      MM_MODEM_CAPABILITY_CDMA_EVDO)));
-    g_assert (find_capability_combination (filtered, (MM_MODEM_CAPABILITY_GSM_UMTS |
-                                                      MM_MODEM_CAPABILITY_LTE)));
-    g_assert (find_capability_combination (filtered, (MM_MODEM_CAPABILITY_CDMA_EVDO |
-                                                      MM_MODEM_CAPABILITY_LTE)));
-    g_assert (find_capability_combination (filtered, (MM_MODEM_CAPABILITY_GSM_UMTS |
-                                                      MM_MODEM_CAPABILITY_CDMA_EVDO |
-                                                      MM_MODEM_CAPABILITY_LTE)));
-    g_array_unref (filtered);
-
-    g_array_unref (combinations);
-}
-
-/*****************************************************************************/
 /* Test +CCLK responses */
 
 typedef struct {
@@ -3538,7 +3532,7 @@ typedef struct {
     gboolean ret;
     gboolean test_iso8601;
     gboolean test_tz;
-    gchar *iso8601;
+    const gchar *iso8601;
     gint32 offset;
 } CclkTest;
 
@@ -3637,7 +3631,7 @@ typedef struct {
     gboolean ret;
     guint sw1;
     guint sw2;
-    gchar *hex;
+    const gchar *hex;
 } CrsmTest;
 
 static const CrsmTest crsm_tests[] = {
@@ -3966,6 +3960,7 @@ test_cesq_response_to_signal (void)
         MMSignal *lte  = NULL;
 
         success = mm_3gpp_cesq_response_to_signal_info (cesq_response_tests[i].str,
+                                                        NULL,
                                                         &gsm, &umts, &lte,
                                                         &error);
         g_assert_no_error (error);
@@ -4028,9 +4023,9 @@ test_cfun_generic_response (void)
 }
 
 typedef struct {
-    gchar *response;
+    const gchar *response;
     gint result;
-    gchar *error_message;
+    const gchar *error_message;
 } CSIMResponseTest;
 
 static CSIMResponseTest csim_response_test_list [] = {
@@ -4188,7 +4183,7 @@ common_test_ccwa_response (const gchar *response,
     GError   *error = NULL;
     gboolean  result;
 
-    result = mm_3gpp_parse_ccwa_service_query_response (response, &status, &error);
+    result = mm_3gpp_parse_ccwa_service_query_response (response, NULL, &status, &error);
 
     if (expected_error) {
         g_assert (!result);
@@ -4246,7 +4241,7 @@ common_test_clcc_response (const gchar      *str,
     GList      *call_info_list = NULL;
     GList      *l;
 
-    result = mm_3gpp_parse_clcc_response (str, &call_info_list, &error);
+    result = mm_3gpp_parse_clcc_response (str, NULL, &call_info_list, &error);
     g_assert_no_error (error);
     g_assert (result);
 
@@ -4293,7 +4288,7 @@ static void
 test_clcc_response_single (void)
 {
     static const MMCallInfo expected_call_info_list[] = {
-        { 1, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE, "123456789" }
+        { 1, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE, (gchar *) "123456789" }
     };
 
     const gchar *response =
@@ -4306,7 +4301,7 @@ static void
 test_clcc_response_single_long (void)
 {
     static const MMCallInfo expected_call_info_list[] = {
-        { 1, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_RINGING_IN, "123456789" }
+        { 1, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_RINGING_IN, (gchar *) "123456789" }
     };
 
     /* NOTE: priority field is EMPTY */
@@ -4320,11 +4315,11 @@ static void
 test_clcc_response_multiple (void)
 {
     static const MMCallInfo expected_call_info_list[] = {
-        { 1, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  NULL        },
-        { 2, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  "123456789" },
-        { 3, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  "987654321" },
-        { 4, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  "000000000" },
-        { 5, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_WAITING, "555555555" },
+        { 1, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  NULL                  },
+        { 2, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  (gchar *) "123456789" },
+        { 3, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  (gchar *) "987654321" },
+        { 4, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_ACTIVE,  (gchar *) "000000000" },
+        { 5, MM_CALL_DIRECTION_INCOMING, MM_CALL_STATE_WAITING, (gchar *) "555555555" },
     };
 
     const gchar *response =
@@ -4344,7 +4339,7 @@ test_clcc_response_multiple (void)
 typedef struct {
     const gchar *raw;
     guint        n_numbers;
-    gchar       *numbers[MAX_EMERGENCY_NUMBERS];
+    const gchar *numbers[MAX_EMERGENCY_NUMBERS];
 } EmergencyNumbersTest;
 
 static const EmergencyNumbersTest emergency_numbers_tests[] = {
@@ -4389,7 +4384,7 @@ test_emergency_numbers (void)
 /*****************************************************************************/
 
 typedef struct {
-    gchar *str;
+    const gchar *str;
     gint expected_number_list[9];
 } TestParseNumberList;
 
@@ -4467,26 +4462,6 @@ test_bcd_to_string (void *f, gpointer d)
 
 /*****************************************************************************/
 
-void
-_mm_log (const char *loc,
-         const char *func,
-         guint32 level,
-         const char *fmt,
-         ...)
-{
-    va_list args;
-    gchar *msg;
-
-    if (!g_test_verbose ())
-        return;
-
-    va_start (args, fmt);
-    msg = g_strdup_vprintf (fmt, args);
-    va_end (args);
-    g_print ("%s\n", msg);
-    g_free (msg);
-}
-
 #define TESTCASE(t, d) g_test_create_case (#t, 0, d, NULL, (GTestFixtureFunc) t, NULL)
 
 int main (int argc, char **argv)
@@ -4549,6 +4524,7 @@ int main (int argc, char **argv)
     g_test_suite_add (suite, TESTCASE (test_cops_response_gobi, NULL));
     g_test_suite_add (suite, TESTCASE (test_cops_response_sek600i, NULL));
     g_test_suite_add (suite, TESTCASE (test_cops_response_samsung_z810, NULL));
+    g_test_suite_add (suite, TESTCASE (test_cops_response_ublox_lara, NULL));
 
     g_test_suite_add (suite, TESTCASE (test_cops_response_gsm_invalid, NULL));
     g_test_suite_add (suite, TESTCASE (test_cops_response_umts_invalid, NULL));
@@ -4597,6 +4573,11 @@ int main (int argc, char **argv)
     g_test_suite_add (suite, TESTCASE (test_cereg2_altair_lte_unsolicited, reg_data));
     g_test_suite_add (suite, TESTCASE (test_cereg2_novatel_lte_solicited, reg_data));
     g_test_suite_add (suite, TESTCASE (test_cereg2_novatel_lte_unsolicited, reg_data));
+
+    g_test_suite_add (suite, TESTCASE (test_c5greg1_solicited, reg_data));
+    g_test_suite_add (suite, TESTCASE (test_c5greg1_unsolicited, reg_data));
+    g_test_suite_add (suite, TESTCASE (test_c5greg2_solicited, reg_data));
+    g_test_suite_add (suite, TESTCASE (test_c5greg2_unsolicited, reg_data));
 
     g_test_suite_add (suite, TESTCASE (test_creg_cgreg_multi_unsolicited, reg_data));
     g_test_suite_add (suite, TESTCASE (test_creg_cgreg_multi2_unsolicited, reg_data));
@@ -4682,8 +4663,6 @@ int main (int argc, char **argv)
     g_test_suite_add (suite, TESTCASE (test_cmgr_response_telit, NULL));
 
     g_test_suite_add (suite, TESTCASE (test_supported_mode_filter, NULL));
-
-    g_test_suite_add (suite, TESTCASE (test_supported_capability_filter, NULL));
 
     g_test_suite_add (suite, TESTCASE (test_cclk_response, NULL));
 

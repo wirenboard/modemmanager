@@ -20,7 +20,7 @@
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-messaging.h"
 #include "mm-sms-list.h"
-#include "mm-log.h"
+#include "mm-log-object.h"
 
 #define SUPPORT_CHECKED_TAG "messaging-support-checked-tag"
 #define SUPPORTED_TAG       "messaging-supported-tag"
@@ -426,7 +426,7 @@ mm_iface_modem_messaging_take_part (MMIfaceModemMessaging *self,
 
     added = mm_sms_list_take_part (list, sms_part, state, storage, &error);
     if (!added) {
-        mm_dbg ("Couldn't take part in SMS list: '%s'", error->message);
+        mm_obj_dbg (self, "couldn't take part in SMS list: %s", error->message);
         g_error_free (error);
 
         /* If part wasn't taken, we need to free the part ourselves */
@@ -503,24 +503,20 @@ update_message_list (MmGdbusModemMessaging *skeleton,
 }
 
 static void
-sms_added (MMSmsList *list,
-           const gchar *sms_path,
-           gboolean received,
+sms_added (MMSmsList             *list,
+           const gchar           *sms_path,
+           gboolean               received,
            MmGdbusModemMessaging *skeleton)
 {
-    mm_dbg ("Added %s SMS at '%s'",
-            received ? "received" : "local",
-            sms_path);
     update_message_list (skeleton, list);
     mm_gdbus_modem_messaging_emit_added (skeleton, sms_path, received);
 }
 
 static void
-sms_deleted (MMSmsList *list,
-             const gchar *sms_path,
+sms_deleted (MMSmsList             *list,
+             const gchar           *sms_path,
              MmGdbusModemMessaging *skeleton)
 {
-    mm_dbg ("Deleted SMS at '%s'", sms_path);
     update_message_list (skeleton, list);
     mm_gdbus_modem_messaging_emit_deleted (skeleton, sms_path);
 }
@@ -611,8 +607,8 @@ interface_disabling_step (GTask *task)
 
     switch (ctx->step) {
     case DISABLING_STEP_FIRST:
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case DISABLING_STEP_DISABLE_UNSOLICITED_EVENTS:
         /* Allow cleaning up unsolicited events */
@@ -624,8 +620,8 @@ interface_disabling_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case DISABLING_STEP_CLEANUP_UNSOLICITED_EVENTS:
         /* Allow cleaning up unsolicited events */
@@ -637,8 +633,8 @@ interface_disabling_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case DISABLING_STEP_LAST:
         /* Clear SMS list */
@@ -650,6 +646,9 @@ interface_disabling_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();
@@ -759,11 +758,11 @@ load_initial_sms_parts_ready (MMIfaceModemMessaging *self,
         StorageContext *storage_ctx;
 
         storage_ctx = get_storage_context (self);
-        mm_dbg ("Couldn't load SMS parts from storage '%s': '%s'",
-                mm_sms_storage_get_string (g_array_index (storage_ctx->supported_mem1,
-                                                          MMSmsStorage,
-                                                          ctx->mem1_storage_index)),
-                error->message);
+        mm_obj_dbg (self, "couldn't load SMS parts from storage '%s': %s",
+                    mm_sms_storage_get_string (g_array_index (storage_ctx->supported_mem1,
+                                                              MMSmsStorage,
+                                                              ctx->mem1_storage_index)),
+                    error->message);
         g_error_free (error);
     }
 
@@ -781,7 +780,7 @@ set_default_storage_ready (MMIfaceModemMessaging *self,
     GError *error = NULL;
 
     if (!MM_IFACE_MODEM_MESSAGING_GET_INTERFACE (self)->set_default_storage_finish (self, res, &error)) {
-        mm_warn ("Could not set default storage: '%s'", error->message);
+        mm_obj_warn (self, "could not set default storage: %s", error->message);
         g_error_free (error);
     }
 
@@ -863,7 +862,7 @@ enable_unsolicited_events_ready (MMIfaceModemMessaging *self,
 
     /* Not critical! */
     if (!MM_IFACE_MODEM_MESSAGING_GET_INTERFACE (self)->enable_unsolicited_events_finish (self, res, &error)) {
-        mm_dbg ("Couldn't enable unsolicited events: '%s'", error->message);
+        mm_obj_dbg (self, "couldn't enable unsolicited events: %s", error->message);
         g_error_free (error);
     }
 
@@ -955,9 +954,8 @@ interface_enabling_step (GTask *task)
 
         g_object_unref (list);
 
-        /* Fall down to next step */
         ctx->step++;
-    }
+    } /* fall through */
 
     case ENABLING_STEP_SETUP_SMS_FORMAT:
         /* Allow setting SMS format to use */
@@ -969,8 +967,8 @@ interface_enabling_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case ENABLING_STEP_STORAGE_DEFAULTS: {
         MMSmsStorage default_storage;
@@ -987,7 +985,7 @@ interface_enabling_step (GTask *task)
                       NULL);
 
         if (default_storage == MM_SMS_STORAGE_UNKNOWN)
-            mm_info ("Cannot set default storage, none of the suggested ones supported");
+            mm_obj_warn (self, "cannot set default storage, none of the suggested ones supported");
         else if (MM_IFACE_MODEM_MESSAGING_GET_INTERFACE (self)->set_default_storage &&
                  MM_IFACE_MODEM_MESSAGING_GET_INTERFACE (self)->set_default_storage_finish) {
             MM_IFACE_MODEM_MESSAGING_GET_INTERFACE (self)->set_default_storage (
@@ -998,9 +996,8 @@ interface_enabling_step (GTask *task)
             return;
         }
 
-        /* Fall down to next step */
         ctx->step++;
-    }
+    } /* fall through */
 
     case ENABLING_STEP_LOAD_INITIAL_SMS_PARTS:
         /* Allow loading the initial list of SMS parts */
@@ -1009,8 +1006,8 @@ interface_enabling_step (GTask *task)
             load_initial_sms_parts_from_storages (task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case ENABLING_STEP_SETUP_UNSOLICITED_EVENTS:
         /* Allow setting up unsolicited events */
@@ -1022,8 +1019,8 @@ interface_enabling_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case ENABLING_STEP_ENABLE_UNSOLICITED_EVENTS:
         /* Allow setting up unsolicited events */
@@ -1035,14 +1032,17 @@ interface_enabling_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case ENABLING_STEP_LAST:
         /* We are done without errors! */
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();
@@ -1137,7 +1137,7 @@ load_supported_storages_ready (MMIfaceModemMessaging *self,
             &storage_ctx->supported_mem2,
             &storage_ctx->supported_mem3,
             &error)) {
-        mm_dbg ("Couldn't load supported storages: '%s'", error->message);
+        mm_obj_dbg (self, "couldn't load supported storages: %s", error->message);
         g_error_free (error);
     } else {
         gchar *mem1;
@@ -1151,17 +1151,17 @@ load_supported_storages_ready (MMIfaceModemMessaging *self,
         skip_unknown_storages (storage_ctx->supported_mem2);
         skip_unknown_storages (storage_ctx->supported_mem3);
 
-        mem1 = mm_common_build_sms_storages_string ((MMSmsStorage *)storage_ctx->supported_mem1->data,
+        mem1 = mm_common_build_sms_storages_string ((MMSmsStorage *)(gpointer)storage_ctx->supported_mem1->data,
                                                     storage_ctx->supported_mem1->len);
-        mem2 = mm_common_build_sms_storages_string ((MMSmsStorage *)storage_ctx->supported_mem2->data,
+        mem2 = mm_common_build_sms_storages_string ((MMSmsStorage *)(gpointer)storage_ctx->supported_mem2->data,
                                                     storage_ctx->supported_mem2->len);
-        mem3 = mm_common_build_sms_storages_string ((MMSmsStorage *)storage_ctx->supported_mem3->data,
+        mem3 = mm_common_build_sms_storages_string ((MMSmsStorage *)(gpointer)storage_ctx->supported_mem3->data,
                                                     storage_ctx->supported_mem3->len);
 
-        mm_dbg ("Supported storages loaded:");
-        mm_dbg ("  mem1 (list/read/delete) storages: '%s'", mem1);
-        mm_dbg ("  mem2 (write/send) storages:       '%s'", mem2);
-        mm_dbg ("  mem3 (reception) storages:        '%s'", mem3);
+        mm_obj_dbg (self, "supported storages loaded:");
+        mm_obj_dbg (self, "  mem1 (list/read/delete) storages: '%s'", mem1);
+        mm_obj_dbg (self, "  mem2 (write/send) storages:       '%s'", mem2);
+        mm_obj_dbg (self, "  mem3 (reception) storages:        '%s'", mem3);
         g_free (mem1);
         g_free (mem2);
         g_free (mem3);
@@ -1211,7 +1211,7 @@ check_support_ready (MMIfaceModemMessaging *self,
                                                                               &error)) {
         if (error) {
             /* This error shouldn't be treated as critical */
-            mm_dbg ("Messaging support check failed: '%s'", error->message);
+            mm_obj_dbg (self, "messaging support check failed: %s", error->message);
             g_error_free (error);
         }
     } else {
@@ -1239,11 +1239,10 @@ init_current_storages_ready (MMIfaceModemMessaging *self,
             self,
             res,
             &error)) {
-        mm_dbg ("Couldn't initialize current storages: '%s'", error->message);
+        mm_obj_dbg (self, "couldn't initialize current storages: %s", error->message);
         g_error_free (error);
-    } else {
-        mm_dbg ("Current storages initialized");
-    }
+    } else
+        mm_obj_dbg (self, "current storages initialized");
 
     /* Go on to next step */
     ctx = g_task_get_task_data (task);
@@ -1276,8 +1275,8 @@ interface_initialization_step (GTask *task)
             supported_quark = (g_quark_from_static_string (
                                    SUPPORTED_TAG));
 
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_CHECK_SUPPORT:
         if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
@@ -1303,8 +1302,8 @@ interface_initialization_step (GTask *task)
             /* If there is no implementation to check support, assume we DON'T
              * support it. */
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_FAIL_IF_UNSUPPORTED:
         if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
@@ -1316,8 +1315,8 @@ interface_initialization_step (GTask *task)
             g_object_unref (task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_LOAD_SUPPORTED_STORAGES:
         if (MM_IFACE_MODEM_MESSAGING_GET_INTERFACE (self)->load_supported_storages &&
@@ -1328,8 +1327,8 @@ interface_initialization_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_INIT_CURRENT_STORAGES:
         if (MM_IFACE_MODEM_MESSAGING_GET_INTERFACE (self)->init_current_storages &&
@@ -1340,8 +1339,8 @@ interface_initialization_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_LAST:
         /* We are done without errors! */
@@ -1367,6 +1366,9 @@ interface_initialization_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();

@@ -25,7 +25,7 @@
 
 #include "ModemManager.h"
 #include "mm-modem-helpers.h"
-#include "mm-log.h"
+#include "mm-log-object.h"
 #include "mm-errors-types.h"
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-3gpp.h"
@@ -111,7 +111,7 @@ parent_load_supported_modes_ready (MMIfaceModem *self,
     g_array_append_val (combinations, mode);
 
     /* Filter out those unsupported modes */
-    filtered = mm_filter_supported_modes (all, combinations);
+    filtered = mm_filter_supported_modes (all, combinations, self);
     g_array_unref (all);
     g_array_unref (combinations);
 
@@ -561,8 +561,8 @@ load_access_technologies_step (GTask *task)
 
     switch (ctx->step) {
     case ACCESS_TECHNOLOGIES_STEP_FIRST:
-        /* Go on to next step */
         ctx->step++;
+        /* fall through */
 
     case ACCESS_TECHNOLOGIES_STEP_OSSYS:
         mm_base_modem_at_command (MM_BASE_MODEM (self),
@@ -583,8 +583,8 @@ load_access_technologies_step (GTask *task)
                                       task);
             return;
         }
-        /* Go on to next step */
         ctx->step++;
+        /* fall through */
 
     case ACCESS_TECHNOLOGIES_STEP_OWCTI:
         if (ctx->check_3g) {
@@ -596,14 +596,17 @@ load_access_technologies_step (GTask *task)
                                       task);
             return;
         }
-        /* Go on to next step */
         ctx->step++;
+        /* fall through */
 
     case ACCESS_TECHNOLOGIES_STEP_LAST:
         /* All done, set result and complete */
         g_task_return_int (task, ctx->access_technology);
         g_object_unref (task);
         break;
+
+    default:
+        g_assert_not_reached ();
     }
 }
 
@@ -709,7 +712,6 @@ modem_3gpp_load_imei_finish (MMIfaceModem3gpp *self,
     if (comma)
         *comma = '\0';
 
-    mm_dbg ("loaded IMEI: %s", imei);
     return imei;
 }
 
@@ -718,7 +720,6 @@ modem_3gpp_load_imei (MMIfaceModem3gpp *self,
                       GAsyncReadyCallback callback,
                       gpointer user_data)
 {
-    mm_dbg ("loading (Option) IMEI...");
     mm_base_modem_at_command (MM_BASE_MODEM (self),
                               "+CGSN",
                               3,
@@ -805,7 +806,7 @@ option_signal_changed (MMPortSerialAt *port,
                        MMBroadbandModemOption *self)
 {
     gchar *str;
-    gint quality = 0;
+    guint quality = 0;
 
     str = g_match_info_fetch (match_info, 1);
     if (str) {
@@ -818,10 +819,10 @@ option_signal_changed (MMPortSerialAt *port,
         quality = 0;
     } else {
         /* Normalize the quality */
-        quality = CLAMP (quality, 0, 31) * 100 / 31;
+        quality = MM_CLAMP_HIGH (quality, 31) * 100 / 31;
     }
 
-    mm_iface_modem_update_signal_quality (MM_IFACE_MODEM (self), (guint)quality);
+    mm_iface_modem_update_signal_quality (MM_IFACE_MODEM (self), quality);
 }
 
 static void

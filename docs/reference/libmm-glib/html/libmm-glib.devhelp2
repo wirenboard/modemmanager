@@ -143,6 +143,7 @@
     <sub name="Index of new symbols in 1.8" link="api-index-1-8.html"/>
     <sub name="Index of new symbols in 1.10" link="api-index-1-10.html"/>
     <sub name="Index of new symbols in 1.12" link="api-index-1-12.html"/>
+    <sub name="Index of new symbols in 1.14" link="api-index-1-14.html"/>
     <sub name="Annotation Glossary" link="annotation-glossary.html"/>
   </chapters>
   <functions>
@@ -552,7 +553,8 @@
     <keyword type="function" name="mm_location_3gpp_get_cell_id ()" link="MMLocation3gpp.html#mm-location-3gpp-get-cell-id" since="1.0"/>
     <keyword type="struct" name="struct MMLocation3gpp" link="MMLocation3gpp.html#MMLocation3gpp-struct"/>
     <keyword type="function" name="mm_location_gps_nmea_get_trace ()" link="MMLocationGpsNmea.html#mm-location-gps-nmea-get-trace" since="1.0"/>
-    <keyword type="function" name="mm_location_gps_nmea_build_full ()" link="MMLocationGpsNmea.html#mm-location-gps-nmea-build-full" since="1.0"/>
+    <keyword type="function" name="mm_location_gps_nmea_get_traces ()" link="MMLocationGpsNmea.html#mm-location-gps-nmea-get-traces" since="1.14"/>
+    <keyword type="function" name="mm_location_gps_nmea_build_full ()" link="MMLocationGpsNmea.html#mm-location-gps-nmea-build-full" deprecated="" since="1.0"/>
     <keyword type="struct" name="struct MMLocationGpsNmea" link="MMLocationGpsNmea.html#MMLocationGpsNmea-struct"/>
     <keyword type="function" name="mm_location_gps_raw_get_utc_time ()" link="MMLocationGpsRaw.html#mm-location-gps-raw-get-utc-time" since="1.0"/>
     <keyword type="function" name="mm_location_gps_raw_get_longitude ()" link="MMLocationGpsRaw.html#mm-location-gps-raw-get-longitude" since="1.0"/>
@@ -750,6 +752,11 @@
     <keyword type="function" name="mm_bearer_stats_get_duration ()" link="MMBearerStats.html#mm-bearer-stats-get-duration" since="1.6"/>
     <keyword type="function" name="mm_bearer_stats_get_rx_bytes ()" link="MMBearerStats.html#mm-bearer-stats-get-rx-bytes" since="1.6"/>
     <keyword type="function" name="mm_bearer_stats_get_tx_bytes ()" link="MMBearerStats.html#mm-bearer-stats-get-tx-bytes" since="1.6"/>
+    <keyword type="function" name="mm_bearer_stats_get_attempts ()" link="MMBearerStats.html#mm-bearer-stats-get-attempts" since="1.14"/>
+    <keyword type="function" name="mm_bearer_stats_get_failed_attempts ()" link="MMBearerStats.html#mm-bearer-stats-get-failed-attempts" since="1.14"/>
+    <keyword type="function" name="mm_bearer_stats_get_total_duration ()" link="MMBearerStats.html#mm-bearer-stats-get-total-duration" since="1.14"/>
+    <keyword type="function" name="mm_bearer_stats_get_total_rx_bytes ()" link="MMBearerStats.html#mm-bearer-stats-get-total-rx-bytes" since="1.14"/>
+    <keyword type="function" name="mm_bearer_stats_get_total_tx_bytes ()" link="MMBearerStats.html#mm-bearer-stats-get-total-tx-bytes" since="1.14"/>
     <keyword type="struct" name="struct MMBearerStats" link="MMBearerStats.html#MMBearerStats-struct"/>
     <keyword type="function" name="mm_sim_get_path ()" link="MMSim.html#mm-sim-get-path" since="1.0"/>
     <keyword type="function" name="mm_sim_dup_path ()" link="MMSim.html#mm-sim-dup-path" since="1.0"/>

@@ -4,6 +4,117 @@
    language is requested. */
 #undef ENABLE_NLS
 
+/* Define if altair-lte plugin is enabled */
+#undef ENABLE_PLUGIN_ALTAIR_LTE
+
+/* Define if anydata plugin is enabled */
+#undef ENABLE_PLUGIN_ANYDATA
+
+/* Define if broadmobi plugin is enabled */
+#undef ENABLE_PLUGIN_BROADMOBI
+
+/* Define if cinterion plugin is enabled */
+#undef ENABLE_PLUGIN_CINTERION
+
+/* Define if dell plugin is enabled */
+#undef ENABLE_PLUGIN_DELL
+
+/* Define if dlink plugin is enabled */
+#undef ENABLE_PLUGIN_DLINK
+
+/* Define if fibocom plugin is enabled */
+#undef ENABLE_PLUGIN_FIBOCOM
+
+/* Define if foxconn plugin is enabled */
+#undef ENABLE_PLUGIN_FOXCONN
+
+/* Define if generic plugin is enabled */
+#undef ENABLE_PLUGIN_GENERIC
+
+/* Define if haier plugin is enabled */
+#undef ENABLE_PLUGIN_HAIER
+
+/* Define if huawei plugin is enabled */
+#undef ENABLE_PLUGIN_HUAWEI
+
+/* Define if iridium plugin is enabled */
+#undef ENABLE_PLUGIN_IRIDIUM
+
+/* Define if linktop plugin is enabled */
+#undef ENABLE_PLUGIN_LINKTOP
+
+/* Define if longcheer plugin is enabled */
+#undef ENABLE_PLUGIN_LONGCHEER
+
+/* Define if mbm plugin is enabled */
+#undef ENABLE_PLUGIN_MBM
+
+/* Define if motorola plugin is enabled */
+#undef ENABLE_PLUGIN_MOTOROLA
+
+/* Define if mtk plugin is enabled */
+#undef ENABLE_PLUGIN_MTK
+
+/* Define if nokia plugin is enabled */
+#undef ENABLE_PLUGIN_NOKIA
+
+/* Define if nokia-icera plugin is enabled */
+#undef ENABLE_PLUGIN_NOKIA_ICERA
+
+/* Define if novatel plugin is enabled */
+#undef ENABLE_PLUGIN_NOVATEL
+
+/* Define if novatel-lte plugin is enabled */
+#undef ENABLE_PLUGIN_NOVATEL_LTE
+
+/* Define if option plugin is enabled */
+#undef ENABLE_PLUGIN_OPTION
+
+/* Define if option-hso plugin is enabled */
+#undef ENABLE_PLUGIN_OPTION_HSO
+
+/* Define if pantech plugin is enabled */
+#undef ENABLE_PLUGIN_PANTECH
+
+/* Define if quectel plugin is enabled */
+#undef ENABLE_PLUGIN_QUECTEL
+
+/* Define if samsung plugin is enabled */
+#undef ENABLE_PLUGIN_SAMSUNG
+
+/* Define if sierra plugin is enabled */
+#undef ENABLE_PLUGIN_SIERRA
+
+/* Define if sierra-legacy plugin is enabled */
+#undef ENABLE_PLUGIN_SIERRA_LEGACY
+
+/* Define if simtech plugin is enabled */
+#undef ENABLE_PLUGIN_SIMTECH
+
+/* Define if telit plugin is enabled */
+#undef ENABLE_PLUGIN_TELIT
+
+/* Define if thuraya plugin is enabled */
+#undef ENABLE_PLUGIN_THURAYA
+
+/* Define if tplink plugin is enabled */
+#undef ENABLE_PLUGIN_TPLINK
+
+/* Define if ublox plugin is enabled */
+#undef ENABLE_PLUGIN_UBLOX
+
+/* Define if via plugin is enabled */
+#undef ENABLE_PLUGIN_VIA
+
+/* Define if wavecom plugin is enabled */
+#undef ENABLE_PLUGIN_WAVECOM
+
+/* Define if x22x plugin is enabled */
+#undef ENABLE_PLUGIN_X22X
+
+/* Define if zte plugin is enabled */
+#undef ENABLE_PLUGIN_ZTE
+
 /* Gettext package */
 #undef GETTEXT_PACKAGE
 
@@ -121,6 +232,27 @@
 
 /* Define if you want QMI support */
 #undef WITH_QMI
+
+/* Define if foxconn utils are built */
+#undef WITH_SHARED_FOXCONN
+
+/* Define if icera utils are built */
+#undef WITH_SHARED_ICERA
+
+/* Define if novatel utils are built */
+#undef WITH_SHARED_NOVATEL
+
+/* Define if option utils are built */
+#undef WITH_SHARED_OPTION
+
+/* Define if sierra utils are built */
+#undef WITH_SHARED_SIERRA
+
+/* Define if telit utils are built */
+#undef WITH_SHARED_TELIT
+
+/* Define if xmm utils are built */
+#undef WITH_SHARED_XMM
 
 /* Define if you want systemd journal support */
 #undef WITH_SYSTEMD_JOURNAL

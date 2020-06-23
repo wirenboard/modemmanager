@@ -65,7 +65,7 @@ mmcli_modem_simple_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("simple",
-                                "Simple options",
+                                "Simple options:",
                                 "Show Simple options",
                                 NULL,
                                 NULL);
@@ -101,7 +101,7 @@ mmcli_modem_simple_options_enabled (void)
 }
 
 static void
-context_free (Context *ctx)
+context_free (void)
 {
     if (!ctx)
         return;
@@ -131,7 +131,7 @@ ensure_modem_simple (void)
 void
 mmcli_modem_simple_shutdown (void)
 {
-    context_free (ctx);
+    context_free ();
 }
 
 static void

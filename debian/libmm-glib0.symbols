@@ -68,15 +68,25 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_bearer_properties_set_password@Base 0.7.991
  mm_bearer_properties_set_rm_protocol@Base 0.7.991
  mm_bearer_properties_set_user@Base 0.7.991
+ mm_bearer_stats_get_attempts@Base 1.13.900
  mm_bearer_stats_get_dictionary@Base 1.5.993
  mm_bearer_stats_get_duration@Base 1.5.993
+ mm_bearer_stats_get_failed_attempts@Base 1.13.900
  mm_bearer_stats_get_rx_bytes@Base 1.5.993
+ mm_bearer_stats_get_total_duration@Base 1.13.900
+ mm_bearer_stats_get_total_rx_bytes@Base 1.13.900
+ mm_bearer_stats_get_total_tx_bytes@Base 1.13.900
  mm_bearer_stats_get_tx_bytes@Base 1.5.993
  mm_bearer_stats_get_type@Base 1.5.993
  mm_bearer_stats_new@Base 1.5.993
  mm_bearer_stats_new_from_dictionary@Base 1.5.993
+ mm_bearer_stats_set_attempts@Base 1.13.900
  mm_bearer_stats_set_duration@Base 1.5.993
+ mm_bearer_stats_set_failed_attempts@Base 1.13.900
  mm_bearer_stats_set_rx_bytes@Base 1.5.993
+ mm_bearer_stats_set_total_duration@Base 1.13.900
+ mm_bearer_stats_set_total_rx_bytes@Base 1.13.900
+ mm_bearer_stats_set_total_tx_bytes@Base 1.13.900
  mm_bearer_stats_set_tx_bytes@Base 1.5.993
  mm_bearer_type_get_string@Base 1.10.0
  mm_bearer_type_get_type@Base 1.10.0
@@ -182,7 +192,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_common_build_bands_string@Base 0.7.991
  mm_common_build_bands_unknown@Base 0.7.991
  mm_common_build_capabilities_string@Base 0.7.991
- mm_common_build_capability_combinations_any@Base 0.7.991
+#MISSING: 1.13.900# mm_common_build_capability_combinations_any@Base 0.7.991
  mm_common_build_capability_combinations_none@Base 0.7.991
  mm_common_build_mode_combinations_default@Base 0.7.991
  mm_common_build_mode_combinations_string@Base 0.7.991
@@ -1093,9 +1103,11 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_get_int_from_match_info@Base 0.7.991
  mm_get_int_from_str@Base 0.7.991
  mm_get_string_unquoted_from_match_info@Base 0.7.991
+ mm_get_u64_from_hex_match_info@Base 1.13.900
  mm_get_u64_from_hex_str@Base 1.12.6
  mm_get_u64_from_match_info@Base 1.12.6
  mm_get_u64_from_str@Base 1.12.6
+ mm_get_uint_from_hex_match_info@Base 1.13.900
  mm_get_uint_from_hex_str@Base 1.7.990
  mm_get_uint_from_match_info@Base 0.7.991
  mm_get_uint_from_str@Base 0.7.991
@@ -1138,6 +1150,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_location_gps_nmea_build_full@Base 0.7.991
  mm_location_gps_nmea_get_string_variant@Base 0.7.991
  mm_location_gps_nmea_get_trace@Base 0.7.991
+ mm_location_gps_nmea_get_traces@Base 1.13.900
  mm_location_gps_nmea_get_type@Base 0.7.991
  mm_location_gps_nmea_new@Base 0.7.991
  mm_location_gps_nmea_new_from_string_variant@Base 0.7.991

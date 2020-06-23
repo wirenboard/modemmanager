@@ -26,7 +26,7 @@
 #include <ModemManager.h>
 #define _LIBMM_INSIDE_MM
 #include <libmm-glib.h>
-#include "mm-log.h"
+#include "mm-log-test.h"
 #include "mm-sms-part-3gpp.h"
 
 #define PROGRAM_NAME    "mmsmspdu"
@@ -93,6 +93,7 @@ show_part_info (MMSmsPart *part)
     case MM_SMS_ENCODING_8BIT:
         g_print ("encoding: 8BIT\n");
         break;
+    case MM_SMS_ENCODING_UNKNOWN:
     default:
         g_print ("encoding: unknown (0x%x)\n", encoding);
         break;
@@ -162,26 +163,6 @@ show_part_info (MMSmsPart *part)
     }
 }
 
-void
-_mm_log (const char *loc,
-         const char *func,
-         guint32     level,
-         const char *fmt,
-         ...)
-{
-    va_list args;
-    gchar *msg;
-
-    if (!verbose_flag)
-        return;
-
-    va_start (args, fmt);
-    msg = g_strdup_vprintf (fmt, args);
-    va_end (args);
-    g_print ("%s\n", msg);
-    g_free (msg);
-}
-
 static void
 print_version_and_exit (void)
 {
@@ -218,7 +199,7 @@ int main (int argc, char **argv)
         exit (EXIT_FAILURE);
     }
 
-    part = mm_sms_part_3gpp_new_from_pdu (0, pdu, &error);
+    part = mm_sms_part_3gpp_new_from_pdu (0, pdu, NULL, &error);
     if (!part) {
         g_printerr ("error: couldn't parse PDU: %s\n", error->message);
         exit (EXIT_FAILURE);

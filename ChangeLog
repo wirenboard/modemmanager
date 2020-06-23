@@ -1,3 +1,1195 @@
+commit cbcc14110521fdb360a3028b1b15d59ffc74257e
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jun 4 09:48:10 2020 +0200
+
+    build: bump version to 1.13.900 (1.14-rc1)
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit cd501c4d2657e8273d928748056050fc5b696f7c
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jun 4 11:38:48 2020 +0200
+
+    NEWS: add details about the plugin configure options
+
+ NEWS | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+commit a5c060ef879c804ee21aa6c68784ccdac7171ee7
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Jun 2 15:42:58 2020 +0200
+
+    filter: setup automatic per-vid checks in the plugin whitelist
+
+    Until now, the plugin whitelist rule in the filter would only handle
+    those plugins that require specific udev tags, and those that had
+    explicit full vid:pid pairs.
+
+    This update makes a new implicit automatic whitelist for all devices
+    that match any of the vids managed by the different plugins.
+
+    Looking at the current list of devices in the blacklist and greylist
+    maintained by ModemManager, there are no devices falling under the
+    list of supported plugin vids that would need to be blacklisted;
+    except for u-blox GPS modules:
+
+      huawei    -> 0x12d1        -> None in blacklist/greylist
+      thuraya   -> 0x1a26        -> None in blacklist/greylist
+      telit     -> 0x1bc7        -> None in blacklist/greylist
+      dLink     -> 0x2001        -> None in blacklist/greylist
+      wavecom   -> 0x114f        -> None in blacklist/greylist
+      x22x      -> 0x1bbb,0x0b3c -> None in blacklist/greylist
+      anydata   -> 0x16d5        -> None in blacklist/greylist
+      quectel   -> 0x2c7c        -> None in blacklist/greylist
+      haier     -> 0x201e        -> None in blacklist/greylist
+      novatel   -> 0x1410        -> None in blacklist/greylist
+      dell      -> 0x413c        -> None in blacklist/greylist
+      option    -> 0x0af0,0x1931 -> None in blacklist/greylist
+      nokia     -> 0x0421        -> None in blacklist/greylist
+      cinterion -> 0x1e2d,0x0681 -> None in blacklist/greylist
+      simtech   -> 0x1e0e        -> None in blacklist/greylist
+      iridium   -> 0x1edd        -> None in blacklist/greylist
+      pantech   -> 0x106c        -> None in blacklist/greylist
+      longcheer -> 0x1c9e,0x1bbb -> None in blacklist/greylist
+      linktop   -> 0x230d        -> None in blacklist/greylist
+      sierra    -> 0x1199        -> None in blacklist/greylist
+      ublox     -> 0x1546        -------------> GPS chips blacklisted
+      !!!!!
+      foxconn   -> 0x0489        -> None in blacklist/greylist
+      broadmobi -> 0x2020        -> None in blacklist/greylist
+      fibocom   -> 0x2cb7        -> None in blacklist/greylist
+      tplink    -> 0x2357        -> None in blacklist/greylist
+      zte       -> 0x19d2        -> None in blacklist/greylist
+
+    The rules used to blacklist the u-blox GPS chips have already been
+    moved to the u-blox plugin itself, and now they use the broader
+    ID_MM_DEVICE_IGNORE tag that applies in all filter modes.
+
+ NEWS                    |  4 ++++
+ src/mm-filter.c         | 37 +++++++++++++++++++++++++++++++++++++
+ src/mm-filter.h         |  2 ++
+ src/mm-plugin-manager.c | 18 +++++++++++++++++-
+ src/mm-plugin.c         |  6 ++++++
+ src/mm-plugin.h         |  1 +
+ 6 files changed, 67 insertions(+), 1 deletion(-)
+
+commit bbeca601138ff51b817bb1ef84b53a70572d0c19
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Jun 2 15:39:51 2020 +0200
+
+    ublox: fully ignore GPS devices with plugin-installed rules
+
+    Instead of setting up the ID_MM_TTY_BLACKLIST tag used in 'legacy'
+    filter mode, tag all known u-blox GPS devices with the broader
+    ID_MM_DEVICE_IGNORE tag that applies under all filter modes.
+
+    Also, make this rules be installed by the plugin itself, because at
+    the end, it is the u-blox plugin the one attempting to probe all
+    devices with vid 0x1546.
+
+ NEWS                                       | 1 +
+ plugins/ublox/77-mm-ublox-port-types.rules | 5 +++++
+ src/77-mm-usb-device-blacklist.rules       | 5 -----
+ 3 files changed, 6 insertions(+), 5 deletions(-)
+
+commit 657d5e61802db19be728e5e2e313c4f80244cb4d
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jun 4 09:46:04 2020 +0200
+
+    NEWS: update MBIM reset operation info to include Qualcomm devices
+
+    We're using QMI over MBIM to perform the reset if the device is QMI
+    based.
+
+ NEWS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 1ef46cdf80a26633bb6cb2dc2be335cdd56bcc5b
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Jun 3 17:32:19 2020 +0200
+
+    build: require libmbim 1.24-rc1
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 30428ed57d4c43f80ef86da9d18f4da8cbb06285
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Jun 3 17:29:57 2020 +0200
+
+    NEWS: update for 1.14.0
+
+ NEWS | 126
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 126 insertions(+)
+
+commit b81101972ea49bf619d64c448a7eaf358c663bb1
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Jun 3 17:29:46 2020 +0200
+
+    docs,libmm-glib: add 1.14 index
+
+ docs/reference/libmm-glib/libmm-glib-docs.xml | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+commit d36df682264698e6c33a6c7e79e1f11ec142b609
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Jun 2 10:16:33 2020 +0200
+
+    wavecom: break loop matching 2G bands if exact combination found
+
+ plugins/wavecom/mm-broadband-modem-wavecom.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+commit a6607a5e7dc5ac036f416bb405d37e5c22691ec1
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Jun 2 10:13:08 2020 +0200
+
+    wavecom: port to use g_autoptr() setup
+
+ plugins/wavecom/mm-broadband-modem-wavecom.c | 113
+ ++++++++++-----------------
+ 1 file changed, 42 insertions(+), 71 deletions(-)
+
+commit 08d40fe05d4b53946928c38ad488f5acff24d360
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Jun 2 10:01:43 2020 +0200
+
+    wavecom: fix GTask return handling when loading current caps
+
+ plugins/wavecom/mm-broadband-modem-wavecom.c | 26
+ ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
+
+commit d8b70602c51b77356eb439d63c4cac311d867310
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri May 15 15:09:33 2020 +0200
+
+    huawei: ignore NDISDUP disconnection errors
+
+    Running NDISDUP=1,0 on an already disconnected bearer/context will
+    report ERROR, so we can really ignore the result of the command,
+    because we're anyway going to get the correct bearer/context status
+    later on with the NDISSTATQRY checks.
+
+ plugins/huawei/mm-broadband-bearer-huawei.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
+
+commit 472fb96bbe758a7ba11c184ea7c04e328c27fd97
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri May 15 15:01:56 2020 +0200
+
+    huawei: don't delay reporting network initiated disconnects
+
+    When a network-initiated event is received telling us that a
+    bearer/context is disconnected, we should handle and process it right
+    away, without thinking on whether there is going to be a
+    user-requested disconnect afterwards or not.
+
+    This effectively reverts the changes introduced in commit
+    21a5aaf4fe6934aad2e6c770aa4bdffa3ad29f9d, which looks like was done to
+    handle synchronization issues with upper layers (e.g. with
+    NetworkManager or Shill).
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/205
+
+ plugins/huawei/mm-broadband-bearer-huawei.c | 59
+ -----------------------------
+ plugins/huawei/mm-broadband-modem-huawei.c  |  7 +---
+ 2 files changed, 2 insertions(+), 64 deletions(-)
+
+commit 15543794b781266af31e613faea2d904afcee54e
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu May 28 15:00:40 2020 +0200
+
+    filter: 'strict' is the new default
+
+    The 'strict' filter policy is less invasive, as it will not touch TTYs
+    unless there are clear indications that it may be a modem. Under this
+    mode, the ModemManager-provided blacklist database is not used.
+
+ src/mm-context.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 82d38f701cb523d83f6390dc5a5a84b0604b7948
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu May 28 14:58:47 2020 +0200
+
+    filter: rename 'default' to 'legacy'
+
+    The old 'default' policy is renamed to 'legacy', and is considered now
+    deprecated.
+
+ src/mm-context.c | 8 ++++----
+ src/mm-filter.h  | 4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+commit 6eca223705b0e5c5ce52fff77858c41c82a854d7
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jun 1 15:09:20 2020 +0200
+
+    shared-qmi: require minimum set of NMEA types before starting
+    GNSS engine
+
+ configure.ac        |   2 +-
+ src/mm-shared-qmi.c | 248
+ +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 245 insertions(+), 5 deletions(-)
+
+commit fd28f9475011d3d62202b650b64a64b7c42b5027
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jun 1 15:56:42 2020 +0200
+
+    ci: always build libqmi with basic collection
+
+    Which must be the minimum set of supported messages required by
+    ModemManager.
+
+ .gitlab-ci.yml | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+commit 10648f8d36c08dbd711604824c1a21fb7859aa54
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jun 1 15:18:01 2020 +0200
+
+    broadband-modem-qmi: plug memleak when changing current firmware
+
+      ==80079== 104 (40 direct, 64 indirect) bytes in 1 blocks are
+      definitely lost in loss record 4,761 of 5,232
+      ==80079==    at 0x483977F: malloc (vg_replace_malloc.c:309)
+      ==80079==    by 0x5025AE9: g_malloc (in
+      /usr/lib/libglib-2.0.so.0.6400.2)
+      ==80079==    by 0x5006223: g_slice_alloc (in
+      /usr/lib/libglib-2.0.so.0.6400.2)
+      ==80079==    by 0x505B0F4: g_array_sized_new (in
+      /usr/lib/libglib-2.0.so.0.6400.2)
+      ==80079==    by 0x2008A3: firmware_change_current
+      (mm-broadband-modem-qmi.c:8426)
+      ==80079==    by 0x1AB5F3: select_auth_ready
+      (mm-iface-modem-firmware.c:225)
+      ==80079==    by 0x4E68653: ??? (in /usr/lib/libgio-2.0.so.0.6400.2)
+      ==80079==    by 0x4E6DA26: ??? (in /usr/lib/libgio-2.0.so.0.6400.2)
+      ==80079==    by 0x17402E: authorize_ready (mm-base-modem.c:1363)
+      ==80079==    by 0x4E68653: ??? (in /usr/lib/libgio-2.0.so.0.6400.2)
+      ==80079==    by 0x4E6DA26: ??? (in /usr/lib/libgio-2.0.so.0.6400.2)
+      ==80079==    by 0x15366D: check_authorization_ready
+      (mm-auth-provider.c:99)
+
+ src/mm-broadband-modem-qmi.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit d848b10d2479dd2d7a3e2c6330ca72b8902f829d
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jun 1 15:16:23 2020 +0200
+
+    iface-modem-firmware: plug memleak when listing images
+
+      ==80079== 1,377 (48 direct, 1,329 indirect) bytes in 1 blocks are
+      definitely lost in loss record 5,200 of 5,232
+      ==80079==    at 0x483977F: malloc (vg_replace_malloc.c:309)
+      ==80079==    by 0x5025AE9: g_malloc (in
+      /usr/lib/libglib-2.0.so.0.6400.2)
+      ==80079==    by 0x5006223: g_slice_alloc (in
+      /usr/lib/libglib-2.0.so.0.6400.2)
+      ==80079==    by 0x4FEB59B: ??? (in /usr/lib/libglib-2.0.so.0.6400.2)
+      ==80079==    by 0x4FEE378: g_variant_builder_end (in
+      /usr/lib/libglib-2.0.so.0.6400.2)
+      ==80079==    by 0x48F8314: mm_firmware_properties_get_dictionary
+      (mm-firmware-properties.c:337)
+      ==80079==    by 0x1AAF29: load_current_ready
+      (mm-iface-modem-firmware.c:80)
+      ==80079==    by 0x4E68653: ??? (in /usr/lib/libgio-2.0.so.0.6400.2)
+      ==80079==    by 0x4E68688: ??? (in /usr/lib/libgio-2.0.so.0.6400.2)
+      ==80079==    by 0x502B58E: g_main_context_dispatch (in
+      /usr/lib/libglib-2.0.so.0.6400.2)
+      ==80079==    by 0x502D530: ??? (in /usr/lib/libglib-2.0.so.0.6400.2)
+      ==80079==    by 0x502E542: g_main_loop_run (in
+      /usr/lib/libglib-2.0.so.0.6400.2)
+
+ src/mm-iface-modem-firmware.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+commit 3b35bbd47bc8accd42eed2c22070557104f09d27
+Author: Louis-Alexis Eyraud <louis-alexis.eyraud@sigfox.com>
+Date:   Fri May 29 10:47:11 2020 +0200
+
+    huawei: fix memory leak when parsing HCSQ response
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/220
+
+ plugins/huawei/mm-broadband-modem-huawei.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit df36f8d2d3fc34bd4c95ad97587d7cad04c6a9df
+Author: Giacinto Cifelli <gciofono@gmail.com>
+Date:   Thu May 28 05:28:32 2020 +0200
+
+    cinterion: fix syntax error for setting radio/bands/[23]g
+
+ plugins/cinterion/mm-broadband-modem-cinterion.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 3efe127aa881a0be3595665cb3f0a38819b37626
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed May 27 15:48:40 2020 +0200
+
+    iface-modem-voice: fix assertions in call setup/teardown logic
+
+ src/mm-iface-modem-voice.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+commit 0cc5a6ce4f225b9aad06ec20235467188fe23d66
+Author: Giacinto Cifelli <gciofono@gmail.com>
+Date:   Tue May 26 15:03:52 2020 +0200
+
+    cinterion: skip sim ready check for modules that don't support it
+
+ plugins/cinterion/mm-broadband-modem-cinterion.c | 61
+ ++++++++++++++++++++----
+ 1 file changed, 51 insertions(+), 10 deletions(-)
+
+commit da7bc39f0c0bfc53d90195c0911f4a50b98bd1c8
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed May 27 07:09:58 2020 +0200
+
+    blacklist: add USB CEC adapters
+
+    These are not being probed when using the STRICT filter, so this
+    blacklist update is relevant only for DEFAULT filter type.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/212
+
+ src/77-mm-usb-device-blacklist.rules | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+commit 84ec3d2fcf081ab3404d27458031c87aa6214065
+Author: Giacinto Cifelli <gciofono@gmail.com>
+Date:   Tue May 26 15:00:03 2020 +0200
+
+    cinterion: simplify check
+
+    no longer need to check the charset because of the fix in charsets,
+    that now accepts GSM and UCS2.
+
+ plugins/cinterion/mm-modem-helpers-cinterion.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 502c636516b68dc1556f574a9cc2922462d077bf
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 26 14:28:08 2020 +0200
+
+    zte: add MF667 port type hints
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/217
+
+ plugins/zte/77-mm-zte-port-types.rules | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit a399c7e42a8e780dc47edbac45d64db75e031fac
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 26 11:45:44 2020 +0200
+
+    charsets: take_and_convert() methods should support GSM encoding
+
+    The iconv() operation would fail because we wouldn't give any proper
+    charset string to convert to/from. Use our custom GSM encoding support
+    instead.
+
+ src/mm-charsets.c         | 22 ++++++++++++++++++----
+ src/tests/test-charsets.c | 14 ++++++++++++++
+ 2 files changed, 32 insertions(+), 4 deletions(-)
+
+commit c99457695334eb7a9f32ea0d085ee39e01a96a59
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 26 11:44:59 2020 +0200
+
+    charsets,test: extend UCS2->UTF-8 testing for the reverse operation
+
+ src/tests/test-charsets.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+commit c4e6a0c4f657781c45e8dac58aebd3e29a40895b
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 26 11:26:01 2020 +0200
+
+    charsets: don't warn in unlikely case of needing to convert to HEX
+    from UTF-8
+
+    This would really be an implementation detail, not a real use
+    case. Just don't warn in this case, as in the conversion in the
+    opposite direction.
+
+ src/mm-charsets.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+commit 87b8c9b295e22d234d2ed2e49761ba36e3aa3921
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 26 11:14:48 2020 +0200
+
+    cinterion: minor coding style fixes in new band management
+
+ plugins/cinterion/mm-modem-helpers-cinterion.c | 139
+ +++++++++++++------------
+ 1 file changed, 71 insertions(+), 68 deletions(-)
+
+commit 793132d56d346ea1968c92c67156f3d8759bd395
+Author: Giacinto Cifelli <gciofono@gmail.com>
+Date:   Tue May 19 11:09:26 2020 +0200
+
+    cinterion: radio/band handling for LTE modems
+
+ plugins/cinterion/77-mm-cinterion-port-types.rules |   2 +
+ plugins/cinterion/mm-broadband-modem-cinterion.c   | 171 ++++--
+ plugins/cinterion/mm-modem-helpers-cinterion.c     | 495
+ +++++++++++++----
+ plugins/cinterion/mm-modem-helpers-cinterion.h     |  67 ++-
+ .../cinterion/tests/test-modem-helpers-cinterion.c | 588
+ +++++++++++++++++++--
+ 5 files changed, 1133 insertions(+), 190 deletions(-)
+
+commit 09260311196c110493dd1d713d7341f3a2c02c14
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 26 15:03:24 2020 +0200
+
+    Revert "charsets: don't warn in unlikely case of needing to convert
+    to HEX from UTF-8"
+
+    This reverts commit 6a7dd87f30b2cc1b459abab38a0805aa8ba1bfbc.
+
+    Reverting because the merge request was set to squash all together....
+
+ plugins/cinterion/77-mm-cinterion-port-types.rules |   2 -
+ plugins/cinterion/mm-broadband-modem-cinterion.c   | 171 ++----
+ plugins/cinterion/mm-modem-helpers-cinterion.c     | 520
+ ++++--------------
+ plugins/cinterion/mm-modem-helpers-cinterion.h     |  67 +--
+ .../cinterion/tests/test-modem-helpers-cinterion.c | 588
+ ++-------------------
+ src/mm-charsets.c                                  |  24 +-
+ src/tests/test-charsets.c                          |  20 +-
+ 7 files changed, 209 insertions(+), 1183 deletions(-)
+
+commit 6a7dd87f30b2cc1b459abab38a0805aa8ba1bfbc
+Author: Giacinto Cifelli <gciofono@gmail.com>
+Date:   Tue May 26 12:45:40 2020 +0000
+
+    charsets: don't warn in unlikely case of needing to convert to HEX
+    from UTF-8
+
+    This would really be an implementation detail, not a real use
+    case. Just don't warn in this case, as in the conversion in the
+    opposite direction.
+
+ plugins/cinterion/77-mm-cinterion-port-types.rules |   2 +
+ plugins/cinterion/mm-broadband-modem-cinterion.c   | 171 ++++--
+ plugins/cinterion/mm-modem-helpers-cinterion.c     | 520
+ ++++++++++++++----
+ plugins/cinterion/mm-modem-helpers-cinterion.h     |  67 ++-
+ .../cinterion/tests/test-modem-helpers-cinterion.c | 588
+ +++++++++++++++++++--
+ src/mm-charsets.c                                  |  24 +-
+ src/tests/test-charsets.c                          |  20 +-
+ 7 files changed, 1183 insertions(+), 209 deletions(-)
+
+commit 15a941fae5e7d8000fd58f4da03be2d379151576
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed May 20 13:12:38 2020 +0200
+
+    broadband-modem-qmi: only use "Data Service Capabilities" array if
+    content given
+
+    See
+    https://gitlab.freedesktop.org/mobile-broadband/libqmi/-/issues/32#note_505065
+
+ src/mm-broadband-modem-qmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 29a68c94b9896eb216f0b604210aafe751423fc2
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri May 22 10:58:29 2020 +0200
+
+    huawei: ignore ^CCALLSTATE URCs for now
+
+    We will want to support these to avoid needing to have CLCC call
+    polling, but for now, just ignore them so that they don't interfere
+    with the call management.
+
+    For context, see:
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/216
+
+ plugins/huawei/mm-broadband-modem-huawei.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+commit 1eeec40ee85552cee957f35db9cc85aae6116e48
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu May 21 15:03:17 2020 +0200
+
+    iface-modem-voice: fix assert() when setting up call polling
+
+    If an incoming call is detected during the CLCC polling, the polling
+    timeout will already be set, so don't assert when checking the polling
+    id afterwards, just make sure we don't reset the timeout.
+
+    https://lists.freedesktop.org/archives/modemmanager-devel/2020-May/007866.html
+
+ src/mm-iface-modem-voice.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+commit 98fa83a693c24002dc0087c4304ea1143b498d1f
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:49:53 2020 +0200
+
+    cinterion,tests: avoid cast-align errors
+
+    We can safely cast the data in a GArray to gpointer first, and then
+    to the pointer type we require.
+
+      cinterion/tests/test-modem-helpers-cinterion.c: In function
+      'common_test_scfg':
+      cinterion/tests/test-modem-helpers-cinterion.c:56:56: error: cast
+      increases required alignment of target type [-Werror=cast-align]
+           expected_bands_str = mm_common_build_bands_string ((const
+           MMModemBand *)expected_bands->data,
+                                                              ^
+      cinterion/tests/test-modem-helpers-cinterion.c:58:47: error: cast
+      increases required alignment of target type [-Werror=cast-align]
+           bands_str = mm_common_build_bands_string ((const MMModemBand
+           *)bands->data,
+                                                     ^
+      cinterion/tests/test-modem-helpers-cinterion.c: In function
+      'common_test_scfg_response':
+      cinterion/tests/test-modem-helpers-cinterion.c:209:56: error: cast
+      increases required alignment of target type [-Werror=cast-align]
+           expected_bands_str = mm_common_build_bands_string ((const
+           MMModemBand *)expected_bands->data,
+                                                              ^
+      cinterion/tests/test-modem-helpers-cinterion.c:211:47: error: cast
+      increases required alignment of target type [-Werror=cast-align]
+           bands_str = mm_common_build_bands_string ((const MMModemBand
+           *)bands->data,
+                                                     ^
+
+ plugins/cinterion/tests/test-modem-helpers-cinterion.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+commit b71ae9ce72e9d0e28a01ff81dabb6126def9ca0c
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:45:34 2020 +0200
+
+    wavecom: avoid cast-align errors
+
+    We can safely cast the data in a GArray to gpointer first, and then
+    to the pointer type we require.
+
+      wavecom/mm-broadband-modem-wavecom.c: In function 'set_bands_3g':
+      wavecom/mm-broadband-modem-wavecom.c:800:50: error: cast increases
+      required alignment of target type [-Werror=cast-align]
+           bands_string = mm_common_build_bands_string ((MMModemBand
+           *)bands_array_final->data,
+                                                        ^
+      wavecom/mm-broadband-modem-wavecom.c: In function 'set_bands_2g':
+      wavecom/mm-broadband-modem-wavecom.c:872:50: error: cast increases
+      required alignment of target type [-Werror=cast-align]
+           bands_string = mm_common_build_bands_string ((MMModemBand
+           *)bands_array_final->data,
+                                                        ^
+
+ plugins/wavecom/mm-broadband-modem-wavecom.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 8bf13294819d57468a85a6bd2646b3467932bbb4
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:42:56 2020 +0200
+
+    libmm-glib,helpers: use locale-independent strtod()
+
+    Otherwise parsing may fail, e.g. as in this unit test:
+
+      # Start of smoni tests
+      # DEBUG: testing SMONI response: ^SMONI:
+      2G,71,-61,262,02,0143,83BA,33,33,3,6,G,NOCONN
+      # DEBUG: testing SMONI response: ^SMONI: 2G,SEARCH,SEARCH
+      # DEBUG: testing SMONI response: ^SMONI:
+      2G,673,-89,262,07,4EED,A500,16,16,7,4,G,5,-107,LIMSRV
+      # DEBUG: testing SMONI response: ^SMONI:
+      2G,673,-80,262,07,4EED,A500,35,35,7,4,G,643,4,0,-80,0,S_FR
+      # DEBUG: testing SMONI response: ^SMONI:
+      3G,10564,296,-7.5,-79,262,02,0143,00228FF,-92,-78,NOCONN
+      **
+      ERROR:cinterion/tests/test-modem-helpers-cinterion.c:1036:test_smoni_response:
+      assertion failed (fabs (ecn0 - smoni_response_tests[i].ecn0) < 0.1):
+      (0,5 < 0,1)
+      Bail out!
+      ERROR:cinterion/tests/test-modem-helpers-cinterion.c:1036:test_smoni_response:
+      assertion failed (fabs (ecn0 - smoni_response_tests[i].ecn0) < 0.1):
+      (0,5 < 0,1)
+      Aborted (core dumped)
+
+ libmm-glib/mm-common-helpers.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 58ae8f4c2451b5d1110263ffb5f9fa6e3fcdcf03
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:39:25 2020 +0200
+
+    cinterion,helpers: minor coding style fix
+
+ plugins/cinterion/mm-modem-helpers-cinterion.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+commit 9bfc8a7829f5eacb7658011d177bb74e319af754
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:32:56 2020 +0200
+
+    novatel-lte: use GPtrArray to build a GStrv
+
+      novatel/mm-broadband-modem-novatel-lte.c: In function
+      'response_processor_nwmdn_ignore_at_errors':
+      novatel/mm-broadband-modem-novatel-lte.c:241:19: error: cast
+      increases required alignment of target type [-Werror=cast-align]
+           own_numbers = (GStrv) g_array_free (array, FALSE);
+                         ^
+
+ plugins/novatel/mm-broadband-modem-novatel-lte.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+commit a2b0cee935e4d0648a13572b57fda059c16854fb
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:27:02 2020 +0200
+
+    huawei,helpers: fix warnings with -Wcast-align
+
+      huawei/mm-modem-helpers-huawei.c: In function
+      'match_info_to_ip4_addr':
+      huawei/mm-modem-helpers-huawei.c:193:39: error: cast increases
+      required alignment of target type [-Werror=cast-align]
+           *out_addr = GUINT32_SWAP_LE_BE (*((guint32 *) bin));
+                                             ^
+      /usr/include/glib-2.0/glib/gtypes.h:184:77: note: in definition
+      of macro 'GUINT32_SWAP_LE_BE'
+       #    define GUINT32_SWAP_LE_BE(val) ((guint32) __builtin_bswap32
+       ((gint32) (val)))
+                                                                                   ^~~
+
+ plugins/huawei/mm-modem-helpers-huawei.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+commit bd2e6f5df43236f709113647845afb9fe095f837
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:18:38 2020 +0200
+
+    huawei: avoid cast-align errors
+
+    We can safely cast the data in a GArray to gpointer first, and then
+    to the pointer type we require.
+
+      huawei/mm-broadband-modem-huawei.c: In function 'set_current_bands':
+      huawei/mm-broadband-modem-huawei.c:916:50: error: cast increases
+      required alignment of target type [-Werror=cast-align]
+           bands_string = mm_common_build_bands_string ((MMModemBand
+           *)bands_array->data,
+                                                        ^
+
+ plugins/huawei/mm-broadband-modem-huawei.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 175bedf920159f75b2d517fd638835569477aa55
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:17:50 2020 +0200
+
+    xmm: avoid cast-align errors
+
+    We can safely cast the data in a GArray to gpointer first, and then
+    to the pointer type we require.
+
+      xmm/mm-shared-xmm.c: In function
+      'validate_and_build_command_set_current_bands':
+      xmm/mm-shared-xmm.c:512:45: error: cast increases required alignment
+      of target type [-Werror=cast-align]
+               str = mm_common_build_bands_string ((const MMModemBand
+               *)unapplied_bands->data, unapplied_bands->len);
+                                                   ^
+
+ plugins/xmm/mm-shared-xmm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit ccf16e00a73291899af4631557c90e4e697f9841
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:16:51 2020 +0200
+
+    ublox,helpers: avoid cast-align errors
+
+    We can safely cast the data in a GArray to gpointer first, and then
+    to the pointer type we require.
+
+      ublox/mm-modem-helpers-ublox.c: In function
+      'parse_bands_from_string':
+      ublox/mm-modem-helpers-ublox.c:1612:48: error: cast increases
+      required alignment of target type [-Werror=cast-align]
+               tmpstr = mm_common_build_bands_string ((MMModemBand
+               *)(bands->data), bands->len);
+                                                      ^
+
+ plugins/ublox/mm-modem-helpers-ublox.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 76d06ce697bd95e586d07361b4a447ced5b851f1
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:15:42 2020 +0200
+
+    cinterion,helpers: avoid cast-align errors
+
+    We can safely cast the data in a GArray to gpointer first, and then
+    to the pointer type we require.
+
+      cinterion/mm-modem-helpers-cinterion.c: In function
+      'mm_cinterion_build_band':
+      cinterion/mm-modem-helpers-cinterion.c:409:54: error: cast increases
+      required alignment of target type [-Werror=cast-align]
+               bands_string = mm_common_build_bands_string ((MMModemBand
+               *)bands->data, bands->len);
+                                                            ^
+
+ plugins/cinterion/mm-modem-helpers-cinterion.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit b0be4e895cc2b3b9f533b513eb4da3be99718497
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:12:28 2020 +0200
+
+    telit,helpers: avoid cast-align errors
+
+    We can safely cast the data in a GArray to gpointer first, and then
+    to the pointer type we require.
+
+      telit/mm-modem-helpers-telit.c: In function
+      'mm_telit_build_bnd_request':
+      telit/mm-modem-helpers-telit.c:256:55: error: cast increases
+      required alignment of target type [-Werror=cast-align]
+                   bands_str = mm_common_build_bands_string ((const
+                   MMModemBand *)(bands_array->data), bands_array->len);
+                                                             ^
+      telit/mm-modem-helpers-telit.c:275:55: error: cast increases
+      required alignment of target type [-Werror=cast-align]
+                   bands_str = mm_common_build_bands_string ((const
+                   MMModemBand *)(bands_array->data), bands_array->len);
+                                                             ^
+
+ plugins/telit/mm-modem-helpers-telit.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 301b6f0a64d358706c15efff6bca676c4213c9a5
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:10:26 2020 +0200
+
+    plugins,tests: avoid cast-align errors
+
+    We can safely cast the data in a GArray to gpointer first, and then
+    to the pointer type we require.
+
+      tests/test-helpers.c: In function 'mm_test_helpers_compare_bands':
+      tests/test-helpers.c:41:47: error: cast increases required alignment
+      of target type [-Werror=cast-align]
+           bands_str = mm_common_build_bands_string ((MMModemBand
+           *)(bands->data), bands->len);
+                                                     ^
+      tests/test-helpers.c:46:56: error: cast increases required alignment
+      of target type [-Werror=cast-align]
+           expected_bands_str = mm_common_build_bands_string ((MMModemBand
+           *)(expected_bands_array->data), expected_bands_array->len);
+                                                              ^
+
+ plugins/tests/test-helpers.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit c7dee320c004bf9508e54555d0ad9f727b449705
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:08:40 2020 +0200
+
+    test-qcdm-serial-port: fix warnings with -Wsign-compare
+
+      test-qcdm-serial-port.c: In function 'wait_for_child':
+      test-qcdm-serial-port.c:57:52: error: comparison between signed
+      and unsigned integer expressions [-Werror=sign-compare]
+               if (d->child && (now.tv_sec - start.tv_sec > timeout)) {
+                                                          ^
+
+ src/tests/test-qcdm-serial-port.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 71d8bb2ec854e43c56d77c87f80c40807e8f8457
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:04:51 2020 +0200
+
+    iface-modem-messaging: avoid cast-align errors
+
+    We can safely cast the data in a GArray to gpointer first, and then
+    to the pointer type we require.
+
+      mm-iface-modem-messaging.c: In function
+      'load_supported_storages_ready':
+      mm-iface-modem-messaging.c:1154:53: error: cast increases required
+      alignment of target type [-Werror=cast-align]
+               mem1 = mm_common_build_sms_storages_string ((MMSmsStorage
+               *)storage_ctx->supported_mem1->data,
+                                                           ^
+      mm-iface-modem-messaging.c:1156:53: error: cast increases required
+      alignment of target type [-Werror=cast-align]
+               mem2 = mm_common_build_sms_storages_string ((MMSmsStorage
+               *)storage_ctx->supported_mem2->data,
+                                                           ^
+      mm-iface-modem-messaging.c:1158:53: error: cast increases required
+      alignment of target type [-Werror=cast-align]
+               mem3 = mm_common_build_sms_storages_string ((MMSmsStorage
+               *)storage_ctx->supported_mem3->data,
+                                                           ^
+
+ src/mm-iface-modem-messaging.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+commit ffbbec4a0d9a8a19f66b986db6534a10c3f973b4
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 13:03:26 2020 +0200
+
+    iface-modem-location: avoid warnings with -Wsign-compare
+
+      mm-iface-modem-location.c: In function 'location_gps_update_nmea':
+      mm-iface-modem-location.c:272:61: error: comparison between signed
+      and unsigned integer expressions [-Werror=sign-compare]
+                    time (NULL) - ctx->location_gps_nmea_last_time
+                    >= mm_gdbus_modem_location_get_gps_refresh_rate
+                    (skeleton))) {
+                                                                   ^~
+      mm-iface-modem-location.c:282:60: error: comparison between signed
+      and unsigned integer expressions [-Werror=sign-compare]
+                    time (NULL) - ctx->location_gps_raw_last_time >=
+                    mm_gdbus_modem_location_get_gps_refresh_rate
+                    (skeleton))) {
+                                                                  ^~
+
+ src/mm-iface-modem-location.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 7ccec0bd71a0451ad9e6c5f9ec63e47fbead8a27
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 11:40:33 2020 +0200
+
+    iface-modem: avoid cast-align errors
+
+    We can safely cast the data in a GArray to gpointer first, and then
+    to the pointer type we require.
+
+      mm-iface-modem.c: In function 'after_set_load_current_bands_ready':
+      mm-iface-modem.c:2358:55: error: cast increases required alignment
+      of target type [-Werror=cast-align]
+               requested_str = mm_common_build_bands_string ((MMModemBand
+               *)requested_bands->data, requested_bands->len);
+                                                             ^
+      mm-iface-modem.c:2359:55: error: cast increases required alignment
+      of target type [-Werror=cast-align]
+               current_str   = mm_common_build_bands_string ((MMModemBand
+               *)current_bands->data, current_bands->len);
+                                                             ^
+      mm-iface-modem.c: In function 'validate_bands':
+      mm-iface-modem.c:2474:48: error: cast increases required alignment
+      of target type [-Werror=cast-align]
+                                                      (const MMModemBand
+                                                      *)supported_bands_array->data,
+                                                      ^
+      mm-iface-modem.c: In function 'mm_iface_modem_set_current_bands':
+      mm-iface-modem.c:2535:50: error: cast increases required alignment
+      of target type [-Werror=cast-align]
+           bands_string = mm_common_build_bands_string ((MMModemBand
+           *)bands_array->data,
+                                                        ^
+
+ src/mm-iface-modem.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+commit 3476e140ad0b97dee50d14530f0c3dc04a1651b0
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 19 11:28:56 2020 +0200
+
+    modem-helpers: use GPtrArray to build a GStrv
+
+    So that we avoid errors when building on ARM due to increasing target
+    type alignment.
+
+      mm-modem-helpers.c: In function 'mm_3gpp_parse_cnum_exec_response':
+      mm-modem-helpers.c:3206:21: error: cast increases required alignment
+      of target type [-Werror=cast-align]
+           return (array ? (GStrv) g_array_free (array, FALSE) : NULL);
+                           ^
+
+ src/mm-modem-helpers.c | 26 +++++++++++---------------
+ 1 file changed, 11 insertions(+), 15 deletions(-)
+
+commit 8e033ba331647435bab95a071a450b9be977b295
+Author: Giacinto Cifelli <gciofono@gmail.com>
+Date:   Mon May 18 16:50:33 2020 +0200
+
+    AT modem: charset definition in init
+
+    Charset definition moved from enable state machine to init state
+    machine,
+    so that the right current charset is available also during further
+    initialization steps
+
+ src/mm-iface-modem.c | 206
+ +++++++++++++++++++++++++--------------------------
+ 1 file changed, 103 insertions(+), 103 deletions(-)
+
+commit 503581a3ac07e74fa9f31bb2d681750e8f577f96
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat May 16 10:33:29 2020 +0200
+
+    port-qmi: plug memleak when explicitly releasing client
+
+      ==43111== 24 bytes in 1 blocks are definitely lost in loss record
+      1,999 of 5,339
+      ==43111==    at 0x483BB65: calloc (vg_replace_malloc.c:762)
+      ==43111==    by 0x50259D1: g_malloc0 (in
+      /usr/lib/libglib-2.0.so.0.6400.2)
+      ==43111==    by 0x22AAB8: mm_port_qmi_allocate_client
+      (mm-port-qmi.c:201)
+      ==43111==    by 0x2007F0: parent_enabling_started_ready
+      (mm-broadband-modem-qmi.c:9114)
+      ==43111==    by 0x4E68653: ??? (in /usr/lib/libgio-2.0.so.0.6400.2)
+      ==43111==    by 0x4E6DA26: ??? (in /usr/lib/libgio-2.0.so.0.6400.2)
+      ==43111==    by 0x1C535E: enabling_flash_done
+      (mm-broadband-modem.c:10318)
+      ==43111==    by 0x4E68653: ??? (in /usr/lib/libgio-2.0.so.0.6400.2)
+      ==43111==    by 0x4E6DA26: ??? (in /usr/lib/libgio-2.0.so.0.6400.2)
+      ==43111==    by 0x224F0B: flash_do (mm-port-serial.c:1776)
+      ==43111==    by 0x502AC03: ??? (in /usr/lib/libglib-2.0.so.0.6400.2)
+      ==43111==    by 0x502B58E: g_main_context_dispatch (in
+      /usr/lib/libglib-2.0.so.0.6400.2)
+      ==43111==
+
+ src/mm-port-qmi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+commit fae614becf16a8f03e85f19b40a31c933c05f1c6
+Author: Giacinto Cifelli <gciofono@gmail.com>
+Date:   Sat May 16 05:47:52 2020 +0200
+
+    udev rules for the PLS62 in 005b enumeration
+
+ plugins/cinterion/77-mm-cinterion-port-types.rules | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+commit 6b36fe9f19289450dfbed00ade1d239d898a9feb
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri May 15 14:12:12 2020 +0200
+
+    huawei: NDISDUP based devices may use plain TTYs for control
+
+    So don't warn if no associated cdc-wdm port is found.
+
+ plugins/huawei/mm-broadband-modem-huawei.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit f109b528d3edb21fa08be3da6e2ad7280a15707f
+Author: Giacinto Cifelli <gciofono@gmail.com>
+Date:   Thu May 14 05:38:33 2020 +0200
+
+    plugins/cinterion: added Signal interface
+
+    Not all Cinterion modems support AT+CESQ.
+    However a much larger group of them support AT^SMONI
+    This commit uses the latter instead of the default former.
+
+ plugins/cinterion/mm-broadband-modem-cinterion.c   | 136 ++++++++++++
+ plugins/cinterion/mm-modem-helpers-cinterion.c     | 244
+ +++++++++++++++++++++
+ plugins/cinterion/mm-modem-helpers-cinterion.h     |  25 +++
+ .../cinterion/tests/test-modem-helpers-cinterion.c | 244
+ +++++++++++++++++++++
+ 4 files changed, 649 insertions(+)
+
+commit 8b7bdea7e07ca12f787ede809471f413ba988697
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon May 11 18:23:44 2020 +0200
+
+    telit: flag GPS port in the LE910C1
+
+ plugins/telit/77-mm-telit-port-types.rules | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 9c77fb8834cf8b666baa2778514f809f11e303f3
+Author: David Khouya <dkhouya@effenco.com>
+Date:   Sun May 3 10:13:55 2020 -0400
+
+    telit: add LE910C1 udev rule
+
+ plugins/telit/77-mm-telit-port-types.rules | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+commit bbd39a457ce2949dd167f9c2e01eecf6a9e14716
+Author: Giacinto Cifelli <gciofono@gmail.com>
+Date:   Thu May 14 09:48:35 2020 +0200
+
+    configure.ac: check for xsltproc
+
+ configure.ac | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit d33a883be4b8f0f273b91da7f21912ae2fb434de
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed May 13 10:06:37 2020 +0200
+
+    build: require libmbim 1.23.1 for autoptr support
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 26b589cc021f744d1af5d3680907a3e1f0689823
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun May 10 10:36:47 2020 +0200
+
+    broadmobi: new plugin
+
+    Right now, just with port type hints for the BM818.
+
+ .gitlab-ci.yml                                     |  6 +-
+ configure.ac                                       |  2 +
+ plugins/Makefile.am                                | 23 ++++++
+ plugins/broadmobi/77-mm-broadmobi-port-types.rules | 16 ++++
+ plugins/broadmobi/mm-plugin-broadmobi.c            | 95
+ ++++++++++++++++++++++
+ plugins/broadmobi/mm-plugin-broadmobi.h            | 40 +++++++++
+ 6 files changed, 179 insertions(+), 3 deletions(-)
+
+commit 0ddadbdc37c80397367dcd75f0752cc45b2285b6
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun May 10 09:56:10 2020 +0200
+
+    port: use correct enum to string conversion when logging
+
+           CC       mm-port.lo
+        mm-port.c: In function 'log_object_build_id':
+        mm-port.c:117:60: error: implicit conversion from 'MMPortType'
+        to 'MMModemPortType' [-Werror=enum-conversion]
+          117 |                             mm_modem_port_type_get_string
+          (mm_port_get_port_type (self)));
+              |
+              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        cc1: all warnings being treated as errors
+
+ src/mm-port.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 83952c5a301a118738a6e51786b37a041058d2c2
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri May 8 13:24:14 2020 +0200
+
+    bearer-qmi: get correct bearer object pointer from task
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/207
+
+ src/mm-bearer-qmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit d4a45315cf30fa26185202d316a8db3af5e05fcc
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue May 5 13:24:37 2020 +0200
+
+    cli: add allowed-auth bearer property in output
+
+    Given as a list of items, because the bearer can be created with one
+    or more allowed authentication protocols.
+
+ cli/mmcli-bearer.c | 23 +++++++++++++----------
+ cli/mmcli-output.c |  1 +
+ cli/mmcli-output.h |  1 +
+ 3 files changed, 15 insertions(+), 10 deletions(-)
+
+commit dfc2c51b9cc7d9c780763d42c91bf696c2b8880a
+Author: Eric Caruso <ejcaruso@chromium.org>
+Date:   Fri May 1 14:12:43 2020 -0700
+
+    introspection: use correct node name for ModemManager1 object
+
+    In the D-Bus specification it is stated that the root node of
+    an introspection file should have an absolute path[1]. This path
+    should not be the root path in D-Bus as putting objects there is
+    considered incorrect, and also because the MM1 object does not
+    actually sit at the root path (instead, it uses MM_DBUS_PATH, which
+    is /org/freedesktop/ModemManager1). Fix this in the introspection
+    file.
+
+    [1]
+    https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format
+
+ introspection/org.freedesktop.ModemManager1.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 479d8e723c9965ee064a7a57d39d29f6c098da0f
+Author: Murithi Borona <murithi@brck.com>
+Date:   Mon Apr 27 15:43:54 2020 +0300
+
+    huawei: updated HCSQ regex to match unquoted response
+
+ plugins/huawei/mm-modem-helpers-huawei.c         |  2 +-
+ plugins/huawei/tests/test-modem-helpers-huawei.c | 12 +++++++-----
+ 2 files changed, 8 insertions(+), 6 deletions(-)
+
+commit 18a7d9da7a810dcfe22f810e318f1c6fe34c6e03
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Apr 22 15:49:05 2020 +0200
+
+    broadband-modem-qmi: GByteArray can be casted to GArray in USSD
+    encoding
+
+    Reported by: Maxim Anisimov <linaro85@yandex.ru>
+
+ src/mm-broadband-modem-qmi.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+commit d3c5771b1ff8d7acf1c26fccc275f81f59868635
+Author: Maxim Anisimov <linaro85@yandex.ru>
+Date:   Wed Apr 22 15:39:36 2020 +0200
+
+    broadband-modem-qmi: USSD data in UTF-16 not always given
+
+    E.g. in the Quectel EP06-E only the ASCII/UCS-2 data TLV is given.
+
+ src/mm-broadband-modem-qmi.c | 113
+ ++++++++++++++++++++++++++++---------------
+ 1 file changed, 73 insertions(+), 40 deletions(-)
+
+commit 6086c6877c6bca341f6a3b2b07798e8353575d11
+Author: Maxim Anisimov <linaro85@yandex.ru>
+Date:   Wed Apr 22 15:33:40 2020 +0200
+
+    broadband-modem-qmi: fix unicode names in USSD iconv() operations
+
+    So that the limited iconv() in OpenWRT supports the conversion
+    properly.
+
+ src/mm-broadband-modem-qmi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit ae90ed66a2ee94eed28da19e914feb75f03fd504
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Apr 20 11:25:59 2020 +0200
+
+    broadband-modem-qmi: 3GPP USSD support
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/26
+
+ configure.ac                 |   2 +-
+ src/mm-broadband-modem-qmi.c | 517
+ ++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 515 insertions(+), 4 deletions(-)
+
 commit d98597e4302983f2b12f2f70759015044c12ecf6
 Author: Teijo Kinnunen <teijo.kinnunen@uros.com>
 Date:   Thu Apr 16 13:16:28 2020 +0300

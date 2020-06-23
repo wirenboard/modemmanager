@@ -21,7 +21,7 @@
 
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-location.h"
-#include "mm-log.h"
+#include "mm-log-object.h"
 #include "mm-modem-helpers.h"
 
 #define MM_LOCATION_GPS_REFRESH_TIME_SECS 30
@@ -128,15 +128,19 @@ build_location_dictionary (GVariant *previous,
         while (g_variant_iter_next (&iter, "{uv}", &source, &value)) {
             switch (source) {
             case MM_MODEM_LOCATION_SOURCE_3GPP_LAC_CI:
+                g_assert (!location_3gpp_value);
                 location_3gpp_value = value;
                 break;
             case MM_MODEM_LOCATION_SOURCE_GPS_NMEA:
+                g_assert (!location_gps_nmea_value);
                 location_gps_nmea_value = value;
                 break;
             case MM_MODEM_LOCATION_SOURCE_GPS_RAW:
+                g_assert (!location_gps_raw_value);
                 location_gps_raw_value = value;
                 break;
             case MM_MODEM_LOCATION_SOURCE_CDMA_BS:
+                g_assert (!location_cdma_bs_value);
                 location_cdma_bs_value = value;
                 break;
             case MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED:
@@ -231,11 +235,7 @@ notify_gps_location_update (MMIfaceModemLocation *self,
                             MMLocationGpsNmea *location_gps_nmea,
                             MMLocationGpsRaw *location_gps_raw)
 {
-    const gchar *dbus_path;
-
-    dbus_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (self));
-    mm_dbg ("Modem %s: GPS location updated",
-            dbus_path);
+    mm_obj_dbg (self, "GPS location updated");
 
     /* We only update the property if we are supposed to signal
      * location */
@@ -249,14 +249,14 @@ notify_gps_location_update (MMIfaceModemLocation *self,
                                        NULL));
 }
 
-void
-mm_iface_modem_location_gps_update (MMIfaceModemLocation *self,
-                                    const gchar *nmea_trace)
+static void
+location_gps_update_nmea (MMIfaceModemLocation *self,
+                          const gchar          *nmea_trace)
 {
     MmGdbusModemLocation *skeleton;
-    LocationContext *ctx;
-    gboolean update_nmea = FALSE;
-    gboolean update_raw = FALSE;
+    LocationContext      *ctx;
+    gboolean              update_nmea = FALSE;
+    gboolean              update_raw = FALSE;
 
     ctx = get_location_context (self);
     g_object_get (self,
@@ -269,7 +269,7 @@ mm_iface_modem_location_gps_update (MMIfaceModemLocation *self,
         g_assert (ctx->location_gps_nmea != NULL);
         if (mm_location_gps_nmea_add_trace (ctx->location_gps_nmea, nmea_trace) &&
             (ctx->location_gps_nmea_last_time == 0 ||
-             time (NULL) - ctx->location_gps_nmea_last_time >= mm_gdbus_modem_location_get_gps_refresh_rate (skeleton))) {
+             time (NULL) - ctx->location_gps_nmea_last_time >= (glong)mm_gdbus_modem_location_get_gps_refresh_rate (skeleton))) {
             ctx->location_gps_nmea_last_time = time (NULL);
             update_nmea = TRUE;
         }
@@ -279,7 +279,7 @@ mm_iface_modem_location_gps_update (MMIfaceModemLocation *self,
         g_assert (ctx->location_gps_raw != NULL);
         if (mm_location_gps_raw_add_trace (ctx->location_gps_raw, nmea_trace) &&
             (ctx->location_gps_raw_last_time == 0 ||
-             time (NULL) - ctx->location_gps_raw_last_time >= mm_gdbus_modem_location_get_gps_refresh_rate (skeleton))) {
+             time (NULL) - ctx->location_gps_raw_last_time >= (glong)mm_gdbus_modem_location_get_gps_refresh_rate (skeleton))) {
             ctx->location_gps_raw_last_time = time (NULL);
             update_raw = TRUE;
         }
@@ -294,6 +294,50 @@ mm_iface_modem_location_gps_update (MMIfaceModemLocation *self,
     g_object_unref (skeleton);
 }
 
+void
+mm_iface_modem_location_gps_update (MMIfaceModemLocation *self,
+                                    const gchar          *nmea_trace)
+{
+    /* Helper to debug GPS location related issues. Don't depend on a real GPS
+     * fix for debugging, just use some random values to update */
+#if 0
+    {
+        const gchar *prefix = NULL;
+        const gchar *lat = NULL;
+
+        /* lat N/S just to test which one is used */
+        if (g_str_has_prefix (nmea_trace, "$GPGGA")) {
+            prefix = "GPGGA";
+            lat = "S";
+        } else if (g_str_has_prefix (nmea_trace, "$GNGGA")) {
+            prefix = "GNGGA";
+            lat = "N";
+        }
+
+        if (prefix && lat) {
+            g_autoptr(GString)   str = NULL;
+            g_autoptr(GDateTime) now = NULL;
+
+            mm_obj_dbg (self, "GGA trace detected: %s", nmea_trace);
+
+            now = g_date_time_new_now_utc ();
+            str = g_string_new ("");
+            g_string_append_printf (str,
+                                    "$%s,%02u%02u%02u,4807.038,%s,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47",
+                                    prefix,
+                                    g_date_time_get_hour (now),
+                                    g_date_time_get_minute (now),
+                                    g_date_time_get_second (now),
+                                    lat);
+            location_gps_update_nmea (self, str->str);
+            return;
+        }
+    }
+#endif
+
+    location_gps_update_nmea (self, nmea_trace);
+}
+
 /*****************************************************************************/
 
 static void
@@ -301,17 +345,13 @@ notify_3gpp_location_update (MMIfaceModemLocation *self,
                              MmGdbusModemLocation *skeleton,
                              MMLocation3gpp *location_3gpp)
 {
-    const gchar *dbus_path;
-
-    dbus_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (self));
-    mm_dbg ("Modem %s: 3GPP location updated "
-            "(MCC: '%u', MNC: '%u', Location area code: '%lX', Tracking area code: '%lX', Cell ID: '%lX')",
-            dbus_path,
-            mm_location_3gpp_get_mobile_country_code (location_3gpp),
-            mm_location_3gpp_get_mobile_network_code (location_3gpp),
-            mm_location_3gpp_get_location_area_code (location_3gpp),
-            mm_location_3gpp_get_tracking_area_code (location_3gpp),
-            mm_location_3gpp_get_cell_id (location_3gpp));
+    mm_obj_dbg (self, "3GPP location updated "
+                "(MCC: '%u', MNC: '%u', location area code: '%lX', tracking area code: '%lX', cell ID: '%lX')",
+                mm_location_3gpp_get_mobile_country_code (location_3gpp),
+                mm_location_3gpp_get_mobile_network_code (location_3gpp),
+                mm_location_3gpp_get_location_area_code (location_3gpp),
+                mm_location_3gpp_get_tracking_area_code (location_3gpp),
+                mm_location_3gpp_get_cell_id (location_3gpp));
 
     /* We only update the property if we are supposed to signal
      * location */
@@ -413,14 +453,9 @@ notify_cdma_bs_location_update (MMIfaceModemLocation *self,
                                 MmGdbusModemLocation *skeleton,
                                 MMLocationCdmaBs *location_cdma_bs)
 {
-    const gchar *dbus_path;
-
-    dbus_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (self));
-    mm_dbg ("Modem %s: CDMA BS location updated "
-            "(Longitude: '%lf', Latitude: '%lf')",
-            dbus_path,
-            mm_location_cdma_bs_get_longitude (location_cdma_bs),
-            mm_location_cdma_bs_get_latitude (location_cdma_bs));
+    mm_obj_dbg (self, "CDMA base station location updated (longitude: '%lf', latitude: '%lf')",
+                mm_location_cdma_bs_get_longitude (location_cdma_bs),
+                mm_location_cdma_bs_get_latitude (location_cdma_bs));
 
     /* We only update the property if we are supposed to signal
      * location */
@@ -523,6 +558,7 @@ update_location_source_status (MMIfaceModemLocation *self,
     case MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED:
     case MM_MODEM_LOCATION_SOURCE_AGPS_MSA:
     case MM_MODEM_LOCATION_SOURCE_AGPS_MSB:
+    case MM_MODEM_LOCATION_SOURCE_NONE:
         /* Nothing to setup in the context */
     default:
         break;
@@ -663,7 +699,7 @@ setup_gathering_step (GTask *task)
             }
 
             source_str = mm_modem_location_source_build_string_from_mask (ctx->current);
-            mm_dbg ("Enabled location '%s' gathering...", source_str);
+            mm_obj_dbg (self, "enabled location '%s' gathering...", source_str);
             g_free (source_str);
         } else if (ctx->to_disable & ctx->current) {
             /* Remove from mask */
@@ -683,7 +719,7 @@ setup_gathering_step (GTask *task)
             }
 
             source_str = mm_modem_location_source_build_string_from_mask (ctx->current);
-            mm_dbg ("Disabled location '%s' gathering...", source_str);
+            mm_obj_dbg (self, "disabled location '%s' gathering...", source_str);
             g_free (source_str);
         }
 
@@ -748,7 +784,7 @@ setup_gathering (MMIfaceModemLocation *self,
         if (mask & source) {
             /* Source set in mask, need to enable if disabled */
             if (currently_enabled & source)
-                mm_dbg ("Location '%s' gathering is already enabled...", str);
+                mm_obj_dbg (self, "location '%s' gathering is already enabled...", str);
             else
                 ctx->to_enable |= source;
         } else {
@@ -756,7 +792,7 @@ setup_gathering (MMIfaceModemLocation *self,
             if (currently_enabled & source)
                 ctx->to_disable |= source;
             else
-                mm_dbg ("Location '%s' gathering is already disabled...", str);
+                mm_obj_dbg (self, "location '%s' gathering is already disabled...", str);
         }
 
         g_free (str);
@@ -798,13 +834,13 @@ setup_gathering (MMIfaceModemLocation *self,
 
     if (ctx->to_enable != MM_MODEM_LOCATION_SOURCE_NONE) {
         str = mm_modem_location_source_build_string_from_mask (ctx->to_enable);
-        mm_dbg ("Need to enable the following location sources: '%s'", str);
+        mm_obj_dbg (self, "need to enable the following location sources: '%s'", str);
         g_free (str);
     }
 
     if (ctx->to_disable != MM_MODEM_LOCATION_SOURCE_NONE) {
         str = mm_modem_location_source_build_string_from_mask (ctx->to_disable);
-        mm_dbg ("Need to disable the following location sources: '%s'", str);
+        mm_obj_dbg (self, "need to disable the following location sources: '%s'", str);
         g_free (str);
     }
 
@@ -895,8 +931,8 @@ handle_setup_auth_ready (MMBaseModem *self,
     /* Enable/disable location signaling */
     location_ctx = get_location_context (ctx->self);
     if (mm_gdbus_modem_location_get_signals_location (ctx->skeleton) != ctx->signal_location) {
-        mm_dbg ("%s location signaling",
-                ctx->signal_location ? "Enabling" : "Disabling");
+        mm_obj_dbg (self, "%s location signaling",
+                    ctx->signal_location ? "enabling" : "disabling");
         mm_gdbus_modem_location_set_signals_location (ctx->skeleton,
                                                       ctx->signal_location);
         if (ctx->signal_location)
@@ -914,7 +950,7 @@ handle_setup_auth_ready (MMBaseModem *self,
     }
 
     str = mm_modem_location_source_build_string_from_mask (ctx->sources);
-    mm_dbg ("Setting up location sources: '%s'", str);
+    mm_obj_dbg (self, "setting up location sources: '%s'", str);
     g_free (str);
 
     /* Go on to enable or disable the requested sources */
@@ -1397,8 +1433,8 @@ interface_disabling_step (GTask *task)
 
     switch (ctx->step) {
     case DISABLING_STEP_FIRST:
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case DISABLING_STEP_DISABLE_GATHERING:
         setup_gathering (self,
@@ -1413,6 +1449,9 @@ interface_disabling_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();
@@ -1516,8 +1555,8 @@ interface_enabling_step (GTask *task)
 
     switch (ctx->step) {
     case ENABLING_STEP_FIRST:
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case ENABLING_STEP_ENABLE_GATHERING: {
         MMModemLocationSource default_sources;
@@ -1542,6 +1581,9 @@ interface_enabling_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();
@@ -1619,7 +1661,7 @@ load_assistance_data_servers_ready (MMIfaceModemLocation *self,
 
     servers = MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_assistance_data_servers_finish (self, res, &error);
     if (error) {
-        mm_warn ("couldn't load assistance data servers: '%s'", error->message);
+        mm_obj_warn (self, "couldn't load assistance data servers: %s", error->message);
         g_error_free (error);
     }
 
@@ -1644,7 +1686,7 @@ load_supported_assistance_data_ready (MMIfaceModemLocation *self,
 
     mask = MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_supported_assistance_data_finish (self, res, &error);
     if (error) {
-        mm_warn ("couldn't load supported assistance data types: '%s'", error->message);
+        mm_obj_warn (self, "couldn't load supported assistance data types: %s", error->message);
         g_error_free (error);
     }
 
@@ -1668,7 +1710,7 @@ load_supl_server_ready (MMIfaceModemLocation *self,
 
     supl = MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_supl_server_finish (self, res, &error);
     if (error) {
-        mm_warn ("couldn't load SUPL server: '%s'", error->message);
+        mm_obj_warn (self, "couldn't load SUPL server: %s", error->message);
         g_error_free (error);
     }
 
@@ -1692,7 +1734,7 @@ load_capabilities_ready (MMIfaceModemLocation *self,
 
     ctx->capabilities = MM_IFACE_MODEM_LOCATION_GET_INTERFACE (self)->load_capabilities_finish (self, res, &error);
     if (error) {
-        mm_warn ("couldn't load location capabilities: '%s'", error->message);
+        mm_obj_warn (self, "couldn't load location capabilities: %s", error->message);
         g_error_free (error);
     }
 
@@ -1720,8 +1762,8 @@ interface_initialization_step (GTask *task)
 
     switch (ctx->step) {
     case INITIALIZATION_STEP_FIRST:
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_CAPABILITIES:
         /* Location capabilities value is meant to be loaded only once during
@@ -1736,8 +1778,8 @@ interface_initialization_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_VALIDATE_CAPABILITIES:
         /* If the modem doesn't support any location capabilities, we won't export
@@ -1750,8 +1792,8 @@ interface_initialization_step (GTask *task)
             g_object_unref (task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_SUPL_SERVER:
         /* If the modem supports A-GPS, load SUPL server */
@@ -1765,8 +1807,8 @@ interface_initialization_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_SUPPORTED_ASSISTANCE_DATA:
         /* If the modem supports any GPS-related technology, check assistance data types supported */
@@ -1782,8 +1824,8 @@ interface_initialization_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_ASSISTANCE_DATA_SERVERS:
         /* If any assistance data supported, load servers */
@@ -1796,8 +1838,8 @@ interface_initialization_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_GPS_REFRESH_RATE:
         /* If we have GPS capabilities, expose the GPS refresh rate */
@@ -1806,8 +1848,8 @@ interface_initialization_step (GTask *task)
             /* Set the default rate in the interface */
             mm_gdbus_modem_location_set_gps_refresh_rate (ctx->skeleton, MM_LOCATION_GPS_REFRESH_TIME_SECS);
 
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_LAST:
         /* We are done without errors! */
@@ -1841,6 +1883,9 @@ interface_initialization_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();

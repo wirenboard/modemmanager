@@ -152,7 +152,7 @@ CreateBearer (IN  a{sv} properties,
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN a{sv} <parameter>properties</parameter></literal>:</term>
-  <listitem><para>List of properties to assign to the bearer after creating it.</para></listitem>
+  <listitem><para>Dictionary of properties needed to get the bearer connected.</para></listitem>
 </varlistentry>
 <varlistentry>
   <term><literal>OUT o <parameter>path</parameter></literal>:</term>
@@ -229,7 +229,10 @@ SetPowerState (IN  u state);
 <programlisting>
 SetCurrentCapabilities (IN  u capabilities);
 </programlisting>
-<para>        Set the capabilities of the device. A restart of the modem may be required.
+<para>        Set the capabilities of the device.
+</para><para>        The given bitmask should be supported by the modem, as specified in the
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities">"SupportedCapabilities"</link> property.
+</para><para>        This command may power-cycle the device.
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -280,19 +283,23 @@ Command (IN  s cmd,
          IN  u timeout,
          OUT s response);
 </programlisting>
-<para></para>
+<para>       Send an arbitrary AT command to a modem and get the response.
+</para><para>       Note that using this interface call is only allowed when running
+       ModemManager in debug mode or if the project was built using
+       the <literal>with-at-command-via-dbus</literal> configure option.
+</para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN s <parameter>cmd</parameter></literal>:</term>
-  <listitem><para></para></listitem>
+  <listitem><para>The command string, e.g. "AT+GCAP" or "+GCAP" (leading AT is inserted if necessary).</para></listitem>
 </varlistentry>
 <varlistentry>
   <term><literal>IN u <parameter>timeout</parameter></literal>:</term>
-  <listitem><para></para></listitem>
+  <listitem><para>The number of seconds to wait for a response.</para></listitem>
 </varlistentry>
 <varlistentry>
   <term><literal>OUT s <parameter>response</parameter></literal>:</term>
-  <listitem><para></para></listitem>
+  <listitem><para>The modem's response.</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -355,11 +362,14 @@ Bearers  readable   ao
 SupportedCapabilities  readable   au
 </programlisting>
 <para>        List of <link linkend="MMModemCapability">MMModemCapability</link>
-        values, specifying the combinations of generic family of access
+        bitmasks, specifying the combinations of generic family of access
         technologies the modem supports.
-</para><para>        If the modem doesn't allow changing the current capabilities, a single entry with
-        <link linkend="MM-MODEM-CAPABILITY-ANY:CAPS"><constant>MM_MODEM_CAPABILITY_ANY</constant></link>
-        will be given.
+</para><para>        If the modem doesn't allow changing the current capabilities, the
+        list will report one single entry with the same bitmask as in
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentCapabilities">"CurrentCapabilities"</link>.
+</para><para>        Only multimode devices implementing both 3GPP (GSM/UMTS/LTE/5GNR) and
+        3GPP2 (CDMA/EVDO) specs will report more than one combination of
+        capabilities.
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentCapabilities">
@@ -369,8 +379,10 @@ SupportedCapabilities  readable   au
 CurrentCapabilities  readable   u
 </programlisting>
 <para>        Bitmask of <link linkend="MMModemCapability">MMModemCapability</link>
-        values, specifying the  generic family of access technologies the modem
-        currently supports without a firmware reload or reinitialization.
+        values, specifying the currently used generic family of access
+        technologies.
+</para><para>        This bitmask will be one of the ones listed in
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities">"SupportedCapabilities"</link>.
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxBearers">

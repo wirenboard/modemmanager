@@ -23,7 +23,7 @@
 #define _LIBMM_INSIDE_MM
 #include <libmm-glib.h>
 
-#include "mm-log.h"
+#include "mm-log-object.h"
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-location.h"
 #include "mm-base-modem.h"
@@ -108,31 +108,10 @@ get_private (MMSharedCinterion *self)
 /* GPS trace received */
 
 static void
-trace_received (MMPortSerialGps *port,
-                const gchar *trace,
+trace_received (MMPortSerialGps      *port,
+                const gchar          *trace,
                 MMIfaceModemLocation *self)
 {
-    /* Helper to debug GPS location related issues. Don't depend on a real GPS
-     * fix for debugging, just use some random values to update */
-#if 0
-    if (g_str_has_prefix (trace, "$GPGGA")) {
-        GString *str;
-        GDateTime *now;
-
-        now = g_date_time_new_now_utc ();
-        str = g_string_new ("");
-        g_string_append_printf (str,
-                                "$GPGGA,%02u%02u%02u,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47",
-                                g_date_time_get_hour (now),
-                                g_date_time_get_minute (now),
-                                g_date_time_get_second (now));
-        mm_iface_modem_location_gps_update (self, str->str);
-        g_string_free (str, TRUE);
-        g_date_time_unref (now);
-        return;
-    }
-#endif
-
     mm_iface_modem_location_gps_update (self, trace);
 }
 
@@ -238,7 +217,7 @@ probe_gps_features (GTask *task)
     sources = GPOINTER_TO_UINT (g_task_get_task_data (task));
 
     if (priv->sgpss_support == FEATURE_SUPPORTED || priv->sgpsc_support == FEATURE_SUPPORTED) {
-        mm_dbg ("GPS commands supported: GPS capabilities enabled");
+        mm_obj_dbg (self, "GPS commands supported: GPS capabilities enabled");
 
         /* We only flag as supported by this implementation those sources not already
          * supported by the parent implementation */
@@ -257,7 +236,7 @@ probe_gps_features (GTask *task)
                                               self,
                                               NULL);
     } else
-        mm_dbg ("No GPS command supported: no GPS capabilities");
+        mm_obj_dbg (self, "no GPS command supported: no GPS capabilities");
 
     g_task_return_int (task, (gssize) sources);
     g_object_unref (task);
@@ -283,7 +262,7 @@ parent_load_capabilities_ready (MMIfaceModemLocation *self,
 
     /* Now our own check. If we don't have any GPS port, we're done */
     if (!mm_base_modem_peek_port_gps (MM_BASE_MODEM (self))) {
-        mm_dbg ("No GPS data port found: no GPS capabilities");
+        mm_obj_dbg (self, "no GPS data port found: no GPS capabilities");
         g_task_return_int (task, sources);
         g_object_unref (task);
         return;
@@ -412,7 +391,7 @@ disable_location_gathering_context_gps_step (GTask *task)
     switch (ctx->gps_step) {
     case DISABLE_LOCATION_GATHERING_GPS_STEP_FIRST:
         ctx->gps_step++;
-        /* Fall down to next step */
+        /* fall through */
 
     case DISABLE_LOCATION_GATHERING_GPS_STEP_SGPSS:
         if (priv->sgpss_support == FEATURE_SUPPORTED) {
@@ -422,7 +401,7 @@ disable_location_gathering_context_gps_step (GTask *task)
             return;
         }
         ctx->gps_step++;
-        /* Fall down to next step */
+        /* fall through */
 
     case DISABLE_LOCATION_GATHERING_GPS_STEP_SGPSC_ENGINE:
         if (priv->sgpsc_support == FEATURE_SUPPORTED) {
@@ -433,7 +412,7 @@ disable_location_gathering_context_gps_step (GTask *task)
             return;
         }
         ctx->gps_step++;
-        /* Fall down to next step */
+        /* fall through */
 
     case DISABLE_LOCATION_GATHERING_GPS_STEP_SGPSC_ANTENNA:
         if (priv->sgpsc_support == FEATURE_SUPPORTED) {
@@ -444,7 +423,7 @@ disable_location_gathering_context_gps_step (GTask *task)
             return;
         }
         ctx->gps_step++;
-        /* Fall down to next step */
+        /* fall through */
 
     case DISABLE_LOCATION_GATHERING_GPS_STEP_SGPSC_OUTPUT:
         if (priv->sgpsc_support == FEATURE_SUPPORTED) {
@@ -455,7 +434,7 @@ disable_location_gathering_context_gps_step (GTask *task)
             return;
         }
         ctx->gps_step++;
-        /* Fall down to next step */
+        /* fall through */
 
     case DISABLE_LOCATION_GATHERING_GPS_STEP_LAST:
         /* Only use the GPS port in NMEA/RAW setups */
@@ -480,6 +459,9 @@ disable_location_gathering_context_gps_step (GTask *task)
         }
         g_object_unref (task);
         return;
+
+    default:
+        g_assert_not_reached ();
     }
 }
 
@@ -628,7 +610,7 @@ enable_sgpsc_or_sgpss_ready (MMBaseModem  *self,
          * Engine; so we'll run some retries of the same command ourselves. */
         if (ctx->gps_step == ENABLE_LOCATION_GATHERING_GPS_STEP_SGPSC_ENGINE) {
             ctx->sgpsc_engine_retries++;
-            mm_dbg ("GPS Engine setup failed (%u/%u)", ctx->sgpsc_engine_retries, MAX_SGPSC_ENGINE_RETRIES);
+            mm_obj_dbg (self, "GPS engine setup failed (%u/%u)", ctx->sgpsc_engine_retries, MAX_SGPSC_ENGINE_RETRIES);
             if (ctx->sgpsc_engine_retries < MAX_SGPSC_ENGINE_RETRIES) {
                 g_clear_error (&error);
                 goto schedule;
@@ -665,7 +647,7 @@ enable_location_gathering_context_gps_step (GTask *task)
     switch (ctx->gps_step) {
     case ENABLE_LOCATION_GATHERING_GPS_STEP_FIRST:
         ctx->gps_step++;
-        /* Fall down to next step */
+        /* fall through */
 
     case ENABLE_LOCATION_GATHERING_GPS_STEP_SGPSS:
         if (priv->sgpss_support == FEATURE_SUPPORTED) {
@@ -675,7 +657,7 @@ enable_location_gathering_context_gps_step (GTask *task)
             return;
         }
         ctx->gps_step++;
-        /* Fall down to next step */
+        /* fall through */
 
     case ENABLE_LOCATION_GATHERING_GPS_STEP_SGPSC_OUTPUT:
         if (priv->sgpsc_support == FEATURE_SUPPORTED) {
@@ -686,8 +668,7 @@ enable_location_gathering_context_gps_step (GTask *task)
             return;
         }
         ctx->gps_step++;
-        /* Fall down to next step */
-
+        /* fall through */
 
     case ENABLE_LOCATION_GATHERING_GPS_STEP_SGPSC_ANTENNA:
         if (priv->sgpsc_support == FEATURE_SUPPORTED) {
@@ -698,7 +679,7 @@ enable_location_gathering_context_gps_step (GTask *task)
             return;
         }
         ctx->gps_step++;
-        /* Fall down to next step */
+        /* fall through */
 
     case ENABLE_LOCATION_GATHERING_GPS_STEP_SGPSC_ENGINE:
         if (priv->sgpsc_support == FEATURE_SUPPORTED) {
@@ -709,7 +690,7 @@ enable_location_gathering_context_gps_step (GTask *task)
             return;
         }
         ctx->gps_step++;
-        /* Fall down to next step */
+        /* fall through */
 
     case ENABLE_LOCATION_GATHERING_GPS_STEP_LAST:
         /* Only use the GPS port in NMEA/RAW setups */
@@ -735,6 +716,9 @@ enable_location_gathering_context_gps_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        g_assert_not_reached ();
     }
 }
 
@@ -819,7 +803,7 @@ mm_shared_cinterion_create_call (MMIfaceModemVoice *self,
     /* If ^SLCC is supported create a cinterion call object */
     priv = get_private (MM_SHARED_CINTERION (self));
     if (priv->slcc_support == FEATURE_SUPPORTED) {
-        mm_dbg ("Created new call with ^SLCC support");
+        mm_obj_dbg (self, "created new call with ^SLCC support");
         return mm_base_call_new (MM_BASE_MODEM (self),
                                  direction,
                                  number,
@@ -873,16 +857,14 @@ slcc_command_ready (MMBaseModem  *self,
                     GTask        *task)
 {
     VoiceUnsolicitedEventsContext *ctx;
-    GError                        *error = NULL;
+    g_autoptr(GError)              error = NULL;
 
     ctx = g_task_get_task_data (task);
 
-    if (!mm_base_modem_at_command_finish (self, res, &error)) {
-        mm_dbg ("Couldn't %s ^SLCC reporting: '%s'",
-                ctx->enable ? "enable" : "disable",
-                error->message);
-        g_error_free (error);
-    }
+    if (!mm_base_modem_at_command_full_finish (self, res, &error))
+        mm_obj_dbg (self, "couldn't %s ^SLCC reporting: %s",
+                    ctx->enable ? "enable" : "disable",
+                    error->message);
 
     /* Continue on next port */
     run_voice_enable_disable_unsolicited_events (task);
@@ -908,13 +890,13 @@ run_voice_enable_disable_unsolicited_events (GTask *task)
     }
 
     if (!ctx->slcc_primary_done && ctx->primary) {
-        mm_dbg ("%s ^SLCC  extended list of current calls reporting in primary port...",
-                ctx->enable ? "Enabling" : "Disabling");
+        mm_obj_dbg (self, "%s ^SLCC  extended list of current calls reporting in primary port...",
+                    ctx->enable ? "enabling" : "disabling");
         ctx->slcc_primary_done = TRUE;
         port = ctx->primary;
     } else if (!ctx->slcc_secondary_done && ctx->secondary) {
-        mm_dbg ("%s ^SLCC  extended list of current calls reporting in secondary port...",
-                ctx->enable ? "Enabling" : "Disabling");
+        mm_obj_dbg (self, "%s ^SLCC  extended list of current calls reporting in secondary port...",
+                    ctx->enable ? "enabling" : "disabling");
         ctx->slcc_secondary_done = TRUE;
         port = ctx->secondary;
     }
@@ -977,15 +959,13 @@ parent_voice_disable_unsolicited_events_ready (MMIfaceModemVoice *self,
                                                GAsyncResult      *res,
                                                GTask             *task)
 {
-    GError  *error = NULL;
-    Private *priv;
+    g_autoptr(GError)  error = NULL;
+    Private           *priv;
 
     priv = get_private (MM_SHARED_CINTERION (self));
 
-    if (!priv->iface_modem_voice_parent->disable_unsolicited_events_finish (self, res, &error)) {
-        mm_warn ("Couldn't disable parent voice unsolicited events: %s", error->message);
-        g_error_free (error);
-    }
+    if (!priv->iface_modem_voice_parent->disable_unsolicited_events_finish (self, res, &error))
+        mm_obj_warn (self, "couldn't disable parent voice unsolicited events: %s", error->message);
 
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
@@ -996,13 +976,11 @@ voice_disable_unsolicited_events_ready (MMSharedCinterion *self,
                                         GAsyncResult      *res,
                                         GTask             *task)
 {
-    Private *priv;
-    GError  *error = NULL;
+    Private           *priv;
+    g_autoptr(GError)  error = NULL;
 
-    if (!common_voice_enable_disable_unsolicited_events_finish (self, res, &error)) {
-        mm_warn ("Couldn't disable Cinterion-specific voice unsolicited events: %s", error->message);
-        g_error_free (error);
-    }
+    if (!common_voice_enable_disable_unsolicited_events_finish (self, res, &error))
+        mm_obj_warn (self, "couldn't disable Cinterion-specific voice unsolicited events: %s", error->message);
 
     priv = get_private (MM_SHARED_CINTERION (self));
     g_assert (priv->iface_modem_voice_parent);
@@ -1048,12 +1026,10 @@ voice_enable_unsolicited_events_ready (MMSharedCinterion *self,
                                        GAsyncResult      *res,
                                        GTask             *task)
 {
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
 
-    if (!common_voice_enable_disable_unsolicited_events_finish (self, res, &error)) {
-        mm_warn ("Couldn't enable Cinterion-specific voice unsolicited events: %s", error->message);
-        g_error_free (error);
-    }
+    if (!common_voice_enable_disable_unsolicited_events_finish (self, res, &error))
+        mm_obj_warn (self, "couldn't enable Cinterion-specific voice unsolicited events: %s", error->message);
 
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
@@ -1064,15 +1040,13 @@ parent_voice_enable_unsolicited_events_ready (MMIfaceModemVoice *self,
                                               GAsyncResult      *res,
                                               GTask             *task)
 {
-    GError  *error = NULL;
-    Private *priv;
+    g_autoptr(GError)  error = NULL;
+    Private           *priv;
 
     priv = get_private (MM_SHARED_CINTERION (self));
 
-    if (!priv->iface_modem_voice_parent->enable_unsolicited_events_finish (self, res, &error)) {
-        mm_warn ("Couldn't enable parent voice unsolicited events: %s", error->message);
-        g_error_free (error);
-    }
+    if (!priv->iface_modem_voice_parent->enable_unsolicited_events_finish (self, res, &error))
+        mm_obj_warn (self, "couldn't enable parent voice unsolicited events: %s", error->message);
 
     /* our own enabling next */
     common_voice_enable_disable_unsolicited_events (MM_SHARED_CINTERION (self),
@@ -1111,20 +1085,16 @@ slcc_received (MMPortSerialAt    *port,
                GMatchInfo        *match_info,
                MMSharedCinterion *self)
 {
-    gchar  *full;
-    GError *error = NULL;
-    GList  *call_info_list = NULL;
+    g_autofree gchar  *full = NULL;
+    g_autoptr(GError)  error = NULL;
+    GList             *call_info_list = NULL;
 
     full = g_match_info_fetch (match_info, 0);
-
-    if (!mm_cinterion_parse_slcc_list (full, &call_info_list, &error)) {
-        mm_warn ("couldn't parse ^SLCC list: %s", error->message);
-        g_error_free (error);
-    } else
+    if (!mm_cinterion_parse_slcc_list (full, self, &call_info_list, &error))
+        mm_obj_warn (self, "couldn't parse ^SLCC list: %s", error->message);
+    else
         mm_iface_modem_voice_report_all_calls (MM_IFACE_MODEM_VOICE (self), call_info_list);
-
     mm_cinterion_call_info_list_free (call_info_list);
-    g_free (full);
 }
 
 static void
@@ -1168,15 +1138,13 @@ parent_voice_cleanup_unsolicited_events_ready (MMIfaceModemVoice *self,
                                                GAsyncResult      *res,
                                                GTask             *task)
 {
-    GError  *error = NULL;
-    Private *priv;
+    g_autoptr(GError)  error = NULL;
+    Private           *priv;
 
     priv = get_private (MM_SHARED_CINTERION (self));
 
-    if (!priv->iface_modem_voice_parent->cleanup_unsolicited_events_finish (self, res, &error)) {
-        mm_warn ("Couldn't cleanup parent voice unsolicited events: %s", error->message);
-        g_error_free (error);
-    }
+    if (!priv->iface_modem_voice_parent->cleanup_unsolicited_events_finish (self, res, &error))
+        mm_obj_warn (self, "couldn't cleanup parent voice unsolicited events: %s", error->message);
 
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
@@ -1223,15 +1191,13 @@ parent_voice_setup_unsolicited_events_ready (MMIfaceModemVoice *self,
                                              GAsyncResult      *res,
                                              GTask             *task)
 {
-    GError  *error = NULL;
-    Private *priv;
+    g_autoptr(GError)  error = NULL;
+    Private           *priv;
 
     priv = get_private (MM_SHARED_CINTERION (self));
 
-    if (!priv->iface_modem_voice_parent->setup_unsolicited_events_finish (self, res, &error)) {
-        mm_warn ("Couldn't setup parent voice unsolicited events: %s", error->message);
-        g_error_free (error);
-    }
+    if (!priv->iface_modem_voice_parent->setup_unsolicited_events_finish (self, res, &error))
+        mm_obj_warn (self, "Couldn't setup parent voice unsolicited events: %s", error->message);
 
     /* our own setup next */
     common_voice_setup_cleanup_unsolicited_events (MM_SHARED_CINTERION (self), TRUE);
@@ -1353,24 +1319,18 @@ ctzu_received (MMPortSerialAt    *port,
                GMatchInfo        *match_info,
                MMSharedCinterion *self)
 {
-    gchar             *iso8601 = NULL;
-    MMNetworkTimezone *tz = NULL;
-    GError            *error = NULL;
+    g_autofree gchar             *iso8601 = NULL;
+    g_autoptr(MMNetworkTimezone)  tz = NULL;
+    g_autoptr(GError)             error = NULL;
 
     if (!mm_cinterion_parse_ctzu_urc (match_info, &iso8601, &tz, &error)) {
-        mm_dbg ("Couldn't process +CTZU URC: %s", error->message);
-        g_error_free (error);
+        mm_obj_dbg (self, "couldn't process +CTZU URC: %s", error->message);
         return;
     }
 
-    g_assert (iso8601);
-    mm_dbg ("+CTZU URC received: %s", iso8601);
+    mm_obj_dbg (self, "+CTZU URC received: %s", iso8601);
     mm_iface_modem_time_update_network_time (MM_IFACE_MODEM_TIME (self), iso8601);
-    g_free (iso8601);
-
-    g_assert (tz);
     mm_iface_modem_time_update_network_timezone (MM_IFACE_MODEM_TIME (self), tz);
-    g_object_unref (tz);
 }
 
 static void
@@ -1386,8 +1346,8 @@ common_time_setup_cleanup_unsolicited_events (MMSharedCinterion *self,
     ports[0] = mm_base_modem_peek_port_primary   (MM_BASE_MODEM (self));
     ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
 
-    mm_dbg ("%s up time unsolicited events...",
-            enable ? "Setting" : "Cleaning");
+    mm_obj_dbg (self, "%s up time unsolicited events...",
+                enable ? "setting" : "cleaning");
 
     for (i = 0; i < G_N_ELEMENTS (ports); i++) {
         if (!ports[i])
@@ -1417,15 +1377,13 @@ parent_time_cleanup_unsolicited_events_ready (MMIfaceModemTime *self,
                                               GAsyncResult     *res,
                                               GTask            *task)
 {
-    GError  *error = NULL;
-    Private *priv;
+    g_autoptr(GError)  error = NULL;
+    Private           *priv;
 
     priv = get_private (MM_SHARED_CINTERION (self));
 
-    if (!priv->iface_modem_time_parent->cleanup_unsolicited_events_finish (self, res, &error)) {
-        mm_warn ("Couldn't cleanup parent time unsolicited events: %s", error->message);
-        g_error_free (error);
-    }
+    if (!priv->iface_modem_time_parent->cleanup_unsolicited_events_finish (self, res, &error))
+        mm_obj_warn (self, "couldn't cleanup parent time unsolicited events: %s", error->message);
 
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
@@ -1491,15 +1449,13 @@ parent_time_setup_unsolicited_events_ready (MMIfaceModemTime *self,
                                             GAsyncResult     *res,
                                             GTask            *task)
 {
-    GError  *error = NULL;
-    Private *priv;
+    g_autoptr(GError)  error = NULL;
+    Private           *priv;
 
     priv = get_private (MM_SHARED_CINTERION (self));
 
-    if (!priv->iface_modem_time_parent->cleanup_unsolicited_events_finish (self, res, &error)) {
-        mm_warn ("Couldn't cleanup parent time unsolicited events: %s", error->message);
-        g_error_free (error);
-    }
+    if (!priv->iface_modem_time_parent->cleanup_unsolicited_events_finish (self, res, &error))
+        mm_obj_warn (self, "Couldn't cleanup parent time unsolicited events: %s", error->message);
 
     own_time_setup_unsolicited_events (task);
 }

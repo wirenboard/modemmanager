@@ -19,7 +19,7 @@
 
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-time.h"
-#include "mm-log.h"
+#include "mm-log-object.h"
 
 #define SUPPORT_CHECKED_TAG          "time-support-checked-tag"
 #define SUPPORTED_TAG                "time-supported-tag"
@@ -202,7 +202,7 @@ load_network_timezone_ready (MMIfaceModemTime *self,
     if (!tz) {
         NetworkTimezoneContext *ctx;
 
-        mm_dbg ("Couldn't load network timezone: %s", error->message);
+        mm_obj_dbg (self, "couldn't load network timezone: %s", error->message);
         g_error_free (error);
 
         /* Note: may be NULL if the polling has been removed while processing the async operation */
@@ -216,7 +216,7 @@ load_network_timezone_ready (MMIfaceModemTime *self,
         /* If no more retries, we don't do anything else */
         if (ctx->network_timezone_poll_retries == 0 ||
             !g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_RETRY)) {
-            mm_warn ("Couldn't load network timezone from the current network");
+            mm_obj_warn (self, "couldn't load network timezone from the current network");
             return;
         }
 
@@ -255,7 +255,7 @@ start_network_timezone_poll (MMIfaceModemTime *self)
 
     ctx = (NetworkTimezoneContext *) g_object_get_qdata (G_OBJECT (self), network_timezone_context_quark);
 
-    mm_dbg ("Network timezone polling started");
+    mm_obj_dbg (self, "network timezone polling started");
     ctx->network_timezone_poll_retries = NETWORK_TIMEZONE_POLL_RETRIES;
     ctx->network_timezone_poll_id = g_timeout_add_seconds (NETWORK_TIMEZONE_POLL_INTERVAL_SEC, (GSourceFunc)network_timezone_poll_cb, self);
 }
@@ -268,7 +268,7 @@ stop_network_timezone_poll (MMIfaceModemTime *self)
     ctx = (NetworkTimezoneContext *) g_object_get_qdata (G_OBJECT (self), network_timezone_context_quark);
 
     if (ctx->network_timezone_poll_id) {
-        mm_dbg ("Network timezone polling stopped");
+        mm_obj_dbg (self, "network timezone polling stopped");
         g_source_remove (ctx->network_timezone_poll_id);
         ctx->network_timezone_poll_id = 0;
     }
@@ -322,7 +322,7 @@ start_network_timezone (MMIfaceModemTime *self)
     /* If loading network timezone not supported, just finish here */
     if (!MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->load_network_timezone ||
         !MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->load_network_timezone_finish) {
-        mm_dbg ("Loading network timezone is not supported");
+        mm_obj_dbg (self, "loading network timezone is not supported");
         return;
     }
 
@@ -480,14 +480,14 @@ interface_disabling_step (GTask *task)
 
     switch (ctx->step) {
     case DISABLING_STEP_FIRST:
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case DISABLING_STEP_CANCEL_NETWORK_TIMEZONE_UPDATE:
         /* Stop and cleanup context */
         stop_network_timezone (self);
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case DISABLING_STEP_DISABLE_UNSOLICITED_EVENTS:
         /* Allow cleaning up unsolicited events */
@@ -499,8 +499,8 @@ interface_disabling_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case DISABLING_STEP_CLEANUP_UNSOLICITED_EVENTS:
         /* Allow cleaning up unsolicited events */
@@ -512,14 +512,17 @@ interface_disabling_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case DISABLING_STEP_LAST:
         /* We are done without errors! */
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();
@@ -619,7 +622,7 @@ enable_unsolicited_events_ready (MMIfaceModemTime *self,
 
     /* Not critical! */
     if (!MM_IFACE_MODEM_TIME_GET_INTERFACE (self)->enable_unsolicited_events_finish (self, res, &error)) {
-        mm_dbg ("Couldn't enable unsolicited events: '%s'", error->message);
+        mm_obj_dbg (self, "couldn't enable unsolicited events: %s", error->message);
         g_error_free (error);
     }
 
@@ -646,14 +649,14 @@ interface_enabling_step (GTask *task)
 
     switch (ctx->step) {
     case ENABLING_STEP_FIRST:
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case ENABLING_STEP_SETUP_NETWORK_TIMEZONE_RETRIEVAL:
         /* We start it and schedule it to run asynchronously */
         start_network_timezone (self);
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case ENABLING_STEP_SETUP_UNSOLICITED_EVENTS:
         /* Allow setting up unsolicited events */
@@ -665,8 +668,8 @@ interface_enabling_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case ENABLING_STEP_ENABLE_UNSOLICITED_EVENTS:
         /* Allow setting up unsolicited events */
@@ -678,14 +681,17 @@ interface_enabling_step (GTask *task)
                 task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case ENABLING_STEP_LAST:
         /* We are done without errors! */
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();
@@ -758,7 +764,7 @@ check_support_ready (MMIfaceModemTime *self,
                                                                          &error)) {
         if (error) {
             /* This error shouldn't be treated as critical */
-            mm_dbg ("Time support check failed: '%s'", error->message);
+            mm_obj_dbg (self, "time support check failed: %s", error->message);
             g_error_free (error);
         }
     } else {
@@ -799,8 +805,8 @@ interface_initialization_step (GTask *task)
             supported_quark = (g_quark_from_static_string (
                                    SUPPORTED_TAG));
 
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_CHECK_SUPPORT:
         if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
@@ -826,8 +832,8 @@ interface_initialization_step (GTask *task)
             /* If there is no implementation to check support, assume we DON'T
              * support it. */
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_FAIL_IF_UNSUPPORTED:
         if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self),
@@ -839,8 +845,8 @@ interface_initialization_step (GTask *task)
             g_object_unref (task);
             return;
         }
-        /* Fall down to next step */
         ctx->step++;
+        /* fall through */
 
     case INITIALIZATION_STEP_LAST:
         /* We are done without errors! */
@@ -858,6 +864,9 @@ interface_initialization_step (GTask *task)
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
+
+    default:
+        break;
     }
 
     g_assert_not_reached ();

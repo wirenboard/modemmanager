@@ -94,14 +94,14 @@ bin_PROGRAMS = mmcli$(EXEEXT)
 subdir = cli
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_code_coverage.m4 \
-	$(top_srcdir)/m4/compiler_warnings.m4 \
 	$(top_srcdir)/m4/gettext.m4 $(top_srcdir)/m4/gtk-doc.m4 \
 	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
 	$(top_srcdir)/m4/introspection.m4 $(top_srcdir)/m4/lib-ld.m4 \
 	$(top_srcdir)/m4/lib-link.m4 $(top_srcdir)/m4/lib-prefix.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/nls.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/m4/mm-enable-plugin.m4 $(top_srcdir)/m4/nls.m4 \
 	$(top_srcdir)/m4/po.m4 $(top_srcdir)/m4/progtest.m4 \
 	$(top_srcdir)/m4/vapigen.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -128,14 +128,14 @@ am_mmcli_OBJECTS = mmcli-mmcli.$(OBJEXT) mmcli-mmcli-common.$(OBJEXT) \
 	mmcli-mmcli-sim.$(OBJEXT) mmcli-mmcli-sms.$(OBJEXT) \
 	mmcli-mmcli-call.$(OBJEXT)
 mmcli_OBJECTS = $(am_mmcli_OBJECTS)
-am__DEPENDENCIES_1 =
-@WITH_UDEV_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
-mmcli_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/libmm-glib/libmm-glib.la $(am__DEPENDENCIES_2)
+mmcli_DEPENDENCIES = $(top_builddir)/libmm-glib/libmm-glib.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+mmcli_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(mmcli_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -354,9 +354,13 @@ VAPIGEN = @VAPIGEN@
 VAPIGEN_MAKEFILE = @VAPIGEN_MAKEFILE@
 VAPIGEN_VAPIDIR = @VAPIGEN_VAPIDIR@
 VERSION = @VERSION@
+WARN_CFLAGS = @WARN_CFLAGS@
+WARN_LDFLAGS = @WARN_LDFLAGS@
+WARN_SCANNERFLAGS = @WARN_SCANNERFLAGS@
 XGETTEXT = @XGETTEXT@
 XGETTEXT_015 = @XGETTEXT_015@
 XGETTEXT_EXTRA_OPTIONS = @XGETTEXT_EXTRA_OPTIONS@
+XSLTPROC_CHECK = @XSLTPROC_CHECK@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -409,7 +413,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-mmcli_CPPFLAGS = $(MMCLI_CFLAGS) -I$(top_srcdir) \
+mmcli_CPPFLAGS = $(WARN_CFLAGS) $(MMCLI_CFLAGS) -I$(top_srcdir) \
 	-I$(top_srcdir)/include -I$(top_builddir)/include \
 	-I$(top_srcdir)/libmm-glib \
 	-I${top_srcdir}/libmm-glib/generated \
@@ -437,8 +441,11 @@ mmcli_SOURCES = \
 	mmcli-call.c \
 	$(NULL)
 
-mmcli_LDADD = $(MMCLI_LIBS) $(top_builddir)/libmm-glib/libmm-glib.la \
-	$(NULL) $(am__append_2)
+mmcli_LDADD = \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+mmcli_LDFLAGS = $(WARN_LDFLAGS) $(MMCLI_LIBS) $(NULL) $(am__append_2)
 completiondir = $(datadir)/bash-completion/completions
 EXTRA_DIST = mmcli-completion
 all: all-am
@@ -526,7 +533,7 @@ clean-binPROGRAMS:
 
 mmcli$(EXEEXT): $(mmcli_OBJECTS) $(mmcli_DEPENDENCIES) $(EXTRA_mmcli_DEPENDENCIES) 
 	@rm -f mmcli$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(mmcli_OBJECTS) $(mmcli_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(mmcli_LINK) $(mmcli_OBJECTS) $(mmcli_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

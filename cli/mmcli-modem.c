@@ -140,7 +140,7 @@ mmcli_modem_get_option_group (void)
 
     /* Status options */
     group = g_option_group_new ("modem",
-                                "Modem options",
+                                "Modem options:",
                                 "Show modem options",
                                 NULL,
                                 NULL);
@@ -205,7 +205,7 @@ mmcli_modem_options_enabled (void)
 }
 
 static void
-context_free (Context *ctx)
+context_free (void)
 {
     if (!ctx)
         return;
@@ -230,7 +230,7 @@ context_free (Context *ctx)
 void
 mmcli_modem_shutdown (void)
 {
-    context_free (ctx);
+    context_free ();
 }
 
 static void
@@ -407,7 +407,7 @@ print_modem_info (void)
             pco_list = mm_modem_3gpp_get_pco (ctx->modem_3gpp);
             initial_eps_bearer_path = mm_modem_3gpp_get_initial_eps_bearer_path (ctx->modem_3gpp);
 
-            if (mm_modem_get_current_capabilities (ctx->modem) & (MM_MODEM_CAPABILITY_LTE | MM_MODEM_CAPABILITY_LTE_ADVANCED)) {
+            if (mm_modem_get_current_capabilities (ctx->modem) & (MM_MODEM_CAPABILITY_LTE)) {
                 MMBearerProperties *initial_eps_bearer_properties;
 
                 initial_eps_bearer_properties = mm_modem_3gpp_peek_initial_eps_bearer_settings (ctx->modem_3gpp);
@@ -1294,7 +1294,6 @@ mmcli_modem_run_synchronous (GDBusConnection *connection)
     /* Request to create a new bearer? */
     if (create_bearer_str) {
         MMBearer *bearer;
-        GError *error = NULL;
         MMBearerProperties *properties;
 
         properties = mm_bearer_properties_new_from_string (create_bearer_str, &error);

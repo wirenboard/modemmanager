@@ -126,7 +126,6 @@ MMModemCapability *mm_common_capability_combinations_variant_to_array  (GVariant
 GVariant          *mm_common_capability_combinations_array_to_variant  (const MMModemCapability *capabilities,
                                                                         guint n_capabilities);
 GVariant          *mm_common_capability_combinations_garray_to_variant (GArray *array);
-GVariant          *mm_common_build_capability_combinations_any         (void);
 GVariant          *mm_common_build_capability_combinations_none        (void);
 
 GArray                              *mm_common_oma_pending_network_initiated_sessions_variant_to_garray (GVariant *variant);
@@ -165,6 +164,12 @@ gboolean  mm_get_uint_from_match_info            (GMatchInfo  *match_info,
 gboolean  mm_get_u64_from_match_info             (GMatchInfo  *match_info,
                                                   guint32      match_index,
                                                   guint64     *out);
+gboolean  mm_get_uint_from_hex_match_info        (GMatchInfo  *match_info,
+                                                  guint32      match_index,
+                                                  guint       *out);
+gboolean  mm_get_u64_from_hex_match_info         (GMatchInfo  *match_info,
+                                                  guint32      match_index,
+                                                  guint64     *out);
 gboolean  mm_get_double_from_str                 (const gchar *str,
                                                   gdouble     *out);
 gboolean  mm_get_double_from_match_info          (GMatchInfo  *match_info,
@@ -181,28 +186,5 @@ gchar    *mm_utils_bin2hexstr (const guint8 *bin, gsize len);
 gboolean  mm_utils_ishexstr   (const gchar *hex);
 
 gboolean  mm_utils_check_for_single_value (guint32 value);
-
-#if GLIB_CHECK_VERSION(2, 44, 0)
-#define mm_autoptr g_autoptr
-#else
-
-/* Re-implement for those glib that don't have it */
-#define _MM_AUTOPTR_FUNC_NAME(TypeName) mm_autoptr_cleanup_##TypeName
-#define _MM_AUTOPTR_TYPENAME(TypeName)  TypeName##_autoptr
-#define _MM_CLEANUP(func)               __attribute__((cleanup(func)))
-
-#define _MM_DEFINE_AUTOPTR_CLEANUP_FUNCS(TypeName, cleanup) \
-  typedef TypeName *_MM_AUTOPTR_TYPENAME(TypeName);                                 \
-  G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                                  \
-  static G_GNUC_UNUSED inline void _MM_AUTOPTR_FUNC_NAME(TypeName) (TypeName **_ptr) \
-    { if (_ptr && *_ptr) (cleanup) (*_ptr); }                                                 \
-  G_GNUC_END_IGNORE_DEPRECATIONS
-
-#define mm_autoptr(TypeName) _MM_CLEANUP(_MM_AUTOPTR_FUNC_NAME(TypeName)) _MM_AUTOPTR_TYPENAME(TypeName)
-
-_MM_DEFINE_AUTOPTR_CLEANUP_FUNCS(GRegex, g_regex_unref)
-_MM_DEFINE_AUTOPTR_CLEANUP_FUNCS(GMatchInfo, g_match_info_unref)
-
-#endif
 
 #endif /* MM_COMMON_HELPERS_H */

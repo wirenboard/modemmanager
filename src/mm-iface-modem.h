@@ -391,7 +391,6 @@ MMModemCapability mm_iface_modem_get_current_capabilities (MMIfaceModem *self);
 gboolean          mm_iface_modem_is_3gpp                  (MMIfaceModem *self);
 gboolean          mm_iface_modem_is_3gpp_only             (MMIfaceModem *self);
 gboolean          mm_iface_modem_is_3gpp_lte              (MMIfaceModem *self);
-gboolean          mm_iface_modem_is_3gpp_lte_only         (MMIfaceModem *self);
 gboolean          mm_iface_modem_is_cdma                  (MMIfaceModem *self);
 gboolean          mm_iface_modem_is_cdma_only             (MMIfaceModem *self);
 
@@ -402,6 +401,8 @@ gboolean mm_iface_modem_is_3g      (MMIfaceModem *self);
 gboolean mm_iface_modem_is_3g_only (MMIfaceModem *self);
 gboolean mm_iface_modem_is_4g      (MMIfaceModem *self);
 gboolean mm_iface_modem_is_4g_only (MMIfaceModem *self);
+gboolean mm_iface_modem_is_5g      (MMIfaceModem *self);
+gboolean mm_iface_modem_is_5g_only (MMIfaceModem *self);
 
 /* Helpers to query properties */
 const gchar *mm_iface_modem_get_model          (MMIfaceModem  *self);

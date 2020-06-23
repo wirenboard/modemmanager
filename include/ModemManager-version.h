@@ -46,7 +46,7 @@
  *
  * Since: 1.0
  */
-#define MM_MINOR_VERSION (12)
+#define MM_MINOR_VERSION (13)
 
 /**
  * MM_MICRO_VERSION:
@@ -56,7 +56,7 @@
  *
  * Since: 1.0
  */
-#define MM_MICRO_VERSION (10)
+#define MM_MICRO_VERSION (900)
 
 /**
  * MM_CHECK_VERSION:

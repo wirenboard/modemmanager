@@ -106,11 +106,6 @@ ATTRS{idVendor}=="0e8d", ATTRS{idProduct}=="2000", ENV{ID_MM_TTY_BLACKLIST}="1"
 # PS-360 OEM (GPS sold with MS Street and Trips 2005)
 ATTRS{idVendor}=="067b", ATTRS{idProduct}=="aaa0", ENV{ID_MM_TTY_BLACKLIST}="1"
 
-# u-blox AG, u-blox 5 GPS chips
-ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a5", ENV{ID_MM_TTY_BLACKLIST}="1"
-ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a6", ENV{ID_MM_TTY_BLACKLIST}="1"
-ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a7", ENV{ID_MM_TTY_BLACKLIST}="1"
-
 # Garmin GPS devices
 DRIVERS=="garmin_gps", ENV{ID_MM_TTY_BLACKLIST}="1"
 
@@ -207,5 +202,9 @@ ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="f013", ENV{ID_MM_TTY_BLACKLIST}="1"
 
 # All devices from Prusa Research
 ATTRS{idVendor}=="2c99", ENV{ID_MM_TTY_BLACKLIST}="1"
+
+# USB-CEC adapters
+ATTRS{idVendor}=="2548", ATTRS{idProduct}=="1001", ENV{ID_MM_TTY_BLACKLIST}="1"
+ATTRS{idVendor}=="2548", ATTRS{idProduct}=="1002", ENV{ID_MM_TTY_BLACKLIST}="1"
 
 LABEL="mm_usb_device_blacklist_end"

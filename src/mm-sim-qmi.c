@@ -25,7 +25,7 @@
 #define _LIBMM_INSIDE_MM
 #include <libmm-glib.h>
 
-#include "mm-log.h"
+#include "mm-log-object.h"
 #include "mm-sim-qmi.h"
 
 G_DEFINE_TYPE (MMSimQmi, mm_sim_qmi, MM_TYPE_BASE_SIM)
@@ -148,6 +148,7 @@ uim_read (MMSimQmi            *self,
     GArray *file_path_bytes;
     gsize i;
     QmiMessageUimReadTransparentInput *input;
+    GArray *aid;
 
     task = g_task_new (self, NULL, callback, user_data);
 
@@ -167,11 +168,13 @@ uim_read (MMSimQmi            *self,
     }
 
     input = qmi_message_uim_read_transparent_input_new ();
-    qmi_message_uim_read_transparent_input_set_session_information (
+    aid = g_array_new (FALSE, FALSE, sizeof (guint8)); /* empty AID */
+    qmi_message_uim_read_transparent_input_set_session (
         input,
         QMI_UIM_SESSION_TYPE_PRIMARY_GW_PROVISIONING,
-        "",
+        aid,
         NULL);
+    g_array_unref (aid);
     qmi_message_uim_read_transparent_input_set_file (input,
                                                      file_id,
                                                      file_path_bytes,
@@ -295,7 +298,7 @@ load_sim_identifier (MMBaseSim           *_self,
     self = MM_SIM_QMI (_self);
     task = g_task_new (self, NULL, callback, user_data);
 
-    mm_dbg ("loading SIM identifier...");
+    mm_obj_dbg (self, "loading SIM identifier...");
     if (!self->priv->dms_uim_deprecated)
         dms_uim_get_iccid (self, task);
     else
@@ -420,7 +423,7 @@ load_imsi (MMBaseSim           *_self,
     self = MM_SIM_QMI (_self);
     task = g_task_new (self, NULL, callback, user_data);
 
-    mm_dbg ("loading IMSI...");
+    mm_obj_dbg (self, "loading IMSI...");
     if (!self->priv->dms_uim_deprecated)
         dms_uim_get_imsi (self, task);
     else
@@ -537,7 +540,7 @@ load_operator_identifier (MMBaseSim           *self,
                             QMI_SERVICE_NAS, &client))
         return;
 
-    mm_dbg ("loading SIM operator identifier...");
+    mm_obj_dbg (self, "loading SIM operator identifier...");
     qmi_client_nas_get_home_network (QMI_CLIENT_NAS (client),
                                      NULL,
                                      5,
@@ -586,7 +589,7 @@ load_operator_name (MMBaseSim           *self,
                             QMI_SERVICE_NAS, &client))
         return;
 
-    mm_dbg ("loading SIM operator name...");
+    mm_obj_dbg (self, "loading SIM operator name...");
     qmi_client_nas_get_home_network (QMI_CLIENT_NAS (client),
                                      NULL,
                                      5,
@@ -662,6 +665,7 @@ uim_verify_pin (MMSimQmi *self,
 {
     QmiMessageUimVerifyPinInput *input;
     QmiClient *client = NULL;
+    GArray *aid;
 
     if (!ensure_qmi_client (task,
                             self,
@@ -674,11 +678,13 @@ uim_verify_pin (MMSimQmi *self,
         QMI_UIM_PIN_ID_PIN1,
         g_task_get_task_data (task),
         NULL);
-    qmi_message_uim_verify_pin_input_set_session_information (
+    aid = g_array_new (FALSE, FALSE, sizeof (guint8)); /* empty AID */
+    qmi_message_uim_verify_pin_input_set_session (
         input,
         QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
-        "", /* ignored */
+        aid,
         NULL);
+    g_array_unref (aid);
     qmi_client_uim_verify_pin (QMI_CLIENT_UIM (client),
                                input,
                                5,
@@ -727,7 +733,7 @@ dms_uim_verify_pin (MMSimQmi *self,
         return;
     }
 
-    mm_dbg ("Sending PIN...");
+    mm_obj_dbg (self, "sending PIN...");
     input = qmi_message_dms_uim_verify_pin_input_new ();
     qmi_message_dms_uim_verify_pin_input_set_info (
         input,
@@ -757,7 +763,7 @@ send_pin (MMBaseSim           *_self,
 
     g_task_set_task_data (task, g_strdup (pin), g_free);
 
-    mm_dbg ("Verifying PIN...");
+    mm_obj_dbg (self, "verifying PIN...");
     if (!self->priv->dms_uim_deprecated)
         dms_uim_verify_pin (self, task);
     else
@@ -818,6 +824,7 @@ uim_unblock_pin (MMSimQmi *self,
     QmiMessageUimUnblockPinInput *input;
     QmiClient *client = NULL;
     UnblockPinContext *ctx;
+    GArray *aid;
 
     if (!ensure_qmi_client (task,
                             self,
@@ -833,11 +840,13 @@ uim_unblock_pin (MMSimQmi *self,
         ctx->puk,
         ctx->new_pin,
         NULL);
-    qmi_message_uim_unblock_pin_input_set_session_information (
+    aid = g_array_new (FALSE, FALSE, sizeof (guint8)); /* empty AID */
+    qmi_message_uim_unblock_pin_input_set_session (
         input,
         QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
-        "", /* ignored */
+        aid,
         NULL);
+    g_array_unref (aid);
     qmi_client_uim_unblock_pin (QMI_CLIENT_UIM (client),
                                 input,
                                 5,
@@ -924,7 +933,7 @@ send_puk (MMBaseSim           *_self,
     ctx->new_pin = g_strdup (new_pin);
     g_task_set_task_data (task, ctx, (GDestroyNotify) unblock_pin_context_free);
 
-    mm_dbg ("Unblocking PIN...");
+    mm_obj_dbg (self, "unblocking PIN...");
     if (!self->priv->dms_uim_deprecated)
         dms_uim_unblock_pin (self, task);
     else
@@ -985,6 +994,7 @@ uim_change_pin (MMSimQmi *self,
     QmiMessageUimChangePinInput *input;
     QmiClient *client = NULL;
     ChangePinContext *ctx;
+    GArray *aid;
 
     if (!ensure_qmi_client (task,
                             self,
@@ -1000,11 +1010,13 @@ uim_change_pin (MMSimQmi *self,
         ctx->old_pin,
         ctx->new_pin,
         NULL);
-    qmi_message_uim_change_pin_input_set_session_information (
+    aid = g_array_new (FALSE, FALSE, sizeof (guint8)); /* empty AID */
+    qmi_message_uim_change_pin_input_set_session (
         input,
         QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
-        "", /* ignored */
+        aid,
         NULL);
+    g_array_unref (aid);
     qmi_client_uim_change_pin (QMI_CLIENT_UIM (client),
                                input,
                                5,
@@ -1091,7 +1103,7 @@ change_pin (MMBaseSim           *_self,
     ctx->new_pin = g_strdup (new_pin);
     g_task_set_task_data (task, ctx, (GDestroyNotify) change_pin_context_free);
 
-    mm_dbg ("Changing PIN...");
+    mm_obj_dbg (self, "changing PIN...");
     if (!self->priv->dms_uim_deprecated)
         dms_uim_change_pin (self, task);
     else
@@ -1151,6 +1163,7 @@ uim_enable_pin (MMSimQmi *self,
     QmiMessageUimSetPinProtectionInput *input;
     QmiClient *client = NULL;
     EnablePinContext *ctx;
+    GArray *aid;
 
     if (!ensure_qmi_client (task,
                             MM_SIM_QMI (self),
@@ -1166,11 +1179,13 @@ uim_enable_pin (MMSimQmi *self,
         ctx->enabled,
         ctx->pin,
         NULL);
-    qmi_message_uim_set_pin_protection_input_set_session_information (
+    aid = g_array_new (FALSE, FALSE, sizeof (guint8)); /* empty AID */
+    qmi_message_uim_set_pin_protection_input_set_session (
         input,
         QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
-        "", /* ignored */
+        aid,
         NULL);
+    g_array_unref (aid);
     qmi_client_uim_set_pin_protection (QMI_CLIENT_UIM (client),
                                        input,
                                        5,
@@ -1257,7 +1272,7 @@ enable_pin (MMBaseSim           *_self,
     ctx->enabled = enabled;
     g_task_set_task_data (task, ctx, (GDestroyNotify) enable_pin_context_free);
 
-    mm_dbg ("%s PIN...", enabled ? "Enabling" : "Disabling");
+    mm_obj_dbg (self, "%s PIN...", enabled ? "enabling" : "disabling");
     if (!self->priv->dms_uim_deprecated)
         dms_uim_enable_pin (self, task);
     else

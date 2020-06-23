@@ -108,7 +108,7 @@ mmcli_manager_get_option_group (void)
 
     /* Status options */
     group = g_option_group_new ("manager",
-                                "Manager options",
+                                "Manager options:",
                                 "Show manager options",
                                 NULL,
                                 NULL);
@@ -164,7 +164,7 @@ mmcli_manager_options_enabled (void)
 }
 
 static void
-context_free (Context *ctx)
+context_free (void)
 {
     if (!ctx)
         return;
@@ -184,7 +184,7 @@ context_free (Context *ctx)
 void
 mmcli_manager_shutdown (void)
 {
-    context_free (ctx);
+    context_free ();
 }
 
 static void

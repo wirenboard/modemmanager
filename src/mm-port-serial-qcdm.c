@@ -27,7 +27,7 @@
 #include "libqcdm/src/utils.h"
 #include "libqcdm/src/errors.h"
 #include "libqcdm/src/dm-commands.h"
-#include "mm-log.h"
+#include "mm-log-object.h"
 
 G_DEFINE_TYPE (MMPortSerialQcdm, mm_port_serial_qcdm, MM_TYPE_PORT_SERIAL)
 
@@ -40,7 +40,8 @@ struct _MMPortSerialQcdmPrivate {
 static gboolean
 find_qcdm_start (GByteArray *response, gsize *start)
 {
-    int i, last = -1;
+    guint i;
+    gint  last = -1;
 
     /* Look for 3 bytes and a QCDM frame marker, ie enough data for a valid
      * frame.  There will usually be three cases here; (1) a QCDM frame
@@ -49,8 +50,13 @@ find_qcdm_start (GByteArray *response, gsize *start)
      * uses HDLC framing (like Sierra CnS) that starts and ends with 0x7E.
      */
     for (i = 0; i < response->len; i++) {
+        /* Marker found */
         if (response->data[i] == 0x7E) {
-            if (i > last + 3) {
+            /* If we didn't get an initial marker, count at least 3 bytes since
+             * origin; if we did get an initial marker, count at least 3 bytes
+             * since the marker.
+             */
+            if (((last == -1) && (i >= 3)) || ((last >= 0) && (i > (guint)(last + 3)))) {
                 /* Got a full QCDM frame; 3 non-0x7E bytes and a terminator */
                 if (start)
                     *start = last + 1;
@@ -200,10 +206,13 @@ mm_port_serial_qcdm_command (MMPortSerialQcdm *self,
 }
 
 static void
-debug_log (MMPortSerial *port, const char *prefix, const char *buf, gsize len)
+debug_log (MMPortSerial *self,
+           const gchar  *prefix,
+           const gchar  *buf,
+           gsize         len)
 {
     static GString *debug = NULL;
-    const char *s = buf;
+    const gchar    *s = buf;
 
     if (!debug)
         debug = g_string_sized_new (512);
@@ -213,7 +222,7 @@ debug_log (MMPortSerial *port, const char *prefix, const char *buf, gsize len)
     while (len--)
         g_string_append_printf (debug, " %02x", (guint8) (*s++ & 0xFF));
 
-    mm_dbg ("(%s): %s", mm_port_get_device (MM_PORT (port)), debug->str);
+    mm_obj_dbg (self, "%s", debug->str);
     g_string_truncate (debug, 0);
 }
 
