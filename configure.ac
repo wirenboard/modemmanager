@@ -5,8 +5,8 @@ dnl Package and library versioning support
 dnl
 
 m4_define([mm_major_version], [1])
-m4_define([mm_minor_version], [13])
-m4_define([mm_micro_version], [900])
+m4_define([mm_minor_version], [14])
+m4_define([mm_micro_version], [0])
 m4_define([mm_version],
           [mm_major_version.mm_minor_version.mm_micro_version])
 
@@ -18,9 +18,9 @@ dnl        If the interface has grown (that is, the new library is compatible
 dnl            with old code), increment a.
 dnl        If the interface has changed in an incompatible way (that is,
 dnl            functions have changed or been removed), then zero a.
-m4_define([mm_glib_lt_current],  [5])
+m4_define([mm_glib_lt_current],  [6])
 m4_define([mm_glib_lt_revision], [0])
-m4_define([mm_glib_lt_age],      [5])
+m4_define([mm_glib_lt_age],      [6])
 
 dnl-----------------------------------------------------------------------------
 dnl autoconf, automake, libtool initialization
@@ -370,7 +370,7 @@ dnl-----------------------------------------------------------------------------
 dnl MBIM support (enabled by default)
 dnl
 
-LIBMBIM_VERSION=1.23.900
+LIBMBIM_VERSION=1.24.0
 
 AC_ARG_WITH(mbim, AS_HELP_STRING([--without-mbim], [Build without MBIM support]), [], [with_mbim=yes])
 AM_CONDITIONAL(WITH_MBIM, test "x$with_mbim" = "xyes")
@@ -394,7 +394,7 @@ dnl-----------------------------------------------------------------------------
 dnl QMI support (enabled by default)
 dnl
 
-LIBQMI_VERSION=1.25.900
+LIBQMI_VERSION=1.26.0
 
 AC_ARG_WITH(qmi, AS_HELP_STRING([--without-qmi], [Build without QMI support]), [], [with_qmi=yes])
 AM_CONDITIONAL(WITH_QMI, test "x$with_qmi" = "xyes")
