@@ -128,6 +128,7 @@ struct _MMBroadbandModemQmiPrivate {
 
     /* 3GPP USSD helpers */
     guint ussd_indication_id;
+    guint ussd_release_indication_id;
     gboolean ussd_unsolicited_events_enabled;
     gboolean ussd_unsolicited_events_setup;
     GTask *pending_ussd_action;
@@ -2765,11 +2766,24 @@ common_process_serving_system_3gpp (MMBroadbandModemQmi *self,
             g_free (new_operator_id);
     }
 
-    /* Report new registration states */
+    /* Report new registration states. The QMI serving system API reports "CS"
+     * and "PS" registration states, and if the device is in LTE, we'll take the "PS"
+     * one as "EPS". But, if the device is not in LTE, we should also set the "EPS"
+     * state as unknown, so that the "PS" one takes precedence when building
+     * the consolidated registration state (otherwise we may be using some old cached
+     * "EPS" state wrongly). */
     mm_iface_modem_3gpp_update_cs_registration_state (MM_IFACE_MODEM_3GPP (self), mm_cs_registration_state);
     mm_iface_modem_3gpp_update_ps_registration_state (MM_IFACE_MODEM_3GPP (self), mm_ps_registration_state);
-    if (mm_access_technologies & MM_MODEM_ACCESS_TECHNOLOGY_LTE)
-        mm_iface_modem_3gpp_update_eps_registration_state (MM_IFACE_MODEM_3GPP (self), mm_ps_registration_state);
+    if (mm_iface_modem_is_3gpp_lte (MM_IFACE_MODEM (self)))
+        mm_iface_modem_3gpp_update_eps_registration_state (MM_IFACE_MODEM_3GPP (self),
+                                                           (mm_access_technologies & MM_MODEM_ACCESS_TECHNOLOGY_LTE) ?
+                                                           mm_ps_registration_state : MM_MODEM_3GPP_REGISTRATION_STATE_UNKNOWN);
+    /* Same thing for "5GS" state */
+    if (mm_iface_modem_is_3gpp_5gnr (MM_IFACE_MODEM (self)))
+        mm_iface_modem_3gpp_update_5gs_registration_state (MM_IFACE_MODEM_3GPP (self),
+                                                           (mm_access_technologies & MM_MODEM_ACCESS_TECHNOLOGY_5GNR) ?
+                                                           mm_ps_registration_state : MM_MODEM_3GPP_REGISTRATION_STATE_UNKNOWN);
+
 
     /* Get 3GPP location LAC/TAC and CI */
     lac = 0;
@@ -7314,6 +7328,30 @@ ussd_indication_cb (QmiClientVoice               *client,
     process_ussd_message (self, user_action, utf8, error);
 }
 
+static void
+ussd_release_indication_cb (QmiClientVoice      *client,
+                            MMBroadbandModemQmi *self)
+{
+    GTask  *pending_task;
+    GError *error;
+
+    mm_iface_modem_3gpp_ussd_update_state (MM_IFACE_MODEM_3GPP_USSD (self),
+                                           MM_MODEM_3GPP_USSD_SESSION_STATE_IDLE);
+
+    error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_ABORTED, "USSD terminated by network");
+
+    pending_task = g_steal_pointer (&self->priv->pending_ussd_action);
+    if (pending_task) {
+        g_task_return_error (pending_task, error);
+        g_object_unref (pending_task);
+        return;
+    }
+
+    /* If no pending task, just report the error */
+    mm_obj_dbg (self, "USSD release indication: %s", error->message);
+    g_error_free (error);
+}
+
 /*****************************************************************************/
 /* Setup/cleanup unsolicited events */
 
@@ -7357,10 +7395,19 @@ common_3gpp_ussd_setup_cleanup_unsolicited_events (MMBroadbandModemQmi *self,
                               "ussd",
                               G_CALLBACK (ussd_indication_cb),
                               self);
+        g_assert (self->priv->ussd_release_indication_id == 0);
+        self->priv->ussd_release_indication_id =
+            g_signal_connect (client,
+                              "release-ussd",
+                              G_CALLBACK (ussd_release_indication_cb),
+                              self);
     } else {
         g_assert (self->priv->ussd_indication_id != 0);
         g_signal_handler_disconnect (client, self->priv->ussd_indication_id);
         self->priv->ussd_indication_id = 0;
+        g_assert (self->priv->ussd_release_indication_id != 0);
+        g_signal_handler_disconnect (client, self->priv->ussd_release_indication_id);
+        self->priv->ussd_release_indication_id = 0;
     }
 
     g_task_return_boolean (task, TRUE);

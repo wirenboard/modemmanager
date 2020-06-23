@@ -1,3 +1,217 @@
+commit 5f20662aeb9b0f79865a9a9df151349a29b4a2bd
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Jun 23 14:06:03 2020 +0200
+
+    release: bump version to 1.14.0
+
+ configure.ac | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+commit 71d65bbe7e98248c21c4c35f4ec4210264ba745a
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jun 22 14:10:28 2020 +0200
+
+    u-blox: always ignore M8 and M9 GPS modules
+
+ plugins/ublox/77-mm-ublox-port-types.rules | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit fbf38753441ee6eb9635a0f7b24e7a1b3ac818c3
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jun 22 09:30:09 2020 +0200
+
+    blacklist: add chinese clone of Arduino nano
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/228
+
+ src/77-mm-usb-device-blacklist.rules | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit 5cbeeb1b99939f9bc6faea1c29e99bc1f274d077
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Jun 20 12:05:18 2020 +0200
+
+    build: require libqmi 1.26.0
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 57422ec0bb6403bd17efab174f1d9b67079a5b1e
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Jun 19 14:27:27 2020 +0200
+
+    NEWS: add info about MBIM-powered Cinterion devices
+
+ NEWS | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit ecf54efc671b8c05e6354470e6ed8f496985d3a9
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Jun 17 14:53:45 2020 +0200
+
+    cinterion: added port type hints for the mPLS62-w in MBIM mode
+
+      T:  Bus=01 Lev=02 Prnt=04 Port=01 Cnt=01 Dev#= 40 Spd=480 MxCh= 0
+      D:  Ver= 2.00 Cls=ef(misc ) Sub=02 Prot=01 MxPS=64 #Cfgs=  1
+      P:  Vendor=1e2d ProdID=005d Rev=17.30
+      S:  Manufacturer=Cinterion Wireless Modules
+      S:  Product=PLSx
+      C:  #Ifs=12 Cfg#= 1 Atr=e0 MxPwr=100mA
+      I:  If#=0x0 Alt= 0 #EPs= 1 Cls=02(commc) Sub=02 Prot=01
+      Driver=cdc_acm
+      I:  If#=0x1 Alt= 0 #EPs= 2 Cls=0a(data ) Sub=00 Prot=00
+      Driver=cdc_acm
+      I:  If#=0xa Alt= 1 #EPs= 1 Cls=02(commc) Sub=0e Prot=00
+      Driver=cdc_mbim
+      I:  If#=0xb Alt= 2 #EPs= 2 Cls=0a(data ) Sub=00 Prot=02
+      Driver=cdc_mbim
+      I:  If#=0x2 Alt= 0 #EPs= 1 Cls=02(commc) Sub=02 Prot=00
+      Driver=cdc_acm
+      I:  If#=0x3 Alt= 0 #EPs= 2 Cls=0a(data ) Sub=00 Prot=00
+      Driver=cdc_acm
+      I:  If#=0x4 Alt= 0 #EPs= 1 Cls=02(commc) Sub=02 Prot=00
+      Driver=cdc_acm
+      I:  If#=0x5 Alt= 0 #EPs= 2 Cls=0a(data ) Sub=00 Prot=00
+      Driver=cdc_acm
+      I:  If#=0x6 Alt= 0 #EPs= 1 Cls=02(commc) Sub=02 Prot=00
+      Driver=cdc_acm
+      I:  If#=0x7 Alt= 0 #EPs= 2 Cls=0a(data ) Sub=00 Prot=00
+      Driver=cdc_acm
+      I:  If#=0x8 Alt= 0 #EPs= 1 Cls=02(commc) Sub=02 Prot=00
+      Driver=cdc_acm
+      I:  If#=0x9 Alt= 0 #EPs= 2 Cls=0a(data ) Sub=00 Prot=00
+      Driver=cdc_acm
+
+ plugins/cinterion/77-mm-cinterion-port-types.rules | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+commit c2ee73173e77b57108e52a09bfecadef19ae13a8
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Jun 17 14:26:58 2020 +0200
+
+    cinterion: allow MBIM-powered devices
+
+    Like the mPLS62-w when setup to be controlled in MBIM mode instead of
+    plain AT commands.
+
+ plugins/cinterion/mm-plugin-cinterion.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+commit 54de41928b73b2c7fdfe5b4c791625f6973510f0
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jun 18 10:58:14 2020 +0200
+
+    build: require libmbim 1.24.0
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 9d31cbaa2dc2efb77d174134156b612072d6bf0b
+Author: Eric Caruso <ejcaruso@chromium.org>
+Date:   Wed Jun 17 16:19:07 2020 -0700
+
+    mm-kernel-device: give cmp a total order
+
+    This allows MMKernelDevice::cmp to compare two kernel devices
+    with different object types, which means that subclasses can
+    continue to only handle comparisons with their own type. The
+    order may not be stable across builds.
+
+ src/kerneldevice/mm-kernel-device.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit 12ea728112f562a572a5c0ecc7bba47bb529d41c
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Jun 16 09:41:14 2020 +0200
+
+    AUTHORS: update with latest commit stats
+
+ AUTHORS | 23 ++++++++++++++++++-----
+ 1 file changed, 18 insertions(+), 5 deletions(-)
+
+commit cb8d810583690ea2c011e66d36c1eeb346f83690
+Author: Brendan Peter <bpeter@lytx.com>
+Date:   Mon Jun 15 15:48:01 2020 -0700
+
+    quectel: add port type hints for EG95
+
+ plugins/quectel/77-mm-quectel-port-types.rules | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+commit 569990f38cc241b0309ec7d8c92a7b2de3e89005
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Jun 12 09:25:09 2020 +0200
+
+    broadband-modem-qmi: also build 5GS reg state from Serving System
+
+ src/mm-broadband-modem-qmi.c | 6 ++++++
+ src/mm-iface-modem.c         | 6 ++++++
+ src/mm-iface-modem.h         | 1 +
+ 3 files changed, 13 insertions(+)
+
+commit 8340237f9da911ca6ecc58fd6c453e9ea32616d4
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Jun 12 09:17:40 2020 +0200
+
+    broadband-modem-qmi: avoid using stale EPS registration state
+
+    When the device goes from LTE to UMTS, we must make sure we also
+    always update the EPS registration state as unknown, or the built
+    consolidated state will be wrong.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/225
+
+ src/mm-broadband-modem-qmi.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+commit 3af93cbe18709864a10c3efd752e7db44f41c18f
+Author: Maxim Anisimov <maxim.anisimov.ua@gmail.com>
+Date:   Fri Jun 5 08:57:48 2020 +0300
+
+    broadband-modem-qmi: switch USSD state to idle when ussd session is
+    terminated by network
+
+    The cellular operator can break the interactive USSD session. In
+    this case, it is necessary
+    to process this situation otherwise --3gpp-ussd-initiate or
+    --3gpp-ussd-respond will give an error.
+
+    Signed-off-by: Maxim Anisimov <maxim.anisimov.ua@gmail.com>
+
+ src/mm-broadband-modem-qmi.c | 34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
+
+commit 62c6f941a2ea44b0f67fbb849c92335d78137b96
+Author: Maxim Anisimov <maxim.anisimov.ua@gmail.com>
+Date:   Fri Jun 5 09:29:23 2020 +0300
+
+    cli: make control chars in strings are escaped correctly for json
+    output
+
+    We need to change json output escaping according to this
+    https://bugzilla.gnome.org/show_bug.cgi?id=730425
+
+    Signed-off-by: Maxim Anisimov <maxim.anisimov.ua@gmail.com>
+
+ cli/mmcli-output.c | 47 +++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 45 insertions(+), 2 deletions(-)
+
+commit 1e0b38d98aff792481f4635c524bbf669b0be5ad
+Author: Maxim Anisimov <maxim.anisimov.ua@gmail.com>
+Date:   Fri Jun 5 08:43:05 2020 +0300
+
+    sms-part-3gpp:  fix unicode names in sms decode iconv() operations
+
+    So that the limited iconv() in OpenWRT supports the conversion
+    properly.
+
+    Signed-off-by: Maxim Anisimov <maxim.anisimov.ua@gmail.com>
+
+ src/mm-sms-part-3gpp.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
 commit cbcc14110521fdb360a3028b1b15d59ffc74257e
 Author: Aleksander Morgado <aleksander@aleksander.es>
 Date:   Thu Jun 4 09:48:10 2020 +0200
