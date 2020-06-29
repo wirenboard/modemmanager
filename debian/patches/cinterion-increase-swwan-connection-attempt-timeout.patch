@@ -1,0 +1,23 @@
+Description: cinterion: increase SWWAN connection attempt timeout
+ It's critical not to timeout early on devices with AT ports, or we may end up flagging the modem as invalid.
+ ModemManager[26829]: <debug> [1593097973.552712] [modem1/ttyACM0/at] --> 'AT^SWWAN=1,2,1<CR>'
+ ....
+ ModemManager[26829]: <debug> [1593098064.195217] [modem1] couldn't connect bearer: Serial command timed out
+ ....
+ ModemManager[26829]: <error> [1593098091.167987] [modem1] port ttyACM0 timed out 10 consecutive times, marking modem as invalid
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Origin: upstream
+Last-Update: 2020-06-29
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/plugins/cinterion/mm-broadband-bearer-cinterion.c
++++ b/plugins/cinterion/mm-broadband-bearer-cinterion.c
+@@ -433,7 +433,7 @@
+         mm_base_modem_at_command_full (ctx->modem,
+                                        ctx->primary,
+                                        command,
+-                                       90,
++                                       180,
+                                        FALSE,
+                                        FALSE,
+                                        NULL,
