@@ -329,98 +329,99 @@ noinst_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3) \
 ################################################################################
 # plugin: quectel
 ################################################################################
-@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_85 = quectel/77-mm-quectel-port-types.rules
-@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_86 = libmm-plugin-quectel.la
-@ENABLE_PLUGIN_QUECTEL_TRUE@@WITH_QMI_TRUE@am__append_87 = \
+@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_85 = libmm-plugin-quectel.la
+@ENABLE_PLUGIN_QUECTEL_TRUE@@WITH_QMI_TRUE@am__append_86 = \
 @ENABLE_PLUGIN_QUECTEL_TRUE@@WITH_QMI_TRUE@	quectel/mm-broadband-modem-qmi-quectel.c \
 @ENABLE_PLUGIN_QUECTEL_TRUE@@WITH_QMI_TRUE@	quectel/mm-broadband-modem-qmi-quectel.h \
 @ENABLE_PLUGIN_QUECTEL_TRUE@@WITH_QMI_TRUE@	$(NULL)
 
+@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_87 = quectel/77-mm-quectel-port-types.rules
+@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_88 = -DTESTUDEVRULESDIR_QUECTEL=\"${srcdir}/quectel\"
 
 ################################################################################
 # plugin: samsung
 ################################################################################
-@ENABLE_PLUGIN_SAMSUNG_TRUE@am__append_88 = libmm-plugin-samsung.la
+@ENABLE_PLUGIN_SAMSUNG_TRUE@am__append_89 = libmm-plugin-samsung.la
 
 ################################################################################
 # plugin: sierra (legacy)
 ################################################################################
-@ENABLE_PLUGIN_SIERRA_LEGACY_TRUE@am__append_89 = libmm-plugin-sierra-legacy.la
+@ENABLE_PLUGIN_SIERRA_LEGACY_TRUE@am__append_90 = libmm-plugin-sierra-legacy.la
 
 ################################################################################
 # plugin: sierra (new QMI or MBIM modems)
 ################################################################################
-@ENABLE_PLUGIN_SIERRA_TRUE@am__append_90 = sierra/77-mm-sierra.rules
-@ENABLE_PLUGIN_SIERRA_TRUE@am__append_91 = libmm-plugin-sierra.la
+@ENABLE_PLUGIN_SIERRA_TRUE@am__append_91 = sierra/77-mm-sierra.rules
+@ENABLE_PLUGIN_SIERRA_TRUE@am__append_92 = libmm-plugin-sierra.la
 
 ################################################################################
 # plugin: simtech
 ################################################################################
-@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_92 = libhelpers-simtech.la
-@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_93 = test-modem-helpers-simtech
-@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_94 = libmm-plugin-simtech.la
-@ENABLE_PLUGIN_SIMTECH_TRUE@@WITH_QMI_TRUE@am__append_95 = \
+@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_93 = libhelpers-simtech.la
+@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_94 = test-modem-helpers-simtech
+@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_95 = libmm-plugin-simtech.la
+@ENABLE_PLUGIN_SIMTECH_TRUE@@WITH_QMI_TRUE@am__append_96 = \
 @ENABLE_PLUGIN_SIMTECH_TRUE@@WITH_QMI_TRUE@	simtech/mm-broadband-modem-qmi-simtech.c \
 @ENABLE_PLUGIN_SIMTECH_TRUE@@WITH_QMI_TRUE@	simtech/mm-broadband-modem-qmi-simtech.h \
 @ENABLE_PLUGIN_SIMTECH_TRUE@@WITH_QMI_TRUE@	$(NULL)
 
-@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_96 = simtech/77-mm-simtech-port-types.rules
-@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_97 = -DTESTUDEVRULESDIR_SIMTECH=\"${srcdir}/simtech\"
+@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_97 = simtech/77-mm-simtech-port-types.rules
+@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_98 = -DTESTUDEVRULESDIR_SIMTECH=\"${srcdir}/simtech\"
 
 ################################################################################
 # plugin: telit
 ################################################################################
-@ENABLE_PLUGIN_TELIT_TRUE@am__append_98 = libmm-plugin-telit.la
-@ENABLE_PLUGIN_TELIT_TRUE@am__append_99 = telit/77-mm-telit-port-types.rules
-@ENABLE_PLUGIN_TELIT_TRUE@am__append_100 = -DTESTUDEVRULESDIR_TELIT=\"${srcdir}/telit\"
+@ENABLE_PLUGIN_TELIT_TRUE@am__append_99 = libmm-plugin-telit.la
+@ENABLE_PLUGIN_TELIT_TRUE@am__append_100 = telit/77-mm-telit-port-types.rules
+@ENABLE_PLUGIN_TELIT_TRUE@am__append_101 = -DTESTUDEVRULESDIR_TELIT=\"${srcdir}/telit\"
 
 ################################################################################
 # plugin: thuraya xt
 ################################################################################
-@ENABLE_PLUGIN_THURAYA_TRUE@am__append_101 = libhelpers-thuraya.la
-@ENABLE_PLUGIN_THURAYA_TRUE@am__append_102 = test-modem-helpers-thuraya
-@ENABLE_PLUGIN_THURAYA_TRUE@am__append_103 = libmm-plugin-thuraya.la
+@ENABLE_PLUGIN_THURAYA_TRUE@am__append_102 = libhelpers-thuraya.la
+@ENABLE_PLUGIN_THURAYA_TRUE@am__append_103 = test-modem-helpers-thuraya
+@ENABLE_PLUGIN_THURAYA_TRUE@am__append_104 = libmm-plugin-thuraya.la
 
 ################################################################################
 # plugin: tplink
 ################################################################################
-@ENABLE_PLUGIN_TPLINK_TRUE@am__append_104 = libmm-plugin-tplink.la
-@ENABLE_PLUGIN_TPLINK_TRUE@am__append_105 = tplink/77-mm-tplink-port-types.rules
-@ENABLE_PLUGIN_TPLINK_TRUE@am__append_106 = -DTESTUDEVRULESDIR_TPLINK=\"${srcdir}/tplink\"
+@ENABLE_PLUGIN_TPLINK_TRUE@am__append_105 = libmm-plugin-tplink.la
+@ENABLE_PLUGIN_TPLINK_TRUE@am__append_106 = tplink/77-mm-tplink-port-types.rules
+@ENABLE_PLUGIN_TPLINK_TRUE@am__append_107 = -DTESTUDEVRULESDIR_TPLINK=\"${srcdir}/tplink\"
 
 ################################################################################
 # plugin: u-blox
 ################################################################################
-@ENABLE_PLUGIN_UBLOX_TRUE@am__append_107 = ublox/77-mm-ublox-port-types.rules
-@ENABLE_PLUGIN_UBLOX_TRUE@am__append_108 = libhelpers-ublox.la
-@ENABLE_PLUGIN_UBLOX_TRUE@am__append_109 = $(UBLOX_ENUMS_GENERATED)
+@ENABLE_PLUGIN_UBLOX_TRUE@am__append_108 = ublox/77-mm-ublox-port-types.rules
+@ENABLE_PLUGIN_UBLOX_TRUE@am__append_109 = libhelpers-ublox.la
 @ENABLE_PLUGIN_UBLOX_TRUE@am__append_110 = $(UBLOX_ENUMS_GENERATED)
-@ENABLE_PLUGIN_UBLOX_TRUE@am__append_111 = test-modem-helpers-ublox
-@ENABLE_PLUGIN_UBLOX_TRUE@am__append_112 = libmm-plugin-ublox.la
+@ENABLE_PLUGIN_UBLOX_TRUE@am__append_111 = $(UBLOX_ENUMS_GENERATED)
+@ENABLE_PLUGIN_UBLOX_TRUE@am__append_112 = test-modem-helpers-ublox
+@ENABLE_PLUGIN_UBLOX_TRUE@am__append_113 = libmm-plugin-ublox.la
 
 ################################################################################
 # plugin: via
 ################################################################################
-@ENABLE_PLUGIN_VIA_TRUE@am__append_113 = libmm-plugin-via.la
+@ENABLE_PLUGIN_VIA_TRUE@am__append_114 = libmm-plugin-via.la
 
 ################################################################################
 # plugin: wavecom (now sierra airlink)
 ################################################################################
-@ENABLE_PLUGIN_WAVECOM_TRUE@am__append_114 = libmm-plugin-wavecom.la
+@ENABLE_PLUGIN_WAVECOM_TRUE@am__append_115 = libmm-plugin-wavecom.la
 
 ################################################################################
 # plugin: alcatel/TCT/JRD x220D and possibly others
 ################################################################################
-@ENABLE_PLUGIN_X22X_TRUE@am__append_115 = libmm-plugin-x22x.la
-@ENABLE_PLUGIN_X22X_TRUE@am__append_116 = x22x/77-mm-x22x-port-types.rules
-@ENABLE_PLUGIN_X22X_TRUE@am__append_117 = -DTESTUDEVRULESDIR_X22X=\"${srcdir}/x22x\"
+@ENABLE_PLUGIN_X22X_TRUE@am__append_116 = libmm-plugin-x22x.la
+@ENABLE_PLUGIN_X22X_TRUE@am__append_117 = x22x/77-mm-x22x-port-types.rules
+@ENABLE_PLUGIN_X22X_TRUE@am__append_118 = -DTESTUDEVRULESDIR_X22X=\"${srcdir}/x22x\"
 
 ################################################################################
 # plugin: zte
 ################################################################################
-@ENABLE_PLUGIN_ZTE_TRUE@am__append_118 = libmm-plugin-zte.la
-@ENABLE_PLUGIN_ZTE_TRUE@am__append_119 = zte/77-mm-zte-port-types.rules
-@ENABLE_PLUGIN_ZTE_TRUE@am__append_120 = -DTESTUDEVRULESDIR_ZTE=\"${srcdir}/zte\"
+@ENABLE_PLUGIN_ZTE_TRUE@am__append_119 = libmm-plugin-zte.la
+@ENABLE_PLUGIN_ZTE_TRUE@am__append_120 = zte/77-mm-zte-port-types.rules
+@ENABLE_PLUGIN_ZTE_TRUE@am__append_121 = -DTESTUDEVRULESDIR_ZTE=\"${srcdir}/zte\"
 subdir = plugins
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_code_coverage.m4 \
@@ -1984,8 +1985,9 @@ AM_CFLAGS = $(WARN_CFLAGS) $(MM_CFLAGS) $(CODE_COVERAGE_CFLAGS) \
 	$(am__append_41) $(am__append_44) $(am__append_47) \
 	$(am__append_51) $(am__append_54) $(am__append_59) \
 	$(am__append_66) $(am__append_71) $(am__append_75) \
-	$(am__append_79) $(am__append_97) $(am__append_100) \
-	$(am__append_106) $(am__append_117) $(am__append_120)
+	$(am__append_79) $(am__append_88) $(am__append_98) \
+	$(am__append_101) $(am__append_107) $(am__append_118) \
+	$(am__append_121)
 AM_LDFLAGS = $(WARN_LDFLAGS) $(MM_LIBS) $(CODE_COVERAGE_LDFLAGS) \
 	$(GUDEV_LIBS) $(NULL) $(am__append_2) $(am__append_4)
 
@@ -2016,9 +2018,9 @@ dist_udevrules_DATA = $(am__append_31) $(am__append_37) \
 	$(am__append_40) $(am__append_43) $(am__append_46) \
 	$(am__append_49) $(am__append_53) $(am__append_58) \
 	$(am__append_65) $(am__append_70) $(am__append_74) \
-	$(am__append_78) $(am__append_85) $(am__append_90) \
-	$(am__append_96) $(am__append_99) $(am__append_105) \
-	$(am__append_107) $(am__append_116) $(am__append_119)
+	$(am__append_78) $(am__append_87) $(am__append_91) \
+	$(am__append_97) $(am__append_100) $(am__append_106) \
+	$(am__append_108) $(am__append_117) $(am__append_120)
 
 # Helper libs
 
@@ -2028,8 +2030,8 @@ dist_udevrules_DATA = $(am__append_31) $(am__append_37) \
 noinst_LTLIBRARIES = libmm-test-common.la $(am__append_5) \
 	$(am__append_8) $(am__append_13) $(am__append_19) \
 	$(am__append_26) $(am__append_33) $(am__append_55) \
-	$(am__append_61) $(am__append_67) $(am__append_92) \
-	$(am__append_101) $(am__append_108)
+	$(am__append_61) $(am__append_67) $(am__append_93) \
+	$(am__append_102) $(am__append_109)
 
 # Plugins
 pkglib_LTLIBRARIES = $(am__append_7) $(am__append_10) $(am__append_11) \
@@ -2042,17 +2044,17 @@ pkglib_LTLIBRARIES = $(am__append_7) $(am__append_10) $(am__append_11) \
 	$(am__append_69) $(am__append_72) $(am__append_73) \
 	$(am__append_76) $(am__append_77) $(am__append_80) \
 	$(am__append_81) $(am__append_82) $(am__append_83) \
-	$(am__append_84) $(am__append_86) $(am__append_88) \
-	$(am__append_89) $(am__append_91) $(am__append_94) \
-	$(am__append_98) $(am__append_103) $(am__append_104) \
-	$(am__append_112) $(am__append_113) $(am__append_114) \
-	$(am__append_115) $(am__append_118)
+	$(am__append_84) $(am__append_85) $(am__append_89) \
+	$(am__append_90) $(am__append_92) $(am__append_95) \
+	$(am__append_99) $(am__append_104) $(am__append_105) \
+	$(am__append_113) $(am__append_114) $(am__append_115) \
+	$(am__append_116) $(am__append_119)
 
 # Built sources
-BUILT_SOURCES = $(am__append_17) $(am__append_109)
+BUILT_SOURCES = $(am__append_17) $(am__append_110)
 
 # Clean files
-CLEANFILES = $(am__append_18) $(am__append_110)
+CLEANFILES = $(am__append_18) $(am__append_111)
 
 # Data files
 dist_pkgdata_DATA = $(am__append_50)
@@ -2783,7 +2785,7 @@ TEST_COMMON_LIBADD_FLAGS = \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/mm-shared-quectel.h \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/mm-broadband-modem-quectel.c \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/mm-broadband-modem-quectel.h \
-@ENABLE_PLUGIN_QUECTEL_TRUE@	$(NULL) $(am__append_87)
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(NULL) $(am__append_86)
 @ENABLE_PLUGIN_QUECTEL_TRUE@libmm_plugin_quectel_la_CPPFLAGS = \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	$(PLUGIN_COMMON_COMPILER_FLAGS) \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	-DMM_MODULE_NAME=\"quectel\" \
@@ -2860,7 +2862,7 @@ TEST_COMMON_LIBADD_FLAGS = \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	simtech/mm-shared-simtech.h \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	simtech/mm-broadband-modem-simtech.h \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	simtech/mm-broadband-modem-simtech.c \
-@ENABLE_PLUGIN_SIMTECH_TRUE@	$(NULL) $(am__append_95)
+@ENABLE_PLUGIN_SIMTECH_TRUE@	$(NULL) $(am__append_96)
 @ENABLE_PLUGIN_SIMTECH_TRUE@libmm_plugin_simtech_la_CPPFLAGS = \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	$(PLUGIN_COMMON_COMPILER_FLAGS) \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	-DMM_MODULE_NAME=\"simtech\" \
