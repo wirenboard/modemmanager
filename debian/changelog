@@ -1,3 +1,10 @@
+modemmanager (1.14.2-0.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * New upstream version.
+
+ -- Martin <debacle@debian.org>  Wed, 19 Aug 2020 17:43:57 +0000
+
 modemmanager (1.14.0-0.1) unstable; urgency=medium
 
   * Non-maintainer upload.
