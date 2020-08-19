@@ -3123,7 +3123,7 @@ basic_connect_notification_subscriber_ready_status (MMBroadbandModemMbim *self,
                ready_state != MBIM_SUBSCRIBER_READY_STATE_SIM_NOT_INSERTED)) {
         /* SIM has been removed or reinserted, re-probe to ensure correct interfaces are exposed */
         mm_obj_dbg (self, "SIM hot swap detected");
-        mm_broadband_modem_update_sim_hot_swap_detected (MM_BROADBAND_MODEM (self));
+        mm_broadband_modem_sim_hot_swap_detected (MM_BROADBAND_MODEM (self));
     }
 
     self->priv->last_ready_state = ready_state;
@@ -4369,20 +4369,12 @@ modem_signal_load_values_finish (MMIfaceModemSignal  *self,
     if (!result)
         return FALSE;
 
-    if (gsm && result->gsm) {
-        *gsm = result->gsm;
-        result->gsm = NULL;
-    }
-
-    if (umts && result->umts) {
-        *umts = result->umts;
-        result->umts = NULL;
-    }
-
-    if (lte && result->lte) {
-        *lte = result->lte;
-        result->lte = NULL;
-    }
+    if (gsm)
+        *gsm = g_steal_pointer (&result->gsm);
+    if (umts)
+        *umts = g_steal_pointer (&result->umts);
+    if (lte)
+        *lte = g_steal_pointer (&result->lte);
 
     signal_load_values_result_free (result);
 
