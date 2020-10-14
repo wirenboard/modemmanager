@@ -215,6 +215,8 @@
     <description>Query network time and timezone information</description>
     <description xml:lang="uk">Надсилання запиту щодо часу і часового поясу мережі</description>
     <description xml:lang="tr">Ağ zaman ve saat dilimi bilgisini sorgula</description>
+    <description xml:lang="sv">Fråga efter nätverkstid och tidzonsinformation</description>
+    <description xml:lang="sk">Požadovanie informácií o sieťovom čase a časovej zóne</description>
     <description xml:lang="ru">Запрос информации о времени и часовых поясах в сети</description>
     <description xml:lang="pt_BR">Consultar informações de hora e fuso horário da rede</description>
     <description xml:lang="pl">Odpytywanie informacji o czasie sieciowym i strefie czasowej</description>
@@ -223,6 +225,8 @@
     <message>System policy prevents querying network time information.</message>
     <message xml:lang="uk">Правила системи забороняють надсилання запитів щодо часу мережі.</message>
     <message xml:lang="tr">Sistem ilkesi ağ zaman bilgisini sorgulamayı engelliyor.</message>
+    <message xml:lang="sv">En systempolicy förhindrar frågande av nätverkstidsinformation.</message>
+    <message xml:lang="sk">Politika systému zabraňuje požadovaniu informácií o sieťovom čase.</message>
     <message xml:lang="ru">Системная политика запрещает запрашивать информацию о времени в сети.</message>
     <message xml:lang="pt_BR">A política de sistema impede de consultar informações de horário da rede.</message>
     <message xml:lang="pl">Ustawienia systemu uniemożliwiają odpytywanie informacji o czasie sieciowym.</message>
@@ -280,7 +284,7 @@
     <description xml:lang="zh_CN">查询和利用网络信息和服务</description>
     <description xml:lang="uk">Надіслати запит і використати дані щодо мережі і служби</description>
     <description xml:lang="tr">Ağ bilgisi ve hizmetleri sorgula ve yararlan</description>
-    <description xml:lang="sv">Fråga och nyttja nätverksinformation och tjänster</description>
+    <description xml:lang="sv">Fråga efter och nyttja nätverksinformation och tjänster</description>
     <description xml:lang="sk">Požadovanie a spracovanie sieťových informácií a služieb</description>
     <description xml:lang="ru">Запрос, использование сетевой информации и услуг</description>
     <description xml:lang="pt_BR">Consultar ou utilizar serviços e informações de rede.</description>
@@ -322,7 +326,7 @@
     <description xml:lang="zh_CN">在移动宽带设备上查询和管理固件</description>
     <description xml:lang="uk">Опитування та керування мікропрограмою на пристрої мобільної широкосмугової мережі</description>
     <description xml:lang="tr">Mobil geniş bant aygıtındaki donanım yazılımını sorgula ve yönet</description>
-    <description xml:lang="sv">Fråga och hantera fast programvara för en mobil bredbandsenhet</description>
+    <description xml:lang="sv">Fråga efter och hantera fast programvara för en mobil bredbandsenhet</description>
     <description xml:lang="sk">Požadovanie a správa firmvéru mobilného širokopásmového zariadenia</description>
     <description xml:lang="ru">Запрос и управление прошивкой на мобильном широкополосном устройстве</description>
     <description xml:lang="pt_BR">Consultar e gerenciar firmware em um dispositivo de banda larga móvel</description>
