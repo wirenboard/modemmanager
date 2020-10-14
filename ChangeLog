@@ -1,3 +1,731 @@
+commit 5ac0d258a3d20e1bde3b1d9858f3856559ee42fa
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 14 14:47:15 2020 +0200
+
+    release: bump version to 1.14.6
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit c04d343b902b693bbebebb9183c1d21743a8f51e
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 14 14:31:44 2020 +0200
+
+    NEWS: update for 1.14.6
+
+ NEWS | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+commit 5ca8f8ce1208fcf8b3216b1acfc44406e2881477
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 14 14:40:00 2020 +0200
+
+    xmm: fix missing GError initialization
+
+    (cherry picked from commit f013e94ff89680d1acd7dba12ff4a6a0fa7b58bf)
+
+ plugins/xmm/mm-shared-xmm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 889d301854346f74f215101508be9b636e9ed797
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 14 14:38:52 2020 +0200
+
+    simtech: fix missing GError initialization
+
+    (cherry picked from commit 3b6176cbe2bc64bbf19fa0378b1c65b646bb6d13)
+
+ plugins/simtech/mm-shared-simtech.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 60b603117f61539762688ffc48184da4ea9c72e6
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 14 14:38:40 2020 +0200
+
+    cinterion: fix missing GError initialization
+
+    (cherry picked from commit 50c1550c9f808ddd080f7992bf2d7f4dfae6e0ec)
+
+ plugins/cinterion/mm-shared-cinterion.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 781cc706cad1fae080ad952b2a357e480fe04da8
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 14 14:24:35 2020 +0200
+
+    broadband-modem-qmi: ensure GError is initialized to NULL
+
+      (ModemManager:21568): GLib-WARNING **: 22:11:27.828: GError set
+      over the top of a previous GError or uninitialized memory.
+      This indicates a bug in someone's code. You must ensure an error
+      is NULL before it's set.
+      The overwriting error message was: QMI protocol error (94):
+      'NotSupported'
+      [21568]: <warn>  [1582841487.829678] [modem0] couldn't load facility
+      locks: (NULL)
+      [21568]: <debug> [1582841487.830746] [modem0] loading UE mode of
+      operation for EPS...
+      [21568]: <debug> [1582841487.832138] [modem0/ttyUSB2/at] device
+      open count is 2 (open)
+      Segmentation fault
+
+    This issue is only applicable in the mm-1-14 branch.
+    Fixes cd686f10e049cf0494678f4d87e17e62e8f53e76.
+
+ src/mm-broadband-modem-qmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 327f509f04224c105ab2227317270ce6b998d9ed
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 14 12:51:08 2020 +0200
+
+    build: post-release version bump to 1.14.5
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit db38b333c0f0915e4e7c9a0344a8c4c95baba484
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 14 12:29:08 2020 +0200
+
+    release: bump version to 1.14.4
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit c67b1ef8acbbaf2ea805be283aee42a7c99717c7
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 14 12:28:13 2020 +0200
+
+    NEWS: update for 1.14.4
+
+ NEWS | 35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+commit 38b4b8e507c3b2d414c75a1a2d48d607db592dc4
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Oct 10 15:08:29 2020 +0200
+
+    iface-modem-3gpp: print consolidated reg state info only when updating
+
+    (cherry picked from commit c6f38ecac3ed2ac783dbab706c5e155ba7409747)
+
+ src/mm-iface-modem-3gpp.c | 86
+ +++++++++++++++++++----------------------------
+ 1 file changed, 34 insertions(+), 52 deletions(-)
+
+commit b871d4f1dd7213a4d3a152c9c7574e0561d8ac3a
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Oct 10 14:38:24 2020 +0200
+
+    iface-modem-location: log old and new 3GPP location ids when updating
+
+    (cherry picked from commit df9cb4a8f6f0abaad8052e36c10874bfbea2ac76)
+
+ src/mm-iface-modem-location.c | 74
+ ++++++++++++++++++++++++++++---------------
+ 1 file changed, 49 insertions(+), 25 deletions(-)
+
+commit 846765afeba2a57da63d21272e180ff519ed9dfc
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Oct 9 12:50:49 2020 +0200
+
+    iface-modem-location: allow Cell ID only updates
+
+    The "Serving System" indications reported via QMI when the device is
+    moving may contain LAC/TAC+CID updates or just CID updates.
+
+    E.g. this one has "CID 3GPP" (0x1e):
+
+      Mon Aug  3 11:22:42 2020 daemon.debug [1567]: [/dev/cdc-wdm0]
+      received
+      generic indication (translated)... <<<<<< QMUX: <<<<<<   length
+      = 33
+      <<<<<<   flags   = 0x80 <<<<<<   service = "nas" <<<<<<   client
+      = 3
+      <<<<<< QMI: <<<<<<   flags       = "indication" <<<<<<
+      transaction =
+      4512 <<<<<<   tlv_length  = 21 <<<<<<   message     = "Serving
+      System"
+      (0x0024) <<<<<< TLV: <<<<<<   type       = "Serving System" (0x01)
+      <<<<<<   length     = 6 <<<<<<   value      = 01:01:01:02:01:08
+      <<<<<<
+        translated = [ registration_state = 'registered' cs_attach_state =
+      'attached' ps_attach_state = 'attached' selected_network = '3gpp'
+      radio_interfaces = '{ [0] = 'lte '}' ] <<<<<< TLV: <<<<<<   type
+      = "Data Service Capability" (0x11) <<<<<<   length     = 2 <<<<<<
+      value      = 01:0B <<<<<<   translated = { [0] = 'lte '} <<<<<< TLV:
+      <<<<<<   type       = "CID 3GPP" (0x1e) <<<<<<   length     =
+      4 <<<<<<
+        value      = 14:C2:A8:00 <<<<<<   translated = 11059732
+
+    And this one has both "CID 3GPP" (0x1e) and "LTE TAC" (0x25):
+
+      Mon Aug  3 11:23:05 2020 daemon.debug [1567]: [/dev/cdc-wdm0]
+      received
+      generic indication (translated)... <<<<<< QMUX: <<<<<<   length
+      = 38
+      <<<<<<   flags   = 0x80 <<<<<<   service = "nas" <<<<<<   client
+      = 3
+      <<<<<< QMI: <<<<<<   flags       = "indication" <<<<<<
+      transaction =
+      4513 <<<<<<   tlv_length  = 26 <<<<<<   message     = "Serving
+      System"
+      (0x0024) <<<<<< TLV: <<<<<<   type       = "Serving System" (0x01)
+      <<<<<<   length     = 6 <<<<<<   value      = 01:01:01:02:01:08
+      <<<<<<
+        translated = [ registration_state = 'registered' cs_attach_state =
+      'attached' ps_attach_state = 'attached' selected_network = '3gpp'
+      radio_interfaces = '{ [0] = 'lte '}' ] <<<<<< TLV: <<<<<<   type
+      = "Data Service Capability" (0x11) <<<<<<   length     = 2 <<<<<<
+      value      = 01:0B <<<<<<   translated = { [0] = 'lte '} <<<<<< TLV:
+      <<<<<<   type       = "CID 3GPP" (0x1e) <<<<<<   length     =
+      4 <<<<<<
+        value      = 32:36:BC:00 <<<<<<   translated = 12334642 <<<<<<
+        TLV:
+      <<<<<<   type       = "LTE TAC" (0x25) <<<<<<   length     = 2 <<<
+
+    We should therefore allow changes only in the CID, maintaining
+    whatever LAC/TAC value we had before.
+
+    (cherry picked from commit 135d484501dbf641b51b02033377871100323049)
+
+ src/mm-broadband-modem-qmi.c  |  2 +-
+ src/mm-iface-modem-3gpp.c     |  8 ++++----
+ src/mm-iface-modem-location.c | 26 ++++++++++++++++++++------
+ 3 files changed, 25 insertions(+), 11 deletions(-)
+
+commit 97a1a763792967c5581dcd9fe8fcb8558f3d4784
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Thu Oct 1 13:19:28 2020 +0200
+
+    port-qmi: increase qmi_device_open retries
+
+    Telit FN980 requires more time for becoming responsive to
+    qmi requests after device appearance.
+
+    (cherry picked from commit 075bcb74f30d18985e1ada82312fe58215f82040)
+
+ src/mm-port-qmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 6af45d01b962eae87eb9f51f569b92b15ee30295
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Tue Sep 29 22:43:55 2020 +0200
+
+    telit: add tag ID_MM_TELIT_PORT_DELAY for initial delay mechanism
+
+    (cherry picked from commit dcf188d2ef27a17afc0b3447c5c464286e7d250b)
+
+ plugins/telit/77-mm-telit-port-types.rules | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+commit 5d4567fc3dadc5c81cf0e35bcb1b1b4ec8b9a73a
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Tue Sep 29 16:03:55 2020 +0200
+
+    telit: add initial delay for AT ports to become responsive
+
+    Add a polling mechanism for port responsiveness, since some modem
+    families require some time before being usable after the serial
+    ports have been exposed by the kernel.
+
+    (cherry picked from commit f6c4e3369a29c1f1bf14325be5a362a3ba29a71c)
+
+ plugins/telit/mm-common-telit.c | 82
+ ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 81 insertions(+), 1 deletion(-)
+
+commit d5af56365eb2be776cf8f5b5f70df773c197b78a
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Tue Sep 29 22:37:00 2020 +0200
+
+    telit: add FN980 and LM9x0 MBIM compositions rules
+
+    (cherry picked from commit 71cd727425d66bb5f7854cde2d4c033e73cbba97)
+
+ plugins/telit/77-mm-telit-port-types.rules | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+commit bf01ae5d66289e766932f3ab52af02bc72b6e1aa
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Tue Sep 29 10:16:22 2020 +0200
+
+    telit: fix LM9x0 udev rules
+
+    (cherry picked from commit ed8cf8d04c38495526a2958ee9454adca2d2a67d)
+
+ plugins/telit/77-mm-telit-port-types.rules | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+commit b891e4bcb290a1850fa4addb2722298cfe725d9b
+Author: Pavan Holla <pholla@chromium.org>
+Date:   Wed Sep 30 20:44:48 2020 +0000
+
+    broadband-modem-qmi: Report FIXED_DIALING lock correctly
+
+    Querying facility locks should return a FIXED_DIALING lock if
+    PIN2 lock
+    is enabled.
+
+    (cherry picked from commit bab0f44e74031896b9fd4c3a0390285d838aaa07)
+
+ src/mm-broadband-modem-qmi.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+commit cd686f10e049cf0494678f4d87e17e62e8f53e76
+Author: Pavan Holla <pholla@chromium.org>
+Date:   Wed Sep 30 20:29:36 2020 +0000
+
+    broadband-modem-qmi: Return error if get_pin_status fails
+
+    Prior to this CL, failure to get pin status while probing facility
+    locks
+    would not flag an error. Failure to read a pin lock is a critical
+    error
+    and we return it to higher layers.
+
+    (cherry picked from commit 74ab15d3239b62c53a0eecfac5a0488b6731bb71)
+
+ src/mm-broadband-modem-qmi.c | 51
+ +++++++++++++++++++++++---------------------
+ 1 file changed, 27 insertions(+), 24 deletions(-)
+
+commit 072ce5920f8266be7f92478dfbda3139389ccbfc
+Author: Dušan Kazik <prescott66@gmail.com>
+Date:   Fri Sep 18 05:36:07 2020 +0000
+
+    po: slovak translation update
+
+    (cherry picked from commit 318b2b01e340936e3f3b8d443f89acc432b85190)
+
+ po/sk.po | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
+
+commit 1892d975c8d1bd92ff17dc112d09f2ec9853d243
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Sep 25 09:27:15 2020 +0200
+
+    samsung: fix typo in plugin name
+
+    (cherry picked from commit 8e8c794815fe1ef079101ce2eff5af43ee48b0f1)
+
+ plugins/Makefile.am | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 2e8d1d8c5dbd8bdf0b38585bb03b9a66b809080a
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Sep 19 18:38:04 2020 +0200
+
+    iface-modem-messaging: if sms list doesn't exist, free part
+
+    If the device goes away while we are listing SMS messages, it may
+    happen that we ask the messaging interface to take a part and the
+    sms list object has already been disposed. Make sure the part is freed
+    in that case, so that we avoid memory leaks.
+
+      ==19138== 6,914 (1,232 direct, 5,682 indirect) bytes in 11 blocks
+      are definitely lost in loss record 5,282 of 5,287
+      ==19138==    at 0x483A77F: malloc (vg_replace_malloc.c:307)
+      ==19138==    by 0x5023349: g_malloc (in
+      /usr/lib/libglib-2.0.so.0.6600.0)
+      ==19138==    by 0x50446FF: g_slice_alloc (in
+      /usr/lib/libglib-2.0.so.0.6600.0)
+      ==19138==    by 0x5044D6A: g_slice_alloc0 (in
+      /usr/lib/libglib-2.0.so.0.6600.0)
+      ==19138==    by 0x2577FC: mm_sms_part_new (mm-sms-part.c:180)
+      ==19138==    by 0x2504D0: mm_sms_part_3gpp_new_from_binary_pdu
+      (mm-sms-part-3gpp.c:385)
+      ==19138==    by 0x21A15C: add_sms_part
+      (mm-broadband-modem-mbim.c:5169)
+      ==19138==    by 0x21A31F: sms_read_query_ready
+      (mm-broadband-modem-mbim.c:5215)
+      ==19138==    by 0x4E600F3: ??? (in /usr/lib/libgio-2.0.so.0.6600.0)
+      ==19138==    by 0x4E64638: ??? (in /usr/lib/libgio-2.0.so.0.6600.0)
+      ==19138==    by 0x4D3870D: transaction_task_complete_and_free
+      (mbim-device.c:236)
+      ==19138==    by 0x4D396B9: process_message (mbim-device.c:616)
+
+    (cherry picked from commit 4e0f849bb98b535a9d48795ef85174727d9636da)
+
+ src/mm-iface-modem-messaging.c | 28 +++++++++++++---------------
+ 1 file changed, 13 insertions(+), 15 deletions(-)
+
+commit a4d34530a76dadebeba4aab343c5f143d43e1842
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Sep 19 20:26:43 2020 +0200
+
+    core: add autoptr cleanup methods to all internal types
+
+    (cherry picked from commit 00949c4ad34326722f6044a39aff8e1a33da6f18)
+
+ src/kerneldevice/mm-kernel-device-generic.h | 4 +++-
+ src/kerneldevice/mm-kernel-device-udev.h    | 4 +++-
+ src/kerneldevice/mm-kernel-device.h         | 1 +
+ src/mm-base-bearer.h                        | 1 +
+ src/mm-base-call.h                          | 1 +
+ src/mm-base-manager.h                       | 1 +
+ src/mm-base-modem.h                         | 1 +
+ src/mm-base-sim.h                           | 1 +
+ src/mm-base-sms.h                           | 1 +
+ src/mm-bearer-list.h                        | 1 +
+ src/mm-bearer-mbim.h                        | 1 +
+ src/mm-bearer-qmi.h                         | 1 +
+ src/mm-broadband-bearer.h                   | 1 +
+ src/mm-broadband-modem-mbim.h               | 1 +
+ src/mm-broadband-modem-qmi.h                | 1 +
+ src/mm-broadband-modem.h                    | 1 +
+ src/mm-call-list.h                          | 1 +
+ src/mm-device.h                             | 1 +
+ src/mm-filter.h                             | 1 +
+ src/mm-iface-modem-3gpp-ussd.h              | 1 +
+ src/mm-iface-modem-3gpp.h                   | 1 +
+ src/mm-iface-modem-cdma.h                   | 1 +
+ src/mm-iface-modem-firmware.h               | 1 +
+ src/mm-iface-modem-location.h               | 1 +
+ src/mm-iface-modem-messaging.h              | 1 +
+ src/mm-iface-modem-oma.h                    | 1 +
+ src/mm-iface-modem-signal.h                 | 1 +
+ src/mm-iface-modem-simple.h                 | 1 +
+ src/mm-iface-modem-time.h                   | 1 +
+ src/mm-iface-modem-voice.h                  | 1 +
+ src/mm-iface-modem.h                        | 1 +
+ src/mm-plugin-manager.h                     | 4 +++-
+ src/mm-plugin.h                             | 1 +
+ src/mm-port-mbim.h                          | 1 +
+ src/mm-port-probe.h                         | 1 +
+ src/mm-port-qmi.h                           | 1 +
+ src/mm-port-serial-at.h                     | 1 +
+ src/mm-port-serial-gps.h                    | 1 +
+ src/mm-port-serial-qcdm.h                   | 1 +
+ src/mm-port-serial.h                        | 1 +
+ src/mm-port.h                               | 1 +
+ src/mm-shared-qmi.h                         | 1 +
+ src/mm-sim-mbim.h                           | 1 +
+ src/mm-sim-qmi.h                            | 1 +
+ src/mm-sms-list.h                           | 1 +
+ src/mm-sms-mbim.h                           | 1 +
+ src/mm-sms-part.h                           | 2 ++
+ src/mm-sms-qmi.h                            | 1 +
+ 48 files changed, 55 insertions(+), 3 deletions(-)
+
+commit bd96f8874c66f7b3a96e58e6fb7454da21afd2b8
+Author: Anders Jonsson <anders.jonsson@norsjovallen.se>
+Date:   Sat Sep 19 00:05:53 2020 +0200
+
+    po: Update Swedish translation
+
+    (cherry picked from commit 19ddfa18bbbce29315429436f461696d50b752b3)
+
+ po/sv.po | 22 ++++++++++------------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
+
+commit 8d8ac9e8462f6dd209c3833e8bef378cbc3a002d
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Sep 18 10:32:02 2020 +0200
+
+    po: use package bugreport as MSGID_BUGS_ADDRESS
+
+    (cherry picked from commit 856ea932678e62ffccd9f1cf53e8671324efd569)
+
+ po/Makevars | 2 +-
+ po/cs.po    | 5 +++--
+ po/da.po    | 5 +++--
+ po/de.po    | 5 +++--
+ po/fr.po    | 5 +++--
+ po/fur.po   | 5 +++--
+ po/hu.po    | 5 +++--
+ po/id.po    | 5 +++--
+ po/it.po    | 5 +++--
+ po/lt.po    | 5 +++--
+ po/pl.po    | 5 +++--
+ po/pt_BR.po | 5 +++--
+ po/ru.po    | 5 +++--
+ po/sk.po    | 5 +++--
+ po/sv.po    | 5 +++--
+ po/tr.po    | 5 +++--
+ po/uk.po    | 5 +++--
+ po/zh_CN.po | 5 +++--
+ 18 files changed, 52 insertions(+), 35 deletions(-)
+
+commit f5ff58729d0cc2d6badb926b9957ddb23ffe7632
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Sep 18 10:31:32 2020 +0200
+
+    build: set package bugreport to the gitlab issues URL
+
+    (cherry picked from commit 6a3b7bdf95bbdb4b6bf75ea331abc1f885f802dc)
+
+ configure.ac | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+commit ae03d32c7a72bf034ff3c636013a692a6d03f5b8
+Author: Jessy Diamond Exum <jessy.exum@meraki.net>
+Date:   Wed Aug 26 13:52:04 2020 -0700
+
+    cinterion: Configure the PLAS9 to correctly send Unsolicited Result
+    Codes.
+
+    The PLS8 and PLAS9 modems (and likely many others modems supported by
+    this driver) have two AT capable serial ports: The 'MODEM' AT port
+    (default for PPP) and the 'APPLICATION' AT port (used for general
+    control).
+
+    The PLS8 modem sends URCs to the APPLICATION port by default, while he
+    PLAS9 defaults sending URCs to the MODEM port. To get URCs to behave
+    on both modems, it is necessary to explicitly set the URC reporting
+    port to APPLICATION.
+
+    (cherry picked from commit b1679b58939fc2563b827d478ac0eea937fd16c8)
+
+ plugins/cinterion/mm-broadband-modem-cinterion.c | 29
+ ++++++++++++++++++++----
+ 1 file changed, 24 insertions(+), 5 deletions(-)
+
+commit 1cd78cc28a9c82be70b56731636bb9299bdd1fb2
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Sep 7 10:55:02 2020 +0200
+
+    bearer-mbim: avoid attempting to load deactivated IP types
+
+    If we're asking for IPv4v6 and we get IPv4-only connected, we
+    shouldn't attempt to provide IPv6 addressing details in the bearer
+    object, because we would fallback to say DHCP is needed if we were not
+    able to load any IPv6 details from the modem.
+
+    This is, instead of provinding both IPv4 and IPv6 details:
+      ------------------------------------
+      Properties         |            apn: internet
+                         |        roaming: allowed
+                         |        ip type: ipv4v6
+                         |   allowed-auth: none, pap, chap, mschap,
+                         mschapv2, eap
+      ------------------------------------
+      IPv4 configuration |         method: static
+                         |        address: 10.182.100.233
+                         |         prefix: 24
+                         |        gateway: 10.182.100.1
+                         |            dns: 80.58.61.250, 80.58.61.254
+      ------------------------------------
+      IPv6 configuration |         method: dhcp
+                         |         prefix: 0
+
+    We should report only IPv4 details:
+      ----------------------------------
+      Properties         |          apn: internet
+                         |      roaming: allowed
+                         |      ip type: ipv4v6
+                         | allowed-auth: none, pap, chap, mschap,
+                         mschapv2, eap
+      ----------------------------------
+      IPv4 configuration |       method: static
+                         |      address: 10.182.100.233
+                         |       prefix: 24
+                         |      gateway: 10.182.100.1
+                         |          dns: 80.58.61.250, 80.58.61.254
+
+    (cherry picked from commit 958ca74391481616db41cd412a9e12556dd21971)
+
+ src/mm-bearer-mbim.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+commit 4d78be6fd99ce4c20862eee921ad6c351d811b11
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Sep 7 10:46:38 2020 +0200
+
+    bearer-mbim: don't fail IPv4 connection if IPv4v6 was requested
+
+    If we ask for IPv4v6 is requested but the network only grants IPv4, we
+    end up receiving the 'Connect Set' response with nw_error set to
+    'pdp-type-ipv4-only-allowed'. In this case, we should still succeed
+    the connection attempt and only report the IPv4 info.
+
+    We therefore change the logic to skip processing the nw_error unless
+    the activation state is reported as ACTIVATED or ACTIVATING.
+
+    (cherry picked from commit f8eeab21213e4ec487ce3f91b0ca09f11e52cec0)
+
+ src/mm-bearer-mbim.c | 37 ++++++++++++++++++++++---------------
+ 1 file changed, 22 insertions(+), 15 deletions(-)
+
+commit d195ee9d3399f8c7dc709e6893c268453768a792
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Aug 28 18:45:59 2020 +0200
+
+    simtech: add SIM7070/SIM7080/SIM7090 port type hints
+
+    These modules have 2 different USB layouts:
+
+    The default layout with PID 0x9205 (AT+CUSBSELNV=1) exposes 4 TTYs and
+    an ECM interface:
+
+      T:  Bus=02 Lev=01 Prnt=01 Port=02 Cnt=01 Dev#=  6 Spd=480 MxCh= 0
+      D:  Ver= 2.00 Cls=ef(misc ) Sub=02 Prot=01 MxPS=64 #Cfgs=  1
+      P:  Vendor=1e0e ProdID=9205 Rev=00.00
+      S:  Manufacturer=SimTech, Incorporated
+      S:  Product=SimTech SIM7080
+      S:  SerialNumber=1234567890ABCDEF
+      C:  #Ifs= 6 Cfg#= 1 Atr=e0 MxPwr=500mA
+      I:  If#=0x0 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=ff Prot=ff
+      Driver=option
+      I:  If#=0x1 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=ff Prot=ff
+      Driver=option
+      I:  If#=0x2 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=ff Prot=ff
+      Driver=option
+      I:  If#=0x3 Alt= 0 #EPs= 3 Cls=ff(vend.) Sub=ff Prot=ff
+      Driver=option
+      I:  If#=0x4 Alt= 0 #EPs= 1 Cls=02(commc) Sub=06 Prot=00
+      Driver=cdc_ether
+      I:  If#=0x5 Alt= 1 #EPs= 2 Cls=0a(data ) Sub=00 Prot=00
+      Driver=cdc_ether
+
+    The purpose of each TTY is as follows:
+     * ttyUSB0: DIAG/QCDM port.
+     * ttyUSB1: GNSS data.
+     * ttyUSB2: AT-capable port (control).
+     * ttyUSB3: AT-capable port (data).
+
+    In the secondary layout with PID=0x9206 (AT+CUSBSELNV=86) the module
+    exposes 6 TTY ports:
+
+      T:  Bus=02 Lev=01 Prnt=01 Port=02 Cnt=01 Dev#=  8 Spd=480 MxCh= 0
+      D:  Ver= 2.00 Cls=02(commc) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+      P:  Vendor=1e0e ProdID=9206 Rev=00.00
+      S:  Manufacturer=SimTech, Incorporated
+      S:  Product=SimTech SIM7080
+      S:  SerialNumber=1234567890ABCDEF
+      C:  #Ifs= 6 Cfg#= 1 Atr=e0 MxPwr=500mA
+      I:  If#=0x0 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=ff Prot=ff
+      Driver=option
+      I:  If#=0x1 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=ff Prot=ff
+      Driver=option
+      I:  If#=0x2 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=ff Prot=ff
+      Driver=option
+      I:  If#=0x3 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=ff Prot=ff
+      Driver=option
+      I:  If#=0x4 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=ff Prot=ff
+      Driver=option
+      I:  If#=0x5 Alt= 0 #EPs= 3 Cls=ff(vend.) Sub=ff Prot=ff
+      Driver=option
+
+    The purpose of each TTY is as follows:
+     * ttyUSB0: DIAG/QCDM port.
+     * ttyUSB1: GNSS data.
+     * ttyUSB2: AT-capable port (control).
+     * ttyUSB3: QFLOG interface.
+     * ttyUSB4: DAM interface.
+     * ttyUSB5: AT-capable port (data).
+
+    (cherry picked from commit 42288fc2a10b5e1740d86ebe6249e21a2337d3bc)
+
+ plugins/simtech/77-mm-simtech-port-types.rules | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+commit 97e20d1e2b93e9908ebebb17c2d59f3c8fe4e781
+Author: David Leonard <David.Leonard@digi.com>
+Date:   Wed Aug 26 14:37:10 2020 +1000
+
+    sms: fix CMDA SMS UTF-8 translation
+
+    Fixes incoming SMS translation issue seen on MC7354 when translating
+    contents from Latin-1 encoding to UTF-8, because the encoding
+    parameter
+    "ISO−8859−1" used U+2212 (MINUS SIGN) instead of U+002D
+    (HYPHEN-MINUS).
+
+      [mm-sms-part-cdma.c:873] read_bearer_data_user_data():
+      text/data: ignored (latin to UTF-8 conversion error): 0:
+      Conversion from character set 'ISO−8859−1' to 'UTF-8' is
+      not supported
+
+    Fix thanks to Peter Hunt
+
+    (cherry picked from commit 48973e3d72307ca84375d1c7811eb0b04def91ce)
+
+ src/mm-sms-part-cdma.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 5bbef22215bf3cfead5436a431543c17a6ffa29f
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Aug 20 12:18:05 2020 +0200
+
+    sms-part-3gpp: allow sending UTF-16 as if it were UCS-2
+
+    Despite 3GPP TS 23.038 specifies that Unicode SMS messages are
+    encoded in UCS-2, UTF-16 encoding is commonly used instead on many
+    modern platforms to allow encoding code points that fall outside the
+    Basic Multilingual Plane (BMP), such as Emoji.
+
+    Update the logic to always use UTF-16 instead of UCS-2 when creating
+    or parsing PDUs (even if we always report as sending or receiving
+    UCS-2). For all purposes, UCS-2 is considered a subset of UTF-16
+    (assuming that code points out of the [U+0000,U+D7FF] and
+    [U+E000,U+FFFF] ranges are not applicable in UCS-2).
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/250
+
+    (cherry picked from commit 599f545c0d905505516c6546ff77caced2aa14f1)
+
+ src/mm-sms-part-3gpp.c         | 159
+ +++++++++++++++++++++--------------------
+ src/mm-sms-part.h              |  18 ++++-
+ src/tests/test-sms-part-3gpp.c |  78 ++++++++++++++++----
+ 3 files changed, 165 insertions(+), 90 deletions(-)
+
+commit f38c3bf7615b9d8366598f32cdd645d0bc503363
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Aug 20 11:32:18 2020 +0200
+
+    charsets: refactor coding style
+
+    Mostly to use GLib types like gchar or gint, and also to use
+    G_N_ELEMENTS() instead of custom end of array terminating items.
+
+    (cherry picked from commit 81162df15dc9a409d0979ff8d472a026f31ed883)
+
+ src/mm-charsets.c | 290
+ ++++++++++++++++++++++++++++--------------------------
+ src/mm-charsets.h |  42 ++++----
+ 2 files changed, 170 insertions(+), 162 deletions(-)
+
+commit 901426c3ac3e52971e06530066ac6527ab7cb08f
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Aug 20 10:58:24 2020 +0200
+
+    charsets: add UTF-16BE as a possible modem charset
+
+    Just as an implementation detail to be taken as an extension of
+    UCS2BE, never really to be used as a real modem charset.
+
+    (cherry picked from commit eb5443b197464e55c85d7a8af67a28f2088506a3)
+
+ src/mm-charsets.c         | 16 ++++++++++++++--
+ src/mm-charsets.h         |  3 ++-
+ src/tests/test-charsets.c | 18 ++++++++++--------
+ 3 files changed, 26 insertions(+), 11 deletions(-)
+
+commit 55f90b1dafcd50fec79b20e4ecd73a31b2a86339
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Aug 20 10:57:01 2020 +0200
+
+    sms-part-3gpp: minor refactor in text split logic
+
+    (cherry picked from commit 93686510d737bc373100beaeeb3edb7ca091a3f0)
+
+ src/mm-sms-part-3gpp.c | 167
+ ++++++++++++++++++++++++++++---------------------
+ 1 file changed, 94 insertions(+), 73 deletions(-)
+
+commit 028b359d0365f6750834aed90bd545c1a5768cc3
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Aug 19 18:34:04 2020 +0200
+
+    build: post-release version bump to 1.14.3
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 commit 88bbae4fe8b2b3b4dfca6bf4370a8124810ed74f
 Author: Aleksander Morgado <aleksander@aleksander.es>
 Date:   Wed Aug 19 18:09:32 2020 +0200
