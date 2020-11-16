@@ -6,7 +6,7 @@ dnl
 
 m4_define([mm_major_version], [1])
 m4_define([mm_minor_version], [14])
-m4_define([mm_micro_version], [6])
+m4_define([mm_micro_version], [8])
 m4_define([mm_version],
           [mm_major_version.mm_minor_version.mm_micro_version])
 
@@ -48,9 +48,6 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
-
-AC_CHECK_PROG(XSLTPROC_CHECK,xsltproc,yes)
-AS_IF([test x"$XSLTPROC_CHECK" != x"yes"], [AC_MSG_ERROR([Please install xsltproc before configuring.])])
 
 dnl Initialize libtool
 LT_PREREQ([2.2])
@@ -164,6 +161,12 @@ AC_SUBST(GLIB_MKENUMS)
 
 GDBUS_CODEGEN=`$PKG_CONFIG --variable=gdbus_codegen gio-2.0`
 AC_SUBST(GDBUS_CODEGEN)
+
+dnl xsltproc required in git builds only
+AC_CHECK_PROG(XSLTPROC_CHECK,xsltproc,yes)
+if test "x$ax_is_release" != "xyes" -a "x$XSLTPROC_CHECK" != "xyes"; then
+   AC_MSG_ERROR([Please install xsltproc before configuring.])
+fi
 
 dnl-----------------------------------------------------------------------------
 dnl Testing support

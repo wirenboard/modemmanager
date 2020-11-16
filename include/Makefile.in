@@ -386,7 +386,7 @@ include_HEADERS = \
 	ModemManager-version.h \
 	ModemManager.h
 
-CLEANFILES = \
+MAINTAINERCLEANFILES = \
 	ModemManager-names.h
 
 EXTRA_DIST = \
@@ -569,7 +569,6 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
-	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -578,6 +577,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am

@@ -452,7 +452,8 @@ content_files = \
 @ENABLE_GTK_DOC_FALSE@	$(DOC_MODULE).hierarchy \
 @ENABLE_GTK_DOC_FALSE@	$(DOC_MODULE).interfaces \
 @ENABLE_GTK_DOC_FALSE@	$(DOC_MODULE).prerequisites \
-@ENABLE_GTK_DOC_FALSE@	$(DOC_MODULE).signals *.stamp -rf xml \
+@ENABLE_GTK_DOC_FALSE@	$(DOC_MODULE).signals \
+@ENABLE_GTK_DOC_FALSE@	$(DOC_MODULE).actions *.stamp -rf xml \
 @ENABLE_GTK_DOC_FALSE@	html tmpl $(NULL)
 @ENABLE_GTK_DOC_TRUE@CLEANFILES = $(SCANOBJ_FILES) $(REPORT_FILES) \
 @ENABLE_GTK_DOC_TRUE@	$(DOC_STAMPS) gtkdoc-check.test \
@@ -467,7 +468,8 @@ content_files = \
 @ENABLE_GTK_DOC_TRUE@	$(DOC_MODULE).hierarchy \
 @ENABLE_GTK_DOC_TRUE@	$(DOC_MODULE).interfaces \
 @ENABLE_GTK_DOC_TRUE@	$(DOC_MODULE).prerequisites \
-@ENABLE_GTK_DOC_TRUE@	$(DOC_MODULE).signals *.stamp -rf xml \
+@ENABLE_GTK_DOC_TRUE@	$(DOC_MODULE).signals \
+@ENABLE_GTK_DOC_TRUE@	$(DOC_MODULE).actions *.stamp -rf xml \
 @ENABLE_GTK_DOC_TRUE@	html tmpl $(NULL)
 @ENABLE_GTK_DOC_TRUE@@GTK_DOC_BUILD_HTML_FALSE@HTML_BUILD_STAMP = 
 @ENABLE_GTK_DOC_TRUE@@GTK_DOC_BUILD_HTML_TRUE@HTML_BUILD_STAMP = html-build.stamp
@@ -625,11 +627,11 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-@ENABLE_GTK_DOC_FALSE@uninstall-local:
 @ENABLE_GTK_DOC_FALSE@distclean-local:
 @ENABLE_GTK_DOC_FALSE@clean-local:
-@ENABLE_GTK_DOC_FALSE@maintainer-clean-local:
+@ENABLE_GTK_DOC_FALSE@uninstall-local:
 @ENABLE_GTK_DOC_FALSE@install-data-local:
+@ENABLE_GTK_DOC_FALSE@maintainer-clean-local:
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-local mostlyclean-am
