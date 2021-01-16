@@ -3466,6 +3466,9 @@ device_notification_cb (MbimDevice *device,
     case MBIM_SERVICE_QMI:
     case MBIM_SERVICE_ATDS:
     case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
+#if MBIM_CHECK_VERSION (1,25,1)
+    case MBIM_SERVICE_MS_SAR:
+#endif
     default:
         /* Ignore */
         break;
@@ -4612,8 +4615,8 @@ ussd_decode (guint32      scheme,
     gchar *decoded = NULL;
 
     if (scheme == MM_MODEM_GSM_USSD_SCHEME_7BIT) {
-        guint8  *unpacked;
-        guint32  unpacked_len;
+        g_autofree guint8  *unpacked = NULL;
+        guint32             unpacked_len;
 
         unpacked = mm_charset_gsm_unpack ((const guint8 *)data->data, (data->len * 8) / 7, 0, &unpacked_len);
         decoded = (gchar *) mm_charset_gsm_unpacked_to_utf8 (unpacked, unpacked_len);

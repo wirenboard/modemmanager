@@ -1,3 +1,218 @@
+commit 304a1b123fe87cf5f3b9067fb83f37c9e09e12f5
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Jan 16 14:11:16 2021 +0100
+
+    release: bump version to 1.14.10
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 9ed9234904074c313c617ffe45e364c39c3cce81
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Jan 16 14:10:58 2021 +0100
+
+    NEWS: update for 1.14.10
+
+ NEWS | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+commit 95bb97c41ea635fa4bfc3f6b6a925e4502c25f8d
+Author: Louis-Alexis Eyraud <louis-alexis.eyraud@sigfox.com>
+Date:   Fri Jan 15 15:14:58 2021 +0100
+
+    zte: add 1 second delay after sim unlock to avoid IMSI reading issue
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/306
+
+    Signed-off-by: Louis-Alexis Eyraud <louis-alexis.eyraud@sigfox.com>
+    (cherry picked from commit 9c353cf6f0a7650cfe1b914d6881890de9dff0b0)
+
+ plugins/zte/mm-broadband-modem-zte.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
+
+commit 42a3a2d50b30580cf13e57b69c14a9c7611e49c2
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jan 11 14:18:36 2021 +0100
+
+    iface-modem: avoid leaking the MmGdbusModem when bearers are updated
+
+    See See
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/302
+
+    (cherry picked from commit d12ab8a25a60323a753e3437c81a984a503deb40)
+
+ src/mm-iface-modem.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit 17569fd41bd61fd892ae1af1e15e3fbe0045726a
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jan 11 14:13:28 2021 +0100
+
+    telit: plug GPS data port leak
+
+    The _get_port_gps() returns a full reference, use _peek_port_gps()
+    instead.
+
+    See
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/302
+
+    (cherry picked from commit 102de14c15b1c278988de376d03262bcb078211d)
+
+ plugins/telit/mm-broadband-modem-telit.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 781371615ead5a11297c7293f1bdb32015915a62
+Author: Frederic Martinsons <frederic.martinsons@sigfox.com>
+Date:   Sun Dec 20 18:11:06 2020 +0100
+
+    mmcli: don't assume that mm_object_peek_modem or mm_object_get_modem
+    return non null
+
+    This very peculiar case can happen when an intermediate initiliazition
+    step
+    of a modem fails.
+
+    The ModemManager daemon should always expose the modem interface
+    but let not
+    assume that in mmcli and protect these calls.
+
+    Signed-off-by: Frederic Martinsons <frederic.martinsons@sigfox.com>
+    (cherry picked from commit 18b72a046e89d00d7e7b9f2d718c43d64e595de0)
+
+ cli/mmcli-common.c  | 4 +++-
+ cli/mmcli-manager.c | 9 +++++++--
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+
+commit 48f87ac97319a5d1500a7f202a2ff1506bf83398
+Author: Frederic Martinsons <frederic.martinsons@sigfox.com>
+Date:   Sun Dec 20 18:07:44 2020 +0100
+
+    iface-modem: don't consider charset setup failure as fatal.
+
+    On some modem (for example SORACOM SC-QGLC4-C1) , the character
+    set setup
+    step fails with "Unknown error" when the SIM card is missing or
+    locked.
+    This leads to not expose Modem interface and not being able to
+    unlocked
+    the SIM.
+    We should not consider this step as fatal but just issue a warning
+    to let
+    other steps continue (which will let modem in failed state anyway).
+
+    Closes #289
+
+    Signed-off-by: Frederic Martinsons <frederic.martinsons@sigfox.com>
+    (cherry picked from commit 2f53a08e5f1eef8c1892dc55f32fbacba85565a0)
+
+ src/mm-iface-modem.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+commit e70fbb0d540b1300e0b17f0274109e11719fb4a8
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Dec 14 09:58:59 2020 +0100
+
+    cinterion: add AT primary/secondary port type hints for PLS8
+
+    (cherry picked from commit 243272c11178e68914d7cc2dcfdc28248edb2aa7)
+
+ plugins/cinterion/77-mm-cinterion-port-types.rules | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit 5382e2d64dcf9e1305af55fb7e55e6b0c3760a77
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Dec 14 09:58:15 2020 +0100
+
+    cinterion: add QCDM and GPS port type hints for PLS62
+
+    (cherry picked from commit ba4b3f60b7605441bb127be231eab49450c29404)
+
+ plugins/cinterion/77-mm-cinterion-port-types.rules | 20
+ ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+commit 7684b8c87c834bce0f1ab141427b82b2e3ed3ac5
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Dec 14 09:35:02 2020 +0100
+
+    cinterion: add PLS83 port type hints
+
+    (cherry picked from commit 067b09c8358ad92ff0ca3c266d0229e9518069d0)
+
+ plugins/cinterion/77-mm-cinterion-port-types.rules | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+commit 45955463e7b87a0488421284dfb635f91a54d545
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Dec 13 17:33:11 2020 +0100
+
+    broadband-modem-mbim: ignore MS SAR notifications explicitly
+
+    SAR service will be introduced in the stable libmbim 1.26.0, but it's
+    been flagged in the dev 1.25.1 version already.
+
+    (cherry picked from commit bee8a391bf46e33f8378504f71c4e087d7a82fb5)
+
+ src/mm-broadband-modem-mbim.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit f125c97ec5fda2b3e4fb69868eebd521ac90e366
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Nov 26 23:30:56 2020 +0100
+
+    broadband-modem-mbim: plug memleak when processing USSD in GSM7
+
+    (cherry picked from commit 0729ba5c88eb038e60ffbe3faf9431e9650f7ca1)
+
+ src/mm-broadband-modem-mbim.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 2a743d5b109079cd07ed5afa55fb9a79ccb8d155
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Dec 1 22:59:32 2020 +0100
+
+    broadband-modem-qmi: fix reporting of signal strength indications
+
+    We had all the logic in place... but we were never actually enabling
+    the signal strength indications because the `enable` flag in the
+    context was never set.
+
+    The bug was introduced back in May 2018, and released with 1.10.0.
+
+    Fixes baefe53ab9c0ea0612d2bf7da64b6f6cf9753bcd
+
+    (cherry picked from commit 12dd53a12e81e4f4752ded5579a52751141461ca)
+
+ src/mm-broadband-modem-qmi.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit 30b13bd23073b64ae686fa6dfd6afb244be9c9d0
+Author: David Leonard <David.Leonard@digi.com>
+Date:   Wed Aug 26 14:19:28 2020 +1000
+
+    sms: fix 7-bit ASCII SMS decoding
+
+    Fixes an issue where (5+8n)-character long SMS messages received on a
+    CDMA network would be dropped with a "cannot read user data" error,
+    while other length SMS messages would be delivered fine.
+
+    Fix thanks to Peter Hunt
+
+    (cherry picked from commit 7ac42e76482acd687464f9dca2ef3ac7b67825a1)
+
+ src/mm-sms-part-cdma.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit bd43afa6bc0eca0973ec8058b7c26d9396020a04
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Nov 16 10:36:10 2020 +0100
+
+    build: post-release version bump to 1.14.9
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 commit 19c2266a328ce39033f8d15f5c7ff3561149b22b
 Author: Aleksander Morgado <aleksander@aleksander.es>
 Date:   Mon Nov 16 09:29:39 2020 +0100
@@ -36929,7 +37144,7 @@ Date:   Sat May 14 15:25:32 2016 +0800
  31 files changed, 69 insertions(+), 60 deletions(-)
 
 commit 55f3ab80835114342618083664c4fa585455b9e0
-Merge: 830b6ebc ba097f1a
+Merge: 830b6ebca ba097f1a4
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Fri May 27 12:39:56 2016 -0500
 
@@ -43017,7 +43232,7 @@ Date:   Mon Jun 16 16:22:51 2014 +0200
  1 file changed, 6 insertions(+), 4 deletions(-)
 
 commit 6e490944d07061ca15837963552d023807958feb
-Merge: ff4e4579 02f9b926
+Merge: ff4e45791 02f9b926c
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Fri Jun 13 14:57:08 2014 -0500
 
@@ -87722,7 +87937,7 @@ Date:   Thu Jun 30 15:51:53 2011 -0500
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 commit 7762d401e8201efc05d643b9da32f3e60a42c470
-Merge: 881f928c 7e69d2cf
+Merge: 881f928c4 7e69d2cf3
 Author: Aleksander Morgado <aleksander@lanedo.com>
 Date:   Thu Jun 30 19:48:23 2011 +0200
 
@@ -89065,7 +89280,7 @@ Date:   Mon Apr 18 17:38:39 2011 -0500
  1 file changed, 15 insertions(+), 4 deletions(-)
 
 commit 5dadfa4c214be79e704eb61c135893f93a705d3a
-Merge: 487972c1 765da63a
+Merge: 487972c1a 765da63ad
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Thu Apr 14 14:20:43 2011 -0500
 
@@ -89832,7 +90047,7 @@ Date:   Mon Jan 24 13:57:22 2011 -0600
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 commit 2b2ca316a1ef9c9b30e68b44446abfe76cb1bbce
-Merge: 12f1b351 f047ca66
+Merge: 12f1b351e f047ca66a
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Jan 24 13:56:40 2011 -0600
 
@@ -91866,7 +92081,7 @@ Date:   Tue Jun 29 22:24:00 2010 -0700
  3 files changed, 108 insertions(+)
 
 commit 6e79d153efc30fb2030536f7f795c19ad4a0661a
-Merge: 72a1a6ca 5fc9f259
+Merge: 72a1a6caf 5fc9f259e
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Thu Jun 24 11:09:33 2010 -0700
 
@@ -94020,7 +94235,7 @@ Date:   Fri Mar 12 15:31:29 2010 -0800
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 commit 936533cfcc34b1bba797688049316bb8994443bd
-Merge: 9d915013 3e760488
+Merge: 9d9150133 3e760488b
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Fri Mar 12 12:40:00 2010 -0800
 
@@ -94037,7 +94252,7 @@ Date:   Fri Mar 12 12:38:53 2010 -0800
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 commit 9d91501330514d8bbd83c8f729ec5231e862e226
-Merge: 4d1e00c4 7aa6d03d
+Merge: 4d1e00c49 7aa6d03d9
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Fri Mar 12 12:21:29 2010 -0800
 
@@ -94108,7 +94323,7 @@ Date:   Thu Mar 11 16:02:12 2010 -0800
  3 files changed, 6 insertions(+), 7 deletions(-)
 
 commit 3ec7e89f112cb65a584de84b76e207d7a804bd6f
-Merge: 479937cb 749f9c0e
+Merge: 479937cbb 749f9c0eb
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Thu Mar 11 13:43:06 2010 -0800
 
@@ -94237,7 +94452,7 @@ Date:   Wed Mar 10 15:45:50 2010 -0800
  1 file changed, 10 insertions(+), 9 deletions(-)
 
 commit 479937cbbba560c77ec37ebf6468fe0e568986bd
-Merge: 6a32d374 e3c87e4e
+Merge: 6a32d374c e3c87e4e1
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Wed Mar 10 15:04:49 2010 -0800
 
@@ -94255,7 +94470,7 @@ Date:   Wed Mar 10 14:57:23 2010 -0800
  1 file changed, 8 insertions(+), 7 deletions(-)
 
 commit 1979512d8dfb6428353e6bf358f908973a318095
-Merge: 8dde6bb8 b7858ba2
+Merge: 8dde6bb8d b7858ba23
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Wed Mar 10 14:50:41 2010 -0800
 
@@ -94528,7 +94743,7 @@ Date:   Mon Mar 8 20:01:42 2010 -0800
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 commit f3721a5674ef7899d9a6ef0f4c5b356720bb9833
-Merge: f6c51489 9e231c3d
+Merge: f6c514897 9e231c3d4
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Mar 8 20:01:22 2010 -0800
 
@@ -95075,7 +95290,7 @@ Date:   Mon Mar 1 09:15:01 2010 -0800
  5 files changed, 24 insertions(+), 14 deletions(-)
 
 commit f6c514897e40e768b180963f2782ed60527ffaa6
-Merge: 7a0373af 9d7cb0dd
+Merge: 7a0373afe 9d7cb0ddc
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Mar 1 09:07:05 2010 -0800
 
@@ -95458,7 +95673,7 @@ Date:   Sun Feb 21 11:22:16 2010 -0800
  2 files changed, 12 insertions(+), 4 deletions(-)
 
 commit 2cdefeb6dafa9d8405ddd1247967ca6e3267b1a7
-Merge: a8c7bba1 b9958e6e
+Merge: a8c7bba19 b9958e6ec
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Sat Feb 20 14:58:04 2010 -0800
 
@@ -95525,7 +95740,7 @@ Date:   Sat Feb 20 14:53:43 2010 -0800
  1 file changed, 9 insertions(+), 3 deletions(-)
 
 commit 9d8e892ffe602a123697a5f65393b5752129de09
-Merge: c916ea7b 9185ce98
+Merge: c916ea7b4 9185ce987
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Sat Feb 20 12:49:22 2010 -0800
 
@@ -95897,7 +96112,7 @@ Date:   Fri Jan 22 14:11:24 2010 -0800
  4 files changed, 16 deletions(-)
 
 commit ed885b7595294115b5cde8755c754515294f27cc
-Merge: a919c835 e9840144
+Merge: a919c8358 e98401440
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Tue Jan 19 15:07:03 2010 -0800
 
@@ -96033,7 +96248,7 @@ Date:   Tue Jan 19 11:53:45 2010 -0800
  1 file changed, 13 insertions(+), 9 deletions(-)
 
 commit 28eca600f7f1a0387a99c51d35179d81dc3fec59
-Merge: 50ad39b2 b1992f90
+Merge: 50ad39b28 b1992f903
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Tue Jan 19 00:21:10 2010 -0800
 
@@ -96500,7 +96715,7 @@ Date:   Mon Dec 7 22:07:58 2009 -0800
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 commit dd057d28e4ab3812eebd41a7df1c2f80d90d8600
-Merge: f715e0d4 a9e06244
+Merge: f715e0d49 a9e062442
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Dec 7 22:04:28 2009 -0800
 
@@ -96733,7 +96948,7 @@ Date:   Tue Dec 1 11:25:28 2009 -0800
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 commit 881a725ea47e059023a268404368346d232dd15a
-Merge: 909b8b7c b46ac89f
+Merge: 909b8b7c8 b46ac89ff
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Tue Dec 1 11:22:00 2009 -0800
 
@@ -96775,7 +96990,7 @@ Date:   Mon Nov 30 17:42:37 2009 -0800
  1 file changed, 24 insertions(+)
 
 commit 909b8b7c8dbe2de97d9550004641c70411d92c56
-Merge: c463b5a4 0f595adb
+Merge: c463b5a40 0f595adb7
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Nov 30 15:44:20 2009 -0800
 
@@ -97035,7 +97250,7 @@ Date:   Tue Nov 24 00:43:20 2009 -0800
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 commit c463b5a4005b9e55d0faeb887debe327118ef230
-Merge: 3be4a151 9e92bceb
+Merge: 3be4a1518 9e92bceb0
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Tue Nov 24 00:20:52 2009 -0800
 
@@ -97055,7 +97270,7 @@ Date:   Tue Nov 24 00:19:27 2009 -0800
  1 file changed, 20 insertions(+), 32 deletions(-)
 
 commit 3be4a15189aef361187b86df64f62ca70284dee3
-Merge: d8ff5f74 e5b5c833
+Merge: d8ff5f74e e5b5c8339
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Nov 23 23:48:26 2009 -0800
 
@@ -97118,7 +97333,7 @@ Date:   Tue Nov 17 14:16:24 2009 -0800
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 commit 3c6e4056e7cded28e612a76d9321f54fb1b51ce2
-Merge: 9bbc6ab5 74f679ac
+Merge: 9bbc6ab53 74f679acd
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Fri Nov 6 15:11:01 2009 -0800
 
@@ -97646,7 +97861,7 @@ Date:   Tue Oct 6 11:39:40 2009 -0700
  3 files changed, 77 insertions(+), 13 deletions(-)
 
 commit 912b98723b2965b9aaf1f0328781a2730d7cc178
-Merge: 3b19a857 aa78b5f5
+Merge: 3b19a8572 aa78b5f5e
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Oct 5 09:52:01 2009 -0700
 
@@ -98232,7 +98447,7 @@ Date:   Mon Jun 29 23:11:43 2009 -0400
  2 files changed, 6 insertions(+), 1 deletion(-)
 
 commit 5298be26ddf580681a4a506cf0379996d7eb9d4d
-Merge: 5a563d56 8e3da635
+Merge: 5a563d56d 8e3da6359
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Jun 29 22:54:32 2009 -0400
 
@@ -98352,7 +98567,7 @@ Date:   Mon Jun 29 14:24:43 2009 -0400
  2 files changed, 25 insertions(+), 32 deletions(-)
 
 commit c106368ce7c06e0ae5b64cc6146ad05c3b9fa819
-Merge: ff58936f c397247c
+Merge: ff58936f1 c397247c0
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Jun 29 13:14:11 2009 -0400
 
@@ -98441,7 +98656,7 @@ Date:   Mon Jun 29 09:00:25 2009 -0400
  1 file changed, 9 insertions(+), 11 deletions(-)
 
 commit 504b4991cd3aecd358d92a9c39233e6ca09036fa
-Merge: 6077763d ef0a604d
+Merge: 6077763d9 ef0a604dc
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Jun 29 07:29:57 2009 -0400
 
@@ -98937,7 +99152,7 @@ Date:   Thu May 14 13:14:45 2009 +0300
  2 files changed, 8 insertions(+), 7 deletions(-)
 
 commit 92041d5f750ab440d278c95c1f65483aa8ebf192
-Merge: 2a3acc7a 58a48405
+Merge: 2a3acc7a3 58a48405c
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon May 11 06:43:43 2009 -0400
 
@@ -99532,7 +99747,7 @@ Date:   Tue Dec 9 15:41:51 2008 +0200
  12 files changed, 199 insertions(+), 182 deletions(-)
 
 commit a504fb408aa2ba3bb495a08d948ae97bdcb1cdd6
-Merge: 793044b5 1673c6c9
+Merge: 793044b57 1673c6c99
 Author: Tambet Ingo <tambet@gmail.com>
 Date:   Fri Dec 5 15:57:55 2008 +0200
 
