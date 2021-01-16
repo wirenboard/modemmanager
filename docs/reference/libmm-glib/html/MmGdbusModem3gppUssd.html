@@ -8,7 +8,7 @@
 <link rel="up" href="pt02.html" title="Part II. Low level API">
 <link rel="prev" href="MmGdbusModem3gppSkeleton.html" title="MmGdbusModem3gppSkeleton">
 <link rel="next" href="MmGdbusModem3gppUssdProxy.html" title="MmGdbusModem3gppUssdProxy">
-<meta name="generator" content="GTK-Doc V1.32.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.33.0 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -168,13 +168,13 @@
 <tbody>
 <tr>
 <td class="property_type">
-<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</td>
+<span class="type">char</span> *</td>
 <td class="property_name"><a class="link" href="MmGdbusModem3gppUssd.html#MmGdbusModem3gppUssd--network-notification" title="The “network-notification” property">network-notification</a></td>
 <td class="property_flags">Read / Write</td>
 </tr>
 <tr>
 <td class="property_type">
-<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</td>
+<span class="type">char</span> *</td>
 <td class="property_name"><a class="link" href="MmGdbusModem3gppUssd.html#MmGdbusModem3gppUssd--network-request" title="The “network-request” property">network-request</a></td>
 <td class="property_flags">Read / Write</td>
 </tr>
@@ -954,7 +954,7 @@ is set. </p>
 <a name="MmGdbusModem3gppUssd.property-details"></a><h2>Property Details</h2>
 <div class="refsect2">
 <a name="MmGdbusModem3gppUssd--network-notification"></a><h3>The <code class="literal">“network-notification”</code> property</h3>
-<pre class="programlisting">  “network-notification”     <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
+<pre class="programlisting">  “network-notification”     <span class="type">char</span> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.NetworkNotification">"NetworkNotification"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
 <p>Owner: MmGdbusModem3gppUssd</p>
@@ -964,7 +964,7 @@ is set. </p>
 <hr>
 <div class="refsect2">
 <a name="MmGdbusModem3gppUssd--network-request"></a><h3>The <code class="literal">“network-request”</code> property</h3>
-<pre class="programlisting">  “network-request”          <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
+<pre class="programlisting">  “network-request”          <span class="type">char</span> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.NetworkRequest">"NetworkRequest"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
 <p>Owner: MmGdbusModem3gppUssd</p>
@@ -1032,7 +1032,7 @@ user_function (<a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusMo
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
 user_function (<a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd"><span class="type">MmGdbusModem3gppUssd</span></a>  *object,
                <a href="https://developer.gnome.org/gio/unstable/GDBusMethodInvocation.html#GDBusMethodInvocation-struct"><span class="type">GDBusMethodInvocation</span></a> *invocation,
-               <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>                 *arg_command,
+               <span class="type">char</span>                  *arg_command,
                <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>               user_data)</pre>
 <p>Signal emitted when a remote caller is invoking the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Initiate"><GTKDOCLINK HREF="Initiate"><code class="function">Initiate()</code></a></GTKDOCLINK> D-Bus method.</p>
 <p>If a signal handler returns <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a>, it means the signal handler will handle the invocation (e.g. take a reference to <em class="parameter"><code>invocation</code></em>
@@ -1081,7 +1081,7 @@ user_function (<a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusMo
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
 user_function (<a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd"><span class="type">MmGdbusModem3gppUssd</span></a>  *object,
                <a href="https://developer.gnome.org/gio/unstable/GDBusMethodInvocation.html#GDBusMethodInvocation-struct"><span class="type">GDBusMethodInvocation</span></a> *invocation,
-               <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>                 *arg_response,
+               <span class="type">char</span>                  *arg_response,
                <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>               user_data)</pre>
 <p>Signal emitted when a remote caller is invoking the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Respond"><GTKDOCLINK HREF="Respond"><code class="function">Respond()</code></a></GTKDOCLINK> D-Bus method.</p>
 <p>If a signal handler returns <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a>, it means the signal handler will handle the invocation (e.g. take a reference to <em class="parameter"><code>invocation</code></em>
@@ -1127,6 +1127,6 @@ user_function (<a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusMo
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.32.1</div>
+<hr>Generated by GTK-Doc V1.33.0</div>
 </body>
 </html>

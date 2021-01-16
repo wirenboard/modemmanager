@@ -422,6 +422,7 @@ bearer_list_updated (MMBearerList *bearer_list,
     g_strfreev (paths);
 
     g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (skeleton));
+    g_object_unref (skeleton);
 }
 
 /*****************************************************************************/
@@ -4821,12 +4822,7 @@ interface_initialization_step (GTask *task)
                 return;
             }
 
-            g_task_return_new_error (task,
-                                     MM_CORE_ERROR,
-                                     MM_CORE_ERROR_FAILED,
-                                     "Failed to find a usable modem character set");
-            g_object_unref (task);
-            return;
+            mm_obj_warn (self, "Failed to find usable modem character set, let it to UNKNOWN");
         }
         ctx->step++;
         /* fall-through */

@@ -8,7 +8,7 @@
 <link rel="up" href="pt02.html" title="Part II. Low level API">
 <link rel="prev" href="MmGdbusModem3gppUssdSkeleton.html" title="MmGdbusModem3gppUssdSkeleton">
 <link rel="next" href="MmGdbusModemCdmaProxy.html" title="MmGdbusModemCdmaProxy">
-<meta name="generator" content="GTK-Doc V1.32.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.33.0 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -186,7 +186,7 @@
 </tr>
 <tr>
 <td class="property_type">
-<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</td>
+<span class="type">char</span> *</td>
 <td class="property_name"><a class="link" href="MmGdbusModemCdma.html#MmGdbusModemCdma--esn" title="The “esn” property">esn</a></td>
 <td class="property_flags">Read / Write</td>
 </tr>
@@ -197,7 +197,7 @@
 </tr>
 <tr>
 <td class="property_type">
-<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</td>
+<span class="type">char</span> *</td>
 <td class="property_name"><a class="link" href="MmGdbusModemCdma.html#MmGdbusModemCdma--meid" title="The “meid” property">meid</a></td>
 <td class="property_flags">Read / Write</td>
 </tr>
@@ -984,7 +984,7 @@ is set. </p>
 <hr>
 <div class="refsect2">
 <a name="MmGdbusModemCdma--esn"></a><h3>The <code class="literal">“esn”</code> property</h3>
-<pre class="programlisting">  “esn”                      <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
+<pre class="programlisting">  “esn”                      <span class="type">char</span> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Esn">"Esn"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
 <p>Owner: MmGdbusModemCdma</p>
@@ -1004,7 +1004,7 @@ is set. </p>
 <hr>
 <div class="refsect2">
 <a name="MmGdbusModemCdma--meid"></a><h3>The <code class="literal">“meid”</code> property</h3>
-<pre class="programlisting">  “meid”                     <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
+<pre class="programlisting">  “meid”                     <span class="type">char</span> *</pre>
 <p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Meid">"Meid"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
 <p>Owner: MmGdbusModemCdma</p>
@@ -1089,7 +1089,7 @@ user_function (<a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemC
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
 user_function (<a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemCdma"><span class="type">MmGdbusModemCdma</span></a>      *object,
                <a href="https://developer.gnome.org/gio/unstable/GDBusMethodInvocation.html#GDBusMethodInvocation-struct"><span class="type">GDBusMethodInvocation</span></a> *invocation,
-               <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>                 *arg_carrier_code,
+               <span class="type">char</span>                  *arg_carrier_code,
                <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>               user_data)</pre>
 <p>Signal emitted when a remote caller is invoking the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-method-org-freedesktop-ModemManager1-Modem-ModemCdma.Activate"><GTKDOCLINK HREF="Activate"><code class="function">Activate()</code></a></GTKDOCLINK> D-Bus method.</p>
 <p>If a signal handler returns <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a>, it means the signal handler will handle the invocation (e.g. take a reference to <em class="parameter"><code>invocation</code></em>
@@ -1184,6 +1184,6 @@ user_function (<a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemC
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.32.1</div>
+<hr>Generated by GTK-Doc V1.33.0</div>
 </body>
 </html>
