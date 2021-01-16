@@ -1,2 +1,3 @@
 version=3
+opts=pgpmode=auto \
 https://www.freedesktop.org/software/ModemManager/ModemManager-(.*)\.tar\.xz
