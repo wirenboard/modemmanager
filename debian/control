@@ -18,7 +18,7 @@ Build-Depends: debhelper-compat (= 10),
                libmbim-glib-dev (>= 1.24.0~),
                libglib2.0-doc,
                valac (>= 0.22),
-               dbus
+               dbus <!nocheck>,
 Standards-Version: 4.2.1
 Rules-Requires-Root: no
 Vcs-Git: https://salsa.debian.org/debian/modemmanager.git

@@ -1,3 +1,10 @@
+modemmanager (1.14.10-0.2) UNRELEASED; urgency=medium
+
+  * Non-maintainer upload.
+  * Annotate dbus dependency <!nocheck>. (Closes: #980827)
+
+ -- Helmut Grohne <helmut@subdivi.de>  Fri, 22 Jan 2021 22:25:52 +0100
+
 modemmanager (1.14.10-0.1) unstable; urgency=medium
 
   * Non-maintainer upload.
