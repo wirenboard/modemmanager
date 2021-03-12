@@ -8,7 +8,7 @@
 <link rel="up" href="ch07.html" title="The Call object">
 <link rel="prev" href="ch07.html" title="The Call object">
 <link rel="next" href="MMCallProperties.html" title="MMCallProperties">
-<meta name="generator" content="GTK-Doc V1.33.0 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -364,7 +364,7 @@ mm_call_get_path (<em class="parameter"><code><a class="link" href="MMCall.html"
 <div class="refsect3">
 <a name="mm-call-get-path.returns"></a><h4>Returns</h4>
 <p>The DBus path of the <a class="link" href="MMCall.html" title="MMCall"><span class="type">MMCall</span></a> object. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
@@ -393,7 +393,7 @@ mm_call_dup_path (<em class="parameter"><code><a class="link" href="MMCall.html"
 <a name="mm-call-dup-path.returns"></a><h4>Returns</h4>
 <p>The DBus path of the <a class="link" href="MMCall.html" title="MMCall"><span class="type">MMCall</span></a> object.
 The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
@@ -426,7 +426,7 @@ thread.</div>
 <div class="refsect3">
 <a name="mm-call-get-number.returns"></a><h4>Returns</h4>
 <p>The number, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
@@ -456,7 +456,7 @@ the remote number in incoming calls</p>
 <a name="mm-call-dup-number.returns"></a><h4>Returns</h4>
 <p>The number, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it couldn't be retrieved.
 The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
 </div>
@@ -566,7 +566,7 @@ mm_call_get_audio_port (<em class="parameter"><code><a class="link" href="MMCall
 <a name="mm-call-get-audio-port.returns"></a><h4>Returns</h4>
 <p>The audio port, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if call audio is not
 routed via the host or couldn't be retrieved. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
@@ -595,7 +595,7 @@ mm_call_dup_audio_port (<em class="parameter"><code><a class="link" href="MMCall
 <a name="mm-call-dup-audio-port.returns"></a><h4>Returns</h4>
 <p>The audio port, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if call audio is not
 routed via the host or couldn't be retrieved. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
@@ -629,7 +629,7 @@ new values.</div>
 <a name="mm-call-get-audio-format.returns"></a><h4>Returns</h4>
 <p>A <a class="link" href="MMCallAudioFormat.html" title="MMCallAudioFormat"><span class="type">MMCallAudioFormat</span></a> that must be freed with
 <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if unknown. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
@@ -664,7 +664,7 @@ thread.</div>
 <p>A <a class="link" href="MMCallAudioFormat.html" title="MMCallAudioFormat"><span class="type">MMCallAudioFormat</span></a>. Do not free the returned
 value, it belongs to <em class="parameter"><code>self</code></em>
 . </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
@@ -1707,6 +1707,6 @@ using the provided API.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.33.0</div>
+<hr>Generated by GTK-Doc V1.33.1</div>
 </body>
 </html>

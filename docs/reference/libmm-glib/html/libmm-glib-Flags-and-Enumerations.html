@@ -8,7 +8,7 @@
 <link rel="up" href="ch01.html" title="Common enums and flags helpers">
 <link rel="prev" href="ch01.html" title="Common enums and flags helpers">
 <link rel="next" href="ch02.html" title="The Manager object">
-<meta name="generator" content="GTK-Doc V1.33.0 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -374,7 +374,7 @@ mm_bearer_type_get_string (<em class="parameter"><code><a href="/usr/share/gtk-d
 <div class="refsect3">
 <a name="mm-bearer-type-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -402,7 +402,7 @@ mm_bearer_ip_method_get_string (<em class="parameter"><code><a href="/usr/share/
 <div class="refsect3">
 <a name="mm-bearer-ip-method-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -430,7 +430,7 @@ mm_bearer_ip_family_get_string (<em class="parameter"><code><a href="/usr/share/
 <div class="refsect3">
 <a name="mm-bearer-ip-family-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -460,7 +460,7 @@ each <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumer
 <div class="refsect3">
 <a name="mm-bearer-allowed-auth-build-string-from-mask.returns"></a><h4>Returns</h4>
 <p>a string with the list of nicknames, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none given. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -490,7 +490,7 @@ each <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumer
 <div class="refsect3">
 <a name="mm-modem-capability-build-string-from-mask.returns"></a><h4>Returns</h4>
 <p>a string with the list of nicknames, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none given. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -518,7 +518,7 @@ mm_modem_state_get_string (<em class="parameter"><code><a href="/usr/share/gtk-d
 <div class="refsect3">
 <a name="mm-modem-state-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -547,7 +547,7 @@ mm_modem_state_failed_reason_get_string
 <div class="refsect3">
 <a name="mm-modem-state-failed-reason-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -576,7 +576,7 @@ mm_modem_state_change_reason_get_string
 <div class="refsect3">
 <a name="mm-modem-state-change-reason-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -604,7 +604,7 @@ mm_modem_power_state_get_string (<em class="parameter"><code><a href="/usr/share
 <div class="refsect3">
 <a name="mm-modem-power-state-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -632,7 +632,7 @@ mm_modem_lock_get_string (<em class="parameter"><code><a href="/usr/share/gtk-do
 <div class="refsect3">
 <a name="mm-modem-lock-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -662,7 +662,7 @@ each <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumer
 <div class="refsect3">
 <a name="mm-modem-access-technology-build-string-from-mask.returns"></a><h4>Returns</h4>
 <p>a string with the list of nicknames, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none given. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -691,7 +691,7 @@ each <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumer
 <div class="refsect3">
 <a name="mm-modem-mode-build-string-from-mask.returns"></a><h4>Returns</h4>
 <p>a string with the list of nicknames, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none given. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -719,7 +719,7 @@ mm_modem_band_get_string (<em class="parameter"><code><a href="/usr/share/gtk-do
 <div class="refsect3">
 <a name="mm-modem-band-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -747,7 +747,7 @@ mm_modem_port_type_get_string (<em class="parameter"><code><a href="/usr/share/g
 <div class="refsect3">
 <a name="mm-modem-port-type-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -776,7 +776,7 @@ mm_modem_3gpp_registration_state_get_string
 <div class="refsect3">
 <a name="mm-modem-3gpp-registration-state-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -805,7 +805,7 @@ mm_modem_3gpp_subscription_state_get_string
 <div class="refsect3">
 <a name="mm-modem-3gpp-subscription-state-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -835,7 +835,7 @@ each <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumer
 <div class="refsect3">
 <a name="mm-modem-3gpp-facility-build-string-from-mask.returns"></a><h4>Returns</h4>
 <p>a string with the list of nicknames, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none given. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -864,7 +864,7 @@ mm_modem_3gpp_network_availability_get_string
 <div class="refsect3">
 <a name="mm-modem-3gpp-network-availability-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -893,7 +893,7 @@ mm_modem_3gpp_ussd_session_state_get_string
 <div class="refsect3">
 <a name="mm-modem-3gpp-ussd-session-state-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -922,7 +922,7 @@ mm_modem_3gpp_eps_ue_mode_operation_get_string
 <div class="refsect3">
 <a name="mm-modem-3gpp-eps-ue-mode-operation-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -951,7 +951,7 @@ mm_modem_cdma_registration_state_get_string
 <div class="refsect3">
 <a name="mm-modem-cdma-registration-state-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -980,7 +980,7 @@ mm_modem_cdma_activation_state_get_string
 <div class="refsect3">
 <a name="mm-modem-cdma-activation-state-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1008,7 +1008,7 @@ mm_modem_cdma_rm_protocol_get_string (<em class="parameter"><code><a href="/usr/
 <div class="refsect3">
 <a name="mm-modem-cdma-rm-protocol-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1038,7 +1038,7 @@ each <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumer
 <div class="refsect3">
 <a name="mm-modem-location-source-build-string-from-mask.returns"></a><h4>Returns</h4>
 <p>a string with the list of nicknames, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none given. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1068,7 +1068,7 @@ each <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumer
 <div class="refsect3">
 <a name="mm-modem-location-assistance-data-type-build-string-from-mask.returns"></a><h4>Returns</h4>
 <p>a string with the list of nicknames, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none given. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1096,7 +1096,7 @@ mm_modem_contacts_storage_get_string (<em class="parameter"><code><a href="/usr/
 <div class="refsect3">
 <a name="mm-modem-contacts-storage-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1126,7 +1126,7 @@ each <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumer
 <div class="refsect3">
 <a name="mm-modem-firmware-update-method-build-string-from-mask.returns"></a><h4>Returns</h4>
 <p>a string with the list of nicknames, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none given. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1154,7 +1154,7 @@ mm_sms_pdu_type_get_string (<em class="parameter"><code><a href="/usr/share/gtk-
 <div class="refsect3">
 <a name="mm-sms-pdu-type-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1182,7 +1182,7 @@ mm_sms_state_get_string (<em class="parameter"><code><a href="/usr/share/gtk-doc
 <div class="refsect3">
 <a name="mm-sms-state-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1210,7 +1210,7 @@ mm_sms_delivery_state_get_string (<em class="parameter"><code><a href="/usr/shar
 <div class="refsect3">
 <a name="mm-sms-delivery-state-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1238,7 +1238,7 @@ mm_sms_storage_get_string (<em class="parameter"><code><a href="/usr/share/gtk-d
 <div class="refsect3">
 <a name="mm-sms-storage-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1266,7 +1266,7 @@ mm_sms_validity_type_get_string (<em class="parameter"><code><a href="/usr/share
 <div class="refsect3">
 <a name="mm-sms-validity-type-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1294,7 +1294,7 @@ mm_sms_cdma_teleservice_id_get_string (<em class="parameter"><code><a href="/usr
 <div class="refsect3">
 <a name="mm-sms-cdma-teleservice-id-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1323,7 +1323,7 @@ mm_sms_cdma_service_category_get_string
 <div class="refsect3">
 <a name="mm-sms-cdma-service-category-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1351,7 +1351,7 @@ mm_firmware_image_type_get_string (<em class="parameter"><code><a href="/usr/sha
 <div class="refsect3">
 <a name="mm-firmware-image-type-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1380,7 +1380,7 @@ each <a href="/usr/share/gtk-doc/html/ModemManager/ModemManager-Flags-and-Enumer
 <div class="refsect3">
 <a name="mm-oma-feature-build-string-from-mask.returns"></a><h4>Returns</h4>
 <p>a string with the list of nicknames, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none given. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-Memory-Allocation.html#g-free"><code class="function">g_free()</code></a>. </p>
-<p><span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1408,7 +1408,7 @@ mm_oma_session_type_get_string (<em class="parameter"><code><a href="/usr/share/
 <div class="refsect3">
 <a name="mm-oma-session-type-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1436,7 +1436,7 @@ mm_oma_session_state_get_string (<em class="parameter"><code><a href="/usr/share
 <div class="refsect3">
 <a name="mm-oma-session-state-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1465,7 +1465,7 @@ mm_oma_session_state_failed_reason_get_string
 <div class="refsect3">
 <a name="mm-oma-session-state-failed-reason-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1493,7 +1493,7 @@ mm_call_direction_get_string (<em class="parameter"><code><a href="/usr/share/gt
 <div class="refsect3">
 <a name="mm-call-direction-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1521,7 +1521,7 @@ mm_call_state_get_string (<em class="parameter"><code><a href="/usr/share/gtk-do
 <div class="refsect3">
 <a name="mm-call-state-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1549,12 +1549,12 @@ mm_call_state_reason_get_string (<em class="parameter"><code><a href="/usr/share
 <div class="refsect3">
 <a name="mm-call-state-reason-get-string.returns"></a><h4>Returns</h4>
 <p>a string with the nickname, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if not found. Do not free the returned value. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.33.0</div>
+<hr>Generated by GTK-Doc V1.33.1</div>
 </body>
 </html>
