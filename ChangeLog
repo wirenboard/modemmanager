@@ -1,3 +1,79 @@
+commit dccfb032d176acdba5175b11fbbe186676343a59
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Mar 12 11:24:58 2021 +0100
+
+    release: bump version to 1.14.12
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 4da7b368fc5a90a6b3cc5eaaa6a2032fd54952a3
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Mar 12 11:23:55 2021 +0100
+
+    NEWS: update for 1.14.12
+
+ NEWS | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+commit a0b7edeefaa0c07d6ac25d62e95d4e56fa4cee20
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Mar 11 10:33:00 2021 +0100
+
+    bearer-mbim: plug MbimDevice leak in disconnection context
+
+    (cherry picked from commit a772b70632008d6c375487a8e711b80bb343a931)
+
+ src/mm-bearer-mbim.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit 18ffd664e59bee7fd98f1992b4818ef6220f85f5
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Feb 26 11:16:59 2021 +0100
+
+    shared-qmi: network registration cancellation logic with asserts
+    disabled
+
+    g_assert() calls may be disabled, and if so, the network registration
+    task would never get completed.
+
+    (cherry picked from commit c7d366671f749689c143f7effe2a183eb710def9)
+
+ src/mm-shared-qmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 0754f204f986ebd26bcb60df37de9cc4f0650152
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Feb 22 15:04:43 2021 +0100
+
+    bearer-mbim: IP type may be reported as deactivated and still have
+    IP settings
+
+    If we were requesting for IPv4v6 and we only got IPv4 reported as
+    activated, we would right away ignore the IPv6 bits, even if we
+    received IPv6 settings later on when querying for them. Change that,
+    so that if an IP address of a given type is received, we assume the
+    corresponding context was really activated even if the modem didn't
+    report it in the connect set response.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/320
+
+    (cherry picked from commit a546201470ee1067be5494ab5f678016bb2bc2ec)
+
+ src/mm-bearer-mbim.c | 61
+ +++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 41 insertions(+), 20 deletions(-)
+
+commit bd489b7f53e0f2b3d6fb9ad25c284a14e3c7177f
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Jan 16 15:12:19 2021 +0100
+
+    build: post-release version bump to 1.14.11
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 commit 304a1b123fe87cf5f3b9067fb83f37c9e09e12f5
 Author: Aleksander Morgado <aleksander@aleksander.es>
 Date:   Sat Jan 16 14:11:16 2021 +0100
