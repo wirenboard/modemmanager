@@ -626,9 +626,10 @@ test_cops_response_motoc (void *f, gpointer d)
 static void
 test_cops_response_mf627a (void *f, gpointer d)
 {
+    /* The '@' in this string is ASCII 0x40, and 0x40 is a valid GSM-7 char: '¡' (which is 0xc2,0xa1 in UTF-8) */
     const char *reply = "+COPS: (2,\"AT&T@\",\"AT&TD\",\"310410\",0),(3,\"Vstream Wireless\",\"VSTREAM\",\"31026\",0),";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "AT&T@",            (gchar *) "AT&TD",   (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "AT&T¡",            (gchar *) "AT&TD",   (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
         { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, (gchar *) "Vstream Wireless", (gchar *) "VSTREAM", (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
@@ -638,9 +639,10 @@ test_cops_response_mf627a (void *f, gpointer d)
 static void
 test_cops_response_mf627b (void *f, gpointer d)
 {
+    /* The '@' in this string is ASCII 0x40, and 0x40 is a valid GSM-7 char: '¡' (which is 0xc2,0xa1 in UTF-8) */
     const char *reply = "+COPS: (2,\"AT&Tp\",\"AT&T@\",\"310410\",0),(3,\"\",\"\",\"31026\",0),";
     static MM3gppNetworkInfo expected[] = {
-        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "AT&Tp", (gchar *) "AT&T@", (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
+        { MM_MODEM_3GPP_NETWORK_AVAILABILITY_CURRENT,   (gchar *) "AT&Tp", (gchar *) "AT&T¡", (gchar *) "310410", MM_MODEM_ACCESS_TECHNOLOGY_GSM },
         { MM_MODEM_3GPP_NETWORK_AVAILABILITY_FORBIDDEN, NULL,              NULL,              (gchar *) "31026",  MM_MODEM_ACCESS_TECHNOLOGY_GSM },
     };
 
@@ -1041,7 +1043,7 @@ common_test_normalize_operator (const NormalizeOperatorTest *t)
     gchar *str;
 
     str = g_strdup (t->input);
-    mm_3gpp_normalize_operator (&str, t->charset);
+    mm_3gpp_normalize_operator (&str, t->charset, NULL);
     if (!t->normalized)
         g_assert (!str);
     else
@@ -4429,20 +4431,22 @@ test_parse_uint_list (void)
 typedef struct {
     const guint8 bcd[10];
     gsize bcd_len;
-    const gchar *str;
+    const gchar *low_nybble_first_str;
+    const gchar *high_nybble_first_str;
 } BcdToStringTest;
 
 static const BcdToStringTest bcd_to_string_tests[] = {
-    { { }, 0, "" },
-    { { 0x01 }, 1, "10" },
-    { { 0x1F }, 1, "" },
-    { { 0xE2 }, 1, "2" },
-    { { 0xD3 }, 1, "3" },
-    { { 0xC4 }, 1, "4" },
-    { { 0xB1, 0x23 }, 2, "1" },
-    { { 0x01, 0x23, 0x45, 0x67 }, 4, "10325476" },
-    { { 0x01, 0x23, 0x45, 0xA7 }, 4, "1032547" },
-    { { 0x01, 0x23, 0x45, 0x67 }, 2, "1032" },
+    { { }, 0, "", "" },
+    { { 0x01 }, 1, "10", "01" },
+    { { 0x1F }, 1, "", "1" },
+    { { 0xE2 }, 1, "2", "" },
+    { { 0xD3 }, 1, "3", "" },
+    { { 0xC4 }, 1, "4", "" },
+    { { 0xB1, 0x23 }, 2, "1", "" },
+    { { 0x01, 0x2A }, 2, "10", "012" },
+    { { 0x01, 0x23, 0x45, 0x67 }, 4, "10325476", "01234567" },
+    { { 0x01, 0x23, 0x45, 0xA7 }, 4, "1032547", "012345" },
+    { { 0x01, 0x23, 0x45, 0x67 }, 2, "1032", "0123" },
 };
 
 static void
@@ -4454,8 +4458,15 @@ test_bcd_to_string (void *f, gpointer d)
         gchar *str;
 
         str = mm_bcd_to_string (bcd_to_string_tests[i].bcd,
-                                bcd_to_string_tests[i].bcd_len);
-        g_assert_cmpstr (str, ==, bcd_to_string_tests[i].str);
+                                bcd_to_string_tests[i].bcd_len,
+                                TRUE /* low_nybble_first */);
+        g_assert_cmpstr (str, ==, bcd_to_string_tests[i].low_nybble_first_str);
+        g_free (str);
+
+        str = mm_bcd_to_string (bcd_to_string_tests[i].bcd,
+                                bcd_to_string_tests[i].bcd_len,
+                                FALSE /* low_nybble_first */);
+        g_assert_cmpstr (str, ==, bcd_to_string_tests[i].high_nybble_first_str);
         g_free (str);
     }
 }

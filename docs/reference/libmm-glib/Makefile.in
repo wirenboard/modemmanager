@@ -219,6 +219,8 @@ INTROSPECTION_TYPELIBDIR = @INTROSPECTION_TYPELIBDIR@
 LCOV = @LCOV@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBELOGIND_CFLAGS = @LIBELOGIND_CFLAGS@
+LIBELOGIND_LIBS = @LIBELOGIND_LIBS@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBMM_GLIB_CFLAGS = @LIBMM_GLIB_CFLAGS@
@@ -449,7 +451,6 @@ content_files = \
 @ENABLE_GTK_DOC_TRUE@	sgml.stamp html.stamp pdf.stamp
 
 @ENABLE_GTK_DOC_TRUE@SCANOBJ_FILES = \
-@ENABLE_GTK_DOC_TRUE@	$(DOC_MODULE).actions	 \
 @ENABLE_GTK_DOC_TRUE@	$(DOC_MODULE).args 	 \
 @ENABLE_GTK_DOC_TRUE@	$(DOC_MODULE).hierarchy  \
 @ENABLE_GTK_DOC_TRUE@	$(DOC_MODULE).interfaces \
@@ -647,11 +648,11 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-@ENABLE_GTK_DOC_FALSE@uninstall-local:
-@ENABLE_GTK_DOC_FALSE@distclean-local:
-@ENABLE_GTK_DOC_FALSE@install-data-local:
 @ENABLE_GTK_DOC_FALSE@clean-local:
+@ENABLE_GTK_DOC_FALSE@uninstall-local:
 @ENABLE_GTK_DOC_FALSE@maintainer-clean-local:
+@ENABLE_GTK_DOC_FALSE@install-data-local:
+@ENABLE_GTK_DOC_FALSE@distclean-local:
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-local mostlyclean-am
@@ -902,7 +903,6 @@ uninstall-am: uninstall-local
 @ENABLE_GTK_DOC_TRUE@	    mv -f $${installdir}/$(DOC_MODULE).devhelp2 \
 @ENABLE_GTK_DOC_TRUE@	      $${installdir}/$(DOC_MODULE)-$(DOC_MODULE_VERSION).devhelp2; \
 @ENABLE_GTK_DOC_TRUE@	  fi; \
-@ENABLE_GTK_DOC_TRUE@	  $(GTKDOC_REBASE) --relative --dest-dir=$(DESTDIR) --html-dir=$${installdir}; \
 @ENABLE_GTK_DOC_TRUE@	fi
 
 @ENABLE_GTK_DOC_TRUE@uninstall-local:

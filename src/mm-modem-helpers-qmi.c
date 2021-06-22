@@ -1106,66 +1106,74 @@ mm_modem_capability_to_qmi_acquisition_order_preference (MMModemCapability caps)
     return array;
 }
 
+static gboolean
+radio_interface_array_contains (GArray               *array,
+                                QmiNasRadioInterface  act)
+{
+    guint i;
+
+    for (i = 0; i < array->len; i++) {
+        QmiNasRadioInterface value;
+
+        value = g_array_index (array, QmiNasRadioInterface, i);
+        if (value == act)
+            return TRUE;
+    }
+    return FALSE;
+}
+
+static void
+radio_interface_array_add_missing (GArray *array,
+                                   GArray *all)
+{
+    guint i;
+
+    for (i = 0; i < all->len; i++) {
+        QmiNasRadioInterface value;
+
+        value = g_array_index (all, QmiNasRadioInterface, i);
+        if (!radio_interface_array_contains (array, value))
+            g_array_append_val (array, value);
+    }
+}
+
 GArray *
-mm_modem_mode_to_qmi_acquisition_order_preference (MMModemMode allowed,
-                                                   MMModemMode preferred,
-                                                   gboolean    is_cdma,
-                                                   gboolean    is_3gpp)
+mm_modem_mode_to_qmi_acquisition_order_preference (MMModemMode  allowed,
+                                                   MMModemMode  preferred,
+                                                   GArray      *all)
 {
     GArray               *array;
+    QmiNasRadioInterface  preferred_radio = QMI_NAS_RADIO_INTERFACE_UNKNOWN;
     QmiNasRadioInterface  value;
 
-    array = g_array_new (FALSE, FALSE, sizeof (QmiNasRadioInterface));
+    array = g_array_sized_new (FALSE, FALSE, sizeof (QmiNasRadioInterface), all->len);
 
-    if (allowed & MM_MODEM_MODE_5G) {
-        value = QMI_NAS_RADIO_INTERFACE_5GNR;
-        if (preferred == MM_MODEM_MODE_5G)
-            g_array_prepend_val (array, value);
-        else
-            g_array_append_val (array, value);
+#define PROCESS_ALLOWED_PREFERRED_MODE(MODE,RADIO)                      \
+    if ((allowed & MODE) && (radio_interface_array_contains (all, RADIO))) { \
+        if ((preferred == MODE) && (preferred_radio == QMI_NAS_RADIO_INTERFACE_UNKNOWN)) \
+            preferred_radio = RADIO;                                    \
+        else {                                                          \
+            value = RADIO;                                              \
+            g_array_append_val (array, value);                          \
+        }                                                               \
     }
 
-    if (allowed & MM_MODEM_MODE_4G) {
-        value = QMI_NAS_RADIO_INTERFACE_LTE;
-        if (preferred == MM_MODEM_MODE_4G)
-            g_array_prepend_val (array, value);
-        else
-            g_array_append_val (array, value);
-    }
+    PROCESS_ALLOWED_PREFERRED_MODE (MM_MODEM_MODE_5G, QMI_NAS_RADIO_INTERFACE_5GNR);
+    PROCESS_ALLOWED_PREFERRED_MODE (MM_MODEM_MODE_4G, QMI_NAS_RADIO_INTERFACE_LTE);
+    PROCESS_ALLOWED_PREFERRED_MODE (MM_MODEM_MODE_3G, QMI_NAS_RADIO_INTERFACE_UMTS);
+    PROCESS_ALLOWED_PREFERRED_MODE (MM_MODEM_MODE_3G, QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO);
+    PROCESS_ALLOWED_PREFERRED_MODE (MM_MODEM_MODE_2G, QMI_NAS_RADIO_INTERFACE_GSM);
+    PROCESS_ALLOWED_PREFERRED_MODE (MM_MODEM_MODE_2G, QMI_NAS_RADIO_INTERFACE_CDMA_1X);
 
-    if (allowed & MM_MODEM_MODE_3G) {
-        if (is_cdma) {
-            value = QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO;
-            if (preferred == MM_MODEM_MODE_3G)
-                g_array_prepend_val (array, value);
-            else
-                g_array_append_val (array, value);
-        }
-        if (is_3gpp) {
-            value = QMI_NAS_RADIO_INTERFACE_UMTS;
-            if (preferred == MM_MODEM_MODE_3G)
-                g_array_prepend_val (array, value);
-            else
-                g_array_append_val (array, value);
-        }
-    }
+#undef PROCESS_ALLOWED_PREFERRED_MODE
 
-    if (allowed & MM_MODEM_MODE_2G) {
-        if (is_cdma) {
-            value = QMI_NAS_RADIO_INTERFACE_CDMA_1X;
-            if (preferred == MM_MODEM_MODE_2G)
-                g_array_prepend_val (array, value);
-            else
-                g_array_append_val (array, value);
-        }
-        if (is_3gpp) {
-            value = QMI_NAS_RADIO_INTERFACE_GSM;
-            if (preferred == MM_MODEM_MODE_2G)
-                g_array_prepend_val (array, value);
-            else
-                g_array_append_val (array, value);
-        }
-    }
+    if (preferred_radio != QMI_NAS_RADIO_INTERFACE_UNKNOWN)
+        g_array_prepend_val (array, preferred_radio);
+
+    /* the acquisition order preference is a TLV that must ALWAYS contain the
+     * same list of QmiNasRadioInterface values, just with a different order. */
+    radio_interface_array_add_missing (array, all);
+    g_assert_cmpuint (array->len, ==, all->len);
 
     return array;
 }
@@ -1472,6 +1480,72 @@ mm_bearer_allowed_auth_to_qmi_authentication (MMBearerAllowedAuth auth)
     return out;
 }
 
+MMBearerAllowedAuth
+mm_bearer_allowed_auth_from_qmi_authentication (QmiWdsAuthentication auth)
+{
+    MMBearerAllowedAuth out = 0;
+
+    if (auth & QMI_WDS_AUTHENTICATION_PAP)
+        out |= MM_BEARER_ALLOWED_AUTH_PAP;
+    if (auth & QMI_WDS_AUTHENTICATION_CHAP)
+        out |= MM_BEARER_ALLOWED_AUTH_CHAP;
+
+    return out;
+}
+
+MMBearerIpFamily
+mm_bearer_ip_family_from_qmi_ip_support_type (QmiWdsIpSupportType ip_support_type)
+{
+    switch (ip_support_type) {
+    case QMI_WDS_IP_SUPPORT_TYPE_IPV4:
+        return MM_BEARER_IP_FAMILY_IPV4;
+    case QMI_WDS_IP_SUPPORT_TYPE_IPV6:
+        return MM_BEARER_IP_FAMILY_IPV6;
+    case QMI_WDS_IP_SUPPORT_TYPE_IPV4V6:
+        return MM_BEARER_IP_FAMILY_IPV4V6;
+    default:
+        return MM_BEARER_IP_FAMILY_NONE;
+    }
+}
+
+MMBearerIpFamily
+mm_bearer_ip_family_from_qmi_pdp_type (QmiWdsPdpType pdp_type)
+{
+    switch (pdp_type) {
+    case QMI_WDS_PDP_TYPE_IPV4:
+        return MM_BEARER_IP_FAMILY_IPV4;
+    case QMI_WDS_PDP_TYPE_IPV6:
+        return MM_BEARER_IP_FAMILY_IPV6;
+    case QMI_WDS_PDP_TYPE_IPV4_OR_IPV6:
+        return MM_BEARER_IP_FAMILY_IPV4V6;
+    case QMI_WDS_PDP_TYPE_PPP:
+    default:
+        return MM_BEARER_IP_FAMILY_NONE;
+    }
+}
+
+gboolean
+mm_bearer_ip_family_to_qmi_pdp_type (MMBearerIpFamily  ip_family,
+                                     QmiWdsPdpType    *out_pdp_type)
+{
+    switch (ip_family) {
+    case MM_BEARER_IP_FAMILY_IPV4:
+        *out_pdp_type = QMI_WDS_PDP_TYPE_IPV4;
+        return TRUE;
+    case MM_BEARER_IP_FAMILY_IPV6:
+        *out_pdp_type =  QMI_WDS_PDP_TYPE_IPV6;
+        return TRUE;
+    case MM_BEARER_IP_FAMILY_IPV4V6:
+        *out_pdp_type =  QMI_WDS_PDP_TYPE_IPV4_OR_IPV6;
+        return TRUE;
+    case MM_BEARER_IP_FAMILY_NONE:
+    case MM_BEARER_IP_FAMILY_ANY:
+    default:
+        /* there is no valid conversion, so just return FALSE to indicate it */
+        return FALSE;
+    }
+}
+
 /*****************************************************************************/
 
 /**
@@ -1745,25 +1819,19 @@ mm_firmware_unique_id_to_qmi_unique_id (const gchar  *unique_id,
 
     /* The length will be exactly EXPECTED_QMI_UNIQUE_ID_LENGTH*2 if given in HEX */
     if (len == (2 * EXPECTED_QMI_UNIQUE_ID_LENGTH)) {
-        guint8 *tmp;
-        gsize   tmp_len;
-        guint   i;
-
-        for (i = 0; i < len; i++) {
-            if (!g_ascii_isxdigit (unique_id[i])) {
-                g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                             "Unexpected character found in unique id (not HEX): %c", unique_id[i]);
-                return NULL;
-            }
-        }
+        g_autofree guint8 *tmp = NULL;
+        gsize              tmp_len;
 
         tmp_len = 0;
-        tmp = (guint8 *) mm_utils_hexstr2bin (unique_id, &tmp_len);
+        tmp = mm_utils_hexstr2bin (unique_id, -1, &tmp_len, error);
+        if (!tmp) {
+            g_prefix_error (error, "Unexpected character found in unique id: ");
+            return NULL;
+        }
         g_assert (tmp_len == EXPECTED_QMI_UNIQUE_ID_LENGTH);
 
         qmi_unique_id = g_array_sized_new (FALSE, FALSE, sizeof (guint8), tmp_len);
         g_array_insert_vals (qmi_unique_id, 0, tmp, tmp_len);
-        g_free (tmp);
         return qmi_unique_id;
     }
 
@@ -1790,4 +1858,258 @@ mm_firmware_unique_id_to_qmi_unique_id (const gchar  *unique_id,
     g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
                  "Unexpected unique id length: %u", len);
     return NULL;
+}
+
+/*****************************************************************************/
+
+gboolean
+mm_qmi_uim_get_card_status_output_parse (gpointer                           log_object,
+                                         QmiMessageUimGetCardStatusOutput  *output,
+                                         MMModemLock                       *o_lock,
+                                         QmiUimPinState                    *o_pin1_state,
+                                         guint                             *o_pin1_retries,
+                                         guint                             *o_puk1_retries,
+                                         QmiUimPinState                    *o_pin2_state,
+                                         guint                             *o_pin2_retries,
+                                         guint                             *o_puk2_retries,
+                                         GError                           **error)
+{
+    QmiMessageUimGetCardStatusOutputCardStatusCardsElement                    *card;
+    QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElement *app;
+    GArray      *cards;
+    guint16      index_gw_primary = 0xFFFF;
+    guint8       gw_primary_slot_i = 0;
+    guint8       gw_primary_application_i = 0;
+    MMModemLock  lock = MM_MODEM_LOCK_UNKNOWN;
+
+    /* This command supports MULTIPLE cards with MULTIPLE applications each. For our
+     * purposes, we're going to consider as the SIM to use the one identified as
+     * 'primary GW' exclusively. We don't really support Dual Sim Dual Standby yet. */
+
+    qmi_message_uim_get_card_status_output_get_card_status (
+        output,
+        &index_gw_primary,
+        NULL, /* index_1x_primary */
+        NULL, /* index_gw_secondary */
+        NULL, /* index_1x_secondary */
+        &cards,
+        NULL);
+
+    if (cards->len == 0) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                     "No cards reported");
+        return FALSE;
+    }
+
+    /* Look for the primary GW slot and application.
+     * If we don't have valid GW primary slot index and application index, assume
+     * we're missing the SIM altogether */
+    gw_primary_slot_i        = ((index_gw_primary & 0xFF00) >> 8);
+    gw_primary_application_i = ((index_gw_primary & 0x00FF));
+
+    if (gw_primary_slot_i == 0xFF) {
+        g_set_error (error,
+                     MM_MOBILE_EQUIPMENT_ERROR,
+                     MM_MOBILE_EQUIPMENT_ERROR_SIM_NOT_INSERTED,
+                     "GW primary session index unknown");
+        return FALSE;
+    }
+    mm_obj_dbg (log_object, "GW primary session index: %u",     gw_primary_slot_i);
+
+    if (gw_primary_application_i == 0xFF) {
+        g_set_error (error,
+                     MM_MOBILE_EQUIPMENT_ERROR,
+                     MM_MOBILE_EQUIPMENT_ERROR_SIM_NOT_INSERTED,
+                     "GW primary application index unknown");
+        return FALSE;
+    }
+    mm_obj_dbg (log_object, "GW primary application index: %u", gw_primary_application_i);
+
+    /* Validate slot index */
+    if (gw_primary_slot_i >= cards->len) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "Invalid GW primary session index: %u",
+                     gw_primary_slot_i);
+        return FALSE;
+    }
+
+    /* Get card at slot */
+    card = &g_array_index (cards, QmiMessageUimGetCardStatusOutputCardStatusCardsElement, gw_primary_slot_i);
+
+    if (card->card_state == QMI_UIM_CARD_STATE_ABSENT) {
+        g_set_error (error,
+                     MM_MOBILE_EQUIPMENT_ERROR,
+                     MM_MOBILE_EQUIPMENT_ERROR_SIM_NOT_INSERTED,
+                     "No card found");
+        return FALSE;
+    }
+
+    if (card->card_state == QMI_UIM_CARD_STATE_ERROR) {
+        const gchar *card_error;
+
+        card_error = qmi_uim_card_error_get_string (card->error_code);
+        g_set_error (error,
+                     MM_MOBILE_EQUIPMENT_ERROR,
+                     MM_MOBILE_EQUIPMENT_ERROR_SIM_WRONG,
+                     "Card error: %s", card_error ? card_error : "unknown error");
+        return FALSE;
+    }
+
+    if (card->card_state != QMI_UIM_CARD_STATE_PRESENT) {
+        g_set_error (error,
+                     MM_MOBILE_EQUIPMENT_ERROR,
+                     MM_MOBILE_EQUIPMENT_ERROR_SIM_WRONG,
+                     "Card error: unexpected card state: 0x%x", card->card_state);
+        return FALSE;
+    }
+
+    /* Card is present */
+
+    if (card->applications->len == 0) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "No applications reported in card");
+        return FALSE;
+    }
+
+    /* Validate application index */
+    if (gw_primary_application_i >= card->applications->len) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "Invalid GW primary application index: %u",
+                     gw_primary_application_i);
+        return FALSE;
+    }
+
+    app = &g_array_index (card->applications, QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElement, gw_primary_application_i);
+    if ((app->type != QMI_UIM_CARD_APPLICATION_TYPE_SIM) && (app->type != QMI_UIM_CARD_APPLICATION_TYPE_USIM)) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "Unsupported application type found in GW primary application index: %s",
+                     qmi_uim_card_application_type_get_string (app->type));
+        return FALSE;
+    }
+
+    /* Illegal application state is fatal, consider it as a failed SIM right
+     * away and don't even attempt to retry */
+    if (app->state == QMI_UIM_CARD_APPLICATION_STATE_ILLEGAL) {
+        g_set_error (error,
+                     MM_MOBILE_EQUIPMENT_ERROR,
+                     MM_MOBILE_EQUIPMENT_ERROR_SIM_WRONG,
+                     "Illegal SIM/USIM application state");
+        return FALSE;
+    }
+
+    /* If card not ready yet, return RETRY error.
+     * If the application state reports needing PIN/PUk, consider that ready as
+     * well, and let the logic fall down to check PIN1/PIN2. */
+    if (app->state != QMI_UIM_CARD_APPLICATION_STATE_READY &&
+        app->state != QMI_UIM_CARD_APPLICATION_STATE_PIN1_OR_UPIN_PIN_REQUIRED &&
+        app->state != QMI_UIM_CARD_APPLICATION_STATE_PUK1_OR_UPIN_PUK_REQUIRED &&
+        app->state != QMI_UIM_CARD_APPLICATION_STATE_PIN1_BLOCKED) {
+        mm_obj_dbg (log_object, "neither SIM nor USIM are ready");
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_RETRY,
+                     "SIM not ready yet (retry)");
+        return FALSE;
+    }
+
+    /* Report state and retries if requested to do so */
+    if (o_pin1_state)
+        *o_pin1_state = app->pin1_state;
+    if (o_pin1_retries)
+        *o_pin1_retries = app->pin1_retries;
+    if (o_puk1_retries)
+        *o_puk1_retries = app->puk1_retries;
+    if (o_pin2_state)
+        *o_pin2_state = app->pin2_state;
+    if (o_pin2_retries)
+        *o_pin2_retries = app->pin2_retries;
+    if (o_puk2_retries)
+        *o_puk2_retries = app->puk2_retries;
+
+    /* Early bail out if lock status isn't wanted at this point, so that we
+     * don't fail with an error the unlock retries check */
+    if (!o_lock)
+        return TRUE;
+
+    /* Card is ready, what's the lock status? */
+
+    /* PIN1 */
+    switch (app->pin1_state) {
+    case QMI_UIM_PIN_STATE_NOT_INITIALIZED:
+        g_set_error (error,
+                     MM_MOBILE_EQUIPMENT_ERROR,
+                     MM_MOBILE_EQUIPMENT_ERROR_SIM_WRONG,
+                     "SIM PIN/PUK status not known yet");
+        return FALSE;
+
+    case QMI_UIM_PIN_STATE_PERMANENTLY_BLOCKED:
+        g_set_error (error,
+                     MM_MOBILE_EQUIPMENT_ERROR,
+                     MM_MOBILE_EQUIPMENT_ERROR_SIM_WRONG,
+                     "SIM PIN/PUK permanently blocked");
+        return FALSE;
+
+    case QMI_UIM_PIN_STATE_ENABLED_NOT_VERIFIED:
+        lock = MM_MODEM_LOCK_SIM_PIN;
+        break;
+
+    case QMI_UIM_PIN_STATE_BLOCKED:
+        lock = MM_MODEM_LOCK_SIM_PUK;
+        break;
+
+    case QMI_UIM_PIN_STATE_DISABLED:
+    case QMI_UIM_PIN_STATE_ENABLED_VERIFIED:
+        lock = MM_MODEM_LOCK_NONE;
+        break;
+
+    default:
+        g_set_error (error,
+                     MM_MOBILE_EQUIPMENT_ERROR,
+                     MM_MOBILE_EQUIPMENT_ERROR_SIM_WRONG,
+                     "Unknown SIM PIN/PUK status");
+        return FALSE;
+    }
+
+    /* PIN2 */
+    if (lock == MM_MODEM_LOCK_NONE) {
+        switch (app->pin2_state) {
+        case QMI_UIM_PIN_STATE_NOT_INITIALIZED:
+            mm_obj_warn (log_object, "SIM PIN2/PUK2 status not known yet");
+            break;
+
+        case QMI_UIM_PIN_STATE_ENABLED_NOT_VERIFIED:
+            lock = MM_MODEM_LOCK_SIM_PIN2;
+            break;
+
+        case QMI_UIM_PIN_STATE_PERMANENTLY_BLOCKED:
+            mm_obj_warn (log_object, "PUK2 permanently blocked");
+            /* Fall through */
+        case QMI_UIM_PIN_STATE_BLOCKED:
+            lock = MM_MODEM_LOCK_SIM_PUK2;
+            break;
+
+        case QMI_UIM_PIN_STATE_DISABLED:
+        case QMI_UIM_PIN_STATE_ENABLED_VERIFIED:
+            break;
+
+        default:
+            mm_obj_warn (log_object, "unknown SIM PIN2/PUK2 status");
+            break;
+        }
+    }
+
+    *o_lock = lock;
+    return TRUE;
+}
+
+/*************************************************************************/
+/* EID parsing */
+
+#define EID_BYTE_LENGTH 16
+
+gchar *
+mm_qmi_uim_decode_eid (const gchar *eid, gsize eid_len)
+{
+    if (eid_len != EID_BYTE_LENGTH)
+        return NULL;
+
+    return mm_bcd_to_string ((const guint8 *) eid, eid_len, FALSE /* low_nybble_first */);
 }

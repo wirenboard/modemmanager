@@ -19,6 +19,7 @@
 <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem.SetCurrentCapabilities">SetCurrentCapabilities</link> (IN  u     capabilities);
 <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem.SetCurrentModes">SetCurrentModes</link>        (IN  (uu)  modes);
 <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem.SetCurrentBands">SetCurrentBands</link>        (IN  au    bands);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem.SetPrimarySimSlot">SetPrimarySimSlot</link>      (IN  u     sim_slot);
 <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem.Command">Command</link>                (IN  s     cmd,
                         IN  u     timeout,
                         OUT s     response);
@@ -36,6 +37,8 @@
     <title role="properties.title">Properties</title>
     <synopsis>
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Sim">Sim</link>                           readable   o
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SimSlots">SimSlots</link>                      readable   ao
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.PrimarySimSlot">PrimarySimSlot</link>                readable   u
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers">Bearers</link>                       readable   ao
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities">SupportedCapabilities</link>         readable   au
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentCapabilities">CurrentCapabilities</link>           readable   u
@@ -143,7 +146,7 @@ CreateBearer (IN  a{sv} properties,
         <varlistentry><term><literal>"rm-protocol"</literal></term>
           <listitem><para>Protocol of the Rm interface, given as a <link linkend="MMModemCdmaRmProtocol">MMModemCdmaRmProtocol</link> value (signature <literal>"u"</literal>). Optional in CDMA.</para></listitem></varlistentry>
         <varlistentry><term><literal>"number"</literal></term>
-          <listitem><para>Telephone number to dial, given as a string value (signature <literal>"s"</literal>). Required in POTS.</para></listitem></varlistentry>
+          <listitem><para>Number to dial for the data connection, given as a string value (signature <literal>"s"</literal>). Deprecated since version 1.10.0.</para></listitem></varlistentry>
         </variablelist>
 </para><para>        Some properties are only applicable to a bearer of certain access
         technologies, for example the <literal>"apn"</literal> property is not
@@ -275,6 +278,27 @@ SetCurrentBands (IN  au bands);
 </varlistentry>
 </variablelist>
 </refsect2>
+<refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1-Modem.SetPrimarySimSlot">
+  <title>The SetPrimarySimSlot() method</title>
+  <indexterm zone="gdbus-method-org-freedesktop-ModemManager1-Modem.SetPrimarySimSlot"><primary sortas="Modem.SetPrimarySimSlot">org.freedesktop.ModemManager1.Modem.SetPrimarySimSlot()</primary></indexterm>
+<programlisting>
+SetPrimarySimSlot (IN  u sim_slot);
+</programlisting>
+<para>        Selects which SIM slot to be considered as primary, on devices that expose
+	multiple slots in the <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SimSlots">"SimSlots"</link> property.
+</para><para>        When the switch happens the modem may require a full device reprobe, so the modem
+	object in DBus will get removed, and recreated once the selected SIM slot is in
+	use.
+</para><para>        There is no limitation on which SIM slot to select, so the user may also set as
+	primary a slot that doesn't currently have any valid SIM card inserted.
+</para>
+<variablelist role="params">
+<varlistentry>
+  <term><literal>IN u <parameter>sim_slot</parameter></literal>:</term>
+  <listitem><para>SIM slot number to set as primary.</para></listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
 <refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1-Modem.Command">
   <title>The Command() method</title>
   <indexterm zone="gdbus-method-org-freedesktop-ModemManager1-Modem.Command"><primary sortas="Modem.Command">org.freedesktop.ModemManager1.Modem.Command()</primary></indexterm>
@@ -340,7 +364,49 @@ StateChanged (i old,
 <programlisting>
 Sim  readable   o
 </programlisting>
-<para>        The path of the SIM object available in this device, if any.
+<para>        The path of the primary active SIM object available in this device,
+        if any.
+</para><para>        This SIM object is the one used for network registration and data
+        connection setup.
+</para><para>        If multiple <link linkend="gdbus-interface-org-freedesktop-ModemManager1-Modem.top_of_page">org.freedesktop.ModemManager1.Modem</link>.SimSlots are
+        supported, the <link linkend="gdbus-interface-org-freedesktop-ModemManager1-Modem.top_of_page">org.freedesktop.ModemManager1.Modem</link>.PrimarySimSlot
+        index value specifies which is the slot number where this SIM card
+        is available.
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.SimSlots">
+  <title>The "SimSlots" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem.SimSlots"><primary sortas="Modem:SimSlots">org.freedesktop.ModemManager1.Modem:SimSlots</primary></indexterm>
+<programlisting>
+SimSlots  readable   ao
+</programlisting>
+<para>        The list of SIM slots available in the system, including the SIM object
+        paths if the cards are present. If a given SIM slot at a given index
+        doesn't have a SIM card available, an empty object path will be given.
+</para><para>        The length of this array of objects will be equal to the amount of
+        available SIM slots in the system, and the index in the array is the
+        slot index.
+</para><para>        This list includes the SIM object considered as primary active SIM slot
+        (<link linkend="gdbus-interface-org-freedesktop-ModemManager1-Modem.top_of_page">org.freedesktop.ModemManager1.Modem</link>.Sim) at index
+        <link linkend="gdbus-interface-org-freedesktop-ModemManager1-Modem.top_of_page">org.freedesktop.ModemManager1.Modem</link>.ActiveSimSlot.
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.PrimarySimSlot">
+  <title>The "PrimarySimSlot" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem.PrimarySimSlot"><primary sortas="Modem:PrimarySimSlot">org.freedesktop.ModemManager1.Modem:PrimarySimSlot</primary></indexterm>
+<programlisting>
+PrimarySimSlot  readable   u
+</programlisting>
+<para>        The index of the primary active SIM slot in the
+        <link linkend="gdbus-interface-org-freedesktop-ModemManager1-Modem.top_of_page">org.freedesktop.ModemManager1.Modem</link>.SimSlots array, given in the [1,N]
+        range.
+</para><para>        If multiple SIM slots aren't supported, this property will report
+        value 0.
+</para><para>        In a Multi SIM Single Standby setup, this index identifies the only SIM
+        that is currently active. All the remaining slots will be inactive.
+</para><para>        In a Multi SIM Multi Standby setup, this index identifies the active SIM
+        that is considered primary, i.e. the one that will be used when a data
+        connection is setup.
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers">

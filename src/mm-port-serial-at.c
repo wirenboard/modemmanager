@@ -473,6 +473,8 @@ mm_port_serial_at_set_flags (MMPortSerialAt *self, MMPortSerialAtFlag flags)
 {
     g_return_if_fail (self != NULL);
     g_return_if_fail (MM_IS_PORT_SERIAL_AT (self));
+
+    /* MM_PORT_SERIAL_AT_FLAG_NONE_NO_GENERIC is not expected */
     g_return_if_fail (flags <= (MM_PORT_SERIAL_AT_FLAG_PRIMARY |
                                 MM_PORT_SERIAL_AT_FLAG_SECONDARY |
                                 MM_PORT_SERIAL_AT_FLAG_PPP |
@@ -527,17 +529,13 @@ config (MMPortSerial *_self)
 /*****************************************************************************/
 
 MMPortSerialAt *
-mm_port_serial_at_new (const char *name,
-                       MMPortSubsys subsys)
+mm_port_serial_at_new (const char   *name,
+                       MMPortSubsys  subsys)
 {
-    g_return_val_if_fail (subsys == MM_PORT_SUBSYS_TTY ||
-                          subsys == MM_PORT_SUBSYS_USB ||
-                          subsys == MM_PORT_SUBSYS_UNIX, NULL);
-
     return MM_PORT_SERIAL_AT (g_object_new (MM_TYPE_PORT_SERIAL_AT,
                                             MM_PORT_DEVICE, name,
                                             MM_PORT_SUBSYS, subsys,
-                                            MM_PORT_TYPE, MM_PORT_TYPE_AT,
+                                            MM_PORT_TYPE,   MM_PORT_TYPE_AT,
                                             NULL));
 }
 

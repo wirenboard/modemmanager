@@ -1134,6 +1134,7 @@ test_sind_response_simstatus (void)
 
 static void
 common_test_smong_response (const gchar             *response,
+                            gboolean                 success,
                             MMModemAccessTechnology  expected_access_tech)
 {
     GError                  *error = NULL;
@@ -1141,10 +1142,15 @@ common_test_smong_response (const gchar             *response,
     MMModemAccessTechnology  access_tech;
 
     res = mm_cinterion_parse_smong_response (response, &access_tech, &error);
-    g_assert_no_error (error);
-    g_assert (res == TRUE);
 
-    g_assert_cmpuint (access_tech, ==, expected_access_tech);
+    if (success) {
+        g_assert_no_error (error);
+        g_assert (res);
+        g_assert_cmpuint (access_tech, ==, expected_access_tech);
+    } else {
+        g_assert (error);
+        g_assert (!res);
+    }
 }
 
 static void
@@ -1155,7 +1161,7 @@ test_smong_response_tc63i (void)
         "GPRS Monitor\r\n"
         "BCCH  G  PBCCH  PAT MCC  MNC  NOM  TA      RAC                               # Cell #\r\n"
         "0073  1  -      -   262   02  2    00 01\r\n";
-    common_test_smong_response (response, MM_MODEM_ACCESS_TECHNOLOGY_GPRS);
+    common_test_smong_response (response, TRUE, MM_MODEM_ACCESS_TECHNOLOGY_GPRS);
 }
 
 static void
@@ -1167,7 +1173,19 @@ test_smong_response_other (void)
         "\r\n"
         "BCCH  G  PBCCH  PAT MCC  MNC  NOM  TA      RAC                              # Cell #\r\n"
         "  44  1  -      -   234   10  -    -       -                                             \r\n";
-    common_test_smong_response (response, MM_MODEM_ACCESS_TECHNOLOGY_GPRS);
+    common_test_smong_response (response, TRUE, MM_MODEM_ACCESS_TECHNOLOGY_GPRS);
+}
+
+static void
+test_smong_response_no_match (void)
+{
+    const gchar *response =
+        "\r\n"
+        "GPRS Monitor\r\n"
+        "\r\n"
+        "BCCH  K  PBCCH  PAT MCC  MNC  NOM  TA      RAC                              # Cell #\r\n"
+        "  44  1  -      -   234   10  -    -       -                                             \r\n";
+    common_test_smong_response (response, FALSE, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN);
 }
 
 /*****************************************************************************/
@@ -1596,6 +1614,142 @@ test_smoni_response_to_signal (void)
     }
 }
 
+/*****************************************************************************/
+/* Test ^SCFG="MEopMode/Prov/Cfg" responses */
+
+typedef struct {
+    const gchar            *str;
+    MMCinterionModemFamily  modem_family;
+    gboolean                success;
+    guint                   expected_cid;
+} ProvcfgResponseTest;
+
+static const ProvcfgResponseTest provcfg_response_tests[] = {
+    {
+
+        .str          = "^SCFG: \"MEopMode/Prov/Cfg\",\"vdfde\"",
+        .modem_family = MM_CINTERION_MODEM_FAMILY_DEFAULT,
+        .success      = TRUE,
+        .expected_cid = 1,
+    },
+    {
+
+        .str          = "* ^SCFG: \"MEopMode/Prov/Cfg\",\"attus\"",
+        .modem_family = MM_CINTERION_MODEM_FAMILY_IMT,
+        .success      = TRUE,
+        .expected_cid = 1,
+    },
+    {
+
+        .str          = "* ^SCFG: \"MEopMode/Prov/Cfg\",\"2\"",
+        .modem_family = MM_CINTERION_MODEM_FAMILY_DEFAULT,
+        .success      = TRUE,
+        .expected_cid = 3,
+    },
+    {
+
+        .str          = "* ^SCFG: \"MEopMode/Prov/Cfg\",\"vzwdcus\"",
+        .modem_family = MM_CINTERION_MODEM_FAMILY_DEFAULT,
+        .success      = TRUE,
+        .expected_cid = 3,
+    },
+    {
+
+        .str          = "* ^SCFG: \"MEopMode/Prov/Cfg\",\"tmode\"",
+        .modem_family = MM_CINTERION_MODEM_FAMILY_DEFAULT,
+        .success      = TRUE,
+        .expected_cid = 2,
+    },
+    {
+        .str          = "* ^SCFG: \"MEopMode/Prov/Cfg\",\"fallback*\"",
+        .modem_family = MM_CINTERION_MODEM_FAMILY_DEFAULT,
+        .success      = TRUE,
+        .expected_cid = 1,
+    },
+    {
+        /* commas not allowed by the regex */
+        .str          = "* ^SCFG: \"MEopMode/Prov/Cfg\",\"something,with,commas\"",
+        .modem_family = MM_CINTERION_MODEM_FAMILY_DEFAULT,
+        .success      = FALSE,
+    }
+};
+
+static void
+test_provcfg_response (void)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (provcfg_response_tests); i++) {
+        gint      cid = -1;
+        gboolean  result;
+        GError   *error = NULL;
+
+        result = mm_cinterion_provcfg_response_to_cid (provcfg_response_tests[i].str,
+                                                       provcfg_response_tests[i].modem_family,
+                                                       MM_MODEM_CHARSET_GSM,
+                                                       NULL,
+                                                       &cid,
+                                                       &error);
+        if (provcfg_response_tests[i].success) {
+            g_assert_no_error (error);
+            g_assert (result);
+            g_assert_cmpuint (cid, ==, provcfg_response_tests[i].expected_cid);
+        } else {
+            g_assert (error);
+            g_assert (!result);
+        }
+    }
+}
+
+/*****************************************************************************/
+/* Test ^SGAUTH responses */
+
+static void
+test_sgauth_response (void)
+{
+    gboolean             result;
+    MMBearerAllowedAuth  auth = MM_BEARER_ALLOWED_AUTH_UNKNOWN;
+    gchar               *username = NULL;
+    GError              *error = NULL;
+
+    const gchar *response =
+        "^SGAUTH: 1,2,\"vf\"\r\n"
+        "^SGAUTH: 2,1,\"\"\r\n"
+        "^SGAUTH: 3,0\r\n";
+
+    /* CID 1 */
+    result = mm_cinterion_parse_sgauth_response (response, 1, &auth, &username, &error);
+    g_assert_no_error (error);
+    g_assert (result);
+    g_assert_cmpuint (auth, ==, MM_BEARER_ALLOWED_AUTH_CHAP);
+    g_assert_cmpstr (username, ==, "vf");
+
+    auth = MM_BEARER_ALLOWED_AUTH_UNKNOWN;
+    g_clear_pointer (&username, g_free);
+
+    /* CID 2 */
+    result = mm_cinterion_parse_sgauth_response (response, 2, &auth, &username, &error);
+    g_assert_no_error (error);
+    g_assert (result);
+    g_assert_cmpuint (auth, ==, MM_BEARER_ALLOWED_AUTH_PAP);
+    g_assert_null (username);
+
+    auth = MM_BEARER_ALLOWED_AUTH_UNKNOWN;
+
+    /* CID 3 */
+    result = mm_cinterion_parse_sgauth_response (response, 3, &auth, &username, &error);
+    g_assert_no_error (error);
+    g_assert (result);
+    g_assert_cmpuint (auth, ==, MM_BEARER_ALLOWED_AUTH_NONE);
+    g_assert_null (username);
+
+    auth = MM_BEARER_ALLOWED_AUTH_UNKNOWN;
+
+    /* CID 4 */
+    result = mm_cinterion_parse_sgauth_response (response, 4, &auth, &username, &error);
+    g_assert_error (error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND);
+    g_assert (!result);
+}
 
 /*****************************************************************************/
 
@@ -1621,6 +1775,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/MM/cinterion/sind/response/simstatus", test_sind_response_simstatus);
     g_test_add_func ("/MM/cinterion/smong/response/tc63i",    test_smong_response_tc63i);
     g_test_add_func ("/MM/cinterion/smong/response/other",    test_smong_response_other);
+    g_test_add_func ("/MM/cinterion/smong/response/no-match", test_smong_response_no_match);
     g_test_add_func ("/MM/cinterion/slcc/urc/empty",          test_slcc_urc_empty);
     g_test_add_func ("/MM/cinterion/slcc/urc/single",         test_slcc_urc_single);
     g_test_add_func ("/MM/cinterion/slcc/urc/multiple",       test_slcc_urc_multiple);
@@ -1629,6 +1784,8 @@ int main (int argc, char **argv)
     g_test_add_func ("/MM/cinterion/ctzu/urc/full",           test_ctzu_urc_full);
     g_test_add_func ("/MM/cinterion/smoni/query_response",    test_smoni_response);
     g_test_add_func ("/MM/cinterion/smoni/query_response_to_signal", test_smoni_response_to_signal);
+    g_test_add_func ("/MM/cinterion/scfg/provcfg",            test_provcfg_response);
+    g_test_add_func ("/MM/cinterion/sgauth",                  test_sgauth_response);
 
     return g_test_run ();
 }

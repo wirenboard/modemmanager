@@ -338,14 +338,14 @@ dial_3gpp_context_step (GTask *task)
                 guint sierra_auth;
 
                 if (allowed_auth == MM_BEARER_ALLOWED_AUTH_UNKNOWN) {
-                    mm_obj_dbg (self, "using default (PAP) authentication method");
-                    sierra_auth = 1;
-                } else if (allowed_auth & MM_BEARER_ALLOWED_AUTH_PAP) {
-                    mm_obj_dbg (self, "using PAP authentication method");
-                    sierra_auth = 1;
+                    mm_obj_dbg (self, "using default (CHAP) authentication method");
+                    sierra_auth = 2;
                 } else if (allowed_auth & MM_BEARER_ALLOWED_AUTH_CHAP) {
                     mm_obj_dbg (self, "using CHAP authentication method");
                     sierra_auth = 2;
+                } else if (allowed_auth & MM_BEARER_ALLOWED_AUTH_PAP) {
+                    mm_obj_dbg (self, "using PAP authentication method");
+                    sierra_auth = 1;
                 } else {
                     gchar *str;
 
@@ -407,7 +407,7 @@ dial_3gpp_context_step (GTask *task)
             mm_base_modem_at_command_full (ctx->modem,
                                            ctx->primary,
                                            command,
-                                           10,
+                                           MM_BASE_BEARER_DEFAULT_CONNECTION_TIMEOUT,
                                            FALSE,
                                            FALSE, /* raw */
                                            NULL, /* cancellable */
@@ -538,7 +538,7 @@ disconnect_3gpp (MMBroadbandBearer *self,
         mm_base_modem_at_command_full (MM_BASE_MODEM (modem),
                                        primary,
                                        command,
-                                       3,
+                                       MM_BASE_BEARER_DEFAULT_DISCONNECTION_TIMEOUT,
                                        FALSE,
                                        FALSE, /* raw */
                                        NULL, /* cancellable */

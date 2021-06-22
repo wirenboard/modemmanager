@@ -86,10 +86,19 @@ typedef enum {
     PROCESS_NOTIFICATION_FLAG_LTE_ATTACH_STATUS    = 1 << 8,
 } ProcessNotificationFlag;
 
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+enum {
+    PROP_0,
+    PROP_QMI_UNSUPPORTED,
+    PROP_LAST
+};
+#endif
+
 struct _MMBroadbandModemMbimPrivate {
     /* Queried and cached capabilities */
     MbimCellularClass caps_cellular_class;
     MbimDataClass caps_data_class;
+    gchar *caps_custom_data_class;
     MbimSmsCaps caps_sms;
     guint caps_max_sessions;
     gchar *caps_device_id;
@@ -128,6 +137,7 @@ struct _MMBroadbandModemMbimPrivate {
     gulong mbim_device_removed_id;
 
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+    gboolean qmi_unsupported;
     /* Flag when QMI-based capability/mode switching is in use */
     gboolean qmi_capability_and_mode_switching;
 #endif
@@ -143,7 +153,7 @@ peek_device (gpointer self,
 {
     MMPortMbim *port;
 
-    port = mm_base_modem_peek_port_mbim (MM_BASE_MODEM (self));
+    port = mm_broadband_modem_mbim_peek_port_mbim (MM_BROADBAND_MODEM_MBIM (self));
     if (!port) {
         g_task_report_new_error (self,
                                  callback,
@@ -172,7 +182,7 @@ shared_qmi_peek_client (MMSharedQmi    *self,
 
     g_assert (flag == MM_PORT_QMI_FLAG_DEFAULT);
 
-    port = mm_base_modem_peek_port_mbim (MM_BASE_MODEM (self));
+    port = mm_broadband_modem_mbim_peek_port_mbim (MM_BROADBAND_MODEM_MBIM (self));
     if (!port) {
         g_set_error (error,
                      MM_CORE_ERROR,
@@ -201,6 +211,130 @@ shared_qmi_peek_client (MMSharedQmi    *self,
 }
 
 #endif
+
+/*****************************************************************************/
+
+MMPortMbim *
+mm_broadband_modem_mbim_get_port_mbim (MMBroadbandModemMbim *self)
+{
+    MMPortMbim *primary_mbim_port;
+
+    g_assert (MM_IS_BROADBAND_MODEM_MBIM (self));
+
+    primary_mbim_port = mm_broadband_modem_mbim_peek_port_mbim (self);
+    return (primary_mbim_port ?
+            MM_PORT_MBIM (g_object_ref (primary_mbim_port)) :
+            NULL);
+}
+
+MMPortMbim *
+mm_broadband_modem_mbim_peek_port_mbim (MMBroadbandModemMbim *self)
+{
+    MMPortMbim *primary_mbim_port = NULL;
+    GList      *mbim_ports;
+
+    g_assert (MM_IS_BROADBAND_MODEM_MBIM (self));
+
+    mbim_ports = mm_base_modem_find_ports (MM_BASE_MODEM (self),
+                                           MM_PORT_SUBSYS_UNKNOWN,
+                                           MM_PORT_TYPE_MBIM,
+                                           NULL);
+
+    /* First MBIM port in the list is the primary one always */
+    if (mbim_ports)
+        primary_mbim_port = MM_PORT_MBIM (mbim_ports->data);
+
+    g_list_free_full (mbim_ports, g_object_unref);
+
+    return primary_mbim_port;
+}
+
+MMPortMbim *
+mm_broadband_modem_mbim_get_port_mbim_for_data (MMBroadbandModemMbim  *self,
+                                                MMPort                *data,
+                                                GError               **error)
+{
+    MMPortMbim *mbim_port;
+
+    g_assert (MM_IS_BROADBAND_MODEM_MBIM (self));
+
+    mbim_port = mm_broadband_modem_mbim_peek_port_mbim_for_data (self, data, error);
+    return (mbim_port ?
+            MM_PORT_MBIM (g_object_ref (mbim_port)) :
+            NULL);
+}
+
+static MMPortMbim *
+peek_port_mbim_for_data (MMBroadbandModemMbim  *self,
+                         MMPort                *data,
+                         GError               **error)
+{
+    GList       *cdc_wdm_mbim_ports;
+    GList       *l;
+    const gchar *net_port_parent_path;
+    MMPortMbim  *found = NULL;
+    const gchar *net_port_driver;
+
+    g_assert (MM_IS_BROADBAND_MODEM_MBIM (self));
+    g_assert (mm_port_get_subsys (data) == MM_PORT_SUBSYS_NET);
+
+    net_port_driver = mm_kernel_device_get_driver (mm_port_peek_kernel_device (data));
+    if (g_strcmp0 (net_port_driver, "cdc_mbim") != 0) {
+        g_set_error (error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "Unsupported MBIM kernel driver for 'net/%s': %s",
+                     mm_port_get_device (data),
+                     net_port_driver);
+        return NULL;
+    }
+
+    net_port_parent_path = mm_kernel_device_get_interface_sysfs_path (mm_port_peek_kernel_device (data));
+    if (!net_port_parent_path) {
+        g_set_error (error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "No parent path for 'net/%s'",
+                     mm_port_get_device (data));
+        return NULL;
+    }
+
+    /* Find the CDC-WDM port on the same USB interface as the given net port */
+    cdc_wdm_mbim_ports = mm_base_modem_find_ports (MM_BASE_MODEM (self),
+                                                   MM_PORT_SUBSYS_USBMISC,
+                                                   MM_PORT_TYPE_MBIM,
+                                                   NULL);
+
+    for (l = cdc_wdm_mbim_ports; l && !found; l = g_list_next (l)) {
+        const gchar *wdm_port_parent_path;
+
+        g_assert (MM_IS_PORT_MBIM (l->data));
+        wdm_port_parent_path = mm_kernel_device_get_interface_sysfs_path (mm_port_peek_kernel_device (MM_PORT (l->data)));
+        if (wdm_port_parent_path && g_str_equal (wdm_port_parent_path, net_port_parent_path))
+            found = MM_PORT_MBIM (l->data);
+    }
+
+    g_list_free_full (cdc_wdm_mbim_ports, g_object_unref);
+
+    if (!found)
+        g_set_error (error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_NOT_FOUND,
+                     "Couldn't find associated MBIM port for 'net/%s'",
+                     mm_port_get_device (data));
+
+    return found;
+}
+
+MMPortMbim *
+mm_broadband_modem_mbim_peek_port_mbim_for_data (MMBroadbandModemMbim  *self,
+                                                 MMPort                *data,
+                                                 GError               **error)
+{
+    g_assert (MM_BROADBAND_MODEM_MBIM_GET_CLASS (self)->peek_port_mbim_for_data);
+
+    return MM_BROADBAND_MODEM_MBIM_GET_CLASS (self)->peek_port_mbim_for_data (self, data, error);
+}
 
 /*****************************************************************************/
 /* Current capabilities (Modem interface) */
@@ -314,7 +448,7 @@ device_caps_query_ready (MbimDevice *device,
             &self->priv->caps_sms,
             NULL, /* ctrl_caps */
             &self->priv->caps_max_sessions,
-            NULL, /* custom_data_class */
+            &self->priv->caps_custom_data_class,
             &self->priv->caps_device_id,
             &self->priv->caps_firmware_info,
             &self->priv->caps_hardware_info,
@@ -325,7 +459,8 @@ device_caps_query_ready (MbimDevice *device,
     }
 
     ctx->current_mbim = mm_modem_capability_from_mbim_device_caps (self->priv->caps_cellular_class,
-                                                                   self->priv->caps_data_class);
+                                                                   self->priv->caps_data_class,
+                                                                   self->priv->caps_custom_data_class);
     complete_current_capabilities (task);
 
 out:
@@ -428,7 +563,9 @@ load_supported_capabilities_mbim (GTask *task)
     self = g_task_get_source_object (task);
 
     /* Current capabilities should have been cached already, just assume them */
-    current = mm_modem_capability_from_mbim_device_caps (self->priv->caps_cellular_class, self->priv->caps_data_class);
+    current = mm_modem_capability_from_mbim_device_caps (self->priv->caps_cellular_class,
+                                                         self->priv->caps_data_class,
+                                                         self->priv->caps_custom_data_class);
     if (current != 0) {
         supported = g_array_sized_new (FALSE, FALSE, sizeof (MMModemCapability), 1);
         g_array_append_val (supported, current);
@@ -515,7 +652,7 @@ modem_load_manufacturer (MMIfaceModem *self,
     gchar *manufacturer = NULL;
     MMPortMbim *port;
 
-    port = mm_base_modem_peek_port_mbim (MM_BASE_MODEM (self));
+    port = mm_broadband_modem_mbim_peek_port_mbim (MM_BROADBAND_MODEM_MBIM (self));
     if (port) {
         manufacturer = g_strdup (mm_kernel_device_get_physdev_manufacturer (
             mm_port_peek_kernel_device (MM_PORT (port))));
@@ -549,7 +686,7 @@ modem_load_model (MMIfaceModem *self,
     GTask *task;
     MMPortMbim *port;
 
-    port = mm_base_modem_peek_port_mbim (MM_BASE_MODEM (self));
+    port = mm_broadband_modem_mbim_peek_port_mbim (MM_BROADBAND_MODEM_MBIM (self));
     if (port) {
         model = g_strdup (mm_kernel_device_get_physdev_product (
             mm_port_peek_kernel_device (MM_PORT (port))));
@@ -677,15 +814,19 @@ modem_load_device_identifier (MMIfaceModem *self,
                               GAsyncReadyCallback callback,
                               gpointer user_data)
 {
-    gchar *device_identifier;
-    GTask *task;
+    gchar  *device_identifier;
+    GTask  *task;
+    GError *error = NULL;
+
+    task = g_task_new (self, NULL, callback, user_data);
 
     /* Just use dummy ATI/ATI1 replies, all the other internal info should be
      * enough for uniqueness */
-    device_identifier = mm_broadband_modem_create_device_identifier (MM_BROADBAND_MODEM (self), "", "");
-
-    task = g_task_new (self, NULL, callback, user_data);
-    g_task_return_pointer (task, device_identifier, g_free);
+    device_identifier = mm_broadband_modem_create_device_identifier (MM_BROADBAND_MODEM (self), "", "", &error);
+    if (!device_identifier)
+        g_task_return_error (task, error);
+    else
+        g_task_return_pointer (task, device_identifier, g_free);
     g_object_unref (task);
 }
 
@@ -1356,36 +1497,6 @@ modem_load_power_state (MMIfaceModem *self,
 /*****************************************************************************/
 /* Power up (Modem interface) */
 
-typedef enum {
-    POWER_UP_CONTEXT_STEP_FIRST,
-#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-    POWER_UP_CONTEXT_STEP_FCC_AUTH,
-    POWER_UP_CONTEXT_STEP_RETRY,
-#endif
-    POWER_UP_CONTEXT_STEP_LAST,
-} PowerUpContextStep;
-
-typedef struct {
-    MbimDevice         *device;
-    PowerUpContextStep  step;
-#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-    QmiClient          *qmi_client_dms;
-    GError             *saved_error;
-#endif
-} PowerUpContext;
-
-static void
-power_up_context_free (PowerUpContext *ctx)
-{
-#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-    g_clear_object (&ctx->qmi_client_dms);
-    if (ctx->saved_error)
-        g_error_free (ctx->saved_error);
-#endif
-    g_object_unref (ctx->device);
-    g_slice_free (PowerUpContext, ctx);
-}
-
 static gboolean
 power_up_finish (MMIfaceModem  *self,
                  GAsyncResult  *res,
@@ -1394,72 +1505,18 @@ power_up_finish (MMIfaceModem  *self,
     return g_task_propagate_boolean (G_TASK (res), error);
 }
 
-static void power_up_context_step (GTask *task);
-
-#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-
 static void
-set_fcc_authentication_ready (QmiClientDms *qmi_client_dms,
-                              GAsyncResult *res,
-                              GTask        *task)
+radio_state_set_up_ready (MbimDevice   *device,
+                          GAsyncResult *res,
+                          GTask        *task)
 {
-    MMBroadbandModemMbim                    *self;
-    PowerUpContext                          *ctx;
-    QmiMessageDmsSetFccAuthenticationOutput *output;
-    GError                                  *error = NULL;
+    MMBroadbandModemMbim   *self;
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    MbimRadioSwitchState    hardware_radio_state;
+    MbimRadioSwitchState    software_radio_state;
 
     self = g_task_get_source_object (task);
-    ctx = g_task_get_task_data (task);
-
-    output = qmi_client_dms_set_fcc_authentication_finish (qmi_client_dms, res, &error);
-    if (!output || !qmi_message_dms_set_fcc_authentication_output_get_result (output, &error)) {
-        mm_obj_dbg (self, "couldn't set FCC auth: %s", error->message);
-        g_error_free (error);
-        g_assert (ctx->saved_error);
-        g_task_return_error (task, ctx->saved_error);
-        ctx->saved_error = NULL;
-        g_object_unref (task);
-        goto out;
-    }
-
-    ctx->step++;
-    power_up_context_step (task);
-
-out:
-    if (output)
-        qmi_message_dms_set_fcc_authentication_output_unref (output);
-}
-
-static void
-set_radio_state_fcc_auth (GTask *task)
-{
-    PowerUpContext *ctx;
-
-    ctx = g_task_get_task_data (task);
-    g_assert (ctx->qmi_client_dms);
-
-    qmi_client_dms_set_fcc_authentication (QMI_CLIENT_DMS (ctx->qmi_client_dms),
-                                           NULL,
-                                           10,
-                                           NULL, /* cancellable */
-                                           (GAsyncReadyCallback)set_fcc_authentication_ready,
-                                           task);
-}
-
-#endif
-
-static void
-radio_state_set_up_ready (MbimDevice *device,
-                          GAsyncResult *res,
-                          GTask *task)
-{
-    PowerUpContext *ctx;
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimRadioSwitchState hardware_radio_state;
-    MbimRadioSwitchState software_radio_state;
-
-    ctx = g_task_get_task_data (task);
 
     response = mbim_device_command_finish (device, res, &error);
     if (response &&
@@ -1470,96 +1527,26 @@ radio_state_set_up_ready (MbimDevice *device,
             &software_radio_state,
             &error)) {
         if (hardware_radio_state == MBIM_RADIO_SWITCH_STATE_OFF)
-            error = g_error_new (MM_CORE_ERROR,
-                                 MM_CORE_ERROR_FAILED,
+            error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
                                  "Cannot power-up: hardware radio switch is OFF");
         else if (software_radio_state == MBIM_RADIO_SWITCH_STATE_OFF)
-            error = g_error_new (MM_CORE_ERROR,
-                                 MM_CORE_ERROR_FAILED,
+            error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
                                  "Cannot power-up: sotware radio switch is OFF");
     }
 
-    if (response)
-        mbim_message_unref (response);
-
     /* Nice! we're done, quick exit */
     if (!error) {
-        ctx->step = POWER_UP_CONTEXT_STEP_LAST;
-        power_up_context_step (task);
-        return;
-    }
-
-#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-    /* Only the first attempt isn't fatal, if we have a QMI DMS client */
-    if ((ctx->step == POWER_UP_CONTEXT_STEP_FIRST) && ctx->qmi_client_dms) {
-        MMBroadbandModemMbim *self;
-
-        /* Warn and keep, will retry */
-        self = g_task_get_source_object (task);
-        mm_obj_warn (self, "%s", error->message);
-        g_assert (!ctx->saved_error);
-        ctx->saved_error = error;
-        ctx->step++;
-        power_up_context_step (task);
-        return;
-    }
-#endif
-
-    /* Fatal */
-    g_task_return_error (task, error);
-    g_object_unref (task);
-}
-
-static void
-set_radio_state_up (GTask *task)
-{
-    PowerUpContext *ctx;
-    MbimMessage *message;
-
-    ctx = g_task_get_task_data (task);
-    message = mbim_message_radio_state_set_new (MBIM_RADIO_SWITCH_STATE_ON, NULL);
-    mbim_device_command (ctx->device,
-                         message,
-                         20,
-                         NULL,
-                         (GAsyncReadyCallback)radio_state_set_up_ready,
-                         task);
-    mbim_message_unref (message);
-}
-
-static void
-power_up_context_step (GTask *task)
-{
-    PowerUpContext *ctx;
-
-    ctx = g_task_get_task_data (task);
-
-    switch (ctx->step) {
-    case POWER_UP_CONTEXT_STEP_FIRST:
-        set_radio_state_up (task);
-        return;
-
-#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-
-    case POWER_UP_CONTEXT_STEP_FCC_AUTH:
-        set_radio_state_fcc_auth (task);
-        return;
-
-    case POWER_UP_CONTEXT_STEP_RETRY:
-        set_radio_state_up (task);
-        return;
-
-#endif
-
-    case POWER_UP_CONTEXT_STEP_LAST:
-        /* Good! */
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
-
-    default:
-        g_assert_not_reached ();
     }
+
+    /* The SDX55 returns "Operation not allowed", but not really sure about other
+     * older devices. The original logic in the MBIM implemetation triggered a retry
+     * for any kind of error, so let's do the same for now. */
+    mm_obj_warn (self, "%s", error->message);
+    g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_RETRY, "Invalid transition");
+    g_object_unref (task);
 }
 
 static void
@@ -1567,30 +1554,22 @@ modem_power_up (MMIfaceModem        *self,
                 GAsyncReadyCallback  callback,
                 gpointer             user_data)
 {
-    PowerUpContext *ctx;
-    MbimDevice     *device;
-    GTask          *task;
+    MbimDevice             *device;
+    GTask                  *task;
+    g_autoptr(MbimMessage)  message = NULL;
 
     if (!peek_device (self, &device, callback, user_data))
         return;
 
-    ctx = g_slice_new0 (PowerUpContext);
-    ctx->device = g_object_ref (device);
-    ctx->step = POWER_UP_CONTEXT_STEP_FIRST;
-
-#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-    ctx->qmi_client_dms = mm_shared_qmi_peek_client (MM_SHARED_QMI (self),
-                                                     QMI_SERVICE_DMS,
-                                                     MM_PORT_QMI_FLAG_DEFAULT,
-                                                     NULL);
-    if (ctx->qmi_client_dms)
-        g_object_ref (ctx->qmi_client_dms);
-#endif
-
     task = g_task_new (self, NULL, callback, user_data);
-    g_task_set_task_data (task, ctx, (GDestroyNotify)power_up_context_free);
 
-    power_up_context_step (task);
+    message = mbim_message_radio_state_set_new (MBIM_RADIO_SWITCH_STATE_ON, NULL);
+    mbim_device_command (device,
+                         message,
+                         20,
+                         NULL,
+                         (GAsyncReadyCallback)radio_state_set_up_ready,
+                         task);
 }
 
 /*****************************************************************************/
@@ -2305,9 +2284,12 @@ initialization_started (MMBroadbandModem    *self,
 {
     InitializationStartedContext *ctx;
     GTask                        *task;
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+    gboolean                      qmi_unsupported = FALSE;
+#endif
 
     ctx = g_slice_new0 (InitializationStartedContext);
-    ctx->mbim = mm_base_modem_get_port_mbim (MM_BASE_MODEM (self));
+    ctx->mbim = mm_broadband_modem_mbim_get_port_mbim (MM_BROADBAND_MODEM_MBIM (self));
 
     task = g_task_new (self, NULL, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify)initialization_started_context_free);
@@ -2330,10 +2312,16 @@ initialization_started (MMBroadbandModem    *self,
         return;
     }
 
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+    g_object_get (self,
+                  MM_BROADBAND_MODEM_MBIM_QMI_UNSUPPORTED, &qmi_unsupported,
+                  NULL);
+#endif
+
     /* Now open our MBIM port */
     mm_port_mbim_open (ctx->mbim,
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-                       TRUE, /* With QMI over MBIM support if available */
+                       ! qmi_unsupported, /* With QMI over MBIM support if available */
 #endif
                        NULL,
                        (GAsyncReadyCallback)mbim_port_open_ready,
@@ -3270,7 +3258,7 @@ sms_notification_read_stored_sms (MMBroadbandModemMbim *self,
     MbimDevice *device;
     MbimMessage *message;
 
-    port = mm_base_modem_peek_port_mbim (MM_BASE_MODEM (self));
+    port = mm_broadband_modem_mbim_peek_port_mbim (self);
     if (!port)
         return;
     device = mm_port_mbim_peek_device (port);
@@ -3442,37 +3430,14 @@ device_notification_cb (MbimDevice *device,
                 mbim_cid_get_printable (service,
                                         mbim_message_indicate_status_get_cid (notification)));
 
-    switch (service) {
-    case MBIM_SERVICE_BASIC_CONNECT:
+    if (service == MBIM_SERVICE_BASIC_CONNECT)
         basic_connect_notification (self, notification);
-        break;
-    case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
+    else if (service == MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS)
         ms_basic_connect_extensions_notification (self, notification);
-        break;
-    case MBIM_SERVICE_SMS:
+    else if (service == MBIM_SERVICE_SMS)
         sms_notification (self, notification);
-        break;
-    case MBIM_SERVICE_USSD:
+    else if (service == MBIM_SERVICE_USSD)
         ussd_notification (self, notification);
-        break;
-    case MBIM_SERVICE_INVALID:
-    case MBIM_SERVICE_PHONEBOOK:
-    case MBIM_SERVICE_STK:
-    case MBIM_SERVICE_AUTH:
-    case MBIM_SERVICE_DSS:
-    case MBIM_SERVICE_MS_FIRMWARE_ID:
-    case MBIM_SERVICE_MS_HOST_SHUTDOWN:
-    case MBIM_SERVICE_PROXY_CONTROL:
-    case MBIM_SERVICE_QMI:
-    case MBIM_SERVICE_ATDS:
-    case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
-#if MBIM_CHECK_VERSION (1,25,1)
-    case MBIM_SERVICE_MS_SAR:
-#endif
-    default:
-        /* Ignore */
-        break;
-    }
 }
 
 static void
@@ -3557,16 +3522,9 @@ cleanup_unsolicited_events_3gpp (MMIfaceModem3gpp *_self,
                                  gpointer user_data)
 {
     MMBroadbandModemMbim *self = MM_BROADBAND_MODEM_MBIM (_self);
-    gboolean is_sim_hot_swap_configured = FALSE;
-
-    g_object_get (self,
-                  MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED, &is_sim_hot_swap_configured,
-                  NULL);
 
     self->priv->setup_flags &= ~PROCESS_NOTIFICATION_FLAG_SIGNAL_QUALITY;
     self->priv->setup_flags &= ~PROCESS_NOTIFICATION_FLAG_CONNECT;
-    if (is_sim_hot_swap_configured)
-        self->priv->setup_flags &= ~PROCESS_NOTIFICATION_FLAG_SUBSCRIBER_INFO;
     self->priv->setup_flags &= ~PROCESS_NOTIFICATION_FLAG_PACKET_SERVICE;
     if (self->priv->is_pco_supported)
         self->priv->setup_flags &= ~PROCESS_NOTIFICATION_FLAG_PCO;
@@ -3794,67 +3752,124 @@ modem_3gpp_enable_unsolicited_registration_events (MMIfaceModem3gpp *_self,
 /*****************************************************************************/
 /* Setup SIM hot swap */
 
+typedef struct {
+    MbimDevice *device;
+    GError     *subscriber_info_error;
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+    GError     *qmi_error;
+#endif
+} SetupSimHotSwapContext;
+
+static void
+setup_sim_hot_swap_context_free (SetupSimHotSwapContext *ctx)
+{
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+    g_clear_error (&ctx->qmi_error);
+#endif
+    g_clear_error (&ctx->subscriber_info_error);
+    g_clear_object (&ctx->device);
+    g_slice_free (SetupSimHotSwapContext, ctx);
+}
+
 static gboolean
-modem_setup_sim_hot_swap_finish (MMIfaceModem *self,
-                                 GAsyncResult *res,
-                                 GError **error)
+modem_setup_sim_hot_swap_finish (MMIfaceModem  *self,
+                                 GAsyncResult  *res,
+                                 GError       **error)
 {
     return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
-enable_subscriber_info_unsolicited_events_ready (MMBroadbandModemMbim *self,
-                                                 GAsyncResult *res,
-                                                 GTask *task)
+sim_hot_swap_complete (GTask *task)
 {
-    GError *error = NULL;
+    SetupSimHotSwapContext *ctx;
 
-    if (!common_enable_disable_unsolicited_events_finish (self, res, &error)) {
-        mm_obj_dbg (self, "failed to enable subscriber info events: %s", error->message);
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
+    ctx = g_task_get_task_data (task);
 
-    g_task_return_boolean (task, TRUE);
+    /* If MBIM based logic worked, success */
+    if (!ctx->subscriber_info_error)
+        g_task_return_boolean (task, TRUE);
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+    /* Otherwise, If QMI-over-MBIM based logic worked, success */
+    else if (!ctx->qmi_error)
+        g_task_return_boolean (task, TRUE);
+#endif
+    /* Otherwise, prefer MBIM specific error */
+    else
+        g_task_return_error (task, g_steal_pointer (&ctx->subscriber_info_error));
     g_object_unref (task);
 }
 
-static void
-setup_subscriber_info_unsolicited_events_ready (MMBroadbandModemMbim *self,
-                                                GAsyncResult *res,
-                                                GTask *task)
-{
-    GError *error = NULL;
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
 
-    if (!common_setup_cleanup_unsolicited_events_finish (self, res, &error)) {
-        mm_obj_dbg (self, "failed to set up subscriber info events: %s", error->message);
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
+static void
+qmi_setup_sim_hot_swap_ready (MMIfaceModem *self,
+                              GAsyncResult *res,
+                              GTask        *task)
+{
+    SetupSimHotSwapContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+    if (!mm_shared_qmi_setup_sim_hot_swap_finish (self, res, &ctx->qmi_error))
+        mm_obj_dbg (self, "couldn't setup SIM hot swap using QMI over MBIM: %s", ctx->qmi_error->message);
+
+    sim_hot_swap_complete (task);
+}
+
+#endif
+
+static void
+enable_subscriber_info_unsolicited_events_ready (MMBroadbandModemMbim *self,
+                                                 GAsyncResult         *res,
+                                                 GTask                *task)
+{
+    SetupSimHotSwapContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    if (!common_enable_disable_unsolicited_events_finish (self, res, &ctx->subscriber_info_error)) {
+        mm_obj_dbg (self, "failed to enable subscriber info events: %s", ctx->subscriber_info_error->message);
+        /* reset setup flags if enabling failed */
+        self->priv->setup_flags &= ~PROCESS_NOTIFICATION_FLAG_SUBSCRIBER_INFO;
+        common_setup_cleanup_unsolicited_events_sync (self, ctx->device, FALSE);
     }
 
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+    mm_shared_qmi_setup_sim_hot_swap (MM_IFACE_MODEM (self),
+                                      (GAsyncReadyCallback)qmi_setup_sim_hot_swap_ready,
+                                      task);
+#else
+    sim_hot_swap_complete (task);
+#endif
+}
+
+static void
+modem_setup_sim_hot_swap (MMIfaceModem        *_self,
+                          GAsyncReadyCallback  callback,
+                          gpointer             user_data)
+{
+    MMBroadbandModemMbim   *self = MM_BROADBAND_MODEM_MBIM (_self);
+    MbimDevice             *device;
+    GTask                  *task;
+    SetupSimHotSwapContext *ctx;
+
+    if (!peek_device (self, &device, callback, user_data))
+        return;
+
+    task = g_task_new (self, NULL, callback, user_data);
+    ctx = g_slice_new0 (SetupSimHotSwapContext);
+    ctx->device = g_object_ref (device);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)setup_sim_hot_swap_context_free);
+
+    /* Setup flags synchronously, which never fails */
+    self->priv->setup_flags |= PROCESS_NOTIFICATION_FLAG_SUBSCRIBER_INFO;
+    common_setup_cleanup_unsolicited_events_sync (self, ctx->device, TRUE);
+
+    /* Enable flags asynchronously, which may fail */
     self->priv->enable_flags |= PROCESS_NOTIFICATION_FLAG_SUBSCRIBER_INFO;
     common_enable_disable_unsolicited_events (self,
                                               (GAsyncReadyCallback)enable_subscriber_info_unsolicited_events_ready,
                                               task);
-}
-
-static void
-modem_setup_sim_hot_swap (MMIfaceModem *_self,
-                          GAsyncReadyCallback callback,
-                          gpointer user_data)
-{
-    MMBroadbandModemMbim *self = MM_BROADBAND_MODEM_MBIM (_self);
-    GTask *task;
-
-    task = g_task_new (self, NULL, callback, user_data);
-
-    self->priv->setup_flags |= PROCESS_NOTIFICATION_FLAG_SUBSCRIBER_INFO;
-    common_setup_cleanup_unsolicited_events (self,
-                                             TRUE,
-                                             (GAsyncReadyCallback)setup_subscriber_info_unsolicited_events_ready,
-                                             task);
 }
 
 /*****************************************************************************/
@@ -4345,6 +4360,7 @@ typedef struct {
     MMSignal *gsm;
     MMSignal *umts;
     MMSignal *lte;
+    MMSignal *nr5g;
 } SignalLoadValuesResult;
 
 static void
@@ -4353,6 +4369,7 @@ signal_load_values_result_free (SignalLoadValuesResult *result)
     g_clear_object (&result->gsm);
     g_clear_object (&result->umts);
     g_clear_object (&result->lte);
+    g_clear_object (&result->nr5g);
     g_slice_free (SignalLoadValuesResult, result);
 }
 
@@ -4364,6 +4381,7 @@ modem_signal_load_values_finish (MMIfaceModemSignal  *self,
                                  MMSignal           **gsm,
                                  MMSignal           **umts,
                                  MMSignal           **lte,
+                                 MMSignal           **nr5g,
                                  GError             **error)
 {
     SignalLoadValuesResult *result;
@@ -4378,6 +4396,8 @@ modem_signal_load_values_finish (MMIfaceModemSignal  *self,
         *umts = g_steal_pointer (&result->umts);
     if (lte)
         *lte = g_steal_pointer (&result->lte);
+    if (nr5g)
+        *nr5g = g_steal_pointer (&result->nr5g);
 
     signal_load_values_result_free (result);
 
@@ -4484,7 +4504,7 @@ parent_signal_load_values_ready (MMIfaceModemSignal *self,
     result = g_slice_new0 (SignalLoadValuesResult);
     if (!iface_modem_signal_parent->load_values_finish (self, res,
                                                         NULL, NULL,
-                                                        &result->gsm, &result->umts, &result->lte,
+                                                        &result->gsm, &result->umts, &result->lte, &result->nr5g,
                                                         &error)) {
         signal_load_values_result_free (result);
         g_task_return_error (task, error);
@@ -4570,30 +4590,23 @@ ussd_encode (const gchar  *command,
     g_autoptr(GByteArray) array = NULL;
 
     if (mm_charset_can_convert_to (command, MM_MODEM_CHARSET_GSM)) {
-        guint8  *gsm;
-        guint8  *packed;
-        guint32  len = 0;
-        guint32  packed_len = 0;
+        g_autoptr(GByteArray)  gsm = NULL;
+        guint8                *packed;
+        guint32                packed_len = 0;
 
         *scheme = MM_MODEM_GSM_USSD_SCHEME_7BIT;
-        gsm = mm_charset_utf8_to_unpacked_gsm (command, &len);
+        gsm = mm_modem_charset_bytearray_from_utf8 (command, MM_MODEM_CHARSET_GSM, FALSE, error);
         if (!gsm) {
-            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
-                         "Failed to encode USSD command in GSM7 charset");
+            g_prefix_error (error, "Failed to encode USSD command in GSM7 charset: ");
             return NULL;
         }
-        packed = mm_charset_gsm_pack (gsm, len, 0, &packed_len);
-        g_free (gsm);
-
+        packed = mm_charset_gsm_pack (gsm->data, gsm->len, 0, &packed_len);
         array = g_byte_array_new_take (packed, packed_len);
     } else {
-        g_autoptr(GError) inner_error = NULL;
-
         *scheme = MM_MODEM_GSM_USSD_SCHEME_UCS2;
-        array = g_byte_array_sized_new (strlen (command) * 2);
-        if (!mm_modem_charset_byte_array_append (array, command, FALSE, MM_MODEM_CHARSET_UCS2, &inner_error)) {
-            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
-                         "Failed to encode USSD command in UCS2 charset: %s", inner_error->message);
+        array = mm_modem_charset_bytearray_from_utf8 (command, MM_MODEM_CHARSET_UCS2, FALSE, error);
+        if (!array) {
+            g_prefix_error (error, "Failed to encode USSD command in UCS2 charset: ");
             return NULL;
         }
     }
@@ -4615,21 +4628,20 @@ ussd_decode (guint32      scheme,
     gchar *decoded = NULL;
 
     if (scheme == MM_MODEM_GSM_USSD_SCHEME_7BIT) {
-        g_autofree guint8  *unpacked = NULL;
-        guint32             unpacked_len;
+        g_autoptr(GByteArray)  unpacked_array = NULL;
+        guint8                *unpacked = NULL;
+        guint32                unpacked_len;
 
         unpacked = mm_charset_gsm_unpack ((const guint8 *)data->data, (data->len * 8) / 7, 0, &unpacked_len);
-        decoded = (gchar *) mm_charset_gsm_unpacked_to_utf8 (unpacked, unpacked_len);
+        unpacked_array = g_byte_array_new_take (unpacked, unpacked_len);
+
+        decoded = mm_modem_charset_bytearray_to_utf8 (unpacked_array, MM_MODEM_CHARSET_GSM, FALSE, error);
         if (!decoded)
-            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
-                         "Error decoding USSD command in 0x%04x scheme (GSM7 charset)",
-                         scheme);
+            g_prefix_error (error, "Error decoding USSD command in 0x%04x scheme (GSM7 charset): ", scheme);
     } else if (scheme == MM_MODEM_GSM_USSD_SCHEME_UCS2) {
-        decoded = mm_modem_charset_byte_array_to_utf8 (data, MM_MODEM_CHARSET_UCS2);
+        decoded = mm_modem_charset_bytearray_to_utf8 (data, MM_MODEM_CHARSET_UCS2, FALSE, error);
         if (!decoded)
-            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
-                         "Error decoding USSD command in 0x%04x scheme (UCS2 charset)",
-                         scheme);
+            g_prefix_error (error, "Error decoding USSD command in 0x%04x scheme (UCS2 charset): ", scheme);
     } else
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
                      "Failed to decode USSD command in unsupported 0x%04x scheme", scheme);
@@ -5168,6 +5180,7 @@ add_sms_part (MMBroadbandModemMbim *self,
                                                  pdu->pdu_data,
                                                  pdu->pdu_data_size,
                                                  self,
+                                                 FALSE,
                                                  &error);
     if (part) {
         mm_obj_dbg (self, "correctly parsed PDU (%d)", pdu->message_index);
@@ -5330,6 +5343,44 @@ messaging_create_sms (MMIfaceModemMessaging *self)
 
 /*****************************************************************************/
 
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+static void
+set_property (GObject *object,
+              guint prop_id,
+              const GValue *value,
+              GParamSpec *pspec)
+{
+    MMBroadbandModemMbim *self = MM_BROADBAND_MODEM_MBIM (object);
+
+    switch (prop_id) {
+   case PROP_QMI_UNSUPPORTED:
+        self->priv->qmi_unsupported = g_value_get_boolean (value);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+get_property (GObject *object,
+              guint prop_id,
+              GValue *value,
+              GParamSpec *pspec)
+{
+    MMBroadbandModemMbim *self = MM_BROADBAND_MODEM_MBIM (object);
+
+    switch (prop_id) {
+    case PROP_QMI_UNSUPPORTED:
+        g_value_set_boolean (value, self->priv->qmi_unsupported);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+#endif
+
 MMBroadbandModemMbim *
 mm_broadband_modem_mbim_new (const gchar *device,
                              const gchar **drivers,
@@ -5367,7 +5418,7 @@ dispose (GObject *object)
     /* If any port cleanup is needed, it must be done during dispose(), as
      * the modem object will be affected by an explciit g_object_run_dispose()
      * that will remove all port references right away */
-    mbim = mm_base_modem_peek_port_mbim (MM_BASE_MODEM (self));
+    mbim = mm_broadband_modem_mbim_peek_port_mbim (self);
     if (mbim) {
         /* Explicitly remove notification handler */
         self->priv->setup_flags = PROCESS_NOTIFICATION_FLAG_NONE;
@@ -5387,6 +5438,7 @@ finalize (GObject *object)
 {
     MMBroadbandModemMbim *self = MM_BROADBAND_MODEM_MBIM (object);
 
+    g_free (self->priv->caps_custom_data_class);
     g_free (self->priv->caps_device_id);
     g_free (self->priv->caps_firmware_info);
     g_free (self->priv->caps_hardware_info);
@@ -5453,6 +5505,8 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_current_bands_finish = mm_shared_qmi_load_current_bands_finish;
     iface->set_current_bands = mm_shared_qmi_set_current_bands;
     iface->set_current_bands_finish = mm_shared_qmi_set_current_bands_finish;
+    iface->fcc_unlock = mm_shared_qmi_fcc_unlock;
+    iface->fcc_unlock_finish = mm_shared_qmi_fcc_unlock_finish;
 #endif
 
     /* Additional actions */
@@ -5474,6 +5528,12 @@ iface_modem_init (MMIfaceModem *iface)
     /* Create MBIM-specific SIM */
     iface->create_sim = create_sim;
     iface->create_sim_finish = create_sim_finish;
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+    iface->load_sim_slots = mm_shared_qmi_load_sim_slots;
+    iface->load_sim_slots_finish = mm_shared_qmi_load_sim_slots_finish;
+    iface->set_primary_sim_slot = mm_shared_qmi_set_primary_sim_slot;
+    iface->set_primary_sim_slot_finish = mm_shared_qmi_set_primary_sim_slot_finish;
+#endif
 
     /* Create MBIM-specific bearer */
     iface->create_bearer = modem_create_bearer;
@@ -5651,6 +5711,12 @@ mm_broadband_modem_mbim_class_init (MMBroadbandModemMbimClass *klass)
 
     g_type_class_add_private (object_class, sizeof (MMBroadbandModemMbimPrivate));
 
+    klass->peek_port_mbim_for_data = peek_port_mbim_for_data;
+
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+    object_class->set_property = set_property;
+    object_class->get_property = get_property;
+#endif
     object_class->dispose = dispose;
     object_class->finalize = finalize;
 
@@ -5661,4 +5727,13 @@ mm_broadband_modem_mbim_class_init (MMBroadbandModemMbimClass *klass)
     /* Do not initialize the MBIM modem through AT commands */
     broadband_modem_class->enabling_modem_init = NULL;
     broadband_modem_class->enabling_modem_init_finish = NULL;
+
+#if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
+    g_object_class_install_property (object_class, PROP_QMI_UNSUPPORTED,
+        g_param_spec_boolean (MM_BROADBAND_MODEM_MBIM_QMI_UNSUPPORTED,
+                              "QMI over MBIM unsupported",
+                              "TRUE when QMI over MBIM should not be considered.",
+                              FALSE,
+                              G_PARAM_READWRITE));
+#endif
 }

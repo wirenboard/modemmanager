@@ -857,30 +857,11 @@ modem_3gpp_cleanup_unsolicited_events (MMIfaceModem3gpp *self,
 /*****************************************************************************/
 /* Enabling unsolicited events (3GPP interface) */
 
-static gboolean
-response_processor_no_result_stop_on_error (MMBaseModem *self,
-                                            gpointer none,
-                                            const gchar *command,
-                                            const gchar *response,
-                                            gboolean last_command,
-                                            const GError *error,
-                                            GVariant **result,
-                                            GError **result_error)
-{
-    if (error) {
-        *result_error = g_error_copy (error);
-        return TRUE;
-    }
-
-    *result = NULL;
-    return FALSE;
-}
-
 static const MMBaseModemAtCommand unsolicited_events_enable_sequence[] = {
-  { "%STATCM=1", 10, FALSE, response_processor_no_result_stop_on_error },
-  { "%NOTIFYEV=\"SIMREFRESH\",1", 10, FALSE, NULL },
-  { "%PCOINFO=1", 10, FALSE, NULL },
-  { NULL }
+    { "%STATCM=1",                  10, FALSE, mm_base_modem_response_processor_no_result_continue },
+    { "%NOTIFYEV=\"SIMREFRESH\",1", 10, FALSE, NULL },
+    { "%PCOINFO=1",                 10, FALSE, NULL },
+    { NULL }
 };
 
 static gboolean
@@ -1086,7 +1067,7 @@ modem_3gpp_load_operator_name_finish (MMIfaceModem3gpp *self,
                                            error))
         return NULL;
 
-    mm_3gpp_normalize_operator (&operator_name, MM_MODEM_CHARSET_UNKNOWN);
+    mm_3gpp_normalize_operator (&operator_name, MM_MODEM_CHARSET_UNKNOWN, self);
     return operator_name;
 }
 
@@ -1124,9 +1105,13 @@ altair_pco_info_changed (MMPortSerialAt *port,
 
     pco_info = g_match_info_fetch (match_info, 0);
 
+    /* ignore if empty */
+    if (!pco_info || !pco_info[0])
+        return;
+
     mm_obj_dbg (self, "parsing vendor PCO info: %s", pco_info);
     pco = mm_altair_parse_vendor_pco_info (pco_info, &error);
-    if (error) {
+    if (!pco) {
         mm_obj_warn (self, "error parsing vendor PCO info: %s", error->message);
         return;
     }

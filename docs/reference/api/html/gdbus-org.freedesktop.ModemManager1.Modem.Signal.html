@@ -47,6 +47,7 @@
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Gsm" title='The "Gsm" property'>Gsm</a>   readable   a{sv}
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Umts" title='The "Umts" property'>Umts</a>  readable   a{sv}
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Lte" title='The "Lte" property'>Lte</a>   readable   a{sv}
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Nr5g" title='The "Nr5g" property'>Nr5g</a>  readable   a{sv}
 </pre>
 </div>
 <div class="refsect1">
@@ -299,6 +300,51 @@ Lte  readable   a{sv}
 <td><p><span class="term"><code class="literal">"snr"</code></span></p></td>
 <td><p>
               The LTE S/R ratio, in dB, given as
+              a floating point value (signature <code class="literal">"d"</code>).
+            </p></td>
+</tr>
+</tbody>
+</table></div>
+<p>
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Nr5g"></a><h3>The "Nr5g" property</h3>
+<pre class="programlisting">
+Nr5g  readable   a{sv}
+</pre>
+<p>        Dictionary of available signal information for the 5G access
+        technology.
+</p>
+<p>        This dictionary is composed of a string key, with an associated data
+        which contains type-specific information.
+</p>
+<p>        </p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><code class="literal">"rsrq"</code></span></p></td>
+<td><p>
+              The 5G RSRQ (Reference Signal Received Quality), in dB, given as
+              a floating point value (signature <code class="literal">"d"</code>).
+            </p></td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">"rsrp"</code></span></p></td>
+<td><p>
+              The 5G (Reference Signal Received Power), in dBm, given as
+              a floating point value (signature <code class="literal">"d"</code>).
+            </p></td>
+</tr>
+<tr>
+<td><p><span class="term"><code class="literal">"snr"</code></span></p></td>
+<td><p>
+              The 5G S/R ratio, in dB, given as
               a floating point value (signature <code class="literal">"d"</code>).
             </p></td>
 </tr>

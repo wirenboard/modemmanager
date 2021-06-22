@@ -410,7 +410,7 @@ activate_ready (MMBaseModem          *modem,
      * Reports of modem being connected will arrive via unsolicited messages.
      * This timeout should be long enough. Actually... ideally should never get
      * reached. */
-    self->priv->connect_pending_id = g_timeout_add_seconds (60,
+    self->priv->connect_pending_id = g_timeout_add_seconds (MM_BASE_BEARER_DEFAULT_CONNECTION_TIMEOUT,
                                                             (GSourceFunc)connect_timed_out_cb,
                                                             self);
 
@@ -526,14 +526,14 @@ authenticate (GTask *task)
         guint  hso_auth;
 
         if (allowed_auth == MM_BEARER_ALLOWED_AUTH_UNKNOWN) {
-            mm_obj_dbg (self, "using default (PAP) authentication method");
-            hso_auth = 1;
-        } else if (allowed_auth & MM_BEARER_ALLOWED_AUTH_PAP) {
-            mm_obj_dbg (self, "using PAP authentication method");
-            hso_auth = 1;
+            mm_obj_dbg (self, "using default (CHAP) authentication method");
+            hso_auth = 2;
         } else if (allowed_auth & MM_BEARER_ALLOWED_AUTH_CHAP) {
             mm_obj_dbg (self, "using CHAP authentication method");
             hso_auth = 2;
+        } else if (allowed_auth & MM_BEARER_ALLOWED_AUTH_PAP) {
+            mm_obj_dbg (self, "using PAP authentication method");
+            hso_auth = 1;
         } else {
             gchar *str;
 
@@ -686,7 +686,7 @@ disconnect_3gpp (MMBroadbandBearer *self,
     mm_base_modem_at_command_full (MM_BASE_MODEM (modem),
                                    primary,
                                    command,
-                                   3,
+                                   MM_BASE_BEARER_DEFAULT_DISCONNECTION_TIMEOUT,
                                    FALSE,
                                    FALSE, /* raw */
                                    NULL, /* cancellable */

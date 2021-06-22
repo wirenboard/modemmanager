@@ -93,6 +93,14 @@
 </tr>
 <tr>
 <td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-QMI:CAPS" title="ID_MM_PORT_TYPE_QMI">ID_MM_PORT_TYPE_QMI</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-MBIM:CAPS" title="ID_MM_PORT_TYPE_MBIM">ID_MM_PORT_TYPE_MBIM</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
 <td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-TTY-BAUDRATE:CAPS" title="ID_MM_TTY_BAUDRATE">ID_MM_TTY_BAUDRATE</a></td>
 </tr>
 <tr>
@@ -265,6 +273,30 @@ are QCDM ports.</p>
 are audio ports.</p>
 <p>This tag also prevents AT and QCDM probing in the port.</p>
 <p class="since">Since: <a class="link" href="api-index-1-12.html#api-index-1.12">1.12</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="ID-MM-PORT-TYPE-QMI:CAPS"></a><h3>ID_MM_PORT_TYPE_QMI</h3>
+<pre class="programlisting">#define ID_MM_PORT_TYPE_QMI "ID_MM_PORT_TYPE_QMI"
+</pre>
+<p>This is a port-specific tag applied to generic ports that we know in advance
+are QMI ports.</p>
+<p>This tag will also prevent other types of probing (e.g. AT, MBIM) on the
+port.</p>
+<p>This tag is not required for QMI ports exposed by the qmi_wwan driver.</p>
+<p class="since">Since: <a class="link" href="api-index-1-16.html#api-index-1.16">1.16</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="ID-MM-PORT-TYPE-MBIM:CAPS"></a><h3>ID_MM_PORT_TYPE_MBIM</h3>
+<pre class="programlisting">#define ID_MM_PORT_TYPE_MBIM "ID_MM_PORT_TYPE_MBIM"
+</pre>
+<p>This is a port-specific tag applied to generic ports that we know in advance
+are MBIM ports.</p>
+<p>This tag will also prevent other types of probing (e.g. AT, QMI) on the
+port.</p>
+<p>This tag is not required for MBIM ports exposed by the cdc_mbim driver.</p>
+<p class="since">Since: <a class="link" href="api-index-1-16.html#api-index-1.16">1.16</a></p>
 </div>
 <hr>
 <div class="refsect2">

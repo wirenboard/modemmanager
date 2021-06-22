@@ -16,6 +16,9 @@
 #include <config.h>
 #include <string.h>
 
+#define _LIBMM_INSIDE_MM
+#include <libmm-glib.h>
+
 #include "mm-kernel-device.h"
 #include "mm-log-object.h"
 
@@ -29,8 +32,6 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (MMKernelDevice, mm_kernel_device, G_TYPE_OBJEC
 const gchar *
 mm_kernel_device_get_subsystem (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_subsystem ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_subsystem (self) :
             NULL);
@@ -39,8 +40,6 @@ mm_kernel_device_get_subsystem (MMKernelDevice *self)
 const gchar *
 mm_kernel_device_get_name (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_name ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_name (self) :
             NULL);
@@ -49,8 +48,6 @@ mm_kernel_device_get_name (MMKernelDevice *self)
 const gchar *
 mm_kernel_device_get_driver (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_driver ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_driver (self) :
             NULL);
@@ -59,8 +56,6 @@ mm_kernel_device_get_driver (MMKernelDevice *self)
 const gchar *
 mm_kernel_device_get_sysfs_path (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_sysfs_path ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_sysfs_path (self) :
             NULL);
@@ -69,8 +64,6 @@ mm_kernel_device_get_sysfs_path (MMKernelDevice *self)
 const gchar *
 mm_kernel_device_get_physdev_uid (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_uid ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_uid (self) :
             NULL);
@@ -79,8 +72,6 @@ mm_kernel_device_get_physdev_uid (MMKernelDevice *self)
 guint16
 mm_kernel_device_get_physdev_vid (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), 0);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_vid ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_vid (self) :
             0);
@@ -89,8 +80,6 @@ mm_kernel_device_get_physdev_vid (MMKernelDevice *self)
 guint16
 mm_kernel_device_get_physdev_pid (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), 0);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_pid ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_pid (self) :
             0);
@@ -99,8 +88,6 @@ mm_kernel_device_get_physdev_pid (MMKernelDevice *self)
 guint16
 mm_kernel_device_get_physdev_revision (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), 0);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_revision ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_revision (self) :
             0);
@@ -109,8 +96,6 @@ mm_kernel_device_get_physdev_revision (MMKernelDevice *self)
 const gchar *
 mm_kernel_device_get_physdev_subsystem (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_subsystem ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_subsystem (self) :
             NULL);
@@ -119,8 +104,6 @@ mm_kernel_device_get_physdev_subsystem (MMKernelDevice *self)
 const gchar *
 mm_kernel_device_get_physdev_sysfs_path (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_sysfs_path ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_sysfs_path (self) :
             NULL);
@@ -129,8 +112,6 @@ mm_kernel_device_get_physdev_sysfs_path (MMKernelDevice *self)
 const gchar *
 mm_kernel_device_get_physdev_manufacturer (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_manufacturer ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_manufacturer (self) :
             NULL);
@@ -139,8 +120,6 @@ mm_kernel_device_get_physdev_manufacturer (MMKernelDevice *self)
 const gchar *
 mm_kernel_device_get_physdev_product (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_product ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_physdev_product (self) :
             NULL);
@@ -149,8 +128,6 @@ mm_kernel_device_get_physdev_product (MMKernelDevice *self)
 gint
 mm_kernel_device_get_interface_class (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), -1);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_interface_class ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_interface_class (self) :
             -1);
@@ -159,8 +136,6 @@ mm_kernel_device_get_interface_class (MMKernelDevice *self)
 gint
 mm_kernel_device_get_interface_subclass (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), -1);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_interface_subclass ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_interface_subclass (self) :
             -1);
@@ -169,8 +144,6 @@ mm_kernel_device_get_interface_subclass (MMKernelDevice *self)
 gint
 mm_kernel_device_get_interface_protocol (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), -1);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_interface_protocol ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_interface_protocol (self) :
             -1);
@@ -179,8 +152,6 @@ mm_kernel_device_get_interface_protocol (MMKernelDevice *self)
 const gchar *
 mm_kernel_device_get_interface_sysfs_path (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_interface_sysfs_path ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_interface_sysfs_path (self) :
             NULL);
@@ -189,8 +160,6 @@ mm_kernel_device_get_interface_sysfs_path (MMKernelDevice *self)
 const gchar *
 mm_kernel_device_get_interface_description (MMKernelDevice *self)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_interface_description ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_interface_description (self) :
             NULL);
@@ -200,9 +169,6 @@ gboolean
 mm_kernel_device_cmp (MMKernelDevice *a,
                       MMKernelDevice *b)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (a), FALSE);
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (b), FALSE);
-
     if (G_OBJECT_TYPE (a) != G_OBJECT_TYPE (b))
         return FALSE;
 
@@ -215,8 +181,6 @@ gboolean
 mm_kernel_device_has_property (MMKernelDevice *self,
                                const gchar    *property)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), FALSE);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->has_property ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->has_property (self, property) :
             FALSE);
@@ -226,8 +190,6 @@ const gchar *
 mm_kernel_device_get_property (MMKernelDevice *self,
                                const gchar    *property)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_property ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_property (self, property) :
             NULL);
@@ -237,41 +199,38 @@ gboolean
 mm_kernel_device_get_property_as_boolean (MMKernelDevice *self,
                                           const gchar    *property)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), FALSE);
+    const gchar *value;
 
-    return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_property_as_boolean ?
-            MM_KERNEL_DEVICE_GET_CLASS (self)->get_property_as_boolean (self, property) :
-            FALSE);
+    value = mm_kernel_device_get_property (self, property);
+    return (value && mm_common_get_boolean_from_string (value, NULL));
 }
 
 gint
 mm_kernel_device_get_property_as_int (MMKernelDevice *self,
                                       const gchar    *property)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), -1);
+    const gchar *value;
+    gint         aux;
 
-    return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_property_as_int ?
-            MM_KERNEL_DEVICE_GET_CLASS (self)->get_property_as_int (self, property) :
-            -1);
+    value = mm_kernel_device_get_property (self, property);
+    return ((value && mm_get_int_from_str (value, &aux)) ? aux : 0);
 }
 
 guint
 mm_kernel_device_get_property_as_int_hex (MMKernelDevice *self,
                                           const gchar    *property)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), 0);
+    const gchar *value;
+    guint        aux;
 
-    return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_property_as_int_hex ?
-            MM_KERNEL_DEVICE_GET_CLASS (self)->get_property_as_int_hex (self, property) :
-            0);
+    value = mm_kernel_device_get_property (self, property);
+    return ((value && mm_get_uint_from_hex_str (value, &aux)) ? aux : 0);
 }
 
 gboolean
 mm_kernel_device_has_global_property (MMKernelDevice *self,
                                       const gchar    *property)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), FALSE);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->has_global_property ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->has_global_property (self, property) :
             FALSE);
@@ -281,8 +240,6 @@ const gchar *
 mm_kernel_device_get_global_property (MMKernelDevice *self,
                                       const gchar    *property)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
-
     return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_global_property ?
             MM_KERNEL_DEVICE_GET_CLASS (self)->get_global_property (self, property) :
             NULL);
@@ -292,33 +249,86 @@ gboolean
 mm_kernel_device_get_global_property_as_boolean (MMKernelDevice *self,
                                                  const gchar    *property)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), FALSE);
+    const gchar *value;
 
-    return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_global_property_as_boolean ?
-            MM_KERNEL_DEVICE_GET_CLASS (self)->get_global_property_as_boolean (self, property) :
-            FALSE);
+    value = mm_kernel_device_get_global_property (self, property);
+    return (value && mm_common_get_boolean_from_string (value, NULL));
 }
 
 gint
 mm_kernel_device_get_global_property_as_int (MMKernelDevice *self,
                                              const gchar    *property)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), -1);
+    const gchar *value;
+    gint         aux;
 
-    return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_global_property_as_int ?
-            MM_KERNEL_DEVICE_GET_CLASS (self)->get_global_property_as_int (self, property) :
-            -1);
+    value = mm_kernel_device_get_global_property (self, property);
+    return ((value && mm_get_int_from_str (value, &aux)) ? aux : 0);
 }
 
 guint
 mm_kernel_device_get_global_property_as_int_hex (MMKernelDevice *self,
                                                  const gchar    *property)
 {
-    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), 0);
+    const gchar *value;
+    guint        aux;
 
-    return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_global_property_as_int_hex ?
-            MM_KERNEL_DEVICE_GET_CLASS (self)->get_global_property_as_int_hex (self, property) :
-            0);
+    value = mm_kernel_device_get_global_property (self, property);
+    return ((value && mm_get_uint_from_hex_str (value, &aux)) ? aux : 0);
+}
+
+gboolean
+mm_kernel_device_has_attribute (MMKernelDevice *self,
+                                const gchar    *attribute)
+{
+    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), FALSE);
+
+    return (MM_KERNEL_DEVICE_GET_CLASS (self)->has_attribute ?
+            MM_KERNEL_DEVICE_GET_CLASS (self)->has_attribute (self, attribute) :
+            FALSE);
+}
+
+const gchar *
+mm_kernel_device_get_attribute (MMKernelDevice *self,
+                                const gchar    *attribute)
+{
+    g_return_val_if_fail (MM_IS_KERNEL_DEVICE (self), NULL);
+
+    return (MM_KERNEL_DEVICE_GET_CLASS (self)->get_attribute ?
+            MM_KERNEL_DEVICE_GET_CLASS (self)->get_attribute (self, attribute) :
+            NULL);
+}
+
+gboolean
+mm_kernel_device_get_attribute_as_boolean (MMKernelDevice *self,
+                                           const gchar    *attribute)
+{
+    const gchar *value;
+
+    value = mm_kernel_device_get_attribute (self, attribute);
+    return (value && mm_common_get_boolean_from_string (value, NULL));
+}
+
+gint
+mm_kernel_device_get_attribute_as_int (MMKernelDevice *self,
+                                       const gchar    *attribute)
+{
+    const gchar *value;
+    gint         aux;
+
+    value = mm_kernel_device_get_attribute (self, attribute);
+    return ((value && mm_get_int_from_str (value, &aux)) ? aux : 0);
+}
+
+guint
+mm_kernel_device_get_attribute_as_int_hex (MMKernelDevice *self,
+                                           const gchar    *attribute)
+{
+    const gchar *value;
+    guint        aux;
+
+    value = mm_kernel_device_get_attribute (self, attribute);
+    return ((value && mm_get_uint_from_hex_str (value, &aux)) ? aux : 0);
 }
 
 /*****************************************************************************/
