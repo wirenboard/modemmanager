@@ -146,6 +146,22 @@
 </tr>
 <tr>
 <td class="function_type">
+<a class="link" href="MMSignal.html" title="MMSignal"><span class="returnvalue">MMSignal</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMModemSignal.html#mm-modem-signal-peek-nr5g" title="mm_modem_signal_peek_nr5g ()">mm_modem_signal_peek_nr5g</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a class="link" href="MMSignal.html" title="MMSignal"><span class="returnvalue">MMSignal</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMModemSignal.html#mm-modem-signal-get-nr5g" title="mm_modem_signal_get_nr5g ()">mm_modem_signal_get_nr5g</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
 <span class="returnvalue">void</span>
 </td>
 <td class="function_name">
@@ -620,6 +636,72 @@ interface change. Instead, the client is expected to call
 <p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-2.html#api-index-1.2">1.2</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-signal-peek-nr5g"></a><h3>mm_modem_signal_peek_nr5g ()</h3>
+<pre class="programlisting"><a class="link" href="MMSignal.html" title="MMSignal"><span class="returnvalue">MMSignal</span></a> *
+mm_modem_signal_peek_nr5g (<em class="parameter"><code><a class="link" href="MMModemSignal.html" title="MMModemSignal"><span class="type">MMModemSignal</span></a> *self</code></em>);</pre>
+<p>Gets a <a class="link" href="MMSignal.html" title="MMSignal"><span class="type">MMSignal</span></a> object specifying the 5G signal information.</p>
+<div class="warning">The returned value is only valid until the property changes so it is
+only safe to use this function on the thread where <em class="parameter"><code>self</code></em> was constructed. Use
+<a class="link" href="MMModemSignal.html#mm-modem-signal-get-nr5g" title="mm_modem_signal_get_nr5g ()"><code class="function">mm_modem_signal_get_nr5g()</code></a> if on another thread.</div>
+<div class="refsect3">
+<a name="mm-modem-signal-peek-nr5g.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModem.html" title="MMModem"><span class="type">MMModem</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-signal-peek-nr5g.returns"></a><h4>Returns</h4>
+<p>A <a class="link" href="MMSignal.html" title="MMSignal"><span class="type">MMSignal</span></a>. Do not free the returned value, it
+belongs to <em class="parameter"><code>self</code></em>
+. </p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-16.html#api-index-1.16">1.16</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-signal-get-nr5g"></a><h3>mm_modem_signal_get_nr5g ()</h3>
+<pre class="programlisting"><a class="link" href="MMSignal.html" title="MMSignal"><span class="returnvalue">MMSignal</span></a> *
+mm_modem_signal_get_nr5g (<em class="parameter"><code><a class="link" href="MMModemSignal.html" title="MMModemSignal"><span class="type">MMModemSignal</span></a> *self</code></em>);</pre>
+<p>Gets a <a class="link" href="MMSignal.html" title="MMSignal"><span class="type">MMSignal</span></a> object specifying the 5G signal information.</p>
+<div class="warning">The values reported by <em class="parameter"><code>self</code></em> are not updated when the values in the
+interface change. Instead, the client is expected to call
+<a class="link" href="MMModemSignal.html#mm-modem-signal-get-nr5g" title="mm_modem_signal_get_nr5g ()"><code class="function">mm_modem_signal_get_nr5g()</code></a> again to get a new <a class="link" href="MMSignal.html" title="MMSignal"><span class="type">MMSignal</span></a> with the new values.
+</div>
+<div class="refsect3">
+<a name="mm-modem-signal-get-nr5g.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModem.html" title="MMModem"><span class="type">MMModem</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-signal-get-nr5g.returns"></a><h4>Returns</h4>
+<p>A <a class="link" href="MMSignal.html" title="MMSignal"><span class="type">MMSignal</span></a> that must be freed with
+<a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if unknown. </p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-16.html#api-index-1.16">1.16</a></p>
 </div>
 <hr>
 <div class="refsect2">

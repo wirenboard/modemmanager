@@ -35,6 +35,7 @@
 #define MM_IFACE_MODEM_DBUS_SKELETON           "iface-modem-dbus-skeleton"
 #define MM_IFACE_MODEM_STATE                   "iface-modem-state"
 #define MM_IFACE_MODEM_SIM                     "iface-modem-sim"
+#define MM_IFACE_MODEM_SIM_SLOTS               "iface-modem-sim-slots"
 #define MM_IFACE_MODEM_BEARER_LIST             "iface-modem-bearer-list"
 #define MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED  "iface-modem-sim-hot-swap-supported"
 #define MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED "iface-modem-sim-hot-swap-configured"
@@ -268,6 +269,14 @@ struct _MMIfaceModem {
                                                GAsyncResult *res,
                                                GError **error);
 
+    /* Asynchronous FCC unlock operation */
+    void     (* fcc_unlock)        (MMIfaceModem         *self,
+                                    GAsyncReadyCallback   callback,
+                                    gpointer              user_data);
+    gboolean (* fcc_unlock_finish) (MMIfaceModem         *self,
+                                    GAsyncResult         *res,
+                                    GError              **error);
+
     /* Asynchronous modem power-up operation */
     void (*modem_power_up) (MMIfaceModem *self,
                             GAsyncReadyCallback callback,
@@ -289,6 +298,7 @@ struct _MMIfaceModem {
      * Useful for when the modem changes power states since we might
      * not get the relevant notifications from the modem. */
     void (*check_for_sim_swap) (MMIfaceModem *self,
+                                const gchar *iccid,
                                 GAsyncReadyCallback callback,
                                 gpointer user_data);
     gboolean (*check_for_sim_swap_finish) (MMIfaceModem *self,
@@ -342,6 +352,25 @@ struct _MMIfaceModem {
     MMBaseSim * (*create_sim_finish) (MMIfaceModem *self,
                                       GAsyncResult *res,
                                       GError **error);
+
+    /* Create SIMs in all SIM slots */
+    void     (* load_sim_slots)        (MMIfaceModem         *self,
+                                        GAsyncReadyCallback   callback,
+                                        gpointer              user_data);
+    gboolean (* load_sim_slots_finish) (MMIfaceModem         *self,
+                                        GAsyncResult         *res,
+                                        GPtrArray           **sim_slots,
+                                        guint                *primary_sim_slot,
+                                        GError              **error);
+
+    /* Set primary SIM slot */
+    void     (* set_primary_sim_slot)        (MMIfaceModem         *self,
+                                              guint                 sim_slot,
+                                              GAsyncReadyCallback   callback,
+                                              gpointer              user_data);
+    gboolean (* set_primary_sim_slot_finish) (MMIfaceModem         *self,
+                                              GAsyncResult         *res,
+                                              GError              **error);
 
     /* Create bearer */
     void (*create_bearer) (MMIfaceModem *self,
@@ -546,5 +575,15 @@ MMModemState mm_iface_modem_wait_for_final_state_finish (MMIfaceModem *self,
 
 void mm_iface_modem_bind_simple_status (MMIfaceModem *self,
                                         MMSimpleStatus *status);
+
+/* Check if the SIM or eSIM profile has changed */
+void     mm_iface_modem_check_for_sim_swap        (MMIfaceModem *self,
+                                                   guint slot_index,
+                                                   const gchar *iccid,
+                                                   GAsyncReadyCallback callback,
+                                                   gpointer user_data);
+gboolean mm_iface_modem_check_for_sim_swap_finish (MMIfaceModem *self,
+                                                   GAsyncResult *res,
+                                                   GError **error);
 
 #endif /* MM_IFACE_MODEM_H */

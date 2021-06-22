@@ -379,7 +379,7 @@ activate_3gpp (GTask *task)
         mm_obj_dbg (self, "establishing ECM data connection for PDP context #%u...", ctx->cid);
         mm_base_modem_at_command (MM_BASE_MODEM (ctx->modem),
                                   cmd,
-                                  180,
+                                  MM_BASE_BEARER_DEFAULT_CONNECTION_TIMEOUT,
                                   FALSE,
                                   (GAsyncReadyCallback) cedata_activate_ready,
                                   g_object_ref (self));
@@ -396,7 +396,7 @@ activate_3gpp (GTask *task)
     mm_obj_dbg (self, "activating PDP context #%u...", ctx->cid);
     mm_base_modem_at_command (MM_BASE_MODEM (ctx->modem),
                               cmd,
-                              120,
+                              MM_BASE_BEARER_DEFAULT_CONNECTION_TIMEOUT,
                               FALSE,
                               (GAsyncReadyCallback) cgact_activate_ready,
                               task);
@@ -498,10 +498,10 @@ authenticate_3gpp (GTask *task)
         mm_obj_dbg (self, "using automatic authentication method");
         if (self->priv->allowed_auths & MM_UBLOX_BEARER_ALLOWED_AUTH_AUTO)
             ublox_auth = 3;
-        else if (self->priv->allowed_auths & MM_UBLOX_BEARER_ALLOWED_AUTH_PAP)
-            ublox_auth = 1;
         else if (self->priv->allowed_auths & MM_UBLOX_BEARER_ALLOWED_AUTH_CHAP)
             ublox_auth = 2;
+        else if (self->priv->allowed_auths & MM_UBLOX_BEARER_ALLOWED_AUTH_PAP)
+            ublox_auth = 1;
         else if (self->priv->allowed_auths & MM_UBLOX_BEARER_ALLOWED_AUTH_NONE)
             ublox_auth = 0;
     } else if (allowed_auth & MM_BEARER_ALLOWED_AUTH_PAP) {
@@ -730,7 +730,7 @@ disconnect_3gpp  (MMBroadbandBearer   *self,
     mm_obj_dbg (self, "deactivating PDP context #%u...", cid);
     mm_base_modem_at_command (MM_BASE_MODEM (modem),
                               cmd,
-                              120,
+                              MM_BASE_BEARER_DEFAULT_DISCONNECTION_TIMEOUT,
                               FALSE,
                               (GAsyncReadyCallback) cgact_deactivate_ready,
                               task);

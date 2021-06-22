@@ -92,6 +92,8 @@ struct _MMBroadbandModemCinterionPrivate {
     GRegex *sysstart_regex;
     /* +CIEV indications as configured via AT^SIND */
     GRegex *ciev_regex;
+    /* Ignore SIM hotswap SCKS msg, until ready */
+    GRegex *scks_regex;
 
     /* Flags for feature support checks */
     FeatureSupport swwan_support;
@@ -103,17 +105,140 @@ struct _MMBroadbandModemCinterionPrivate {
     MMCinterionModemFamily modem_family;
     MMCinterionRadioBandFormat rb_format;
 
-    /* Command sequence */
-    MMBaseModemAtCommandAlloc *cmds;
+    /* Initial EPS bearer context number */
+    gint initial_eps_bearer_cid;
 };
 
+/*****************************************************************************/
+
 MMCinterionModemFamily
-mm_broadband_modem_cinterion_get_family (MMBroadbandModemCinterion * modem)
+mm_broadband_modem_cinterion_get_family (MMBroadbandModemCinterion *self)
 {
-    g_assert_nonnull (modem);
-    return modem->priv->modem_family;
+    return self->priv->modem_family;
 }
 
+/*****************************************************************************/
+/* Check support (Signal interface) */
+
+static gboolean
+signal_check_support_finish  (MMIfaceModemSignal  *self,
+                              GAsyncResult        *res,
+                              GError             **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+parent_signal_check_support_ready (MMIfaceModemSignal *self,
+                                   GAsyncResult       *res,
+                                   GTask              *task)
+{
+    GError *error = NULL;
+
+    if (!iface_modem_signal_parent->check_support_finish (self, res, &error))
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+check_smoni_support (MMBaseModem  *_self,
+                     GAsyncResult *res,
+                     GTask        *task)
+{
+    MMBroadbandModemCinterion *self = MM_BROADBAND_MODEM_CINTERION (_self);
+
+    /* Fetch the result to the SMONI test. If no response given (error triggered), assume unsupported */
+    if (mm_base_modem_at_command_finish (_self, res, NULL)) {
+        mm_obj_dbg (self, "SMONI supported");
+        self->priv->smoni_support = FEATURE_SUPPORTED;
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    mm_obj_dbg (self, "SMONI unsupported");
+    self->priv->smoni_support = FEATURE_NOT_SUPPORTED;
+
+    /* Otherwise, check if the parent CESQ-based implementation works */
+    g_assert (iface_modem_signal_parent->check_support && iface_modem_signal_parent->check_support_finish);
+    iface_modem_signal_parent->check_support (MM_IFACE_MODEM_SIGNAL (self),
+                                              (GAsyncReadyCallback) parent_signal_check_support_ready,
+                                              task);
+}
+
+static void
+signal_check_support (MMIfaceModemSignal  *self,
+                      GAsyncReadyCallback  callback,
+                      gpointer             user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "^SMONI=?",
+                              3,
+                              TRUE,
+                              (GAsyncReadyCallback) check_smoni_support,
+                              task);
+}
+
+/*****************************************************************************/
+/* Load extended signal information (Signal interface) */
+
+static gboolean
+signal_load_values_finish (MMIfaceModemSignal  *_self,
+                           GAsyncResult        *res,
+                           MMSignal           **cdma,
+                           MMSignal           **evdo,
+                           MMSignal           **gsm,
+                           MMSignal           **umts,
+                           MMSignal           **lte,
+                           MMSignal           **nr5g,
+                           GError             **error)
+{
+    MMBroadbandModemCinterion *self = MM_BROADBAND_MODEM_CINTERION (_self);
+    const gchar *response;
+
+    if (self->priv->smoni_support == FEATURE_NOT_SUPPORTED)
+        return iface_modem_signal_parent->load_values_finish (_self, res, cdma, evdo, gsm, umts, lte, nr5g, error);
+
+    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (_self), res, error);
+    if (!response || !mm_cinterion_smoni_response_to_signal_info (response, gsm, umts, lte, error))
+        return FALSE;
+
+    if (cdma)
+        *cdma = NULL;
+    if (evdo)
+        *evdo = NULL;
+    if (nr5g)
+        *nr5g = NULL;
+
+    return TRUE;
+}
+
+static void
+signal_load_values (MMIfaceModemSignal  *_self,
+                    GCancellable        *cancellable,
+                    GAsyncReadyCallback  callback,
+                    gpointer             user_data)
+{
+    MMBroadbandModemCinterion *self = MM_BROADBAND_MODEM_CINTERION (_self);
+
+    if (self->priv->smoni_support == FEATURE_SUPPORTED) {
+        mm_base_modem_at_command (MM_BASE_MODEM (self),
+                                  "^SMONI",
+                                  3,
+                                  FALSE,
+                                  callback,
+                                  user_data);
+        return;
+    }
+
+    /* ^SMONI not supported, fallback to the parent */
+    iface_modem_signal_parent->load_values (_self, cancellable, callback, user_data);
+}
 
 /*****************************************************************************/
 /* Enable unsolicited events (SMS indications) (Messaging interface) */
@@ -991,6 +1116,645 @@ modem_3gpp_cleanup_unsolicited_events (MMIfaceModem3gpp    *self,
 }
 
 /*****************************************************************************/
+/* Common operation to load expected CID for the initial EPS bearer */
+
+static gboolean
+load_initial_eps_bearer_cid_finish (MMBroadbandModemCinterion  *self,
+                                    GAsyncResult               *res,
+                                    GError                    **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+scfg_prov_cfg_query_ready (MMBaseModem  *_self,
+                           GAsyncResult *res,
+                           GTask        *task)
+{
+    MMBroadbandModemCinterion *self = MM_BROADBAND_MODEM_CINTERION (_self);
+    g_autoptr(GError)          error = NULL;
+    const gchar               *response;
+
+    response = mm_base_modem_at_command_finish (_self, res, &error);
+    if (!response)
+        mm_obj_dbg (self, "couldn't query MNO profiles: %s", error->message);
+
+    else if (!mm_cinterion_provcfg_response_to_cid (response,
+                                                    MM_BROADBAND_MODEM_CINTERION (self)->priv->modem_family,
+                                                    mm_broadband_modem_get_current_charset (MM_BROADBAND_MODEM (self)),
+                                                    self,
+                                                    &self->priv->initial_eps_bearer_cid,
+                                                    &error))
+        mm_obj_dbg (self, "failed processing list of MNO profiles: %s", error->message);
+
+    if (self->priv->initial_eps_bearer_cid < 0) {
+        mm_obj_dbg (self, "using default EPS bearer context id: 1");
+        self->priv->initial_eps_bearer_cid = 1;
+    } else
+        mm_obj_dbg (self, "loaded EPS bearer context id from list of MNO profiles: %d", self->priv->initial_eps_bearer_cid);
+
+    /* This operation really never fails */
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+load_initial_eps_bearer_cid (MMBroadbandModemCinterion *self,
+                             GAsyncReadyCallback        callback,
+                             gpointer                   user_data)
+{
+    GTask *task;
+
+    g_assert (self->priv->initial_eps_bearer_cid < 0);
+
+    task = g_task_new (self, NULL, callback, user_data);
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "^SCFG=\"MEopMode/Prov/Cfg\"",
+                              20,
+                              FALSE,
+                              (GAsyncReadyCallback)scfg_prov_cfg_query_ready,
+                              task);
+}
+
+/*****************************************************************************/
+/* Set initial EPS bearer settings */
+
+typedef enum {
+    SET_INITIAL_EPS_STEP_FIRST = 0,
+    SET_INITIAL_EPS_STEP_CHECK_MODE,
+    SET_INITIAL_EPS_STEP_RF_OFF,
+    SET_INITIAL_EPS_STEP_APN,
+    SET_INITIAL_EPS_STEP_AUTH,
+    SET_INITIAL_EPS_STEP_RF_ON,
+    SET_INITIAL_EPS_STEP_LAST,
+} SetInitialEpsStep;
+
+typedef struct {
+    MMBearerProperties *properties;
+    SetInitialEpsStep   step;
+    guint               initial_cfun_mode;
+    GError             *saved_error;
+} SetInitialEpsContext;
+
+static void
+set_initial_eps_context_free (SetInitialEpsContext *ctx)
+{
+    g_assert (!ctx->saved_error);
+    g_object_unref (ctx->properties);
+    g_slice_free (SetInitialEpsContext, ctx);
+}
+
+static gboolean
+modem_3gpp_set_initial_eps_bearer_settings_finish (MMIfaceModem3gpp  *self,
+                                                   GAsyncResult      *res,
+                                                   GError           **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void set_initial_eps_step (GTask *task);
+
+static void
+set_initial_eps_rf_on_ready (MMBaseModem  *self,
+                             GAsyncResult *res,
+                             GTask        *task)
+{
+    g_autoptr(GError)     error = NULL;
+    SetInitialEpsContext *ctx;
+
+    ctx = (SetInitialEpsContext *) g_task_get_task_data (task);
+
+    if (!mm_base_modem_at_command_finish (self, res, &error)) {
+        mm_obj_warn (self, "couldn't set RF back on: %s", error->message);
+        if (!ctx->saved_error)
+            ctx->saved_error = g_steal_pointer (&error);
+    }
+
+    /* Go to next step */
+    ctx->step++;
+    set_initial_eps_step (task);
+}
+
+static void
+set_initial_eps_auth_ready (MMBaseModem  *_self,
+                            GAsyncResult *res,
+                            GTask        *task)
+{
+    MMBroadbandModemCinterion *self = MM_BROADBAND_MODEM_CINTERION (_self);
+    SetInitialEpsContext      *ctx;
+
+    ctx = (SetInitialEpsContext *) g_task_get_task_data (task);
+
+    if (!mm_base_modem_at_command_finish (_self, res, &ctx->saved_error)) {
+        mm_obj_warn (self, "couldn't configure context %d auth settings: %s",
+                     self->priv->initial_eps_bearer_cid, ctx->saved_error->message);
+        /* Fallback to recover RF before returning the error */
+        ctx->step = SET_INITIAL_EPS_STEP_RF_ON;
+    } else {
+        /* Go to next step */
+        ctx->step++;
+    }
+    set_initial_eps_step (task);
+}
+
+static void
+set_initial_eps_cgdcont_ready (MMBaseModem  *_self,
+                               GAsyncResult *res,
+                               GTask        *task)
+{
+    MMBroadbandModemCinterion *self = MM_BROADBAND_MODEM_CINTERION (_self);
+    SetInitialEpsContext      *ctx;
+
+    ctx = (SetInitialEpsContext *) g_task_get_task_data (task);
+
+    if (!mm_base_modem_at_command_finish (_self, res, &ctx->saved_error)) {
+        mm_obj_warn (self, "couldn't configure context %d settings: %s",
+                     self->priv->initial_eps_bearer_cid, ctx->saved_error->message);
+        /* Fallback to recover RF before returning the error */
+        ctx->step = SET_INITIAL_EPS_STEP_RF_ON;
+    } else {
+        /* Go to next step */
+        ctx->step++;
+    }
+    set_initial_eps_step (task);
+}
+
+static void
+set_initial_eps_rf_off_ready (MMBaseModem  *self,
+                              GAsyncResult *res,
+                              GTask        *task)
+{
+    GError               *error = NULL;
+    SetInitialEpsContext *ctx;
+
+    ctx = (SetInitialEpsContext *) g_task_get_task_data (task);
+
+    if (!mm_base_modem_at_command_finish (self, res, &error)) {
+        mm_obj_warn (self, "couldn't set RF off: %s", error->message);
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    /* Go to next step */
+    ctx->step++;
+    set_initial_eps_step (task);
+}
+
+static void
+set_initial_eps_cfun_mode_load_ready (MMBaseModem  *self,
+                                      GAsyncResult *res,
+                                      GTask        *task)
+{
+    GError                *error = NULL;
+    const gchar           *response;
+    SetInitialEpsContext  *ctx;
+    guint                  mode;
+
+    ctx = (SetInitialEpsContext *) g_task_get_task_data (task);
+    response = mm_base_modem_at_command_finish (self, res, &error);
+    if (!response || !mm_3gpp_parse_cfun_query_response (response, &mode, &error)) {
+        mm_obj_warn (self, "couldn't load initial functionality mode: %s", error->message);
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    mm_obj_dbg (self, "current functionality mode: %u", mode);
+    if (mode != 1 && mode != 4) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_WRONG_STATE,
+                                 "cannot setup the default LTE bearer settings: "
+                                 "the SIM must be powered");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    ctx->initial_cfun_mode = mode;
+    ctx->step++;
+    set_initial_eps_step (task);
+}
+
+static void
+set_initial_eps_step (GTask *task)
+{
+    MMBroadbandModemCinterion *self;
+    SetInitialEpsContext      *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
+
+    switch (ctx->step) {
+    case SET_INITIAL_EPS_STEP_FIRST:
+        ctx->step++;
+        /* fall through */
+
+    case SET_INITIAL_EPS_STEP_CHECK_MODE:
+        mm_base_modem_at_command (
+            MM_BASE_MODEM (self),
+            "+CFUN?",
+            5,
+            FALSE,
+            (GAsyncReadyCallback)set_initial_eps_cfun_mode_load_ready,
+            task);
+        return;
+
+    case SET_INITIAL_EPS_STEP_RF_OFF:
+        if (ctx->initial_cfun_mode != 4) {
+            mm_base_modem_at_command (
+                MM_BASE_MODEM (self),
+                "+CFUN=4",
+                5,
+                FALSE,
+                (GAsyncReadyCallback)set_initial_eps_rf_off_ready,
+                task);
+            return;
+        }
+        ctx->step++;
+        /* fall through */
+
+    case SET_INITIAL_EPS_STEP_APN: {
+        const gchar        *apn;
+        g_autofree gchar   *quoted_apn = NULL;
+        g_autofree gchar   *apn_cmd = NULL;
+        const gchar        *ip_family_str;
+        MMBearerIpFamily    ip_family;
+
+        ip_family = mm_bearer_properties_get_ip_type (ctx->properties);
+        if (ip_family == MM_BEARER_IP_FAMILY_NONE || ip_family == MM_BEARER_IP_FAMILY_ANY)
+            ip_family = MM_BEARER_IP_FAMILY_IPV4;
+
+        ip_family_str = mm_3gpp_get_pdp_type_from_ip_family (ip_family);
+        apn = mm_bearer_properties_get_apn (ctx->properties);
+        mm_obj_dbg (self, "context %d with APN '%s' and PDP type '%s'",
+                    self->priv->initial_eps_bearer_cid, apn, ip_family_str);
+        quoted_apn = mm_port_serial_at_quote_string (apn);
+        apn_cmd = g_strdup_printf ("+CGDCONT=%u,\"%s\",%s",
+                                   self->priv->initial_eps_bearer_cid, ip_family_str, quoted_apn);
+        mm_base_modem_at_command (
+            MM_BASE_MODEM (self),
+            apn_cmd,
+            20,
+            FALSE,
+            (GAsyncReadyCallback)set_initial_eps_cgdcont_ready,
+            task);
+        return;
+    }
+
+    case SET_INITIAL_EPS_STEP_AUTH: {
+        g_autofree gchar  *auth_cmd = NULL;
+
+        auth_cmd = mm_cinterion_build_auth_string (self,
+                                                   MM_BROADBAND_MODEM_CINTERION (self)->priv->modem_family,
+                                                   ctx->properties,
+                                                   self->priv->initial_eps_bearer_cid);
+        mm_base_modem_at_command (
+            MM_BASE_MODEM (self),
+            auth_cmd,
+            20,
+            FALSE,
+            (GAsyncReadyCallback)set_initial_eps_auth_ready,
+            task);
+        return;
+    }
+
+    case SET_INITIAL_EPS_STEP_RF_ON:
+        if (ctx->initial_cfun_mode == 1) {
+            mm_base_modem_at_command (
+                MM_BASE_MODEM (self),
+                "+CFUN=1",
+                5,
+                FALSE,
+                (GAsyncReadyCallback)set_initial_eps_rf_on_ready,
+                task);
+            return;
+        }
+        ctx->step++;
+        /* fall through */
+
+    case SET_INITIAL_EPS_STEP_LAST:
+        if (ctx->saved_error)
+            g_task_return_error (task, g_steal_pointer (&ctx->saved_error));
+        else
+            g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+
+    default:
+        g_assert_not_reached ();
+    }
+}
+
+static void
+modem_3gpp_set_initial_eps_bearer_settings (MMIfaceModem3gpp    *self,
+                                            MMBearerProperties  *properties,
+                                            GAsyncReadyCallback  callback,
+                                            gpointer             user_data)
+{
+    GTask                *task;
+    SetInitialEpsContext *ctx;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    /* The initial EPS bearer settings should have already been loaded */
+    g_assert (MM_BROADBAND_MODEM_CINTERION (self)->priv->initial_eps_bearer_cid >= 0);
+
+    /* Setup context */
+    ctx = g_slice_new0 (SetInitialEpsContext);
+    ctx->properties = g_object_ref (properties);
+    ctx->step = SET_INITIAL_EPS_STEP_FIRST;
+    g_task_set_task_data (task, ctx, (GDestroyNotify) set_initial_eps_context_free);
+
+    set_initial_eps_step (task);
+}
+
+/*****************************************************************************/
+/* Common initial EPS bearer info loading for both:
+ *   - runtime status
+ *   - configuration settings
+ */
+
+typedef enum {
+    COMMON_LOAD_INITIAL_EPS_STEP_FIRST = 0,
+    COMMON_LOAD_INITIAL_EPS_STEP_PROFILE,
+    COMMON_LOAD_INITIAL_EPS_STEP_APN,
+    COMMON_LOAD_INITIAL_EPS_STEP_AUTH,
+    COMMON_LOAD_INITIAL_EPS_STEP_LAST,
+} CommonLoadInitialEpsStep;
+
+typedef struct {
+    MMBearerProperties       *properties;
+    CommonLoadInitialEpsStep  step;
+    gboolean                  runtime;
+} CommonLoadInitialEpsContext;
+
+static void
+common_load_initial_eps_context_free (CommonLoadInitialEpsContext *ctx)
+{
+    g_clear_object (&ctx->properties);
+    g_slice_free (CommonLoadInitialEpsContext, ctx);
+}
+
+static MMBearerProperties *
+common_load_initial_eps_bearer_finish (MMIfaceModem3gpp  *self,
+                                       GAsyncResult      *res,
+                                       GError           **error)
+{
+    return MM_BEARER_PROPERTIES (g_task_propagate_pointer (G_TASK (res), error));
+}
+
+static void common_load_initial_eps_step (GTask *task);
+
+static void
+common_load_initial_eps_auth_ready (MMBaseModem  *_self,
+                                    GAsyncResult *res,
+                                    GTask        *task)
+{
+    MMBroadbandModemCinterion   *self = MM_BROADBAND_MODEM_CINTERION (_self);
+    const gchar                 *response;
+    CommonLoadInitialEpsContext *ctx;
+    g_autoptr(GError)            error = NULL;
+    MMBearerAllowedAuth          auth = MM_BEARER_ALLOWED_AUTH_UNKNOWN;
+    g_autofree gchar            *username = NULL;
+
+    ctx = (CommonLoadInitialEpsContext *) g_task_get_task_data (task);
+
+    response = mm_base_modem_at_command_finish (_self, res, &error);
+    if (!response)
+        mm_obj_dbg (self, "couldn't load context %d auth settings: %s",
+                    self->priv->initial_eps_bearer_cid, error->message);
+    else if (!mm_cinterion_parse_sgauth_response (response, self->priv->initial_eps_bearer_cid, &auth, &username, &error))
+        mm_obj_dbg (self, "couldn't parse context %d auth settings: %s", self->priv->initial_eps_bearer_cid, error->message);
+    else {
+        mm_bearer_properties_set_allowed_auth (ctx->properties, auth);
+        mm_bearer_properties_set_user (ctx->properties, username);
+    }
+
+    /* Go to next step */
+    ctx->step++;
+    common_load_initial_eps_step (task);
+}
+
+static void
+common_load_initial_eps_load_cid_ready (MMBroadbandModemCinterion *self,
+                                        GAsyncResult              *res,
+                                        GTask                     *task)
+{
+    CommonLoadInitialEpsContext *ctx;
+
+    ctx = (CommonLoadInitialEpsContext *) g_task_get_task_data (task);
+
+    load_initial_eps_bearer_cid_finish (self, res, NULL);
+    g_assert (self->priv->initial_eps_bearer_cid >= 0);
+
+    /* Go to next step */
+    ctx->step++;
+    common_load_initial_eps_step (task);
+}
+
+static void
+common_load_initial_eps_cgcontrdp_ready (MMBaseModem  *_self,
+                                         GAsyncResult *res,
+                                         GTask        *task)
+{
+    MMBroadbandModemCinterion   *self = MM_BROADBAND_MODEM_CINTERION (_self);
+    const gchar                 *response;
+    CommonLoadInitialEpsContext *ctx;
+    g_autofree gchar            *apn = NULL;
+    g_autoptr(GError)            error = NULL;
+
+    ctx = (CommonLoadInitialEpsContext *) g_task_get_task_data (task);
+
+    /* errors aren't fatal */
+    response = mm_base_modem_at_command_finish (_self, res, &error);
+    if (!response)
+        mm_obj_dbg (self, "couldn't load context %d settings: %s",
+                    self->priv->initial_eps_bearer_cid, error->message);
+    else if (!mm_3gpp_parse_cgcontrdp_response (response, NULL, NULL, &apn, NULL, NULL, NULL, NULL, NULL, &error))
+        mm_obj_dbg (self, "couldn't parse CGDCONTRDP response: %s", error->message);
+    else
+        mm_bearer_properties_set_apn (ctx->properties, apn);
+
+    /* Go to next step */
+    ctx->step++;
+    common_load_initial_eps_step (task);
+}
+
+static void
+common_load_initial_eps_cgdcont_ready (MMBaseModem  *_self,
+                                       GAsyncResult *res,
+                                       GTask        *task)
+{
+    MMBroadbandModemCinterion   *self = MM_BROADBAND_MODEM_CINTERION (_self);
+    const gchar                 *response;
+    CommonLoadInitialEpsContext *ctx;
+    g_autoptr(GError)            error = NULL;
+
+    ctx = (CommonLoadInitialEpsContext *) g_task_get_task_data (task);
+
+    /* errors aren't fatal */
+    response = mm_base_modem_at_command_finish (_self, res, &error);
+    if (!response)
+        mm_obj_dbg (self, "couldn't load context %d status: %s",
+                    self->priv->initial_eps_bearer_cid, error->message);
+    else {
+        GList *context_list;
+
+        context_list = mm_3gpp_parse_cgdcont_read_response (response, &error);
+        if (!context_list)
+            mm_obj_dbg (self, "couldn't parse CGDCONT response: %s", error->message);
+        else {
+            GList *l;
+
+            for (l = context_list; l; l = g_list_next (l)) {
+                MM3gppPdpContext *pdp = l->data;
+
+                if (pdp->cid == (guint) self->priv->initial_eps_bearer_cid) {
+                    mm_bearer_properties_set_ip_type (ctx->properties, pdp->pdp_type);
+                    mm_bearer_properties_set_apn (ctx->properties, pdp->apn ? pdp->apn : "");
+                    break;
+                }
+            }
+            if (!l)
+                mm_obj_dbg (self, "no status reported for context %d", self->priv->initial_eps_bearer_cid);
+            mm_3gpp_pdp_context_list_free (context_list);
+        }
+    }
+
+    /* Go to next step */
+    ctx->step++;
+    common_load_initial_eps_step (task);
+}
+
+static void
+common_load_initial_eps_step (GTask *task)
+{
+    MMBroadbandModemCinterion   *self;
+    CommonLoadInitialEpsContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
+
+    switch (ctx->step) {
+    case COMMON_LOAD_INITIAL_EPS_STEP_FIRST:
+        ctx->step++;
+        /* fall through */
+
+    case COMMON_LOAD_INITIAL_EPS_STEP_PROFILE:
+        /* Initial EPS bearer CID initialization run once only */
+        if (G_UNLIKELY (self->priv->initial_eps_bearer_cid < 0)) {
+            load_initial_eps_bearer_cid (
+                self,
+                (GAsyncReadyCallback)common_load_initial_eps_load_cid_ready,
+                task);
+            return;
+        }
+        ctx->step++;
+        /* fall through */
+
+    case COMMON_LOAD_INITIAL_EPS_STEP_APN:
+        if (ctx->runtime) {
+            mm_base_modem_at_command (
+                MM_BASE_MODEM (self),
+                "+CGDCONT?",
+                20,
+                FALSE,
+                (GAsyncReadyCallback)common_load_initial_eps_cgdcont_ready,
+                task);
+        } else {
+            g_autofree gchar *cmd = NULL;
+
+            cmd = g_strdup_printf ("+CGCONTRDP=%u", self->priv->initial_eps_bearer_cid);
+            mm_base_modem_at_command (
+                MM_BASE_MODEM (self),
+                "+CGCONTRDP",
+                20,
+                FALSE,
+                (GAsyncReadyCallback)common_load_initial_eps_cgcontrdp_ready,
+                task);
+        }
+        return;
+
+    case COMMON_LOAD_INITIAL_EPS_STEP_AUTH:
+        mm_base_modem_at_command (
+            MM_BASE_MODEM (self),
+            "^SGAUTH?",
+            20,
+            FALSE,
+            (GAsyncReadyCallback)common_load_initial_eps_auth_ready,
+            task);
+        return;
+
+    case COMMON_LOAD_INITIAL_EPS_STEP_LAST:
+        g_task_return_pointer (task, ctx->properties, g_object_unref);
+        g_object_unref (task);
+        return;
+
+    default:
+        g_assert_not_reached ();
+    }
+}
+
+static void
+common_load_initial_eps_bearer (MMIfaceModem3gpp    *self,
+                                gboolean             runtime,
+                                GAsyncReadyCallback  callback,
+                                gpointer             user_data)
+{
+    GTask                       *task;
+    CommonLoadInitialEpsContext *ctx;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    /* Setup context */
+    ctx = g_slice_new0 (CommonLoadInitialEpsContext);
+    ctx->runtime = runtime;
+    ctx->properties = mm_bearer_properties_new ();
+    ctx->step = COMMON_LOAD_INITIAL_EPS_STEP_FIRST;
+    g_task_set_task_data (task, ctx, (GDestroyNotify) common_load_initial_eps_context_free);
+
+    common_load_initial_eps_step (task);
+}
+
+/*****************************************************************************/
+/* Initial EPS bearer runtime status loading */
+
+static MMBearerProperties *
+modem_3gpp_load_initial_eps_bearer_finish (MMIfaceModem3gpp  *self,
+                                           GAsyncResult      *res,
+                                           GError           **error)
+{
+    return common_load_initial_eps_bearer_finish (self, res, error);
+}
+
+static void
+modem_3gpp_load_initial_eps_bearer (MMIfaceModem3gpp    *self,
+                                    GAsyncReadyCallback  callback,
+                                    gpointer             user_data)
+{
+    common_load_initial_eps_bearer (self, TRUE, callback, user_data);
+}
+
+/*****************************************************************************/
+/* Initial EPS bearer settings loading -> set configuration */
+
+static MMBearerProperties *
+modem_3gpp_load_initial_eps_bearer_settings_finish (MMIfaceModem3gpp  *self,
+                                                    GAsyncResult      *res,
+                                                    GError           **error)
+{
+    return common_load_initial_eps_bearer_finish (self, res, error);
+}
+
+static void
+modem_3gpp_load_initial_eps_bearer_settings (MMIfaceModem3gpp    *self,
+                                             GAsyncReadyCallback  callback,
+                                             gpointer             user_data)
+{
+    common_load_initial_eps_bearer (self, FALSE, callback, user_data);
+}
+
+/*****************************************************************************/
 /* Load supported modes (Modem interface) */
 
 static GArray *
@@ -1303,6 +2067,23 @@ load_current_bands (MMIfaceModem        *self,
 /*****************************************************************************/
 /* Set current bands (Modem interface) */
 
+typedef struct {
+    MMBaseModemAtCommandAlloc *cmds;
+} SetCurrentBandsContext;
+
+static void
+set_current_bands_context_free (SetCurrentBandsContext *ctx)
+{
+    if (ctx->cmds) {
+        guint i;
+
+        for (i = 0; ctx->cmds[i].command; i++)
+            mm_base_modem_at_command_alloc_clear (&ctx->cmds[i]);
+        g_free (ctx->cmds);
+    }
+    g_slice_free (SetCurrentBandsContext, ctx);
+}
+
 static gboolean
 set_current_bands_finish (MMIfaceModem  *self,
                           GAsyncResult  *res,
@@ -1326,23 +2107,17 @@ scfg_set_ready (MMBaseModem  *self,
 }
 
 static void
-scfg_set_ready_sequence (MMBaseModem  *_self,
+scfg_set_ready_sequence (MMBaseModem  *self,
                          GAsyncResult *res,
                          GTask        *task)
 {
     GError *error = NULL;
-    gpointer ctx = NULL;
-    guint i;
-    MMBroadbandModemCinterion *self;
 
-    self = g_task_get_source_object (task);
-    for (i = 0; self->priv->cmds[i].command; i++)
-        mm_base_modem_at_command_alloc_clear (&self->priv->cmds[i]);
-    g_free(self->priv->cmds);
-    self->priv->cmds = NULL;
-
-    mm_base_modem_at_sequence_finish (_self, res, &ctx, &error);
-    g_task_return_boolean (task, TRUE);
+    mm_base_modem_at_sequence_finish (self, res, NULL, &error);
+    if (error)
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
 
@@ -1387,39 +2162,83 @@ set_bands_3g (GTask  *task,
                                   FALSE,
                                   (GAsyncReadyCallback)scfg_set_ready,
                                   task);
-    } else { /* self->priv->rb_format == MM_CINTERION_RADIO_BAND_FORMAT_MULTIPLE */
+        return;
+    }
+
+    if (self->priv->rb_format == MM_CINTERION_RADIO_BAND_FORMAT_MULTIPLE) {
+        SetCurrentBandsContext *ctx;
+
+        ctx = g_slice_new0 (SetCurrentBandsContext);
+        g_task_set_task_data (task, ctx, (GDestroyNotify)set_current_bands_context_free);
+
         if (self->priv->modem_family == MM_CINTERION_MODEM_FAMILY_IMT) {
             g_autofree gchar *bandstr2G = NULL;
             g_autofree gchar *bandstr3G = NULL;
             g_autofree gchar *bandstr4G = NULL;
+            g_autofree gchar *bandstr2G_enc = NULL;
+            g_autofree gchar *bandstr3G_enc = NULL;
+            g_autofree gchar *bandstr4G_enc = NULL;
 
             bandstr2G = g_strdup_printf ("0x%08X", band[MM_CINTERION_RB_BLOCK_GSM]);
             bandstr3G = g_strdup_printf ("0x%08X", band[MM_CINTERION_RB_BLOCK_UMTS]);
             bandstr4G = g_strdup_printf ("0x%08X", band[MM_CINTERION_RB_BLOCK_LTE_LOW]);
-            bandstr2G = mm_broadband_modem_take_and_convert_to_current_charset (MM_BROADBAND_MODEM (self), bandstr2G);
-            bandstr3G = mm_broadband_modem_take_and_convert_to_current_charset (MM_BROADBAND_MODEM (self), bandstr3G);
-            bandstr4G = mm_broadband_modem_take_and_convert_to_current_charset (MM_BROADBAND_MODEM (self), bandstr4G);
-            self->priv->cmds = g_new0 (MMBaseModemAtCommandAlloc, 3 + 1);
-            self->priv->cmds[0].command = g_strdup_printf ("^SCFG=\"Radio/Band/2G\",\"%s\"", bandstr2G);
-            self->priv->cmds[1].command = g_strdup_printf ("^SCFG=\"Radio/Band/3G\",\"%s\"", bandstr3G);
-            self->priv->cmds[2].command = g_strdup_printf ("^SCFG=\"Radio/Band/4G\",\"%s\"", bandstr4G);
-            self->priv->cmds[0].timeout = self->priv->cmds[1].timeout = self->priv->cmds[2].timeout = 60;
+
+            bandstr2G_enc = mm_modem_charset_str_from_utf8 (bandstr2G,
+                                                            mm_broadband_modem_get_current_charset (MM_BROADBAND_MODEM (self)),
+                                                            FALSE,
+                                                            &error);
+            if (!bandstr2G_enc) {
+                g_prefix_error (&error, "Couldn't convert 2G band string to current charset: ");
+                g_task_return_error (task, error);
+                g_object_unref (task);
+                return;
+            }
+
+            bandstr3G_enc = mm_modem_charset_str_from_utf8 (bandstr3G,
+                                                            mm_broadband_modem_get_current_charset (MM_BROADBAND_MODEM (self)),
+                                                            FALSE,
+                                                            &error);
+            if (!bandstr3G_enc) {
+                g_prefix_error (&error, "Couldn't convert 3G band string to current charset: ");
+                g_task_return_error (task, error);
+                g_object_unref (task);
+                return;
+            }
+
+            bandstr4G_enc = mm_modem_charset_str_from_utf8 (bandstr4G,
+                                                            mm_broadband_modem_get_current_charset (MM_BROADBAND_MODEM (self)),
+                                                            FALSE,
+                                                            &error);
+            if (!bandstr4G_enc) {
+                g_prefix_error (&error, "Couldn't convert 4G band string to current charset: ");
+                g_task_return_error (task, error);
+                g_object_unref (task);
+                return;
+            }
+
+            ctx->cmds = g_new0 (MMBaseModemAtCommandAlloc, 3 + 1);
+            ctx->cmds[0].command = g_strdup_printf ("^SCFG=\"Radio/Band/2G\",\"%s\"", bandstr2G_enc);
+            ctx->cmds[1].command = g_strdup_printf ("^SCFG=\"Radio/Band/3G\",\"%s\"", bandstr3G_enc);
+            ctx->cmds[2].command = g_strdup_printf ("^SCFG=\"Radio/Band/4G\",\"%s\"", bandstr4G_enc);
+            ctx->cmds[0].timeout = ctx->cmds[1].timeout = ctx->cmds[2].timeout = 60;
         } else {
-            self->priv->cmds = g_new0 (MMBaseModemAtCommandAlloc, 3 + 1);
-            self->priv->cmds[0].command = g_strdup_printf ("^SCFG=\"Radio/Band/2G\",\"%08x\",,1", band[MM_CINTERION_RB_BLOCK_GSM]);
-            self->priv->cmds[1].command = g_strdup_printf ("^SCFG=\"Radio/Band/3G\",\"%08x\",,1", band[MM_CINTERION_RB_BLOCK_UMTS]);
-            self->priv->cmds[2].command = g_strdup_printf ("^SCFG=\"Radio/Band/4G\",\"%08x\",\"%08x\",1", band[MM_CINTERION_RB_BLOCK_LTE_LOW], band[MM_CINTERION_RB_BLOCK_LTE_HIGH]);
-            self->priv->cmds[0].timeout = self->priv->cmds[1].timeout = self->priv->cmds[2].timeout = 15;
+            ctx->cmds = g_new0 (MMBaseModemAtCommandAlloc, 3 + 1);
+            ctx->cmds[0].command = g_strdup_printf ("^SCFG=\"Radio/Band/2G\",\"%08x\",,1", band[MM_CINTERION_RB_BLOCK_GSM]);
+            ctx->cmds[1].command = g_strdup_printf ("^SCFG=\"Radio/Band/3G\",\"%08x\",,1", band[MM_CINTERION_RB_BLOCK_UMTS]);
+            ctx->cmds[2].command = g_strdup_printf ("^SCFG=\"Radio/Band/4G\",\"%08x\",\"%08x\",1", band[MM_CINTERION_RB_BLOCK_LTE_LOW], band[MM_CINTERION_RB_BLOCK_LTE_HIGH]);
+            ctx->cmds[0].timeout = ctx->cmds[1].timeout = ctx->cmds[2].timeout = 15;
         }
 
         mm_base_modem_at_sequence (MM_BASE_MODEM (self),
-                                   (const MMBaseModemAtCommand *)self->priv->cmds,
+                                   (const MMBaseModemAtCommand *)ctx->cmds,
                                    NULL,
                                    NULL,
                                    (GAsyncReadyCallback)scfg_set_ready_sequence,
                                    task);
+        return;
     }
 
+    g_assert_not_reached ();
 }
 
 static void
@@ -1429,8 +2248,9 @@ set_bands_2g (GTask  *task,
     MMBroadbandModemCinterion *self;
     GError                    *error = NULL;
     guint                      band[MM_CINTERION_RB_BLOCK_N] = { 0 };
-    gchar                     *cmd;
-    gchar                     *bandstr;
+    g_autofree gchar          *cmd = NULL;
+    g_autofree gchar          *bandstr = NULL;
+    g_autofree gchar          *bandstr_enc = NULL;
 
     self = g_task_get_source_object (task);
 
@@ -1448,12 +2268,13 @@ set_bands_2g (GTask  *task,
 
     /* Build string with the value, in the proper charset */
     bandstr = g_strdup_printf ("%u", band[MM_CINTERION_RB_BLOCK_LEGACY]);
-    bandstr = mm_broadband_modem_take_and_convert_to_current_charset (MM_BROADBAND_MODEM (self), bandstr);
-    if (!bandstr) {
-        g_task_return_new_error (task,
-                                 MM_CORE_ERROR,
-                                 MM_CORE_ERROR_UNSUPPORTED,
-                                 "Couldn't convert band set to current charset");
+    bandstr_enc = mm_modem_charset_str_from_utf8 (bandstr,
+                                                  mm_broadband_modem_get_current_charset (MM_BROADBAND_MODEM (self)),
+                                                  FALSE,
+                                                  &error);
+    if (!bandstr_enc) {
+        g_prefix_error (&error, "Couldn't convert band string to current charset: ");
+        g_task_return_error (task, error);
         g_object_unref (task);
         return;
     }
@@ -1464,17 +2285,13 @@ set_bands_2g (GTask  *task,
      * the modem to connect at that specific frequency only. Note that we will be
      * passing double-quote enclosed strings here!
      */
-    cmd = g_strdup_printf ("^SCFG=\"Radio/Band\",\"%s\",\"%s\"", bandstr, bandstr);
-
+    cmd = g_strdup_printf ("^SCFG=\"Radio/Band\",\"%s\",\"%s\"", bandstr_enc, bandstr_enc);
     mm_base_modem_at_command (MM_BASE_MODEM (self),
                               cmd,
                               15,
                               FALSE,
                               (GAsyncReadyCallback)scfg_set_ready,
                               task);
-
-    g_free (cmd);
-    g_free (bandstr);
 }
 
 static void
@@ -1811,6 +2628,107 @@ after_sim_unlock (MMIfaceModem        *self,
 }
 
 /*****************************************************************************/
+/* Setup SIM hot swap (Modem interface) */
+
+static void
+cinterion_scks_unsolicited_handler (MMPortSerialAt *port,
+                                    GMatchInfo *match_info,
+                                    MMBroadbandModemCinterion *self)
+{
+    guint scks;
+
+    if (!mm_get_uint_from_match_info (match_info, 1, &scks))
+        return;
+
+    switch (scks) {
+        case 0:
+            mm_obj_info (self, "SIM removal detected");
+            break;
+        case 1:
+            mm_obj_info (self, "SIM insertion detected");
+            break;
+        case 2:
+            mm_obj_info (self, "SIM interface hardware deactivated (Potentially non-electrically compatible SIM inserted)");
+            break;
+        case 3:
+            mm_obj_info (self, "SIM interface hardware deactivated (Technical problem, no precise diagnosis)");
+            break;
+        default:
+            g_assert_not_reached ();
+            break;
+    }
+
+    mm_broadband_modem_sim_hot_swap_detected (MM_BROADBAND_MODEM (self));
+}
+
+static gboolean
+modem_setup_sim_hot_swap_finish (MMIfaceModem *self,
+                                 GAsyncResult *res,
+                                 GError **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+cinterion_hot_swap_init_ready (MMBaseModem *_self,
+                               GAsyncResult *res,
+                               GTask *task)
+{
+    MMBroadbandModemCinterion *self = MM_BROADBAND_MODEM_CINTERION (_self);
+    GError *error = NULL;
+    MMPortSerialAt *primary;
+    MMPortSerialAt *secondary;
+
+    if (!mm_base_modem_at_command_finish (_self, res, &error)) {
+        g_prefix_error (&error, "Could not enable SCKS: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    mm_obj_dbg (self, "SIM hot swap detect successfully enabled");
+
+    primary = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    mm_port_serial_at_add_unsolicited_msg_handler (
+        primary,
+        self->priv->scks_regex,
+        (MMPortSerialAtUnsolicitedMsgFn) cinterion_scks_unsolicited_handler,
+        self,
+        NULL);
+
+    secondary = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+    if (secondary)
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            secondary,
+            self->priv->scks_regex,
+            (MMPortSerialAtUnsolicitedMsgFn) cinterion_scks_unsolicited_handler,
+            self,
+            NULL);
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+modem_setup_sim_hot_swap (MMIfaceModem *self,
+                          GAsyncReadyCallback callback,
+                          gpointer user_data)
+{
+    GTask *task;
+
+    mm_obj_dbg (self, "Enabling SCKS URCs for SIM hot swap detection");
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "^SCKS=1",
+                              3,
+                              FALSE,
+                              (GAsyncReadyCallback) cinterion_hot_swap_init_ready,
+                              task);
+}
+
+/*****************************************************************************/
 /* Create Bearer (Modem interface) */
 
 static MMBaseBearer *
@@ -1943,6 +2861,35 @@ cinterion_modem_create_bearer (MMIfaceModem        *_self,
 
 /*****************************************************************************/
 
+static void
+setup_ports (MMBroadbandModem *_self)
+{
+    MMBroadbandModemCinterion *self = (MM_BROADBAND_MODEM_CINTERION (_self));
+    MMPortSerialAt            *ports[2];
+    guint                      i;
+
+    /* Call parent's setup ports first always */
+    MM_BROADBAND_MODEM_CLASS (mm_broadband_modem_cinterion_parent_class)->setup_ports (_self);
+
+    ports[0] = mm_base_modem_peek_port_primary   (MM_BASE_MODEM (self));
+    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+
+    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
+        if (!ports[i])
+            continue;
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->sysstart_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->scks_regex,
+            NULL, NULL, NULL);
+    }
+}
+
+/*****************************************************************************/
+
 MMBroadbandModemCinterion *
 mm_broadband_modem_cinterion_new (const gchar *device,
                                   const gchar **drivers,
@@ -1956,6 +2903,8 @@ mm_broadband_modem_cinterion_new (const gchar *device,
                          MM_BASE_MODEM_PLUGIN, plugin,
                          MM_BASE_MODEM_VENDOR_ID, vendor_id,
                          MM_BASE_MODEM_PRODUCT_ID, product_id,
+                         MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED, TRUE,
+                         MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED, FALSE,
                          NULL);
 }
 
@@ -1968,6 +2917,7 @@ mm_broadband_modem_cinterion_init (MMBroadbandModemCinterion *self)
                                               MMBroadbandModemCinterionPrivate);
 
     /* Initialize private variables */
+    self->priv->initial_eps_bearer_cid = -1;
     self->priv->sind_psinfo_support    = FEATURE_SUPPORT_UNKNOWN;
     self->priv->swwan_support          = FEATURE_SUPPORT_UNKNOWN;
     self->priv->smoni_support          = FEATURE_SUPPORT_UNKNOWN;
@@ -1977,6 +2927,8 @@ mm_broadband_modem_cinterion_init (MMBroadbandModemCinterion *self)
                                           G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
     self->priv->sysstart_regex = g_regex_new ("\\r\\n\\^SYSSTART.*\\r\\n",
                                               G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->scks_regex = g_regex_new ("\\^SCKS:\\s*([0-3])\\r\\n",
+                                          G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
 }
 
 static void
@@ -1999,6 +2951,7 @@ finalize (GObject *object)
 
     g_regex_unref (self->priv->ciev_regex);
     g_regex_unref (self->priv->sysstart_regex);
+    g_regex_unref (self->priv->scks_regex);
 
     G_OBJECT_CLASS (mm_broadband_modem_cinterion_parent_class)->finalize (object);
 }
@@ -2034,6 +2987,8 @@ iface_modem_init (MMIfaceModem *iface)
     iface->modem_power_down_finish = modem_power_down_finish;
     iface->modem_power_off = modem_power_off;
     iface->modem_power_off_finish = modem_power_off_finish;
+    iface->setup_sim_hot_swap = modem_setup_sim_hot_swap;
+    iface->setup_sim_hot_swap_finish = modem_setup_sim_hot_swap_finish;
 }
 
 static void
@@ -2050,6 +3005,14 @@ iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
     iface->setup_unsolicited_events_finish = modem_3gpp_setup_cleanup_unsolicited_events_finish;
     iface->cleanup_unsolicited_events = modem_3gpp_cleanup_unsolicited_events;
     iface->cleanup_unsolicited_events_finish = modem_3gpp_setup_cleanup_unsolicited_events_finish;
+
+    iface->load_initial_eps_bearer = modem_3gpp_load_initial_eps_bearer;
+    iface->load_initial_eps_bearer_finish = modem_3gpp_load_initial_eps_bearer_finish;
+    iface->load_initial_eps_bearer_settings = modem_3gpp_load_initial_eps_bearer_settings;
+    iface->load_initial_eps_bearer_settings_finish = modem_3gpp_load_initial_eps_bearer_settings_finish;
+    iface->set_initial_eps_bearer_settings = modem_3gpp_set_initial_eps_bearer_settings;
+    iface->set_initial_eps_bearer_settings_finish = modem_3gpp_set_initial_eps_bearer_settings_finish;
+
 }
 
 static void
@@ -2131,31 +3094,14 @@ shared_cinterion_init (MMSharedCinterion *iface)
 }
 
 static void
-setup_ports (MMBroadbandModem *_self)
+iface_modem_signal_init (MMIfaceModemSignal *iface)
 {
-    MMBroadbandModemCinterion *self = (MM_BROADBAND_MODEM_CINTERION (_self));
-    MMPortSerialAt *port;
+    iface_modem_signal_parent   = g_type_interface_peek_parent (iface);
 
-    /* Call parent's setup ports first always */
-    MM_BROADBAND_MODEM_CLASS (mm_broadband_modem_cinterion_parent_class)->setup_ports (_self);
-
-    /* Primary */
-    port = mm_base_modem_get_port_primary (MM_BASE_MODEM (self));
-    if (port) {
-        mm_port_serial_at_add_unsolicited_msg_handler (
-            port,
-            self->priv->sysstart_regex,
-            NULL, NULL, NULL);
-    }
-
-    /* Secondary */
-    port = mm_base_modem_get_port_secondary (MM_BASE_MODEM (self));
-    if (port) {
-        mm_port_serial_at_add_unsolicited_msg_handler (
-            port,
-            self->priv->sysstart_regex,
-            NULL, NULL, NULL);
-    }
+    iface->check_support        = signal_check_support;
+    iface->check_support_finish = signal_check_support_finish;
+    iface->load_values          = signal_load_values;
+    iface->load_values_finish   = signal_load_values_finish;
 }
 
 static void
@@ -2169,135 +3115,4 @@ mm_broadband_modem_cinterion_class_init (MMBroadbandModemCinterionClass *klass)
     /* Virtual methods */
     object_class->finalize = finalize;
     broadband_modem_class->setup_ports = setup_ports;
-}
-
-/*****************************************************************************/
-/* Check support (Signal interface) */
-
-static gboolean
-signal_check_support_finish  (MMIfaceModemSignal  *self,
-                              GAsyncResult        *res,
-                              GError             **error)
-{
-    return g_task_propagate_boolean (G_TASK (res), error);
-}
-
-static void
-parent_signal_check_support_ready (MMIfaceModemSignal *self,
-                                   GAsyncResult       *res,
-                                   GTask              *task)
-{
-    GError *error = NULL;
-
-    if (!iface_modem_signal_parent->check_support_finish (self, res, &error))
-        g_task_return_error (task, error);
-    else
-        g_task_return_boolean (task, TRUE);
-    g_object_unref (task);
-}
-
-static void
-check_smoni_support (MMBaseModem  *_self,
-                     GAsyncResult *res,
-                     GTask        *task)
-{
-    MMBroadbandModemCinterion *self = MM_BROADBAND_MODEM_CINTERION (_self);
-
-    /* Fetch the result to the SMONI test. If no response given (error triggered), assume unsupported */
-    if (mm_base_modem_at_command_finish (_self, res, NULL)) {
-        mm_obj_dbg (self, "SMONI supported");
-        self->priv->smoni_support = FEATURE_SUPPORTED;
-        g_task_return_boolean (task, TRUE);
-        g_object_unref (task);
-        return;
-    }
-
-    mm_obj_dbg (self, "SMONI unsupported");
-    self->priv->smoni_support = FEATURE_NOT_SUPPORTED;
-
-    /* Otherwise, check if the parent CESQ-based implementation works */
-    g_assert (iface_modem_signal_parent->check_support && iface_modem_signal_parent->check_support_finish);
-    iface_modem_signal_parent->check_support (MM_IFACE_MODEM_SIGNAL (self),
-                                              (GAsyncReadyCallback) parent_signal_check_support_ready,
-                                              task);
-}
-
-static void
-signal_check_support (MMIfaceModemSignal  *self,
-                      GAsyncReadyCallback  callback,
-                      gpointer             user_data)
-{
-    GTask *task;
-
-    task = g_task_new (self, NULL, callback, user_data);
-    mm_base_modem_at_command (MM_BASE_MODEM (self),
-                              "^SMONI=?",
-                              3,
-                              TRUE,
-                              (GAsyncReadyCallback) check_smoni_support,
-                              task);
-}
-
-/*****************************************************************************/
-/* Load extended signal information (Signal interface) */
-
-static gboolean
-signal_load_values_finish (MMIfaceModemSignal  *_self,
-                           GAsyncResult        *res,
-                           MMSignal           **cdma,
-                           MMSignal           **evdo,
-                           MMSignal           **gsm,
-                           MMSignal           **umts,
-                           MMSignal           **lte,
-                           GError             **error)
-{
-    MMBroadbandModemCinterion *self = MM_BROADBAND_MODEM_CINTERION (_self);
-    const gchar *response;
-
-    if (self->priv->smoni_support == FEATURE_NOT_SUPPORTED)
-        return iface_modem_signal_parent->load_values_finish (_self, res, cdma, evdo, gsm, umts, lte, error);
-
-    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (_self), res, error);
-    if (!response || !mm_cinterion_smoni_response_to_signal_info (response, gsm, umts, lte, error))
-        return FALSE;
-
-    if (cdma)
-        *cdma = NULL;
-    if (evdo)
-        *evdo = NULL;
-
-    return TRUE;
-}
-
-static void
-signal_load_values (MMIfaceModemSignal  *_self,
-                    GCancellable        *cancellable,
-                    GAsyncReadyCallback  callback,
-                    gpointer             user_data)
-{
-    MMBroadbandModemCinterion *self = MM_BROADBAND_MODEM_CINTERION (_self);
-
-    if (self->priv->smoni_support == FEATURE_SUPPORTED) {
-        mm_base_modem_at_command (MM_BASE_MODEM (self),
-                                  "^SMONI",
-                                  3,
-                                  FALSE,
-                                  callback,
-                                  user_data);
-        return;
-    }
-
-    /* ^SMONI not supported, fallback to the parent */
-    iface_modem_signal_parent->load_values (_self, cancellable, callback, user_data);
-}
-
-static void
-iface_modem_signal_init (MMIfaceModemSignal *iface)
-{
-    iface_modem_signal_parent   = g_type_interface_peek_parent (iface);
-
-    iface->check_support        = signal_check_support;
-    iface->check_support_finish = signal_check_support_finish;
-    iface->load_values          = signal_load_values;
-    iface->load_values_finish   = signal_load_values_finish;
 }

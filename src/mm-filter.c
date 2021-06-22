@@ -193,10 +193,23 @@ mm_filter_port (MMFilter        *self,
     }
 
     /* If this is a cdc-wdm device, we always allow it */
-    if ((self->priv->enabled_rules & MM_FILTER_RULE_CDC_WDM) &&
-        (g_strcmp0 (subsystem, "usb") == 0 || g_strcmp0 (subsystem, "usbmisc") == 0) &&
-        (name && g_str_has_prefix (name, "cdc-wdm"))) {
-        mm_obj_dbg (self, "(%s/%s) port allowed: cdc-wdm device", subsystem, name);
+    if ((self->priv->enabled_rules & MM_FILTER_RULE_USBMISC) &&
+        (g_strcmp0 (subsystem, "usbmisc") == 0)) {
+        mm_obj_dbg (self, "(%s/%s) port allowed: usbmisc device", subsystem, name);
+        return TRUE;
+    }
+
+    /* If this is a rpmsg channel device, we always allow it */
+    if ((self->priv->enabled_rules & MM_FILTER_RULE_RPMSG) &&
+        (g_strcmp0 (subsystem, "rpmsg") == 0)) {
+        mm_obj_dbg (self, "(%s/%s) port allowed: rpmsg device", subsystem, name);
+        return TRUE;
+    }
+
+    /* If this is a wwan port/device, we always allow it */
+    if ((self->priv->enabled_rules & MM_FILTER_RULE_WWAN) &&
+        (g_strcmp0 (subsystem, "wwan") == 0)) {
+        mm_obj_dbg (self, "(%s/%s) port allowed: wwan device", subsystem, name);
         return TRUE;
     }
 
@@ -449,7 +462,9 @@ mm_filter_new (MMFilterRule   enabled_rules,
     mm_obj_dbg (self, "  plugin whitelist:           %s", RULE_ENABLED_STR (MM_FILTER_RULE_PLUGIN_WHITELIST));
     mm_obj_dbg (self, "  virtual devices forbidden:  %s", RULE_ENABLED_STR (MM_FILTER_RULE_VIRTUAL));
     mm_obj_dbg (self, "  net devices allowed:        %s", RULE_ENABLED_STR (MM_FILTER_RULE_NET));
-    mm_obj_dbg (self, "  cdc-wdm devices allowed:    %s", RULE_ENABLED_STR (MM_FILTER_RULE_CDC_WDM));
+    mm_obj_dbg (self, "  usbmisc devices allowed:    %s", RULE_ENABLED_STR (MM_FILTER_RULE_USBMISC));
+    mm_obj_dbg (self, "  rpmsg devices allowed:      %s", RULE_ENABLED_STR (MM_FILTER_RULE_RPMSG));
+    mm_obj_dbg (self, "  wwan devices allowed:       %s", RULE_ENABLED_STR (MM_FILTER_RULE_WWAN));
     if (self->priv->enabled_rules & MM_FILTER_RULE_TTY) {
         mm_obj_dbg (self, "  tty devices:");
         mm_obj_dbg (self, "      blacklist applied:        %s", RULE_ENABLED_STR (MM_FILTER_RULE_TTY_BLACKLIST));

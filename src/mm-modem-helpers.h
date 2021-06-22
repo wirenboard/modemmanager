@@ -84,7 +84,9 @@ GArray *mm_filter_supported_modes (const GArray *all,
                                    const GArray *supported_combinations,
                                    gpointer      log_object);
 
-gchar *mm_bcd_to_string (const guint8 *bcd, gsize bcd_len);
+gchar *mm_bcd_to_string (const guint8 *bcd,
+                         gsize bcd_len,
+                         gboolean low_nybble_first);
 
 /*****************************************************************************/
 /* VOICE specific helpers and utilities */
@@ -427,7 +429,8 @@ const gchar         *mm_3gpp_facility_to_acronym (MMModem3gppFacility  facility)
 MMModemAccessTechnology mm_string_to_access_tech (const gchar *string);
 
 void mm_3gpp_normalize_operator (gchar          **operator,
-                                 MMModemCharset   cur_charset);
+                                 MMModemCharset   cur_charset,
+                                 gpointer         log_object);
 
 gboolean mm_3gpp_parse_operator_id (const gchar *operator_id,
                                     guint16 *mcc,

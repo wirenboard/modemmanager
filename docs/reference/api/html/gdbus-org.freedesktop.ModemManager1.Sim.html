@@ -47,8 +47,10 @@
 <div class="refsect1">
 <a name="id-1.5.7.3.4"></a><h2>Properties</h2>
 <pre class="synopsis">
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.Active" title='The "Active" property'>Active</a>              readable   b
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.SimIdentifier" title='The "SimIdentifier" property'>SimIdentifier</a>       readable   s
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.Imsi" title='The "Imsi" property'>Imsi</a>                readable   s
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.Eid" title='The "Eid" property'>Eid</a>                 readable   s
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorIdentifier" title='The "OperatorIdentifier" property'>OperatorIdentifier</a>  readable   s
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorName" title='The "OperatorName" property'>OperatorName</a>        readable   s
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers" title='The "EmergencyNumbers" property'>EmergencyNumbers</a>    readable   as
@@ -162,6 +164,21 @@ ChangePin (IN  s old_pin,
 <div class="refsect1">
 <a name="gdbus-properties-org.freedesktop.ModemManager1.Sim"></a><h2>Property Details</h2>
 <div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Sim.Active"></a><h3>The "Active" property</h3>
+<pre class="programlisting">
+Active  readable   b
+</pre>
+<p>        Boolean indicating whether the SIM is currently active.
+</p>
+<p>        On systems that support Multi SIM Single Standby, only one SIM may be
+        active at any given time, which will be the one considered primary.
+</p>
+<p>        On systems that support Multi SIM Multi Standby, more than one SIM may
+        be active at any given time, but only one of them is considered primary.
+</p>
+</div>
+<hr>
+<div class="refsect2">
 <a name="gdbus-property-org-freedesktop-ModemManager1-Sim.SimIdentifier"></a><h3>The "SimIdentifier" property</h3>
 <pre class="programlisting">
 SimIdentifier  readable   s
@@ -179,6 +196,15 @@ SimIdentifier  readable   s
 Imsi  readable   s
 </pre>
 <p>        The IMSI of the SIM card, if any.
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Sim.Eid"></a><h3>The "Eid" property</h3>
+<pre class="programlisting">
+Eid  readable   s
+</pre>
+<p>        The EID of the SIM card, if any.
 </p>
 </div>
 <hr>

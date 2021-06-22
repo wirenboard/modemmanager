@@ -98,7 +98,7 @@ noinst_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3) \
 	$(am__EXEEXT_4) $(am__EXEEXT_5) $(am__EXEEXT_6) \
 	$(am__EXEEXT_7) $(am__EXEEXT_8) $(am__EXEEXT_9) \
 	$(am__EXEEXT_10) $(am__EXEEXT_11) $(am__EXEEXT_12) \
-	$(am__EXEEXT_13) test-udev-rules$(EXEEXT) \
+	$(am__EXEEXT_13) $(am__EXEEXT_14) test-udev-rules$(EXEEXT) \
 	test-keyfiles$(EXEEXT)
 
 ################################################################################
@@ -226,202 +226,216 @@ noinst_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3) \
 ################################################################################
 @ENABLE_PLUGIN_FOXCONN_TRUE@am__append_48 = libmm-plugin-foxconn.la
 @ENABLE_PLUGIN_FOXCONN_TRUE@am__append_49 = foxconn/77-mm-foxconn-port-types.rules
-@ENABLE_PLUGIN_FOXCONN_TRUE@am__append_50 = foxconn/mm-foxconn-t77w968-carrier-mapping.conf
+@ENABLE_PLUGIN_FOXCONN_TRUE@am__append_50 = foxconn/mm-foxconn-carrier-mapping.conf
 @ENABLE_PLUGIN_FOXCONN_TRUE@am__append_51 = \
 @ENABLE_PLUGIN_FOXCONN_TRUE@	-DTESTUDEVRULESDIR_FOXCONN=\"${srcdir}/foxconn\" \
-@ENABLE_PLUGIN_FOXCONN_TRUE@	-DTESTKEYFILE_FOXCONN_T77W968=\"${srcdir}/foxconn/mm-foxconn-t77w968-carrier-mapping.conf\" \
+@ENABLE_PLUGIN_FOXCONN_TRUE@	-DTESTKEYFILE_FOXCONN=\"${srcdir}/foxconn/mm-foxconn-carrier-mapping.conf\" \
 @ENABLE_PLUGIN_FOXCONN_TRUE@	$(NULL)
 
 
 ################################################################################
-# plugin: haier
+# plugin: gosuncn
 ################################################################################
-@ENABLE_PLUGIN_HAIER_TRUE@am__append_52 = libmm-plugin-haier.la
-@ENABLE_PLUGIN_HAIER_TRUE@am__append_53 = haier/77-mm-haier-port-types.rules
-@ENABLE_PLUGIN_HAIER_TRUE@am__append_54 = -DTESTUDEVRULESDIR_HAIER=\"${srcdir}/haier\"
+@ENABLE_PLUGIN_GOSUNCN_TRUE@am__append_52 = libmm-plugin-gosuncn.la
+@ENABLE_PLUGIN_GOSUNCN_TRUE@am__append_53 = gosuncn/77-mm-gosuncn-port-types.rules
+@ENABLE_PLUGIN_GOSUNCN_TRUE@am__append_54 = -DTESTUDEVRULESDIR_GOSUNCN=\"${srcdir}/gosuncn\"
 
 ################################################################################
-# plugin: huawei
+# plugin: haier
 ################################################################################
-@ENABLE_PLUGIN_HUAWEI_TRUE@am__append_55 = libhelpers-huawei.la
-@ENABLE_PLUGIN_HUAWEI_TRUE@am__append_56 = test-modem-helpers-huawei
-@ENABLE_PLUGIN_HUAWEI_TRUE@am__append_57 = libmm-plugin-huawei.la
-@ENABLE_PLUGIN_HUAWEI_TRUE@am__append_58 = huawei/77-mm-huawei-net-port-types.rules
-@ENABLE_PLUGIN_HUAWEI_TRUE@am__append_59 = -DTESTUDEVRULESDIR_HUAWEI=\"${srcdir}/huawei\"
+@ENABLE_PLUGIN_HAIER_TRUE@am__append_55 = libmm-plugin-haier.la
+@ENABLE_PLUGIN_HAIER_TRUE@am__append_56 = haier/77-mm-haier-port-types.rules
+@ENABLE_PLUGIN_HAIER_TRUE@am__append_57 = -DTESTUDEVRULESDIR_HAIER=\"${srcdir}/haier\"
+@ENABLE_PLUGIN_HUAWEI_TRUE@am__append_58 = $(HUAWEI_ENUMS_GENERATED)
+@ENABLE_PLUGIN_HUAWEI_TRUE@am__append_59 = $(HUAWEI_ENUMS_GENERATED)
+@ENABLE_PLUGIN_HUAWEI_TRUE@am__append_60 = libhelpers-huawei.la
+@ENABLE_PLUGIN_HUAWEI_TRUE@am__append_61 = test-modem-helpers-huawei
+@ENABLE_PLUGIN_HUAWEI_TRUE@am__append_62 = libmm-plugin-huawei.la
+@ENABLE_PLUGIN_HUAWEI_TRUE@am__append_63 = huawei/77-mm-huawei-net-port-types.rules
+@ENABLE_PLUGIN_HUAWEI_TRUE@am__append_64 = -DTESTUDEVRULESDIR_HUAWEI=\"${srcdir}/huawei\"
 
 ################################################################################
 # plugin: iridium
 ################################################################################
-@ENABLE_PLUGIN_IRIDIUM_TRUE@am__append_60 = libmm-plugin-iridium.la
+@ENABLE_PLUGIN_IRIDIUM_TRUE@am__append_65 = libmm-plugin-iridium.la
 
 ################################################################################
 # plugin: linktop
 ################################################################################
-@ENABLE_PLUGIN_LINKTOP_TRUE@am__append_61 = libhelpers-linktop.la
-@ENABLE_PLUGIN_LINKTOP_TRUE@am__append_62 = test-modem-helpers-linktop
-@ENABLE_PLUGIN_LINKTOP_TRUE@am__append_63 = libmm-plugin-linktop.la
+@ENABLE_PLUGIN_LINKTOP_TRUE@am__append_66 = libhelpers-linktop.la
+@ENABLE_PLUGIN_LINKTOP_TRUE@am__append_67 = test-modem-helpers-linktop
+@ENABLE_PLUGIN_LINKTOP_TRUE@am__append_68 = libmm-plugin-linktop.la
 
 ################################################################################
 # plugin: longcheer (and rebranded dongles)
 ################################################################################
-@ENABLE_PLUGIN_LONGCHEER_TRUE@am__append_64 = libmm-plugin-longcheer.la
-@ENABLE_PLUGIN_LONGCHEER_TRUE@am__append_65 = longcheer/77-mm-longcheer-port-types.rules
-@ENABLE_PLUGIN_LONGCHEER_TRUE@am__append_66 = -DTESTUDEVRULESDIR_LONGCHEER=\"${srcdir}/longcheer\"
+@ENABLE_PLUGIN_LONGCHEER_TRUE@am__append_69 = libmm-plugin-longcheer.la
+@ENABLE_PLUGIN_LONGCHEER_TRUE@am__append_70 = longcheer/77-mm-longcheer-port-types.rules
+@ENABLE_PLUGIN_LONGCHEER_TRUE@am__append_71 = -DTESTUDEVRULESDIR_LONGCHEER=\"${srcdir}/longcheer\"
 
 ################################################################################
 # plugin: ericsson mbm
 ################################################################################
-@ENABLE_PLUGIN_MBM_TRUE@am__append_67 = libhelpers-mbm.la
-@ENABLE_PLUGIN_MBM_TRUE@am__append_68 = test-modem-helpers-mbm
-@ENABLE_PLUGIN_MBM_TRUE@am__append_69 = libmm-plugin-ericsson-mbm.la
-@ENABLE_PLUGIN_MBM_TRUE@am__append_70 = mbm/77-mm-ericsson-mbm.rules
-@ENABLE_PLUGIN_MBM_TRUE@am__append_71 = -DTESTUDEVRULESDIR_MBM=\"${srcdir}/mbm\"
+@ENABLE_PLUGIN_MBM_TRUE@am__append_72 = libhelpers-mbm.la
+@ENABLE_PLUGIN_MBM_TRUE@am__append_73 = test-modem-helpers-mbm
+@ENABLE_PLUGIN_MBM_TRUE@am__append_74 = libmm-plugin-ericsson-mbm.la
+@ENABLE_PLUGIN_MBM_TRUE@am__append_75 = mbm/77-mm-ericsson-mbm.rules
+@ENABLE_PLUGIN_MBM_TRUE@am__append_76 = -DTESTUDEVRULESDIR_MBM=\"${srcdir}/mbm\"
 
 ################################################################################
 # plugin: motorola
 ################################################################################
-@ENABLE_PLUGIN_MOTOROLA_TRUE@am__append_72 = libmm-plugin-motorola.la
+@ENABLE_PLUGIN_MOTOROLA_TRUE@am__append_77 = libmm-plugin-motorola.la
 
 ################################################################################
 # plugin: mtk
 ################################################################################
-@ENABLE_PLUGIN_MTK_TRUE@am__append_73 = libmm-plugin-mtk.la
-@ENABLE_PLUGIN_MTK_TRUE@am__append_74 = mtk/77-mm-mtk-port-types.rules
-@ENABLE_PLUGIN_MTK_TRUE@am__append_75 = -DTESTUDEVRULESDIR_MTK=\"${srcdir}/mtk\"
+@ENABLE_PLUGIN_MTK_TRUE@am__append_78 = libmm-plugin-mtk.la
+@ENABLE_PLUGIN_MTK_TRUE@am__append_79 = mtk/77-mm-mtk-port-types.rules
+@ENABLE_PLUGIN_MTK_TRUE@am__append_80 = -DTESTUDEVRULESDIR_MTK=\"${srcdir}/mtk\"
 
 ################################################################################
 # plugin: nokia
 ################################################################################
-@ENABLE_PLUGIN_NOKIA_TRUE@am__append_76 = libmm-plugin-nokia.la
+@ENABLE_PLUGIN_NOKIA_TRUE@am__append_81 = libmm-plugin-nokia.la
 
 ################################################################################
 # plugin: nokia (icera)
 ################################################################################
-@ENABLE_PLUGIN_NOKIA_ICERA_TRUE@am__append_77 = libmm-plugin-nokia-icera.la
-@ENABLE_PLUGIN_NOKIA_ICERA_TRUE@am__append_78 = nokia/77-mm-nokia-port-types.rules
-@ENABLE_PLUGIN_NOKIA_ICERA_TRUE@am__append_79 = -DTESTUDEVRULESDIR_NOKIA_ICERA=\"${srcdir}/nokia\"
+@ENABLE_PLUGIN_NOKIA_ICERA_TRUE@am__append_82 = libmm-plugin-nokia-icera.la
+@ENABLE_PLUGIN_NOKIA_ICERA_TRUE@am__append_83 = nokia/77-mm-nokia-port-types.rules
+@ENABLE_PLUGIN_NOKIA_ICERA_TRUE@am__append_84 = -DTESTUDEVRULESDIR_NOKIA_ICERA=\"${srcdir}/nokia\"
 
 ################################################################################
 # plugin: novatel non-lte
 ################################################################################
-@ENABLE_PLUGIN_NOVATEL_TRUE@am__append_80 = libmm-plugin-novatel.la
+@ENABLE_PLUGIN_NOVATEL_TRUE@am__append_85 = libmm-plugin-novatel.la
 
 ################################################################################
 # plugin: novatel lte
 ################################################################################
-@ENABLE_PLUGIN_NOVATEL_LTE_TRUE@am__append_81 = libmm-plugin-novatel-lte.la
+@ENABLE_PLUGIN_NOVATEL_LTE_TRUE@am__append_86 = libmm-plugin-novatel-lte.la
 
 ################################################################################
 # plugin: option
 ################################################################################
-@ENABLE_PLUGIN_OPTION_TRUE@am__append_82 = libmm-plugin-option.la
+@ENABLE_PLUGIN_OPTION_TRUE@am__append_87 = libmm-plugin-option.la
 
 ################################################################################
 # plugin: option hso
 ################################################################################
-@ENABLE_PLUGIN_OPTION_HSO_TRUE@am__append_83 = libmm-plugin-option-hso.la
+@ENABLE_PLUGIN_OPTION_HSO_TRUE@am__append_88 = libmm-plugin-option-hso.la
 
 ################################################################################
 # plugin: pantech
 ################################################################################
-@ENABLE_PLUGIN_PANTECH_TRUE@am__append_84 = libmm-plugin-pantech.la
+@ENABLE_PLUGIN_PANTECH_TRUE@am__append_89 = libmm-plugin-pantech.la
+
+################################################################################
+# plugin: qcom-soc
+################################################################################
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@am__append_90 = libmm-plugin-qcom-soc.la
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@am__append_91 = qcom-soc/77-mm-qcom-soc.rules
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@am__append_92 = -DTESTUDEVRULESDIR_QCOM_SOC=\"${srcdir}/qcom-soc/\"
 
 ################################################################################
 # plugin: quectel
 ################################################################################
-@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_85 = libmm-plugin-quectel.la
-@ENABLE_PLUGIN_QUECTEL_TRUE@@WITH_QMI_TRUE@am__append_86 = \
+@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_93 = libhelpers-quectel.la
+@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_94 = test-modem-helpers-quectel
+@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_95 = libmm-plugin-quectel.la
+@ENABLE_PLUGIN_QUECTEL_TRUE@@WITH_QMI_TRUE@am__append_96 = \
 @ENABLE_PLUGIN_QUECTEL_TRUE@@WITH_QMI_TRUE@	quectel/mm-broadband-modem-qmi-quectel.c \
 @ENABLE_PLUGIN_QUECTEL_TRUE@@WITH_QMI_TRUE@	quectel/mm-broadband-modem-qmi-quectel.h \
 @ENABLE_PLUGIN_QUECTEL_TRUE@@WITH_QMI_TRUE@	$(NULL)
 
-@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_87 = quectel/77-mm-quectel-port-types.rules
-@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_88 = -DTESTUDEVRULESDIR_QUECTEL=\"${srcdir}/quectel\"
+@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_97 = quectel/77-mm-quectel-port-types.rules
+@ENABLE_PLUGIN_QUECTEL_TRUE@am__append_98 = -DTESTUDEVRULESDIR_QUECTEL=\"${srcdir}/quectel\"
 
 ################################################################################
 # plugin: samsung
 ################################################################################
-@ENABLE_PLUGIN_SAMSUNG_TRUE@am__append_89 = libmm-plugin-samsung.la
+@ENABLE_PLUGIN_SAMSUNG_TRUE@am__append_99 = libmm-plugin-samsung.la
 
 ################################################################################
 # plugin: sierra (legacy)
 ################################################################################
-@ENABLE_PLUGIN_SIERRA_LEGACY_TRUE@am__append_90 = libmm-plugin-sierra-legacy.la
+@ENABLE_PLUGIN_SIERRA_LEGACY_TRUE@am__append_100 = libmm-plugin-sierra-legacy.la
 
 ################################################################################
 # plugin: sierra (new QMI or MBIM modems)
 ################################################################################
-@ENABLE_PLUGIN_SIERRA_TRUE@am__append_91 = sierra/77-mm-sierra.rules
-@ENABLE_PLUGIN_SIERRA_TRUE@am__append_92 = libmm-plugin-sierra.la
+@ENABLE_PLUGIN_SIERRA_TRUE@am__append_101 = sierra/77-mm-sierra.rules
+@ENABLE_PLUGIN_SIERRA_TRUE@am__append_102 = libmm-plugin-sierra.la
 
 ################################################################################
 # plugin: simtech
 ################################################################################
-@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_93 = libhelpers-simtech.la
-@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_94 = test-modem-helpers-simtech
-@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_95 = libmm-plugin-simtech.la
-@ENABLE_PLUGIN_SIMTECH_TRUE@@WITH_QMI_TRUE@am__append_96 = \
+@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_103 = libhelpers-simtech.la
+@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_104 = test-modem-helpers-simtech
+@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_105 = libmm-plugin-simtech.la
+@ENABLE_PLUGIN_SIMTECH_TRUE@@WITH_QMI_TRUE@am__append_106 = \
 @ENABLE_PLUGIN_SIMTECH_TRUE@@WITH_QMI_TRUE@	simtech/mm-broadband-modem-qmi-simtech.c \
 @ENABLE_PLUGIN_SIMTECH_TRUE@@WITH_QMI_TRUE@	simtech/mm-broadband-modem-qmi-simtech.h \
 @ENABLE_PLUGIN_SIMTECH_TRUE@@WITH_QMI_TRUE@	$(NULL)
 
-@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_97 = simtech/77-mm-simtech-port-types.rules
-@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_98 = -DTESTUDEVRULESDIR_SIMTECH=\"${srcdir}/simtech\"
+@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_107 = simtech/77-mm-simtech-port-types.rules
+@ENABLE_PLUGIN_SIMTECH_TRUE@am__append_108 = -DTESTUDEVRULESDIR_SIMTECH=\"${srcdir}/simtech\"
 
 ################################################################################
 # plugin: telit
 ################################################################################
-@ENABLE_PLUGIN_TELIT_TRUE@am__append_99 = libmm-plugin-telit.la
-@ENABLE_PLUGIN_TELIT_TRUE@am__append_100 = telit/77-mm-telit-port-types.rules
-@ENABLE_PLUGIN_TELIT_TRUE@am__append_101 = -DTESTUDEVRULESDIR_TELIT=\"${srcdir}/telit\"
+@ENABLE_PLUGIN_TELIT_TRUE@am__append_109 = libmm-plugin-telit.la
+@ENABLE_PLUGIN_TELIT_TRUE@am__append_110 = telit/77-mm-telit-port-types.rules
+@ENABLE_PLUGIN_TELIT_TRUE@am__append_111 = -DTESTUDEVRULESDIR_TELIT=\"${srcdir}/telit\"
 
 ################################################################################
 # plugin: thuraya xt
 ################################################################################
-@ENABLE_PLUGIN_THURAYA_TRUE@am__append_102 = libhelpers-thuraya.la
-@ENABLE_PLUGIN_THURAYA_TRUE@am__append_103 = test-modem-helpers-thuraya
-@ENABLE_PLUGIN_THURAYA_TRUE@am__append_104 = libmm-plugin-thuraya.la
+@ENABLE_PLUGIN_THURAYA_TRUE@am__append_112 = libhelpers-thuraya.la
+@ENABLE_PLUGIN_THURAYA_TRUE@am__append_113 = test-modem-helpers-thuraya
+@ENABLE_PLUGIN_THURAYA_TRUE@am__append_114 = libmm-plugin-thuraya.la
 
 ################################################################################
 # plugin: tplink
 ################################################################################
-@ENABLE_PLUGIN_TPLINK_TRUE@am__append_105 = libmm-plugin-tplink.la
-@ENABLE_PLUGIN_TPLINK_TRUE@am__append_106 = tplink/77-mm-tplink-port-types.rules
-@ENABLE_PLUGIN_TPLINK_TRUE@am__append_107 = -DTESTUDEVRULESDIR_TPLINK=\"${srcdir}/tplink\"
+@ENABLE_PLUGIN_TPLINK_TRUE@am__append_115 = libmm-plugin-tplink.la
+@ENABLE_PLUGIN_TPLINK_TRUE@am__append_116 = tplink/77-mm-tplink-port-types.rules
+@ENABLE_PLUGIN_TPLINK_TRUE@am__append_117 = -DTESTUDEVRULESDIR_TPLINK=\"${srcdir}/tplink\"
 
 ################################################################################
 # plugin: u-blox
 ################################################################################
-@ENABLE_PLUGIN_UBLOX_TRUE@am__append_108 = ublox/77-mm-ublox-port-types.rules
-@ENABLE_PLUGIN_UBLOX_TRUE@am__append_109 = libhelpers-ublox.la
-@ENABLE_PLUGIN_UBLOX_TRUE@am__append_110 = $(UBLOX_ENUMS_GENERATED)
-@ENABLE_PLUGIN_UBLOX_TRUE@am__append_111 = $(UBLOX_ENUMS_GENERATED)
-@ENABLE_PLUGIN_UBLOX_TRUE@am__append_112 = test-modem-helpers-ublox
-@ENABLE_PLUGIN_UBLOX_TRUE@am__append_113 = libmm-plugin-ublox.la
+@ENABLE_PLUGIN_UBLOX_TRUE@am__append_118 = ublox/77-mm-ublox-port-types.rules
+@ENABLE_PLUGIN_UBLOX_TRUE@am__append_119 = libhelpers-ublox.la
+@ENABLE_PLUGIN_UBLOX_TRUE@am__append_120 = $(UBLOX_ENUMS_GENERATED)
+@ENABLE_PLUGIN_UBLOX_TRUE@am__append_121 = $(UBLOX_ENUMS_GENERATED)
+@ENABLE_PLUGIN_UBLOX_TRUE@am__append_122 = test-modem-helpers-ublox
+@ENABLE_PLUGIN_UBLOX_TRUE@am__append_123 = libmm-plugin-ublox.la
 
 ################################################################################
 # plugin: via
 ################################################################################
-@ENABLE_PLUGIN_VIA_TRUE@am__append_114 = libmm-plugin-via.la
+@ENABLE_PLUGIN_VIA_TRUE@am__append_124 = libmm-plugin-via.la
 
 ################################################################################
 # plugin: wavecom (now sierra airlink)
 ################################################################################
-@ENABLE_PLUGIN_WAVECOM_TRUE@am__append_115 = libmm-plugin-wavecom.la
+@ENABLE_PLUGIN_WAVECOM_TRUE@am__append_125 = libmm-plugin-wavecom.la
 
 ################################################################################
 # plugin: alcatel/TCT/JRD x220D and possibly others
 ################################################################################
-@ENABLE_PLUGIN_X22X_TRUE@am__append_116 = libmm-plugin-x22x.la
-@ENABLE_PLUGIN_X22X_TRUE@am__append_117 = x22x/77-mm-x22x-port-types.rules
-@ENABLE_PLUGIN_X22X_TRUE@am__append_118 = -DTESTUDEVRULESDIR_X22X=\"${srcdir}/x22x\"
+@ENABLE_PLUGIN_X22X_TRUE@am__append_126 = libmm-plugin-x22x.la
+@ENABLE_PLUGIN_X22X_TRUE@am__append_127 = x22x/77-mm-x22x-port-types.rules
+@ENABLE_PLUGIN_X22X_TRUE@am__append_128 = -DTESTUDEVRULESDIR_X22X=\"${srcdir}/x22x\"
 
 ################################################################################
 # plugin: zte
 ################################################################################
-@ENABLE_PLUGIN_ZTE_TRUE@am__append_119 = libmm-plugin-zte.la
-@ENABLE_PLUGIN_ZTE_TRUE@am__append_120 = zte/77-mm-zte-port-types.rules
-@ENABLE_PLUGIN_ZTE_TRUE@am__append_121 = -DTESTUDEVRULESDIR_ZTE=\"${srcdir}/zte\"
+@ENABLE_PLUGIN_ZTE_TRUE@am__append_129 = libmm-plugin-zte.la
+@ENABLE_PLUGIN_ZTE_TRUE@am__append_130 = zte/77-mm-zte-port-types.rules
+@ENABLE_PLUGIN_ZTE_TRUE@am__append_131 = -DTESTUDEVRULESDIR_ZTE=\"${srcdir}/zte\"
 subdir = plugins
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_code_coverage.m4 \
@@ -459,9 +473,10 @@ CONFIG_CLEAN_VPATH_FILES =
 @ENABLE_PLUGIN_LINKTOP_TRUE@am__EXEEXT_9 = test-modem-helpers-linktop$(EXEEXT)
 @ENABLE_PLUGIN_MBM_TRUE@am__EXEEXT_10 =  \
 @ENABLE_PLUGIN_MBM_TRUE@	test-modem-helpers-mbm$(EXEEXT)
-@ENABLE_PLUGIN_SIMTECH_TRUE@am__EXEEXT_11 = test-modem-helpers-simtech$(EXEEXT)
-@ENABLE_PLUGIN_THURAYA_TRUE@am__EXEEXT_12 = test-modem-helpers-thuraya$(EXEEXT)
-@ENABLE_PLUGIN_UBLOX_TRUE@am__EXEEXT_13 =  \
+@ENABLE_PLUGIN_QUECTEL_TRUE@am__EXEEXT_11 = test-modem-helpers-quectel$(EXEEXT)
+@ENABLE_PLUGIN_SIMTECH_TRUE@am__EXEEXT_12 = test-modem-helpers-simtech$(EXEEXT)
+@ENABLE_PLUGIN_THURAYA_TRUE@am__EXEEXT_13 = test-modem-helpers-thuraya$(EXEEXT)
+@ENABLE_PLUGIN_UBLOX_TRUE@am__EXEEXT_14 =  \
 @ENABLE_PLUGIN_UBLOX_TRUE@	test-modem-helpers-ublox$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -520,7 +535,11 @@ am__libhelpers_huawei_la_SOURCES_DIST =  \
 	huawei/mm-modem-helpers-huawei.c \
 	huawei/mm-modem-helpers-huawei.h
 @ENABLE_PLUGIN_HUAWEI_TRUE@am_libhelpers_huawei_la_OBJECTS = huawei/libhelpers_huawei_la-mm-modem-helpers-huawei.lo
-libhelpers_huawei_la_OBJECTS = $(am_libhelpers_huawei_la_OBJECTS)
+@ENABLE_PLUGIN_HUAWEI_TRUE@am__objects_1 = huawei/libhelpers_huawei_la-mm-huawei-enums-types.lo
+@ENABLE_PLUGIN_HUAWEI_TRUE@nodist_libhelpers_huawei_la_OBJECTS =  \
+@ENABLE_PLUGIN_HUAWEI_TRUE@	$(am__objects_1)
+libhelpers_huawei_la_OBJECTS = $(am_libhelpers_huawei_la_OBJECTS) \
+	$(nodist_libhelpers_huawei_la_OBJECTS)
 @ENABLE_PLUGIN_HUAWEI_TRUE@am_libhelpers_huawei_la_rpath =
 libhelpers_icera_la_LIBADD =
 am__libhelpers_icera_la_SOURCES_DIST = icera/mm-modem-helpers-icera.c \
@@ -541,6 +560,13 @@ am__libhelpers_mbm_la_SOURCES_DIST = mbm/mm-modem-helpers-mbm.c \
 @ENABLE_PLUGIN_MBM_TRUE@am_libhelpers_mbm_la_OBJECTS = mbm/libhelpers_mbm_la-mm-modem-helpers-mbm.lo
 libhelpers_mbm_la_OBJECTS = $(am_libhelpers_mbm_la_OBJECTS)
 @ENABLE_PLUGIN_MBM_TRUE@am_libhelpers_mbm_la_rpath =
+libhelpers_quectel_la_LIBADD =
+am__libhelpers_quectel_la_SOURCES_DIST =  \
+	quectel/mm-modem-helpers-quectel.c \
+	quectel/mm-modem-helpers-quectel.h
+@ENABLE_PLUGIN_QUECTEL_TRUE@am_libhelpers_quectel_la_OBJECTS = quectel/libhelpers_quectel_la-mm-modem-helpers-quectel.lo
+libhelpers_quectel_la_OBJECTS = $(am_libhelpers_quectel_la_OBJECTS)
+@ENABLE_PLUGIN_QUECTEL_TRUE@am_libhelpers_quectel_la_rpath =
 libhelpers_sierra_la_LIBADD =
 am__libhelpers_sierra_la_SOURCES_DIST =  \
 	sierra/mm-modem-helpers-sierra.c \
@@ -559,9 +585,9 @@ libhelpers_telit_la_LIBADD =
 am__libhelpers_telit_la_SOURCES_DIST = telit/mm-modem-helpers-telit.c \
 	telit/mm-modem-helpers-telit.h
 @WITH_SHARED_TELIT_TRUE@am_libhelpers_telit_la_OBJECTS = telit/libhelpers_telit_la-mm-modem-helpers-telit.lo
-@WITH_SHARED_TELIT_TRUE@am__objects_1 = telit/libhelpers_telit_la-mm-telit-enums-types.lo
+@WITH_SHARED_TELIT_TRUE@am__objects_2 = telit/libhelpers_telit_la-mm-telit-enums-types.lo
 @WITH_SHARED_TELIT_TRUE@nodist_libhelpers_telit_la_OBJECTS =  \
-@WITH_SHARED_TELIT_TRUE@	$(am__objects_1)
+@WITH_SHARED_TELIT_TRUE@	$(am__objects_2)
 libhelpers_telit_la_OBJECTS = $(am_libhelpers_telit_la_OBJECTS) \
 	$(nodist_libhelpers_telit_la_OBJECTS)
 @WITH_SHARED_TELIT_TRUE@am_libhelpers_telit_la_rpath =
@@ -576,9 +602,9 @@ libhelpers_ublox_la_LIBADD =
 am__libhelpers_ublox_la_SOURCES_DIST = ublox/mm-modem-helpers-ublox.c \
 	ublox/mm-modem-helpers-ublox.h
 @ENABLE_PLUGIN_UBLOX_TRUE@am_libhelpers_ublox_la_OBJECTS = ublox/libhelpers_ublox_la-mm-modem-helpers-ublox.lo
-@ENABLE_PLUGIN_UBLOX_TRUE@am__objects_2 = ublox/libhelpers_ublox_la-mm-ublox-enums-types.lo
+@ENABLE_PLUGIN_UBLOX_TRUE@am__objects_3 = ublox/libhelpers_ublox_la-mm-ublox-enums-types.lo
 @ENABLE_PLUGIN_UBLOX_TRUE@nodist_libhelpers_ublox_la_OBJECTS =  \
-@ENABLE_PLUGIN_UBLOX_TRUE@	$(am__objects_2)
+@ENABLE_PLUGIN_UBLOX_TRUE@	$(am__objects_3)
 libhelpers_ublox_la_OBJECTS = $(am_libhelpers_ublox_la_OBJECTS) \
 	$(nodist_libhelpers_ublox_la_OBJECTS)
 @ENABLE_PLUGIN_UBLOX_TRUE@am_libhelpers_ublox_la_rpath =
@@ -646,12 +672,12 @@ am__libmm_plugin_cinterion_la_SOURCES_DIST =  \
 	cinterion/mm-broadband-bearer-cinterion.h \
 	cinterion/mm-broadband-modem-qmi-cinterion.c \
 	cinterion/mm-broadband-modem-qmi-cinterion.h
-@ENABLE_PLUGIN_CINTERION_TRUE@@WITH_QMI_TRUE@am__objects_3 = cinterion/libmm_plugin_cinterion_la-mm-broadband-modem-qmi-cinterion.lo
+@ENABLE_PLUGIN_CINTERION_TRUE@@WITH_QMI_TRUE@am__objects_4 = cinterion/libmm_plugin_cinterion_la-mm-broadband-modem-qmi-cinterion.lo
 @ENABLE_PLUGIN_CINTERION_TRUE@am_libmm_plugin_cinterion_la_OBJECTS = cinterion/libmm_plugin_cinterion_la-mm-plugin-cinterion.lo \
 @ENABLE_PLUGIN_CINTERION_TRUE@	cinterion/libmm_plugin_cinterion_la-mm-shared-cinterion.lo \
 @ENABLE_PLUGIN_CINTERION_TRUE@	cinterion/libmm_plugin_cinterion_la-mm-broadband-modem-cinterion.lo \
 @ENABLE_PLUGIN_CINTERION_TRUE@	cinterion/libmm_plugin_cinterion_la-mm-broadband-bearer-cinterion.lo \
-@ENABLE_PLUGIN_CINTERION_TRUE@	$(am__objects_3)
+@ENABLE_PLUGIN_CINTERION_TRUE@	$(am__objects_4)
 libmm_plugin_cinterion_la_OBJECTS =  \
 	$(am_libmm_plugin_cinterion_la_OBJECTS)
 libmm_plugin_cinterion_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -737,6 +763,18 @@ libmm_plugin_generic_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(LDFLAGS) -o $@
 @ENABLE_PLUGIN_GENERIC_TRUE@am_libmm_plugin_generic_la_rpath = -rpath \
 @ENABLE_PLUGIN_GENERIC_TRUE@	$(pkglibdir)
+libmm_plugin_gosuncn_la_LIBADD =
+am__libmm_plugin_gosuncn_la_SOURCES_DIST =  \
+	gosuncn/mm-plugin-gosuncn.c gosuncn/mm-plugin-gosuncn.h
+@ENABLE_PLUGIN_GOSUNCN_TRUE@am_libmm_plugin_gosuncn_la_OBJECTS = gosuncn/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.lo
+libmm_plugin_gosuncn_la_OBJECTS =  \
+	$(am_libmm_plugin_gosuncn_la_OBJECTS)
+libmm_plugin_gosuncn_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_gosuncn_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
+@ENABLE_PLUGIN_GOSUNCN_TRUE@am_libmm_plugin_gosuncn_la_rpath = -rpath \
+@ENABLE_PLUGIN_GOSUNCN_TRUE@	$(pkglibdir)
 libmm_plugin_haier_la_LIBADD =
 am__libmm_plugin_haier_la_SOURCES_DIST = haier/mm-plugin-haier.c \
 	haier/mm-plugin-haier.h
@@ -951,7 +989,24 @@ libmm_plugin_pantech_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(LDFLAGS) -o $@
 @ENABLE_PLUGIN_PANTECH_TRUE@am_libmm_plugin_pantech_la_rpath = -rpath \
 @ENABLE_PLUGIN_PANTECH_TRUE@	$(pkglibdir)
-libmm_plugin_quectel_la_LIBADD =
+libmm_plugin_qcom_soc_la_LIBADD =
+am__libmm_plugin_qcom_soc_la_SOURCES_DIST =  \
+	qcom-soc/mm-plugin-qcom-soc.c qcom-soc/mm-plugin-qcom-soc.h \
+	qcom-soc/mm-broadband-modem-qmi-qcom-soc.c \
+	qcom-soc/mm-broadband-modem-qmi-qcom-soc.h
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@am_libmm_plugin_qcom_soc_la_OBJECTS = qcom-soc/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.lo \
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@	qcom-soc/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.lo
+libmm_plugin_qcom_soc_la_OBJECTS =  \
+	$(am_libmm_plugin_qcom_soc_la_OBJECTS)
+libmm_plugin_qcom_soc_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libmm_plugin_qcom_soc_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@am_libmm_plugin_qcom_soc_la_rpath =  \
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@	-rpath \
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@	$(pkglibdir)
+@ENABLE_PLUGIN_QUECTEL_TRUE@libmm_plugin_quectel_la_DEPENDENCIES =  \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(builddir)/libhelpers-quectel.la
 am__libmm_plugin_quectel_la_SOURCES_DIST =  \
 	quectel/mm-plugin-quectel.c quectel/mm-plugin-quectel.h \
 	quectel/mm-shared-quectel.c quectel/mm-shared-quectel.h \
@@ -959,11 +1014,11 @@ am__libmm_plugin_quectel_la_SOURCES_DIST =  \
 	quectel/mm-broadband-modem-quectel.h \
 	quectel/mm-broadband-modem-qmi-quectel.c \
 	quectel/mm-broadband-modem-qmi-quectel.h
-@ENABLE_PLUGIN_QUECTEL_TRUE@@WITH_QMI_TRUE@am__objects_4 = quectel/libmm_plugin_quectel_la-mm-broadband-modem-qmi-quectel.lo
+@ENABLE_PLUGIN_QUECTEL_TRUE@@WITH_QMI_TRUE@am__objects_5 = quectel/libmm_plugin_quectel_la-mm-broadband-modem-qmi-quectel.lo
 @ENABLE_PLUGIN_QUECTEL_TRUE@am_libmm_plugin_quectel_la_OBJECTS = quectel/libmm_plugin_quectel_la-mm-plugin-quectel.lo \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/libmm_plugin_quectel_la-mm-shared-quectel.lo \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/libmm_plugin_quectel_la-mm-broadband-modem-quectel.lo \
-@ENABLE_PLUGIN_QUECTEL_TRUE@	$(am__objects_4)
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(am__objects_5)
 libmm_plugin_quectel_la_OBJECTS =  \
 	$(am_libmm_plugin_quectel_la_OBJECTS)
 libmm_plugin_quectel_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -1023,11 +1078,11 @@ am__libmm_plugin_simtech_la_SOURCES_DIST =  \
 	simtech/mm-broadband-modem-simtech.c \
 	simtech/mm-broadband-modem-qmi-simtech.c \
 	simtech/mm-broadband-modem-qmi-simtech.h
-@ENABLE_PLUGIN_SIMTECH_TRUE@@WITH_QMI_TRUE@am__objects_5 = simtech/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.lo
+@ENABLE_PLUGIN_SIMTECH_TRUE@@WITH_QMI_TRUE@am__objects_6 = simtech/libmm_plugin_simtech_la-mm-broadband-modem-qmi-simtech.lo
 @ENABLE_PLUGIN_SIMTECH_TRUE@am_libmm_plugin_simtech_la_OBJECTS = simtech/libmm_plugin_simtech_la-mm-plugin-simtech.lo \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	simtech/libmm_plugin_simtech_la-mm-shared-simtech.lo \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	simtech/libmm_plugin_simtech_la-mm-broadband-modem-simtech.lo \
-@ENABLE_PLUGIN_SIMTECH_TRUE@	$(am__objects_5)
+@ENABLE_PLUGIN_SIMTECH_TRUE@	$(am__objects_6)
 libmm_plugin_simtech_la_OBJECTS =  \
 	$(am_libmm_plugin_simtech_la_OBJECTS)
 libmm_plugin_simtech_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -1153,10 +1208,10 @@ libmm_plugin_zte_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 @ENABLE_PLUGIN_ZTE_TRUE@	$(pkglibdir)
 libmm_shared_foxconn_la_LIBADD =
 am__libmm_shared_foxconn_la_SOURCES_DIST = foxconn/mm-shared.c \
-	foxconn/mm-broadband-modem-foxconn-t77w968.c \
-	foxconn/mm-broadband-modem-foxconn-t77w968.h
+	foxconn/mm-broadband-modem-mbim-foxconn.c \
+	foxconn/mm-broadband-modem-mbim-foxconn.h
 @WITH_MBIM_TRUE@@WITH_SHARED_FOXCONN_TRUE@am_libmm_shared_foxconn_la_OBJECTS = foxconn/libmm_shared_foxconn_la-mm-shared.lo \
-@WITH_MBIM_TRUE@@WITH_SHARED_FOXCONN_TRUE@	foxconn/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.lo
+@WITH_MBIM_TRUE@@WITH_SHARED_FOXCONN_TRUE@	foxconn/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.lo
 libmm_shared_foxconn_la_OBJECTS =  \
 	$(am_libmm_shared_foxconn_la_OBJECTS)
 libmm_shared_foxconn_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -1241,12 +1296,12 @@ am__libmm_shared_telit_la_SOURCES_DIST = telit/mm-shared.c \
 	telit/mm-broadband-modem-telit.h \
 	telit/mm-broadband-modem-mbim-telit.h \
 	telit/mm-broadband-modem-mbim-telit.c
-@WITH_MBIM_TRUE@@WITH_SHARED_TELIT_TRUE@am__objects_6 = telit/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.lo
+@WITH_MBIM_TRUE@@WITH_SHARED_TELIT_TRUE@am__objects_7 = telit/libmm_shared_telit_la-mm-broadband-modem-mbim-telit.lo
 @WITH_SHARED_TELIT_TRUE@am_libmm_shared_telit_la_OBJECTS = telit/libmm_shared_telit_la-mm-shared.lo \
 @WITH_SHARED_TELIT_TRUE@	telit/libmm_shared_telit_la-mm-common-telit.lo \
 @WITH_SHARED_TELIT_TRUE@	telit/libmm_shared_telit_la-mm-shared-telit.lo \
 @WITH_SHARED_TELIT_TRUE@	telit/libmm_shared_telit_la-mm-broadband-modem-telit.lo \
-@WITH_SHARED_TELIT_TRUE@	$(am__objects_6)
+@WITH_SHARED_TELIT_TRUE@	$(am__objects_7)
 libmm_shared_telit_la_OBJECTS = $(am_libmm_shared_telit_la_OBJECTS)
 libmm_shared_telit_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -1261,12 +1316,12 @@ am__libmm_shared_xmm_la_SOURCES_DIST = xmm/mm-shared.c \
 	xmm/mm-broadband-modem-xmm.h xmm/mm-broadband-modem-xmm.c \
 	xmm/mm-broadband-modem-mbim-xmm.h \
 	xmm/mm-broadband-modem-mbim-xmm.c
-@WITH_MBIM_TRUE@@WITH_SHARED_XMM_TRUE@am__objects_7 = xmm/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.lo
+@WITH_MBIM_TRUE@@WITH_SHARED_XMM_TRUE@am__objects_8 = xmm/libmm_shared_xmm_la-mm-broadband-modem-mbim-xmm.lo
 @WITH_SHARED_XMM_TRUE@am_libmm_shared_xmm_la_OBJECTS =  \
 @WITH_SHARED_XMM_TRUE@	xmm/libmm_shared_xmm_la-mm-shared.lo \
 @WITH_SHARED_XMM_TRUE@	xmm/libmm_shared_xmm_la-mm-shared-xmm.lo \
 @WITH_SHARED_XMM_TRUE@	xmm/libmm_shared_xmm_la-mm-broadband-modem-xmm.lo \
-@WITH_SHARED_XMM_TRUE@	$(am__objects_7)
+@WITH_SHARED_XMM_TRUE@	$(am__objects_8)
 libmm_shared_xmm_la_OBJECTS = $(am_libmm_shared_xmm_la_OBJECTS)
 libmm_shared_xmm_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -1298,6 +1353,7 @@ am__test_modem_helpers_cinterion_SOURCES_DIST =  \
 test_modem_helpers_cinterion_OBJECTS =  \
 	$(am_test_modem_helpers_cinterion_OBJECTS)
 @ENABLE_PLUGIN_CINTERION_TRUE@test_modem_helpers_cinterion_DEPENDENCIES = $(builddir)/libhelpers-cinterion.la \
+@ENABLE_PLUGIN_CINTERION_TRUE@	$(top_builddir)/src/libport.la \
 @ENABLE_PLUGIN_CINTERION_TRUE@	$(top_builddir)/src/libhelpers.la \
 @ENABLE_PLUGIN_CINTERION_TRUE@	$(top_builddir)/libmm-glib/libmm-glib.la
 am__test_modem_helpers_huawei_SOURCES_DIST =  \
@@ -1335,6 +1391,15 @@ test_modem_helpers_mbm_OBJECTS = $(am_test_modem_helpers_mbm_OBJECTS)
 @ENABLE_PLUGIN_MBM_TRUE@	$(builddir)/libhelpers-mbm.la \
 @ENABLE_PLUGIN_MBM_TRUE@	$(top_builddir)/src/libhelpers.la \
 @ENABLE_PLUGIN_MBM_TRUE@	$(top_builddir)/libmm-glib/libmm-glib.la
+am__test_modem_helpers_quectel_SOURCES_DIST =  \
+	quectel/tests/test-modem-helpers-quectel.c
+@ENABLE_PLUGIN_QUECTEL_TRUE@am_test_modem_helpers_quectel_OBJECTS = quectel/tests/test_modem_helpers_quectel-test-modem-helpers-quectel.$(OBJEXT)
+test_modem_helpers_quectel_OBJECTS =  \
+	$(am_test_modem_helpers_quectel_OBJECTS)
+@ENABLE_PLUGIN_QUECTEL_TRUE@test_modem_helpers_quectel_DEPENDENCIES =  \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(builddir)/libhelpers-quectel.la \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(top_builddir)/src/libhelpers.la \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(top_builddir)/libmm-glib/libmm-glib.la
 am__test_modem_helpers_sierra_SOURCES_DIST =  \
 	sierra/tests/test-modem-helpers-sierra.c
 @WITH_SHARED_SIERRA_TRUE@am_test_modem_helpers_sierra_OBJECTS = sierra/tests/test_modem_helpers_sierra-test-modem-helpers-sierra.$(OBJEXT)
@@ -1435,11 +1500,13 @@ am__depfiles_remade = altair/$(DEPDIR)/libhelpers_altair_lte_la-mm-modem-helpers
 	dlink/$(DEPDIR)/libmm_plugin_dlink_la-mm-plugin-dlink.Plo \
 	fibocom/$(DEPDIR)/libmm_plugin_fibocom_la-mm-plugin-fibocom.Plo \
 	foxconn/$(DEPDIR)/libmm_plugin_foxconn_la-mm-plugin-foxconn.Plo \
-	foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.Plo \
+	foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.Plo \
 	foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-shared.Plo \
 	generic/$(DEPDIR)/libmm_plugin_generic_la-mm-plugin-generic.Plo \
 	generic/tests/$(DEPDIR)/test_service_generic-test-service-generic.Po \
+	gosuncn/$(DEPDIR)/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.Plo \
 	haier/$(DEPDIR)/libmm_plugin_haier_la-mm-plugin-haier.Plo \
+	huawei/$(DEPDIR)/libhelpers_huawei_la-mm-huawei-enums-types.Plo \
 	huawei/$(DEPDIR)/libhelpers_huawei_la-mm-modem-helpers-huawei.Plo \
 	huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-bearer-huawei.Plo \
 	huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-modem-huawei.Plo \
@@ -1492,10 +1559,14 @@ am__depfiles_remade = altair/$(DEPDIR)/libhelpers_altair_lte_la-mm-modem-helpers
 	pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-broadband-modem-pantech.Plo \
 	pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-plugin-pantech.Plo \
 	pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-sim-pantech.Plo \
+	qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.Plo \
+	qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.Plo \
+	quectel/$(DEPDIR)/libhelpers_quectel_la-mm-modem-helpers-quectel.Plo \
 	quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-broadband-modem-qmi-quectel.Plo \
 	quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-broadband-modem-quectel.Plo \
 	quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-plugin-quectel.Plo \
 	quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-shared-quectel.Plo \
+	quectel/tests/$(DEPDIR)/test_modem_helpers_quectel-test-modem-helpers-quectel.Po \
 	samsung/$(DEPDIR)/libmm_plugin_samsung_la-mm-broadband-modem-samsung.Plo \
 	samsung/$(DEPDIR)/libmm_plugin_samsung_la-mm-plugin-samsung.Plo \
 	sierra/$(DEPDIR)/libhelpers_sierra_la-mm-modem-helpers-sierra.Plo \
@@ -1577,8 +1648,11 @@ am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(libhelpers_cinterion_la_SOURCES) \
-	$(libhelpers_huawei_la_SOURCES) $(libhelpers_icera_la_SOURCES) \
+	$(libhelpers_huawei_la_SOURCES) \
+	$(nodist_libhelpers_huawei_la_SOURCES) \
+	$(libhelpers_icera_la_SOURCES) \
 	$(libhelpers_linktop_la_SOURCES) $(libhelpers_mbm_la_SOURCES) \
+	$(libhelpers_quectel_la_SOURCES) \
 	$(libhelpers_sierra_la_SOURCES) \
 	$(libhelpers_simtech_la_SOURCES) \
 	$(libhelpers_telit_la_SOURCES) \
@@ -1597,6 +1671,7 @@ SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(libmm_plugin_fibocom_la_SOURCES) \
 	$(libmm_plugin_foxconn_la_SOURCES) \
 	$(libmm_plugin_generic_la_SOURCES) \
+	$(libmm_plugin_gosuncn_la_SOURCES) \
 	$(libmm_plugin_haier_la_SOURCES) \
 	$(libmm_plugin_huawei_la_SOURCES) \
 	$(libmm_plugin_iridium_la_SOURCES) \
@@ -1611,6 +1686,7 @@ SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(libmm_plugin_option_hso_la_SOURCES) \
 	$(libmm_plugin_option_la_SOURCES) \
 	$(libmm_plugin_pantech_la_SOURCES) \
+	$(libmm_plugin_qcom_soc_la_SOURCES) \
 	$(libmm_plugin_quectel_la_SOURCES) \
 	$(libmm_plugin_samsung_la_SOURCES) \
 	$(libmm_plugin_sierra_legacy_la_SOURCES) \
@@ -1637,6 +1713,7 @@ SOURCES = $(libhelpers_altair_lte_la_SOURCES) \
 	$(test_modem_helpers_icera_SOURCES) \
 	$(test_modem_helpers_linktop_SOURCES) \
 	$(test_modem_helpers_mbm_SOURCES) \
+	$(test_modem_helpers_quectel_SOURCES) \
 	$(test_modem_helpers_sierra_SOURCES) \
 	$(test_modem_helpers_simtech_SOURCES) \
 	$(test_modem_helpers_telit_SOURCES) \
@@ -1650,6 +1727,7 @@ DIST_SOURCES = $(am__libhelpers_altair_lte_la_SOURCES_DIST) \
 	$(am__libhelpers_icera_la_SOURCES_DIST) \
 	$(am__libhelpers_linktop_la_SOURCES_DIST) \
 	$(am__libhelpers_mbm_la_SOURCES_DIST) \
+	$(am__libhelpers_quectel_la_SOURCES_DIST) \
 	$(am__libhelpers_sierra_la_SOURCES_DIST) \
 	$(am__libhelpers_simtech_la_SOURCES_DIST) \
 	$(am__libhelpers_telit_la_SOURCES_DIST) \
@@ -1666,6 +1744,7 @@ DIST_SOURCES = $(am__libhelpers_altair_lte_la_SOURCES_DIST) \
 	$(am__libmm_plugin_fibocom_la_SOURCES_DIST) \
 	$(am__libmm_plugin_foxconn_la_SOURCES_DIST) \
 	$(am__libmm_plugin_generic_la_SOURCES_DIST) \
+	$(am__libmm_plugin_gosuncn_la_SOURCES_DIST) \
 	$(am__libmm_plugin_haier_la_SOURCES_DIST) \
 	$(am__libmm_plugin_huawei_la_SOURCES_DIST) \
 	$(am__libmm_plugin_iridium_la_SOURCES_DIST) \
@@ -1680,6 +1759,7 @@ DIST_SOURCES = $(am__libhelpers_altair_lte_la_SOURCES_DIST) \
 	$(am__libmm_plugin_option_hso_la_SOURCES_DIST) \
 	$(am__libmm_plugin_option_la_SOURCES_DIST) \
 	$(am__libmm_plugin_pantech_la_SOURCES_DIST) \
+	$(am__libmm_plugin_qcom_soc_la_SOURCES_DIST) \
 	$(am__libmm_plugin_quectel_la_SOURCES_DIST) \
 	$(am__libmm_plugin_samsung_la_SOURCES_DIST) \
 	$(am__libmm_plugin_sierra_legacy_la_SOURCES_DIST) \
@@ -1707,6 +1787,7 @@ DIST_SOURCES = $(am__libhelpers_altair_lte_la_SOURCES_DIST) \
 	$(am__test_modem_helpers_icera_SOURCES_DIST) \
 	$(am__test_modem_helpers_linktop_SOURCES_DIST) \
 	$(am__test_modem_helpers_mbm_SOURCES_DIST) \
+	$(am__test_modem_helpers_quectel_SOURCES_DIST) \
 	$(am__test_modem_helpers_sierra_SOURCES_DIST) \
 	$(am__test_modem_helpers_simtech_SOURCES_DIST) \
 	$(am__test_modem_helpers_telit_SOURCES_DIST) \
@@ -1720,8 +1801,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-am__dist_pkgdata_DATA_DIST =  \
-	foxconn/mm-foxconn-t77w968-carrier-mapping.conf
+am__dist_pkgdata_DATA_DIST = foxconn/mm-foxconn-carrier-mapping.conf
 am__dist_udevrules_DATA_DIST =  \
 	broadmobi/77-mm-broadmobi-port-types.rules \
 	cinterion/77-mm-cinterion-port-types.rules \
@@ -1729,11 +1809,13 @@ am__dist_udevrules_DATA_DIST =  \
 	dlink/77-mm-dlink-port-types.rules \
 	fibocom/77-mm-fibocom-port-types.rules \
 	foxconn/77-mm-foxconn-port-types.rules \
+	gosuncn/77-mm-gosuncn-port-types.rules \
 	haier/77-mm-haier-port-types.rules \
 	huawei/77-mm-huawei-net-port-types.rules \
 	longcheer/77-mm-longcheer-port-types.rules \
 	mbm/77-mm-ericsson-mbm.rules mtk/77-mm-mtk-port-types.rules \
 	nokia/77-mm-nokia-port-types.rules \
+	qcom-soc/77-mm-qcom-soc.rules \
 	quectel/77-mm-quectel-port-types.rules \
 	sierra/77-mm-sierra.rules \
 	simtech/77-mm-simtech-port-types.rules \
@@ -1830,6 +1912,8 @@ INTROSPECTION_TYPELIBDIR = @INTROSPECTION_TYPELIBDIR@
 LCOV = @LCOV@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBELOGIND_CFLAGS = @LIBELOGIND_CFLAGS@
+LIBELOGIND_LIBS = @LIBELOGIND_LIBS@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBMM_GLIB_CFLAGS = @LIBMM_GLIB_CFLAGS@
@@ -1984,11 +2068,11 @@ AM_CFLAGS = $(WARN_CFLAGS) $(MM_CFLAGS) $(CODE_COVERAGE_CFLAGS) \
 	-I$(top_builddir)/libmm-glib/generated $(NULL) $(am__append_1) \
 	$(am__append_3) $(am__append_32) $(am__append_38) \
 	$(am__append_41) $(am__append_44) $(am__append_47) \
-	$(am__append_51) $(am__append_54) $(am__append_59) \
-	$(am__append_66) $(am__append_71) $(am__append_75) \
-	$(am__append_79) $(am__append_88) $(am__append_98) \
-	$(am__append_101) $(am__append_107) $(am__append_118) \
-	$(am__append_121)
+	$(am__append_51) $(am__append_54) $(am__append_57) \
+	$(am__append_64) $(am__append_71) $(am__append_76) \
+	$(am__append_80) $(am__append_84) $(am__append_92) \
+	$(am__append_98) $(am__append_108) $(am__append_111) \
+	$(am__append_117) $(am__append_128) $(am__append_131)
 AM_LDFLAGS = $(WARN_LDFLAGS) $(MM_LIBS) $(CODE_COVERAGE_LDFLAGS) \
 	$(GUDEV_LIBS) $(NULL) $(am__append_2) $(am__append_4)
 
@@ -2017,11 +2101,12 @@ PLUGIN_COMMON_LINKER_FLAGS = \
 udevrulesdir = $(UDEV_BASE_DIR)/rules.d
 dist_udevrules_DATA = $(am__append_31) $(am__append_37) \
 	$(am__append_40) $(am__append_43) $(am__append_46) \
-	$(am__append_49) $(am__append_53) $(am__append_58) \
-	$(am__append_65) $(am__append_70) $(am__append_74) \
-	$(am__append_78) $(am__append_87) $(am__append_91) \
-	$(am__append_97) $(am__append_100) $(am__append_106) \
-	$(am__append_108) $(am__append_117) $(am__append_120)
+	$(am__append_49) $(am__append_53) $(am__append_56) \
+	$(am__append_63) $(am__append_70) $(am__append_75) \
+	$(am__append_79) $(am__append_83) $(am__append_91) \
+	$(am__append_97) $(am__append_101) $(am__append_107) \
+	$(am__append_110) $(am__append_116) $(am__append_118) \
+	$(am__append_127) $(am__append_130)
 
 # Helper libs
 
@@ -2030,9 +2115,9 @@ dist_udevrules_DATA = $(am__append_31) $(am__append_37) \
 ################################################################################
 noinst_LTLIBRARIES = libmm-test-common.la $(am__append_5) \
 	$(am__append_8) $(am__append_13) $(am__append_19) \
-	$(am__append_26) $(am__append_33) $(am__append_55) \
-	$(am__append_61) $(am__append_67) $(am__append_93) \
-	$(am__append_102) $(am__append_109)
+	$(am__append_26) $(am__append_33) $(am__append_60) \
+	$(am__append_66) $(am__append_72) $(am__append_93) \
+	$(am__append_103) $(am__append_112) $(am__append_119)
 
 # Plugins
 pkglib_LTLIBRARIES = $(am__append_7) $(am__append_10) $(am__append_11) \
@@ -2040,22 +2125,23 @@ pkglib_LTLIBRARIES = $(am__append_7) $(am__append_10) $(am__append_11) \
 	$(am__append_23) $(am__append_24) $(am__append_28) \
 	$(am__append_29) $(am__append_30) $(am__append_35) \
 	$(am__append_39) $(am__append_42) $(am__append_45) \
-	$(am__append_48) $(am__append_52) $(am__append_57) \
-	$(am__append_60) $(am__append_63) $(am__append_64) \
-	$(am__append_69) $(am__append_72) $(am__append_73) \
-	$(am__append_76) $(am__append_77) $(am__append_80) \
-	$(am__append_81) $(am__append_82) $(am__append_83) \
-	$(am__append_84) $(am__append_85) $(am__append_89) \
-	$(am__append_90) $(am__append_92) $(am__append_95) \
-	$(am__append_99) $(am__append_104) $(am__append_105) \
-	$(am__append_113) $(am__append_114) $(am__append_115) \
-	$(am__append_116) $(am__append_119)
+	$(am__append_48) $(am__append_52) $(am__append_55) \
+	$(am__append_62) $(am__append_65) $(am__append_68) \
+	$(am__append_69) $(am__append_74) $(am__append_77) \
+	$(am__append_78) $(am__append_81) $(am__append_82) \
+	$(am__append_85) $(am__append_86) $(am__append_87) \
+	$(am__append_88) $(am__append_89) $(am__append_90) \
+	$(am__append_95) $(am__append_99) $(am__append_100) \
+	$(am__append_102) $(am__append_105) $(am__append_109) \
+	$(am__append_114) $(am__append_115) $(am__append_123) \
+	$(am__append_124) $(am__append_125) $(am__append_126) \
+	$(am__append_129)
 
 # Built sources
-BUILT_SOURCES = $(am__append_17) $(am__append_110)
+BUILT_SOURCES = $(am__append_17) $(am__append_58) $(am__append_120)
 
 # Clean files
-CLEANFILES = $(am__append_18) $(am__append_111)
+CLEANFILES = $(am__append_18) $(am__append_59) $(am__append_121)
 
 # Data files
 dist_pkgdata_DATA = $(am__append_50)
@@ -2312,8 +2398,8 @@ TEST_COMMON_LIBADD_FLAGS = \
 
 @WITH_MBIM_TRUE@@WITH_SHARED_FOXCONN_TRUE@libmm_shared_foxconn_la_SOURCES = \
 @WITH_MBIM_TRUE@@WITH_SHARED_FOXCONN_TRUE@	foxconn/mm-shared.c \
-@WITH_MBIM_TRUE@@WITH_SHARED_FOXCONN_TRUE@	foxconn/mm-broadband-modem-foxconn-t77w968.c \
-@WITH_MBIM_TRUE@@WITH_SHARED_FOXCONN_TRUE@	foxconn/mm-broadband-modem-foxconn-t77w968.h \
+@WITH_MBIM_TRUE@@WITH_SHARED_FOXCONN_TRUE@	foxconn/mm-broadband-modem-mbim-foxconn.c \
+@WITH_MBIM_TRUE@@WITH_SHARED_FOXCONN_TRUE@	foxconn/mm-broadband-modem-mbim-foxconn.h \
 @WITH_MBIM_TRUE@@WITH_SHARED_FOXCONN_TRUE@	$(NULL)
 
 @WITH_MBIM_TRUE@@WITH_SHARED_FOXCONN_TRUE@libmm_shared_foxconn_la_CPPFLAGS = \
@@ -2423,6 +2509,7 @@ TEST_COMMON_LIBADD_FLAGS = \
 
 @ENABLE_PLUGIN_CINTERION_TRUE@test_modem_helpers_cinterion_LDADD = \
 @ENABLE_PLUGIN_CINTERION_TRUE@	$(builddir)/libhelpers-cinterion.la \
+@ENABLE_PLUGIN_CINTERION_TRUE@	$(top_builddir)/src/libport.la \
 @ENABLE_PLUGIN_CINTERION_TRUE@	$(top_builddir)/src/libhelpers.la \
 @ENABLE_PLUGIN_CINTERION_TRUE@	$(top_builddir)/libmm-glib/libmm-glib.la \
 @ENABLE_PLUGIN_CINTERION_TRUE@	$(NULL)
@@ -2495,6 +2582,17 @@ TEST_COMMON_LIBADD_FLAGS = \
 @ENABLE_PLUGIN_FOXCONN_TRUE@	$(NULL)
 
 @ENABLE_PLUGIN_FOXCONN_TRUE@libmm_plugin_foxconn_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
+@ENABLE_PLUGIN_GOSUNCN_TRUE@libmm_plugin_gosuncn_la_SOURCES = \
+@ENABLE_PLUGIN_GOSUNCN_TRUE@	gosuncn/mm-plugin-gosuncn.c \
+@ENABLE_PLUGIN_GOSUNCN_TRUE@	gosuncn/mm-plugin-gosuncn.h \
+@ENABLE_PLUGIN_GOSUNCN_TRUE@	$(NULL)
+
+@ENABLE_PLUGIN_GOSUNCN_TRUE@libmm_plugin_gosuncn_la_CPPFLAGS = \
+@ENABLE_PLUGIN_GOSUNCN_TRUE@	$(PLUGIN_COMMON_COMPILER_FLAGS) \
+@ENABLE_PLUGIN_GOSUNCN_TRUE@	-DMM_MODULE_NAME=\"gosuncn\" \
+@ENABLE_PLUGIN_GOSUNCN_TRUE@	$(NULL)
+
+@ENABLE_PLUGIN_GOSUNCN_TRUE@libmm_plugin_gosuncn_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 @ENABLE_PLUGIN_HAIER_TRUE@libmm_plugin_haier_la_SOURCES = \
 @ENABLE_PLUGIN_HAIER_TRUE@	haier/mm-plugin-haier.c \
 @ENABLE_PLUGIN_HAIER_TRUE@	haier/mm-plugin-haier.h \
@@ -2506,6 +2604,19 @@ TEST_COMMON_LIBADD_FLAGS = \
 @ENABLE_PLUGIN_HAIER_TRUE@	$(NULL)
 
 @ENABLE_PLUGIN_HAIER_TRUE@libmm_plugin_haier_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
+
+################################################################################
+# plugin: huawei
+################################################################################
+@ENABLE_PLUGIN_HUAWEI_TRUE@HUAWEI_ENUMS_INPUTS = \
+@ENABLE_PLUGIN_HUAWEI_TRUE@	$(top_srcdir)/plugins/huawei/mm-modem-helpers-huawei.h \
+@ENABLE_PLUGIN_HUAWEI_TRUE@	$(NULL)
+
+@ENABLE_PLUGIN_HUAWEI_TRUE@HUAWEI_ENUMS_GENERATED = \
+@ENABLE_PLUGIN_HUAWEI_TRUE@	huawei/mm-huawei-enums-types.h \
+@ENABLE_PLUGIN_HUAWEI_TRUE@	huawei/mm-huawei-enums-types.c \
+@ENABLE_PLUGIN_HUAWEI_TRUE@	$(NULL)
+
 @ENABLE_PLUGIN_HUAWEI_TRUE@libhelpers_huawei_la_SOURCES = \
 @ENABLE_PLUGIN_HUAWEI_TRUE@	huawei/mm-modem-helpers-huawei.c \
 @ENABLE_PLUGIN_HUAWEI_TRUE@	huawei/mm-modem-helpers-huawei.h \
@@ -2513,14 +2624,18 @@ TEST_COMMON_LIBADD_FLAGS = \
 
 @ENABLE_PLUGIN_HUAWEI_TRUE@libhelpers_huawei_la_CPPFLAGS = \
 @ENABLE_PLUGIN_HUAWEI_TRUE@	-DMM_MODULE_NAME=\"huawei\" \
+@ENABLE_PLUGIN_HUAWEI_TRUE@	-I$(top_srcdir)/plugins/huawei \
+@ENABLE_PLUGIN_HUAWEI_TRUE@	-I$(top_builddir)/plugins/huawei \
 @ENABLE_PLUGIN_HUAWEI_TRUE@	$(NULL)
 
+@ENABLE_PLUGIN_HUAWEI_TRUE@nodist_libhelpers_huawei_la_SOURCES = $(HUAWEI_ENUMS_GENERATED)
 @ENABLE_PLUGIN_HUAWEI_TRUE@test_modem_helpers_huawei_SOURCES = \
 @ENABLE_PLUGIN_HUAWEI_TRUE@	huawei/tests/test-modem-helpers-huawei.c \
 @ENABLE_PLUGIN_HUAWEI_TRUE@	$(NULL)
 
 @ENABLE_PLUGIN_HUAWEI_TRUE@test_modem_helpers_huawei_CPPFLAGS = \
 @ENABLE_PLUGIN_HUAWEI_TRUE@	-I$(top_srcdir)/plugins/huawei \
+@ENABLE_PLUGIN_HUAWEI_TRUE@	-I$(top_builddir)/plugins/huawei \
 @ENABLE_PLUGIN_HUAWEI_TRUE@	$(NULL)
 
 @ENABLE_PLUGIN_HUAWEI_TRUE@test_modem_helpers_huawei_LDADD = \
@@ -2541,6 +2656,8 @@ TEST_COMMON_LIBADD_FLAGS = \
 @ENABLE_PLUGIN_HUAWEI_TRUE@	$(NULL)
 
 @ENABLE_PLUGIN_HUAWEI_TRUE@libmm_plugin_huawei_la_CPPFLAGS = \
+@ENABLE_PLUGIN_HUAWEI_TRUE@	-I$(top_srcdir)/plugins/huawei \
+@ENABLE_PLUGIN_HUAWEI_TRUE@	-I$(top_builddir)/plugins/huawei \
 @ENABLE_PLUGIN_HUAWEI_TRUE@	$(PLUGIN_COMMON_COMPILER_FLAGS) \
 @ENABLE_PLUGIN_HUAWEI_TRUE@	-DMM_MODULE_NAME=\"huawei\" \
 @ENABLE_PLUGIN_HUAWEI_TRUE@	$(NULL)
@@ -2779,6 +2896,42 @@ TEST_COMMON_LIBADD_FLAGS = \
 @ENABLE_PLUGIN_PANTECH_TRUE@	$(NULL)
 
 @ENABLE_PLUGIN_PANTECH_TRUE@libmm_plugin_pantech_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@libmm_plugin_qcom_soc_la_SOURCES = \
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@	qcom-soc/mm-plugin-qcom-soc.c \
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@	qcom-soc/mm-plugin-qcom-soc.h \
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@	qcom-soc/mm-broadband-modem-qmi-qcom-soc.c \
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@	qcom-soc/mm-broadband-modem-qmi-qcom-soc.h \
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@	$(NULL)
+
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@libmm_plugin_qcom_soc_la_CPPFLAGS = \
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@	$(PLUGIN_COMMON_COMPILER_FLAGS) \
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@	-DMM_MODULE_NAME=\"qcom-soc\" \
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@	$(NULL)
+
+@ENABLE_PLUGIN_QCOM_SOC_TRUE@@WITH_QMI_TRUE@libmm_plugin_qcom_soc_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
+@ENABLE_PLUGIN_QUECTEL_TRUE@libhelpers_quectel_la_SOURCES = \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/mm-modem-helpers-quectel.c \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/mm-modem-helpers-quectel.h \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(NULL)
+
+@ENABLE_PLUGIN_QUECTEL_TRUE@libhelpers_quectel_la_CPPFLAGS = \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	-DMM_MODULE_NAME=\"quectel\" \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(NULL)
+
+@ENABLE_PLUGIN_QUECTEL_TRUE@test_modem_helpers_quectel_SOURCES = \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/tests/test-modem-helpers-quectel.c \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(NULL)
+
+@ENABLE_PLUGIN_QUECTEL_TRUE@test_modem_helpers_quectel_CPPFLAGS = \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	-I$(top_srcdir)/plugins/quectel \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(NULL)
+
+@ENABLE_PLUGIN_QUECTEL_TRUE@test_modem_helpers_quectel_LDADD = \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(builddir)/libhelpers-quectel.la  \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(top_builddir)/src/libhelpers.la \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(top_builddir)/libmm-glib/libmm-glib.la \
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(NULL)
+
 @ENABLE_PLUGIN_QUECTEL_TRUE@libmm_plugin_quectel_la_SOURCES =  \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/mm-plugin-quectel.c \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/mm-plugin-quectel.h \
@@ -2786,13 +2939,14 @@ TEST_COMMON_LIBADD_FLAGS = \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/mm-shared-quectel.h \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/mm-broadband-modem-quectel.c \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	quectel/mm-broadband-modem-quectel.h \
-@ENABLE_PLUGIN_QUECTEL_TRUE@	$(NULL) $(am__append_86)
+@ENABLE_PLUGIN_QUECTEL_TRUE@	$(NULL) $(am__append_96)
 @ENABLE_PLUGIN_QUECTEL_TRUE@libmm_plugin_quectel_la_CPPFLAGS = \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	$(PLUGIN_COMMON_COMPILER_FLAGS) \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	-DMM_MODULE_NAME=\"quectel\" \
 @ENABLE_PLUGIN_QUECTEL_TRUE@	$(NULL)
 
 @ENABLE_PLUGIN_QUECTEL_TRUE@libmm_plugin_quectel_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
+@ENABLE_PLUGIN_QUECTEL_TRUE@libmm_plugin_quectel_la_LIBADD = $(builddir)/libhelpers-quectel.la
 @ENABLE_PLUGIN_SAMSUNG_TRUE@libmm_plugin_samsung_la_SOURCES = \
 @ENABLE_PLUGIN_SAMSUNG_TRUE@	samsung/mm-plugin-samsung.c \
 @ENABLE_PLUGIN_SAMSUNG_TRUE@	samsung/mm-plugin-samsung.h \
@@ -2829,6 +2983,7 @@ TEST_COMMON_LIBADD_FLAGS = \
 
 @ENABLE_PLUGIN_SIERRA_TRUE@libmm_plugin_sierra_la_CPPFLAGS = \
 @ENABLE_PLUGIN_SIERRA_TRUE@	$(PLUGIN_COMMON_COMPILER_FLAGS) \
+@ENABLE_PLUGIN_SIERRA_TRUE@	$(XMM_COMMON_COMPILER_FLAGS) \
 @ENABLE_PLUGIN_SIERRA_TRUE@	-DMM_MODULE_NAME=\"sierra\" \
 @ENABLE_PLUGIN_SIERRA_TRUE@	$(NULL)
 
@@ -2863,7 +3018,7 @@ TEST_COMMON_LIBADD_FLAGS = \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	simtech/mm-shared-simtech.h \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	simtech/mm-broadband-modem-simtech.h \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	simtech/mm-broadband-modem-simtech.c \
-@ENABLE_PLUGIN_SIMTECH_TRUE@	$(NULL) $(am__append_96)
+@ENABLE_PLUGIN_SIMTECH_TRUE@	$(NULL) $(am__append_106)
 @ENABLE_PLUGIN_SIMTECH_TRUE@libmm_plugin_simtech_la_CPPFLAGS = \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	$(PLUGIN_COMMON_COMPILER_FLAGS) \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	-DMM_MODULE_NAME=\"simtech\" \
@@ -3186,6 +3341,8 @@ huawei/$(DEPDIR)/$(am__dirstamp):
 	@: > huawei/$(DEPDIR)/$(am__dirstamp)
 huawei/libhelpers_huawei_la-mm-modem-helpers-huawei.lo:  \
 	huawei/$(am__dirstamp) huawei/$(DEPDIR)/$(am__dirstamp)
+huawei/libhelpers_huawei_la-mm-huawei-enums-types.lo:  \
+	huawei/$(am__dirstamp) huawei/$(DEPDIR)/$(am__dirstamp)
 
 libhelpers-huawei.la: $(libhelpers_huawei_la_OBJECTS) $(libhelpers_huawei_la_DEPENDENCIES) $(EXTRA_libhelpers_huawei_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK) $(am_libhelpers_huawei_la_rpath) $(libhelpers_huawei_la_OBJECTS) $(libhelpers_huawei_la_LIBADD) $(LIBS)
@@ -3222,6 +3379,17 @@ mbm/libhelpers_mbm_la-mm-modem-helpers-mbm.lo: mbm/$(am__dirstamp) \
 
 libhelpers-mbm.la: $(libhelpers_mbm_la_OBJECTS) $(libhelpers_mbm_la_DEPENDENCIES) $(EXTRA_libhelpers_mbm_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK) $(am_libhelpers_mbm_la_rpath) $(libhelpers_mbm_la_OBJECTS) $(libhelpers_mbm_la_LIBADD) $(LIBS)
+quectel/$(am__dirstamp):
+	@$(MKDIR_P) quectel
+	@: > quectel/$(am__dirstamp)
+quectel/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) quectel/$(DEPDIR)
+	@: > quectel/$(DEPDIR)/$(am__dirstamp)
+quectel/libhelpers_quectel_la-mm-modem-helpers-quectel.lo:  \
+	quectel/$(am__dirstamp) quectel/$(DEPDIR)/$(am__dirstamp)
+
+libhelpers-quectel.la: $(libhelpers_quectel_la_OBJECTS) $(libhelpers_quectel_la_DEPENDENCIES) $(EXTRA_libhelpers_quectel_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK) $(am_libhelpers_quectel_la_rpath) $(libhelpers_quectel_la_OBJECTS) $(libhelpers_quectel_la_LIBADD) $(LIBS)
 sierra/$(am__dirstamp):
 	@$(MKDIR_P) sierra
 	@: > sierra/$(am__dirstamp)
@@ -3404,6 +3572,17 @@ generic/libmm_plugin_generic_la-mm-plugin-generic.lo:  \
 
 libmm-plugin-generic.la: $(libmm_plugin_generic_la_OBJECTS) $(libmm_plugin_generic_la_DEPENDENCIES) $(EXTRA_libmm_plugin_generic_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libmm_plugin_generic_la_LINK) $(am_libmm_plugin_generic_la_rpath) $(libmm_plugin_generic_la_OBJECTS) $(libmm_plugin_generic_la_LIBADD) $(LIBS)
+gosuncn/$(am__dirstamp):
+	@$(MKDIR_P) gosuncn
+	@: > gosuncn/$(am__dirstamp)
+gosuncn/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) gosuncn/$(DEPDIR)
+	@: > gosuncn/$(DEPDIR)/$(am__dirstamp)
+gosuncn/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.lo:  \
+	gosuncn/$(am__dirstamp) gosuncn/$(DEPDIR)/$(am__dirstamp)
+
+libmm-plugin-gosuncn.la: $(libmm_plugin_gosuncn_la_OBJECTS) $(libmm_plugin_gosuncn_la_DEPENDENCIES) $(EXTRA_libmm_plugin_gosuncn_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libmm_plugin_gosuncn_la_LINK) $(am_libmm_plugin_gosuncn_la_rpath) $(libmm_plugin_gosuncn_la_OBJECTS) $(libmm_plugin_gosuncn_la_LIBADD) $(LIBS)
 haier/$(am__dirstamp):
 	@$(MKDIR_P) haier
 	@: > haier/$(am__dirstamp)
@@ -3566,12 +3745,19 @@ pantech/libmm_plugin_pantech_la-mm-broadband-modem-pantech.lo:  \
 
 libmm-plugin-pantech.la: $(libmm_plugin_pantech_la_OBJECTS) $(libmm_plugin_pantech_la_DEPENDENCIES) $(EXTRA_libmm_plugin_pantech_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libmm_plugin_pantech_la_LINK) $(am_libmm_plugin_pantech_la_rpath) $(libmm_plugin_pantech_la_OBJECTS) $(libmm_plugin_pantech_la_LIBADD) $(LIBS)
-quectel/$(am__dirstamp):
-	@$(MKDIR_P) quectel
-	@: > quectel/$(am__dirstamp)
-quectel/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) quectel/$(DEPDIR)
-	@: > quectel/$(DEPDIR)/$(am__dirstamp)
+qcom-soc/$(am__dirstamp):
+	@$(MKDIR_P) qcom-soc
+	@: > qcom-soc/$(am__dirstamp)
+qcom-soc/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) qcom-soc/$(DEPDIR)
+	@: > qcom-soc/$(DEPDIR)/$(am__dirstamp)
+qcom-soc/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.lo:  \
+	qcom-soc/$(am__dirstamp) qcom-soc/$(DEPDIR)/$(am__dirstamp)
+qcom-soc/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.lo:  \
+	qcom-soc/$(am__dirstamp) qcom-soc/$(DEPDIR)/$(am__dirstamp)
+
+libmm-plugin-qcom-soc.la: $(libmm_plugin_qcom_soc_la_OBJECTS) $(libmm_plugin_qcom_soc_la_DEPENDENCIES) $(EXTRA_libmm_plugin_qcom_soc_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libmm_plugin_qcom_soc_la_LINK) $(am_libmm_plugin_qcom_soc_la_rpath) $(libmm_plugin_qcom_soc_la_OBJECTS) $(libmm_plugin_qcom_soc_la_LIBADD) $(LIBS)
 quectel/libmm_plugin_quectel_la-mm-plugin-quectel.lo:  \
 	quectel/$(am__dirstamp) quectel/$(DEPDIR)/$(am__dirstamp)
 quectel/libmm_plugin_quectel_la-mm-shared-quectel.lo:  \
@@ -3711,7 +3897,7 @@ libmm-plugin-zte.la: $(libmm_plugin_zte_la_OBJECTS) $(libmm_plugin_zte_la_DEPEND
 	$(AM_V_CCLD)$(libmm_plugin_zte_la_LINK) $(am_libmm_plugin_zte_la_rpath) $(libmm_plugin_zte_la_OBJECTS) $(libmm_plugin_zte_la_LIBADD) $(LIBS)
 foxconn/libmm_shared_foxconn_la-mm-shared.lo: foxconn/$(am__dirstamp) \
 	foxconn/$(DEPDIR)/$(am__dirstamp)
-foxconn/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.lo:  \
+foxconn/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.lo:  \
 	foxconn/$(am__dirstamp) foxconn/$(DEPDIR)/$(am__dirstamp)
 
 libmm-shared-foxconn.la: $(libmm_shared_foxconn_la_OBJECTS) $(libmm_shared_foxconn_la_DEPENDENCIES) $(EXTRA_libmm_shared_foxconn_la_DEPENDENCIES) 
@@ -3876,6 +4062,19 @@ mbm/tests/test_modem_helpers_mbm-test-modem-helpers-mbm.$(OBJEXT):  \
 test-modem-helpers-mbm$(EXEEXT): $(test_modem_helpers_mbm_OBJECTS) $(test_modem_helpers_mbm_DEPENDENCIES) $(EXTRA_test_modem_helpers_mbm_DEPENDENCIES) 
 	@rm -f test-modem-helpers-mbm$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_modem_helpers_mbm_OBJECTS) $(test_modem_helpers_mbm_LDADD) $(LIBS)
+quectel/tests/$(am__dirstamp):
+	@$(MKDIR_P) quectel/tests
+	@: > quectel/tests/$(am__dirstamp)
+quectel/tests/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) quectel/tests/$(DEPDIR)
+	@: > quectel/tests/$(DEPDIR)/$(am__dirstamp)
+quectel/tests/test_modem_helpers_quectel-test-modem-helpers-quectel.$(OBJEXT):  \
+	quectel/tests/$(am__dirstamp) \
+	quectel/tests/$(DEPDIR)/$(am__dirstamp)
+
+test-modem-helpers-quectel$(EXEEXT): $(test_modem_helpers_quectel_OBJECTS) $(test_modem_helpers_quectel_DEPENDENCIES) $(EXTRA_test_modem_helpers_quectel_DEPENDENCIES) 
+	@rm -f test-modem-helpers-quectel$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_modem_helpers_quectel_OBJECTS) $(test_modem_helpers_quectel_LDADD) $(LIBS)
 sierra/tests/$(am__dirstamp):
 	@$(MKDIR_P) sierra/tests
 	@: > sierra/tests/$(am__dirstamp)
@@ -3996,6 +4195,8 @@ mostlyclean-compile:
 	-rm -f generic/*.$(OBJEXT)
 	-rm -f generic/*.lo
 	-rm -f generic/tests/*.$(OBJEXT)
+	-rm -f gosuncn/*.$(OBJEXT)
+	-rm -f gosuncn/*.lo
 	-rm -f haier/*.$(OBJEXT)
 	-rm -f haier/*.lo
 	-rm -f huawei/*.$(OBJEXT)
@@ -4026,8 +4227,11 @@ mostlyclean-compile:
 	-rm -f option/*.lo
 	-rm -f pantech/*.$(OBJEXT)
 	-rm -f pantech/*.lo
+	-rm -f qcom-soc/*.$(OBJEXT)
+	-rm -f qcom-soc/*.lo
 	-rm -f quectel/*.$(OBJEXT)
 	-rm -f quectel/*.lo
+	-rm -f quectel/tests/*.$(OBJEXT)
 	-rm -f samsung/*.$(OBJEXT)
 	-rm -f samsung/*.lo
 	-rm -f sierra/*.$(OBJEXT)
@@ -4083,11 +4287,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@dlink/$(DEPDIR)/libmm_plugin_dlink_la-mm-plugin-dlink.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@fibocom/$(DEPDIR)/libmm_plugin_fibocom_la-mm-plugin-fibocom.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@foxconn/$(DEPDIR)/libmm_plugin_foxconn_la-mm-plugin-foxconn.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-shared.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@generic/$(DEPDIR)/libmm_plugin_generic_la-mm-plugin-generic.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@generic/tests/$(DEPDIR)/test_service_generic-test-service-generic.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@gosuncn/$(DEPDIR)/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@haier/$(DEPDIR)/libmm_plugin_haier_la-mm-plugin-haier.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@huawei/$(DEPDIR)/libhelpers_huawei_la-mm-huawei-enums-types.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@huawei/$(DEPDIR)/libhelpers_huawei_la-mm-modem-helpers-huawei.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-bearer-huawei.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-modem-huawei.Plo@am__quote@ # am--include-marker
@@ -4140,10 +4346,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-broadband-modem-pantech.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-plugin-pantech.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-sim-pantech.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@quectel/$(DEPDIR)/libhelpers_quectel_la-mm-modem-helpers-quectel.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-broadband-modem-qmi-quectel.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-broadband-modem-quectel.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-plugin-quectel.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-shared-quectel.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@quectel/tests/$(DEPDIR)/test_modem_helpers_quectel-test-modem-helpers-quectel.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@samsung/$(DEPDIR)/libmm_plugin_samsung_la-mm-broadband-modem-samsung.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@samsung/$(DEPDIR)/libmm_plugin_samsung_la-mm-plugin-samsung.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@sierra/$(DEPDIR)/libhelpers_sierra_la-mm-modem-helpers-sierra.Plo@am__quote@ # am--include-marker
@@ -4256,6 +4466,13 @@ huawei/libhelpers_huawei_la-mm-modem-helpers-huawei.lo: huawei/mm-modem-helpers-
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhelpers_huawei_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o huawei/libhelpers_huawei_la-mm-modem-helpers-huawei.lo `test -f 'huawei/mm-modem-helpers-huawei.c' || echo '$(srcdir)/'`huawei/mm-modem-helpers-huawei.c
 
+huawei/libhelpers_huawei_la-mm-huawei-enums-types.lo: huawei/mm-huawei-enums-types.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhelpers_huawei_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT huawei/libhelpers_huawei_la-mm-huawei-enums-types.lo -MD -MP -MF huawei/$(DEPDIR)/libhelpers_huawei_la-mm-huawei-enums-types.Tpo -c -o huawei/libhelpers_huawei_la-mm-huawei-enums-types.lo `test -f 'huawei/mm-huawei-enums-types.c' || echo '$(srcdir)/'`huawei/mm-huawei-enums-types.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) huawei/$(DEPDIR)/libhelpers_huawei_la-mm-huawei-enums-types.Tpo huawei/$(DEPDIR)/libhelpers_huawei_la-mm-huawei-enums-types.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='huawei/mm-huawei-enums-types.c' object='huawei/libhelpers_huawei_la-mm-huawei-enums-types.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhelpers_huawei_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o huawei/libhelpers_huawei_la-mm-huawei-enums-types.lo `test -f 'huawei/mm-huawei-enums-types.c' || echo '$(srcdir)/'`huawei/mm-huawei-enums-types.c
+
 icera/libhelpers_icera_la-mm-modem-helpers-icera.lo: icera/mm-modem-helpers-icera.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhelpers_icera_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT icera/libhelpers_icera_la-mm-modem-helpers-icera.lo -MD -MP -MF icera/$(DEPDIR)/libhelpers_icera_la-mm-modem-helpers-icera.Tpo -c -o icera/libhelpers_icera_la-mm-modem-helpers-icera.lo `test -f 'icera/mm-modem-helpers-icera.c' || echo '$(srcdir)/'`icera/mm-modem-helpers-icera.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) icera/$(DEPDIR)/libhelpers_icera_la-mm-modem-helpers-icera.Tpo icera/$(DEPDIR)/libhelpers_icera_la-mm-modem-helpers-icera.Plo
@@ -4276,6 +4493,13 @@ mbm/libhelpers_mbm_la-mm-modem-helpers-mbm.lo: mbm/mm-modem-helpers-mbm.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mbm/mm-modem-helpers-mbm.c' object='mbm/libhelpers_mbm_la-mm-modem-helpers-mbm.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhelpers_mbm_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mbm/libhelpers_mbm_la-mm-modem-helpers-mbm.lo `test -f 'mbm/mm-modem-helpers-mbm.c' || echo '$(srcdir)/'`mbm/mm-modem-helpers-mbm.c
+
+quectel/libhelpers_quectel_la-mm-modem-helpers-quectel.lo: quectel/mm-modem-helpers-quectel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhelpers_quectel_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT quectel/libhelpers_quectel_la-mm-modem-helpers-quectel.lo -MD -MP -MF quectel/$(DEPDIR)/libhelpers_quectel_la-mm-modem-helpers-quectel.Tpo -c -o quectel/libhelpers_quectel_la-mm-modem-helpers-quectel.lo `test -f 'quectel/mm-modem-helpers-quectel.c' || echo '$(srcdir)/'`quectel/mm-modem-helpers-quectel.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) quectel/$(DEPDIR)/libhelpers_quectel_la-mm-modem-helpers-quectel.Tpo quectel/$(DEPDIR)/libhelpers_quectel_la-mm-modem-helpers-quectel.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='quectel/mm-modem-helpers-quectel.c' object='quectel/libhelpers_quectel_la-mm-modem-helpers-quectel.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhelpers_quectel_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o quectel/libhelpers_quectel_la-mm-modem-helpers-quectel.lo `test -f 'quectel/mm-modem-helpers-quectel.c' || echo '$(srcdir)/'`quectel/mm-modem-helpers-quectel.c
 
 sierra/libhelpers_sierra_la-mm-modem-helpers-sierra.lo: sierra/mm-modem-helpers-sierra.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhelpers_sierra_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sierra/libhelpers_sierra_la-mm-modem-helpers-sierra.lo -MD -MP -MF sierra/$(DEPDIR)/libhelpers_sierra_la-mm-modem-helpers-sierra.Tpo -c -o sierra/libhelpers_sierra_la-mm-modem-helpers-sierra.lo `test -f 'sierra/mm-modem-helpers-sierra.c' || echo '$(srcdir)/'`sierra/mm-modem-helpers-sierra.c
@@ -4472,6 +4696,13 @@ generic/libmm_plugin_generic_la-mm-plugin-generic.lo: generic/mm-plugin-generic.
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='generic/mm-plugin-generic.c' object='generic/libmm_plugin_generic_la-mm-plugin-generic.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_generic_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o generic/libmm_plugin_generic_la-mm-plugin-generic.lo `test -f 'generic/mm-plugin-generic.c' || echo '$(srcdir)/'`generic/mm-plugin-generic.c
+
+gosuncn/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.lo: gosuncn/mm-plugin-gosuncn.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_gosuncn_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT gosuncn/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.lo -MD -MP -MF gosuncn/$(DEPDIR)/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.Tpo -c -o gosuncn/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.lo `test -f 'gosuncn/mm-plugin-gosuncn.c' || echo '$(srcdir)/'`gosuncn/mm-plugin-gosuncn.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) gosuncn/$(DEPDIR)/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.Tpo gosuncn/$(DEPDIR)/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='gosuncn/mm-plugin-gosuncn.c' object='gosuncn/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_gosuncn_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o gosuncn/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.lo `test -f 'gosuncn/mm-plugin-gosuncn.c' || echo '$(srcdir)/'`gosuncn/mm-plugin-gosuncn.c
 
 haier/libmm_plugin_haier_la-mm-plugin-haier.lo: haier/mm-plugin-haier.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_haier_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT haier/libmm_plugin_haier_la-mm-plugin-haier.lo -MD -MP -MF haier/$(DEPDIR)/libmm_plugin_haier_la-mm-plugin-haier.Tpo -c -o haier/libmm_plugin_haier_la-mm-plugin-haier.lo `test -f 'haier/mm-plugin-haier.c' || echo '$(srcdir)/'`haier/mm-plugin-haier.c
@@ -4704,6 +4935,20 @@ pantech/libmm_plugin_pantech_la-mm-broadband-modem-pantech.lo: pantech/mm-broadb
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_pantech_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o pantech/libmm_plugin_pantech_la-mm-broadband-modem-pantech.lo `test -f 'pantech/mm-broadband-modem-pantech.c' || echo '$(srcdir)/'`pantech/mm-broadband-modem-pantech.c
 
+qcom-soc/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.lo: qcom-soc/mm-plugin-qcom-soc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_qcom_soc_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT qcom-soc/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.lo -MD -MP -MF qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.Tpo -c -o qcom-soc/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.lo `test -f 'qcom-soc/mm-plugin-qcom-soc.c' || echo '$(srcdir)/'`qcom-soc/mm-plugin-qcom-soc.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.Tpo qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='qcom-soc/mm-plugin-qcom-soc.c' object='qcom-soc/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_qcom_soc_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o qcom-soc/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.lo `test -f 'qcom-soc/mm-plugin-qcom-soc.c' || echo '$(srcdir)/'`qcom-soc/mm-plugin-qcom-soc.c
+
+qcom-soc/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.lo: qcom-soc/mm-broadband-modem-qmi-qcom-soc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_qcom_soc_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT qcom-soc/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.lo -MD -MP -MF qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.Tpo -c -o qcom-soc/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.lo `test -f 'qcom-soc/mm-broadband-modem-qmi-qcom-soc.c' || echo '$(srcdir)/'`qcom-soc/mm-broadband-modem-qmi-qcom-soc.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.Tpo qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='qcom-soc/mm-broadband-modem-qmi-qcom-soc.c' object='qcom-soc/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_qcom_soc_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o qcom-soc/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.lo `test -f 'qcom-soc/mm-broadband-modem-qmi-qcom-soc.c' || echo '$(srcdir)/'`qcom-soc/mm-broadband-modem-qmi-qcom-soc.c
+
 quectel/libmm_plugin_quectel_la-mm-plugin-quectel.lo: quectel/mm-plugin-quectel.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_plugin_quectel_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT quectel/libmm_plugin_quectel_la-mm-plugin-quectel.lo -MD -MP -MF quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-plugin-quectel.Tpo -c -o quectel/libmm_plugin_quectel_la-mm-plugin-quectel.lo `test -f 'quectel/mm-plugin-quectel.c' || echo '$(srcdir)/'`quectel/mm-plugin-quectel.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-plugin-quectel.Tpo quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-plugin-quectel.Plo
@@ -4928,12 +5173,12 @@ foxconn/libmm_shared_foxconn_la-mm-shared.lo: foxconn/mm-shared.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_foxconn_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o foxconn/libmm_shared_foxconn_la-mm-shared.lo `test -f 'foxconn/mm-shared.c' || echo '$(srcdir)/'`foxconn/mm-shared.c
 
-foxconn/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.lo: foxconn/mm-broadband-modem-foxconn-t77w968.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_foxconn_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT foxconn/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.lo -MD -MP -MF foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.Tpo -c -o foxconn/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.lo `test -f 'foxconn/mm-broadband-modem-foxconn-t77w968.c' || echo '$(srcdir)/'`foxconn/mm-broadband-modem-foxconn-t77w968.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.Tpo foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='foxconn/mm-broadband-modem-foxconn-t77w968.c' object='foxconn/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.lo' libtool=yes @AMDEPBACKSLASH@
+foxconn/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.lo: foxconn/mm-broadband-modem-mbim-foxconn.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_foxconn_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT foxconn/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.lo -MD -MP -MF foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.Tpo -c -o foxconn/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.lo `test -f 'foxconn/mm-broadband-modem-mbim-foxconn.c' || echo '$(srcdir)/'`foxconn/mm-broadband-modem-mbim-foxconn.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.Tpo foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='foxconn/mm-broadband-modem-mbim-foxconn.c' object='foxconn/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_foxconn_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o foxconn/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.lo `test -f 'foxconn/mm-broadband-modem-foxconn-t77w968.c' || echo '$(srcdir)/'`foxconn/mm-broadband-modem-foxconn-t77w968.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_foxconn_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o foxconn/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.lo `test -f 'foxconn/mm-broadband-modem-mbim-foxconn.c' || echo '$(srcdir)/'`foxconn/mm-broadband-modem-mbim-foxconn.c
 
 icera/libmm_shared_icera_la-mm-shared.lo: icera/mm-shared.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_shared_icera_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT icera/libmm_shared_icera_la-mm-shared.lo -MD -MP -MF icera/$(DEPDIR)/libmm_shared_icera_la-mm-shared.Tpo -c -o icera/libmm_shared_icera_la-mm-shared.lo `test -f 'icera/mm-shared.c' || echo '$(srcdir)/'`icera/mm-shared.c
@@ -5194,6 +5439,20 @@ mbm/tests/test_modem_helpers_mbm-test-modem-helpers-mbm.obj: mbm/tests/test-mode
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_mbm_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mbm/tests/test_modem_helpers_mbm-test-modem-helpers-mbm.obj `if test -f 'mbm/tests/test-modem-helpers-mbm.c'; then $(CYGPATH_W) 'mbm/tests/test-modem-helpers-mbm.c'; else $(CYGPATH_W) '$(srcdir)/mbm/tests/test-modem-helpers-mbm.c'; fi`
 
+quectel/tests/test_modem_helpers_quectel-test-modem-helpers-quectel.o: quectel/tests/test-modem-helpers-quectel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_quectel_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT quectel/tests/test_modem_helpers_quectel-test-modem-helpers-quectel.o -MD -MP -MF quectel/tests/$(DEPDIR)/test_modem_helpers_quectel-test-modem-helpers-quectel.Tpo -c -o quectel/tests/test_modem_helpers_quectel-test-modem-helpers-quectel.o `test -f 'quectel/tests/test-modem-helpers-quectel.c' || echo '$(srcdir)/'`quectel/tests/test-modem-helpers-quectel.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) quectel/tests/$(DEPDIR)/test_modem_helpers_quectel-test-modem-helpers-quectel.Tpo quectel/tests/$(DEPDIR)/test_modem_helpers_quectel-test-modem-helpers-quectel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='quectel/tests/test-modem-helpers-quectel.c' object='quectel/tests/test_modem_helpers_quectel-test-modem-helpers-quectel.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_quectel_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o quectel/tests/test_modem_helpers_quectel-test-modem-helpers-quectel.o `test -f 'quectel/tests/test-modem-helpers-quectel.c' || echo '$(srcdir)/'`quectel/tests/test-modem-helpers-quectel.c
+
+quectel/tests/test_modem_helpers_quectel-test-modem-helpers-quectel.obj: quectel/tests/test-modem-helpers-quectel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_quectel_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT quectel/tests/test_modem_helpers_quectel-test-modem-helpers-quectel.obj -MD -MP -MF quectel/tests/$(DEPDIR)/test_modem_helpers_quectel-test-modem-helpers-quectel.Tpo -c -o quectel/tests/test_modem_helpers_quectel-test-modem-helpers-quectel.obj `if test -f 'quectel/tests/test-modem-helpers-quectel.c'; then $(CYGPATH_W) 'quectel/tests/test-modem-helpers-quectel.c'; else $(CYGPATH_W) '$(srcdir)/quectel/tests/test-modem-helpers-quectel.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) quectel/tests/$(DEPDIR)/test_modem_helpers_quectel-test-modem-helpers-quectel.Tpo quectel/tests/$(DEPDIR)/test_modem_helpers_quectel-test-modem-helpers-quectel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='quectel/tests/test-modem-helpers-quectel.c' object='quectel/tests/test_modem_helpers_quectel-test-modem-helpers-quectel.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_quectel_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o quectel/tests/test_modem_helpers_quectel-test-modem-helpers-quectel.obj `if test -f 'quectel/tests/test-modem-helpers-quectel.c'; then $(CYGPATH_W) 'quectel/tests/test-modem-helpers-quectel.c'; else $(CYGPATH_W) '$(srcdir)/quectel/tests/test-modem-helpers-quectel.c'; fi`
+
 sierra/tests/test_modem_helpers_sierra-test-modem-helpers-sierra.o: sierra/tests/test-modem-helpers-sierra.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_modem_helpers_sierra_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sierra/tests/test_modem_helpers_sierra-test-modem-helpers-sierra.o -MD -MP -MF sierra/tests/$(DEPDIR)/test_modem_helpers_sierra-test-modem-helpers-sierra.Tpo -c -o sierra/tests/test_modem_helpers_sierra-test-modem-helpers-sierra.o `test -f 'sierra/tests/test-modem-helpers-sierra.c' || echo '$(srcdir)/'`sierra/tests/test-modem-helpers-sierra.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) sierra/tests/$(DEPDIR)/test_modem_helpers_sierra-test-modem-helpers-sierra.Tpo sierra/tests/$(DEPDIR)/test_modem_helpers_sierra-test-modem-helpers-sierra.Po
@@ -5306,6 +5565,7 @@ clean-libtool:
 	-rm -rf fibocom/.libs fibocom/_libs
 	-rm -rf foxconn/.libs foxconn/_libs
 	-rm -rf generic/.libs generic/_libs
+	-rm -rf gosuncn/.libs gosuncn/_libs
 	-rm -rf haier/.libs haier/_libs
 	-rm -rf huawei/.libs huawei/_libs
 	-rm -rf icera/.libs icera/_libs
@@ -5319,6 +5579,7 @@ clean-libtool:
 	-rm -rf novatel/.libs novatel/_libs
 	-rm -rf option/.libs option/_libs
 	-rm -rf pantech/.libs pantech/_libs
+	-rm -rf qcom-soc/.libs qcom-soc/_libs
 	-rm -rf quectel/.libs quectel/_libs
 	-rm -rf samsung/.libs samsung/_libs
 	-rm -rf sierra/.libs sierra/_libs
@@ -5523,6 +5784,8 @@ distclean-generic:
 	-rm -f generic/$(am__dirstamp)
 	-rm -f generic/tests/$(DEPDIR)/$(am__dirstamp)
 	-rm -f generic/tests/$(am__dirstamp)
+	-rm -f gosuncn/$(DEPDIR)/$(am__dirstamp)
+	-rm -f gosuncn/$(am__dirstamp)
 	-rm -f haier/$(DEPDIR)/$(am__dirstamp)
 	-rm -f haier/$(am__dirstamp)
 	-rm -f huawei/$(DEPDIR)/$(am__dirstamp)
@@ -5557,8 +5820,12 @@ distclean-generic:
 	-rm -f option/$(am__dirstamp)
 	-rm -f pantech/$(DEPDIR)/$(am__dirstamp)
 	-rm -f pantech/$(am__dirstamp)
+	-rm -f qcom-soc/$(DEPDIR)/$(am__dirstamp)
+	-rm -f qcom-soc/$(am__dirstamp)
 	-rm -f quectel/$(DEPDIR)/$(am__dirstamp)
 	-rm -f quectel/$(am__dirstamp)
+	-rm -f quectel/tests/$(DEPDIR)/$(am__dirstamp)
+	-rm -f quectel/tests/$(am__dirstamp)
 	-rm -f samsung/$(DEPDIR)/$(am__dirstamp)
 	-rm -f samsung/$(am__dirstamp)
 	-rm -f sierra/$(DEPDIR)/$(am__dirstamp)
@@ -5627,11 +5894,13 @@ distclean: distclean-am
 	-rm -f dlink/$(DEPDIR)/libmm_plugin_dlink_la-mm-plugin-dlink.Plo
 	-rm -f fibocom/$(DEPDIR)/libmm_plugin_fibocom_la-mm-plugin-fibocom.Plo
 	-rm -f foxconn/$(DEPDIR)/libmm_plugin_foxconn_la-mm-plugin-foxconn.Plo
-	-rm -f foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.Plo
+	-rm -f foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.Plo
 	-rm -f foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-shared.Plo
 	-rm -f generic/$(DEPDIR)/libmm_plugin_generic_la-mm-plugin-generic.Plo
 	-rm -f generic/tests/$(DEPDIR)/test_service_generic-test-service-generic.Po
+	-rm -f gosuncn/$(DEPDIR)/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.Plo
 	-rm -f haier/$(DEPDIR)/libmm_plugin_haier_la-mm-plugin-haier.Plo
+	-rm -f huawei/$(DEPDIR)/libhelpers_huawei_la-mm-huawei-enums-types.Plo
 	-rm -f huawei/$(DEPDIR)/libhelpers_huawei_la-mm-modem-helpers-huawei.Plo
 	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-bearer-huawei.Plo
 	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-modem-huawei.Plo
@@ -5684,10 +5953,14 @@ distclean: distclean-am
 	-rm -f pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-broadband-modem-pantech.Plo
 	-rm -f pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-plugin-pantech.Plo
 	-rm -f pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-sim-pantech.Plo
+	-rm -f qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.Plo
+	-rm -f qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.Plo
+	-rm -f quectel/$(DEPDIR)/libhelpers_quectel_la-mm-modem-helpers-quectel.Plo
 	-rm -f quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-broadband-modem-qmi-quectel.Plo
 	-rm -f quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-broadband-modem-quectel.Plo
 	-rm -f quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-plugin-quectel.Plo
 	-rm -f quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-shared-quectel.Plo
+	-rm -f quectel/tests/$(DEPDIR)/test_modem_helpers_quectel-test-modem-helpers-quectel.Po
 	-rm -f samsung/$(DEPDIR)/libmm_plugin_samsung_la-mm-broadband-modem-samsung.Plo
 	-rm -f samsung/$(DEPDIR)/libmm_plugin_samsung_la-mm-plugin-samsung.Plo
 	-rm -f sierra/$(DEPDIR)/libhelpers_sierra_la-mm-modem-helpers-sierra.Plo
@@ -5812,11 +6085,13 @@ maintainer-clean: maintainer-clean-am
 	-rm -f dlink/$(DEPDIR)/libmm_plugin_dlink_la-mm-plugin-dlink.Plo
 	-rm -f fibocom/$(DEPDIR)/libmm_plugin_fibocom_la-mm-plugin-fibocom.Plo
 	-rm -f foxconn/$(DEPDIR)/libmm_plugin_foxconn_la-mm-plugin-foxconn.Plo
-	-rm -f foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-foxconn-t77w968.Plo
+	-rm -f foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-broadband-modem-mbim-foxconn.Plo
 	-rm -f foxconn/$(DEPDIR)/libmm_shared_foxconn_la-mm-shared.Plo
 	-rm -f generic/$(DEPDIR)/libmm_plugin_generic_la-mm-plugin-generic.Plo
 	-rm -f generic/tests/$(DEPDIR)/test_service_generic-test-service-generic.Po
+	-rm -f gosuncn/$(DEPDIR)/libmm_plugin_gosuncn_la-mm-plugin-gosuncn.Plo
 	-rm -f haier/$(DEPDIR)/libmm_plugin_haier_la-mm-plugin-haier.Plo
+	-rm -f huawei/$(DEPDIR)/libhelpers_huawei_la-mm-huawei-enums-types.Plo
 	-rm -f huawei/$(DEPDIR)/libhelpers_huawei_la-mm-modem-helpers-huawei.Plo
 	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-bearer-huawei.Plo
 	-rm -f huawei/$(DEPDIR)/libmm_plugin_huawei_la-mm-broadband-modem-huawei.Plo
@@ -5869,10 +6144,14 @@ maintainer-clean: maintainer-clean-am
 	-rm -f pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-broadband-modem-pantech.Plo
 	-rm -f pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-plugin-pantech.Plo
 	-rm -f pantech/$(DEPDIR)/libmm_plugin_pantech_la-mm-sim-pantech.Plo
+	-rm -f qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-broadband-modem-qmi-qcom-soc.Plo
+	-rm -f qcom-soc/$(DEPDIR)/libmm_plugin_qcom_soc_la-mm-plugin-qcom-soc.Plo
+	-rm -f quectel/$(DEPDIR)/libhelpers_quectel_la-mm-modem-helpers-quectel.Plo
 	-rm -f quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-broadband-modem-qmi-quectel.Plo
 	-rm -f quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-broadband-modem-quectel.Plo
 	-rm -f quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-plugin-quectel.Plo
 	-rm -f quectel/$(DEPDIR)/libmm_plugin_quectel_la-mm-shared-quectel.Plo
+	-rm -f quectel/tests/$(DEPDIR)/test_modem_helpers_quectel-test-modem-helpers-quectel.Po
 	-rm -f samsung/$(DEPDIR)/libmm_plugin_samsung_la-mm-broadband-modem-samsung.Plo
 	-rm -f samsung/$(DEPDIR)/libmm_plugin_samsung_la-mm-plugin-samsung.Plo
 	-rm -f sierra/$(DEPDIR)/libhelpers_sierra_la-mm-modem-helpers-sierra.Plo
@@ -6059,6 +6338,23 @@ check-local: test-nonrecursive
 @WITH_SHARED_TELIT_TRUE@			--fhead "#include \"mm-telit-enums-types.h\"" \
 @WITH_SHARED_TELIT_TRUE@			--template $(top_srcdir)/build-aux/mm-enums-template.c \
 @WITH_SHARED_TELIT_TRUE@			$(TELIT_ENUMS_INPUTS) > $@
+
+@ENABLE_PLUGIN_HUAWEI_TRUE@huawei/mm-huawei-enums-types.h: Makefile.am $(HUAWEI_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-template.h
+@ENABLE_PLUGIN_HUAWEI_TRUE@	$(AM_V_GEN) \
+@ENABLE_PLUGIN_HUAWEI_TRUE@		$(MKDIR_P) huawei; \
+@ENABLE_PLUGIN_HUAWEI_TRUE@		$(GLIB_MKENUMS) \
+@ENABLE_PLUGIN_HUAWEI_TRUE@			--fhead "#include \"mm-modem-helpers-huawei.h\"\n#ifndef __MM_HUAWEI_ENUMS_TYPES_H__\n#define __MM_HUAWEI_ENUMS_TYPES_H__\n" \
+@ENABLE_PLUGIN_HUAWEI_TRUE@			--template $(top_srcdir)/build-aux/mm-enums-template.h \
+@ENABLE_PLUGIN_HUAWEI_TRUE@			--ftail "#endif /* __MM_HUAWEI_ENUMS_TYPES_H__ */\n" \
+@ENABLE_PLUGIN_HUAWEI_TRUE@			$(HUAWEI_ENUMS_INPUTS) > $@
+
+@ENABLE_PLUGIN_HUAWEI_TRUE@huawei/mm-huawei-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-template.c huawei/mm-huawei-enums-types.h
+@ENABLE_PLUGIN_HUAWEI_TRUE@	$(AM_V_GEN) \
+@ENABLE_PLUGIN_HUAWEI_TRUE@		$(MKDIR_P) huawei; \
+@ENABLE_PLUGIN_HUAWEI_TRUE@		$(GLIB_MKENUMS) \
+@ENABLE_PLUGIN_HUAWEI_TRUE@			--fhead "#include \"mm-huawei-enums-types.h\"" \
+@ENABLE_PLUGIN_HUAWEI_TRUE@			--template $(top_srcdir)/build-aux/mm-enums-template.c \
+@ENABLE_PLUGIN_HUAWEI_TRUE@			$(HUAWEI_ENUMS_INPUTS) > $@
 
 @ENABLE_PLUGIN_UBLOX_TRUE@ublox/mm-ublox-enums-types.h: Makefile.am $(UBLOX_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-template.h
 @ENABLE_PLUGIN_UBLOX_TRUE@	$(AM_V_GEN) \

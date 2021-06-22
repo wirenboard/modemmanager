@@ -64,11 +64,10 @@ QmiNasRatModePreference mm_modem_mode_to_qmi_rat_mode_preference (MMModemMode mo
 MMModemCapability mm_modem_capability_from_qmi_rat_mode_preference (QmiNasRatModePreference qmi);
 QmiNasRatModePreference mm_modem_capability_to_qmi_rat_mode_preference (MMModemCapability caps);
 
-GArray *mm_modem_capability_to_qmi_acquisition_order_preference (MMModemCapability caps);
-GArray *mm_modem_mode_to_qmi_acquisition_order_preference       (MMModemMode       allowed,
-                                                                 MMModemMode       preferred,
-                                                                 gboolean          is_cdma,
-                                                                 gboolean          is_3gpp);
+GArray *mm_modem_capability_to_qmi_acquisition_order_preference (MMModemCapability  caps);
+GArray *mm_modem_mode_to_qmi_acquisition_order_preference       (MMModemMode        allowed,
+                                                                 MMModemMode        preferred,
+                                                                 GArray            *all);
 
 MMModemCapability mm_modem_capability_from_qmi_radio_technology_preference (QmiNasRadioTechnologyPreference qmi);
 QmiNasRadioTechnologyPreference mm_modem_capability_to_qmi_radio_technology_preference (MMModemCapability caps);
@@ -113,7 +112,12 @@ MMSmsState mm_sms_state_from_qmi_message_tag (QmiWmsMessageTagType tag);
 /*****************************************************************************/
 /* QMI/WDS to MM translations */
 
-QmiWdsAuthentication mm_bearer_allowed_auth_to_qmi_authentication (MMBearerAllowedAuth auth);
+QmiWdsAuthentication mm_bearer_allowed_auth_to_qmi_authentication   (MMBearerAllowedAuth auth);
+MMBearerAllowedAuth  mm_bearer_allowed_auth_from_qmi_authentication (QmiWdsAuthentication auth);
+MMBearerIpFamily     mm_bearer_ip_family_from_qmi_ip_support_type   (QmiWdsIpSupportType ip_support_type);
+MMBearerIpFamily     mm_bearer_ip_family_from_qmi_pdp_type          (QmiWdsPdpType pdp_type);
+gboolean             mm_bearer_ip_family_to_qmi_pdp_type            (MMBearerIpFamily  ip_family,
+                                                                     QmiWdsPdpType    *out_pdp_type);
 
 /*****************************************************************************/
 /* QMI/OMA to MM translations */
@@ -153,5 +157,23 @@ gchar  *mm_qmi_unique_id_to_firmware_unique_id (GArray       *qmi_unique_id,
                                                 GError      **error);
 GArray *mm_firmware_unique_id_to_qmi_unique_id (const gchar  *unique_id,
                                                 GError      **error);
+
+/*****************************************************************************/
+/* Common UIM Get Card Status parsing */
+
+gboolean mm_qmi_uim_get_card_status_output_parse (gpointer                           log_object,
+                                                  QmiMessageUimGetCardStatusOutput  *output,
+                                                  MMModemLock                       *o_lock,
+                                                  QmiUimPinState                    *o_pin1_state,
+                                                  guint                             *o_pin1_retries,
+                                                  guint                             *o_puk1_retries,
+                                                  QmiUimPinState                    *o_pin2_state,
+                                                  guint                             *o_pin2_retries,
+                                                  guint                             *o_puk2_retries,
+                                                  GError                           **error);
+
+/*****************************************************************************/
+/* UIM Get Slot Status parsing */
+gchar *mm_qmi_uim_decode_eid (const gchar *eid, gsize eid_len);
 
 #endif  /* MM_MODEM_HELPERS_QMI_H */

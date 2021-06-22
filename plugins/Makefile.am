@@ -429,8 +429,8 @@ if WITH_MBIM
 pkglib_LTLIBRARIES += libmm-shared-foxconn.la
 libmm_shared_foxconn_la_SOURCES = \
 	foxconn/mm-shared.c \
-	foxconn/mm-broadband-modem-foxconn-t77w968.c \
-	foxconn/mm-broadband-modem-foxconn-t77w968.h \
+	foxconn/mm-broadband-modem-mbim-foxconn.c \
+	foxconn/mm-broadband-modem-mbim-foxconn.h \
 	$(NULL)
 libmm_shared_foxconn_la_CPPFLAGS = \
 	$(SHARED_COMMON_COMPILER_FLAGS) \
@@ -583,6 +583,7 @@ test_modem_helpers_cinterion_CPPFLAGS = \
 	$(NULL)
 test_modem_helpers_cinterion_LDADD = \
 	$(builddir)/libhelpers-cinterion.la \
+	$(top_builddir)/src/libport.la \
 	$(top_builddir)/src/libhelpers.la \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
 	$(NULL)
@@ -715,12 +716,35 @@ libmm_plugin_foxconn_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 
 dist_udevrules_DATA += foxconn/77-mm-foxconn-port-types.rules
 
-dist_pkgdata_DATA += foxconn/mm-foxconn-t77w968-carrier-mapping.conf
+dist_pkgdata_DATA += foxconn/mm-foxconn-carrier-mapping.conf
 
 AM_CFLAGS += \
 	-DTESTUDEVRULESDIR_FOXCONN=\"${srcdir}/foxconn\" \
-	-DTESTKEYFILE_FOXCONN_T77W968=\"${srcdir}/foxconn/mm-foxconn-t77w968-carrier-mapping.conf\" \
+	-DTESTKEYFILE_FOXCONN=\"${srcdir}/foxconn/mm-foxconn-carrier-mapping.conf\" \
 	$(NULL)
+
+endif
+
+################################################################################
+# plugin: gosuncn
+################################################################################
+
+if ENABLE_PLUGIN_GOSUNCN
+
+pkglib_LTLIBRARIES += libmm-plugin-gosuncn.la
+libmm_plugin_gosuncn_la_SOURCES = \
+	gosuncn/mm-plugin-gosuncn.c \
+	gosuncn/mm-plugin-gosuncn.h \
+	$(NULL)
+libmm_plugin_gosuncn_la_CPPFLAGS = \
+	$(PLUGIN_COMMON_COMPILER_FLAGS) \
+	-DMM_MODULE_NAME=\"gosuncn\" \
+	$(NULL)
+libmm_plugin_gosuncn_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
+
+dist_udevrules_DATA += gosuncn/77-mm-gosuncn-port-types.rules
+
+AM_CFLAGS += -DTESTUDEVRULESDIR_GOSUNCN=\"${srcdir}/gosuncn\"
 
 endif
 
@@ -753,6 +777,35 @@ endif
 
 if ENABLE_PLUGIN_HUAWEI
 
+HUAWEI_ENUMS_INPUTS = \
+	$(top_srcdir)/plugins/huawei/mm-modem-helpers-huawei.h \
+	$(NULL)
+
+HUAWEI_ENUMS_GENERATED = \
+	huawei/mm-huawei-enums-types.h \
+	huawei/mm-huawei-enums-types.c \
+	$(NULL)
+
+BUILT_SOURCES += $(HUAWEI_ENUMS_GENERATED)
+CLEANFILES    += $(HUAWEI_ENUMS_GENERATED)
+
+huawei/mm-huawei-enums-types.h: Makefile.am $(HUAWEI_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-template.h
+	$(AM_V_GEN) \
+		$(MKDIR_P) huawei; \
+		$(GLIB_MKENUMS) \
+			--fhead "#include \"mm-modem-helpers-huawei.h\"\n#ifndef __MM_HUAWEI_ENUMS_TYPES_H__\n#define __MM_HUAWEI_ENUMS_TYPES_H__\n" \
+			--template $(top_srcdir)/build-aux/mm-enums-template.h \
+			--ftail "#endif /* __MM_HUAWEI_ENUMS_TYPES_H__ */\n" \
+			$(HUAWEI_ENUMS_INPUTS) > $@
+
+huawei/mm-huawei-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-template.c huawei/mm-huawei-enums-types.h
+	$(AM_V_GEN) \
+		$(MKDIR_P) huawei; \
+		$(GLIB_MKENUMS) \
+			--fhead "#include \"mm-huawei-enums-types.h\"" \
+			--template $(top_srcdir)/build-aux/mm-enums-template.c \
+			$(HUAWEI_ENUMS_INPUTS) > $@
+
 noinst_LTLIBRARIES += libhelpers-huawei.la
 libhelpers_huawei_la_SOURCES = \
 	huawei/mm-modem-helpers-huawei.c \
@@ -760,7 +813,10 @@ libhelpers_huawei_la_SOURCES = \
 	$(NULL)
 libhelpers_huawei_la_CPPFLAGS = \
 	-DMM_MODULE_NAME=\"huawei\" \
+	-I$(top_srcdir)/plugins/huawei \
+	-I$(top_builddir)/plugins/huawei \
 	$(NULL)
+nodist_libhelpers_huawei_la_SOURCES = $(HUAWEI_ENUMS_GENERATED)
 
 noinst_PROGRAMS += test-modem-helpers-huawei
 test_modem_helpers_huawei_SOURCES = \
@@ -768,6 +824,7 @@ test_modem_helpers_huawei_SOURCES = \
 	$(NULL)
 test_modem_helpers_huawei_CPPFLAGS = \
 	-I$(top_srcdir)/plugins/huawei \
+	-I$(top_builddir)/plugins/huawei \
 	$(NULL)
 test_modem_helpers_huawei_LDADD = \
 	$(builddir)/libhelpers-huawei.la \
@@ -787,6 +844,8 @@ libmm_plugin_huawei_la_SOURCES = \
 	huawei/mm-broadband-bearer-huawei.h \
 	$(NULL)
 libmm_plugin_huawei_la_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/huawei \
+	-I$(top_builddir)/plugins/huawei \
 	$(PLUGIN_COMMON_COMPILER_FLAGS) \
 	-DMM_MODULE_NAME=\"huawei\" \
 	$(NULL)
@@ -1150,10 +1209,57 @@ libmm_plugin_pantech_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 endif
 
 ################################################################################
+# plugin: qcom-soc
+################################################################################
+
+if ENABLE_PLUGIN_QCOM_SOC
+if WITH_QMI
+pkglib_LTLIBRARIES += libmm-plugin-qcom-soc.la
+libmm_plugin_qcom_soc_la_SOURCES = \
+	qcom-soc/mm-plugin-qcom-soc.c \
+	qcom-soc/mm-plugin-qcom-soc.h \
+	qcom-soc/mm-broadband-modem-qmi-qcom-soc.c \
+	qcom-soc/mm-broadband-modem-qmi-qcom-soc.h \
+	$(NULL)
+libmm_plugin_qcom_soc_la_CPPFLAGS = \
+	$(PLUGIN_COMMON_COMPILER_FLAGS) \
+	-DMM_MODULE_NAME=\"qcom-soc\" \
+	$(NULL)
+libmm_plugin_qcom_soc_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
+
+dist_udevrules_DATA += qcom-soc/77-mm-qcom-soc.rules
+
+AM_CFLAGS += -DTESTUDEVRULESDIR_QCOM_SOC=\"${srcdir}/qcom-soc/\"
+endif
+endif
+
+################################################################################
 # plugin: quectel
 ################################################################################
 
 if ENABLE_PLUGIN_QUECTEL
+
+noinst_LTLIBRARIES += libhelpers-quectel.la
+libhelpers_quectel_la_SOURCES = \
+	quectel/mm-modem-helpers-quectel.c \
+	quectel/mm-modem-helpers-quectel.h \
+	$(NULL)
+libhelpers_quectel_la_CPPFLAGS = \
+	-DMM_MODULE_NAME=\"quectel\" \
+	$(NULL)
+
+noinst_PROGRAMS += test-modem-helpers-quectel
+test_modem_helpers_quectel_SOURCES = \
+	quectel/tests/test-modem-helpers-quectel.c \
+	$(NULL)
+test_modem_helpers_quectel_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/quectel \
+	$(NULL)
+test_modem_helpers_quectel_LDADD = \
+	$(builddir)/libhelpers-quectel.la  \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
 
 pkglib_LTLIBRARIES += libmm-plugin-quectel.la
 libmm_plugin_quectel_la_SOURCES = \
@@ -1175,6 +1281,7 @@ libmm_plugin_quectel_la_CPPFLAGS = \
 	-DMM_MODULE_NAME=\"quectel\" \
 	$(NULL)
 libmm_plugin_quectel_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
+libmm_plugin_quectel_la_LIBADD = $(builddir)/libhelpers-quectel.la
 
 dist_udevrules_DATA += quectel/77-mm-quectel-port-types.rules
 AM_CFLAGS += -DTESTUDEVRULESDIR_QUECTEL=\"${srcdir}/quectel\"
@@ -1241,6 +1348,7 @@ libmm_plugin_sierra_la_SOURCES = \
 	$(NULL)
 libmm_plugin_sierra_la_CPPFLAGS = \
 	$(PLUGIN_COMMON_COMPILER_FLAGS) \
+	$(XMM_COMMON_COMPILER_FLAGS) \
 	-DMM_MODULE_NAME=\"sierra\" \
 	$(NULL)
 libmm_plugin_sierra_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)

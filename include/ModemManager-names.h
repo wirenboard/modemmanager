@@ -85,8 +85,10 @@
 #define MM_SIM_METHOD_SENDPUK "SendPuk"
 #define MM_SIM_METHOD_ENABLEPIN "EnablePin"
 #define MM_SIM_METHOD_CHANGEPIN "ChangePin"
+#define MM_SIM_PROPERTY_ACTIVE "Active"
 #define MM_SIM_PROPERTY_SIMIDENTIFIER "SimIdentifier"
 #define MM_SIM_PROPERTY_IMSI "Imsi"
+#define MM_SIM_PROPERTY_EID "Eid"
 #define MM_SIM_PROPERTY_OPERATORIDENTIFIER "OperatorIdentifier"
 #define MM_SIM_PROPERTY_OPERATORNAME "OperatorName"
 #define MM_SIM_PROPERTY_EMERGENCYNUMBERS "EmergencyNumbers"
@@ -161,9 +163,12 @@
 #define MM_MODEM_METHOD_SETCURRENTCAPABILITIES "SetCurrentCapabilities"
 #define MM_MODEM_METHOD_SETCURRENTMODES "SetCurrentModes"
 #define MM_MODEM_METHOD_SETCURRENTBANDS "SetCurrentBands"
+#define MM_MODEM_METHOD_SETPRIMARYSIMSLOT "SetPrimarySimSlot"
 #define MM_MODEM_METHOD_COMMAND "Command"
 #define MM_MODEM_SIGNAL_STATECHANGED "StateChanged"
 #define MM_MODEM_PROPERTY_SIM "Sim"
+#define MM_MODEM_PROPERTY_SIMSLOTS "SimSlots"
+#define MM_MODEM_PROPERTY_PRIMARYSIMSLOT "PrimarySimSlot"
 #define MM_MODEM_PROPERTY_BEARERS "Bearers"
 #define MM_MODEM_PROPERTY_SUPPORTEDCAPABILITIES "SupportedCapabilities"
 #define MM_MODEM_PROPERTY_CURRENTCAPABILITIES "CurrentCapabilities"
@@ -308,6 +313,7 @@
 #define MM_MODEM_SIGNAL_PROPERTY_GSM "Gsm"
 #define MM_MODEM_SIGNAL_PROPERTY_UMTS "Umts"
 #define MM_MODEM_SIGNAL_PROPERTY_LTE "Lte"
+#define MM_MODEM_SIGNAL_PROPERTY_NR5G "Nr5g"
 /*
  * Interface 'org.freedesktop.ModemManager1.Modem.Oma'
  */

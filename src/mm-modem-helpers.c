@@ -473,7 +473,7 @@ mm_filter_supported_modes (const GArray *all,
 static const gchar bcd_chars[] = "0123456789\0\0\0\0\0\0";
 
 gchar *
-mm_bcd_to_string (const guint8 *bcd, gsize bcd_len)
+mm_bcd_to_string (const guint8 *bcd, gsize bcd_len, gboolean low_nybble_first)
 {
     GString *str;
     gsize i;
@@ -482,8 +482,11 @@ mm_bcd_to_string (const guint8 *bcd, gsize bcd_len)
 
     str = g_string_sized_new (bcd_len * 2 + 1);
     for (i = 0 ; i < bcd_len; i++) {
-        str = g_string_append_c (str, bcd_chars[bcd[i] & 0xF]);
+        if (low_nybble_first)
+            str = g_string_append_c (str, bcd_chars[bcd[i] & 0xF]);
         str = g_string_append_c (str, bcd_chars[(bcd[i] >> 4) & 0xF]);
+        if (!low_nybble_first)
+            str = g_string_append_c (str, bcd_chars[bcd[i] & 0xF]);
     }
     return g_string_free (str, FALSE);
 }
@@ -1286,9 +1289,9 @@ mm_3gpp_parse_cops_test_response (const gchar     *reply,
         info->operator_code = mm_get_string_unquoted_from_match_info (match_info, 4);
 
         /* The returned strings may be given in e.g. UCS2 */
-        mm_3gpp_normalize_operator (&info->operator_long,  cur_charset);
-        mm_3gpp_normalize_operator (&info->operator_short, cur_charset);
-        mm_3gpp_normalize_operator (&info->operator_code,  cur_charset);
+        mm_3gpp_normalize_operator (&info->operator_long,  cur_charset, log_object);
+        mm_3gpp_normalize_operator (&info->operator_short, cur_charset, log_object);
+        mm_3gpp_normalize_operator (&info->operator_code,  cur_charset, log_object);
 
         /* Only try for access technology with UMTS-format matches.
          * If none give, assume GSM */
@@ -4015,8 +4018,11 @@ mm_string_to_access_tech (const gchar *string)
 
 void
 mm_3gpp_normalize_operator (gchar          **operator,
-                            MMModemCharset   cur_charset)
+                            MMModemCharset   cur_charset,
+                            gpointer         log_object)
 {
+    g_autofree gchar *normalized = NULL;
+
     g_assert (operator);
 
     if (*operator == NULL)
@@ -4024,31 +4030,38 @@ mm_3gpp_normalize_operator (gchar          **operator,
 
     /* Despite +CSCS? may claim supporting UCS2, Some modems (e.g. Huawei)
      * always report the operator name in ASCII in a +COPS response. */
-    if (cur_charset == MM_MODEM_CHARSET_UCS2) {
-        gchar *tmp;
+    if (cur_charset != MM_MODEM_CHARSET_UNKNOWN) {
+        g_autoptr(GError) error = NULL;
 
-        tmp = g_strdup (*operator);
-        /* In this case we're already checking UTF-8 validity */
-        tmp = mm_charset_take_and_convert_to_utf8 (tmp, cur_charset);
-        if (tmp) {
-            g_clear_pointer (operator, g_free);
-            *operator = tmp;
+        normalized = mm_modem_charset_str_to_utf8 (*operator, -1, cur_charset, TRUE, &error);
+        if (normalized)
             goto out;
-        }
+
+        mm_obj_dbg (log_object, "couldn't convert operator string '%s' from charset '%s': %s",
+                    *operator,
+                    mm_modem_charset_to_string (cur_charset),
+                    error->message);
     }
 
     /* Charset is unknown or there was an error in conversion; try to see
      * if the contents we got are valid UTF-8 already. */
-    if (!g_utf8_validate (*operator, -1, NULL))
-        g_clear_pointer (operator, g_free);
+    if (g_utf8_validate (*operator, -1, NULL))
+        normalized = g_strdup (*operator);
 
 out:
 
     /* Some modems (Novatel LTE) return the operator name as "Unknown" when
      * it fails to obtain the operator name. Return NULL in such case.
      */
-    if (*operator && g_ascii_strcasecmp (*operator, "unknown") == 0)
+    if (!normalized || g_ascii_strcasecmp (normalized, "unknown") == 0) {
+        /* If normalization failed, just cleanup the string */
         g_clear_pointer (operator, g_free);
+        return;
+    }
+
+    mm_obj_dbg (log_object, "operator normalized '%s'->'%s'", *operator, normalized);
+    g_clear_pointer (operator, g_free);
+    *operator = g_steal_pointer (&normalized);
 }
 
 /*************************************************************************/
@@ -4288,10 +4301,9 @@ mm_3gpp_parse_emergency_numbers (const char *raw, GError **error)
         return NULL;
     }
 
-    bin = (guint8 *) mm_utils_hexstr2bin (raw, &binlen);
+    bin = mm_utils_hexstr2bin (raw, -1, &binlen, error);
     if (!bin) {
-        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
-                     "invalid raw emergency numbers list contents: %s", raw);
+        g_prefix_error (error, "invalid raw emergency numbers list contents: ");
         return NULL;
     }
 
@@ -4301,7 +4313,7 @@ mm_3gpp_parse_emergency_numbers (const char *raw, GError **error)
     for (i = 0; i < max_items; i++) {
         gchar *number;
 
-        number = mm_bcd_to_string (&bin[i*3], 3);
+        number = mm_bcd_to_string (&bin[i*3], 3, TRUE /* low_nybble_first */);
         if (number && number[0])
             g_ptr_array_add (out, number);
         else

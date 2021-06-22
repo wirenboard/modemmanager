@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<book xmlns="http://www.devhelp.net/book" title="ModemManager Reference Manual" link="index.html" author="Dan WilliamsAleksander Morgado" name="ModemManager" version="2" language="c">
+<book xmlns="http://www.devhelp.net/book" title="ModemManager Reference Manual" link="index.html" author="Dan WilliamsAleksander Morgado" name="ModemManager" version="2" language="c" online="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/">
   <chapters>
     <sub name="ModemManager Overview" link="ref-overview.html">
       <sub name="Introduction" link="ref-overview-introduction.html"/>
@@ -91,6 +91,7 @@
     <sub name="Index of new symbols in 1.8" link="api-index-1-8.html"/>
     <sub name="Index of new symbols in 1.10" link="api-index-1-10.html"/>
     <sub name="Index of new symbols in 1.12" link="api-index-1-12.html"/>
+    <sub name="Index of new symbols in 1.16" link="api-index-1-16.html"/>
   </chapters>
   <functions>
     <keyword type="macro" name="MM_CHECK_VERSION()" link="ModemManager-Version-checks.html#MM-CHECK-VERSION:CAPS" since="1.0"/>
@@ -158,6 +159,8 @@
     <keyword type="macro" name="ID_MM_PORT_TYPE_GPS" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-GPS:CAPS" since="1.10"/>
     <keyword type="macro" name="ID_MM_PORT_TYPE_QCDM" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-QCDM:CAPS" since="1.10"/>
     <keyword type="macro" name="ID_MM_PORT_TYPE_AUDIO" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AUDIO:CAPS" since="1.12"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_QMI" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-QMI:CAPS" since="1.16"/>
+    <keyword type="macro" name="ID_MM_PORT_TYPE_MBIM" link="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-MBIM:CAPS" since="1.16"/>
     <keyword type="macro" name="ID_MM_TTY_BAUDRATE" link="ModemManager-Common-udev-tags.html#ID-MM-TTY-BAUDRATE:CAPS" since="1.10"/>
     <keyword type="macro" name="ID_MM_TTY_FLOW_CONTROL" link="ModemManager-Common-udev-tags.html#ID-MM-TTY-FLOW-CONTROL:CAPS" since="1.10"/>
     <keyword type="method" name="The ScanDevices() method" link="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.ScanDevices"/>
@@ -175,9 +178,12 @@
     <keyword type="method" name="The SetCurrentCapabilities() method" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.SetCurrentCapabilities"/>
     <keyword type="method" name="The SetCurrentModes() method" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.SetCurrentModes"/>
     <keyword type="method" name="The SetCurrentBands() method" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.SetCurrentBands"/>
+    <keyword type="method" name="The SetPrimarySimSlot() method" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.SetPrimarySimSlot"/>
     <keyword type="method" name="The Command() method" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.Command"/>
     <keyword type="signal" name="The &quot;StateChanged&quot; signal" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-signal-org-freedesktop-ModemManager1-Modem.StateChanged"/>
     <keyword type="property" name="The &quot;Sim&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Sim"/>
+    <keyword type="property" name="The &quot;SimSlots&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SimSlots"/>
+    <keyword type="property" name="The &quot;PrimarySimSlot&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.PrimarySimSlot"/>
     <keyword type="property" name="The &quot;Bearers&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers"/>
     <keyword type="property" name="The &quot;SupportedCapabilities&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities"/>
     <keyword type="property" name="The &quot;CurrentCapabilities&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentCapabilities"/>
@@ -289,6 +295,7 @@
     <keyword type="property" name="The &quot;Gsm&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Gsm"/>
     <keyword type="property" name="The &quot;Umts&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Umts"/>
     <keyword type="property" name="The &quot;Lte&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Lte"/>
+    <keyword type="property" name="The &quot;Nr5g&quot; property" link="gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Nr5g"/>
     <keyword type="method" name="The Setup() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Oma.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Oma.Setup"/>
     <keyword type="method" name="The StartClientInitiatedSession() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Oma.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Oma.StartClientInitiatedSession"/>
     <keyword type="method" name="The AcceptNetworkInitiatedSession() method" link="gdbus-org.freedesktop.ModemManager1.Modem.Oma.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Oma.AcceptNetworkInitiatedSession"/>
@@ -313,8 +320,10 @@
     <keyword type="method" name="The SendPuk() method" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.SendPuk"/>
     <keyword type="method" name="The EnablePin() method" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.EnablePin"/>
     <keyword type="method" name="The ChangePin() method" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.ChangePin"/>
+    <keyword type="property" name="The &quot;Active&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.Active"/>
     <keyword type="property" name="The &quot;SimIdentifier&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.SimIdentifier"/>
     <keyword type="property" name="The &quot;Imsi&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.Imsi"/>
+    <keyword type="property" name="The &quot;Eid&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.Eid"/>
     <keyword type="property" name="The &quot;OperatorIdentifier&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorIdentifier"/>
     <keyword type="property" name="The &quot;OperatorName&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorName"/>
     <keyword type="property" name="The &quot;EmergencyNumbers&quot; property" link="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers"/>
@@ -736,6 +745,7 @@
     <keyword type="constant" name="MM_MODEM_PORT_TYPE_QMI" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-PORT-TYPE-QMI:CAPS"/>
     <keyword type="constant" name="MM_MODEM_PORT_TYPE_MBIM" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-PORT-TYPE-MBIM:CAPS"/>
     <keyword type="constant" name="MM_MODEM_PORT_TYPE_AUDIO" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-PORT-TYPE-AUDIO:CAPS"/>
+    <keyword type="constant" name="MM_MODEM_PORT_TYPE_IGNORED" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-PORT-TYPE-IGNORED:CAPS"/>
     <keyword type="constant" name="MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-FIRMWARE-UPDATE-METHOD-NONE:CAPS"/>
     <keyword type="constant" name="MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-FIRMWARE-UPDATE-METHOD-FASTBOOT:CAPS"/>
     <keyword type="constant" name="MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC" link="ModemManager-Flags-and-Enumerations.html#MM-MODEM-FIRMWARE-UPDATE-METHOD-QMI-PDC:CAPS"/>

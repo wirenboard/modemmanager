@@ -147,6 +147,12 @@ mm_plugin_get_name (MMPlugin *self)
 }
 
 const gchar **
+mm_plugin_get_allowed_subsystems (MMPlugin *self)
+{
+    return (const gchar **) self->priv->subsystems;
+}
+
+const gchar **
 mm_plugin_get_allowed_udev_tags (MMPlugin *self)
 {
     return (const gchar **) self->priv->udev_tags;
@@ -216,10 +222,6 @@ apply_subsystem_filter (MMPlugin       *self,
         subsys = mm_kernel_device_get_subsystem (port);
         for (i = 0; self->priv->subsystems[i]; i++) {
             if (g_str_equal (subsys, self->priv->subsystems[i]))
-                break;
-            /* New kernels may report as 'usbmisc' the subsystem */
-            else if (g_str_equal (self->priv->subsystems[i], "usb") &&
-                     g_str_equal (subsys, "usbmisc"))
                 break;
         }
 
@@ -763,31 +765,35 @@ mm_plugin_supports_port (MMPlugin            *self,
         return;
     }
 
-    /* Before launching any probing, check if the port is a net device. */
-    if (g_str_equal (mm_kernel_device_get_subsystem (port), "net")) {
-        mm_obj_dbg (self, "probing of port %s deferred until result suggested", mm_kernel_device_get_name (port));
-        g_task_return_int (task, MM_PLUGIN_SUPPORTS_PORT_DEFER_UNTIL_SUGGESTED);
-        g_object_unref (task);
-        return;
-    }
-
     /* Build flags depending on what probing needed */
     probe_run_flags = MM_PORT_PROBE_NONE;
-    if (!g_str_has_prefix (mm_kernel_device_get_name (port), "cdc-wdm")) {
-        /* Serial ports... */
+    if (g_str_equal (mm_kernel_device_get_subsystem (port), "tty")) {
         if (self->priv->at)
             probe_run_flags |= MM_PORT_PROBE_AT;
         else if (self->priv->single_at)
             probe_run_flags |= MM_PORT_PROBE_AT;
         if (self->priv->qcdm)
             probe_run_flags |= MM_PORT_PROBE_QCDM;
-    } else {
-        /* cdc-wdm ports... */
+    } else if (g_str_equal (mm_kernel_device_get_subsystem (port), "usbmisc")) {
         if (self->priv->qmi && !g_strcmp0 (mm_kernel_device_get_driver (port), "qmi_wwan"))
             probe_run_flags |= MM_PORT_PROBE_QMI;
         else if (self->priv->mbim && !g_strcmp0 (mm_kernel_device_get_driver (port), "cdc_mbim"))
             probe_run_flags |= MM_PORT_PROBE_MBIM;
         else
+            probe_run_flags |= MM_PORT_PROBE_AT;
+    } else if (g_str_equal (mm_kernel_device_get_subsystem (port), "rpmsg")) {
+        if (self->priv->at)
+            probe_run_flags |= MM_PORT_PROBE_AT;
+        if (self->priv->qmi)
+            probe_run_flags |= MM_PORT_PROBE_QMI;
+    } else if (g_str_equal (mm_kernel_device_get_subsystem (port), "wwan")) {
+        if (self->priv->mbim)
+            probe_run_flags |= MM_PORT_PROBE_MBIM;
+        if (self->priv->qmi)
+            probe_run_flags |= MM_PORT_PROBE_QMI;
+        if (self->priv->qcdm)
+            probe_run_flags |= MM_PORT_PROBE_QCDM;
+        if (self->priv->at)
             probe_run_flags |= MM_PORT_PROBE_AT;
     }
 
@@ -803,9 +809,11 @@ mm_plugin_supports_port (MMPlugin            *self,
             probe_run_flags |= MM_PORT_PROBE_AT_XMM;
     }
 
-    /* If no explicit probing was required, just request to grab it without probing anything.
-     * This may happen, e.g. with cdc-wdm ports which do not need QMI/MBIM probing. */
+    /* If no explicit probing was required, just request to grab it without
+     * probing anything. This happens for all net ports and e.g. for cdc-wdm
+     * ports which do not need QMI/MBIM probing. */
     if (probe_run_flags == MM_PORT_PROBE_NONE) {
+        mm_obj_dbg (self, "probing of port %s deferred until result suggested", mm_kernel_device_get_name (port));
         g_task_return_int (task, MM_PLUGIN_SUPPORTS_PORT_DEFER_UNTIL_SUGGESTED);
         g_object_unref (task);
         return;
@@ -889,22 +897,25 @@ mm_plugin_discard_port_early (MMPlugin       *self,
 
 MMBaseModem *
 mm_plugin_create_modem (MMPlugin  *self,
-                        MMDevice *device,
+                        MMDevice  *device,
                         GError   **error)
 {
-    MMBaseModem *modem;
-    GList *port_probes = NULL;
+    MMBaseModem  *modem;
+    GList        *port_probes = NULL;
     const gchar **virtual_ports = NULL;
+    const gchar **drivers;
 
     if (!mm_device_is_virtual (device))
         port_probes = mm_device_peek_port_probe_list (device);
     else
         virtual_ports = mm_device_virtual_peek_ports (device);
 
+    drivers = mm_device_get_drivers (device);
+
     /* Let the plugin create the modem from the port probe results */
     modem = MM_PLUGIN_GET_CLASS (self)->create_modem (MM_PLUGIN (self),
                                                       mm_device_get_uid (device),
-                                                      mm_device_get_drivers (device),
+                                                      drivers,
                                                       mm_device_get_vendor (device),
                                                       mm_device_get_product (device),
                                                       port_probes,
@@ -957,60 +968,66 @@ mm_plugin_create_modem (MMPlugin  *self,
                 goto grab_port;
             }
 
+            /* Force network ignore rules for devices that use qmi_wwan */
+            if (drivers && g_strv_contains (drivers, "qmi_wwan")) {
 #if defined WITH_QMI
-            if (MM_IS_BROADBAND_MODEM_QMI (modem) &&
-                port_type == MM_PORT_TYPE_NET &&
-                g_strcmp0 (driver, "qmi_wwan") != 0) {
-                /* Non-QMI net ports are ignored in QMI modems */
-                mm_obj_dbg (self, "ignoring non-QMI net port %s in QMI modem", name);
-                force_ignored = TRUE;
-                goto grab_port;
-            }
+                if (MM_IS_BROADBAND_MODEM_QMI (modem) &&
+                    port_type == MM_PORT_TYPE_NET &&
+                    g_strcmp0 (driver, "qmi_wwan") != 0) {
+                    /* Non-QMI net ports are ignored in QMI modems */
+                    mm_obj_dbg (self, "ignoring non-QMI net port %s in QMI modem", name);
+                    force_ignored = TRUE;
+                    goto grab_port;
+                }
 
-            if (!MM_IS_BROADBAND_MODEM_QMI (modem) &&
-                port_type == MM_PORT_TYPE_NET &&
-                g_strcmp0 (driver, "qmi_wwan") == 0) {
-                /* QMI net ports are ignored in non-QMI modems */
-                mm_obj_dbg (self, "ignoring QMI net port %s in non-QMI modem", name);
-                force_ignored = TRUE;
-                goto grab_port;
-            }
+                if (!MM_IS_BROADBAND_MODEM_QMI (modem) &&
+                    port_type == MM_PORT_TYPE_NET &&
+                    g_strcmp0 (driver, "qmi_wwan") == 0) {
+                    /* QMI net ports are ignored in non-QMI modems */
+                    mm_obj_dbg (self, "ignoring QMI net port %s in non-QMI modem", name);
+                    force_ignored = TRUE;
+                    goto grab_port;
+                }
 #else
-            if (port_type == MM_PORT_TYPE_NET &&
-                g_strcmp0 (driver, "qmi_wwan") == 0) {
-                /* QMI net ports are ignored if QMI support not built */
-                mm_obj_dbg (self, "ignoring QMI net port %s as QMI support isn't available", name);
-                force_ignored = TRUE;
-                goto grab_port;
-            }
+                if (port_type == MM_PORT_TYPE_NET &&
+                    g_strcmp0 (driver, "qmi_wwan") == 0) {
+                    /* QMI net ports are ignored if QMI support not built */
+                    mm_obj_dbg (self, "ignoring QMI net port %s as QMI support isn't available", name);
+                    force_ignored = TRUE;
+                    goto grab_port;
+                }
 #endif
+            }
 
+            /* Force network ignore rules for devices that use cdc_mbim */
+            if (drivers && g_strv_contains (drivers, "cdc_mbim")) {
 #if defined WITH_MBIM
-            if (MM_IS_BROADBAND_MODEM_MBIM (modem) &&
-                port_type == MM_PORT_TYPE_NET &&
-                g_strcmp0 (driver, "cdc_mbim") != 0) {
-                /* Non-MBIM net ports are ignored in MBIM modems */
-                mm_obj_dbg (self, "ignoring non-MBIM net port %s in MBIM modem", name);
-                force_ignored = TRUE;
-                goto grab_port;
-            }
+                if (MM_IS_BROADBAND_MODEM_MBIM (modem) &&
+                    port_type == MM_PORT_TYPE_NET &&
+                    g_strcmp0 (driver, "cdc_mbim") != 0) {
+                    /* Non-MBIM net ports are ignored in MBIM modems */
+                    mm_obj_dbg (self, "ignoring non-MBIM net port %s in MBIM modem", name);
+                    force_ignored = TRUE;
+                    goto grab_port;
+                }
 
-            if (!MM_IS_BROADBAND_MODEM_MBIM (modem) &&
-                port_type == MM_PORT_TYPE_NET &&
-                g_strcmp0 (driver, "cdc_mbim") == 0) {
-                /* MBIM net ports are ignored in non-MBIM modems */
-                mm_obj_dbg (self, "ignoring MBIM net port %s in non-MBIM modem", name);
-                force_ignored = TRUE;
-                goto grab_port;
-            }
+                if (!MM_IS_BROADBAND_MODEM_MBIM (modem) &&
+                    port_type == MM_PORT_TYPE_NET &&
+                    g_strcmp0 (driver, "cdc_mbim") == 0) {
+                    /* MBIM net ports are ignored in non-MBIM modems */
+                    mm_obj_dbg (self, "ignoring MBIM net port %s in non-MBIM modem", name);
+                    force_ignored = TRUE;
+                    goto grab_port;
+                }
 #else
-            if (port_type == MM_PORT_TYPE_NET &&
-                g_strcmp0 (driver, "cdc_mbim") == 0) {
-                mm_obj_dbg (self, "ignoring MBIM net port %s as MBIM support isn't available", name);
-                force_ignored = TRUE;
-                goto grab_port;
-            }
+                if (port_type == MM_PORT_TYPE_NET &&
+                    g_strcmp0 (driver, "cdc_mbim") == 0) {
+                    mm_obj_dbg (self, "ignoring MBIM net port %s as MBIM support isn't available", name);
+                    force_ignored = TRUE;
+                    goto grab_port;
+                }
 #endif
+            }
 
         grab_port:
             if (force_ignored)

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<book xmlns="http://www.devhelp.net/book" title="libmm-glib Reference Manual" link="index.html" author="Aleksander Morgado" name="libmm-glib" version="2" language="c">
+<book xmlns="http://www.devhelp.net/book" title="libmm-glib Reference Manual" link="index.html" author="Aleksander Morgado" name="libmm-glib" version="2" language="c" online="https://www.freedesktop.org/software/ModemManager/doc/latest/libmm-glib/">
   <chapters>
     <sub name="High level API" link="pt01.html">
       <sub name="Common enums and flags helpers" link="ch01.html">
@@ -144,6 +144,7 @@
     <sub name="Index of new symbols in 1.10" link="api-index-1-10.html"/>
     <sub name="Index of new symbols in 1.12" link="api-index-1-12.html"/>
     <sub name="Index of new symbols in 1.14" link="api-index-1-14.html"/>
+    <sub name="Index of new symbols in 1.16" link="api-index-1-16.html"/>
     <sub name="Annotation Glossary" link="annotation-glossary.html"/>
   </chapters>
   <functions>
@@ -306,6 +307,15 @@
     <keyword type="function" name="mm_modem_get_sim ()" link="MMModem.html#mm-modem-get-sim" since="1.0"/>
     <keyword type="function" name="mm_modem_get_sim_finish ()" link="MMModem.html#mm-modem-get-sim-finish" since="1.0"/>
     <keyword type="function" name="mm_modem_get_sim_sync ()" link="MMModem.html#mm-modem-get-sim-sync" since="1.0"/>
+    <keyword type="function" name="mm_modem_get_sim_slot_paths ()" link="MMModem.html#mm-modem-get-sim-slot-paths" since="1.16"/>
+    <keyword type="function" name="mm_modem_dup_sim_slot_paths ()" link="MMModem.html#mm-modem-dup-sim-slot-paths" since="1.16"/>
+    <keyword type="function" name="mm_modem_get_primary_sim_slot ()" link="MMModem.html#mm-modem-get-primary-sim-slot" since="1.16"/>
+    <keyword type="function" name="mm_modem_list_sim_slots ()" link="MMModem.html#mm-modem-list-sim-slots" since="1.16"/>
+    <keyword type="function" name="mm_modem_list_sim_slots_finish ()" link="MMModem.html#mm-modem-list-sim-slots-finish" since="1.16"/>
+    <keyword type="function" name="mm_modem_list_sim_slots_sync ()" link="MMModem.html#mm-modem-list-sim-slots-sync" since="1.16"/>
+    <keyword type="function" name="mm_modem_set_primary_sim_slot ()" link="MMModem.html#mm-modem-set-primary-sim-slot" since="1.16"/>
+    <keyword type="function" name="mm_modem_set_primary_sim_slot_finish ()" link="MMModem.html#mm-modem-set-primary-sim-slot-finish" since="1.16"/>
+    <keyword type="function" name="mm_modem_set_primary_sim_slot_sync ()" link="MMModem.html#mm-modem-set-primary-sim-slot-sync" since="1.16"/>
     <keyword type="function" name="mm_modem_enable ()" link="MMModem.html#mm-modem-enable" since="1.0"/>
     <keyword type="function" name="mm_modem_enable_finish ()" link="MMModem.html#mm-modem-enable-finish" since="1.0"/>
     <keyword type="function" name="mm_modem_enable_sync ()" link="MMModem.html#mm-modem-enable-sync" since="1.0"/>
@@ -476,6 +486,8 @@
     <keyword type="function" name="mm_simple_connect_properties_set_ip_type ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-ip-type" since="1.0"/>
     <keyword type="function" name="mm_simple_connect_properties_get_allow_roaming ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-allow-roaming" since="1.0"/>
     <keyword type="function" name="mm_simple_connect_properties_set_allow_roaming ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-allow-roaming" since="1.0"/>
+    <keyword type="function" name="mm_simple_connect_properties_get_rm_protocol ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-rm-protocol" since="1.16"/>
+    <keyword type="function" name="mm_simple_connect_properties_set_rm_protocol ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-rm-protocol" since="1.16"/>
     <keyword type="function" name="mm_simple_connect_properties_get_number ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-number" deprecated="" since="1.0"/>
     <keyword type="function" name="mm_simple_connect_properties_set_number ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-number" deprecated="" since="1.0"/>
     <keyword type="struct" name="struct MMSimpleConnectProperties" link="MMSimpleConnectProperties.html#MMSimpleConnectProperties-struct"/>
@@ -630,6 +642,8 @@
     <keyword type="function" name="mm_modem_signal_get_umts ()" link="MMModemSignal.html#mm-modem-signal-get-umts" since="1.2"/>
     <keyword type="function" name="mm_modem_signal_peek_lte ()" link="MMModemSignal.html#mm-modem-signal-peek-lte" since="1.2"/>
     <keyword type="function" name="mm_modem_signal_get_lte ()" link="MMModemSignal.html#mm-modem-signal-get-lte" since="1.2"/>
+    <keyword type="function" name="mm_modem_signal_peek_nr5g ()" link="MMModemSignal.html#mm-modem-signal-peek-nr5g" since="1.16"/>
+    <keyword type="function" name="mm_modem_signal_get_nr5g ()" link="MMModemSignal.html#mm-modem-signal-get-nr5g" since="1.16"/>
     <keyword type="function" name="mm_modem_signal_setup ()" link="MMModemSignal.html#mm-modem-signal-setup" since="1.2"/>
     <keyword type="function" name="mm_modem_signal_setup_finish ()" link="MMModemSignal.html#mm-modem-signal-setup-finish" since="1.2"/>
     <keyword type="function" name="mm_modem_signal_setup_sync ()" link="MMModemSignal.html#mm-modem-signal-setup-sync" since="1.2"/>
@@ -760,10 +774,13 @@
     <keyword type="struct" name="struct MMBearerStats" link="MMBearerStats.html#MMBearerStats-struct"/>
     <keyword type="function" name="mm_sim_get_path ()" link="MMSim.html#mm-sim-get-path" since="1.0"/>
     <keyword type="function" name="mm_sim_dup_path ()" link="MMSim.html#mm-sim-dup-path" since="1.0"/>
+    <keyword type="function" name="mm_sim_get_active ()" link="MMSim.html#mm-sim-get-active" since="1.16"/>
     <keyword type="function" name="mm_sim_get_identifier ()" link="MMSim.html#mm-sim-get-identifier" since="1.0"/>
     <keyword type="function" name="mm_sim_dup_identifier ()" link="MMSim.html#mm-sim-dup-identifier" since="1.0"/>
     <keyword type="function" name="mm_sim_get_imsi ()" link="MMSim.html#mm-sim-get-imsi" since="1.0"/>
     <keyword type="function" name="mm_sim_dup_imsi ()" link="MMSim.html#mm-sim-dup-imsi" since="1.0"/>
+    <keyword type="function" name="mm_sim_get_eid ()" link="MMSim.html#mm-sim-get-eid" since="1.16"/>
+    <keyword type="function" name="mm_sim_dup_eid ()" link="MMSim.html#mm-sim-dup-eid" since="1.16"/>
     <keyword type="function" name="mm_sim_get_operator_identifier ()" link="MMSim.html#mm-sim-get-operator-identifier" since="1.0"/>
     <keyword type="function" name="mm_sim_dup_operator_identifier ()" link="MMSim.html#mm-sim-dup-operator-identifier" since="1.0"/>
     <keyword type="function" name="mm_sim_get_operator_name ()" link="MMSim.html#mm-sim-get-operator-name" since="1.0"/>
@@ -1025,6 +1042,9 @@
     <keyword type="function" name="mm_gdbus_modem_dup_signal_quality ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-signal-quality"/>
     <keyword type="function" name="mm_gdbus_modem_get_sim ()" link="MmGdbusModem.html#mm-gdbus-modem-get-sim"/>
     <keyword type="function" name="mm_gdbus_modem_dup_sim ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-sim"/>
+    <keyword type="function" name="mm_gdbus_modem_dup_sim_slots ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-sim-slots"/>
+    <keyword type="function" name="mm_gdbus_modem_get_sim_slots ()" link="MmGdbusModem.html#mm-gdbus-modem-get-sim-slots"/>
+    <keyword type="function" name="mm_gdbus_modem_get_primary_sim_slot ()" link="MmGdbusModem.html#mm-gdbus-modem-get-primary-sim-slot"/>
     <keyword type="function" name="mm_gdbus_modem_get_supported_capabilities ()" link="MmGdbusModem.html#mm-gdbus-modem-get-supported-capabilities"/>
     <keyword type="function" name="mm_gdbus_modem_dup_supported_capabilities ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-supported-capabilities"/>
     <keyword type="function" name="mm_gdbus_modem_get_state ()" link="MmGdbusModem.html#mm-gdbus-modem-get-state"/>
@@ -1067,6 +1087,9 @@
     <keyword type="function" name="mm_gdbus_modem_call_set_current_capabilities ()" link="MmGdbusModem.html#mm-gdbus-modem-call-set-current-capabilities"/>
     <keyword type="function" name="mm_gdbus_modem_call_set_current_capabilities_finish ()" link="MmGdbusModem.html#mm-gdbus-modem-call-set-current-capabilities-finish"/>
     <keyword type="function" name="mm_gdbus_modem_call_set_current_capabilities_sync ()" link="MmGdbusModem.html#mm-gdbus-modem-call-set-current-capabilities-sync"/>
+    <keyword type="function" name="mm_gdbus_modem_call_set_primary_sim_slot ()" link="MmGdbusModem.html#mm-gdbus-modem-call-set-primary-sim-slot"/>
+    <keyword type="function" name="mm_gdbus_modem_call_set_primary_sim_slot_finish ()" link="MmGdbusModem.html#mm-gdbus-modem-call-set-primary-sim-slot-finish"/>
+    <keyword type="function" name="mm_gdbus_modem_call_set_primary_sim_slot_sync ()" link="MmGdbusModem.html#mm-gdbus-modem-call-set-primary-sim-slot-sync"/>
     <keyword type="function" name="mm_gdbus_modem_call_command ()" link="MmGdbusModem.html#mm-gdbus-modem-call-command"/>
     <keyword type="function" name="mm_gdbus_modem_call_command_finish ()" link="MmGdbusModem.html#mm-gdbus-modem-call-command-finish"/>
     <keyword type="function" name="mm_gdbus_modem_call_command_sync ()" link="MmGdbusModem.html#mm-gdbus-modem-call-command-sync"/>
@@ -1093,9 +1116,11 @@
     <keyword type="property" name="The “ports” property" link="MmGdbusModem.html#MmGdbusModem--ports"/>
     <keyword type="property" name="The “power-state” property" link="MmGdbusModem.html#MmGdbusModem--power-state"/>
     <keyword type="property" name="The “primary-port” property" link="MmGdbusModem.html#MmGdbusModem--primary-port"/>
+    <keyword type="property" name="The “primary-sim-slot” property" link="MmGdbusModem.html#MmGdbusModem--primary-sim-slot"/>
     <keyword type="property" name="The “revision” property" link="MmGdbusModem.html#MmGdbusModem--revision"/>
     <keyword type="property" name="The “signal-quality” property" link="MmGdbusModem.html#MmGdbusModem--signal-quality"/>
     <keyword type="property" name="The “sim” property" link="MmGdbusModem.html#MmGdbusModem--sim"/>
+    <keyword type="property" name="The “sim-slots” property" link="MmGdbusModem.html#MmGdbusModem--sim-slots"/>
     <keyword type="property" name="The “state” property" link="MmGdbusModem.html#MmGdbusModem--state"/>
     <keyword type="property" name="The “state-failed-reason” property" link="MmGdbusModem.html#MmGdbusModem--state-failed-reason"/>
     <keyword type="property" name="The “supported-bands” property" link="MmGdbusModem.html#MmGdbusModem--supported-bands"/>
@@ -1115,6 +1140,7 @@
     <keyword type="signal" name="The “handle-set-current-capabilities” signal" link="MmGdbusModem.html#MmGdbusModem-handle-set-current-capabilities"/>
     <keyword type="signal" name="The “handle-set-current-modes” signal" link="MmGdbusModem.html#MmGdbusModem-handle-set-current-modes"/>
     <keyword type="signal" name="The “handle-set-power-state” signal" link="MmGdbusModem.html#MmGdbusModem-handle-set-power-state"/>
+    <keyword type="signal" name="The “handle-set-primary-sim-slot” signal" link="MmGdbusModem.html#MmGdbusModem-handle-set-primary-sim-slot"/>
     <keyword type="signal" name="The “state-changed” signal" link="MmGdbusModem.html#MmGdbusModem-state-changed"/>
     <keyword type="function" name="mm_gdbus_modem_proxy_new ()" link="MmGdbusModemProxy.html#mm-gdbus-modem-proxy-new"/>
     <keyword type="function" name="mm_gdbus_modem_proxy_new_finish ()" link="MmGdbusModemProxy.html#mm-gdbus-modem-proxy-new-finish"/>
@@ -1375,11 +1401,13 @@
     <keyword type="function" name="mm_gdbus_modem_signal_get_gsm ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-get-gsm"/>
     <keyword type="function" name="mm_gdbus_modem_signal_get_umts ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-get-umts"/>
     <keyword type="function" name="mm_gdbus_modem_signal_get_lte ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-get-lte"/>
+    <keyword type="function" name="mm_gdbus_modem_signal_get_nr5g ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-get-nr5g"/>
     <keyword type="function" name="mm_gdbus_modem_signal_dup_cdma ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-cdma"/>
     <keyword type="function" name="mm_gdbus_modem_signal_dup_evdo ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-evdo"/>
     <keyword type="function" name="mm_gdbus_modem_signal_dup_gsm ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-gsm"/>
     <keyword type="function" name="mm_gdbus_modem_signal_dup_umts ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-umts"/>
     <keyword type="function" name="mm_gdbus_modem_signal_dup_lte ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-lte"/>
+    <keyword type="function" name="mm_gdbus_modem_signal_dup_nr5g ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-nr5g"/>
     <keyword type="function" name="mm_gdbus_modem_signal_call_setup ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-call-setup"/>
     <keyword type="function" name="mm_gdbus_modem_signal_call_setup_finish ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-call-setup-finish"/>
     <keyword type="function" name="mm_gdbus_modem_signal_call_setup_sync ()" link="MmGdbusModemSignal.html#mm-gdbus-modem-signal-call-setup-sync"/>
@@ -1389,6 +1417,7 @@
     <keyword type="property" name="The “evdo” property" link="MmGdbusModemSignal.html#MmGdbusModemSignal--evdo"/>
     <keyword type="property" name="The “gsm” property" link="MmGdbusModemSignal.html#MmGdbusModemSignal--gsm"/>
     <keyword type="property" name="The “lte” property" link="MmGdbusModemSignal.html#MmGdbusModemSignal--lte"/>
+    <keyword type="property" name="The “nr5g” property" link="MmGdbusModemSignal.html#MmGdbusModemSignal--nr5g"/>
     <keyword type="property" name="The “rate” property" link="MmGdbusModemSignal.html#MmGdbusModemSignal--rate"/>
     <keyword type="property" name="The “umts” property" link="MmGdbusModemSignal.html#MmGdbusModemSignal--umts"/>
     <keyword type="signal" name="The “handle-setup” signal" link="MmGdbusModemSignal.html#MmGdbusModemSignal-handle-setup"/>
@@ -1557,8 +1586,11 @@
     <keyword type="struct" name="struct MmGdbusBearerProxy" link="MmGdbusBearerProxy.html#MmGdbusBearerProxy-struct"/>
     <keyword type="function" name="mm_gdbus_bearer_skeleton_new ()" link="MmGdbusBearerSkeleton.html#mm-gdbus-bearer-skeleton-new"/>
     <keyword type="struct" name="struct MmGdbusBearerSkeleton" link="MmGdbusBearerSkeleton.html#MmGdbusBearerSkeleton-struct"/>
+    <keyword type="function" name="mm_gdbus_sim_get_active ()" link="MmGdbusSim.html#mm-gdbus-sim-get-active"/>
     <keyword type="function" name="mm_gdbus_sim_get_imsi ()" link="MmGdbusSim.html#mm-gdbus-sim-get-imsi"/>
     <keyword type="function" name="mm_gdbus_sim_dup_imsi ()" link="MmGdbusSim.html#mm-gdbus-sim-dup-imsi"/>
+    <keyword type="function" name="mm_gdbus_sim_get_eid ()" link="MmGdbusSim.html#mm-gdbus-sim-get-eid"/>
+    <keyword type="function" name="mm_gdbus_sim_dup_eid ()" link="MmGdbusSim.html#mm-gdbus-sim-dup-eid"/>
     <keyword type="function" name="mm_gdbus_sim_get_sim_identifier ()" link="MmGdbusSim.html#mm-gdbus-sim-get-sim-identifier"/>
     <keyword type="function" name="mm_gdbus_sim_dup_sim_identifier ()" link="MmGdbusSim.html#mm-gdbus-sim-dup-sim-identifier"/>
     <keyword type="function" name="mm_gdbus_sim_get_operator_identifier ()" link="MmGdbusSim.html#mm-gdbus-sim-get-operator-identifier"/>
@@ -1581,6 +1613,8 @@
     <keyword type="function" name="mm_gdbus_sim_call_change_pin_sync ()" link="MmGdbusSim.html#mm-gdbus-sim-call-change-pin-sync"/>
     <keyword type="struct" name="MmGdbusSim" link="MmGdbusSim.html#MmGdbusSim-struct"/>
     <keyword type="struct" name="struct MmGdbusSimIface" link="MmGdbusSim.html#MmGdbusSimIface"/>
+    <keyword type="property" name="The “active” property" link="MmGdbusSim.html#MmGdbusSim--active"/>
+    <keyword type="property" name="The “eid” property" link="MmGdbusSim.html#MmGdbusSim--eid"/>
     <keyword type="property" name="The “emergency-numbers” property" link="MmGdbusSim.html#MmGdbusSim--emergency-numbers"/>
     <keyword type="property" name="The “imsi” property" link="MmGdbusSim.html#MmGdbusSim--imsi"/>
     <keyword type="property" name="The “operator-identifier” property" link="MmGdbusSim.html#MmGdbusSim--operator-identifier"/>
@@ -1740,6 +1774,7 @@
     <keyword type="member" name="MmGdbusModemIface.handle-set-current-capabilities" link="MmGdbusModem.html#MmGdbusModemIface.handle-set-current-capabilities"/>
     <keyword type="member" name="MmGdbusModemIface.handle-set-current-modes" link="MmGdbusModem.html#MmGdbusModemIface.handle-set-current-modes"/>
     <keyword type="member" name="MmGdbusModemIface.handle-set-power-state" link="MmGdbusModem.html#MmGdbusModemIface.handle-set-power-state"/>
+    <keyword type="member" name="MmGdbusModemIface.handle-set-primary-sim-slot" link="MmGdbusModem.html#MmGdbusModemIface.handle-set-primary-sim-slot"/>
     <keyword type="member" name="MmGdbusModemIface.get-access-technologies" link="MmGdbusModem.html#MmGdbusModemIface.get-access-technologies"/>
     <keyword type="member" name="MmGdbusModemIface.get-bearers" link="MmGdbusModem.html#MmGdbusModemIface.get-bearers"/>
     <keyword type="member" name="MmGdbusModemIface.get-carrier-configuration" link="MmGdbusModem.html#MmGdbusModemIface.get-carrier-configuration"/>
@@ -1761,9 +1796,11 @@
     <keyword type="member" name="MmGdbusModemIface.get-ports" link="MmGdbusModem.html#MmGdbusModemIface.get-ports"/>
     <keyword type="member" name="MmGdbusModemIface.get-power-state" link="MmGdbusModem.html#MmGdbusModemIface.get-power-state"/>
     <keyword type="member" name="MmGdbusModemIface.get-primary-port" link="MmGdbusModem.html#MmGdbusModemIface.get-primary-port"/>
+    <keyword type="member" name="MmGdbusModemIface.get-primary-sim-slot" link="MmGdbusModem.html#MmGdbusModemIface.get-primary-sim-slot"/>
     <keyword type="member" name="MmGdbusModemIface.get-revision" link="MmGdbusModem.html#MmGdbusModemIface.get-revision"/>
     <keyword type="member" name="MmGdbusModemIface.get-signal-quality" link="MmGdbusModem.html#MmGdbusModemIface.get-signal-quality"/>
     <keyword type="member" name="MmGdbusModemIface.get-sim" link="MmGdbusModem.html#MmGdbusModemIface.get-sim"/>
+    <keyword type="member" name="MmGdbusModemIface.get-sim-slots" link="MmGdbusModem.html#MmGdbusModemIface.get-sim-slots"/>
     <keyword type="member" name="MmGdbusModemIface.get-state" link="MmGdbusModem.html#MmGdbusModemIface.get-state"/>
     <keyword type="member" name="MmGdbusModemIface.get-state-failed-reason" link="MmGdbusModem.html#MmGdbusModemIface.get-state-failed-reason"/>
     <keyword type="member" name="MmGdbusModemIface.get-supported-bands" link="MmGdbusModem.html#MmGdbusModemIface.get-supported-bands"/>
@@ -1843,6 +1880,7 @@
     <keyword type="member" name="MmGdbusModemSignalIface.get-evdo" link="MmGdbusModemSignal.html#MmGdbusModemSignalIface.get-evdo"/>
     <keyword type="member" name="MmGdbusModemSignalIface.get-gsm" link="MmGdbusModemSignal.html#MmGdbusModemSignalIface.get-gsm"/>
     <keyword type="member" name="MmGdbusModemSignalIface.get-lte" link="MmGdbusModemSignal.html#MmGdbusModemSignalIface.get-lte"/>
+    <keyword type="member" name="MmGdbusModemSignalIface.get-nr5g" link="MmGdbusModemSignal.html#MmGdbusModemSignalIface.get-nr5g"/>
     <keyword type="member" name="MmGdbusModemSignalIface.get-rate" link="MmGdbusModemSignal.html#MmGdbusModemSignalIface.get-rate"/>
     <keyword type="member" name="MmGdbusModemSignalIface.get-umts" link="MmGdbusModemSignal.html#MmGdbusModemSignalIface.get-umts"/>
     <keyword type="member" name="MmGdbusModemOmaIface.parent-iface" link="MmGdbusModemOma.html#MmGdbusModemOmaIface.parent-iface"/>
@@ -1890,6 +1928,8 @@
     <keyword type="member" name="MmGdbusSimIface.handle-enable-pin" link="MmGdbusSim.html#MmGdbusSimIface.handle-enable-pin"/>
     <keyword type="member" name="MmGdbusSimIface.handle-send-pin" link="MmGdbusSim.html#MmGdbusSimIface.handle-send-pin"/>
     <keyword type="member" name="MmGdbusSimIface.handle-send-puk" link="MmGdbusSim.html#MmGdbusSimIface.handle-send-puk"/>
+    <keyword type="member" name="MmGdbusSimIface.get-active" link="MmGdbusSim.html#MmGdbusSimIface.get-active"/>
+    <keyword type="member" name="MmGdbusSimIface.get-eid" link="MmGdbusSim.html#MmGdbusSimIface.get-eid"/>
     <keyword type="member" name="MmGdbusSimIface.get-emergency-numbers" link="MmGdbusSim.html#MmGdbusSimIface.get-emergency-numbers"/>
     <keyword type="member" name="MmGdbusSimIface.get-imsi" link="MmGdbusSim.html#MmGdbusSimIface.get-imsi"/>
     <keyword type="member" name="MmGdbusSimIface.get-operator-identifier" link="MmGdbusSim.html#MmGdbusSimIface.get-operator-identifier"/>

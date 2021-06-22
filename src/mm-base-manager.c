@@ -137,17 +137,28 @@ find_device_by_port (MMBaseManager  *manager,
 }
 
 static MMDevice *
+find_device_by_port_name (MMBaseManager *manager,
+                          const gchar   *subsystem,
+                          const gchar   *name)
+{
+    GHashTableIter iter;
+    gpointer key, value;
+
+    g_hash_table_iter_init (&iter, manager->priv->devices);
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+        MMDevice *candidate = MM_DEVICE (value);
+
+        if (mm_device_owns_port_name (candidate, subsystem, name))
+            return candidate;
+    }
+    return NULL;
+}
+
+static MMDevice *
 find_device_by_physdev_uid (MMBaseManager *self,
                             const gchar   *physdev_uid)
 {
     return g_hash_table_lookup (self->priv->devices, physdev_uid);
-}
-
-static MMDevice *
-find_device_by_kernel_device (MMBaseManager  *manager,
-                              MMKernelDevice *kernel_device)
-{
-    return find_device_by_physdev_uid (manager, mm_kernel_device_get_physdev_uid (kernel_device));
 }
 
 /*****************************************************************************/
@@ -215,87 +226,47 @@ static void     device_inhibited_track_port   (MMBaseManager  *self,
                                                MMKernelDevice *port,
                                                gboolean        manual_scan);
 static void     device_inhibited_untrack_port (MMBaseManager  *self,
-                                               MMKernelDevice *port);
+                                               const gchar    *subsystem,
+                                               const gchar    *name);
 
 static void
-device_removed (MMBaseManager  *self,
-                MMKernelDevice *kernel_device)
+device_removed (MMBaseManager *self,
+                const gchar   *subsystem,
+                const gchar   *name)
 {
-    MMDevice    *device;
-    const gchar *subsys;
-    const gchar *name;
+    g_autoptr(MMDevice) device = NULL;
 
-    g_return_if_fail (kernel_device != NULL);
-
-    subsys = mm_kernel_device_get_subsystem (kernel_device);
-    name = mm_kernel_device_get_name (kernel_device);
-
-    if (!g_str_has_prefix (subsys, "usb") ||
-        (name && g_str_has_prefix (name, "cdc-wdm"))) {
-        /* Handle tty/net/wdm port removal */
-        device = find_device_by_port (self, kernel_device);
-        if (device) {
-            /* The callbacks triggered when the port is released or device support is
-             * cancelled may end up unreffing the device or removing it from the HT, and
-             * so in order to make sure the reference is still valid when we call
-             * support_check_cancel() and g_hash_table_remove(), we hold a full reference
-             * ourselves. */
-            g_object_ref (device);
-            {
-                mm_obj_info (self, "port %s released by device '%s'", name, mm_device_get_uid (device));
-                mm_device_release_port (device, kernel_device);
-
-                /* If port probe list gets empty, remove the device object iself */
-                if (!mm_device_peek_port_probe_list (device)) {
-                    mm_obj_dbg (self, "removing empty device '%s'", mm_device_get_uid (device));
-                    if (mm_plugin_manager_device_support_check_cancel (self->priv->plugin_manager, device))
-                        mm_obj_dbg (self, "device support check has been cancelled");
-
-                    /* The device may have already been removed from the tracking HT, we
-                     * just try to remove it and if it fails, we ignore it */
-                    mm_device_remove_modem (device);
-                    g_hash_table_remove (self->priv->devices, mm_device_get_uid (device));
-                }
-            }
-            g_object_unref (device);
-            return;
-        }
-
+    g_assert (subsystem && name);
+    device = find_device_by_port_name (self, subsystem, name);
+    if (!device) {
         /* If the device was inhibited and the port is gone, untrack it.
          * This is only needed for ports that were tracked out of device objects.
          * In this case we don't rely on the physdev uid, as API-reported
          * remove kernel events may not include uid. */
-        device_inhibited_untrack_port (self, kernel_device);
+        device_inhibited_untrack_port (self, subsystem, name);
         return;
     }
 
-#if defined WITH_UDEV
-    /* When a USB modem is switching its USB configuration, udev may deliver
-     * the remove events of USB interfaces associated with the old USB
-     * configuration and the add events of USB interfaces associated with the
-     * new USB configuration in an interleaved fashion. As we don't want a
-     * remove event of an USB interface trigger the removal of a MMDevice for
-     * the special case being handled here, we ignore any remove event with
-     * DEVTYPE != usb_device.
-     */
-    if (g_strcmp0 (mm_kernel_device_get_property (kernel_device, "DEVTYPE"), "usb_device") != 0)
-        return;
-#endif
+    /* The callbacks triggered when the port is released or device support is
+     * cancelled may end up unreffing the device or removing it from the HT, and
+     * so in order to make sure the reference is still valid when we call
+     * support_check_cancel() and g_hash_table_remove(), we hold a full reference
+     * ourselves. */
+    g_object_ref (device);
 
-    /* This case is designed to handle the case where, at least with kernel 2.6.31, unplugging
-     * an in-use ttyACMx device results in udev generating remove events for the usb, but the
-     * ttyACMx device (subsystem tty) is not removed, since it was in-use.  So if we have not
-     * found a modem for the port (above), we're going to look here to see if we have a modem
-     * associated with the newly removed device.  If so, we'll remove the modem, since the
-     * device has been removed.  That way, if the device is reinserted later, we'll go through
-     * the process of exporting it.
-     */
-    device = find_device_by_kernel_device (self, kernel_device);
-    if (device) {
-        mm_obj_dbg (self, "removing device '%s'", mm_device_get_uid (device));
+    mm_obj_info (self, "port %s released by device '%s'", name, mm_device_get_uid (device));
+    mm_device_release_port_name (device, subsystem, name);
+
+    /* If port probe list gets empty, remove the device object iself */
+    if (!mm_device_peek_port_probe_list (device)) {
+        mm_obj_dbg (self, "removing empty device '%s'", mm_device_get_uid (device));
+        if (mm_plugin_manager_device_support_check_cancel (self->priv->plugin_manager, device))
+            mm_obj_dbg (self, "device support check has been cancelled");
+
+        /* The device may have already been removed from the tracking HT, we
+         * just try to remove it and if it fails, we ignore it */
         mm_device_remove_modem (device);
         g_hash_table_remove (self->priv->devices, mm_device_get_uid (device));
-        return;
     }
 }
 
@@ -329,7 +300,7 @@ device_added (MMBaseManager  *self,
         /* This could mean that device changed, losing its candidate
          * flags (such as Bluetooth RFCOMM devices upon disconnect.
          * Try to forget it. */
-        device_removed (self, port);
+        device_removed (self, mm_kernel_device_get_subsystem (port), name);
         mm_obj_dbg (self, "port %s not candidate", name);
         return;
     }
@@ -392,11 +363,10 @@ handle_kernel_event (MMBaseManager            *self,
                      MMKernelEventProperties  *properties,
                      GError                  **error)
 {
-    MMKernelDevice *kernel_device;
-    const gchar    *action;
-    const gchar    *subsystem;
-    const gchar    *name;
-    const gchar    *uid;
+    const gchar *action;
+    const gchar *subsystem;
+    const gchar *name;
+    const gchar *uid;
 
     action = mm_kernel_event_properties_get_action (properties);
     if (!action) {
@@ -414,6 +384,11 @@ handle_kernel_event (MMBaseManager            *self,
         return FALSE;
     }
 
+    if (!g_strv_contains (mm_plugin_manager_get_subsystems (self->priv->plugin_manager), subsystem)) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS, "Invalid 'subsystem' parameter given: '%s'", subsystem);
+        return FALSE;
+    }
+
     name = mm_kernel_event_properties_get_name (properties);
     if (!name) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS, "Missing mandatory parameter 'name'");
@@ -428,60 +403,59 @@ handle_kernel_event (MMBaseManager            *self,
     mm_obj_dbg (self, "  name:      %s", name);
     mm_obj_dbg (self, "  uid:       %s", uid ? uid : "n/a");
 
+    if (g_strcmp0 (action, "add") == 0) {
+        g_autoptr(MMKernelDevice) kernel_device = NULL;
 #if defined WITH_UDEV
-    kernel_device = mm_kernel_device_udev_new_from_properties (properties, error);
-#else
-    kernel_device = mm_kernel_device_generic_new (properties, error);
+        if (!mm_context_get_test_no_udev ())
+            kernel_device = mm_kernel_device_udev_new_from_properties (properties, error);
+        else
 #endif
+            kernel_device = mm_kernel_device_generic_new (properties, error);
+        if (!kernel_device)
+            return FALSE;
 
-    if (!kernel_device)
-        return FALSE;
-
-    if (g_strcmp0 (action, "add") == 0)
         device_added (self, kernel_device, TRUE, TRUE);
-    else if (g_strcmp0 (action, "remove") == 0)
-        device_removed (self, kernel_device);
-    else
-        g_assert_not_reached ();
-    g_object_unref (kernel_device);
+        return TRUE;
+    }
 
-    return TRUE;
+    if (g_strcmp0 (action, "remove") == 0) {
+        device_removed (self, subsystem, name);
+        return TRUE;
+    }
+
+    g_assert_not_reached ();
 }
 
 #if defined WITH_UDEV
 
 static void
-handle_uevent (GUdevClient *client,
-               const gchar *action,
-               GUdevDevice *device,
-               gpointer     user_data)
+handle_uevent (MMBaseManager *self,
+               const gchar   *action,
+               GUdevDevice   *device)
 {
-    MMBaseManager  *self;
-    const gchar    *subsys;
-    const gchar    *name;
-    MMKernelDevice *kernel_device;
+    const gchar *subsystem;
+    const gchar *name;
 
-    self = MM_BASE_MANAGER (user_data);
-    g_return_if_fail (action != NULL);
+    subsystem = g_udev_device_get_subsystem (device);
+    name      = g_udev_device_get_name      (device);
 
-    /* A bit paranoid */
-    subsys = g_udev_device_get_subsystem (device);
-    g_return_if_fail (subsys != NULL);
-    g_return_if_fail (g_str_equal (subsys, "tty") || g_str_equal (subsys, "net") || g_str_has_prefix (subsys, "usb"));
+    /* Valid udev devices must have subsystem and name set; if they don't have
+     * both things, we silently ignore them. */
+    if (!subsystem || !name)
+        return;
 
-    kernel_device = mm_kernel_device_udev_new (device);
+    if (g_str_equal (action, "add") || g_str_equal (action, "move") || g_str_equal (action, "change")) {
+        g_autoptr(MMKernelDevice) kernel_device = NULL;
 
-    /* We only care about tty/net and usb/cdc-wdm devices when adding modem ports,
-     * but for remove, also handle usb parent device remove events
-     */
-    name = mm_kernel_device_get_name (kernel_device);
-    if (   (g_str_equal (action, "add") || g_str_equal (action, "move") || g_str_equal (action, "change"))
-        && (!g_str_has_prefix (subsys, "usb") || (name && g_str_has_prefix (name, "cdc-wdm"))))
+        kernel_device = mm_kernel_device_udev_new (device);
         device_added (self, kernel_device, TRUE, FALSE);
-    else if (g_str_equal (action, "remove"))
-        device_removed (self, kernel_device);
+        return;
+    }
 
-    g_object_unref (kernel_device);
+    if (g_str_equal (action, "remove")) {
+        device_removed (self, subsystem, name);
+        return;
+    }
 }
 
 typedef struct {
@@ -493,11 +467,20 @@ typedef struct {
 static gboolean
 start_device_added_idle (StartDeviceAdded *ctx)
 {
-    MMKernelDevice *kernel_device;
+    const gchar *subsystem;
+    const gchar *name;
 
-    kernel_device = mm_kernel_device_udev_new (ctx->device);
-    device_added (ctx->self, kernel_device, FALSE, ctx->manual_scan);
-    g_object_unref (kernel_device);
+    subsystem = g_udev_device_get_subsystem (ctx->device);
+    name      = g_udev_device_get_name      (ctx->device);
+
+    /* Valid udev devices must have subsystem and name set; if they don't have
+     * both things, we silently ignore them. */
+    if (subsystem && name) {
+        g_autoptr(MMKernelDevice) kernel_device = NULL;
+
+        kernel_device = mm_kernel_device_udev_new (ctx->device);
+        device_added (ctx->self, kernel_device, FALSE, ctx->manual_scan);
+    }
 
     g_object_unref (ctx->self);
     g_object_unref (ctx->device);
@@ -523,44 +506,19 @@ static void
 process_scan (MMBaseManager *self,
               gboolean       manual_scan)
 {
-    GList *devices, *iter;
+    const gchar **subsystems;
+    guint         i;
 
-    devices = g_udev_client_query_by_subsystem (self->priv->udev, "tty");
-    for (iter = devices; iter; iter = g_list_next (iter)) {
-        start_device_added (self, G_UDEV_DEVICE (iter->data), manual_scan);
-        g_object_unref (G_OBJECT (iter->data));
-    }
-    g_list_free (devices);
+    subsystems = mm_plugin_manager_get_subsystems (self->priv->plugin_manager);
+    for (i = 0; subsystems[i]; i++) {
+        GList *devices;
+        GList *iter;
 
-    devices = g_udev_client_query_by_subsystem (self->priv->udev, "net");
-    for (iter = devices; iter; iter = g_list_next (iter)) {
-        start_device_added (self, G_UDEV_DEVICE (iter->data), manual_scan);
-        g_object_unref (G_OBJECT (iter->data));
-    }
-    g_list_free (devices);
-
-    devices = g_udev_client_query_by_subsystem (self->priv->udev, "usb");
-    for (iter = devices; iter; iter = g_list_next (iter)) {
-        const gchar *name;
-
-        name = g_udev_device_get_name (G_UDEV_DEVICE (iter->data));
-        if (name && g_str_has_prefix (name, "cdc-wdm"))
+        devices = g_udev_client_query_by_subsystem (self->priv->udev, subsystems[i]);
+        for (iter = devices; iter; iter = g_list_next (iter))
             start_device_added (self, G_UDEV_DEVICE (iter->data), manual_scan);
-        g_object_unref (G_OBJECT (iter->data));
+        g_list_free_full (devices, g_object_unref);
     }
-    g_list_free (devices);
-
-    /* Newer kernels report 'usbmisc' subsystem */
-    devices = g_udev_client_query_by_subsystem (self->priv->udev, "usbmisc");
-    for (iter = devices; iter; iter = g_list_next (iter)) {
-        const gchar *name;
-
-        name = g_udev_device_get_name (G_UDEV_DEVICE (iter->data));
-        if (name && g_str_has_prefix (name, "cdc-wdm"))
-            start_device_added (self, G_UDEV_DEVICE (iter->data), manual_scan);
-        g_object_unref (G_OBJECT (iter->data));
-    }
-    g_list_free (devices);
 }
 
 #endif
@@ -627,12 +585,13 @@ mm_base_manager_start (MMBaseManager *self,
     }
 
 #if defined WITH_UDEV
-    mm_obj_dbg (self, "starting %s device scan...", manual_scan ? "manual" : "automatic");
-    process_scan (self, manual_scan);
-    mm_obj_dbg (self, "finished device scan...");
-#else
-    mm_obj_dbg (self, "unsupported %s device scan...", manual_scan ? "manual" : "automatic");
+    if (!mm_context_get_test_no_udev ()) {
+        mm_obj_dbg (self, "starting %s device scan...", manual_scan ? "manual" : "automatic");
+        process_scan (self, manual_scan);
+        mm_obj_dbg (self, "finished device scan...");
+    } else
 #endif
+        mm_obj_dbg (self, "unsupported %s device scan...", manual_scan ? "manual" : "automatic");
 }
 
 /*****************************************************************************/
@@ -811,16 +770,17 @@ scan_devices_auth_ready (MMAuthProvider *authp,
         g_dbus_method_invocation_take_error (ctx->invocation, error);
     else {
 #if defined WITH_UDEV
-        /* Otherwise relaunch device scan */
-        mm_base_manager_start (MM_BASE_MANAGER (ctx->self), TRUE);
-        mm_gdbus_org_freedesktop_modem_manager1_complete_scan_devices (
-            MM_GDBUS_ORG_FREEDESKTOP_MODEM_MANAGER1 (ctx->self),
-            ctx->invocation);
-#else
-        g_dbus_method_invocation_return_error_literal (
-            ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
-            "Cannot request manual scan of devices: unsupported");
+        if (!mm_context_get_test_no_udev ()) {
+            /* Otherwise relaunch device scan */
+            mm_base_manager_start (MM_BASE_MANAGER (ctx->self), TRUE);
+            mm_gdbus_org_freedesktop_modem_manager1_complete_scan_devices (
+                MM_GDBUS_ORG_FREEDESKTOP_MODEM_MANAGER1 (ctx->self),
+                ctx->invocation);
+        } else
 #endif
+            g_dbus_method_invocation_return_error_literal (
+                ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                "Cannot request manual scan of devices: unsupported");
     }
 
     scan_devices_context_free (ctx);
@@ -874,7 +834,7 @@ report_kernel_event_auth_ready (MMAuthProvider           *authp,
         goto out;
 
 #if defined WITH_UDEV
-    if (ctx->self->priv->auto_scan) {
+    if (!mm_context_get_test_no_udev () && ctx->self->priv->auto_scan) {
         error = g_error_new_literal (MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
                                      "Cannot report kernel event: "
                                      "udev monitoring already in place");
@@ -889,9 +849,10 @@ report_kernel_event_auth_ready (MMAuthProvider           *authp,
     handle_kernel_event (ctx->self, properties, &error);
 
 out:
-    if (error)
+    if (error) {
+        mm_obj_warn (ctx->self, "couldn't handle kernel event: %s", error->message);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
-    else
+    } else
         mm_gdbus_org_freedesktop_modem_manager1_complete_report_kernel_event (
             MM_GDBUS_ORG_FREEDESKTOP_MODEM_MANAGER1 (ctx->self),
             ctx->invocation);
@@ -968,7 +929,8 @@ is_device_inhibited (MMBaseManager *self,
 
 static void
 device_inhibited_untrack_port (MMBaseManager  *self,
-                               MMKernelDevice *kernel_port)
+                               const gchar    *subsystem,
+                               const gchar    *name)
 {
     GHashTableIter       iter;
     gchar               *uid;
@@ -982,8 +944,10 @@ device_inhibited_untrack_port (MMBaseManager  *self,
             InhibitedDevicePortInfo *port_info;
 
             port_info = (InhibitedDevicePortInfo *)(l->data);
-            if (mm_kernel_device_cmp (port_info->kernel_port, kernel_port)) {
-                mm_obj_dbg (self, "released port %s while inhibited", mm_kernel_device_get_name (kernel_port));
+
+            if ((g_strcmp0 (subsystem, mm_kernel_device_get_subsystem (port_info->kernel_port)) == 0) &&
+                (g_strcmp0 (name, mm_kernel_device_get_name (port_info->kernel_port)) == 0)) {
+                mm_obj_dbg (self, "released port %s while inhibited", name);
                 inhibited_device_port_info_free (port_info);
                 info->port_infos = g_list_delete_link (info->port_infos, l);
                 return;
@@ -1446,15 +1410,6 @@ mm_base_manager_init (MMBaseManager *self)
     /* Setup internal list of inhibited devices */
     self->priv->inhibited_devices = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify)inhibited_device_info_free);
 
-#if defined WITH_UDEV
-    {
-        const gchar *subsys[5] = { "tty", "net", "usb", "usbmisc", NULL };
-
-        /* Setup UDev client */
-        self->priv->udev = g_udev_client_new (subsys);
-    }
-#endif
-
     /* By default, enable autoscan */
     self->priv->auto_scan = TRUE;
 
@@ -1480,12 +1435,6 @@ initable_init (GInitable     *initable,
 {
     MMBaseManager *self = MM_BASE_MANAGER (initable);
 
-#if defined WITH_UDEV
-    /* If autoscan enabled, list for udev events */
-    if (self->priv->auto_scan)
-        g_signal_connect (self->priv->udev, "uevent", G_CALLBACK (handle_uevent), initable);
-#endif
-
     /* Create filter */
     self->priv->filter = mm_filter_new (self->priv->filter_policy, error);
     if (!self->priv->filter)
@@ -1495,6 +1444,16 @@ initable_init (GInitable     *initable,
     self->priv->plugin_manager = mm_plugin_manager_new (self->priv->plugin_dir, self->priv->filter, error);
     if (!self->priv->plugin_manager)
         return FALSE;
+
+#if defined WITH_UDEV
+    if (!mm_context_get_test_no_udev ()) {
+        /* Create udev client based on the subsystems requested by the plugins */
+        self->priv->udev = g_udev_client_new (mm_plugin_manager_get_subsystems (self->priv->plugin_manager));
+        /* If autoscan enabled, list for udev events */
+        if (self->priv->auto_scan)
+            g_signal_connect_swapped (self->priv->udev, "uevent", G_CALLBACK (handle_uevent), initable);
+    }
+#endif
 
     /* Export the manager interface */
     if (!g_dbus_interface_skeleton_export (G_DBUS_INTERFACE_SKELETON (initable),

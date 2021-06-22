@@ -1320,6 +1320,7 @@ mm_get_int_from_str (const gchar *str,
                      gint *out)
 {
     glong num;
+    guint i;
     guint eol = 0;
 
     if (!str)
@@ -1332,10 +1333,10 @@ mm_get_int_from_str (const gchar *str,
     if (!str[0])
         return FALSE;
 
-    for (num = 0; str[num]; num++) {
-        if (str[num] != '+' && str[num] != '-' && !g_ascii_isdigit (str[num])) {
+    for (i = 0; str[i]; i++) {
+        if (str[i] != '+' && str[i] != '-' && !g_ascii_isdigit (str[i])) {
             /* ignore \r\n at the end of the string */
-            if ((str[num] == '\r') || (str[num] == '\n')) {
+            if ((str[i] == '\r') || (str[i] == '\n')) {
                 eol++;
                 continue;
             }
@@ -1346,7 +1347,7 @@ mm_get_int_from_str (const gchar *str,
             return FALSE;
     }
     /* if all characters were eol, the string is not parseable */
-    if (eol == num)
+    if (eol == i)
         return FALSE;
 
     errno = 0;
@@ -1686,33 +1687,48 @@ mm_utils_hex2byte (const gchar *hex)
     return (a << 4) | b;
 }
 
-gchar *
-mm_utils_hexstr2bin (const gchar *hex, gsize *out_len)
+guint8 *
+mm_utils_hexstr2bin (const gchar  *hex,
+                     gssize        len,
+                     gsize        *out_len,
+                     GError      **error)
 {
     const gchar *ipos = hex;
-    gchar *buf = NULL;
-    gsize i;
+    g_autofree guint8 *buf = NULL;
+    gssize i;
     gint a;
-    gchar *opos;
-    gsize len;
+    guint8 *opos;
 
-    len = strlen (hex);
+    if (len < 0)
+        len = strlen (hex);
+
+    if (len == 0) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                     "Hex conversion failed: empty string");
+        return NULL;
+    }
 
     /* Length must be a multiple of 2 */
-    g_return_val_if_fail ((len % 2) == 0, NULL);
+    if ((len % 2) != 0) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                     "Hex conversion failed: invalid input length");
+        return NULL;
+    }
 
-    opos = buf = g_malloc0 ((len / 2) + 1);
+    opos = buf = g_malloc0 (len / 2);
     for (i = 0; i < len; i += 2) {
         a = mm_utils_hex2byte (ipos);
         if (a < 0) {
-            g_free (buf);
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                         "Hex byte conversion from '%c%c' failed",
+                         ipos[0], ipos[1]);
             return NULL;
         }
-        *opos++ = a;
+        *opos++ = (guint8)a;
         ipos += 2;
     }
     *out_len = len / 2;
-    return buf;
+    return g_steal_pointer (&buf);
 }
 
 /* End from hostap */
@@ -1723,9 +1739,9 @@ mm_utils_ishexstr (const gchar *hex)
     gsize len;
     gsize i;
 
-    /* Length not multiple of 2? */
+    /* Empty string or length not multiple of 2? */
     len = strlen (hex);
-    if (len % 2 != 0)
+    if (len == 0 || (len % 2) != 0)
         return FALSE;
 
     for (i = 0; i < len; i++) {

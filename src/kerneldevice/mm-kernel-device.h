@@ -58,17 +58,12 @@ struct _MMKernelDeviceClass {
 
     gboolean      (* cmp) (MMKernelDevice *a, MMKernelDevice *b);
 
-    gboolean      (* has_property)            (MMKernelDevice *self, const gchar *property);
-    const gchar * (* get_property)            (MMKernelDevice *self, const gchar *property);
-    gboolean      (* get_property_as_boolean) (MMKernelDevice *self, const gchar *property);
-    gint          (* get_property_as_int)     (MMKernelDevice *self, const gchar *property);
-    guint         (* get_property_as_int_hex) (MMKernelDevice *self, const gchar *property);
-
-    gboolean      (* has_global_property)            (MMKernelDevice *self, const gchar *property);
-    const gchar * (* get_global_property)            (MMKernelDevice *self, const gchar *property);
-    gboolean      (* get_global_property_as_boolean) (MMKernelDevice *self, const gchar *property);
-    gint          (* get_global_property_as_int)     (MMKernelDevice *self, const gchar *property);
-    guint         (* get_global_property_as_int_hex) (MMKernelDevice *self, const gchar *property);
+    gboolean      (* has_property)        (MMKernelDevice *self, const gchar *property);
+    const gchar * (* get_property)        (MMKernelDevice *self, const gchar *property);
+    gboolean      (* has_global_property) (MMKernelDevice *self, const gchar *property);
+    const gchar * (* get_global_property) (MMKernelDevice *self, const gchar *property);
+    gboolean      (* has_attribute)       (MMKernelDevice *self, const gchar *attribute);
+    const gchar * (* get_attribute)       (MMKernelDevice *self, const gchar *attribute);
 };
 
 GType mm_kernel_device_get_type (void);
@@ -109,5 +104,12 @@ const gchar *mm_kernel_device_get_global_property            (MMKernelDevice *se
 gboolean     mm_kernel_device_get_global_property_as_boolean (MMKernelDevice *self, const gchar *property);
 gint         mm_kernel_device_get_global_property_as_int     (MMKernelDevice *self, const gchar *property);
 guint        mm_kernel_device_get_global_property_as_int_hex (MMKernelDevice *self, const gchar *property);
+
+/* Attributes in sysfs */
+gboolean     mm_kernel_device_has_attribute            (MMKernelDevice *self, const gchar *attribute);
+const gchar *mm_kernel_device_get_attribute            (MMKernelDevice *self, const gchar *attribute);
+gboolean     mm_kernel_device_get_attribute_as_boolean (MMKernelDevice *self, const gchar *attribute);
+gint         mm_kernel_device_get_attribute_as_int     (MMKernelDevice *self, const gchar *attribute);
+guint        mm_kernel_device_get_attribute_as_int_hex (MMKernelDevice *self, const gchar *attribute);
 
 #endif /* MM_KERNEL_DEVICE_H */

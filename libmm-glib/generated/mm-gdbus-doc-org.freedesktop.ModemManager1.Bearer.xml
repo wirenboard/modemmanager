@@ -132,7 +132,7 @@ Ip4Config  readable   a{sv}
           </varlistentry>
         </variablelist>
 </para><para>        If the bearer specifies configuration via PPP or DHCP, only the
-        <literal>"method"</literal> item will be present.
+        <literal>"method"</literal> item is guaranteed to be present.
 </para><para>        Additional items which are only applicable when using the
         <link linkend="MM-BEARER-IP-METHOD-STATIC:CAPS">MM_BEARER_IP_METHOD_STATIC</link>
         method are:

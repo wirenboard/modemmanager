@@ -240,17 +240,18 @@ nodist_libport_la_OBJECTS = $(am__objects_7)
 libport_la_OBJECTS = $(am_libport_la_OBJECTS) \
 	$(nodist_libport_la_OBJECTS)
 am__ModemManager_SOURCES_DIST = main.c mm-context.h mm-context.c \
-	mm-utils.h mm-private-boxed-types.h mm-private-boxed-types.c \
-	mm-auth-provider.h mm-auth-provider.c mm-filter.h mm-filter.c \
-	mm-base-manager.c mm-base-manager.h mm-device.c mm-device.h \
-	mm-plugin-manager.c mm-plugin-manager.h mm-base-sim.h \
-	mm-base-sim.c mm-base-bearer.h mm-base-bearer.c \
-	mm-broadband-bearer.h mm-broadband-bearer.c mm-bearer-list.h \
-	mm-bearer-list.c mm-base-modem-at.h mm-base-modem-at.c \
-	mm-base-modem.h mm-base-modem.c mm-base-sms.h mm-base-sms.c \
-	mm-base-call.h mm-base-call.c mm-sms-list.h mm-sms-list.c \
-	mm-call-list.h mm-call-list.c mm-iface-modem.h \
-	mm-iface-modem.c mm-iface-modem-3gpp.h mm-iface-modem-3gpp.c \
+	mm-utils.h mm-utils.c mm-private-boxed-types.h \
+	mm-private-boxed-types.c mm-auth-provider.h mm-auth-provider.c \
+	mm-filter.h mm-filter.c mm-base-manager.c mm-base-manager.h \
+	mm-device.c mm-device.h mm-plugin-manager.c \
+	mm-plugin-manager.h mm-base-sim.h mm-base-sim.c \
+	mm-base-bearer.h mm-base-bearer.c mm-broadband-bearer.h \
+	mm-broadband-bearer.c mm-bearer-list.h mm-bearer-list.c \
+	mm-base-modem-at.h mm-base-modem-at.c mm-base-modem.h \
+	mm-base-modem.c mm-base-sms.h mm-base-sms.c mm-base-call.h \
+	mm-base-call.c mm-sms-list.h mm-sms-list.c mm-call-list.h \
+	mm-call-list.c mm-iface-modem.h mm-iface-modem.c \
+	mm-iface-modem-3gpp.h mm-iface-modem-3gpp.c \
 	mm-iface-modem-3gpp-ussd.h mm-iface-modem-3gpp-ussd.c \
 	mm-iface-modem-cdma.h mm-iface-modem-cdma.c \
 	mm-iface-modem-simple.h mm-iface-modem-simple.c \
@@ -282,6 +283,7 @@ am__ModemManager_SOURCES_DIST = main.c mm-context.h mm-context.c \
 @WITH_MBIM_TRUE@	ModemManager-mm-broadband-modem-mbim.$(OBJEXT)
 am_ModemManager_OBJECTS = ModemManager-main.$(OBJEXT) \
 	ModemManager-mm-context.$(OBJEXT) \
+	ModemManager-mm-utils.$(OBJEXT) \
 	ModemManager-mm-private-boxed-types.$(OBJEXT) \
 	ModemManager-mm-auth-provider.$(OBJEXT) \
 	ModemManager-mm-filter.$(OBJEXT) \
@@ -383,6 +385,7 @@ am__depfiles_remade = ./$(DEPDIR)/ModemManager-main.Po \
 	./$(DEPDIR)/ModemManager-mm-sms-list.Po \
 	./$(DEPDIR)/ModemManager-mm-sms-mbim.Po \
 	./$(DEPDIR)/ModemManager-mm-sms-qmi.Po \
+	./$(DEPDIR)/ModemManager-mm-utils.Po \
 	./$(DEPDIR)/mm-charsets.Plo ./$(DEPDIR)/mm-error-helpers.Plo \
 	./$(DEPDIR)/mm-helper-enums-types.Plo \
 	./$(DEPDIR)/mm-log-object.Plo ./$(DEPDIR)/mm-log.Plo \
@@ -590,6 +593,8 @@ INTROSPECTION_TYPELIBDIR = @INTROSPECTION_TYPELIBDIR@
 LCOV = @LCOV@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBELOGIND_CFLAGS = @LIBELOGIND_CFLAGS@
+LIBELOGIND_LIBS = @LIBELOGIND_LIBS@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
 LIBMM_GLIB_CFLAGS = @LIBMM_GLIB_CFLAGS@
@@ -850,7 +855,7 @@ ModemManager_LDADD = \
 	$(NULL)
 
 ModemManager_SOURCES = main.c mm-context.h mm-context.c mm-utils.h \
-	mm-private-boxed-types.h mm-private-boxed-types.c \
+	mm-utils.c mm-private-boxed-types.h mm-private-boxed-types.c \
 	mm-auth-provider.h mm-auth-provider.c mm-filter.h mm-filter.c \
 	mm-base-manager.c mm-base-manager.h mm-device.c mm-device.h \
 	mm-plugin-manager.c mm-plugin-manager.h mm-base-sim.h \
@@ -1055,6 +1060,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-sms-list.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-sms-mbim.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-sms-qmi.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-utils.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mm-charsets.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mm-error-helpers.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mm-helper-enums-types.Plo@am__quote@ # am--include-marker
@@ -1165,6 +1171,20 @@ ModemManager-mm-context.obj: mm-context.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-context.c' object='ModemManager-mm-context.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ModemManager-mm-context.obj `if test -f 'mm-context.c'; then $(CYGPATH_W) 'mm-context.c'; else $(CYGPATH_W) '$(srcdir)/mm-context.c'; fi`
+
+ModemManager-mm-utils.o: mm-utils.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ModemManager-mm-utils.o -MD -MP -MF $(DEPDIR)/ModemManager-mm-utils.Tpo -c -o ModemManager-mm-utils.o `test -f 'mm-utils.c' || echo '$(srcdir)/'`mm-utils.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ModemManager-mm-utils.Tpo $(DEPDIR)/ModemManager-mm-utils.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-utils.c' object='ModemManager-mm-utils.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ModemManager-mm-utils.o `test -f 'mm-utils.c' || echo '$(srcdir)/'`mm-utils.c
+
+ModemManager-mm-utils.obj: mm-utils.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ModemManager-mm-utils.obj -MD -MP -MF $(DEPDIR)/ModemManager-mm-utils.Tpo -c -o ModemManager-mm-utils.obj `if test -f 'mm-utils.c'; then $(CYGPATH_W) 'mm-utils.c'; else $(CYGPATH_W) '$(srcdir)/mm-utils.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ModemManager-mm-utils.Tpo $(DEPDIR)/ModemManager-mm-utils.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-utils.c' object='ModemManager-mm-utils.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ModemManager-mm-utils.obj `if test -f 'mm-utils.c'; then $(CYGPATH_W) 'mm-utils.c'; else $(CYGPATH_W) '$(srcdir)/mm-utils.c'; fi`
 
 ModemManager-mm-private-boxed-types.o: mm-private-boxed-types.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ModemManager-mm-private-boxed-types.o -MD -MP -MF $(DEPDIR)/ModemManager-mm-private-boxed-types.Tpo -c -o ModemManager-mm-private-boxed-types.o `test -f 'mm-private-boxed-types.c' || echo '$(srcdir)/'`mm-private-boxed-types.c
@@ -2049,6 +2069,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/ModemManager-mm-sms-list.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-sms-mbim.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-sms-qmi.Po
+	-rm -f ./$(DEPDIR)/ModemManager-mm-utils.Po
 	-rm -f ./$(DEPDIR)/mm-charsets.Plo
 	-rm -f ./$(DEPDIR)/mm-error-helpers.Plo
 	-rm -f ./$(DEPDIR)/mm-helper-enums-types.Plo
@@ -2163,6 +2184,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/ModemManager-mm-sms-list.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-sms-mbim.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-sms-qmi.Po
+	-rm -f ./$(DEPDIR)/ModemManager-mm-utils.Po
 	-rm -f ./$(DEPDIR)/mm-charsets.Plo
 	-rm -f ./$(DEPDIR)/mm-error-helpers.Plo
 	-rm -f ./$(DEPDIR)/mm-helper-enums-types.Plo

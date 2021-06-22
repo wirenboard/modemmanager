@@ -87,6 +87,7 @@ typedef struct {
     MMSignal *gsm;
     MMSignal *umts;
     MMSignal *lte;
+    MMSignal *nr5g;
 } DetailedSignal;
 
 struct _MMBroadbandModemHuaweiPrivate {
@@ -175,7 +176,7 @@ mm_broadband_modem_huawei_get_at_port_list (MMBroadbandModemHuawei *self)
 
     /* Additional cdc-wdm ports used for dialing */
     cdc_wdm_at_ports = mm_base_modem_find_ports (MM_BASE_MODEM (self),
-                                                 MM_PORT_SUBSYS_USB,
+                                                 MM_PORT_SUBSYS_USBMISC,
                                                  MM_PORT_TYPE_AT,
                                                  NULL);
 
@@ -2199,7 +2200,7 @@ peek_port_at_for_data (MMBroadbandModemHuawei *self,
 
     /* Find the CDC-WDM port on the same USB interface as the given net port */
     cdc_wdm_at_ports = mm_base_modem_find_ports (MM_BASE_MODEM (self),
-                                                 MM_PORT_SUBSYS_USB,
+                                                 MM_PORT_SUBSYS_USBMISC,
                                                  MM_PORT_TYPE_AT,
                                                  NULL);
     for (l = cdc_wdm_at_ports; l && !found; l = g_list_next (l)) {
@@ -2300,28 +2301,27 @@ encode (MMIfaceModem3gppUssd *self,
         guint *scheme,
         GError **error)
 {
-    gchar *hex;
-    guint8 *gsm, *packed;
-    guint32 len = 0, packed_len = 0;
+    g_autoptr(GByteArray)  gsm = NULL;
+    g_autofree guint8     *packed = NULL;
+    guint32                packed_len = 0;
+
+    gsm = mm_modem_charset_bytearray_from_utf8 (command, MM_MODEM_CHARSET_GSM, FALSE, error);
+    if (!gsm)
+        return NULL;
 
     *scheme = MM_MODEM_GSM_USSD_SCHEME_7BIT;
-    gsm = mm_charset_utf8_to_unpacked_gsm (command, &len);
 
     /* If command is a multiple of 7 characters long, Huawei firmwares
      * apparently want that padded.  Maybe all modems?
      */
-    if (len % 7 == 0) {
-        gsm = g_realloc (gsm, len + 1);
-        gsm[len] = 0x0d;
-        len++;
+    if (gsm->len % 7 == 0) {
+        static const guint8 padding = 0x0d;
+
+        g_byte_array_append (gsm, &padding, 1);
     }
 
-    packed = mm_charset_gsm_pack (gsm, len, 0, &packed_len);
-    hex = mm_utils_bin2hexstr (packed, packed_len);
-    g_free (packed);
-    g_free (gsm);
-
-    return hex;
+    packed = mm_charset_gsm_pack (gsm->data, gsm->len, 0, &packed_len);
+    return mm_utils_bin2hexstr (packed, packed_len);
 }
 
 static gchar *
@@ -2329,21 +2329,25 @@ decode (MMIfaceModem3gppUssd *self,
         const gchar *reply,
         GError **error)
 {
-    gchar *bin, *utf8;
-    guint8 *unpacked;
-    gsize bin_len;
-    guint32 unpacked_len;
+    g_autofree guint8    *bin = NULL;
+    gsize                 bin_len = 0;
+    g_autofree guint8    *unpacked = NULL;
+    guint32               unpacked_len;
+    g_autoptr(GByteArray) unpacked_array = NULL;
 
-    bin = mm_utils_hexstr2bin (reply, &bin_len);
-    unpacked = mm_charset_gsm_unpack ((guint8*) bin, (bin_len * 8) / 7, 0, &unpacked_len);
+    bin = mm_utils_hexstr2bin (reply, -1, &bin_len, error);
+    if (!bin)
+        return NULL;
+
+    unpacked = mm_charset_gsm_unpack (bin, (bin_len * 8) / 7, 0, &unpacked_len);
     /* if the last character in a 7-byte block is padding, then drop it */
     if ((bin_len % 7 == 0) && (unpacked[unpacked_len - 1] == 0x0d))
         unpacked_len--;
-    utf8 = (char*) mm_charset_gsm_unpacked_to_utf8 (unpacked, unpacked_len);
 
-    g_free (bin);
-    g_free (unpacked);
-    return utf8;
+    unpacked_array = g_byte_array_sized_new (unpacked_len);
+    g_byte_array_append (unpacked_array, unpacked, unpacked_len);
+
+    return mm_modem_charset_bytearray_to_utf8 (unpacked_array, MM_MODEM_CHARSET_GSM, FALSE, error);
 }
 
 /*****************************************************************************/
@@ -3871,47 +3875,24 @@ location_load_capabilities (MMIfaceModemLocation *self,
 }
 
 /*****************************************************************************/
-/* Enable/Disable location gathering (Location interface) */
-
-typedef struct {
-    MMModemLocationSource source;
-    int idx;
-} LocationGatheringContext;
-
-/******************************/
-/* Disable location gathering */
+/* Disable location gathering (Location interface) */
 
 static gboolean
-disable_location_gathering_finish (MMIfaceModemLocation *self,
-                                   GAsyncResult *res,
-                                   GError **error)
+disable_location_gathering_finish (MMIfaceModemLocation  *self,
+                                   GAsyncResult          *res,
+                                   GError               **error)
 {
     return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
-gps_disabled_ready (MMBaseModem *self,
+gps_disabled_ready (MMBaseModem  *self,
                     GAsyncResult *res,
-                    GTask *task)
+                    GTask        *task)
 {
-    LocationGatheringContext *ctx;
-    MMPortSerialGps *gps_port;
     GError *error = NULL;
 
-    ctx = g_task_get_task_data (task);
-
-    mm_base_modem_at_command_full_finish (self, res, &error);
-
-    /* Only use the GPS port in NMEA/RAW setups */
-    if (ctx->source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
-                       MM_MODEM_LOCATION_SOURCE_GPS_RAW)) {
-        /* Even if we get an error here, we try to close the GPS port */
-        gps_port = mm_base_modem_peek_port_gps (self);
-        if (gps_port)
-            mm_port_serial_close (MM_PORT_SERIAL (gps_port));
-    }
-
-    if (error)
+    if (!mm_base_modem_at_command_finish (self, res, &error))
         g_task_return_error (task, error);
     else
         g_task_return_boolean (task, TRUE);
@@ -3919,44 +3900,42 @@ gps_disabled_ready (MMBaseModem *self,
 }
 
 static void
-disable_location_gathering (MMIfaceModemLocation *_self,
-                            MMModemLocationSource source,
-                            GAsyncReadyCallback callback,
-                            gpointer user_data)
+disable_location_gathering (MMIfaceModemLocation  *_self,
+                            MMModemLocationSource  source,
+                            GAsyncReadyCallback    callback,
+                            gpointer               user_data)
 {
     MMBroadbandModemHuawei *self = MM_BROADBAND_MODEM_HUAWEI (_self);
-    gboolean stop_gps = FALSE;
-    LocationGatheringContext *ctx;
-    GTask *task;
+    GTask                  *task;
 
-    ctx = g_new (LocationGatheringContext, 1);
-    ctx->source = source;
+    /* NOTE: no parent disable_location_gathering() implementation */
 
     task = g_task_new (self, NULL, callback, user_data);
-    g_task_set_task_data (task, ctx, g_free);
+
+    self->priv->enabled_sources &= ~source;
 
     /* Only stop GPS engine if no GPS-related sources enabled */
-    if (source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
-                  MM_MODEM_LOCATION_SOURCE_GPS_RAW |
-                  MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED)) {
-        self->priv->enabled_sources &= ~source;
+    if ((source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
+                   MM_MODEM_LOCATION_SOURCE_GPS_RAW |
+                   MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED)) &&
+        !(self->priv->enabled_sources & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
+                                         MM_MODEM_LOCATION_SOURCE_GPS_RAW |
+                                         MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED))) {
+        MMPortSerialGps *gps_port;
 
-        if (!(self->priv->enabled_sources & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
-                                             MM_MODEM_LOCATION_SOURCE_GPS_RAW |
-                                             MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED)))
-            stop_gps = TRUE;
-    }
+        /* Close the data port if we don't need it anymore */
+        if (source & (MM_MODEM_LOCATION_SOURCE_GPS_RAW | MM_MODEM_LOCATION_SOURCE_GPS_NMEA)) {
+            gps_port = mm_base_modem_peek_port_gps (MM_BASE_MODEM (self));
+            if (gps_port)
+                mm_port_serial_close (MM_PORT_SERIAL (gps_port));
+        }
 
-    if (stop_gps) {
-        mm_base_modem_at_command_full (MM_BASE_MODEM (_self),
-                                       mm_base_modem_peek_port_primary (MM_BASE_MODEM (_self)),
-                                       "^WPEND",
-                                       3,
-                                       FALSE,
-                                       FALSE, /* raw */
-                                       NULL, /* cancellable */
-                                       (GAsyncReadyCallback)gps_disabled_ready,
-                                       task);
+        mm_base_modem_at_command (MM_BASE_MODEM (_self),
+                                  "^WPEND",
+                                  3,
+                                  FALSE,
+                                  (GAsyncReadyCallback)gps_disabled_ready,
+                                  task);
         return;
     }
 
@@ -3968,60 +3947,46 @@ disable_location_gathering (MMIfaceModemLocation *_self,
 /*****************************************************************************/
 /* Enable location gathering (Location interface) */
 
+static const MMBaseModemAtCommand gps_startup[] = {
+    { "^WPDOM=0",        3, FALSE, mm_base_modem_response_processor_no_result_continue },
+    { "^WPDST=1",        3, FALSE, mm_base_modem_response_processor_no_result_continue },
+    { "^WPDFR=65535,30", 3, FALSE, mm_base_modem_response_processor_no_result_continue },
+    { "^WPDGP",          3, FALSE, mm_base_modem_response_processor_no_result_continue },
+    { NULL }
+};
+
 static gboolean
-enable_location_gathering_finish (MMIfaceModemLocation *self,
-                                  GAsyncResult *res,
-                                  GError **error)
+enable_location_gathering_finish (MMIfaceModemLocation  *self,
+                                  GAsyncResult          *res,
+                                  GError               **error)
 {
     return g_task_propagate_boolean (G_TASK (res), error);
 }
 
-static const gchar *gps_startup[] = {
-    "^WPDOM=0",
-    "^WPDST=1",
-    "^WPDFR=65535,30",
-    "^WPDGP",
-    NULL
-};
-
 static void
-gps_enabled_ready (MMBaseModem *self,
+gps_startup_ready (MMBaseModem  *_self,
                    GAsyncResult *res,
-                   GTask *task)
+                   GTask        *task)
 {
-    LocationGatheringContext *ctx;
-    GError *error = NULL;
-    MMPortSerialGps *gps_port;
+    MMBroadbandModemHuawei *self = MM_BROADBAND_MODEM_HUAWEI (_self);
+    MMModemLocationSource   source;
+    GError                 *error = NULL;
 
-    ctx = g_task_get_task_data (task);
-
-    if (!mm_base_modem_at_command_full_finish (self, res, &error)) {
-        ctx->idx = 0;
+    mm_base_modem_at_sequence_finish (_self, res, NULL, &error);
+    if (error) {
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
     }
 
-    /* ctx->idx++; make sure ctx->idx is a valid command */
-    if (gps_startup[ctx->idx++] && gps_startup[ctx->idx]) {
-       mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                      mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
-                                      gps_startup[ctx->idx],
-                                      3,
-                                      FALSE,
-                                      FALSE, /* raw */
-                                      NULL, /* cancellable */
-                                      (GAsyncReadyCallback)gps_enabled_ready,
-                                      task);
-       return;
-    }
+    source = GPOINTER_TO_UINT (g_task_get_task_data (task));
 
-    /* Only use the GPS port in NMEA/RAW setups */
-    if (ctx->source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
-                       MM_MODEM_LOCATION_SOURCE_GPS_RAW)) {
-        gps_port = mm_base_modem_peek_port_gps (self);
-        if (!gps_port ||
-            !mm_port_serial_open (MM_PORT_SERIAL (gps_port), &error)) {
+    /* Only open the GPS port in NMEA/RAW setups */
+    if (source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA | MM_MODEM_LOCATION_SOURCE_GPS_RAW)) {
+        MMPortSerialGps *gps_port;
+
+        gps_port = mm_base_modem_peek_port_gps (MM_BASE_MODEM (self));
+        if (!gps_port || !mm_port_serial_open (MM_PORT_SERIAL (gps_port), &error)) {
             if (error)
                 g_task_return_error (task, error);
             else
@@ -4029,23 +3994,29 @@ gps_enabled_ready (MMBaseModem *self,
                                          MM_CORE_ERROR,
                                          MM_CORE_ERROR_FAILED,
                                          "Couldn't open raw GPS serial port");
-        } else
+        } else {
+            /* GPS port was successfully opened */
+            self->priv->enabled_sources |= source;
             g_task_return_boolean (task, TRUE);
-    } else
+        }
+    } else {
+        /* No need to open GPS port */
+        self->priv->enabled_sources |= source;
         g_task_return_boolean (task, TRUE);
+    }
 
     g_object_unref (task);
 }
 
 static void
 parent_enable_location_gathering_ready (MMIfaceModemLocation *_self,
-                                        GAsyncResult *res,
-                                        GTask *task)
+                                        GAsyncResult         *res,
+                                        GTask                *task)
 {
     MMBroadbandModemHuawei *self = MM_BROADBAND_MODEM_HUAWEI (_self);
-    LocationGatheringContext *ctx;
-    gboolean start_gps = FALSE;
-    GError *error = NULL;
+    GError                 *error = NULL;
+    MMModemLocationSource   source;
+    gboolean                start_gps = FALSE;
 
     if (!iface_modem_location_parent->enable_location_gathering_finish (_self, res, &error)) {
         g_task_return_error (task, error);
@@ -4055,53 +4026,43 @@ parent_enable_location_gathering_ready (MMIfaceModemLocation *_self,
 
     /* Now our own enabling */
 
-    ctx = g_task_get_task_data (task);
+    source = GPOINTER_TO_UINT (g_task_get_task_data (task));
 
-    /* NMEA and RAW are both enabled in the same way */
-    if (ctx->source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
-                       MM_MODEM_LOCATION_SOURCE_GPS_RAW |
-                       MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED)) {
-        /* Only start GPS engine if not done already */
-        if (!(self->priv->enabled_sources & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
-                                             MM_MODEM_LOCATION_SOURCE_GPS_RAW |
-                                             MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED)))
-            start_gps = TRUE;
-        self->priv->enabled_sources |= ctx->source;
-    }
+    /* Only start GPS engine if not done already */
+    start_gps = ((source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
+                            MM_MODEM_LOCATION_SOURCE_GPS_RAW |
+                            MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED)) &&
+                 !(self->priv->enabled_sources & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
+                                                  MM_MODEM_LOCATION_SOURCE_GPS_RAW |
+                                                  MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED)));
 
     if (start_gps) {
-        mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                       mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
-                                       gps_startup[ctx->idx],
-                                       3,
-                                       FALSE,
-                                       FALSE, /* raw */
-                                       NULL, /* cancellable */
-                                       (GAsyncReadyCallback)gps_enabled_ready,
-                                       task);
+        mm_base_modem_at_sequence (
+            MM_BASE_MODEM (self),
+            gps_startup,
+            NULL, /* response_processor_context */
+            NULL, /* response_processor_context_free */
+            (GAsyncReadyCallback)gps_startup_ready,
+            task);
         return;
     }
 
     /* For any other location (e.g. 3GPP), or if GPS already running just return */
+    self->priv->enabled_sources |= source;
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
 
 static void
-enable_location_gathering (MMIfaceModemLocation *self,
-                           MMModemLocationSource source,
-                           GAsyncReadyCallback callback,
-                           gpointer user_data)
+enable_location_gathering (MMIfaceModemLocation  *self,
+                           MMModemLocationSource  source,
+                           GAsyncReadyCallback    callback,
+                           gpointer               user_data)
 {
-    LocationGatheringContext *ctx;
     GTask *task;
 
-    ctx = g_new (LocationGatheringContext, 1);
-    ctx->source = source;
-    ctx->idx = 0;
-
     task = g_task_new (self, NULL, callback, user_data);
-    g_task_set_task_data (task, ctx, g_free);
+    g_task_set_task_data (task, GUINT_TO_POINTER (source), NULL);
 
     /* Chain up parent's gathering enable */
     iface_modem_location_parent->enable_location_gathering (self,
@@ -4137,15 +4098,15 @@ modem_time_check_ready (MMBaseModem *_self,
     g_object_unref (task);
 }
 
-static gboolean
-modem_check_time_reply (MMBaseModem *_self,
-                        gpointer none,
-                        const gchar *command,
-                        const gchar *response,
-                        gboolean last_command,
-                        const GError *error,
-                        GVariant **result,
-                        GError **result_error)
+static MMBaseModemAtResponseProcessorResult
+modem_check_time_reply (MMBaseModem   *_self,
+                        gpointer       none,
+                        const gchar   *command,
+                        const gchar   *response,
+                        gboolean       last_command,
+                        const GError  *error,
+                        GVariant     **result,
+                        GError       **result_error)
 {
     MMBroadbandModemHuawei *self = MM_BROADBAND_MODEM_HUAWEI (_self);
 
@@ -4161,7 +4122,9 @@ modem_check_time_reply (MMBaseModem *_self,
             self->priv->time_support = FEATURE_NOT_SUPPORTED;
     }
 
-    return FALSE;
+    *result = NULL;
+    *result_error = NULL;
+    return MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_CONTINUE;
 }
 
 static const MMBaseModemAtCommand time_cmd_sequence[] = {
@@ -4250,6 +4213,7 @@ signal_load_values_finish (MMIfaceModemSignal *self,
                            MMSignal **gsm,
                            MMSignal **umts,
                            MMSignal **lte,
+                           MMSignal **nr5g,
                            GError **error)
 {
     DetailedSignal *signals;
@@ -4263,6 +4227,7 @@ signal_load_values_finish (MMIfaceModemSignal *self,
     *gsm  = signals->gsm ? g_object_ref (signals->gsm) : NULL;
     *umts = signals->umts ? g_object_ref (signals->umts) : NULL;
     *lte  = signals->lte ? g_object_ref (signals->lte) : NULL;
+    *nr5g = signals->nr5g ? g_object_ref (signals->nr5g) : NULL;
 
     detailed_signal_free (signals);
     return TRUE;

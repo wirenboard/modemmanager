@@ -364,7 +364,7 @@ disconnect_3gpp (MMBroadbandBearer *bearer,
         MM_BASE_MODEM (modem),
         primary,
         command,
-        60,
+        MM_BASE_BEARER_DEFAULT_DISCONNECTION_TIMEOUT,
         FALSE,
         FALSE, /* raw */
         NULL, /* cancellable */
@@ -437,7 +437,7 @@ connect_reset (GTask *task)
     mm_base_modem_at_command_full (ctx->modem,
                                    ctx->primary,
                                    command,
-                                   3,
+                                   MM_BASE_BEARER_DEFAULT_DISCONNECTION_TIMEOUT,
                                    FALSE,
                                    FALSE, /* raw */
                                    NULL, /* cancellable */
@@ -624,7 +624,7 @@ activate_ready (MMBaseModem            *modem,
      * Reports of modem being connected will arrive via unsolicited messages.
      * This timeout should be long enough. Actually... ideally should never get
      * reached. */
-    self->priv->connect_pending_id = g_timeout_add_seconds (60,
+    self->priv->connect_pending_id = g_timeout_add_seconds (MM_BASE_BEARER_DEFAULT_CONNECTION_TIMEOUT,
                                                             (GSourceFunc)connect_timed_out_cb,
                                                             self);
 
@@ -698,7 +698,7 @@ authenticate_ready (MMBaseModem  *modem,
     mm_base_modem_at_command_full (ctx->modem,
                                    ctx->primary,
                                    command,
-                                   60,
+                                   MM_BASE_BEARER_DEFAULT_CONNECTION_TIMEOUT,
                                    FALSE,
                                    FALSE, /* raw */
                                    NULL, /* cancellable */
@@ -734,14 +734,14 @@ authenticate (GTask *task)
         guint  icera_auth;
 
         if (allowed_auth == MM_BEARER_ALLOWED_AUTH_UNKNOWN) {
-            mm_obj_dbg (self, "using default (PAP) authentication method");
-            icera_auth = 1;
-        } else if (allowed_auth & MM_BEARER_ALLOWED_AUTH_PAP) {
-            mm_obj_dbg (self, "using PAP authentication method");
-            icera_auth = 1;
+            mm_obj_dbg (self, "using default (CHAP) authentication method");
+            icera_auth = 2;
         } else if (allowed_auth & MM_BEARER_ALLOWED_AUTH_CHAP) {
             mm_obj_dbg (self, "using CHAP authentication method");
             icera_auth = 2;
+        } else if (allowed_auth & MM_BEARER_ALLOWED_AUTH_PAP) {
+            mm_obj_dbg (self, "using PAP authentication method");
+            icera_auth = 1;
         } else {
             gchar *str;
 
@@ -812,7 +812,7 @@ connect_deactivate (GTask *task)
         ctx->modem,
         ctx->primary,
         command,
-        60,
+        MM_BASE_BEARER_DEFAULT_DISCONNECTION_TIMEOUT,
         FALSE,
         FALSE, /* raw */
         NULL, /* cancellable */

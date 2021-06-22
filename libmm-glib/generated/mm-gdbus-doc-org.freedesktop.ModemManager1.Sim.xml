@@ -20,8 +20,10 @@
   <refsect1 role="properties">
     <title role="properties.title">Properties</title>
     <synopsis>
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.Active">Active</link>              readable   b
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.SimIdentifier">SimIdentifier</link>       readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.Imsi">Imsi</link>                readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.Eid">Eid</link>                 readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorIdentifier">OperatorIdentifier</link>  readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorName">OperatorName</link>        readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers">EmergencyNumbers</link>    readable   as
@@ -113,6 +115,19 @@ ChangePin (IN  s old_pin,
 </refsect1>
 <refsect1 role="details" id="gdbus-properties-org.freedesktop.ModemManager1.Sim">
   <title role="details.title">Property Details</title>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sim.Active">
+  <title>The "Active" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Sim.Active"><primary sortas="Sim:Active">org.freedesktop.ModemManager1.Sim:Active</primary></indexterm>
+<programlisting>
+Active  readable   b
+</programlisting>
+<para>        Boolean indicating whether the SIM is currently active.
+</para><para>        On systems that support Multi SIM Single Standby, only one SIM may be
+        active at any given time, which will be the one considered primary.
+</para><para>        On systems that support Multi SIM Multi Standby, more than one SIM may
+        be active at any given time, but only one of them is considered primary.
+</para>
+</refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sim.SimIdentifier">
   <title>The "SimIdentifier" property</title>
   <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Sim.SimIdentifier"><primary sortas="Sim:SimIdentifier">org.freedesktop.ModemManager1.Sim:SimIdentifier</primary></indexterm>
@@ -131,6 +146,15 @@ SimIdentifier  readable   s
 Imsi  readable   s
 </programlisting>
 <para>        The IMSI of the SIM card, if any.
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sim.Eid">
+  <title>The "Eid" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Sim.Eid"><primary sortas="Sim:Eid">org.freedesktop.ModemManager1.Sim:Eid</primary></indexterm>
+<programlisting>
+Eid  readable   s
+</programlisting>
+<para>        The EID of the SIM card, if any.
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorIdentifier">

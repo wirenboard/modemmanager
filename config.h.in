@@ -31,6 +31,9 @@
 /* Define if generic plugin is enabled */
 #undef ENABLE_PLUGIN_GENERIC
 
+/* Define if gosuncn plugin is enabled */
+#undef ENABLE_PLUGIN_GOSUNCN
+
 /* Define if haier plugin is enabled */
 #undef ENABLE_PLUGIN_HAIER
 
@@ -75,6 +78,9 @@
 
 /* Define if pantech plugin is enabled */
 #undef ENABLE_PLUGIN_PANTECH
+
+/* Define if qcom-soc plugin is enabled */
+#undef ENABLE_PLUGIN_QCOM_SOC
 
 /* Define if quectel plugin is enabled */
 #undef ENABLE_PLUGIN_QUECTEL

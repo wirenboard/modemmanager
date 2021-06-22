@@ -97,6 +97,14 @@
 <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
 </td>
 <td class="function_name">
+<a class="link" href="MmGdbusModemSignal.html#mm-gdbus-modem-signal-get-nr5g" title="mm_gdbus_modem_signal_get_nr5g ()">mm_gdbus_modem_signal_get_nr5g</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
+</td>
+<td class="function_name">
 <a class="link" href="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-cdma" title="mm_gdbus_modem_signal_dup_cdma ()">mm_gdbus_modem_signal_dup_cdma</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
@@ -130,6 +138,14 @@
 </td>
 <td class="function_name">
 <a class="link" href="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-lte" title="mm_gdbus_modem_signal_dup_lte ()">mm_gdbus_modem_signal_dup_lte</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-nr5g" title="mm_gdbus_modem_signal_dup_nr5g ()">mm_gdbus_modem_signal_dup_nr5g</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -190,6 +206,12 @@
 <td class="property_type">
 <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *</td>
 <td class="property_name"><a class="link" href="MmGdbusModemSignal.html#MmGdbusModemSignal--lte" title="The “lte” property">lte</a></td>
+<td class="property_flags">Read / Write</td>
+</tr>
+<tr>
+<td class="property_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *</td>
+<td class="property_name"><a class="link" href="MmGdbusModemSignal.html#MmGdbusModemSignal--nr5g" title="The “nr5g” property">nr5g</a></td>
 <td class="property_flags">Read / Write</td>
 </tr>
 <tr>
@@ -268,7 +290,7 @@ MmGdbusModemSignal is implemented by
 <a name="mm-gdbus-modem-signal-get-rate"></a><h3>mm_gdbus_modem_signal_get_rate ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>
 mm_gdbus_modem_signal_get_rate (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
-<p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Rate">"Rate"</a> D-Bus property.</p>
+<p>Gets the value of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Rate">"Rate"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
@@ -296,7 +318,7 @@ mm_gdbus_modem_signal_get_rate (<em class="parameter"><code><a class="link" href
 <a name="mm-gdbus-modem-signal-get-cdma"></a><h3>mm_gdbus_modem_signal_get_cdma ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
 mm_gdbus_modem_signal_get_cdma (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
-<p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Cdma">"Cdma"</a> D-Bus property.</p>
+<p>Gets the value of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Cdma">"Cdma"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
 <p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
  was constructed. Use <a class="link" href="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-cdma" title="mm_gdbus_modem_signal_dup_cdma ()"><code class="function">mm_gdbus_modem_signal_dup_cdma()</code></a> if on another thread.</p>
@@ -328,7 +350,7 @@ mm_gdbus_modem_signal_get_cdma (<em class="parameter"><code><a class="link" href
 <a name="mm-gdbus-modem-signal-get-evdo"></a><h3>mm_gdbus_modem_signal_get_evdo ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
 mm_gdbus_modem_signal_get_evdo (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
-<p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Evdo">"Evdo"</a> D-Bus property.</p>
+<p>Gets the value of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Evdo">"Evdo"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
 <p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
  was constructed. Use <a class="link" href="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-evdo" title="mm_gdbus_modem_signal_dup_evdo ()"><code class="function">mm_gdbus_modem_signal_dup_evdo()</code></a> if on another thread.</p>
@@ -360,7 +382,7 @@ mm_gdbus_modem_signal_get_evdo (<em class="parameter"><code><a class="link" href
 <a name="mm-gdbus-modem-signal-get-gsm"></a><h3>mm_gdbus_modem_signal_get_gsm ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
 mm_gdbus_modem_signal_get_gsm (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
-<p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Gsm">"Gsm"</a> D-Bus property.</p>
+<p>Gets the value of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Gsm">"Gsm"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
 <p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
  was constructed. Use <a class="link" href="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-gsm" title="mm_gdbus_modem_signal_dup_gsm ()"><code class="function">mm_gdbus_modem_signal_dup_gsm()</code></a> if on another thread.</p>
@@ -392,7 +414,7 @@ mm_gdbus_modem_signal_get_gsm (<em class="parameter"><code><a class="link" href=
 <a name="mm-gdbus-modem-signal-get-umts"></a><h3>mm_gdbus_modem_signal_get_umts ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
 mm_gdbus_modem_signal_get_umts (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
-<p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Umts">"Umts"</a> D-Bus property.</p>
+<p>Gets the value of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Umts">"Umts"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
 <p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
  was constructed. Use <a class="link" href="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-umts" title="mm_gdbus_modem_signal_dup_umts ()"><code class="function">mm_gdbus_modem_signal_dup_umts()</code></a> if on another thread.</p>
@@ -424,7 +446,7 @@ mm_gdbus_modem_signal_get_umts (<em class="parameter"><code><a class="link" href
 <a name="mm-gdbus-modem-signal-get-lte"></a><h3>mm_gdbus_modem_signal_get_lte ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
 mm_gdbus_modem_signal_get_lte (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
-<p>Gets the value of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Lte">"Lte"</a> D-Bus property.</p>
+<p>Gets the value of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Lte">"Lte"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
 <p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
  was constructed. Use <a class="link" href="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-lte" title="mm_gdbus_modem_signal_dup_lte ()"><code class="function">mm_gdbus_modem_signal_dup_lte()</code></a> if on another thread.</p>
@@ -453,10 +475,42 @@ mm_gdbus_modem_signal_get_lte (<em class="parameter"><code><a class="link" href=
 </div>
 <hr>
 <div class="refsect2">
+<a name="mm-gdbus-modem-signal-get-nr5g"></a><h3>mm_gdbus_modem_signal_get_nr5g ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
+mm_gdbus_modem_signal_get_nr5g (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
+<p>Gets the value of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Nr5g">"Nr5g"</a> D-Bus property.</p>
+<p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
+<p>The returned value is only valid until the property changes so on the client-side it is only safe to use this function on the thread where <em class="parameter"><code>object</code></em>
+ was constructed. Use <a class="link" href="MmGdbusModemSignal.html#mm-gdbus-modem-signal-dup-nr5g" title="mm_gdbus_modem_signal_dup_nr5g ()"><code class="function">mm_gdbus_modem_signal_dup_nr5g()</code></a> if on another thread.</p>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
+<div class="refsect3">
+<a name="mm-gdbus-modem-signal-get-nr5g.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>object</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-gdbus-modem-signal-get-nr5g.returns"></a><h4>Returns</h4>
+<p>The property value or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if the property is not set. Do not free the returned value, it belongs to <em class="parameter"><code>object</code></em>
+. </p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>][<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
 <a name="mm-gdbus-modem-signal-dup-cdma"></a><h3>mm_gdbus_modem_signal_dup_cdma ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
 mm_gdbus_modem_signal_dup_cdma (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
-<p>Gets a copy of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Cdma">"Cdma"</a> D-Bus property.</p>
+<p>Gets a copy of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Cdma">"Cdma"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
@@ -485,7 +539,7 @@ mm_gdbus_modem_signal_dup_cdma (<em class="parameter"><code><a class="link" href
 <a name="mm-gdbus-modem-signal-dup-evdo"></a><h3>mm_gdbus_modem_signal_dup_evdo ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
 mm_gdbus_modem_signal_dup_evdo (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
-<p>Gets a copy of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Evdo">"Evdo"</a> D-Bus property.</p>
+<p>Gets a copy of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Evdo">"Evdo"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
@@ -514,7 +568,7 @@ mm_gdbus_modem_signal_dup_evdo (<em class="parameter"><code><a class="link" href
 <a name="mm-gdbus-modem-signal-dup-gsm"></a><h3>mm_gdbus_modem_signal_dup_gsm ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
 mm_gdbus_modem_signal_dup_gsm (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
-<p>Gets a copy of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Gsm">"Gsm"</a> D-Bus property.</p>
+<p>Gets a copy of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Gsm">"Gsm"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
@@ -543,7 +597,7 @@ mm_gdbus_modem_signal_dup_gsm (<em class="parameter"><code><a class="link" href=
 <a name="mm-gdbus-modem-signal-dup-umts"></a><h3>mm_gdbus_modem_signal_dup_umts ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
 mm_gdbus_modem_signal_dup_umts (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
-<p>Gets a copy of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Umts">"Umts"</a> D-Bus property.</p>
+<p>Gets a copy of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Umts">"Umts"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
@@ -572,7 +626,7 @@ mm_gdbus_modem_signal_dup_umts (<em class="parameter"><code><a class="link" href
 <a name="mm-gdbus-modem-signal-dup-lte"></a><h3>mm_gdbus_modem_signal_dup_lte ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
 mm_gdbus_modem_signal_dup_lte (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
-<p>Gets a copy of the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Lte">"Lte"</a> D-Bus property.</p>
+<p>Gets a copy of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Lte">"Lte"</a> D-Bus property.</p>
 <p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
 <p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
@@ -598,6 +652,35 @@ mm_gdbus_modem_signal_dup_lte (<em class="parameter"><code><a class="link" href=
 </div>
 <hr>
 <div class="refsect2">
+<a name="mm-gdbus-modem-signal-dup-nr5g"></a><h3>mm_gdbus_modem_signal_dup_nr5g ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="returnvalue">GVariant</span></a> *
+mm_gdbus_modem_signal_dup_nr5g (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *object</code></em>);</pre>
+<p>Gets a copy of the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Nr5g">"Nr5g"</a> D-Bus property.</p>
+<p>Since this D-Bus property is readable, it is meaningful to use this function on both the client- and service-side.</p>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
+<div class="refsect3">
+<a name="mm-gdbus-modem-signal-dup-nr5g.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>object</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-gdbus-modem-signal-dup-nr5g.returns"></a><h4>Returns</h4>
+<p>The property value or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if the property is not set. The returned value should be freed with <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#g-variant-unref"><code class="function">g_variant_unref()</code></a>. </p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>][<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
 <a name="mm-gdbus-modem-signal-call-setup"></a><h3>mm_gdbus_modem_signal_call_setup ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
 mm_gdbus_modem_signal_call_setup (<em class="parameter"><code><a class="link" href="MmGdbusModemSignal.html" title="MmGdbusModemSignal"><span class="type">MmGdbusModemSignal</span></a> *proxy</code></em>,
@@ -605,7 +688,7 @@ mm_gdbus_modem_signal_call_setup (<em class="parameter"><code><a class="link" hr
                                   <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> *cancellable</code></em>,
                                   <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> callback</code></em>,
                                   <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
-<p>Asynchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Signal.Setup"><GTKDOCLINK HREF="Setup"><code class="function">Setup()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
+<p>Asynchronously invokes the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Signal.Setup"><GTKDOCLINK HREF="Setup"><code class="function">Setup()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 .
 When the operation is finished, <em class="parameter"><code>callback</code></em>
  will be invoked in the thread-default main loop of the thread you are calling this method from (see <a href="https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#g-main-context-push-thread-default"><code class="function">g_main_context_push_thread_default()</code></a>).
@@ -701,7 +784,7 @@ mm_gdbus_modem_signal_call_setup_sync (<em class="parameter"><code><a class="lin
                                        <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a> arg_rate</code></em>,
                                        <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> *cancellable</code></em>,
                                        <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);</pre>
-<p>Synchronously invokes the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Signal.Setup"><GTKDOCLINK HREF="Setup"><code class="function">Setup()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
+<p>Synchronously invokes the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Signal.Setup"><GTKDOCLINK HREF="Setup"><code class="function">Setup()</code></a></GTKDOCLINK> D-Bus method on <em class="parameter"><code>proxy</code></em>
 . The calling thread is blocked until a reply is received.</p>
 <p>See <a class="link" href="MmGdbusModemSignal.html#mm-gdbus-modem-signal-call-setup" title="mm_gdbus_modem_signal_call_setup ()"><code class="function">mm_gdbus_modem_signal_call_setup()</code></a> for the asynchronous version of this method.</p>
 <div class="refsect3">
@@ -770,6 +853,8 @@ is set. </p>
 
   GVariant * (*get_lte) (MmGdbusModemSignal *object);
 
+  GVariant * (*get_nr5g) (MmGdbusModemSignal *object);
+
   guint  (*get_rate) (MmGdbusModemSignal *object);
 
   GVariant * (*get_umts) (MmGdbusModemSignal *object);
@@ -816,6 +901,11 @@ is set. </p>
 <td class="struct_member_annotations"> </td>
 </tr>
 <tr>
+<td class="struct_member_name"><p><em class="structfield"><code><a name="MmGdbusModemSignalIface.get-nr5g"></a>get_nr5g</code></em> ()</p></td>
+<td class="struct_member_description"><p>Getter for the <a class="link" href="MmGdbusModemSignal.html#MmGdbusModemSignal--nr5g" title="The “nr5g” property"><span class="type">“nr5g”</span></a> property.</p></td>
+<td class="struct_member_annotations"> </td>
+</tr>
+<tr>
 <td class="struct_member_name"><p><em class="structfield"><code><a name="MmGdbusModemSignalIface.get-rate"></a>get_rate</code></em> ()</p></td>
 <td class="struct_member_description"><p>Getter for the <a class="link" href="MmGdbusModemSignal.html#MmGdbusModemSignal--rate" title="The “rate” property"><span class="type">“rate”</span></a> property.</p></td>
 <td class="struct_member_annotations"> </td>
@@ -835,7 +925,7 @@ is set. </p>
 <div class="refsect2">
 <a name="MmGdbusModemSignal--cdma"></a><h3>The <code class="literal">“cdma”</code> property</h3>
 <pre class="programlisting">  “cdma”                     <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *</pre>
-<p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Cdma">"Cdma"</a>.</p>
+<p>Represents the D-Bus property <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Cdma">"Cdma"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
 <p>Owner: MmGdbusModemSignal</p>
 <p>Flags: Read / Write</p>
@@ -846,7 +936,7 @@ is set. </p>
 <div class="refsect2">
 <a name="MmGdbusModemSignal--evdo"></a><h3>The <code class="literal">“evdo”</code> property</h3>
 <pre class="programlisting">  “evdo”                     <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *</pre>
-<p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Evdo">"Evdo"</a>.</p>
+<p>Represents the D-Bus property <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Evdo">"Evdo"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
 <p>Owner: MmGdbusModemSignal</p>
 <p>Flags: Read / Write</p>
@@ -857,7 +947,7 @@ is set. </p>
 <div class="refsect2">
 <a name="MmGdbusModemSignal--gsm"></a><h3>The <code class="literal">“gsm”</code> property</h3>
 <pre class="programlisting">  “gsm”                      <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *</pre>
-<p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Gsm">"Gsm"</a>.</p>
+<p>Represents the D-Bus property <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Gsm">"Gsm"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
 <p>Owner: MmGdbusModemSignal</p>
 <p>Flags: Read / Write</p>
@@ -868,7 +958,18 @@ is set. </p>
 <div class="refsect2">
 <a name="MmGdbusModemSignal--lte"></a><h3>The <code class="literal">“lte”</code> property</h3>
 <pre class="programlisting">  “lte”                      <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *</pre>
-<p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Lte">"Lte"</a>.</p>
+<p>Represents the D-Bus property <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Lte">"Lte"</a>.</p>
+<p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
+<p>Owner: MmGdbusModemSignal</p>
+<p>Flags: Read / Write</p>
+<p>Allowed values: GVariant&lt;a{sv}&gt;</p>
+<p>Default value: NULL</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MmGdbusModemSignal--nr5g"></a><h3>The <code class="literal">“nr5g”</code> property</h3>
+<pre class="programlisting">  “nr5g”                     <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *</pre>
+<p>Represents the D-Bus property <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Nr5g">"Nr5g"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
 <p>Owner: MmGdbusModemSignal</p>
 <p>Flags: Read / Write</p>
@@ -879,7 +980,7 @@ is set. </p>
 <div class="refsect2">
 <a name="MmGdbusModemSignal--rate"></a><h3>The <code class="literal">“rate”</code> property</h3>
 <pre class="programlisting">  “rate”                     <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
-<p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Rate">"Rate"</a>.</p>
+<p>Represents the D-Bus property <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Rate">"Rate"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
 <p>Owner: MmGdbusModemSignal</p>
 <p>Flags: Read / Write</p>
@@ -889,7 +990,7 @@ is set. </p>
 <div class="refsect2">
 <a name="MmGdbusModemSignal--umts"></a><h3>The <code class="literal">“umts”</code> property</h3>
 <pre class="programlisting">  “umts”                     <a href="https://developer.gnome.org/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *</pre>
-<p>Represents the D-Bus property <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Umts">"Umts"</a>.</p>
+<p>Represents the D-Bus property <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Umts">"Umts"</a>.</p>
 <p>Since the D-Bus property for this <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct"><span class="type">GObject</span></a> property is readable but not writable, it is meaningful to read from it on both the client- and service-side. It is only meaningful, however, to write to it on the service-side.</p>
 <p>Owner: MmGdbusModemSignal</p>
 <p>Flags: Read / Write</p>
@@ -906,7 +1007,7 @@ user_function (<a class="link" href="MmGdbusModemSignal.html" title="MmGdbusMode
                <a href="https://developer.gnome.org/gio/unstable/GDBusMethodInvocation.html#GDBusMethodInvocation-struct"><span class="type">GDBusMethodInvocation</span></a> *invocation,
                <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a>                  arg_rate,
                <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>               user_data)</pre>
-<p>Signal emitted when a remote caller is invoking the <a href="/usr/share/gtk-doc/html/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Signal.Setup"><GTKDOCLINK HREF="Setup"><code class="function">Setup()</code></a></GTKDOCLINK> D-Bus method.</p>
+<p>Signal emitted when a remote caller is invoking the <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/gdbus-org.freedesktop.ModemManager1.Modem.Signal.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Signal.Setup"><GTKDOCLINK HREF="Setup"><code class="function">Setup()</code></a></GTKDOCLINK> D-Bus method.</p>
 <p>If a signal handler returns <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a>, it means the signal handler will handle the invocation (e.g. take a reference to <em class="parameter"><code>invocation</code></em>
  and eventually call <code class="function">mm_gdbus_modem_signal_complete_setup()</code> or e.g. <a href="https://developer.gnome.org/gio/unstable/GDBusMethodInvocation.html#g-dbus-method-invocation-return-error"><code class="function">g_dbus_method_invocation_return_error()</code></a> on it) and no order signal handlers will run. If no signal handler handles the invocation, the <a href="https://developer.gnome.org/gio/unstable/gio-GDBusError.html#G-DBUS-ERROR-UNKNOWN-METHOD:CAPS"><code class="literal">G_DBUS_ERROR_UNKNOWN_METHOD</code></a> error is returned.</p>
 <div class="refsect3">
@@ -943,7 +1044,7 @@ user_function (<a class="link" href="MmGdbusModemSignal.html" title="MmGdbusMode
 </div>
 <div class="refsect3">
 <a name="MmGdbusModemSignal-handle-setup.returns"></a><h4>Returns</h4>
-<p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the invocation was handled, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> to let other signal handlers run.</p>
+<p> <a href="https://developer.gnome.org/gio/unstable/GDBusMethodInvocation.html#G-DBUS-METHOD-INVOCATION-HANDLED:CAPS"><code class="literal">G_DBUS_METHOD_INVOCATION_HANDLED</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the invocation was handled, <a href="https://developer.gnome.org/gio/unstable/GDBusMethodInvocation.html#G-DBUS-METHOD-INVOCATION-UNHANDLED:CAPS"><code class="literal">G_DBUS_METHOD_INVOCATION_UNHANDLED</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> to let other signal handlers run.</p>
 </div>
 <p>Flags: <a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></p>
 </div>

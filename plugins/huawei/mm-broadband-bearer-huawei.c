@@ -327,7 +327,7 @@ connect_3gpp_context_step (GTask *task)
             mm_base_modem_at_command_full (ctx->modem,
                                            ctx->primary,
                                            "^NDISDUP=1,0",
-                                           3,
+                                           MM_BASE_BEARER_DEFAULT_DISCONNECTION_TIMEOUT,
                                            FALSE,
                                            FALSE,
                                            NULL,
@@ -391,17 +391,17 @@ connect_3gpp_context_step (GTask *task)
         if (!user && !passwd)
             command = g_strdup_printf ("AT^NDISDUP=1,1,\"%s\"",
                                        apn == NULL ? "" : apn);
-        else if (encoded_auth == MM_BEARER_HUAWEI_AUTH_NONE)
-            command = g_strdup_printf ("AT^NDISDUP=1,1,\"%s\",\"%s\",\"%s\"",
-                                       apn == NULL ? "" : apn,
-                                       user == NULL ? "" : user,
-                                       passwd == NULL ? "" : passwd);
-        else
+        else {
+            if (encoded_auth == MM_BEARER_HUAWEI_AUTH_NONE) {
+                encoded_auth = MM_BEARER_HUAWEI_AUTH_CHAP;
+                mm_obj_dbg (self, "using default (CHAP) authentication method");
+            }
             command = g_strdup_printf ("AT^NDISDUP=1,1,\"%s\",\"%s\",\"%s\",%d",
                                        apn == NULL ? "" : apn,
                                        user == NULL ? "" : user,
                                        passwd == NULL ? "" : passwd,
                                        encoded_auth);
+        }
 
         mm_base_modem_at_command_full (ctx->modem,
                                        ctx->primary,
@@ -417,11 +417,11 @@ connect_3gpp_context_step (GTask *task)
     }
 
     case CONNECT_3GPP_CONTEXT_STEP_NDISSTATQRY:
-        /* Wait for dial up timeout, retries for 60 times
-         * (1s between the retries, so it means 1 minute).
+        /* Wait for dial up timeout, retries for 180 times
+         * (1s between the retries, so it means 3 minutes).
          * If too many retries, failed
          */
-        if (ctx->check_count > 60) {
+        if (ctx->check_count > MM_BASE_BEARER_DEFAULT_CONNECTION_TIMEOUT) {
             /* Clear context */
             self->priv->connect_pending = NULL;
             g_task_return_new_error (task,
@@ -701,7 +701,7 @@ disconnect_3gpp_context_step (GTask *task)
 
     case DISCONNECT_3GPP_CONTEXT_STEP_NDISSTATQRY:
         /* If too many retries (1s of wait between the retries), failed */
-        if (ctx->check_count > 60) {
+        if (ctx->check_count > MM_BASE_BEARER_DEFAULT_DISCONNECTION_TIMEOUT) {
             /* Clear task */
             self->priv->disconnect_pending = NULL;
             g_task_return_new_error (task,

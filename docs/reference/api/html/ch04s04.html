@@ -63,7 +63,7 @@
     <span class="p">};</span>
     <span class="k">static</span> <span class="k">const</span> <span class="n">gchar</span> <span class="o">*</span><span class="n">vendor_strings</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&quot;vendor&quot;</span><span class="p">,</span> <span class="nb">NULL</span> <span class="p">};</span>
 
-    <span class="k">return</span> <span class="nf">MM_PLUGIN</span> <span class="p">(</span>
+    <span class="k">return</span> <span class="n">MM_PLUGIN</span> <span class="p">(</span>
         <span class="n">g_object_new</span> <span class="p">(</span><span class="n">MM_TYPE_PLUGIN_IRIDIUM</span><span class="p">,</span>
                       <span class="n">MM_PLUGIN_NAME</span><span class="p">,</span> <span class="s">&quot;Example&quot;</span><span class="p">,</span>
 
@@ -119,7 +119,7 @@
     <span class="k">static</span> <span class="k">const</span> <span class="n">gchar</span> <span class="o">*</span><span class="n">vendor_strings</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&quot;vendor&quot;</span><span class="p">,</span> <span class="nb">NULL</span> <span class="p">};</span>
     <span class="k">static</span> <span class="k">const</span> <span class="n">mm_str_pair</span> <span class="n">product_strings</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&quot;another-vendor&quot;</span><span class="p">,</span> <span class="s">&quot;product xyz&quot;</span> <span class="p">};</span>
 
-    <span class="k">return</span> <span class="nf">MM_PLUGIN</span> <span class="p">(</span>
+    <span class="k">return</span> <span class="n">MM_PLUGIN</span> <span class="p">(</span>
         <span class="n">g_object_new</span> <span class="p">(</span><span class="n">MM_TYPE_PLUGIN_IRIDIUM</span><span class="p">,</span>
                       <span class="n">MM_PLUGIN_NAME</span><span class="p">,</span> <span class="s">&quot;Example&quot;</span><span class="p">,</span>
 
@@ -190,7 +190,7 @@
 42
 43</pre></td>
         <td class="listing_code"><pre class="programlisting"><span class="k">static</span> <span class="n">gboolean</span>
-<span class="n">parse_custom_at</span> <span class="p">(</span><span class="k">const</span> <span class="n">gchar</span> <span class="o">*</span><span class="n">response</span><span class="p">,</span>
+<span class="nf">parse_custom_at</span> <span class="p">(</span><span class="k">const</span> <span class="n">gchar</span> <span class="o">*</span><span class="n">response</span><span class="p">,</span>
                  <span class="k">const</span> <span class="n">GError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span>
                  <span class="n">GValue</span> <span class="o">*</span><span class="n">result</span><span class="p">,</span>
                  <span class="n">GError</span> <span class="o">**</span><span class="n">result_error</span><span class="p">)</span>
@@ -217,7 +217,7 @@
     <span class="k">static</span> <span class="k">const</span> <span class="n">gchar</span> <span class="o">*</span><span class="n">subsystems</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&quot;tty&quot;</span><span class="p">,</span> <span class="nb">NULL</span> <span class="p">};</span>
     <span class="k">static</span> <span class="k">const</span> <span class="n">guint16</span> <span class="n">vendor_ids</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="mh">0xabcd</span><span class="p">,</span> <span class="mi">0</span> <span class="p">};</span>
 
-    <span class="k">return</span> <span class="nf">MM_PLUGIN</span> <span class="p">(</span>
+    <span class="k">return</span> <span class="n">MM_PLUGIN</span> <span class="p">(</span>
         <span class="n">g_object_new</span> <span class="p">(</span><span class="n">MM_TYPE_PLUGIN_EXAMPLE</span><span class="p">,</span>
                       <span class="n">MM_PLUGIN_NAME</span><span class="p">,</span> <span class="s">&quot;Example&quot;</span><span class="p">,</span>
 
