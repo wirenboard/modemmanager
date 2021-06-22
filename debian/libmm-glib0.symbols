@@ -490,6 +490,9 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_call_set_power_state@Base 0.7.991
  mm_gdbus_modem_call_set_power_state_finish@Base 0.7.991
  mm_gdbus_modem_call_set_power_state_sync@Base 0.7.991
+ mm_gdbus_modem_call_set_primary_sim_slot@Base 1.16.6
+ mm_gdbus_modem_call_set_primary_sim_slot_finish@Base 1.16.6
+ mm_gdbus_modem_call_set_primary_sim_slot_sync@Base 1.16.6
  mm_gdbus_modem_cdma_call_activate@Base 0.7.991
  mm_gdbus_modem_cdma_call_activate_finish@Base 0.7.991
  mm_gdbus_modem_cdma_call_activate_manual@Base 0.7.991
@@ -538,6 +541,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_complete_set_current_capabilities@Base 0.7.991
  mm_gdbus_modem_complete_set_current_modes@Base 0.7.991
  mm_gdbus_modem_complete_set_power_state@Base 0.7.991
+ mm_gdbus_modem_complete_set_primary_sim_slot@Base 1.16.6
  mm_gdbus_modem_dup_bearers@Base 1.2.0
  mm_gdbus_modem_dup_carrier_configuration@Base 1.10.4
  mm_gdbus_modem_dup_carrier_configuration_revision@Base 1.10.4
@@ -557,6 +561,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_dup_revision@Base 0.7.991
  mm_gdbus_modem_dup_signal_quality@Base 0.7.991
  mm_gdbus_modem_dup_sim@Base 0.7.991
+ mm_gdbus_modem_dup_sim_slots@Base 1.16.6
  mm_gdbus_modem_dup_supported_bands@Base 0.7.991
  mm_gdbus_modem_dup_supported_capabilities@Base 0.7.991
  mm_gdbus_modem_dup_supported_modes@Base 0.7.991
@@ -606,9 +611,11 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_get_ports@Base 1.0.0
  mm_gdbus_modem_get_power_state@Base 0.7.991
  mm_gdbus_modem_get_primary_port@Base 0.7.991
+ mm_gdbus_modem_get_primary_sim_slot@Base 1.16.6
  mm_gdbus_modem_get_revision@Base 0.7.991
  mm_gdbus_modem_get_signal_quality@Base 0.7.991
  mm_gdbus_modem_get_sim@Base 0.7.991
+ mm_gdbus_modem_get_sim_slots@Base 1.16.6
  mm_gdbus_modem_get_state@Base 0.7.991
  mm_gdbus_modem_get_state_failed_reason@Base 0.7.991
  mm_gdbus_modem_get_supported_bands@Base 0.7.991
@@ -771,9 +778,11 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_set_ports@Base 1.0.0
  mm_gdbus_modem_set_power_state@Base 0.7.991
  mm_gdbus_modem_set_primary_port@Base 0.7.991
+ mm_gdbus_modem_set_primary_sim_slot@Base 1.16.6
  mm_gdbus_modem_set_revision@Base 0.7.991
  mm_gdbus_modem_set_signal_quality@Base 0.7.991
  mm_gdbus_modem_set_sim@Base 0.7.991
+ mm_gdbus_modem_set_sim_slots@Base 1.16.6
  mm_gdbus_modem_set_state@Base 0.7.991
  mm_gdbus_modem_set_state_failed_reason@Base 0.7.991
  mm_gdbus_modem_set_supported_bands@Base 0.7.991
@@ -790,11 +799,13 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_signal_dup_evdo@Base 1.2.0
  mm_gdbus_modem_signal_dup_gsm@Base 1.2.0
  mm_gdbus_modem_signal_dup_lte@Base 1.2.0
+ mm_gdbus_modem_signal_dup_nr5g@Base 1.16.6
  mm_gdbus_modem_signal_dup_umts@Base 1.2.0
  mm_gdbus_modem_signal_get_cdma@Base 1.2.0
  mm_gdbus_modem_signal_get_evdo@Base 1.2.0
  mm_gdbus_modem_signal_get_gsm@Base 1.2.0
  mm_gdbus_modem_signal_get_lte@Base 1.2.0
+ mm_gdbus_modem_signal_get_nr5g@Base 1.16.6
  mm_gdbus_modem_signal_get_rate@Base 1.2.0
  mm_gdbus_modem_signal_get_type@Base 1.2.0
  mm_gdbus_modem_signal_get_umts@Base 1.2.0
@@ -811,6 +822,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_signal_set_evdo@Base 1.2.0
  mm_gdbus_modem_signal_set_gsm@Base 1.2.0
  mm_gdbus_modem_signal_set_lte@Base 1.2.0
+ mm_gdbus_modem_signal_set_nr5g@Base 1.16.6
  mm_gdbus_modem_signal_set_rate@Base 1.2.0
  mm_gdbus_modem_signal_set_umts@Base 1.2.0
  mm_gdbus_modem_signal_skeleton_get_type@Base 1.2.0
@@ -1012,11 +1024,14 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_sim_complete_enable_pin@Base 0.7.991
  mm_gdbus_sim_complete_send_pin@Base 0.7.991
  mm_gdbus_sim_complete_send_puk@Base 0.7.991
+ mm_gdbus_sim_dup_eid@Base 1.16.6
  mm_gdbus_sim_dup_emergency_numbers@Base 1.12.6
  mm_gdbus_sim_dup_imsi@Base 0.7.991
  mm_gdbus_sim_dup_operator_identifier@Base 0.7.991
  mm_gdbus_sim_dup_operator_name@Base 0.7.991
  mm_gdbus_sim_dup_sim_identifier@Base 0.7.991
+ mm_gdbus_sim_get_active@Base 1.16.6
+ mm_gdbus_sim_get_eid@Base 1.16.6
  mm_gdbus_sim_get_emergency_numbers@Base 1.12.6
  mm_gdbus_sim_get_imsi@Base 0.7.991
  mm_gdbus_sim_get_operator_identifier@Base 0.7.991
@@ -1032,6 +1047,8 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_sim_proxy_new_for_bus_finish@Base 0.7.991
  mm_gdbus_sim_proxy_new_for_bus_sync@Base 0.7.991
  mm_gdbus_sim_proxy_new_sync@Base 0.7.991
+ mm_gdbus_sim_set_active@Base 1.16.6
+ mm_gdbus_sim_set_eid@Base 1.16.6
  mm_gdbus_sim_set_emergency_numbers@Base 1.12.6
  mm_gdbus_sim_set_imsi@Base 0.7.991
  mm_gdbus_sim_set_operator_identifier@Base 0.7.991
@@ -1318,6 +1335,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_dup_primary_port@Base 0.7.991
  mm_modem_dup_revision@Base 0.7.991
  mm_modem_dup_sim_path@Base 0.7.991
+ mm_modem_dup_sim_slot_paths@Base 1.16.6
  mm_modem_enable@Base 0.7.991
  mm_modem_enable_finish@Base 0.7.991
  mm_modem_enable_sync@Base 0.7.991
@@ -1360,11 +1378,13 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_get_ports@Base 1.0.0
  mm_modem_get_power_state@Base 0.7.991
  mm_modem_get_primary_port@Base 0.7.991
+ mm_modem_get_primary_sim_slot@Base 1.16.6
  mm_modem_get_revision@Base 0.7.991
  mm_modem_get_signal_quality@Base 0.7.991
  mm_modem_get_sim@Base 0.7.991
  mm_modem_get_sim_finish@Base 0.7.991
  mm_modem_get_sim_path@Base 0.7.991
+ mm_modem_get_sim_slot_paths@Base 1.16.6
  mm_modem_get_sim_sync@Base 0.7.991
  mm_modem_get_state@Base 0.7.991
  mm_modem_get_state_failed_reason@Base 0.7.991
@@ -1378,6 +1398,9 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_list_bearers@Base 0.7.991
  mm_modem_list_bearers_finish@Base 0.7.991
  mm_modem_list_bearers_sync@Base 0.7.991
+ mm_modem_list_sim_slots@Base 1.16.6
+ mm_modem_list_sim_slots_finish@Base 1.16.6
+ mm_modem_list_sim_slots_sync@Base 1.16.6
  mm_modem_location_assistance_data_type_build_string_from_mask@Base 1.10.0
  mm_modem_location_assistance_data_type_get_type@Base 1.10.0
  mm_modem_location_dup_assistance_data_servers@Base 1.10.0
@@ -1485,11 +1508,15 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_set_power_state@Base 0.7.991
  mm_modem_set_power_state_finish@Base 0.7.991
  mm_modem_set_power_state_sync@Base 0.7.991
+ mm_modem_set_primary_sim_slot@Base 1.16.6
+ mm_modem_set_primary_sim_slot_finish@Base 1.16.6
+ mm_modem_set_primary_sim_slot_sync@Base 1.16.6
  mm_modem_signal_dup_path@Base 1.2.0
  mm_modem_signal_get_cdma@Base 1.2.0
  mm_modem_signal_get_evdo@Base 1.2.0
  mm_modem_signal_get_gsm@Base 1.2.0
  mm_modem_signal_get_lte@Base 1.2.0
+ mm_modem_signal_get_nr5g@Base 1.16.6
  mm_modem_signal_get_path@Base 1.2.0
  mm_modem_signal_get_rate@Base 1.2.0
  mm_modem_signal_get_type@Base 1.2.0
@@ -1498,6 +1525,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_signal_peek_evdo@Base 1.2.0
  mm_modem_signal_peek_gsm@Base 1.2.0
  mm_modem_signal_peek_lte@Base 1.2.0
+ mm_modem_signal_peek_nr5g@Base 1.16.6
  mm_modem_signal_peek_umts@Base 1.2.0
  mm_modem_signal_setup@Base 1.2.0
  mm_modem_signal_setup_finish@Base 1.2.0
@@ -1644,6 +1672,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_sim_disable_pin@Base 0.7.991
  mm_sim_disable_pin_finish@Base 0.7.991
  mm_sim_disable_pin_sync@Base 0.7.991
+ mm_sim_dup_eid@Base 1.16.6
  mm_sim_dup_emergency_numbers@Base 1.12.6
  mm_sim_dup_identifier@Base 0.7.991
  mm_sim_dup_imsi@Base 0.7.991
@@ -1653,6 +1682,8 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_sim_enable_pin@Base 0.7.991
  mm_sim_enable_pin_finish@Base 0.7.991
  mm_sim_enable_pin_sync@Base 0.7.991
+ mm_sim_get_active@Base 1.16.6
+ mm_sim_get_eid@Base 1.16.6
  mm_sim_get_emergency_numbers@Base 1.12.6
  mm_sim_get_identifier@Base 0.7.991
  mm_sim_get_imsi@Base 0.7.991
@@ -1676,6 +1707,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_simple_connect_properties_get_operator_id@Base 0.7.991
  mm_simple_connect_properties_get_password@Base 0.7.991
  mm_simple_connect_properties_get_pin@Base 0.7.991
+ mm_simple_connect_properties_get_rm_protocol@Base 1.16.6
  mm_simple_connect_properties_get_type@Base 0.7.991
  mm_simple_connect_properties_get_user@Base 0.7.991
  mm_simple_connect_properties_new@Base 0.7.991
@@ -1689,6 +1721,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_simple_connect_properties_set_operator_id@Base 0.7.991
  mm_simple_connect_properties_set_password@Base 0.7.991
  mm_simple_connect_properties_set_pin@Base 0.7.991
+ mm_simple_connect_properties_set_rm_protocol@Base 1.16.6
  mm_simple_connect_properties_set_user@Base 0.7.991
  mm_simple_status_get_3gpp_operator_code@Base 0.7.991
  mm_simple_status_get_3gpp_operator_name@Base 0.7.991
