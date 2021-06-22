@@ -1,3 +1,9 @@
+modemmanager (1.16.6-1) UNRELEASED; urgency=medium
+
+  * New upstream version
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 22 Jun 2021 12:50:39 +0200
+
 modemmanager (1.14.12-0.1) unstable; urgency=medium
 
   * Non-maintainer upload.
