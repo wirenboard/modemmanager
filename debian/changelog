@@ -1,6 +1,8 @@
 modemmanager (1.16.6-1) UNRELEASED; urgency=medium
 
   * New upstream version
+  * debian/control.in:
+    - updated libqmi requirement
   * debian/libmm-glib0.symbols:
     - updated for the new version
 
