@@ -1,3 +1,9 @@
+modemmanager (1.16.6-2) UNRELEASED; urgency=medium
+
+  * debian/control: include python build-depends for tests
+
+ -- Sebastien Bacher <seb128@debian.org>  Fri, 25 Jun 2021 15:31:13 +0200
+
 modemmanager (1.16.6-1) experimental; urgency=medium
 
   * New upstream version
@@ -6,7 +12,7 @@ modemmanager (1.16.6-1) experimental; urgency=medium
   * debian/libmm-glib0.symbols:
     - updated for the new version
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 25 Jun 2021 11:28:12 +0200
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 25 Jun 2021 11:30:20 +0200
 
 modemmanager (1.14.12-0.1) unstable; urgency=medium
 

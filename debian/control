@@ -17,6 +17,8 @@ Build-Depends: debhelper-compat (= 10),
                libqmi-glib-dev (>= 1.28.6~),
                libmbim-glib-dev (>= 1.24.0~),
                libglib2.0-doc,
+               python3-dbus,
+               python3-gi,
                valac (>= 0.22),
                dbus <!nocheck>,
 Standards-Version: 4.2.1
