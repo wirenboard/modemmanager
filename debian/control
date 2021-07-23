@@ -35,6 +35,7 @@ Package: modemmanager
 Architecture: linux-any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
+         policykit-1,
 Recommends: usb-modeswitch
 Description: D-Bus service for managing modems
  ModemManager is a DBus-activated daemon which controls mobile broadband
