@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL=4
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 
