@@ -1,3 +1,23 @@
+modemmanager (1.18.2-1) unstable; urgency=medium
+
+  [ Henry-Nicolas Tourneur ]
+  * d/rules: set with-polkit to permissive (Closes: #800598)
+
+  [ Arnaud Ferraris ]
+  * New upstream version 1.18.2 (Closes: #1000450)
+  * d/control: change maintainer to DebianOnMobile team (Closes: #949129)
+  * d/control: bump debhelper-compat version and Standards-Version.
+  * d/copyright: add Upstream-Contact and update maintainer email
+  * d/gbp.conf: fix debian branch name
+  * debian: add salsa CI pipeline
+  * d/source: add upstream metadata
+  * d/control: update build dependencies.
+  * d/watch: bump watch file version, no change required
+  * d/libmm-glib0: update symbols file for new version
+  * d/rules: add hardening build options
+
+ -- Arnaud Ferraris <arnaud.ferraris@collabora.com>  Mon, 06 Dec 2021 17:46:45 +0100
+
 modemmanager (1.16.6-2) experimental; urgency=medium
 
   * debian/control: include python build-depends for tests
@@ -1113,4 +1133,3 @@ modemmanager (0.2.git.20090806t105932.354a4cb-0ubuntu1) karmic; urgency=low
     - update debian/patches/series
 
  -- Tony Espy <espy@ubuntu.com>  Thu, 06 Aug 2009 12:50:45 +0100
-
