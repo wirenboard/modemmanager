@@ -1,16 +1,17 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: ModemManager
+Upstream-Contact: Aleksander Morgado <aleksander@aleksander.es>
 Source: https://www.freedesktop.org/software/ModemManager/
 
 Files: *
-Copyright: 2011 - 2013 Aleksander Morgado <aleksander@gnu.org>
+Copyright: 2011 - 2013 Aleksander Morgado <aleksander@aleksander.es>
            2008 - 2009 Novell, Inc.
            2009 - 2012 Red Hat, Inc.
            2011 - 2012 Google, Inc.
 License: GPL-2.0+
 
 Files: cli/*
-Copyright: 2011 - 2012 Aleksander Morgado <aleksander@gnu.org>
+Copyright: 2011 - 2012 Aleksander Morgado <aleksander@aleksander.es>
            2011, 2012 Google, Inc.
 License: GPL-3.0+
 
@@ -20,7 +21,7 @@ License: GPL-2.0
 
 Files: libmm-glib/*
        include/*
-Copyright: 2011 - 2012 Aleksander Morgado <aleksander@gnu.org>
+Copyright: 2011 - 2012 Aleksander Morgado <aleksander@aleksander.es>
            2012 Lanedo GmbH <aleksander@lanedo.com>
            2012 Google, Inc.
 License: LGPL-2.0+
