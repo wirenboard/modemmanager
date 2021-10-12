@@ -47,6 +47,7 @@ GetNetworkTime (OUT s time);
 </para><para>        This method will only work if the modem tracks, or can request, the
         current network time; it will not attempt to use previously-received
         network time updates on the host to guess the current network time.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -65,6 +66,7 @@ GetNetworkTime (OUT s time);
 NetworkTimeChanged (s time);
 </programlisting>
 <para>        Sent when the network time is updated.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -104,6 +106,7 @@ NetworkTimezone  readable   a{sv}
             </listitem>
           </varlistentry>
         </variablelist>
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 </refsect1>

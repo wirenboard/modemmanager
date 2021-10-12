@@ -26,6 +26,7 @@
 
 #include "mm-kernel-device-generic.h"
 #include "mm-kernel-device-generic-rules.h"
+#include "mm-kernel-device-helpers.h"
 #include "mm-log-object.h"
 #include "mm-utils.h"
 
@@ -57,6 +58,7 @@ struct _MMKernelDeviceGenericPrivate {
     gchar  **drivers;
     gchar  **subsystems;
     gchar   *sysfs_path;
+    gchar   *wwandev_sysfs_path;
     gchar   *interface_sysfs_path;
     guint8   interface_class;
     guint8   interface_subclass;
@@ -126,7 +128,8 @@ read_sysfs_attribute_link_basename (const gchar *path,
 
 static gchar *
 lookup_sysfs_attribute_as_string (MMKernelDeviceGeneric *self,
-                                  const gchar           *attribute)
+                                  const gchar           *attribute,
+                                  gboolean              iterate)
 {
     g_autofree gchar *iter = NULL;
 
@@ -143,6 +146,8 @@ lookup_sysfs_attribute_as_string (MMKernelDeviceGeneric *self,
         /* return first one found */
         if ((value = read_sysfs_attribute_as_string (iter, attribute)) != NULL)
             return value;
+        else if (!iterate)
+            break;
 
         if (g_strcmp0 (iter, self->priv->physdev_sysfs_path) == 0)
             break;
@@ -233,17 +238,20 @@ ptr_array_add_sysfs_attribute_link_basename (GPtrArray    *array,
 
     g_assert (array && sysfs_path && attribute);
     value = read_sysfs_attribute_link_basename (sysfs_path, attribute);
-    if (value && !g_ptr_array_find_with_equal_func (array, value, g_str_equal, NULL))
-        g_ptr_array_add (array, g_steal_pointer (&value));
+
     if (out_value)
         *out_value = g_strdup (value);
+    if (value && !g_ptr_array_find_with_equal_func (array, value, g_str_equal, NULL))
+        g_ptr_array_add (array, g_steal_pointer (&value));
+
 }
 
 static void
 preload_contents_other (MMKernelDeviceGeneric *self)
 {
-    GPtrArray *drivers;
-    GPtrArray *subsystems;
+    g_autofree gchar *lower_device_name = NULL;
+    GPtrArray        *drivers;
+    GPtrArray        *subsystems;
 
     /* For any other kind of bus (or the absence of one, as in virtual devices),
      * assume this is a single port device and don't try to match multiple ports
@@ -258,6 +266,31 @@ preload_contents_other (MMKernelDeviceGeneric *self)
     ptr_array_add_sysfs_attribute_link_basename (subsystems, self->priv->sysfs_path, "subsystem", NULL);
     g_ptr_array_add (subsystems, NULL);
     self->priv->subsystems = (gchar **) g_ptr_array_free (subsystems, FALSE);
+
+    /* But look for a lower real physical device, as we may have one */
+    lower_device_name = mm_kernel_device_get_lower_device_name (self->priv->sysfs_path);
+    if (lower_device_name) {
+        g_autoptr(MMKernelDevice)           lower_kernel_device = NULL;
+        g_autoptr(MMKernelEventProperties)  props = NULL;
+        g_autoptr(GError)                   error = NULL;
+        const gchar                        *subsystem;
+
+        subsystem = mm_kernel_device_get_subsystem (MM_KERNEL_DEVICE (self));
+
+        props = mm_kernel_event_properties_new ();
+        mm_kernel_event_properties_set_subsystem (props, subsystem);
+        mm_kernel_event_properties_set_name      (props, lower_device_name);
+
+        lower_kernel_device = mm_kernel_device_generic_new (props, &error);
+        if (!lower_kernel_device) {
+            mm_obj_dbg (self, "couldn't find lower device: %s/%s", subsystem, lower_device_name);
+        } else {
+            mm_obj_dbg (self, "setting up lower device: %s/%s", subsystem, lower_device_name);
+            g_object_set (self,
+                          "lower-device", lower_kernel_device,
+                          NULL);
+        }
+    }
 }
 
 static void
@@ -433,6 +466,30 @@ preload_contents_usb (MMKernelDeviceGeneric *self)
     self->priv->subsystems = (gchar **) g_ptr_array_free (subsystems, FALSE);
 }
 
+static void
+preload_contents_wwan (MMKernelDeviceGeneric *self)
+{
+    g_autofree gchar *iter = NULL;
+
+    /* Find the first parent device subsystem */
+    iter = g_path_get_dirname(self->priv->sysfs_path);
+    while (iter && (g_strcmp0 (iter, "/") != 0)) {
+        g_autofree gchar *current_subsystem = NULL;
+        gchar            *parent;
+
+        current_subsystem = read_sysfs_attribute_link_basename (iter, "subsystem");
+        if (current_subsystem) {
+            if (g_strcmp0 (current_subsystem, "wwan") == 0)
+                self->priv->wwandev_sysfs_path = g_strdup (iter);
+            break;
+        }
+
+        parent = g_path_get_dirname (iter);
+        g_clear_pointer (&iter, g_free);
+        iter = parent;
+    }
+}
+
 static gchar *
 find_device_bus_subsystem (MMKernelDeviceGeneric *self)
 {
@@ -490,6 +547,8 @@ preload_contents (MMKernelDeviceGeneric *self)
         preload_contents_platform (self, bus_subsys);
     else
         preload_contents_other (self);
+
+    preload_contents_wwan (self); /* wwan is bus agnostic class */
 
     if (!bus_subsys)
         return;
@@ -551,6 +610,18 @@ static const gchar *
 kernel_device_get_sysfs_path (MMKernelDevice *self)
 {
     return MM_KERNEL_DEVICE_GENERIC (self)->priv->sysfs_path;
+}
+
+static const gchar *
+kernel_device_get_wwandev_sysfs_path (MMKernelDevice *self)
+{
+    return MM_KERNEL_DEVICE_GENERIC (self)->priv->wwandev_sysfs_path;
+}
+
+static gint
+kernel_device_get_interface_number (MMKernelDevice *self)
+{
+    return (gint) MM_KERNEL_DEVICE_GENERIC (self)->priv->interface_number;
 }
 
 static gint
@@ -768,7 +839,7 @@ check_condition (MMKernelDeviceGeneric *self,
     }
 
     /* Attributes checks */
-    if (g_str_has_prefix (match->parameter, "ATTRS")) {
+    if (g_str_has_prefix (match->parameter, "ATTR")) {
         gchar    *attribute;
         gchar    *contents = NULL;
         gboolean  result = FALSE;
@@ -807,7 +878,7 @@ check_condition (MMKernelDeviceGeneric *self,
         else {
             g_autofree gchar *found_value = NULL;
 
-            found_value = lookup_sysfs_attribute_as_string (self, attribute);
+            found_value = lookup_sysfs_attribute_as_string (self, attribute, g_str_has_prefix (match->parameter, "ATTRS"));
             result = ((found_value && g_str_equal (found_value, match->value)) == condition_equal);
         }
 
@@ -1167,6 +1238,7 @@ mm_kernel_device_generic_class_init (MMKernelDeviceGenericClass *klass)
     kernel_device_class->get_name                  = kernel_device_get_name;
     kernel_device_class->get_driver                = kernel_device_get_driver;
     kernel_device_class->get_sysfs_path            = kernel_device_get_sysfs_path;
+    kernel_device_class->get_wwandev_sysfs_path    = kernel_device_get_wwandev_sysfs_path;
     kernel_device_class->get_physdev_uid           = kernel_device_get_physdev_uid;
     kernel_device_class->get_physdev_vid           = kernel_device_get_physdev_vid;
     kernel_device_class->get_physdev_pid           = kernel_device_get_physdev_pid;
@@ -1175,6 +1247,7 @@ mm_kernel_device_generic_class_init (MMKernelDeviceGenericClass *klass)
     kernel_device_class->get_physdev_subsystem     = kernel_device_get_physdev_subsystem;
     kernel_device_class->get_physdev_manufacturer  = kernel_device_get_physdev_manufacturer;
     kernel_device_class->get_physdev_product       = kernel_device_get_physdev_product;
+    kernel_device_class->get_interface_number      = kernel_device_get_interface_number;
     kernel_device_class->get_interface_class       = kernel_device_get_interface_class;
     kernel_device_class->get_interface_subclass    = kernel_device_get_interface_subclass;
     kernel_device_class->get_interface_protocol    = kernel_device_get_interface_protocol;

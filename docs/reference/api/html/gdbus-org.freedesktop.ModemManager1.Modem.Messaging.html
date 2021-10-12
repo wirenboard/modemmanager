@@ -43,7 +43,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.5.5.11.4"></a><h2>Signals</h2>
+<a name="id-1.5.5.12.4"></a><h2>Signals</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Messaging.Added" title='The "Added" signal'>Added</a>   (o path,
          b received);
@@ -51,7 +51,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.5.5.11.5"></a><h2>Properties</h2>
+<a name="id-1.5.5.12.5"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Messaging.Messages" title='The "Messages" property'>Messages</a>           readable   ao
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Messaging.SupportedStorages" title='The "SupportedStorages" property'>SupportedStorages</a>  readable   au
@@ -83,6 +83,8 @@ List (OUT ao result);
         <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Messaging.Added" title='The "Added" signal'>"Added"</a> signal,
         or by querying the specific SMS object of interest.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -101,6 +103,8 @@ List (OUT ao result);
 Delete (IN  o path);
 </pre>
 <p>        Delete an SMS message.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -130,6 +134,8 @@ Create (IN  a{sv} properties,
 </p>
 <p>        If the SMSC is not specified and one is required, the default SMSC is
         used.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -166,6 +172,8 @@ Added (o path,
         '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.State" title='The "State" property'>State</a>'
         property to determine if the message is complete.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -191,6 +199,8 @@ Deleted (o path);
 </pre>
 <p>        Emitted when a message has been deleted.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -212,6 +222,8 @@ Messages  readable   ao
 </pre>
 <p>        The list of SMS object paths.
 </p>
+<p>        Since: 1.2
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -223,6 +235,8 @@ SupportedStorages  readable   au
         specifying the storages supported by this modem for storing and
         receiving SMS.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -232,6 +246,8 @@ DefaultStorage  readable   u
 </pre>
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMSmsStorage" title="enum MMSmsStorage">MMSmsStorage</a> value,
         specifying the storage to be used when receiving or storing SMS.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 </div>

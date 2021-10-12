@@ -36,6 +36,7 @@
 ScanDevices ();
 </programlisting>
 <para>        Start a new scan for connected modem devices.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1.SetLogging">
@@ -45,6 +46,7 @@ ScanDevices ();
 SetLogging (IN  s level);
 </programlisting>
 <para>        Set logging verbosity.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -116,6 +118,7 @@ ReportKernelEvent (IN  a{sv} properties);
             </listitem>
           </varlistentry>
         </variablelist>
+</para><para>        Since: 1.8
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -140,6 +143,7 @@ InhibitDevice (IN  s uid,
 </para><para>        This operation binds the inhibition request to the existence of the
         caller in the DBus bus. If the caller disappears from the bus, the
         inhibition will automatically removed.
+</para><para>        Since: 1.10
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -162,6 +166,7 @@ InhibitDevice (IN  s uid,
 Version  readable   s
 </programlisting>
 <para>        The runtime version of the ModemManager daemon.
+</para><para>        Since: 1.10
 </para>
 </refsect2>
 </refsect1>

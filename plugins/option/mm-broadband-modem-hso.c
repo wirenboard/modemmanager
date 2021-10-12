@@ -34,7 +34,9 @@
 #include "mm-broadband-modem-hso.h"
 #include "mm-broadband-bearer-hso.h"
 #include "mm-bearer-list.h"
+#include "mm-shared-option.h"
 
+static void shared_option_init (MMSharedOption *iface);
 static void iface_modem_init (MMIfaceModem *iface);
 static void iface_modem_3gpp_init (MMIfaceModem3gpp *iface);
 static void iface_modem_location_init (MMIfaceModemLocation *iface);
@@ -43,6 +45,7 @@ static MMIfaceModem3gpp *iface_modem_3gpp_parent;
 static MMIfaceModemLocation *iface_modem_location_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemHso, mm_broadband_modem_hso, MM_TYPE_BROADBAND_MODEM_OPTION, 0,
+                        G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_OPTION, shared_option_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_3GPP, iface_modem_3gpp_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_LOCATION, iface_modem_location_init));
@@ -198,7 +201,19 @@ static void
 bearer_list_report_status_foreach (MMBaseBearer *bearer,
                                    BearerListReportStatusForeachContext *ctx)
 {
-    if (mm_broadband_bearer_get_3gpp_cid (MM_BROADBAND_BEARER (bearer)) != ctx->cid)
+    gint profile_id;
+    gint connecting_profile_id;
+
+    if (!MM_IS_BROADBAND_BEARER_HSO (bearer))
+        return;
+
+    /* The profile ID in the base bearer is set only once the modem is connected */
+    profile_id = mm_base_bearer_get_profile_id (bearer);
+
+    /* The profile ID in the hso bearer is available during the connecting phase */
+    connecting_profile_id = mm_broadband_bearer_hso_get_connecting_profile_id (MM_BROADBAND_BEARER_HSO (bearer));
+
+    if ((profile_id != (gint)ctx->cid) && (connecting_profile_id != (gint)ctx->cid))
         return;
 
     mm_base_bearer_report_connection_status (MM_BASE_BEARER (bearer), ctx->status);
@@ -209,7 +224,7 @@ hso_connection_status_changed (MMPortSerialAt *port,
                                GMatchInfo *match_info,
                                MMBroadbandModemHso *self)
 {
-    MMBearerList *list = NULL;
+    g_autoptr(MMBearerList) list = NULL;
     BearerListReportStatusForeachContext ctx;
     guint cid;
     guint status;
@@ -245,14 +260,10 @@ hso_connection_status_changed (MMPortSerialAt *port,
     g_object_get (self,
                   MM_IFACE_MODEM_BEARER_LIST, &list,
                   NULL);
-    if (!list)
-        return;
 
     /* Will report status only in the bearer with the specific CID */
-    mm_bearer_list_foreach (list,
-                            (MMBearerListForeachFunc)bearer_list_report_status_foreach,
-                            &ctx);
-    g_object_unref (list);
+    if (list)
+        mm_bearer_list_foreach (list, (MMBearerListForeachFunc)bearer_list_report_status_foreach, &ctx);
 }
 
 static gboolean
@@ -691,6 +702,9 @@ mm_broadband_modem_hso_new (const gchar *device,
                          MM_BASE_MODEM_PLUGIN, plugin,
                          MM_BASE_MODEM_VENDOR_ID, vendor_id,
                          MM_BASE_MODEM_PRODUCT_ID, product_id,
+                         /* Generic bearer (AT) and HSO bearer (NET) supported */
+                         MM_BASE_MODEM_DATA_NET_SUPPORTED, TRUE,
+                         MM_BASE_MODEM_DATA_TTY_SUPPORTED, TRUE,
                          NULL);
 }
 
@@ -718,8 +732,15 @@ mm_broadband_modem_hso_init (MMBroadbandModemHso *self)
 }
 
 static void
+shared_option_init (MMSharedOption *iface)
+{
+}
+
+static void
 iface_modem_init (MMIfaceModem *iface)
 {
+    iface->create_sim = mm_shared_option_create_sim;
+    iface->create_sim_finish = mm_shared_option_create_sim_finish;
     iface->create_bearer = modem_create_bearer;
     iface->create_bearer_finish = modem_create_bearer_finish;
     iface->load_unlock_retries = load_unlock_retries;

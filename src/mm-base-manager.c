@@ -24,6 +24,13 @@
 
 #include <gmodule.h>
 
+#if defined WITH_QMI
+# include <libqmi-glib.h>
+#endif
+#if defined WITH_QRTR
+# include "mm-kernel-device-qrtr.h"
+# include "mm-qrtr-bus-watcher.h"
+#endif
 #if defined WITH_UDEV
 # include "mm-kernel-device-udev.h"
 #endif
@@ -45,6 +52,7 @@
 #include "mm-plugin.h"
 #include "mm-filter.h"
 #include "mm-log-object.h"
+#include "mm-base-modem.h"
 
 static void initable_iface_init   (GInitableIface       *iface);
 static void log_object_iface_init (MMLogObjectInterface *iface);
@@ -97,6 +105,10 @@ struct _MMBaseManagerPrivate {
 #if defined WITH_UDEV
     /* The UDev client */
     GUdevClient *udev;
+#endif
+#if defined WITH_QRTR
+    /* The Qrtr Bus Watcher */
+    MMQrtrBusWatcher *qrtr_bus_watcher;
 #endif
 };
 
@@ -236,7 +248,8 @@ device_removed (MMBaseManager *self,
 {
     g_autoptr(MMDevice) device = NULL;
 
-    g_assert (subsystem && name);
+    g_assert (subsystem);
+    g_assert (name);
     device = find_device_by_port_name (self, subsystem, name);
     if (!device) {
         /* If the device was inhibited and the port is gone, untrack it.
@@ -358,6 +371,34 @@ device_added (MMBaseManager  *self,
     mm_device_grab_port (device, port);
 }
 
+#if defined WITH_QRTR
+
+static void
+handle_qrtr_device_added (MMBaseManager    *self,
+                          guint             node_id,
+                          MMQrtrBusWatcher *bus_watcher)
+{
+    g_autoptr(MMKernelDevice)  kernel_device = NULL;
+    QrtrNode                  *node;
+
+    node = mm_qrtr_bus_watcher_peek_node (bus_watcher, node_id);
+
+    kernel_device = mm_kernel_device_qrtr_new (node);
+
+    device_added (self, kernel_device, TRUE, FALSE);
+}
+
+static void
+handle_qrtr_device_removed (MMBaseManager    *self,
+                            guint             node_id)
+{
+    g_autofree gchar *qrtr_device_name = NULL;
+
+    qrtr_device_name = mm_kernel_device_qrtr_helper_build_name (node_id);
+    device_removed (self, MM_KERNEL_DEVICE_QRTR_SUBSYSTEM, qrtr_device_name);
+}
+#endif
+
 static gboolean
 handle_kernel_event (MMBaseManager            *self,
                      MMKernelEventProperties  *properties,
@@ -407,7 +448,7 @@ handle_kernel_event (MMBaseManager            *self,
         g_autoptr(MMKernelDevice) kernel_device = NULL;
 #if defined WITH_UDEV
         if (!mm_context_get_test_no_udev ())
-            kernel_device = mm_kernel_device_udev_new_from_properties (properties, error);
+            kernel_device = mm_kernel_device_udev_new_from_properties (self->priv->udev, properties, error);
         else
 #endif
             kernel_device = mm_kernel_device_generic_new (properties, error);
@@ -447,7 +488,7 @@ handle_uevent (MMBaseManager *self,
     if (g_str_equal (action, "add") || g_str_equal (action, "move") || g_str_equal (action, "change")) {
         g_autoptr(MMKernelDevice) kernel_device = NULL;
 
-        kernel_device = mm_kernel_device_udev_new (device);
+        kernel_device = mm_kernel_device_udev_new (self->priv->udev, device);
         device_added (self, kernel_device, TRUE, FALSE);
         return;
     }
@@ -478,7 +519,7 @@ start_device_added_idle (StartDeviceAdded *ctx)
     if (subsystem && name) {
         g_autoptr(MMKernelDevice) kernel_device = NULL;
 
-        kernel_device = mm_kernel_device_udev_new (ctx->device);
+        kernel_device = mm_kernel_device_udev_new (ctx->self->priv->udev, ctx->device);
         device_added (ctx->self, kernel_device, FALSE, ctx->manual_scan);
     }
 
@@ -534,7 +575,7 @@ process_initial_kernel_events (MMBaseManager *self)
         return;
 
     if (!g_file_get_contents (self->priv->initial_kernel_events, &contents, NULL, &error)) {
-        g_warning ("Couldn't load initial kernel events: %s", error->message);
+        mm_obj_warn (self, "couldn't load initial kernel events: %s", error->message);
         g_error_free (error);
         return;
     }
@@ -555,13 +596,13 @@ process_initial_kernel_events (MMBaseManager *self)
 
             properties = mm_kernel_event_properties_new_from_string (line, &error);
             if (!properties) {
-                g_warning ("Couldn't parse line '%s' as initial kernel event %s", line, error->message);
+                mm_obj_warn (self, "couldn't parse line '%s' as initial kernel event %s", line, error->message);
                 g_clear_error (&error);
             } else if (!handle_kernel_event (self, properties, &error)) {
-                g_warning ("Couldn't process line '%s' as initial kernel event %s", line, error->message);
+                mm_obj_warn (self, "couldn't process line '%s' as initial kernel event %s", line, error->message);
                 g_clear_error (&error);
             } else
-                g_debug ("Processed initial kernel event:' %s'", line);
+                mm_obj_dbg (self, "processed initial kernel event:' %s'", line);
             g_clear_object (&properties);
         }
 
@@ -684,6 +725,50 @@ mm_base_manager_num_modems (MMBaseManager *self)
 }
 
 /*****************************************************************************/
+/* Quick resume synchronization */
+
+#if defined WITH_SYSTEMD_SUSPEND_RESUME
+
+static void
+base_modem_sync_ready (MMBaseModem  *self,
+                       GAsyncResult *res,
+                       gpointer      user_data)
+{
+    g_autoptr(GError) error = NULL;
+
+    mm_base_modem_sync_finish (self, res, &error);
+    if (error) {
+        mm_obj_warn (self, "synchronization failed: %s", error->message);
+        return;
+    }
+    mm_obj_info (self, "synchronization finished");
+}
+
+void
+mm_base_manager_sync (MMBaseManager *self)
+{
+    GHashTableIter iter;
+    gpointer       key, value;
+
+    g_return_if_fail (self != NULL);
+    g_return_if_fail (MM_IS_BASE_MANAGER (self));
+
+    /* Refresh each device */
+    g_hash_table_iter_init (&iter, self->priv->devices);
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+        MMBaseModem *modem;
+
+        modem = mm_device_peek_modem (MM_DEVICE (value));
+
+        /* We just want to start the synchronization, we don't need the result */
+        if (modem)
+            mm_base_modem_sync (modem, (GAsyncReadyCallback)base_modem_sync_ready, NULL);
+    }
+}
+
+#endif
+
+/*****************************************************************************/
 /* Set logging */
 
 typedef struct {
@@ -730,7 +815,7 @@ handle_set_logging (MmGdbusOrgFreedesktopModemManager1 *manager,
     SetLoggingContext *ctx;
 
     ctx = g_new0 (SetLoggingContext, 1);
-    ctx->self = g_object_ref (manager);
+    ctx->self = MM_BASE_MANAGER (g_object_ref (manager));
     ctx->invocation = g_object_ref (invocation);
     ctx->level = g_strdup (level);
 
@@ -793,7 +878,7 @@ handle_scan_devices (MmGdbusOrgFreedesktopModemManager1 *manager,
     ScanDevicesContext *ctx;
 
     ctx = g_new (ScanDevicesContext, 1);
-    ctx->self = g_object_ref (manager);
+    ctx->self = MM_BASE_MANAGER (g_object_ref (manager));
     ctx->invocation = g_object_ref (invocation);
 
     mm_auth_provider_authorize (ctx->self->priv->authp,
@@ -870,7 +955,7 @@ handle_report_kernel_event (MmGdbusOrgFreedesktopModemManager1 *manager,
     ReportKernelEventContext *ctx;
 
     ctx = g_slice_new0 (ReportKernelEventContext);
-    ctx->self = g_object_ref (manager);
+    ctx->self = MM_BASE_MANAGER (g_object_ref (manager));
     ctx->invocation = g_object_ref (invocation);
     ctx->dictionary = g_variant_ref (dictionary);
 
@@ -1195,7 +1280,7 @@ handle_inhibit_device (MmGdbusOrgFreedesktopModemManager1 *manager,
     InhibitDeviceContext *ctx;
 
     ctx = g_slice_new0 (InhibitDeviceContext);
-    ctx->self = g_object_ref (manager);
+    ctx->self = MM_BASE_MANAGER (g_object_ref (manager));
     ctx->invocation = g_object_ref (invocation);
     ctx->uid = g_strdup (uid);
     ctx->inhibit = inhibit;
@@ -1446,12 +1531,26 @@ initable_init (GInitable     *initable,
         return FALSE;
 
 #if defined WITH_UDEV
-    if (!mm_context_get_test_no_udev ()) {
-        /* Create udev client based on the subsystems requested by the plugins */
-        self->priv->udev = g_udev_client_new (mm_plugin_manager_get_subsystems (self->priv->plugin_manager));
-        /* If autoscan enabled, list for udev events */
-        if (self->priv->auto_scan)
-            g_signal_connect_swapped (self->priv->udev, "uevent", G_CALLBACK (handle_uevent), initable);
+    /* Create udev client based on the subsystems requested by the plugins */
+    self->priv->udev = g_udev_client_new (mm_plugin_manager_get_subsystems (self->priv->plugin_manager));
+
+    /* If autoscan enabled, list for udev events */
+    if (!mm_context_get_test_no_udev () && self->priv->auto_scan)
+        g_signal_connect_swapped (self->priv->udev, "uevent", G_CALLBACK (handle_uevent), initable);
+#endif
+
+#if defined WITH_QRTR
+    if (!mm_context_get_test_no_qrtr ()) {
+        /* Create and setup the QrtrBusWatcher */
+        self->priv->qrtr_bus_watcher = mm_qrtr_bus_watcher_new ();
+        mm_qrtr_bus_watcher_start (self->priv->qrtr_bus_watcher, NULL, NULL);
+        /* If autoscan enabled, list for QrtrBusWatcher events */
+        if (self->priv->auto_scan) {
+            g_object_connect (self->priv->qrtr_bus_watcher,
+                              "swapped-signal::" MM_QRTR_BUS_WATCHER_DEVICE_ADDED,   G_CALLBACK (handle_qrtr_device_added),   self,
+                              "swapped-signal::" MM_QRTR_BUS_WATCHER_DEVICE_REMOVED, G_CALLBACK (handle_qrtr_device_removed), self,
+                              NULL);
+        }
     }
 #endif
 
@@ -1498,6 +1597,11 @@ finalize (GObject *object)
 #if defined WITH_UDEV
     if (self->priv->udev)
         g_object_unref (self->priv->udev);
+#endif
+
+#if defined WITH_QRTR
+    if (self->priv->qrtr_bus_watcher)
+        g_object_unref (self->priv->qrtr_bus_watcher);
 #endif
 
     if (self->priv->filter)

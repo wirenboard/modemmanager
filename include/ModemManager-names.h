@@ -55,6 +55,7 @@
 #define MM_DBUS_INTERFACE_MODEM "org.freedesktop.ModemManager1.Modem"
 #define MM_DBUS_INTERFACE_MODEM_VOICE "org.freedesktop.ModemManager1.Modem.Voice"
 #define MM_DBUS_INTERFACE_MODEM_MODEM3GPP "org.freedesktop.ModemManager1.Modem.Modem3gpp"
+#define MM_DBUS_INTERFACE_MODEM_MODEM3GPP_PROFILEMANAGER "org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager"
 #define MM_DBUS_INTERFACE_MODEM_MODEM3GPP_USSD "org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd"
 #define MM_DBUS_INTERFACE_MODEM_MODEMCDMA "org.freedesktop.ModemManager1.Modem.ModemCdma"
 #define MM_DBUS_INTERFACE_MODEM_MESSAGING "org.freedesktop.ModemManager1.Modem.Messaging"
@@ -85,6 +86,7 @@
 #define MM_SIM_METHOD_SENDPUK "SendPuk"
 #define MM_SIM_METHOD_ENABLEPIN "EnablePin"
 #define MM_SIM_METHOD_CHANGEPIN "ChangePin"
+#define MM_SIM_METHOD_SETPREFERREDNETWORKS "SetPreferredNetworks"
 #define MM_SIM_PROPERTY_ACTIVE "Active"
 #define MM_SIM_PROPERTY_SIMIDENTIFIER "SimIdentifier"
 #define MM_SIM_PROPERTY_IMSI "Imsi"
@@ -92,6 +94,7 @@
 #define MM_SIM_PROPERTY_OPERATORIDENTIFIER "OperatorIdentifier"
 #define MM_SIM_PROPERTY_OPERATORNAME "OperatorName"
 #define MM_SIM_PROPERTY_EMERGENCYNUMBERS "EmergencyNumbers"
+#define MM_SIM_PROPERTY_PREFERREDNETWORKS "PreferredNetworks"
 /*
  * Interface 'org.freedesktop.ModemManager1.Bearer'
  */
@@ -100,12 +103,15 @@
 #define MM_BEARER_METHOD_DISCONNECT "Disconnect"
 #define MM_BEARER_PROPERTY_INTERFACE "Interface"
 #define MM_BEARER_PROPERTY_CONNECTED "Connected"
+#define MM_BEARER_PROPERTY_CONNECTIONERROR "ConnectionError"
 #define MM_BEARER_PROPERTY_SUSPENDED "Suspended"
+#define MM_BEARER_PROPERTY_MULTIPLEXED "Multiplexed"
 #define MM_BEARER_PROPERTY_IP4CONFIG "Ip4Config"
 #define MM_BEARER_PROPERTY_IP6CONFIG "Ip6Config"
 #define MM_BEARER_PROPERTY_STATS "Stats"
 #define MM_BEARER_PROPERTY_IPTIMEOUT "IpTimeout"
 #define MM_BEARER_PROPERTY_BEARERTYPE "BearerType"
+#define MM_BEARER_PROPERTY_PROFILEID "ProfileId"
 #define MM_BEARER_PROPERTY_PROPERTIES "Properties"
 /*
  * Interface 'org.freedesktop.ModemManager1.Sms'
@@ -174,6 +180,7 @@
 #define MM_MODEM_PROPERTY_CURRENTCAPABILITIES "CurrentCapabilities"
 #define MM_MODEM_PROPERTY_MAXBEARERS "MaxBearers"
 #define MM_MODEM_PROPERTY_MAXACTIVEBEARERS "MaxActiveBearers"
+#define MM_MODEM_PROPERTY_MAXACTIVEMULTIPLEXEDBEARERS "MaxActiveMultiplexedBearers"
 #define MM_MODEM_PROPERTY_MANUFACTURER "Manufacturer"
 #define MM_MODEM_PROPERTY_MODEL "Model"
 #define MM_MODEM_PROPERTY_REVISION "Revision"
@@ -225,6 +232,7 @@
 #define MM_MODEM_MODEM3GPP_METHOD_SCAN "Scan"
 #define MM_MODEM_MODEM3GPP_METHOD_SETEPSUEMODEOPERATION "SetEpsUeModeOperation"
 #define MM_MODEM_MODEM3GPP_METHOD_SETINITIALEPSBEARERSETTINGS "SetInitialEpsBearerSettings"
+#define MM_MODEM_MODEM3GPP_METHOD_DISABLEFACILITYLOCK "DisableFacilityLock"
 #define MM_MODEM_MODEM3GPP_PROPERTY_IMEI "Imei"
 #define MM_MODEM_MODEM3GPP_PROPERTY_REGISTRATIONSTATE "RegistrationState"
 #define MM_MODEM_MODEM3GPP_PROPERTY_OPERATORCODE "OperatorCode"
@@ -235,6 +243,14 @@
 #define MM_MODEM_MODEM3GPP_PROPERTY_PCO "Pco"
 #define MM_MODEM_MODEM3GPP_PROPERTY_INITIALEPSBEARER "InitialEpsBearer"
 #define MM_MODEM_MODEM3GPP_PROPERTY_INITIALEPSBEARERSETTINGS "InitialEpsBearerSettings"
+/*
+ * Interface 'org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager'
+ */
+ 
+#define MM_MODEM_MODEM3GPP_PROFILEMANAGER_METHOD_LIST "List"
+#define MM_MODEM_MODEM3GPP_PROFILEMANAGER_METHOD_SET "Set"
+#define MM_MODEM_MODEM3GPP_PROFILEMANAGER_METHOD_DELETE "Delete"
+#define MM_MODEM_MODEM3GPP_PROFILEMANAGER_SIGNAL_UPDATED "Updated"
 /*
  * Interface 'org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd'
  */

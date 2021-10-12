@@ -67,29 +67,6 @@ peek_device (gpointer self,
     return TRUE;
 }
 
-static void
-update_modem_unlock_retries (MMSimMbim *self,
-                             MbimPinType pin_type,
-                             guint32 remaining_attempts)
-{
-    MMBaseModem *modem = NULL;
-    MMUnlockRetries *unlock_retries;
-
-    g_object_get (G_OBJECT (self),
-                  MM_BASE_SIM_MODEM, &modem,
-                  NULL);
-    g_assert (MM_IS_BASE_MODEM (modem));
-
-    unlock_retries = mm_unlock_retries_new ();
-    mm_unlock_retries_set (unlock_retries,
-                           mm_modem_lock_from_mbim_pin_type (pin_type),
-                           remaining_attempts);
-    mm_iface_modem_update_unlock_retries (MM_IFACE_MODEM (modem),
-                                          unlock_retries);
-    g_object_unref (unlock_retries);
-    g_object_unref (modem);
-}
-
 /*****************************************************************************/
 /* Load SIM identifier */
 
@@ -108,7 +85,8 @@ simid_subscriber_ready_state_ready (MbimDevice *device,
 {
     MbimMessage *response;
     GError *error = NULL;
-    gchar *sim_iccid;
+    gchar *sim_iccid = NULL;
+    g_autofree gchar *raw_iccid = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (response &&
@@ -117,14 +95,18 @@ simid_subscriber_ready_state_ready (MbimDevice *device,
             response,
             NULL, /* ready_state */
             NULL, /* subscriber_id */
-            &sim_iccid,
+            &raw_iccid,
             NULL, /* ready_info */
             NULL, /* telephone_numbers_count */
             NULL, /* telephone_numbers */
             &error))
-        g_task_return_pointer (task, sim_iccid, g_free);
-    else
+        sim_iccid = mm_3gpp_parse_iccid (raw_iccid, &error);
+
+    if (error)
         g_task_return_error (task, error);
+    else
+        g_task_return_pointer (task, sim_iccid, g_free);
+
     g_object_unref (task);
 
     if (response)
@@ -274,7 +256,7 @@ load_operator_identifier (MMBaseSim *self,
     message = mbim_message_home_provider_query_new (NULL);
     mbim_device_command (device,
                          message,
-                         10,
+                         30,
                          NULL,
                          (GAsyncReadyCallback)load_operator_identifier_ready,
                          task);
@@ -335,7 +317,7 @@ load_operator_name (MMBaseSim *self,
     message = mbim_message_home_provider_query_new (NULL);
     mbim_device_command (device,
                          message,
-                         10,
+                         30,
                          NULL,
                          (GAsyncReadyCallback)load_operator_name_ready,
                          task);
@@ -377,8 +359,6 @@ pin_set_enter_ready (MbimDevice *device,
                                              &pin_state,
                                              &remaining_attempts,
                                              NULL)) {
-            update_modem_unlock_retries (self, pin_type, remaining_attempts);
-
             if (!success) {
                 /* Sending PIN failed, build a better error to report */
                 if (pin_type == MBIM_PIN_TYPE_PIN1 && pin_state == MBIM_PIN_STATE_LOCKED) {
@@ -474,8 +454,6 @@ puk_set_enter_ready (MbimDevice *device,
                                              &pin_state,
                                              &remaining_attempts,
                                              NULL)) {
-            update_modem_unlock_retries (self, pin_type, remaining_attempts);
-
             if (!success) {
                 /* Sending PUK failed, build a better error to report */
                 if (pin_type == MBIM_PIN_TYPE_PUK1 && pin_state == MBIM_PIN_STATE_LOCKED) {
@@ -553,25 +531,12 @@ pin_set_enable_ready (MbimDevice *device,
                       GAsyncResult *res,
                       GTask *task)
 {
-    MMSimMbim *self;
     GError *error = NULL;
     MbimMessage *response;
-    MbimPinType pin_type;
-    guint32 remaining_attempts;
-
-    self = g_task_get_source_object (task);
 
     response = mbim_device_command_finish (device, res, &error);
     if (response) {
         mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error);
-
-        if (mbim_message_pin_response_parse (response,
-                                             &pin_type,
-                                             NULL,
-                                             &remaining_attempts,
-                                             NULL))
-            update_modem_unlock_retries (self, pin_type, remaining_attempts);
-
         mbim_message_unref (response);
     }
 
@@ -644,25 +609,12 @@ pin_set_change_ready (MbimDevice *device,
                       GAsyncResult *res,
                       GTask *task)
 {
-    MMSimMbim *self;
     GError *error = NULL;
     MbimMessage *response;
-    MbimPinType pin_type;
-    guint32 remaining_attempts;
-
-    self = g_task_get_source_object (task);
 
     response = mbim_device_command_finish (device, res, &error);
     if (response) {
         mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error);
-
-        if (mbim_message_pin_response_parse (response,
-                                             &pin_type,
-                                             NULL,
-                                             &remaining_attempts,
-                                             NULL))
-            update_modem_unlock_retries (self, pin_type, remaining_attempts);
-
         mbim_message_unref (response);
     }
 
@@ -755,6 +707,34 @@ mm_sim_mbim_new (MMBaseModem *modem,
                                 MM_BASE_SIM_MODEM, modem,
                                 "active", TRUE, /* by default always active */
                                 NULL);
+}
+
+MMBaseSim *
+mm_sim_mbim_new_initialized (MMBaseModem *modem,
+                             guint        slot_number,
+                             gboolean     active,
+                             const gchar *sim_identifier,
+                             const gchar *imsi,
+                             const gchar *eid,
+                             const gchar *operator_identifier,
+                             const gchar *operator_name,
+                             const GStrv  emergency_numbers)
+{
+    MMBaseSim *sim;
+
+    sim = MM_BASE_SIM (g_object_new (MM_TYPE_SIM_MBIM,
+                                     MM_BASE_SIM_MODEM,       modem,
+                                     MM_BASE_SIM_SLOT_NUMBER, slot_number,
+                                     "active",                active,
+                                     "sim-identifier",        sim_identifier,
+                                     "eid",                   eid,
+                                     "operator-identifier",   operator_identifier,
+                                     "operator-name",         operator_name,
+                                     "emergency-numbers",     emergency_numbers,
+                                     NULL));
+
+    mm_base_sim_export (sim);
+    return sim;
 }
 
 static void

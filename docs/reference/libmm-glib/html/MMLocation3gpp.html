@@ -5,7 +5,7 @@
 <title>MMLocation3gpp: libmm-glib Reference Manual</title>
 <meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
 <link rel="home" href="index.html" title="libmm-glib Reference Manual">
-<link rel="up" href="ch03s03.html" title="Location support">
+<link rel="up" href="ch03s05.html" title="Location support">
 <link rel="prev" href="MMModemLocation.html" title="MMModemLocation">
 <link rel="next" href="MMLocationGpsNmea.html" title="MMLocationGpsNmea">
 <meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
@@ -19,7 +19,7 @@
                   <a href="#MMLocation3gpp.object-hierarchy" class="shortcut">Object Hierarchy</a></span>
 </td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
-<td><a accesskey="u" href="ch03s03.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="u" href="ch03s05.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
 <td><a accesskey="p" href="MMModemLocation.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
 <td><a accesskey="n" href="MMLocationGpsNmea.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
 </tr></table>
@@ -54,6 +54,13 @@
 </td>
 <td class="function_name">
 <a class="link" href="MMLocation3gpp.html#mm-location-3gpp-get-mobile-network-code" title="mm_location_3gpp_get_mobile_network_code ()">mm_location_3gpp_get_mobile_network_code</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMLocation3gpp.html#mm-location-3gpp-get-operator-code" title="mm_location_3gpp_get_operator_code ()">mm_location_3gpp_get_operator_code</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -145,6 +152,12 @@ mm_location_3gpp_get_mobile_country_code
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>
 mm_location_3gpp_get_mobile_network_code
                                (<em class="parameter"><code><a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="type">MMLocation3gpp</span></a> *self</code></em>);</pre>
+<div class="warning">
+<p><code class="literal">mm_location_3gpp_get_mobile_network_code</code> has been deprecated since version 1.18.0. and should not be used in newly-written code.</p>
+<p>This function can not separate between two-digit MNCs
+and three-digit MNCs with a leading zero. Use <a class="link" href="MMLocation3gpp.html#mm-location-3gpp-get-operator-code" title="mm_location_3gpp_get_operator_code ()"><code class="function">mm_location_3gpp_get_operator_code()</code></a>
+instead.</p>
+</div>
 <p>Gets the Mobile Network Code of the 3GPP network.</p>
 <p>Note that 0 may actually be a valid MNC. In general, the MNC should be
 considered valid just if the reported MCC is valid, as MCC should never
@@ -169,6 +182,38 @@ be 0.</p>
 <p> the MNC, or 0 if unknown.</p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-location-3gpp-get-operator-code"></a><h3>mm_location_3gpp_get_operator_code ()</h3>
+<pre class="programlisting">const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *
+mm_location_3gpp_get_operator_code (<em class="parameter"><code><a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="type">MMLocation3gpp</span></a> *self</code></em>);</pre>
+<p>Gets the 3GPP network Mobile Country Code and Mobile Network Code.</p>
+<p>Returned in the format <code class="literal">"MCCMNC"</code>, where
+<code class="literal">MCC</code> is the three-digit ITU E.212 Mobile Country Code
+and <code class="literal">MNC</code> is the two- or three-digit GSM Mobile Network
+Code. e.g. e<code class="literal">"31026"</code> or <code class="literal">"310260"</code>.</p>
+<div class="refsect3">
+<a name="mm-location-3gpp-get-operator-code.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="type">MMLocation3gpp</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-location-3gpp-get-operator-code.returns"></a><h4>Returns</h4>
+<p>The operator code, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. </p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
 </div>
 <hr>
 <div class="refsect2">

@@ -313,6 +313,9 @@
 /* Define if you want QMI support */
 #undef WITH_QMI
 
+/* Define if you want QRTR support */
+#undef WITH_QRTR
+
 /* Define if foxconn utils are built */
 #undef WITH_SHARED_FOXCONN
 

@@ -18,6 +18,8 @@ libmm_glib_la_SOURCES = \
 	mm-modem.c \
 	mm-modem-3gpp.h \
 	mm-modem-3gpp.c \
+	mm-modem-3gpp-profile-manager.h \
+	mm-modem-3gpp-profile-manager.c \
 	mm-modem-3gpp-ussd.h \
 	mm-modem-3gpp-ussd.c \
 	mm-modem-cdma.h \
@@ -89,6 +91,12 @@ libmm_glib_la_SOURCES = \
 	mm-pco.c \
 	mm-call-audio-format.h \
 	mm-call-audio-format.c \
+	mm-sim-preferred-network.h \
+	mm-sim-preferred-network.c \
+	mm-3gpp-profile.h \
+	mm-3gpp-profile.c \
+	mm-compat.h \
+	mm-compat.c \
 	$(NULL)
 
 libmm_glib_la_CPPFLAGS = \
@@ -125,6 +133,7 @@ include_HEADERS = \
 	mm-object.h \
 	mm-modem.h \
 	mm-modem-3gpp.h \
+	mm-modem-3gpp-profile-manager.h \
 	mm-modem-3gpp-ussd.h \
 	mm-modem-cdma.h \
 	mm-modem-messaging.h \
@@ -160,6 +169,9 @@ include_HEADERS = \
 	mm-kernel-event-properties.h \
 	mm-pco.h \
 	mm-call-audio-format.h \
+	mm-sim-preferred-network.h \
+	mm-3gpp-profile.h \
+	mm-compat.h \
 	$(NULL)
 
 CLEANFILES =
@@ -174,6 +186,7 @@ GENERATED_H = \
 	mm-gdbus-manager.h \
 	mm-gdbus-sim.h \
 	mm-gdbus-sms.h \
+	mm-gdbus-call.h \
 	mm-gdbus-bearer.h \
 	mm-gdbus-modem.h \
 	$(NULL)
@@ -185,6 +198,7 @@ GENERATED_C = \
 	mm-gdbus-manager.c \
 	mm-gdbus-sim.c \
 	mm-gdbus-sms.c \
+	mm-gdbus-call.c \
 	mm-gdbus-bearer.c \
 	mm-gdbus-modem.c \
 	$(NULL)

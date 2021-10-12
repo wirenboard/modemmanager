@@ -45,10 +45,10 @@
 G_DEFINE_TYPE (MMModem3gpp, mm_modem_3gpp, MM_GDBUS_TYPE_MODEM3GPP_PROXY)
 
 struct _MMModem3gppPrivate {
-    /* Properties */
-    GMutex              initial_eps_bearer_settings_mutex;
-    guint               initial_eps_bearer_settings_id;
-    MMBearerProperties *initial_eps_bearer_settings;
+    /* Common mutex to sync access */
+    GMutex mutex;
+
+    PROPERTY_OBJECT_DECLARE (initial_eps_bearer_settings, MMBearerProperties)
 };
 
 /*****************************************************************************/
@@ -275,37 +275,6 @@ mm_modem_3gpp_get_registration_state (MMModem3gpp *self)
 
     return mm_gdbus_modem3gpp_get_registration_state (MM_GDBUS_MODEM3GPP (self));
 }
-
-/*****************************************************************************/
-
-#ifndef MM_DISABLE_DEPRECATED
-
-/**
- * mm_modem_3gpp_get_subscription_state:
- * @self: A #MMModem.
- *
- * Get the current subscription status of the account. This value is only
- * available after the modem attempts to register with the network.
- *
- * The value of this property can only be obtained with operator specific logic
- * (e.g. processing specific PCO info), and therefore it doesn't make sense to
- * expose it in the ModemManager interface.
- *
- * Returns: A #MMModem3gppSubscriptionState value, specifying the current
- * subscription state.
- *
- * Since: 1.0
- * Deprecated: 1.10.0. The value of this property can only be obtained with
- * operator specific logic (e.g. processing specific PCO info), and therefore
- * it doesn't make sense to expose it in the ModemManager interface.
- */
-MMModem3gppSubscriptionState
-mm_modem_3gpp_get_subscription_state (MMModem3gpp *self)
-{
-    return MM_MODEM_3GPP_SUBSCRIPTION_STATE_UNKNOWN;
-}
-
-#endif /* MM_DISABLE_DEPRECATED */
 
 /*****************************************************************************/
 
@@ -659,67 +628,6 @@ mm_modem_3gpp_network_get_access_technology (const MMModem3gppNetwork *network)
 
 /*****************************************************************************/
 
-static void
-initial_eps_bearer_settings_updated (MMModem3gpp *self,
-                                     GParamSpec  *pspec)
-{
-    g_mutex_lock (&self->priv->initial_eps_bearer_settings_mutex);
-    {
-        GVariant *dictionary;
-
-        g_clear_object (&self->priv->initial_eps_bearer_settings);
-
-        dictionary = mm_gdbus_modem3gpp_get_initial_eps_bearer_settings (MM_GDBUS_MODEM3GPP (self));
-        if (dictionary) {
-            GError *error = NULL;
-
-            self->priv->initial_eps_bearer_settings = mm_bearer_properties_new_from_dictionary (dictionary, &error);
-            if (error) {
-                g_warning ("Invalid bearer properties received: %s", error->message);
-                g_error_free (error);
-            }
-        }
-    }
-    g_mutex_unlock (&self->priv->initial_eps_bearer_settings_mutex);
-}
-
-static void
-ensure_internal_initial_eps_bearer_settings (MMModem3gpp         *self,
-                                             MMBearerProperties **dup)
-{
-    g_mutex_lock (&self->priv->initial_eps_bearer_settings_mutex);
-    {
-        /* If this is the first time ever asking for the object, setup the
-         * update listener and the initial object, if any. */
-        if (!self->priv->initial_eps_bearer_settings_id) {
-            GVariant *dictionary;
-
-            dictionary = mm_gdbus_modem3gpp_dup_initial_eps_bearer_settings (MM_GDBUS_MODEM3GPP (self));
-            if (dictionary) {
-                GError *error = NULL;
-
-                self->priv->initial_eps_bearer_settings = mm_bearer_properties_new_from_dictionary (dictionary, &error);
-                if (error) {
-                    g_warning ("Invalid initial bearer properties: %s", error->message);
-                    g_error_free (error);
-                }
-                g_variant_unref (dictionary);
-            }
-
-            /* No need to clear this signal connection when freeing self */
-            self->priv->initial_eps_bearer_settings_id =
-                g_signal_connect (self,
-                                  "notify::initial-eps-bearer-properties",
-                                  G_CALLBACK (initial_eps_bearer_settings_updated),
-                                  NULL);
-        }
-
-        if (dup && self->priv->initial_eps_bearer_settings)
-            *dup = g_object_ref (self->priv->initial_eps_bearer_settings);
-    }
-    g_mutex_unlock (&self->priv->initial_eps_bearer_settings_mutex);
-}
-
 /**
  * mm_modem_3gpp_get_initial_eps_bearer_settings:
  * @self: A #MMModem3gpp.
@@ -737,16 +645,6 @@ ensure_internal_initial_eps_bearer_settings (MMModem3gpp         *self,
  *
  * Since: 1.10
  */
-MMBearerProperties *
-mm_modem_3gpp_get_initial_eps_bearer_settings (MMModem3gpp *self)
-{
-    MMBearerProperties *props = NULL;
-
-    g_return_val_if_fail (MM_IS_MODEM_3GPP (self), NULL);
-
-    ensure_internal_initial_eps_bearer_settings (self, &props);
-    return props;
-}
 
 /**
  * mm_modem_3gpp_peek_initial_eps_bearer_settings:
@@ -765,14 +663,15 @@ mm_modem_3gpp_get_initial_eps_bearer_settings (MMModem3gpp *self)
  *
  * Since: 1.10
  */
-MMBearerProperties *
-mm_modem_3gpp_peek_initial_eps_bearer_settings (MMModem3gpp *self)
-{
-    g_return_val_if_fail (MM_IS_MODEM_3GPP (self), NULL);
 
-    ensure_internal_initial_eps_bearer_settings (self, NULL);
-    return self->priv->initial_eps_bearer_settings;
-}
+/* helpers to match the property substring name with the one in our API */
+#define mm_gdbus_modem_3gpp_dup_initial_eps_bearer_settings mm_gdbus_modem3gpp_dup_initial_eps_bearer_settings
+#define MM_GDBUS_MODEM_3GPP MM_GDBUS_MODEM3GPP
+
+PROPERTY_OBJECT_DEFINE_FAILABLE (initial_eps_bearer_settings,
+                                 Modem3gpp, modem_3gpp, MODEM_3GPP,
+                                 MMBearerProperties,
+                                 mm_bearer_properties_new_from_dictionary)
 
 /*****************************************************************************/
 
@@ -1260,11 +1159,63 @@ mm_modem_3gpp_set_initial_eps_bearer_settings_sync (MMModem3gpp         *self,
 
 /*****************************************************************************/
 
+void
+mm_modem_3gpp_disable_facility_lock (MMModem3gpp         *self,
+                                     MMModem3gppFacility  facility,
+                                     const gchar         *control_key,
+                                     GCancellable        *cancellable,
+                                     GAsyncReadyCallback  callback,
+                                     gpointer             user_data)
+{
+    GVariant *properties;
+
+    properties = g_variant_ref_sink (g_variant_new ("(us)", (guint)facility, control_key));
+    mm_gdbus_modem3gpp_call_disable_facility_lock (MM_GDBUS_MODEM3GPP (self),
+                                                   properties,
+                                                   cancellable,
+                                                   callback,
+                                                   user_data);
+    g_variant_unref (properties);
+}
+
+gboolean
+mm_modem_3gpp_disable_facility_lock_finish (MMModem3gpp   *self,
+                                            GAsyncResult  *res,
+                                            GError       **error)
+{
+    return mm_gdbus_modem3gpp_call_disable_facility_lock_finish (MM_GDBUS_MODEM3GPP (self),
+                                                                 res,
+                                                                 error);
+}
+
+gboolean
+mm_modem_3gpp_disable_facility_lock_sync (MMModem3gpp          *self,
+                                          MMModem3gppFacility   facility,
+                                          const gchar          *control_key,
+                                          GCancellable         *cancellable,
+                                          GError              **error)
+{
+    GVariant *properties;
+    gboolean  result;
+
+    properties = g_variant_ref_sink (g_variant_new ("(us)", (guint)facility, control_key));
+    result = mm_gdbus_modem3gpp_call_disable_facility_lock_sync (MM_GDBUS_MODEM3GPP (self),
+                                                                 properties,
+                                                                 cancellable,
+                                                                 error);
+    g_variant_unref (properties);
+    return result;
+}
+
+/*****************************************************************************/
+
 static void
 mm_modem_3gpp_init (MMModem3gpp *self)
 {
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, MM_TYPE_MODEM_3GPP, MMModem3gppPrivate);
-    g_mutex_init (&self->priv->initial_eps_bearer_settings_mutex);
+    g_mutex_init (&self->priv->mutex);
+
+    PROPERTY_INITIALIZE (initial_eps_bearer_settings, "initial-eps-bearer-settings")
 }
 
 static void
@@ -1272,19 +1223,11 @@ finalize (GObject *object)
 {
     MMModem3gpp *self = MM_MODEM_3GPP (object);
 
-    g_mutex_clear (&self->priv->initial_eps_bearer_settings_mutex);
+    g_mutex_clear (&self->priv->mutex);
+
+    PROPERTY_OBJECT_FINALIZE (initial_eps_bearer_settings);
 
     G_OBJECT_CLASS (mm_modem_3gpp_parent_class)->finalize (object);
-}
-
-static void
-dispose (GObject *object)
-{
-    MMModem3gpp *self = MM_MODEM_3GPP (object);
-
-    g_clear_object (&self->priv->initial_eps_bearer_settings);
-
-    G_OBJECT_CLASS (mm_modem_3gpp_parent_class)->dispose (object);
 }
 
 static void
@@ -1294,7 +1237,5 @@ mm_modem_3gpp_class_init (MMModem3gppClass *modem_class)
 
     g_type_class_add_private (object_class, sizeof (MMModem3gppPrivate));
 
-    /* Virtual methods */
-    object_class->dispose  = dispose;
     object_class->finalize = finalize;
 }

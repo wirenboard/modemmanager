@@ -53,6 +53,7 @@
 Setup (IN  u features);
 </programlisting>
 <para>        Configures which OMA device management features should be enabled.
+</para><para>        Since: 1.2
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -68,6 +69,7 @@ Setup (IN  u features);
 StartClientInitiatedSession (IN  u session_type);
 </programlisting>
 <para>        Starts a client-initiated device management session.
+</para><para>        Since: 1.2
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -84,6 +86,7 @@ AcceptNetworkInitiatedSession (IN  u session_id,
                                IN  b accept);
 </programlisting>
 <para>        Accepts or rejects a network-initiated device management session.
+</para><para>        Since: 1.2
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -103,6 +106,7 @@ AcceptNetworkInitiatedSession (IN  u session_id,
 CancelSession ();
 </programlisting>
 <para>        Cancels the current on-going device management session.
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 </refsect1>
@@ -117,6 +121,7 @@ SessionStateChanged (i old_session_state,
                      u session_state_failed_reason);
 </programlisting>
 <para>        The session state changed.
+</para><para>        Since: 1.2
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -145,6 +150,7 @@ Features  readable   u
 <para>        Bitmask of <link linkend="MMModemOmaFeature">MMModemOmaFeature</link>
         flags, specifying which device management features are enabled or
         disabled.
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Oma.PendingNetworkInitiatedSessions">
@@ -167,6 +173,7 @@ PendingNetworkInitiatedSessions  readable   a(uu)
             </listitem>
           </varlistentry>
         </variablelist>
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Oma.SessionType">
@@ -177,6 +184,7 @@ SessionType  readable   u
 </programlisting>
 <para>        Type of the current on-going device management session, given as a
         <link linkend="MMOmaSessionType">MMOmaSessionType</link>.
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Oma.SessionState">
@@ -187,6 +195,7 @@ SessionState  readable   i
 </programlisting>
 <para>        State of the current on-going device management session, given as a
         <link linkend="MMOmaSessionState">MMOmaSessionState</link>.
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 </refsect1>

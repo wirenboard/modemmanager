@@ -12,6 +12,7 @@
 <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Scan">Scan</link>                        (OUT aa{sv} results);
 <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetEpsUeModeOperation">SetEpsUeModeOperation</link>       (IN  u      mode);
 <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings">SetInitialEpsBearerSettings</link> (IN  a{sv}  settings);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.DisableFacilityLock">DisableFacilityLock</link>         (IN  (us)   properties);
 </synopsis>
   </refsynopsisdiv>
   <refsect1 role="properties">
@@ -48,6 +49,7 @@
 Register (IN  s operator_id);
 </programlisting>
 <para>        Request registration with a given mobile network.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -107,6 +109,7 @@ Scan (OUT aa{sv} results);
             </listitem>
           </varlistentry>
         </variablelist>
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -122,6 +125,7 @@ Scan (OUT aa{sv} results);
 SetEpsUeModeOperation (IN  u mode);
 </programlisting>
 <para>        Sets the UE mode of operation for EPS.
+</para><para>        Since: 1.10
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -137,24 +141,49 @@ SetEpsUeModeOperation (IN  u mode);
 SetInitialEpsBearerSettings (IN  a{sv} settings);
 </programlisting>
 <para>        Updates the default settings to be used in the initial default EPS bearer when registering to the LTE network.
-</para><para>        Allowed properties are:
-        <variablelist>
-        <varlistentry><term><literal>"apn"</literal></term>
-          <listitem><para>Access Point Name, given as a string value (signature <literal>"s"</literal>).</para></listitem></varlistentry>
-        <varlistentry><term><literal>"ip-type"</literal></term>
-          <listitem><para>Addressing type, given as a <link linkend="MMBearerIpFamily">MMBearerIpFamily</link> value (signature <literal>"u"</literal>).</para></listitem></varlistentry>
-        <varlistentry><term><literal>"allowed-auth"</literal></term>
-          <listitem><para>The authentication method to use, given as a <link linkend="MMBearerAllowedAuth">MMBearerAllowedAuth</link> value (signature <literal>"u"</literal>).</para></listitem></varlistentry>
-        <varlistentry><term><literal>"user"</literal></term>
-          <listitem><para>User name (if any) required by the network, given as a string value (signature <literal>"s"</literal>).</para></listitem></varlistentry>
-        <varlistentry><term><literal>"password"</literal></term>
-          <listitem><para>Password (if any) required by the network, given as a string value (signature <literal>"s"</literal>).</para></listitem></varlistentry>
-        </variablelist>
+</para><para>        The allowed properties in this method are all the 3GPP-specific ones specified
+        in the <link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties">bearer properties</link>;
+        i.e.: <literal>"apn"</literal>, <literal>"ip-type"</literal>,
+        <literal>"allowed-auth"</literal>, <literal>"user"</literal>, and
+        <literal>"password"</literal>.
+</para><para>        Since: 1.10
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN a{sv} <parameter>settings</parameter></literal>:</term>
   <listitem><para>List of properties to use when requesting the LTE attach procedure.</para></listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
+<refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.DisableFacilityLock">
+  <title>The DisableFacilityLock() method</title>
+  <indexterm zone="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.DisableFacilityLock"><primary sortas="Modem3gpp.DisableFacilityLock">org.freedesktop.ModemManager1.Modem.Modem3gpp.DisableFacilityLock()</primary></indexterm>
+<programlisting>
+DisableFacilityLock (IN  (us) properties);
+</programlisting>
+<para>        Sends control key to modem to disable selected facility lock
+</para><para>        <variablelist>
+        <varlistentry><term>"facility"</term>
+          <listitem>
+            <para>
+              A <link linkend="MMModem3gppFacility">MMModem3gppFacility</link> value
+              representing the type of the facility lock to disable.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry><term>"control key"</term>
+          <listitem>
+            <para>
+              Alphanumeric key required to unlock facility.
+            </para>
+          </listitem>
+        </varlistentry>
+        </variablelist>
+</para>
+<variablelist role="params">
+<varlistentry>
+  <term><literal>IN (us) <parameter>properties</parameter></literal>:</term>
+  <listitem><para>A tuple of facility type and control key.</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -168,6 +197,7 @@ SetInitialEpsBearerSettings (IN  a{sv} settings);
 Imei  readable   s
 </programlisting>
 <para>        The <ulink url="http://en.wikipedia.org/wiki/Imei">IMEI</ulink> of the device.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.RegistrationState">
@@ -179,6 +209,7 @@ RegistrationState  readable   u
 <para>        A <link linkend="MMModem3gppRegistrationState">MMModem3gppRegistrationState</link>
         value specifying the mobile registration status as defined in 3GPP TS 27.007
         section 10.1.19.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.OperatorCode">
@@ -195,6 +226,7 @@ OperatorCode  readable   s
 </para><para>        If the <literal>MCC</literal> and <literal>MNC</literal> are not known
         or the mobile is not registered to a mobile network, this property will
         be a zero-length (blank) string.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.OperatorName">
@@ -207,6 +239,7 @@ OperatorName  readable   s
 </para><para>        If the operator name is not known or the mobile is not
         registered to a mobile network, this property will be a zero-length
         (blank) string.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.EnabledFacilityLocks">
@@ -217,6 +250,7 @@ EnabledFacilityLocks  readable   u
 </programlisting>
 <para>        Bitmask of <link linkend="MMModem3gppFacility">MMModem3gppFacility</link> values
         for which PIN locking is enabled.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.SubscriptionState">
@@ -228,6 +262,7 @@ SubscriptionState  readable   u
 <para>        A <link linkend="MMModem3gppSubscriptionState">MMModem3gppSubscriptionState</link>
         value representing the subscription status of the account and whether there
         is any data remaining, given as an unsigned integer (signature <literal>"u"</literal>).
+</para><para>        Since: 1.2
 </para><para>        Deprecated: 1.10.0. The value of this property can only be obtained with operator
         specific logic (e.g. processing specific PCO info), and therefore it doesn't make sense
         to expose it in the ModemManager interface.
@@ -242,6 +277,7 @@ EpsUeModeOperation  readable   u
 <para>        A <link linkend="MMModem3gppEpsUeModeOperation">MMModem3gppEpsUeModeOperation</link>
         value representing the UE mode of operation for EPS, given as an unsigned integer
         (signature <literal>"u"</literal>).
+</para><para>        Since: 1.10
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.Pco">
@@ -268,6 +304,7 @@ Pco  readable   a(ubay)
             <literal>"ay"</literal>).
           </listitem>
         </orderedlist>
+</para><para>        Since: 1.10
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer">
@@ -277,6 +314,7 @@ Pco  readable   a(ubay)
 InitialEpsBearer  readable   o
 </programlisting>
 <para>        The object path for the initial default EPS bearer.
+</para><para>        Since: 1.10
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearerSettings">
@@ -295,6 +333,7 @@ InitialEpsBearerSettings  readable   a{sv}
 </para><para>        This is a read-only property, updating these settings should be done using the
         <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings">SetInitialEpsBearerSettings()</link>
         method.
+</para><para>        Since: 1.10
 </para>
 </refsect2>
 </refsect1>

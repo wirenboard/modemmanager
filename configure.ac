@@ -5,8 +5,8 @@ dnl Package and library versioning support
 dnl
 
 m4_define([mm_major_version], [1])
-m4_define([mm_minor_version], [16])
-m4_define([mm_micro_version], [6])
+m4_define([mm_minor_version], [18])
+m4_define([mm_micro_version], [2])
 m4_define([mm_version],
           [mm_major_version.mm_minor_version.mm_micro_version])
 
@@ -18,9 +18,9 @@ dnl        If the interface has grown (that is, the new library is compatible
 dnl            with old code), increment a.
 dnl        If the interface has changed in an incompatible way (that is,
 dnl            functions have changed or been removed), then zero a.
-m4_define([mm_glib_lt_current],  [7])
+m4_define([mm_glib_lt_current],  [8])
 m4_define([mm_glib_lt_revision], [0])
-m4_define([mm_glib_lt_age],      [7])
+m4_define([mm_glib_lt_age],      [8])
 
 dnl-----------------------------------------------------------------------------
 dnl autoconf, automake, libtool initialization
@@ -123,10 +123,8 @@ dnl-----------------------------------------------------------------------------
 dnl Build dependencies
 dnl
 
-# NOTE! If using glib < 2.55.1, make sure you have backported the following patch to avoid
-# the daemon leaking a lot: https://gitlab.gnome.org/GNOME/glib/commit/37d9b0c6995f97ea0f744650aaf5179081f878ba
-GLIB_MIN_VERSION=2.48.0
-GLIB_BUILD_SYMBOLS="-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_48 -DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_48 -DGLIB_DISABLE_DEPRECATION_WARNINGS"
+GLIB_MIN_VERSION=2.56.0
+GLIB_BUILD_SYMBOLS="-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_56 -DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_56 -DGLIB_DISABLE_DEPRECATION_WARNINGS"
 
 PKG_CHECK_MODULES(MM,
                   glib-2.0 >= $GLIB_MIN_VERSION
@@ -222,7 +220,7 @@ dnl-----------------------------------------------------------------------------
 dnl udev support (enabled by default)
 dnl
 
-GUDEV_VERSION=147
+GUDEV_VERSION=232
 
 AC_ARG_WITH(udev, AS_HELP_STRING([--without-udev], [Build without udev support]), [], [with_udev=yes])
 AM_CONDITIONAL(WITH_UDEV, test "x$with_udev" = "xyes")
@@ -377,7 +375,7 @@ dnl-----------------------------------------------------------------------------
 dnl MBIM support (enabled by default)
 dnl
 
-LIBMBIM_VERSION=1.24.0
+LIBMBIM_VERSION=1.26.0
 
 AC_ARG_WITH(mbim, AS_HELP_STRING([--without-mbim], [Build without MBIM support]), [], [with_mbim=yes])
 AM_CONDITIONAL(WITH_MBIM, test "x$with_mbim" = "xyes")
@@ -401,7 +399,7 @@ dnl-----------------------------------------------------------------------------
 dnl QMI support (enabled by default)
 dnl
 
-LIBQMI_VERSION=1.28.6
+LIBQMI_VERSION=1.30.2
 
 AC_ARG_WITH(qmi, AS_HELP_STRING([--without-qmi], [Build without QMI support]), [], [with_qmi=yes])
 AM_CONDITIONAL(WITH_QMI, test "x$with_qmi" = "xyes")
@@ -420,6 +418,42 @@ case $with_qmi in
         with_qmi=no
         ;;
 esac
+
+dnl-----------------------------------------------------------------------------
+dnl QRTR support (both as libqrtr-glib and libqmi-glib apis)
+dnl
+
+LIBQRTR_VERSION=1.0.0
+PKG_CHECK_MODULES(QRTR, [qrtr-glib >= $LIBQRTR_VERSION],[have_qrtr=yes],[have_qrtr=no])
+qmi_qrtr_supported=$($PKG_CONFIG --variable=qmi_qrtr_supported qmi-glib)
+
+AC_ARG_WITH(qrtr, AS_HELP_STRING([--without-qrtr], [Build without QRTR support]), [], [with_qrtr=auto])
+if test "x$with_qrtr" = "xauto"; then
+    if test "x$qmi_qrtr_supported" = "x1" && test "x$with_qmi" = "xyes" && test "x$have_qrtr" = "xyes"; then
+        with_qrtr=yes
+    else
+        with_qrtr=no
+    fi
+fi
+case $with_qrtr in
+    yes)
+        if test "x$with_qmi" = "xno"; then
+            AC_MSG_ERROR([QRTR support requires QMI enabled. Configure using --with-qmi, or otherwise configure using --without-qrtr to disable QRTR support.])
+        elif test "x$have_qrtr" = "xno"; then
+            AC_MSG_ERROR([Couldn't find libqrtr-glib >= $LIBQRTR_VERSION. Install it, or otherwise configure using --without-qrtr to disable QRTR support.])
+        elif test "x$qmi_qrtr_supported" != "x1"; then
+            AC_MSG_ERROR([Couldn't find QRTR support in libqmi-glib. Install it, or otherwise configure using --without-qrtr to disable QRTR support.])
+        else
+            AC_DEFINE(WITH_QRTR, 1, [Define if you want QRTR support])
+            AC_SUBST(QRTR_CFLAGS)
+            AC_SUBST(QRTR_LIBS)
+        fi
+        ;;
+    *)
+        with_qrtr=no
+        ;;
+esac
+AM_CONDITIONAL(WITH_QRTR, test "x$with_qrtr" = "xyes")
 
 dnl-----------------------------------------------------------------------------
 dnl Distribution version string
@@ -565,6 +599,7 @@ examples/modem-watcher-python/Makefile
 examples/modem-watcher-javascript/Makefile
 examples/sms-python/Makefile
 examples/network-scan-python/Makefile
+examples/sms-c/Makefile
 ])
 AC_OUTPUT
 
@@ -592,6 +627,7 @@ echo "
       policykit:               ${with_polkit}
       mbim:                    ${with_mbim}
       qmi:                     ${with_qmi}
+      qrtr:                    ${with_qrtr}
       systemd suspend/resume:  ${with_systemd_suspend_resume}
       systemd journal:         ${with_systemd_journal}
       at command via dbus:     ${with_at_command_via_dbus}

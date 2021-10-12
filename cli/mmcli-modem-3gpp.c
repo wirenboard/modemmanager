@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2011 - 2012 Aleksander Morgado <aleksander@gnu.org>
- * Copyright (C) 2012 Google, Inc.
+ * Copyright (C) 2011 - 2021 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012 - 2021 Google, Inc.
  */
 
 #include "config.h"
@@ -38,24 +38,20 @@
 
 /* Context */
 typedef struct {
-    MMManager *manager;
+    MMManager    *manager;
     GCancellable *cancellable;
-    MMObject *object;
-    MMModem3gpp *modem_3gpp;
-    MMModem3gppUssd *modem_3gpp_ussd;
+    MMObject     *object;
+    MMModem3gpp  *modem_3gpp;
 } Context;
 static Context *ctx;
 
 /* Options */
-static gboolean scan_flag;
-static gboolean register_home_flag;
-static gchar *register_in_operator_str;
-static gchar *set_eps_ue_mode_operation_str;
-static gchar *set_initial_eps_bearer_settings_str;
-static gboolean ussd_status_flag;
-static gchar *ussd_initiate_str;
-static gchar *ussd_respond_str;
-static gboolean ussd_cancel_flag;
+static gboolean  scan_flag;
+static gboolean  register_home_flag;
+static gchar    *register_in_operator_str;
+static gchar    *set_eps_ue_mode_operation_str;
+static gchar    *set_initial_eps_bearer_settings_str;
+static gchar    *disable_facility_lock_str;
 
 static GOptionEntry entries[] = {
     { "3gpp-scan", 0, 0, G_OPTION_ARG_NONE, &scan_flag,
@@ -78,21 +74,9 @@ static GOptionEntry entries[] = {
       "Set the initial EPS bearer settings",
       "[\"key=value,...\"]"
     },
-    { "3gpp-ussd-status", 0, 0, G_OPTION_ARG_NONE, &ussd_status_flag,
-      "Show status of any ongoing USSD session",
-      NULL
-    },
-    { "3gpp-ussd-initiate", 0, 0, G_OPTION_ARG_STRING, &ussd_initiate_str,
-      "Request a given modem to initiate a USSD session",
-      "[command]"
-    },
-    { "3gpp-ussd-respond", 0, 0, G_OPTION_ARG_STRING, &ussd_respond_str,
-      "Request a given modem to respond to a USSD request",
-      "[response]"
-    },
-    { "3gpp-ussd-cancel", 0, 0, G_OPTION_ARG_NONE, &ussd_cancel_flag,
-      "Request to cancel any ongoing USSD session",
-      NULL
+    { "3gpp-disable-facility-lock", 0, 0, G_OPTION_ARG_STRING, &disable_facility_lock_str,
+      "Disable facility personalization",
+      "[facility,key]"
     },
     { NULL }
 };
@@ -115,7 +99,7 @@ mmcli_modem_3gpp_get_option_group (void)
 gboolean
 mmcli_modem_3gpp_options_enabled (void)
 {
-    static guint n_actions = 0;
+    static guint    n_actions = 0;
     static gboolean checked = FALSE;
 
     if (checked)
@@ -126,10 +110,7 @@ mmcli_modem_3gpp_options_enabled (void)
                  !!register_in_operator_str +
                  !!set_eps_ue_mode_operation_str +
                  !!set_initial_eps_bearer_settings_str +
-                 ussd_status_flag +
-                 !!ussd_initiate_str +
-                 !!ussd_respond_str +
-                 ussd_cancel_flag);
+                 !!disable_facility_lock_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many 3GPP actions requested\n");
@@ -140,14 +121,6 @@ mmcli_modem_3gpp_options_enabled (void)
      * always to avoid DBus timeouts */
     if (scan_flag)
         mmcli_force_async_operation ();
-
-    /* USSD initiate and respond will wait for URCs to get finished, so
-     * these are truly async. */
-    if (ussd_initiate_str || ussd_respond_str)
-        mmcli_force_async_operation ();
-
-    if (ussd_status_flag)
-        mmcli_force_sync_operation ();
 
     checked = TRUE;
     return !!n_actions;
@@ -163,8 +136,6 @@ context_free (void)
         g_object_unref (ctx->cancellable);
     if (ctx->modem_3gpp)
         g_object_unref (ctx->modem_3gpp);
-    if (ctx->modem_3gpp_ussd)
-        g_object_unref (ctx->modem_3gpp_ussd);
     if (ctx->object)
         g_object_unref (ctx->object);
     if (ctx->manager)
@@ -173,15 +144,10 @@ context_free (void)
 }
 
 static void
-ensure_modem_3gpp (void)
+ensure_modem_enabled (void)
 {
     if (mm_modem_get_state (mm_object_peek_modem (ctx->object)) < MM_MODEM_STATE_ENABLED) {
         g_printerr ("error: modem not enabled yet\n");
-        exit (EXIT_FAILURE);
-    }
-
-    if (!ctx->modem_3gpp) {
-        g_printerr ("error: modem has no 3GPP capabilities\n");
         exit (EXIT_FAILURE);
     }
 
@@ -189,15 +155,10 @@ ensure_modem_3gpp (void)
 }
 
 static void
-ensure_modem_3gpp_ussd (void)
+ensure_modem_3gpp (void)
 {
-    if (mm_modem_get_state (mm_object_peek_modem (ctx->object)) < MM_MODEM_STATE_ENABLED) {
-        g_printerr ("error: modem not enabled yet\n");
-        exit (EXIT_FAILURE);
-    }
-
-    if (!ctx->modem_3gpp_ussd) {
-        g_printerr ("error: modem has no USSD capabilities\n");
+    if (!ctx->modem_3gpp) {
+        g_printerr ("error: modem has no 3GPP capabilities\n");
         exit (EXIT_FAILURE);
     }
 
@@ -211,7 +172,7 @@ mmcli_modem_3gpp_shutdown (void)
 }
 
 static void
-scan_process_reply (GList *result,
+scan_process_reply (GList        *result,
                     const GError *error)
 {
     if (!result) {
@@ -228,10 +189,9 @@ scan_process_reply (GList *result,
 
 static void
 scan_ready (MMModem3gpp  *modem_3gpp,
-            GAsyncResult *result,
-            gpointer      nothing)
+            GAsyncResult *result)
 {
-    GList *operation_result;
+    GList  *operation_result;
     GError *error = NULL;
 
     operation_result = mm_modem_3gpp_scan_finish (modem_3gpp, result, &error);
@@ -241,7 +201,7 @@ scan_ready (MMModem3gpp  *modem_3gpp,
 }
 
 static void
-register_process_reply (gboolean result,
+register_process_reply (gboolean      result,
                         const GError *error)
 {
     if (!result) {
@@ -255,11 +215,10 @@ register_process_reply (gboolean result,
 
 static void
 register_ready (MMModem3gpp  *modem_3gpp,
-                GAsyncResult *result,
-                gpointer      nothing)
+                GAsyncResult *result)
 {
-    gboolean operation_result;
-    GError *error = NULL;
+    gboolean  operation_result;
+    GError   *error = NULL;
 
     operation_result = mm_modem_3gpp_register_finish (modem_3gpp, result, &error);
     register_process_reply (operation_result, error);
@@ -333,120 +292,90 @@ parse_eps_ue_mode_operation (MMModem3gppEpsUeModeOperation *uemode)
 }
 
 static void
-print_ussd_status (void)
-{
-    mmcli_output_string (MMC_F_GENERAL_DBUS_PATH,              mm_modem_3gpp_ussd_get_path (ctx->modem_3gpp_ussd));
-    mmcli_output_string (MMC_F_3GPP_USSD_STATUS,               mm_modem_3gpp_ussd_session_state_get_string (
-                                                                 mm_modem_3gpp_ussd_get_state (ctx->modem_3gpp_ussd)));
-    mmcli_output_string (MMC_F_3GPP_USSD_NETWORK_REQUEST,      mm_modem_3gpp_ussd_get_network_request      (ctx->modem_3gpp_ussd));
-    mmcli_output_string (MMC_F_3GPP_USSD_NETWORK_NOTIFICATION, mm_modem_3gpp_ussd_get_network_notification (ctx->modem_3gpp_ussd));
-    mmcli_output_dump ();
-}
-
-static void
-ussd_initiate_process_reply (gchar *result,
-                             const GError *error)
+disable_facility_lock_process_reply (gboolean      result,
+                                     const GError *error)
 {
     if (!result) {
-        g_printerr ("error: couldn't initiate USSD session: '%s'\n",
+        g_printerr ("error: couldn't disable facility lock: '%s'\n",
                     error ? error->message : "unknown error");
         exit (EXIT_FAILURE);
     }
 
-    g_print ("USSD session initiated; "
-             "new reply from network: '%s'\n", result);
-    g_free (result);
+    g_print ("successfully disabled facility lock\n");
 }
 
-static void
-ussd_initiate_ready (MMModem3gppUssd *modem_3gpp_ussd,
-                     GAsyncResult    *result,
-                     gpointer         nothing)
+static gboolean
+disable_facility_lock_parse_input (const gchar          *str,
+                                   MMModem3gppFacility  *out_facility,
+                                   gchar               **out_control_key)
 {
-    gchar *operation_result;
-    GError *error = NULL;
+    g_auto(GStrv)       properties = NULL;
+    MMModem3gppFacility facility;
 
-    operation_result = mm_modem_3gpp_ussd_initiate_finish (modem_3gpp_ussd, result, &error);
-    ussd_initiate_process_reply (operation_result, error);
+    properties = g_strsplit (str, ",", -1);
+    if (!properties || !properties[0] || !properties[1])
+        return FALSE;
 
-    mmcli_async_operation_done ();
+    /* Facilities is a bitmask, if 0 is returned we failed parsing */
+    facility = mm_common_get_3gpp_facility_from_string (properties[0], NULL);
+    if (!facility)
+        return FALSE;
+
+    *out_facility = facility;
+    *out_control_key = g_strdup (properties[1]);
+    return TRUE;
 }
 
 static void
-ussd_respond_process_reply (gchar *result,
-                            const GError *error)
-{
-    if (!result) {
-        g_printerr ("error: couldn't send response in USSD session: '%s'\n",
-                    error ? error->message : "unknown error");
-        exit (EXIT_FAILURE);
-    }
-
-    g_print ("response successfully sent in USSD session; "
-             "new reply from network: '%s'\n", result);
-    g_free (result);
-}
-
-static void
-ussd_respond_ready (MMModem3gppUssd *modem_3gpp_ussd,
-                    GAsyncResult    *result,
-                    gpointer         nothing)
-{
-    gchar *operation_result;
-    GError *error = NULL;
-
-    operation_result = mm_modem_3gpp_ussd_respond_finish (modem_3gpp_ussd, result, &error);
-    ussd_respond_process_reply (operation_result, error);
-
-    mmcli_async_operation_done ();
-}
-
-static void
-ussd_cancel_process_reply (gboolean result,
-                           const GError *error)
-{
-    if (!result) {
-        g_printerr ("error: couldn't cancel USSD session: '%s'\n",
-                    error ? error->message : "unknown error");
-        exit (EXIT_FAILURE);
-    }
-
-    g_print ("successfully cancelled USSD session\n");
-}
-
-static void
-ussd_cancel_ready (MMModem3gppUssd *modem_3gpp_ussd,
-                   GAsyncResult    *result,
-                   gpointer         nothing)
+disable_facility_lock_ready (MMModem3gpp  *modem_3gpp,
+                             GAsyncResult *result,
+                             gpointer      nothing)
 {
     gboolean operation_result;
     GError *error = NULL;
 
-    operation_result = mm_modem_3gpp_ussd_cancel_finish (modem_3gpp_ussd, result, &error);
-    ussd_cancel_process_reply (operation_result, error);
+    operation_result = mm_modem_3gpp_disable_facility_lock_finish (modem_3gpp, result, &error);
+    disable_facility_lock_process_reply (operation_result, error);
 
     mmcli_async_operation_done ();
 }
 
 static void
 get_modem_ready (GObject      *source,
-                 GAsyncResult *result,
-                 gpointer      none)
+                 GAsyncResult *result)
 {
     ctx->object = mmcli_get_modem_finish (result, &ctx->manager);
     ctx->modem_3gpp = mm_object_get_modem_3gpp (ctx->object);
-    ctx->modem_3gpp_ussd = mm_object_get_modem_3gpp_ussd (ctx->object);
 
     /* Setup operation timeout */
     if (ctx->modem_3gpp)
         mmcli_force_operation_timeout (G_DBUS_PROXY (ctx->modem_3gpp));
-    if (ctx->modem_3gpp_ussd)
-        mmcli_force_operation_timeout (G_DBUS_PROXY (ctx->modem_3gpp_ussd));
 
     ensure_modem_3gpp ();
 
-    if (ussd_status_flag)
-        g_assert_not_reached ();
+    /* Request to disable facility lock */
+    if (disable_facility_lock_str) {
+        g_autofree gchar    *control_key = NULL;
+        MMModem3gppFacility  facility;
+
+        if (!disable_facility_lock_parse_input (disable_facility_lock_str,
+                                                &facility,
+                                                &control_key)) {
+            g_printerr ("Error parsing properties string.\n");
+            exit (EXIT_FAILURE);
+        }
+
+        g_debug ("Asynchronously disabling facility lock...");
+        mm_modem_3gpp_disable_facility_lock (ctx->modem_3gpp,
+                                             facility,
+                                             control_key,
+                                             ctx->cancellable,
+                                             (GAsyncReadyCallback)disable_facility_lock_ready,
+                                             NULL);
+        return;
+    }
+
+    ensure_modem_enabled ();
 
     /* Request to scan networks? */
     if (scan_flag) {
@@ -506,44 +435,6 @@ get_modem_ready (GObject      *source,
 
     }
 
-    /* Request to initiate USSD session? */
-    if (ussd_initiate_str) {
-        ensure_modem_3gpp_ussd ();
-
-        g_debug ("Asynchronously initiating USSD session...");
-        mm_modem_3gpp_ussd_initiate (ctx->modem_3gpp_ussd,
-                                     ussd_initiate_str,
-                                     ctx->cancellable,
-                                     (GAsyncReadyCallback)ussd_initiate_ready,
-                                     NULL);
-        return;
-    }
-
-    /* Request to respond in USSD session? */
-    if (ussd_respond_str) {
-        ensure_modem_3gpp_ussd ();
-
-        g_debug ("Asynchronously sending response in USSD session...");
-        mm_modem_3gpp_ussd_respond (ctx->modem_3gpp_ussd,
-                                    ussd_respond_str,
-                                    ctx->cancellable,
-                                    (GAsyncReadyCallback)ussd_respond_ready,
-                                    NULL);
-        return;
-    }
-
-    /* Request to cancel USSD session? */
-    if (ussd_cancel_flag) {
-        ensure_modem_3gpp_ussd ();
-
-        g_debug ("Asynchronously cancelling USSD session...");
-        mm_modem_3gpp_ussd_cancel (ctx->modem_3gpp_ussd,
-                                   ctx->cancellable,
-                                   (GAsyncReadyCallback)ussd_cancel_ready,
-                                   NULL);
-        return;
-    }
-
     g_warn_if_reached ();
 }
 
@@ -575,22 +466,40 @@ mmcli_modem_3gpp_run_synchronous (GDBusConnection *connection)
                                         mmcli_get_common_modem_string (),
                                         &ctx->manager);
     ctx->modem_3gpp = mm_object_get_modem_3gpp (ctx->object);
-    ctx->modem_3gpp_ussd = mm_object_get_modem_3gpp_ussd (ctx->object);
 
     /* Setup operation timeout */
     if (ctx->modem_3gpp)
         mmcli_force_operation_timeout (G_DBUS_PROXY (ctx->modem_3gpp));
-    if (ctx->modem_3gpp_ussd)
-        mmcli_force_operation_timeout (G_DBUS_PROXY (ctx->modem_3gpp_ussd));
 
     ensure_modem_3gpp ();
 
     if (scan_flag)
         g_assert_not_reached ();
-    if (ussd_initiate_str)
-        g_assert_not_reached ();
-    if (ussd_respond_str)
-        g_assert_not_reached ();
+
+    /* Request to remove carrier lock */
+    if (disable_facility_lock_str) {
+        g_autofree gchar    *control_key = NULL;
+        MMModem3gppFacility  facility;
+        gboolean             result;
+
+        if (!disable_facility_lock_parse_input (disable_facility_lock_str,
+                                                &facility,
+                                                &control_key)) {
+            g_printerr ("Error parsing properties string.\n");
+            exit (EXIT_FAILURE);
+        }
+
+        g_debug ("Synchronously disabling facility lock...");
+        result = mm_modem_3gpp_disable_facility_lock_sync (ctx->modem_3gpp,
+                                                           facility,
+                                                           control_key,
+                                                           NULL,
+                                                           &error);
+        disable_facility_lock_process_reply (result, error);
+        return;
+    }
+
+    ensure_modem_enabled ();
 
     /* Request to register the modem? */
     if (register_in_operator_str || register_home_flag) {
@@ -640,29 +549,6 @@ mmcli_modem_3gpp_run_synchronous (GDBusConnection *connection)
                                                                      &error);
         set_initial_eps_bearer_settings_process_reply (result, error);
         g_object_unref (config);
-        return;
-    }
-
-    /* Request to show USSD status? */
-    if (ussd_status_flag) {
-        ensure_modem_3gpp_ussd ();
-
-        g_debug ("Printing USSD status...");
-        print_ussd_status ();
-        return;
-    }
-
-    /* Request to cancel USSD session? */
-    if (ussd_cancel_flag) {
-        gboolean result;
-
-        ensure_modem_3gpp_ussd ();
-
-        g_debug ("Asynchronously cancelling USSD session...");
-        result = mm_modem_3gpp_ussd_cancel_sync (ctx->modem_3gpp_ussd,
-                                                 NULL,
-                                                 &error);
-        ussd_cancel_process_reply (result, error);
         return;
     }
 

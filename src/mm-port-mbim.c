@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details:
  *
- * Copyright (C) 2013-2018 Aleksander Morgado <aleksander@gnu.org>
+ * Copyright (C) 2013-2021 Aleksander Morgado <aleksander@gnu.org>
  */
 
 #include <config.h>
@@ -26,6 +26,7 @@
 #include <mm-errors-types.h>
 
 #include "mm-port-mbim.h"
+#include "mm-port-net.h"
 #include "mm-log-object.h"
 
 G_DEFINE_TYPE (MMPortMbim, mm_port_mbim, MM_TYPE_PORT)
@@ -152,6 +153,237 @@ mm_port_mbim_allocate_qmi_client (MMPortMbim           *self,
 }
 
 #endif
+
+/*****************************************************************************/
+
+typedef struct {
+    gchar *link_name;
+    guint  session_id;
+} SetupLinkResult;
+
+static void
+setup_link_result_free (SetupLinkResult *ctx)
+{
+    g_free (ctx->link_name);
+    g_slice_free (SetupLinkResult, ctx);
+}
+
+gchar *
+mm_port_mbim_setup_link_finish (MMPortMbim    *self,
+                                GAsyncResult  *res,
+                                guint         *session_id,
+                                GError       **error)
+{
+    SetupLinkResult *result;
+    gchar           *link_name;
+
+    result = g_task_propagate_pointer (G_TASK (res), error);
+    if (!result)
+        return NULL;
+
+    if (session_id)
+        *session_id = result->session_id;
+    link_name = g_steal_pointer (&result->link_name);
+    setup_link_result_free (result);
+
+    return link_name;
+}
+
+static void
+device_add_link_ready (MbimDevice   *device,
+                       GAsyncResult *res,
+                       GTask        *task)
+{
+    SetupLinkResult *result;
+    GError          *error = NULL;
+
+    result = g_slice_new0 (SetupLinkResult);
+
+    result->link_name = mbim_device_add_link_finish (device, res, &result->session_id, &error);
+    if (!result->link_name) {
+        g_prefix_error (&error, "failed to add link for device: ");
+        g_task_return_error (task, error);
+        setup_link_result_free (result);
+    } else
+        g_task_return_pointer (task, result, (GDestroyNotify)setup_link_result_free);
+    g_object_unref (task);
+}
+
+void
+mm_port_mbim_setup_link (MMPortMbim          *self,
+                         MMPort              *data,
+                         const gchar         *link_prefix_hint,
+                         GAsyncReadyCallback  callback,
+                         gpointer             user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    if (!self->priv->mbim_device) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_WRONG_STATE, "Port is not open");
+        g_object_unref (task);
+        return;
+    }
+
+    mbim_device_add_link (self->priv->mbim_device,
+                          MBIM_DEVICE_SESSION_ID_AUTOMATIC,
+                          mm_kernel_device_get_name (mm_port_peek_kernel_device (data)),
+                          link_prefix_hint,
+                          NULL,
+                          (GAsyncReadyCallback) device_add_link_ready,
+                          task);
+}
+
+/*****************************************************************************/
+
+gboolean
+mm_port_mbim_cleanup_link_finish (MMPortMbim    *self,
+                                  GAsyncResult  *res,
+                                  GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+device_delete_link_ready (MbimDevice   *device,
+                          GAsyncResult *res,
+                          GTask        *task)
+{
+    GError *error = NULL;
+
+    if (!mbim_device_delete_link_finish (device, res, &error))
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+void
+mm_port_mbim_cleanup_link (MMPortMbim          *self,
+                           const gchar         *link_name,
+                           GAsyncReadyCallback  callback,
+                           gpointer             user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    if (!self->priv->mbim_device) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_WRONG_STATE, "Port is not open");
+        g_object_unref (task);
+        return;
+    }
+
+    mbim_device_delete_link (self->priv->mbim_device,
+                             link_name,
+                             NULL,
+                             (GAsyncReadyCallback) device_delete_link_ready,
+                             task);
+}
+
+/*****************************************************************************/
+
+typedef struct {
+    MbimDevice *device;
+    MMPort    *data;
+} ResetContext;
+
+static void
+reset_context_free (ResetContext *ctx)
+{
+    g_clear_object (&ctx->device);
+    g_clear_object (&ctx->data);
+    g_slice_free (ResetContext, ctx);
+}
+
+gboolean
+mm_port_mbim_reset_finish (MMPortMbim    *self,
+                           GAsyncResult  *res,
+                           GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+delete_all_links_ready (MbimDevice   *device,
+                        GAsyncResult *res,
+                        GTask        *task)
+{
+    MMPortMbim *self;
+    GError     *error = NULL;
+
+    self = g_task_get_source_object (task);
+
+    /* link deletion not fatal */
+    if (!mbim_device_delete_all_links_finish (device, res, &error)) {
+        mm_obj_dbg (self, "couldn't delete all links: %s", error->message);
+        g_clear_error (&error);
+    }
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+reset_device_new_ready (GObject      *source,
+                        GAsyncResult *res,
+                        GTask        *task)
+{
+    MMPortMbim   *self;
+    ResetContext *ctx;
+    GError       *error = NULL;
+
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
+
+    ctx->device = mbim_device_new_finish (res, &error);
+    if (!ctx->device) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    /* first, delete all links found, if any */
+    mm_obj_dbg (self, "deleting all links in data interface '%s'",
+                mm_port_get_device (ctx->data));
+    mbim_device_delete_all_links (ctx->device,
+                                  mm_port_get_device (ctx->data),
+                                  NULL,
+                                  (GAsyncReadyCallback)delete_all_links_ready,
+                                  task);
+}
+
+void
+mm_port_mbim_reset (MMPortMbim          *self,
+                    MMPort              *data,
+                    GAsyncReadyCallback  callback,
+                    gpointer             user_data)
+{
+    GTask            *task;
+    ResetContext     *ctx;
+    g_autoptr(GFile)  file = NULL;
+    g_autofree gchar *fullpath = NULL;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    if (self->priv->mbim_device) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_WRONG_STATE, "Port is already open");
+        g_object_unref (task);
+        return;
+    }
+
+    ctx = g_slice_new0 (ResetContext);
+    ctx->data = g_object_ref (data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify) reset_context_free);
+
+    fullpath = g_strdup_printf ("/dev/%s", mm_port_get_device (MM_PORT (self)));
+    file = g_file_new_for_path (fullpath);
+
+    mbim_device_new (file, NULL,
+                     (GAsyncReadyCallback) reset_device_new_ready,
+                     task);
+}
 
 /*****************************************************************************/
 
@@ -301,7 +533,7 @@ mbim_query_device_services (GTask *task)
     message = mbim_message_device_services_query_new (NULL);
     mbim_device_command (self->priv->mbim_device,
                          message,
-                         10,
+                         20,
                          NULL,
                          (GAsyncReadyCallback)mbim_query_device_services_ready,
                          task);
@@ -361,7 +593,7 @@ mbim_device_new_ready (GObject      *unused,
     /* Now open the MBIM device */
     mbim_device_open_full (self->priv->mbim_device,
                            MBIM_DEVICE_OPEN_FLAGS_PROXY,
-                           30,
+                           45,
                            g_task_get_cancellable (task),
                            (GAsyncReadyCallback)mbim_device_open_ready,
                            task);

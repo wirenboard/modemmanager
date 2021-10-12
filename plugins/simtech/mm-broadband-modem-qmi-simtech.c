@@ -55,7 +55,12 @@ mm_broadband_modem_qmi_simtech_new (const gchar  *device,
                          MM_BASE_MODEM_PLUGIN,     plugin,
                          MM_BASE_MODEM_VENDOR_ID,  vendor_id,
                          MM_BASE_MODEM_PRODUCT_ID, product_id,
+                         /* QMI modem supports NET only */
+                         MM_BASE_MODEM_DATA_NET_SUPPORTED, TRUE,
+                         MM_BASE_MODEM_DATA_TTY_SUPPORTED, FALSE,
                          MM_BROADBAND_MODEM_INDICATORS_DISABLED, TRUE,
+                         MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED,  TRUE,
+                         MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED, FALSE,
                          NULL);
 }
 

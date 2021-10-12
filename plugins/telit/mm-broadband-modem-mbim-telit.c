@@ -71,7 +71,7 @@ load_supported_modes_ready (MMIfaceModem *self,
         return;
     }
 
-    modes = mm_3gpp_parse_ws46_test_response (response, &error);
+    modes = mm_3gpp_parse_ws46_test_response (response, self, &error);
     if (!modes) {
         g_prefix_error (&error, "parsing WS46=? response failed: ");
         g_task_return_error (task, error);
@@ -140,6 +140,9 @@ mm_broadband_modem_mbim_telit_new (const gchar  *device,
                          MM_BASE_MODEM_PLUGIN,     plugin,
                          MM_BASE_MODEM_VENDOR_ID,  vendor_id,
                          MM_BASE_MODEM_PRODUCT_ID, product_id,
+                         /* MBIM bearer supports NET only */
+                         MM_BASE_MODEM_DATA_NET_SUPPORTED, TRUE,
+                         MM_BASE_MODEM_DATA_TTY_SUPPORTED, FALSE,
                          MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED, TRUE,
                          MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED, FALSE,
                          NULL);

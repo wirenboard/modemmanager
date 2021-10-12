@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+]>
+<refentry id="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager">
+  <refmeta>    <refentrytitle role="top_of_page" id="gdbus-interface-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.top_of_page">org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager</refentrytitle>
+  <indexterm zone="gdbus-interface-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.top_of_page"><primary sortas="Modem3gppProfileManager">org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager</primary></indexterm>
+  </refmeta>  <refnamediv>    <refname>org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager</refname>    <refpurpose>The ModemManager 3GPP profile management interface.</refpurpose>  </refnamediv>  <refsynopsisdiv role="synopsis">
+    <title role="synopsis.title">Methods</title>
+    <synopsis>
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.List">List</link>   (OUT aa{sv} profiles);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.Set">Set</link>    (IN  a{sv}  requested_properties,
+        OUT a{sv}  stored_properties);
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.Delete">Delete</link> (IN  a{sv}  properties);
+</synopsis>
+  </refsynopsisdiv>
+  <refsect1 role="signal_proto">
+    <title role="signal_proto.title">Signals</title>
+    <synopsis>
+<link linkend="gdbus-signal-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.Updated">Updated</link> ();
+</synopsis>
+  </refsect1>
+<refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager">
+  <title role="desc.title">Description</title>
+  <para>      This interface provides access to actions with connection profiles.
+</para><para>      This interface will only be available once the modem is ready to be
+      registered in the cellular network. 3GPP devices will require a valid
+      unlocked SIM card before any of the features in the interface can be
+      used.
+</para><para>      The user of the interface can optionally choose to use the new profile
+      management methods to manage the connection setup, e.g by using the new
+      <literal>"profile-id"</literal> setting in either the
+      <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem.CreateBearer">CreateBearer</link>
+      or the
+      <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Simple.Connect">Connect</link>
+      methods. If that's the case, it is suggested that the legacy approach of
+      not using the profiles is completely avoided. If both approaches are
+      used at the same time, it may happen that a connection attempt not using
+      the <literal>"profile-id"</literal> implicitly updates a given profile
+      (without emitting
+      <link linkend="gdbus-signal-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.Updated">Updated</link>),
+      as the amount of profiles implemented in modems may be fixed.
+</para>
+</refsect1>
+<refsect1 role="details" id="gdbus-methods-org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager">
+  <title role="details.title">Method Details</title>
+<refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.List">
+  <title>The List() method</title>
+  <indexterm zone="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.List"><primary sortas="Modem3gppProfileManager.List">org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager.List()</primary></indexterm>
+<programlisting>
+List (OUT aa{sv} profiles);
+</programlisting>
+<para>        Lists the available profiles or contexts provisioned on the modem.
+</para><para>        Profiles are represented as dictionaries of properties, and any of the
+        3GPP-specific properties defined in the
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties">bearer properties</link>
+        are allowed.
+</para><para>        Depending on the implementation, the settings applicable to the initial
+        EPS bearer given in
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearerSettings">bearer properties</link>
+        may also be reported as an item in the returned list, identified by the
+        <constant>MM_BEARER_APN_TYPE_INITIAL</constant> <literal>"apn-type"</literal> flag.
+</para><para>        Since: 1.18
+</para>
+<variablelist role="params">
+<varlistentry>
+  <term><literal>OUT aa{sv} <parameter>profiles</parameter></literal>:</term>
+  <listitem><para>An array of dictionaries containing the properties of the provisioned profiles.</para></listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
+<refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.Set">
+  <title>The Set() method</title>
+  <indexterm zone="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.Set"><primary sortas="Modem3gppProfileManager.Set">org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager.Set()</primary></indexterm>
+<programlisting>
+Set (IN  a{sv} requested_properties,
+     OUT a{sv} stored_properties);
+</programlisting>
+<para>        Creates or updates a connection profile on this modem. If
+        <literal>"profile-id"</literal> is not given, a new profile will be
+        created; otherwise, the profile with the given ID will be updated.
+</para><para>        Profiles are represented as dictionaries of properties, and any of the
+        3GPP-specific properties defined in the
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties">bearer properties</link>
+        are allowed. The real list of supported properties really depends on the
+        underlying protocol and implementation, though; e.g. in AT-based modems
+        setting <literal>"apn-type"</literal> won't be supported, and instead the
+        user should give that setting explicitly when creating the bearer object.
+</para><para>        The operation may fail if it is attempting to update an existing
+        profile for which connected bearer objects already exist. In this case,
+        the user should make sure these bearer objects are already disconnected
+        before attempting to change the profile settings.
+</para><para>        The operation may also fail if it is attempting to update the profile
+        associated to the settings of the initial EPS bearer, identified by the
+        <constant>MM_BEARER_APN_TYPE_INITIAL</constant> <literal>"apn-type"</literal> flag. In this
+        case, <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings">SetInitialEpsBearerSettings()</link>
+        should be used instead.
+</para><para>        The output <parameter>stored_properties</parameter> will contain the settings that were
+        successfully stored, including the new <literal>"profile-id"</literal>
+        if the operation was creating a new profile.
+</para><para>        Since: 1.18
+</para>
+<variablelist role="params">
+<varlistentry>
+  <term><literal>IN a{sv} <parameter>requested_properties</parameter></literal>:</term>
+  <listitem><para>the requested profile properties.</para></listitem>
+</varlistentry>
+<varlistentry>
+  <term><literal>OUT a{sv} <parameter>stored_properties</parameter></literal>:</term>
+  <listitem><para>the stored profile properties.</para></listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
+<refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.Delete">
+  <title>The Delete() method</title>
+  <indexterm zone="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.Delete"><primary sortas="Modem3gppProfileManager.Delete">org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager.Delete()</primary></indexterm>
+<programlisting>
+Delete (IN  a{sv} properties);
+</programlisting>
+<para>        Deletes the profile with the <literal>"profile-id"</literal> given in <parameter>properties</parameter>.
+</para><para>        If additional settings are given in <parameter>properties</parameter> they are ignored. This
+        allows the user to easily request the deletion of a profile that has been
+        provided in the List() operation.
+</para><para>        This method may just clear the existing profiles (i.e. reseting all the
+        properties to defaults) instead of fully removing them if the profiles
+        cannot be fully removed. In this case, the method will succeed, but the
+        size of the list of profiles will not change.
+</para><para>        This method will fail if <literal>"profile-id"</literal> is not given.
+</para><para>        The operation may fail if it is attempting to delete a profile
+        for which connected bearer objects already exist. In this case,
+        the user should make sure these bearer objects are already disconnected
+        before attempting to delete the profile.
+</para><para>        The operation may also fail if it is attempting to delete the profile
+        associated to the settings of the initial EPS bearer, identified by the
+        <constant>MM_BEARER_APN_TYPE_INITIAL</constant> <literal>"apn-type"</literal> flag. In this
+        case, <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings">SetInitialEpsBearerSettings()</link>
+        may be used instead to clear these settings.
+</para><para>        Since: 1.18
+</para>
+<variablelist role="params">
+<varlistentry>
+  <term><literal>IN a{sv} <parameter>properties</parameter></literal>:</term>
+  <listitem><para>the profile properties.</para></listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
+</refsect1>
+<refsect1 role="details" id="gdbus-signals-org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager">
+  <title role="details.title">Signal Details</title>
+<refsect2 role="signal" id="gdbus-signal-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.Updated">
+  <title>The "Updated" signal</title>
+  <indexterm zone="gdbus-signal-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.Updated"><primary sortas="Modem3gppProfileManager::Updated">org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager::Updated</primary></indexterm>
+<programlisting>
+Updated ();
+</programlisting>
+<para>        Emitted when the profiles are updated by the network through OTA
+        procedures.
+</para><para>        Since: 1.18
+</para>
+</refsect2>
+</refsect1>
+</refentry>
+

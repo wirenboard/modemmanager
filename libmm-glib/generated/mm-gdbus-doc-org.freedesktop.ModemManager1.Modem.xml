@@ -44,6 +44,7 @@
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentCapabilities">CurrentCapabilities</link>           readable   u
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxBearers">MaxBearers</link>                    readable   u
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveBearers">MaxActiveBearers</link>              readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveMultiplexedBearers">MaxActiveMultiplexedBearers</link>   readable   u
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Manufacturer">Manufacturer</link>                  readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Model">Model</link>                         readable   s
 <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Revision">Revision</link>                      readable   s
@@ -93,6 +94,7 @@ Enable (IN  b enable);
         calls, location services, and Short Message Service may be available.
 </para><para>        When disabled, the modem enters low-power state and no network-related
         operations are available.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -109,6 +111,7 @@ ListBearers (OUT ao bearers);
 </programlisting>
 <para>        List configured packet data bearers (EPS Bearers, PDP Contexts, or
         CDMA2000 Packet Data Sessions).
+</para><para>        Since: 1.0
 </para><para>        Deprecated: 1.10.0. Use <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers">"Bearers"</link>
         property instead.
 </para>
@@ -129,28 +132,9 @@ CreateBearer (IN  a{sv} properties,
 <para>        Create a new packet data bearer using the given characteristics.
 </para><para>        This request may fail if the modem does not support additional bearers,
         if too many bearers are already defined, or if properties are invalid.
-</para><para>        Allowed properties are:
-        <variablelist>
-        <varlistentry><term><literal>"apn"</literal></term>
-          <listitem><para>Access Point Name, given as a string value (signature <literal>"s"</literal>). Required in 3GPP.</para></listitem></varlistentry>
-        <varlistentry><term><literal>"ip-type"</literal></term>
-          <listitem><para>Addressing type, given as a <link linkend="MMBearerIpFamily">MMBearerIpFamily</link> value (signature <literal>"u"</literal>). Optional in 3GPP and CDMA.</para></listitem></varlistentry>
-        <varlistentry><term><literal>"allowed-auth"</literal></term>
-          <listitem><para>The authentication method to use, given as a <link linkend="MMBearerAllowedAuth">MMBearerAllowedAuth</link> value (signature <literal>"u"</literal>). Optional in 3GPP.</para></listitem></varlistentry>
-        <varlistentry><term><literal>"user"</literal></term>
-          <listitem><para>User name (if any) required by the network, given as a string value (signature <literal>"s"</literal>). Optional in 3GPP.</para></listitem></varlistentry>
-        <varlistentry><term><literal>"password"</literal></term>
-          <listitem><para>Password (if any) required by the network, given as a string value (signature <literal>"s"</literal>). Optional in 3GPP.</para></listitem></varlistentry>
-        <varlistentry><term><literal>"allow-roaming"</literal></term>
-          <listitem><para>Flag to tell whether connection is allowed during roaming, given as a boolean value (signature <literal>"b"</literal>). Optional in 3GPP.</para></listitem></varlistentry>
-        <varlistentry><term><literal>"rm-protocol"</literal></term>
-          <listitem><para>Protocol of the Rm interface, given as a <link linkend="MMModemCdmaRmProtocol">MMModemCdmaRmProtocol</link> value (signature <literal>"u"</literal>). Optional in CDMA.</para></listitem></varlistentry>
-        <varlistentry><term><literal>"number"</literal></term>
-          <listitem><para>Number to dial for the data connection, given as a string value (signature <literal>"s"</literal>). Deprecated since version 1.10.0.</para></listitem></varlistentry>
-        </variablelist>
-</para><para>        Some properties are only applicable to a bearer of certain access
-        technologies, for example the <literal>"apn"</literal> property is not
-        applicable to CDMA2000 Packet Data Session bearers.
+</para><para>        The properties allowed are any of the ones defined in the
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties">bearer properties</link>.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -172,6 +156,7 @@ DeleteBearer (IN  o bearer);
 <para>        Delete an existing packet data bearer.
 </para><para>        If the bearer is currently active and providing packet data server, it
         will be disconnected and that packet data service will terminate.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -189,6 +174,7 @@ Reset ();
 <para>        Clear non-persistent configuration and state, and return the device to
         a newly-powered-on state.
 </para><para>        This command may power-cycle the device.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1-Modem.FactoryReset">
@@ -201,6 +187,7 @@ FactoryReset (IN  s code);
         state), and return the device to a factory-default state.
 </para><para>        If not required by the modem, <parameter>code</parameter> may be ignored.
 </para><para>        This command may or may not power-cycle the device.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -218,6 +205,7 @@ SetPowerState (IN  u state);
 <para>        Set the power state of the modem. This action can only be run when the
         modem is in <link linkend="MM-MODEM-STATE-DISABLED:CAPS"><constant>MM_MODEM_STATE_DISABLED</constant></link>
         state.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -236,6 +224,7 @@ SetCurrentCapabilities (IN  u capabilities);
 </para><para>        The given bitmask should be supported by the modem, as specified in the
         <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities">"SupportedCapabilities"</link> property.
 </para><para>        This command may power-cycle the device.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -254,6 +243,7 @@ SetCurrentModes (IN  (uu) modes);
         currently allowed to use when connecting to a network.
 </para><para>        The given combination should be supported by the modem, as specified in the
         <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedModes">"SupportedModes"</link> property.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -270,6 +260,7 @@ SetCurrentBands (IN  au bands);
 </programlisting>
 <para>        Set the radio frequency and technology bands the device is currently
         allowed to use when connecting to a network.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -291,6 +282,7 @@ SetPrimarySimSlot (IN  u sim_slot);
 	use.
 </para><para>        There is no limitation on which SIM slot to select, so the user may also set as
 	primary a slot that doesn't currently have any valid SIM card inserted.
+</para><para>        Since: 1.16
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -307,10 +299,11 @@ Command (IN  s cmd,
          IN  u timeout,
          OUT s response);
 </programlisting>
-<para>       Send an arbitrary AT command to a modem and get the response.
-</para><para>       Note that using this interface call is only allowed when running
-       ModemManager in debug mode or if the project was built using
-       the <literal>with-at-command-via-dbus</literal> configure option.
+<para>        Send an arbitrary AT command to a modem and get the response.
+</para><para>        Note that using this interface call is only allowed when running
+        ModemManager in debug mode or if the project was built using
+        the <literal>with-at-command-via-dbus</literal> configure option.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -339,6 +332,7 @@ StateChanged (i old,
               u reason);
 </programlisting>
 <para>        The modem's state (see <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.State">"State"</link>) changed.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -372,6 +366,7 @@ Sim  readable   o
         supported, the <link linkend="gdbus-interface-org-freedesktop-ModemManager1-Modem.top_of_page">org.freedesktop.ModemManager1.Modem</link>.PrimarySimSlot
         index value specifies which is the slot number where this SIM card
         is available.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.SimSlots">
@@ -389,6 +384,7 @@ SimSlots  readable   ao
 </para><para>        This list includes the SIM object considered as primary active SIM slot
         (<link linkend="gdbus-interface-org-freedesktop-ModemManager1-Modem.top_of_page">org.freedesktop.ModemManager1.Modem</link>.Sim) at index
         <link linkend="gdbus-interface-org-freedesktop-ModemManager1-Modem.top_of_page">org.freedesktop.ModemManager1.Modem</link>.ActiveSimSlot.
+</para><para>        Since: 1.16
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.PrimarySimSlot">
@@ -407,6 +403,7 @@ PrimarySimSlot  readable   u
 </para><para>        In a Multi SIM Multi Standby setup, this index identifies the active SIM
         that is considered primary, i.e. the one that will be used when a data
         connection is setup.
+</para><para>        Since: 1.16
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers">
@@ -419,6 +416,7 @@ Bearers  readable   ao
         CDMA2000 Packet Data Sessions) as requested by the user.
 </para><para>        This list does not include the initial EPS bearer details (see
         <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer">"InitialEpsBearer"</link>).
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities">
@@ -436,6 +434,7 @@ SupportedCapabilities  readable   au
 </para><para>        Only multimode devices implementing both 3GPP (GSM/UMTS/LTE/5GNR) and
         3GPP2 (CDMA/EVDO) specs will report more than one combination of
         capabilities.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentCapabilities">
@@ -449,6 +448,7 @@ CurrentCapabilities  readable   u
         technologies.
 </para><para>        This bitmask will be one of the ones listed in
         <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities">"SupportedCapabilities"</link>.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxBearers">
@@ -464,6 +464,12 @@ MaxBearers  readable   u
         while GSM/UMTS devices typically support three or more, and any
         LTE-capable device (whether LTE-only, GSM/UMTS-capable, and/or
         CDMA2000-capable) also typically support three or more.
+</para><para>        Deprecated: 1.18.0. There is no way to query the modem how many bearers
+        it supports, so the value exposed in this property in all the different
+        implementations is always equal to the value in
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveBearers">"MaxActiveBearers"</link>, so there is no
+        point in using this property.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveBearers">
@@ -474,10 +480,27 @@ MaxActiveBearers  readable   u
 </programlisting>
 <para>        The maximum number of active
         <link linkend="MM-BEARER-TYPE-DEFAULT:CAPS"><constant>MM_BEARER_TYPE_DEFAULT</constant></link>
-        bearers that may be explicitly enabled by the user.
+        bearers that may be explicitly enabled by the user without multiplexing support.
 </para><para>        POTS and CDMA2000-only devices support one active bearer, while GSM/UMTS
-        and LTE-capable devices (including LTE/CDMA devices) typically support
-        at least two active bearers.
+        and LTE/5GNR capable devices (including 3GPP+3GPP3 multimode devices) may support
+        one or more active bearers, depending on the amount of physical ports exposed
+        by the device.
+</para><para>        Since: 1.0
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveMultiplexedBearers">
+  <title>The "MaxActiveMultiplexedBearers" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveMultiplexedBearers"><primary sortas="Modem:MaxActiveMultiplexedBearers">org.freedesktop.ModemManager1.Modem:MaxActiveMultiplexedBearers</primary></indexterm>
+<programlisting>
+MaxActiveMultiplexedBearers  readable   u
+</programlisting>
+<para>        The maximum number of active
+        <link linkend="MM-BEARER-TYPE-DEFAULT:CAPS"><constant>MM_BEARER_TYPE_DEFAULT</constant></link>
+        bearers that may be explicitly enabled by the user with multiplexing support
+        on one single network interface.
+</para><para>        If the modem doesn't support multiplexing of data sessiones, a value of 0 will
+        be reported.
+</para><para>        Since: 1.18
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.Manufacturer">
@@ -487,6 +510,7 @@ MaxActiveBearers  readable   u
 Manufacturer  readable   s
 </programlisting>
 <para>        The equipment manufacturer, as reported by the modem.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.Model">
@@ -496,6 +520,7 @@ Manufacturer  readable   s
 Model  readable   s
 </programlisting>
 <para>        The equipment model, as reported by the modem.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.Revision">
@@ -505,6 +530,7 @@ Model  readable   s
 Revision  readable   s
 </programlisting>
 <para>        The revision identification of the software, as reported by the modem.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfiguration">
@@ -514,6 +540,7 @@ Revision  readable   s
 CarrierConfiguration  readable   s
 </programlisting>
 <para>        The description of the carrier-specific configuration (MCFG) in use by the modem.
+</para><para>        Since: 1.12
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.CarrierConfigurationRevision">
@@ -523,6 +550,7 @@ CarrierConfiguration  readable   s
 CarrierConfigurationRevision  readable   s
 </programlisting>
 <para>        The revision identification of the carrier-specific configuration (MCFG) in use by the modem.
+</para><para>        Since: 1.12
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.HardwareRevision">
@@ -532,6 +560,7 @@ CarrierConfigurationRevision  readable   s
 HardwareRevision  readable   s
 </programlisting>
 <para>        The revision identification of the hardware, as reported by the modem.
+</para><para>        Since: 1.8
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.DeviceIdentifier">
@@ -548,6 +577,7 @@ DeviceIdentifier  readable   s
         experience operations.
 </para><para>        This is not the device's IMEI or ESN since those may not be available
         before unlocking the device via a PIN.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.Device">
@@ -562,6 +592,7 @@ Device  readable   s
         object.
 </para><para>        This value may also be set by the user using the MM_ID_PHYSDEV_UID udev
         tag (e.g. binding the tag to a specific sysfs path).
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.Drivers">
@@ -572,6 +603,7 @@ Drivers  readable   as
 </programlisting>
 <para>        The Operating System device drivers handling communication with the modem
         hardware.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.Plugin">
@@ -581,6 +613,7 @@ Drivers  readable   as
 Plugin  readable   s
 </programlisting>
 <para>        The name of the plugin handling this modem.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.PrimaryPort">
@@ -590,6 +623,7 @@ Plugin  readable   s
 PrimaryPort  readable   s
 </programlisting>
 <para>        The name of the primary port using to control the modem.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.Ports">
@@ -602,6 +636,7 @@ Ports  readable   a(su)
         integer pairs. The string is the port name or path, and the integer is
         the port type given as a
         <link linkend="MMModemPortType">MMModemPortType</link> value.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.EquipmentIdentifier">
@@ -613,6 +648,7 @@ EquipmentIdentifier  readable   s
 <para>        The identity of the device.
 </para><para>        This will be the IMEI number for GSM devices and the hex-format ESN/MEID
         for CDMA devices.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.UnlockRequired">
@@ -623,6 +659,7 @@ UnlockRequired  readable   u
 </programlisting>
 <para>        Current lock state of the device, given as a
         <link linkend="MMModemLock">MMModemLock</link> value.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.UnlockRetries">
@@ -636,6 +673,7 @@ UnlockRetries  readable   a{uu}
         before the code becomes blocked (requiring a PUK) or permanently blocked. Dictionary
         entries exist only for the codes for which the modem is able to report retry
         counts.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.State">
@@ -649,6 +687,7 @@ State  readable   i
 </para><para>        If the device's state cannot be determined,
         <link linkend="MM-MODEM-STATE-UNKNOWN:CAPS"><constant>MM_MODEM_STATE_UNKNOWN</constant></link>
         will be reported.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.StateFailedReason">
@@ -661,6 +700,7 @@ StateFailedReason  readable   u
         <link linkend="MM-MODEM-STATE-FAILED:CAPS"><constant>MM_MODEM_STATE_FAILED</constant></link>
         state, given as a
         <link linkend="MMModemStateFailedReason">MMModemStateFailedReason</link> value.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.AccessTechnologies">
@@ -675,6 +715,7 @@ AccessTechnologies  readable   u
 </para><para>        If the device's access technology cannot be determined,
         <link linkend="MM-MODEM-ACCESS-TECHNOLOGY-UNKNOWN:CAPS"><constant>MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN</constant></link>
         will be reported.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.SignalQuality">
@@ -688,6 +729,7 @@ SignalQuality  readable   (ub)
         devices.
 </para><para>        The additional boolean value indicates if the quality value given was
         recently taken.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.OwnNumbers">
@@ -698,6 +740,7 @@ OwnNumbers  readable   as
 </programlisting>
 <para>        List of numbers (e.g. MSISDN in 3GPP) being currently handled by this
         modem.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.PowerState">
@@ -708,6 +751,7 @@ PowerState  readable   u
 </programlisting>
 <para>        A <link linkend="MMModemPowerState">MMModemPowerState</link> value
         specifying the current power state of the modem.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedModes">
@@ -732,6 +776,7 @@ SupportedModes  readable   a(uu)
             </listitem>
           </varlistentry>
         </variablelist>
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentModes">
@@ -746,6 +791,7 @@ CurrentModes  readable   (uu)
         preferred mode of those specified as allowed.
 </para><para>        The pair must be one of those specified in
         <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedModes">"SupportedModes"</link>.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedBands">
@@ -760,6 +806,7 @@ SupportedBands  readable   au
 </para><para>        For POTS devices, only the
         <link linkend="MM-MODEM-BAND-ANY:CAPS"><constant>MM_MODEM_BAND_ANY</constant></link>
         mode will be returned.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentBands">
@@ -772,6 +819,7 @@ CurrentBands  readable   au
         specifying the radio frequency and technology bands the device is
         currently using when connecting to a network.
 </para><para>        It must be a subset of <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedBands">"SupportedBands"</link>.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedIpFamilies">
@@ -782,6 +830,7 @@ SupportedIpFamilies  readable   u
 </programlisting>
 <para>        Bitmask of <link linkend="MMBearerIpFamily">MMBearerIpFamily</link> values,
         specifying the IP families supported by the device.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 </refsect1>

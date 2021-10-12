@@ -30,14 +30,20 @@
 
 #define SUBSYSTEM_3GPP "3gpp"
 
-/* When comparing EPS bearer settings take into account that PASSWORD may not always
- * be readable, and apply very loose matching for all fields. Also, some implementations
- * may allow configuring roaming allowance in the initial EPS bearer, but that is also
- * not common. */
+/* When comparing EPS bearer settings take into account that:
+ *  -  'password' may not always be readable.
+ *  -  'apn-type' may not always be supported.
+ *  -  'profile-id' will not be known in the requested settings
+ *  -  we ignore settings not applicable to profiles, like 'allow-roaming' or
+ *     'rm-protocol'.
+ *  -  we apply very loose matching for all fields.
+ */
 #define MM_BEARER_PROPERTIES_CMP_FLAGS_EPS              \
     (MM_BEARER_PROPERTIES_CMP_FLAGS_LOOSE |             \
+     MM_BEARER_PROPERTIES_CMP_FLAGS_NO_PROFILE_ID |     \
      MM_BEARER_PROPERTIES_CMP_FLAGS_NO_PASSWORD |       \
      MM_BEARER_PROPERTIES_CMP_FLAGS_NO_ALLOW_ROAMING |  \
+     MM_BEARER_PROPERTIES_CMP_FLAGS_NO_APN_TYPE |       \
      MM_BEARER_PROPERTIES_CMP_FLAGS_NO_RM_PROTOCOL)
 
 /*****************************************************************************/
@@ -411,7 +417,7 @@ mm_iface_modem_3gpp_register_in_network (MMIfaceModem3gpp    *self,
     }
 
     /* Validate input MCC/MNC */
-    if (ctx->operator_id && !mm_3gpp_parse_operator_id (ctx->operator_id, NULL, NULL, &error)) {
+    if (ctx->operator_id && !mm_3gpp_parse_operator_id (ctx->operator_id, NULL, NULL, NULL, &error)) {
         g_assert (error != NULL);
         g_task_return_error (task, error);
         g_object_unref (task);
@@ -452,11 +458,11 @@ mm_iface_modem_3gpp_register_in_network (MMIfaceModem3gpp    *self,
         /* If the modem is already registered and the last time it was asked
          * automatic registration, we're done */
         if (!force_registration &&
-            (current_operator_code || REG_STATE_IS_REGISTERED (reg_state)) &&
+            REG_STATE_IS_REGISTERED (reg_state) &&
             !priv->manual_registration) {
             mm_obj_dbg (self, "already registered automatically in network '%s',"
                         " automatic registration not launched...",
-                        current_operator_code);
+                        current_operator_code ? current_operator_code : "unknown");
             g_task_return_boolean (task, TRUE);
             g_object_unref (task);
             return;
@@ -1123,6 +1129,7 @@ set_initial_eps_bearer_settings_auth_ready (MMBaseModem                         
         old_config = mm_bearer_properties_new_from_dictionary (old_dictionary, NULL);
 
     if (old_config && mm_bearer_properties_cmp (ctx->config, old_config, MM_BEARER_PROPERTIES_CMP_FLAGS_EPS)) {
+        mm_obj_dbg (self, "Skipping initial eps bearer configuration. Same configuration provided");
         mm_gdbus_modem3gpp_complete_set_initial_eps_bearer_settings (ctx->skeleton, ctx->invocation);
         handle_set_initial_eps_bearer_settings_context_free (ctx);
     } else {
@@ -1154,6 +1161,161 @@ handle_set_initial_eps_bearer_settings (MmGdbusModem3gpp      *skeleton,
                              invocation,
                              MM_AUTHORIZATION_DEVICE_CONTROL,
                              (GAsyncReadyCallback)set_initial_eps_bearer_settings_auth_ready,
+                             ctx);
+    return TRUE;
+}
+
+/*****************************************************************************/
+
+typedef struct {
+    MmGdbusModem3gpp      *skeleton;
+    GDBusMethodInvocation *invocation;
+    MMIfaceModem3gpp      *self;
+    GVariant              *dictionary;
+    MMModem3gppFacility    facility;
+    guint8                 slot;
+    gchar                 *control_key;
+} HandleDisableFacilityLockContext;
+
+static void
+handle_disable_facility_lock_context_free (HandleDisableFacilityLockContext *ctx)
+{
+    g_object_unref (ctx->skeleton);
+    g_object_unref (ctx->invocation);
+    g_object_unref (ctx->self);
+    g_variant_unref (ctx->dictionary);
+    g_free (ctx->control_key);
+    g_free (ctx);
+}
+
+static void
+update_lock_info_ready (MMIfaceModem                     *modem,
+                        GAsyncResult                     *res,
+                        HandleDisableFacilityLockContext *ctx)
+{
+    GError      *error = NULL;
+
+    mm_iface_modem_update_lock_info_finish (modem, res, &error);
+    if (error) {
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        handle_disable_facility_lock_context_free (ctx);
+        return;
+    }
+
+    mm_gdbus_modem3gpp_complete_disable_facility_lock (ctx->skeleton, ctx->invocation);
+    handle_disable_facility_lock_context_free (ctx);
+}
+
+static void
+handle_disable_facility_lock_ready (MMIfaceModem3gpp                 *self,
+                                    GAsyncResult                     *res,
+                                    HandleDisableFacilityLockContext *ctx)
+{
+    MMModem3gppFacility  facilities;
+    GError              *error = NULL;
+
+    if (!MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->disable_facility_lock_finish (self, res, &error)) {
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        handle_disable_facility_lock_context_free (ctx);
+        return;
+    }
+
+    /* Update the Enabled Facility Locks property in the DBus interface */
+    facilities = mm_gdbus_modem3gpp_get_enabled_facility_locks (ctx->skeleton);
+    facilities &= ~ctx->facility;
+    mm_gdbus_modem3gpp_set_enabled_facility_locks (ctx->skeleton, facilities);
+
+    /* Recheck lock status after unlock code has been sent  */
+    mm_iface_modem_update_lock_info (MM_IFACE_MODEM (self),
+                                     MM_MODEM_LOCK_UNKNOWN, /* ask */
+                                     (GAsyncReadyCallback)update_lock_info_ready,
+                                     ctx);
+}
+
+static void
+disable_facility_lock_auth_ready (MMBaseModem                      *self,
+                                  GAsyncResult                     *res,
+                                  HandleDisableFacilityLockContext *ctx)
+{
+    GError *error = NULL;
+
+    if (!mm_base_modem_authorize_finish (self, res, &error)) {
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        handle_disable_facility_lock_context_free (ctx);
+        return;
+    }
+
+    /* If disable facility locks is not implemented, report an error */
+    if (!MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->disable_facility_lock ||
+        !MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->disable_facility_lock_finish) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot disable facility locks: operation not supported");
+        handle_disable_facility_lock_context_free (ctx);
+        return;
+    }
+
+    /* Parse properties dictionary */
+    if (!g_variant_is_of_type (ctx->dictionary, G_VARIANT_TYPE ("(us)"))) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot disable facility locks: invalid parameters");
+        handle_disable_facility_lock_context_free (ctx);
+        return;
+    }
+
+    /* Only modems with single slot or single configuration for all slots are supported */
+    ctx->slot = 1;
+
+    g_variant_get (ctx->dictionary, "(us)", &ctx->facility, &ctx->control_key);
+
+    /* Only four facility locks can be disabled:
+     * - MM_MODEM_3GPP_FACILITY_NET_PERS (network personalization)
+     * - MM_MODEM_3GPP_FACILITY_NET_SUB_PERS (network subset personalization)
+     * - MM_MODEM_3GPP_FACILITY_PROVIDER_PERS (service provider personalization)
+     * - MM_MODEM_3GPP_FACILITY_CORP_PERS (corporate personalization)
+     */
+    if (ctx->facility != (ctx->facility & (MM_MODEM_3GPP_FACILITY_NET_PERS |
+                                           MM_MODEM_3GPP_FACILITY_NET_SUB_PERS |
+                                           MM_MODEM_3GPP_FACILITY_PROVIDER_PERS |
+                                           MM_MODEM_3GPP_FACILITY_CORP_PERS))) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Invalid type of facility lock to disable or empty key");
+        handle_disable_facility_lock_context_free (ctx);
+        return;
+    }
+
+    MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->disable_facility_lock (
+        MM_IFACE_MODEM_3GPP (self),
+        ctx->facility,
+        ctx->slot,
+        ctx->control_key,
+        (GAsyncReadyCallback)handle_disable_facility_lock_ready,
+        ctx);
+}
+
+static gboolean
+handle_disable_facility_lock (MmGdbusModem3gpp      *skeleton,
+                              GDBusMethodInvocation *invocation,
+                              GVariant              *dictionary,
+                              MMIfaceModem3gpp      *self)
+{
+    HandleDisableFacilityLockContext *ctx;
+
+    ctx = g_new0 (HandleDisableFacilityLockContext, 1);
+    ctx->skeleton   = g_object_ref (skeleton);
+    ctx->invocation = g_object_ref (invocation);
+    ctx->self       = g_object_ref (self);
+    ctx->dictionary = g_variant_ref (dictionary);
+
+    mm_base_modem_authorize (MM_BASE_MODEM (self),
+                             invocation,
+                             MM_AUTHORIZATION_DEVICE_CONTROL,
+                             (GAsyncReadyCallback)disable_facility_lock_auth_ready,
                              ctx);
     return TRUE;
 }
@@ -1262,15 +1424,13 @@ load_operator_code_ready (MMIfaceModem3gpp *self,
     ReloadCurrentRegistrationInfoContext *ctx;
     GError *error = NULL;
     gchar *str;
-    guint16 mcc = 0;
-    guint16 mnc = 0;
 
     ctx = g_task_get_task_data (task);
 
     str = MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_operator_code_finish (self, res, &error);
     if (error) {
         mm_obj_warn (self, "couldn't load operator code: %s", error->message);
-    } else if (!mm_3gpp_parse_operator_id (str, &mcc, &mnc, &error)) {
+    } else if (!mm_3gpp_parse_operator_id (str, NULL, NULL, NULL, &error)) {
         mm_obj_dbg (self, "unexpected operator code string '%s': %s", str, error->message);
         g_clear_pointer (&str, g_free);
     }
@@ -1280,8 +1440,8 @@ load_operator_code_ready (MMIfaceModem3gpp *self,
         mm_gdbus_modem3gpp_set_operator_code (ctx->skeleton, str);
 
     /* If we also implement the location interface, update the 3GPP location */
-    if (mcc && MM_IS_IFACE_MODEM_LOCATION (self))
-        mm_iface_modem_location_3gpp_update_mcc_mnc (MM_IFACE_MODEM_LOCATION (self), mcc, mnc);
+    if (str && MM_IS_IFACE_MODEM_LOCATION (self))
+        mm_iface_modem_location_3gpp_update_operator_code (MM_IFACE_MODEM_LOCATION (self), str);
 
     g_free (str);
 
@@ -1351,7 +1511,7 @@ mm_iface_modem_3gpp_reload_current_registration_info (MMIfaceModem3gpp *self,
     if (ctx->operator_code_loaded) {
         mm_gdbus_modem3gpp_set_operator_code (ctx->skeleton, NULL);
         if (MM_IS_IFACE_MODEM_LOCATION (self))
-            mm_iface_modem_location_3gpp_update_mcc_mnc (MM_IFACE_MODEM_LOCATION (self), 0, 0);
+            mm_iface_modem_location_3gpp_update_operator_code (MM_IFACE_MODEM_LOCATION (self), NULL);
     }
 
     ctx->operator_name_loaded = !(MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_operator_name &&
@@ -1376,7 +1536,7 @@ mm_iface_modem_3gpp_clear_current_operator (MMIfaceModem3gpp *self)
     mm_gdbus_modem3gpp_set_operator_code (skeleton, NULL);
     mm_gdbus_modem3gpp_set_operator_name (skeleton, NULL);
     if (MM_IS_IFACE_MODEM_LOCATION (self))
-        mm_iface_modem_location_3gpp_update_mcc_mnc (MM_IFACE_MODEM_LOCATION (self), 0, 0);
+        mm_iface_modem_location_3gpp_update_operator_code (MM_IFACE_MODEM_LOCATION (self), NULL);
 }
 
 /*****************************************************************************/
@@ -2341,15 +2501,182 @@ mm_iface_modem_3gpp_enable (MMIfaceModem3gpp *self,
 
 /*****************************************************************************/
 
+#if defined WITH_SYSTEMD_SUSPEND_RESUME
+
+typedef struct _SyncingContext SyncingContext;
+static void interface_syncing_step (GTask *task);
+
+typedef enum {
+    SYNCING_STEP_FIRST,
+    SYNCING_STEP_REFRESH_3GPP_REGISTRATION,
+    SYNCING_STEP_REFRESH_EPS_BEARER,
+    SYNCING_STEP_LAST
+} SyncingStep;
+
+struct _SyncingContext {
+    SyncingStep step;
+};
+
+gboolean
+mm_iface_modem_3gpp_sync_finish (MMIfaceModem3gpp  *self,
+                                 GAsyncResult      *res,
+                                 GError           **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+sync_eps_bearer_ready (MMIfaceModem3gpp *self,
+                       GAsyncResult     *res,
+                       GTask            *task)
+{
+    SyncingContext                *ctx;
+    g_autoptr(MMBearerProperties)  properties  = NULL;
+    g_autoptr(GError)              error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    properties = MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer_finish (self, res, &error);
+    if (!properties)
+        mm_obj_dbg (self, "couldn't refresh initial EPS bearer status: %s", error->message);
+    else
+        mm_iface_modem_3gpp_update_initial_eps_bearer (self, properties);
+
+    /* Go on to next step */
+    ctx->step++;
+    interface_syncing_step (task);
+}
+
+static void
+sync_eps_bearer (MMIfaceModem3gpp    *self,
+                 GAsyncReadyCallback  callback,
+                 GTask               *task)
+{
+    SyncingContext *ctx;
+    gboolean        eps_supported = FALSE;
+
+    g_object_get (self,
+                  MM_IFACE_MODEM_3GPP_EPS_NETWORK_SUPPORTED, &eps_supported,
+                  NULL);
+
+    /* Refresh EPS bearer if supported */
+    if (eps_supported &&
+        MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer &&
+        MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer_finish) {
+        MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_initial_eps_bearer (
+            self,
+            callback,
+            task);
+        return;
+    }
+
+    /* If EPS is unsupported, just go to the next step */
+    ctx = g_task_get_task_data (task);
+    ctx->step++;
+    interface_syncing_step (task);
+}
+
+static void
+sync_registration_ready (MMIfaceModem3gpp *self,
+                         GAsyncResult     *res,
+                         GTask            *task)
+{
+    SyncingContext     *ctx;
+    g_autoptr (GError)  error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    if (!mm_iface_modem_3gpp_run_registration_checks_finish (self, res, &error))
+        mm_obj_dbg (self, "couldn't synchronize 3GPP registration: %s", error->message);
+
+    /* Go on to next step */
+    ctx->step++;
+    interface_syncing_step(task);
+}
+
+static void
+interface_syncing_step (GTask *task)
+{
+    MMIfaceModem3gpp *self;
+    SyncingContext   *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
+    switch (ctx->step) {
+    case SYNCING_STEP_FIRST:
+        ctx->step++;
+        /* fall through */
+
+    case SYNCING_STEP_REFRESH_3GPP_REGISTRATION:
+        /*
+         * Refresh registration info to verify that the modem is still registered.
+         * Wait until registration checks are complete before going to the next step.
+         */
+        mm_iface_modem_3gpp_run_registration_checks (
+            self,
+            (GAsyncReadyCallback)sync_registration_ready,
+            task);
+        return;
+
+    case SYNCING_STEP_REFRESH_EPS_BEARER:
+        /*
+         * Refresh EPS bearer and wait until complete.
+         * We want to make sure that the modem is fully enabled again
+         * when we refresh the mobile data connection bearers.
+         */
+        sync_eps_bearer (
+            self,
+            (GAsyncReadyCallback)sync_eps_bearer_ready,
+            task);
+        return;
+
+    case SYNCING_STEP_LAST:
+        /* We are done without errors! */
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+
+    default:
+        break;
+    }
+
+    g_assert_not_reached ();
+}
+
+void
+mm_iface_modem_3gpp_sync (MMIfaceModem3gpp    *self,
+                          GAsyncReadyCallback  callback,
+                          gpointer             user_data)
+{
+    SyncingContext *ctx;
+    GTask          *task;
+
+    /* Create SyncingContext */
+    ctx = g_new0 (SyncingContext, 1);
+    ctx->step = SYNCING_STEP_FIRST;
+
+    /* Create sync steps task and execute it */
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)g_free);
+    interface_syncing_step (task);
+}
+
+#endif
+
+/*****************************************************************************/
+
 typedef struct _InitializationContext InitializationContext;
 static void interface_initialization_step (GTask *task);
 
 typedef enum {
     INITIALIZATION_STEP_FIRST,
-    INITIALIZATION_STEP_IMEI,
     INITIALIZATION_STEP_ENABLED_FACILITY_LOCKS,
+    INITIALIZATION_STEP_TEST_LOCKED,
+    INITIALIZATION_STEP_IMEI,
     INITIALIZATION_STEP_EPS_UE_MODE_OPERATION,
     INITIALIZATION_STEP_EPS_INITIAL_BEARER_SETTINGS,
+    INITIALIZATION_STEP_CONNECT_SIGNALS,
     INITIALIZATION_STEP_LAST
 } InitializationStep;
 
@@ -2504,6 +2831,7 @@ interface_initialization_step (GTask *task)
 {
     MMIfaceModem3gpp *self;
     InitializationContext *ctx;
+    MMModemState modem_state;
 
     /* Don't run new steps if we're cancelled */
     if (g_task_return_error_if_cancelled (task)) {
@@ -2519,6 +2847,32 @@ interface_initialization_step (GTask *task)
         ctx->step++;
         /* fall through */
 
+    case INITIALIZATION_STEP_ENABLED_FACILITY_LOCKS:
+        if (MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_enabled_facility_locks &&
+            MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_enabled_facility_locks_finish) {
+            MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_enabled_facility_locks (
+                self,
+                (GAsyncReadyCallback)load_enabled_facility_locks_ready,
+                task);
+            return;
+        }
+        ctx->step++;
+        /* fall through */
+
+    case INITIALIZATION_STEP_TEST_LOCKED:
+        modem_state = MM_MODEM_STATE_UNKNOWN;
+        g_object_get (self,
+                      MM_IFACE_MODEM_STATE, &modem_state,
+                      NULL);
+        if (modem_state == MM_MODEM_STATE_LOCKED) {
+            /* Skip some steps and export the interface if modem is locked */
+            ctx->step = INITIALIZATION_STEP_LAST;
+            interface_initialization_step (task);
+            return;
+        }
+        ctx->step++;
+        /* fall through */
+
     case INITIALIZATION_STEP_IMEI:
         /* IMEI value is meant to be loaded only once during the whole
          * lifetime of the modem. Therefore, if we already have it loaded,
@@ -2529,18 +2883,6 @@ interface_initialization_step (GTask *task)
             MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_imei (
                 self,
                 (GAsyncReadyCallback)load_imei_ready,
-                task);
-            return;
-        }
-        ctx->step++;
-        /* fall through */
-
-    case INITIALIZATION_STEP_ENABLED_FACILITY_LOCKS:
-        if (MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_enabled_facility_locks &&
-            MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_enabled_facility_locks_finish) {
-            MM_IFACE_MODEM_3GPP_GET_INTERFACE (self)->load_enabled_facility_locks (
-                self,
-                (GAsyncReadyCallback)load_enabled_facility_locks_ready,
                 task);
             return;
         }
@@ -2571,7 +2913,7 @@ interface_initialization_step (GTask *task)
         ctx->step++;
         /* fall through */
 
-    case INITIALIZATION_STEP_LAST:
+    case INITIALIZATION_STEP_CONNECT_SIGNALS:
         /* We are done without errors! */
 
         /* Handle method invocations */
@@ -2590,6 +2932,16 @@ interface_initialization_step (GTask *task)
         g_signal_connect (ctx->skeleton,
                           "handle-set-initial-eps-bearer-settings",
                           G_CALLBACK (handle_set_initial_eps_bearer_settings),
+                          self);
+
+        ctx->step++;
+        /* fall through */
+
+    case INITIALIZATION_STEP_LAST:
+        /* Always connect the signal to unlock modem */
+        g_signal_connect (ctx->skeleton,
+                          "handle-disable-facility-lock",
+                          G_CALLBACK (handle_disable_facility_lock),
                           self);
 
         /* Finally, export the new interface */

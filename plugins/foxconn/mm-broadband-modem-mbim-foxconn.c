@@ -145,15 +145,24 @@ foxconn_get_firmware_version_ready (QmiClientDms *client,
     GError                                       *error = NULL;
     MMFirmwareUpdateSettings                     *update_settings = NULL;
     const gchar                                  *str;
+    MMIfaceModemFirmware                         *self;
 
     output = qmi_client_dms_foxconn_get_firmware_version_finish (client, res, &error);
     if (!output || !qmi_message_dms_foxconn_get_firmware_version_output_get_result (output, &error))
         goto out;
 
-    /* Create update settings now */
-    update_settings = mm_firmware_update_settings_new (MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT |
-                                                       MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC);
-    mm_firmware_update_settings_set_fastboot_at (update_settings, "AT^FASTBOOT");
+    /* Create update settings now:
+     * 0x105b is the T99W175 module, T99W175 supports QDU,
+     * else support FASTBOOT and QMI PDC.
+     */
+    self = g_task_get_source_object (task);
+    if (mm_base_modem_get_vendor_id (MM_BASE_MODEM (self)) == 0x105b)
+        update_settings = mm_firmware_update_settings_new (MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU);
+    else {
+        update_settings = mm_firmware_update_settings_new (MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT |
+                                                           MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC);
+        mm_firmware_update_settings_set_fastboot_at (update_settings, "AT^FASTBOOT");
+    }
 
     qmi_message_dms_foxconn_get_firmware_version_output_get_version (output, &str, NULL);
     mm_firmware_update_settings_set_version (update_settings, str);
@@ -489,17 +498,30 @@ mm_broadband_modem_mbim_foxconn_new (const gchar  *device,
                                      guint16       vendor_id,
                                      guint16       product_id)
 {
+    const gchar *carrier_config_mapping = NULL;
+
+    /* T77W968 (DW5821e is also T77W968) modules use t77w968 carrier mapping table,
+     * T99W175 modules use t99w175 carrier mapping table. */
+    if ((vendor_id == 0x0489 && (product_id == 0xe0b4 || product_id == 0xe0b5)) ||
+        (vendor_id == 0x413c && (product_id == 0x81d7 || product_id == 0x81e0)))
+        carrier_config_mapping = PKGDATADIR "/mm-foxconn-t77w968-carrier-mapping.conf";
+    else if (vendor_id == 0x105b && (product_id == 0xe0ab || product_id == 0xe0b0 || product_id == 0xe0b1))
+        carrier_config_mapping = PKGDATADIR "/mm-foxconn-t99w175-carrier-mapping.conf";
+
     return g_object_new (MM_TYPE_BROADBAND_MODEM_MBIM_FOXCONN,
                          MM_BASE_MODEM_DEVICE,     device,
                          MM_BASE_MODEM_DRIVERS,    drivers,
                          MM_BASE_MODEM_PLUGIN,     plugin,
                          MM_BASE_MODEM_VENDOR_ID,  vendor_id,
                          MM_BASE_MODEM_PRODUCT_ID, product_id,
+                         /* MBIM bearer supports NET only */
+                         MM_BASE_MODEM_DATA_NET_SUPPORTED, TRUE,
+                         MM_BASE_MODEM_DATA_TTY_SUPPORTED, FALSE,
                          MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED,              TRUE,
                          MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED,             FALSE,
                          MM_IFACE_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED,      TRUE,
                          MM_IFACE_MODEM_LOCATION_ALLOW_GPS_UNMANAGED_ALWAYS, TRUE,
-                         MM_IFACE_MODEM_CARRIER_CONFIG_MAPPING,              PKGDATADIR "/mm-foxconn-carrier-mapping.conf",
+                         MM_IFACE_MODEM_CARRIER_CONFIG_MAPPING,              carrier_config_mapping,
                          NULL);
 }
 

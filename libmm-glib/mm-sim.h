@@ -87,6 +87,8 @@ gchar       *mm_sim_dup_operator_name       (MMSim *self);
 const gchar * const  *mm_sim_get_emergency_numbers (MMSim *self);
 gchar               **mm_sim_dup_emergency_numbers (MMSim *self);
 
+GList*       mm_sim_get_preferred_networks  (MMSim *self);
+
 void     mm_sim_send_pin        (MMSim *self,
                                  const gchar *pin,
                                  GCancellable *cancellable,
@@ -156,6 +158,19 @@ gboolean mm_sim_change_pin_sync   (MMSim *self,
                                    const gchar *new_pin,
                                    GCancellable *cancellable,
                                    GError **error);
+
+void     mm_sim_set_preferred_networks        (MMSim *self,
+                                               const GList *preferred_networks,
+                                               GCancellable *cancellable,
+                                               GAsyncReadyCallback callback,
+                                               gpointer user_data);
+gboolean mm_sim_set_preferred_networks_finish (MMSim *self,
+                                               GAsyncResult *res,
+                                               GError **error);
+gboolean mm_sim_set_preferred_networks_sync   (MMSim *self,
+                                               const GList *preferred_networks,
+                                               GCancellable *cancellable,
+                                               GError **error);
 
 G_END_DECLS
 

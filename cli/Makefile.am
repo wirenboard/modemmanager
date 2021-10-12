@@ -19,6 +19,8 @@ mmcli_SOURCES = \
 	mmcli-manager.c \
 	mmcli-modem.c \
 	mmcli-modem-3gpp.c \
+	mmcli-modem-3gpp-profile-manager.c \
+	mmcli-modem-3gpp-ussd.c \
 	mmcli-modem-cdma.c \
 	mmcli-modem-simple.c \
 	mmcli-modem-location.c \

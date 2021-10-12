@@ -228,6 +228,10 @@ if WITH_SHARED_OPTION
 pkglib_LTLIBRARIES += libmm-shared-option.la
 libmm_shared_option_la_SOURCES = \
 	option/mm-shared.c \
+	option/mm-shared-option.h \
+	option/mm-shared-option.c \
+	option/mm-sim-option.c \
+	option/mm-sim-option.h \
 	option/mm-broadband-modem-option.c \
 	option/mm-broadband-modem-option.h \
 	$(NULL)
@@ -338,21 +342,21 @@ TELIT_ENUMS_GENERATED = \
 BUILT_SOURCES += $(TELIT_ENUMS_GENERATED)
 CLEANFILES    += $(TELIT_ENUMS_GENERATED)
 
-telit/mm-telit-enums-types.h: Makefile.am $(TELIT_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-template.h
+telit/mm-telit-enums-types.h: Makefile.am $(TELIT_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-types.h.template
 	$(AM_V_GEN) \
 		$(MKDIR_P) telit; \
 		$(GLIB_MKENUMS) \
 			--fhead "#include \"mm-modem-helpers-telit.h\"\n#ifndef __MM_TELIT_ENUMS_TYPES_H__\n#define __MM_TELIT_ENUMS_TYPES_H__\n" \
-			--template $(top_srcdir)/build-aux/mm-enums-template.h \
+			--template $(top_srcdir)/build-aux/mm-enums-types.h.template \
 			--ftail "#endif /* __MM_TELIT_ENUMS_TYPES_H__ */\n" \
 			$(TELIT_ENUMS_INPUTS) > $@
 
-telit/mm-telit-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-template.c telit/mm-telit-enums-types.h
+telit/mm-telit-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-types.c.template telit/mm-telit-enums-types.h
 	$(AM_V_GEN) \
 		$(MKDIR_P) telit; \
 		$(GLIB_MKENUMS) \
 			--fhead "#include \"mm-telit-enums-types.h\"" \
-			--template $(top_srcdir)/build-aux/mm-enums-template.c \
+			--template $(top_srcdir)/build-aux/mm-enums-types.c.template \
 			$(TELIT_ENUMS_INPUTS) > $@
 
 noinst_LTLIBRARIES += libhelpers-telit.la
@@ -605,6 +609,12 @@ libmm_plugin_cinterion_la_SOURCES += \
 	cinterion/mm-broadband-modem-qmi-cinterion.h \
 	$(NULL)
 endif
+if WITH_MBIM
+libmm_plugin_cinterion_la_SOURCES += \
+	cinterion/mm-broadband-modem-mbim-cinterion.c \
+	cinterion/mm-broadband-modem-mbim-cinterion.h \
+	$(NULL)
+endif
 libmm_plugin_cinterion_la_CPPFLAGS = \
 	$(PLUGIN_COMMON_COMPILER_FLAGS) \
 	-DMM_MODULE_NAME=\"cinterion\" \
@@ -716,11 +726,15 @@ libmm_plugin_foxconn_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 
 dist_udevrules_DATA += foxconn/77-mm-foxconn-port-types.rules
 
-dist_pkgdata_DATA += foxconn/mm-foxconn-carrier-mapping.conf
+dist_pkgdata_DATA += \
+	foxconn/mm-foxconn-t77w968-carrier-mapping.conf \
+	foxconn/mm-foxconn-t99w175-carrier-mapping.conf \
+	$(NULL)
 
 AM_CFLAGS += \
 	-DTESTUDEVRULESDIR_FOXCONN=\"${srcdir}/foxconn\" \
-	-DTESTKEYFILE_FOXCONN=\"${srcdir}/foxconn/mm-foxconn-carrier-mapping.conf\" \
+	-DTESTKEYFILE_FOXCONN_T77W968=\"${srcdir}/foxconn/mm-foxconn-t77w968-carrier-mapping.conf\" \
+	-DTESTKEYFILE_FOXCONN_T99W175=\"${srcdir}/foxconn/mm-foxconn-t99w175-carrier-mapping.conf\" \
 	$(NULL)
 
 endif
@@ -789,21 +803,21 @@ HUAWEI_ENUMS_GENERATED = \
 BUILT_SOURCES += $(HUAWEI_ENUMS_GENERATED)
 CLEANFILES    += $(HUAWEI_ENUMS_GENERATED)
 
-huawei/mm-huawei-enums-types.h: Makefile.am $(HUAWEI_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-template.h
+huawei/mm-huawei-enums-types.h: Makefile.am $(HUAWEI_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-types.h.template
 	$(AM_V_GEN) \
 		$(MKDIR_P) huawei; \
 		$(GLIB_MKENUMS) \
 			--fhead "#include \"mm-modem-helpers-huawei.h\"\n#ifndef __MM_HUAWEI_ENUMS_TYPES_H__\n#define __MM_HUAWEI_ENUMS_TYPES_H__\n" \
-			--template $(top_srcdir)/build-aux/mm-enums-template.h \
+			--template $(top_srcdir)/build-aux/mm-enums-types.h.template \
 			--ftail "#endif /* __MM_HUAWEI_ENUMS_TYPES_H__ */\n" \
 			$(HUAWEI_ENUMS_INPUTS) > $@
 
-huawei/mm-huawei-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-template.c huawei/mm-huawei-enums-types.h
+huawei/mm-huawei-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-types.c.template huawei/mm-huawei-enums-types.h
 	$(AM_V_GEN) \
 		$(MKDIR_P) huawei; \
 		$(GLIB_MKENUMS) \
 			--fhead "#include \"mm-huawei-enums-types.h\"" \
-			--template $(top_srcdir)/build-aux/mm-enums-template.c \
+			--template $(top_srcdir)/build-aux/mm-enums-types.c.template \
 			$(HUAWEI_ENUMS_INPUTS) > $@
 
 noinst_LTLIBRARIES += libhelpers-huawei.la
@@ -1276,6 +1290,12 @@ libmm_plugin_quectel_la_SOURCES += \
 	quectel/mm-broadband-modem-qmi-quectel.h \
 	$(NULL)
 endif
+if WITH_MBIM
+libmm_plugin_quectel_la_SOURCES += \
+	quectel/mm-broadband-modem-mbim-quectel.c \
+	quectel/mm-broadband-modem-mbim-quectel.h \
+	$(NULL)
+endif
 libmm_plugin_quectel_la_CPPFLAGS = \
 	$(PLUGIN_COMMON_COMPILER_FLAGS) \
 	-DMM_MODULE_NAME=\"quectel\" \
@@ -1527,21 +1547,21 @@ UBLOX_ENUMS_GENERATED = \
 	ublox/mm-ublox-enums-types.c \
 	$(NULL)
 
-ublox/mm-ublox-enums-types.h: Makefile.am $(UBLOX_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-template.h
+ublox/mm-ublox-enums-types.h: Makefile.am $(UBLOX_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-types.h.template
 	$(AM_V_GEN) \
 		$(MKDIR_P) ublox; \
 		$(GLIB_MKENUMS) \
 			--fhead "#include \"mm-modem-helpers-ublox.h\"\n#ifndef __MM_UBLOX_ENUMS_TYPES_H__\n#define __MM_UBLOX_ENUMS_TYPES_H__\n" \
-			--template $(top_srcdir)/build-aux/mm-enums-template.h \
+			--template $(top_srcdir)/build-aux/mm-enums-types.h.template \
 			--ftail "#endif /* __MM_UBLOX_ENUMS_TYPES_H__ */\n" \
 			$(UBLOX_ENUMS_INPUTS) > $@
 
-ublox/mm-ublox-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-template.c ublox/mm-ublox-enums-types.h
+ublox/mm-ublox-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-types.c.template ublox/mm-ublox-enums-types.h
 	$(AM_V_GEN) \
 		$(MKDIR_P) ublox; \
 		$(GLIB_MKENUMS) \
 			--fhead "#include \"mm-ublox-enums-types.h\"" \
-			--template $(top_srcdir)/build-aux/mm-enums-template.c \
+			--template $(top_srcdir)/build-aux/mm-enums-types.c.template \
 			$(UBLOX_ENUMS_INPUTS) > $@
 
 libhelpers_ublox_la_SOURCES = \

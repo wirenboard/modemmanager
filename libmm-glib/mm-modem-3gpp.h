@@ -172,12 +172,20 @@ gboolean mm_modem_3gpp_set_initial_eps_bearer_settings_sync   (MMModem3gpp      
                                                                GCancellable         *cancellable,
                                                                GError              **error);
 
-#ifndef MM_DISABLE_DEPRECATED
-
-G_DEPRECATED
-MMModem3gppSubscriptionState mm_modem_3gpp_get_subscription_state (MMModem3gpp *self);
-
-#endif
+void     mm_modem_3gpp_disable_facility_lock        (MMModem3gpp          *self,
+                                                     MMModem3gppFacility   facility,
+                                                     const gchar          *control_key,
+                                                     GCancellable         *cancellable,
+                                                     GAsyncReadyCallback   callback,
+                                                     gpointer              user_data);
+gboolean mm_modem_3gpp_disable_facility_lock_finish (MMModem3gpp          *self,
+                                                     GAsyncResult         *res,
+                                                     GError              **error);
+gboolean mm_modem_3gpp_disable_facility_lock_sync   (MMModem3gpp          *self,
+                                                     MMModem3gppFacility   facility,
+                                                     const gchar          *control_key,
+                                                     GCancellable         *cancellable,
+                                                     GError              **error);
 
 G_END_DECLS
 

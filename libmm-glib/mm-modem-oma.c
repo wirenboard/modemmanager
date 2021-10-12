@@ -43,10 +43,10 @@
 G_DEFINE_TYPE (MMModemOma, mm_modem_oma, MM_GDBUS_TYPE_MODEM_OMA_PROXY)
 
 struct _MMModemOmaPrivate {
-    /* Supported Modes */
-    GMutex pending_network_initiated_sessions_mutex;
-    guint pending_network_initiated_sessions_id;
-    GArray *pending_network_initiated_sessions;
+    /* Common mutex to sync access */
+    GMutex mutex;
+
+    PROPERTY_ARRAY_DECLARE (pending_network_initiated_sessions)
 };
 
 /*****************************************************************************/
@@ -503,75 +503,8 @@ mm_modem_oma_get_session_state (MMModemOma *self)
 
 /*****************************************************************************/
 
-static void
-pending_network_initiated_sessions_updated (MMModemOma *self,
-                                            GParamSpec *pspec)
-{
-    g_mutex_lock (&self->priv->pending_network_initiated_sessions_mutex);
-    {
-        GVariant *dictionary;
-
-        if (self->priv->pending_network_initiated_sessions)
-            g_array_unref (self->priv->pending_network_initiated_sessions);
-
-        dictionary = mm_gdbus_modem_oma_get_pending_network_initiated_sessions (MM_GDBUS_MODEM_OMA (self));
-        self->priv->pending_network_initiated_sessions = (dictionary ?
-                                                          mm_common_oma_pending_network_initiated_sessions_variant_to_garray (dictionary) :
-                                                          NULL);
-    }
-    g_mutex_unlock (&self->priv->pending_network_initiated_sessions_mutex);
-}
-
-static gboolean
-ensure_internal_pending_network_initiated_sessions (MMModemOma *self,
-                                                    MMOmaPendingNetworkInitiatedSession **dup_sessions,
-                                                    guint *dup_sessions_n)
-{
-    gboolean ret;
-
-    g_mutex_lock (&self->priv->pending_network_initiated_sessions_mutex);
-    {
-        /* If this is the first time ever asking for the array, setup the
-         * update listener and the initial array, if any. */
-        if (!self->priv->pending_network_initiated_sessions_id) {
-            GVariant *dictionary;
-
-            dictionary = mm_gdbus_modem_oma_dup_pending_network_initiated_sessions (MM_GDBUS_MODEM_OMA (self));
-            if (dictionary) {
-                self->priv->pending_network_initiated_sessions = mm_common_oma_pending_network_initiated_sessions_variant_to_garray (dictionary);
-                g_variant_unref (dictionary);
-            }
-
-            /* No need to clear this signal connection when freeing self */
-            self->priv->pending_network_initiated_sessions_id =
-                g_signal_connect (self,
-                                  "notify::pending-network-initiated-sessions",
-                                  G_CALLBACK (pending_network_initiated_sessions_updated),
-                                  NULL);
-        }
-
-        if (!self->priv->pending_network_initiated_sessions)
-            ret = FALSE;
-        else {
-            ret = TRUE;
-
-            if (dup_sessions && dup_sessions_n) {
-                *dup_sessions_n = self->priv->pending_network_initiated_sessions->len;
-                if (self->priv->pending_network_initiated_sessions->len > 0) {
-                    *dup_sessions = g_malloc (sizeof (MMOmaPendingNetworkInitiatedSession) * self->priv->pending_network_initiated_sessions->len);
-                    memcpy (*dup_sessions, self->priv->pending_network_initiated_sessions->data, sizeof (MMOmaPendingNetworkInitiatedSession) * self->priv->pending_network_initiated_sessions->len);
-                } else
-                    *dup_sessions = NULL;
-            }
-        }
-    }
-    g_mutex_unlock (&self->priv->pending_network_initiated_sessions_mutex);
-
-    return ret;
-}
-
 /**
- * mm_modem_get_pending_network_initiated_sessions:
+ * mm_modem_oma_get_pending_network_initiated_sessions:
  * @self: A #MMModem.
  * @sessions: (out) (array length=n_sessions): Return location for the array of
  *  #MMOmaPendingNetworkInitiatedSession structs. The returned array should be
@@ -582,22 +515,12 @@ ensure_internal_pending_network_initiated_sessions (MMModemOma *self,
  *
  * Returns: %TRUE if @sessions and @n_sessions are set, %FALSE otherwise.
  *
- * Since: 1.2
+ * Since: 1.18
  */
-gboolean
-mm_modem_get_pending_network_initiated_sessions (MMModemOma *self,
-                                                 MMOmaPendingNetworkInitiatedSession **sessions,
-                                                 guint *n_sessions)
-{
-    g_return_val_if_fail (MM_IS_MODEM_OMA (self), FALSE);
-    g_return_val_if_fail (sessions != NULL, FALSE);
-    g_return_val_if_fail (n_sessions != NULL, FALSE);
 
-    return ensure_internal_pending_network_initiated_sessions (self, sessions, n_sessions);
-}
 
 /**
- * mm_modem_peek_pending_network_initiated_sessions:
+ * mm_modem_oma_peek_pending_network_initiated_sessions:
  * @self: A #MMModem.
  * @sessions: (out) (array length=n_sessions): Return location for the array of
  *  #MMOmaPendingNetworkInitiatedSession values. Do not free the returned array,
@@ -608,35 +531,23 @@ mm_modem_get_pending_network_initiated_sessions (MMModemOma *self,
  *
  * Returns: %TRUE if @sessions and @n_sessions are set, %FALSE otherwise.
  *
- * Since: 1.2
+ * Since: 1.18
  */
-gboolean
-mm_modem_peek_pending_network_initiated_sessions (MMModemOma *self,
-                                                  const MMOmaPendingNetworkInitiatedSession **sessions,
-                                                  guint *n_sessions)
-{
-    g_return_val_if_fail (MM_IS_MODEM_OMA (self), FALSE);
-    g_return_val_if_fail (sessions != NULL, FALSE);
-    g_return_val_if_fail (n_sessions != NULL, FALSE);
 
-    if (!ensure_internal_pending_network_initiated_sessions (self, NULL, NULL))
-        return FALSE;
-
-    *n_sessions = self->priv->pending_network_initiated_sessions->len;
-    *sessions = (MMOmaPendingNetworkInitiatedSession *)self->priv->pending_network_initiated_sessions->data;
-    return TRUE;
-}
+PROPERTY_ARRAY_DEFINE (pending_network_initiated_sessions,
+                       ModemOma, modem_oma, MODEM_OMA,
+                       MMOmaPendingNetworkInitiatedSession,
+                       mm_common_oma_pending_network_initiated_sessions_variant_to_garray)
 
 /*****************************************************************************/
 
 static void
 mm_modem_oma_init (MMModemOma *self)
 {
-    /* Setup private data */
-    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                              MM_TYPE_MODEM_OMA,
-                                              MMModemOmaPrivate);
-    g_mutex_init (&self->priv->pending_network_initiated_sessions_mutex);
+    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, MM_TYPE_MODEM_OMA, MMModemOmaPrivate);
+    g_mutex_init (&self->priv->mutex);
+
+    PROPERTY_INITIALIZE (pending_network_initiated_sessions, "pending-network-initiated-sessions")
 }
 
 static void
@@ -644,10 +555,9 @@ finalize (GObject *object)
 {
     MMModemOma *self = MM_MODEM_OMA (object);
 
-    g_mutex_clear (&self->priv->pending_network_initiated_sessions_mutex);
+    g_mutex_clear (&self->priv->mutex);
 
-    if (self->priv->pending_network_initiated_sessions)
-        g_array_unref (self->priv->pending_network_initiated_sessions);
+    PROPERTY_ARRAY_FINALIZE (pending_network_initiated_sessions)
 
     G_OBJECT_CLASS (mm_modem_oma_parent_class)->finalize (object);
 }
@@ -659,6 +569,5 @@ mm_modem_oma_class_init (MMModemOmaClass *modem_class)
 
     g_type_class_add_private (object_class, sizeof (MMModemOmaPrivate));
 
-    /* Virtual methods */
     object_class->finalize = finalize;
 }

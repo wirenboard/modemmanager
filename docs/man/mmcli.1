@@ -342,6 +342,23 @@ network-originated request. This option allows for that.
 .TP
 .B \-\-3gpp\-ussd\-cancel
 Cancel an ongoing USSD session for a given modem.
+.TP
+.B \-\-3gpp\-disable\-facility\-lock=FACILITY,CONTROL_KEY
+Disable selected facility lock using provided control key.
+.RS 9
+.TP
+\fB'FACILITY'\fR
+One of the following types of lock:
+.Bd -literal -compact
+  \fB'net-pers'\fR  - network personalization
+  \fB'net-sub-pers'\fR  - network subset personalization
+  \fB'provider-pers'\fR - provider personalization
+  \fB'corp-pers'\fR - corporate personalization
+.Ed
+.TP
+\fB'CONTROL_KEY'\fR
+Alphanumeric code to unlock facility.
+.RE
 
 .SH CDMA OPTIONS
 All CDMA (Code Division Multiple Access) options require the
@@ -692,6 +709,10 @@ Reject an incoming call or hangup an ongoing one.
 Send a DTMF sequence through an ongoing call.
 
 .SH APPLICATION OPTIONS
+.TP
+.B \-J, \-\-output\-json
+Run action with machine-friendly JSON output, to be used e.g. by
+shell scripts that rely on mmcli operations.
 .TP
 .B \-K, \-\-output\-keyvalue
 Run action with machine-friendly key-value output, to be used e.g. by

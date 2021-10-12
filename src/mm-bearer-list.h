@@ -30,9 +30,9 @@
 #define MM_IS_BEARER_LIST_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  MM_TYPE_BEARER_LIST))
 #define MM_BEARER_LIST_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  MM_TYPE_BEARER_LIST, MMBearerListClass))
 
-#define MM_BEARER_LIST_NUM_BEARERS        "num-bearers"
-#define MM_BEARER_LIST_MAX_BEARERS        "max-bearers"
-#define MM_BEARER_LIST_MAX_ACTIVE_BEARERS "max-active-bearers"
+#define MM_BEARER_LIST_NUM_BEARERS                    "num-bearers"
+#define MM_BEARER_LIST_MAX_ACTIVE_BEARERS             "max-active-bearers"
+#define MM_BEARER_LIST_MAX_ACTIVE_MULTIPLEXED_BEARERS "max-active-multiplexed-bearers"
 
 typedef struct _MMBearerList MMBearerList;
 typedef struct _MMBearerListClass MMBearerListClass;
@@ -50,15 +50,12 @@ struct _MMBearerListClass {
 GType mm_bearer_list_get_type (void);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (MMBearerList, g_object_unref)
 
-MMBearerList *mm_bearer_list_new (guint max_bearers,
-                                  guint max_active_bearers);
+MMBearerList *mm_bearer_list_new (guint max_active_bearers,
+                                  guint max_active_multiplexed_bearers);
 
-GStrv mm_bearer_list_get_paths (MMBearerList *self);
-
-guint mm_bearer_list_get_count (MMBearerList *self);
-guint mm_bearer_list_get_count_active (MMBearerList *self);
-guint mm_bearer_list_get_max (MMBearerList *self);
-guint mm_bearer_list_get_max_active (MMBearerList *self);
+GStrv mm_bearer_list_get_paths                  (MMBearerList *self);
+guint mm_bearer_list_get_max_active             (MMBearerList *self);
+guint mm_bearer_list_get_max_active_multiplexed (MMBearerList *self);
 
 gboolean mm_bearer_list_add_bearer (MMBearerList *self,
                                     MMBaseBearer *bearer,
@@ -73,10 +70,12 @@ void mm_bearer_list_foreach (MMBearerList *self,
                              MMBearerListForeachFunc func,
                              gpointer user_data);
 
-MMBaseBearer *mm_bearer_list_find_by_properties (MMBearerList *self,
+MMBaseBearer *mm_bearer_list_find_by_properties (MMBearerList       *self,
                                                  MMBearerProperties *properties);
-MMBaseBearer *mm_bearer_list_find_by_path (MMBearerList *self,
-                                           const gchar *path);
+MMBaseBearer *mm_bearer_list_find_by_path       (MMBearerList       *self,
+                                                 const gchar        *path);
+MMBaseBearer *mm_bearer_list_find_by_profile_id (MMBearerList       *self,
+                                                 gint                profile_id);
 
 void     mm_bearer_list_disconnect_all_bearers        (MMBearerList *self,
                                                        GAsyncReadyCallback callback,
@@ -84,5 +83,16 @@ void     mm_bearer_list_disconnect_all_bearers        (MMBearerList *self,
 gboolean mm_bearer_list_disconnect_all_bearers_finish (MMBearerList *self,
                                                        GAsyncResult *res,
                                                        GError **error);
+
+#if defined WITH_SYSTEMD_SUSPEND_RESUME
+
+void     mm_bearer_list_sync_all_bearers        (MMBearerList *self,
+                                                 GAsyncReadyCallback callback,
+                                                 gpointer user_data);
+gboolean mm_bearer_list_sync_all_bearers_finish (MMBearerList *self,
+                                                 GAsyncResult *res,
+                                                 GError **error);
+
+#endif
 
 #endif /* MM_BEARER_LIST_H */

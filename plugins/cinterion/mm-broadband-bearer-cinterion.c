@@ -63,7 +63,7 @@ get_usb_interface_config_index (MMPort  *data,
     guint usb_iface_num;
     guint i;
 
-    usb_iface_num = mm_kernel_device_get_property_as_int_hex (mm_port_peek_kernel_device (data), "ID_USB_INTERFACE_NUM");
+    usb_iface_num = (guint) mm_kernel_device_get_interface_number (mm_port_peek_kernel_device (data));
 
     for (i = 0; i < G_N_ELEMENTS (usb_interface_configs); i++) {
         if (usb_interface_configs[i].usb_iface_num == usb_iface_num)
@@ -132,14 +132,21 @@ out:
 
 static void
 load_connection_status_by_cid (MMBroadbandBearerCinterion *bearer,
-                               guint                       cid,
+                               gint                        cid,
                                GAsyncReadyCallback         callback,
                                gpointer                    user_data)
 {
-    GTask       *task;
-    MMBaseModem *modem;
+    GTask                  *task;
+    g_autoptr(MMBaseModem)  modem = NULL;
 
     task = g_task_new (bearer, NULL, callback, user_data);
+    if (cid == MM_3GPP_PROFILE_ID_UNKNOWN) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "Unknown profile id to check connection status");
+        g_object_unref (task);
+        return;
+    }
+
     g_task_set_task_data (task, GUINT_TO_POINTER (cid), NULL);
 
     g_object_get (bearer,
@@ -152,7 +159,6 @@ load_connection_status_by_cid (MMBroadbandBearerCinterion *bearer,
                               FALSE,
                               (GAsyncReadyCallback) swwan_check_status_ready,
                               task);
-    g_object_unref (modem);
 }
 
 static void
@@ -161,7 +167,7 @@ load_connection_status (MMBaseBearer        *bearer,
                         gpointer             user_data)
 {
     load_connection_status_by_cid (MM_BROADBAND_BEARER_CINTERION (bearer),
-                                   mm_broadband_bearer_get_3gpp_cid (MM_BROADBAND_BEARER (bearer)),
+                                   mm_base_bearer_get_profile_id (bearer),
                                    callback,
                                    user_data);
 }
@@ -300,21 +306,9 @@ dial_3gpp_context_step (GTask *task)
     }
 
     switch (ctx->step) {
-    case DIAL_3GPP_CONTEXT_STEP_FIRST: {
-        MMBearerIpFamily ip_family;
-
-        ip_family = mm_bearer_properties_get_ip_type (mm_base_bearer_peek_config (MM_BASE_BEARER (ctx->self)));
-        if (ip_family == MM_BEARER_IP_FAMILY_NONE || ip_family == MM_BEARER_IP_FAMILY_ANY) {
-            gchar *ip_family_str;
-
-            ip_family = mm_base_bearer_get_default_ip_family (MM_BASE_BEARER (ctx->self));
-            ip_family_str = mm_bearer_ip_family_build_string_from_mask (ip_family);
-            mm_obj_dbg (self, "no specific IP family requested, defaulting to %s", ip_family_str);
-            g_free (ip_family_str);
-        }
-
+    case DIAL_3GPP_CONTEXT_STEP_FIRST:
         ctx->step++;
-    } /* fall through */
+        /* fall through */
 
     case DIAL_3GPP_CONTEXT_STEP_AUTH: {
         gchar *command;
@@ -370,7 +364,7 @@ dial_3gpp_context_step (GTask *task)
         mm_obj_dbg (self, "dial step %u/%u: checking SWWAN interface %u status...",
                     ctx->step, DIAL_3GPP_CONTEXT_STEP_LAST, usb_interface_configs[ctx->usb_interface_config_index].swwan_index);
         load_connection_status_by_cid (ctx->self,
-                                       ctx->cid,
+                                       (gint) ctx->cid,
                                        (GAsyncReadyCallback) dial_connection_status_ready,
                                        task);
         return;
@@ -407,7 +401,7 @@ dial_3gpp (MMBroadbandBearer   *self,
     g_task_set_task_data (task, ctx, (GDestroyNotify) dial_3gpp_context_free);
 
     /* Setup context */
-    ctx->self    = g_object_ref (self);
+    ctx->self    = MM_BROADBAND_BEARER_CINTERION (g_object_ref (self));
     ctx->modem   = g_object_ref (modem);
     ctx->primary = g_object_ref (primary);
     ctx->cid     = cid;
@@ -568,7 +562,7 @@ disconnect_3gpp_context_step (GTask *task)
                     ctx->step, DISCONNECT_3GPP_CONTEXT_STEP_LAST,
                     usb_interface_configs[ctx->usb_interface_config_index].swwan_index);
         load_connection_status_by_cid (MM_BROADBAND_BEARER_CINTERION (ctx->self),
-                                       ctx->cid,
+                                       (gint) ctx->cid,
                                        (GAsyncReadyCallback) disconnect_connection_status_ready,
                                        task);
          return;
@@ -608,8 +602,8 @@ disconnect_3gpp (MMBroadbandBearer  *self,
     g_task_set_task_data (task, ctx, (GDestroyNotify) disconnect_3gpp_context_free);
 
     /* Setup context */
-    ctx->self    = g_object_ref (self);
-    ctx->modem   = g_object_ref (modem);
+    ctx->self    = MM_BROADBAND_BEARER_CINTERION (g_object_ref (self));
+    ctx->modem   = MM_BASE_MODEM (g_object_ref (modem));
     ctx->primary = g_object_ref (primary);
     ctx->data    = g_object_ref (data);
     ctx->cid     = cid;
@@ -681,6 +675,10 @@ mm_broadband_bearer_cinterion_class_init (MMBroadbandBearerCinterionClass *klass
 
     base_bearer_class->load_connection_status        = load_connection_status;
     base_bearer_class->load_connection_status_finish = load_connection_status_finish;
+#if defined WITH_SYSTEMD_SUSPEND_RESUME
+    base_bearer_class->reload_connection_status        = load_connection_status;
+    base_bearer_class->reload_connection_status_finish = load_connection_status_finish;
+#endif
 
     broadband_bearer_class->dial_3gpp              = dial_3gpp;
     broadband_bearer_class->dial_3gpp_finish       = dial_3gpp_finish;

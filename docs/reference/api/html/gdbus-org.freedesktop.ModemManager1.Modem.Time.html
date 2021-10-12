@@ -40,13 +40,13 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.5.5.13.4"></a><h2>Signals</h2>
+<a name="id-1.5.5.14.4"></a><h2>Signals</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Time.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Time.NetworkTimeChanged" title='The "NetworkTimeChanged" signal'>NetworkTimeChanged</a> (s time);
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.5.5.13.5"></a><h2>Properties</h2>
+<a name="id-1.5.5.14.5"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Time.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Time.NetworkTimezone" title='The "NetworkTimezone" property'>NetworkTimezone</a>  readable   a{sv}
 </pre>
@@ -78,6 +78,8 @@ GetNetworkTime (OUT s time);
         current network time; it will not attempt to use previously-received
         network time updates on the host to guess the current network time.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -98,6 +100,8 @@ GetNetworkTime (OUT s time);
 NetworkTimeChanged (s time);
 </pre>
 <p>        Sent when the network time is updated.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -152,6 +156,8 @@ NetworkTimezone  readable   a{sv}
 </tbody>
 </table></div>
 <p>
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 </div>

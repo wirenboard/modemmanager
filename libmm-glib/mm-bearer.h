@@ -78,9 +78,13 @@ gboolean      mm_bearer_get_connected   (MMBearer *self);
 
 gboolean      mm_bearer_get_suspended   (MMBearer *self);
 
+gboolean      mm_bearer_get_multiplexed (MMBearer *self);
+
 guint         mm_bearer_get_ip_timeout  (MMBearer *self);
 
 MMBearerType  mm_bearer_get_bearer_type (MMBearer *self);
+
+gint          mm_bearer_get_profile_id  (MMBearer *self);
 
 void     mm_bearer_connect        (MMBearer *self,
                                    GCancellable *cancellable,
@@ -115,6 +119,9 @@ MMBearerIpConfig   *mm_bearer_peek_ipv6_config (MMBearer *self);
 
 MMBearerStats      *mm_bearer_get_stats        (MMBearer *self);
 MMBearerStats      *mm_bearer_peek_stats       (MMBearer *self);
+
+GError             *mm_bearer_get_connection_error  (MMBearer *self);
+GError             *mm_bearer_peek_connection_error (MMBearer *self);
 
 G_END_DECLS
 

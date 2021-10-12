@@ -23,7 +23,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#include <mm-log-test.h>
+#include <mm-log.h>
 #include <mm-port-serial.h>
 #include <mm-port-serial-at.h>
 #include <mm-serial-parsers.h>
@@ -41,7 +41,9 @@ static guint           input_watch_id;
 static gchar    *device_str;
 static gboolean  no_flash_flag;
 static gboolean  no_echo_removal_flag;
+static gboolean  spew_control_flag;
 static gint64    send_delay = -1;
+static gboolean  send_lf_flag;
 static gboolean  verbose_flag;
 static gboolean  version_flag;
 
@@ -58,9 +60,17 @@ static GOptionEntry main_entries[] = {
       "Avoid logic to remove echo",
       NULL
     },
+    { "spew-control", 0, 0, G_OPTION_ARG_NONE, &spew_control_flag,
+      "Enable spew control logic",
+      NULL
+    },
     { "send-delay", 0, 0, G_OPTION_ARG_INT64, &send_delay,
       "Send delay for each byte in microseconds (default=1000)",
       "[DELAY]"
+    },
+    { "send-lf", 0, 0, G_OPTION_ARG_NONE, &send_lf_flag,
+      "Send <CR><LF> (default <CR> only)",
+      NULL
     },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
       "Run action with verbose logs",
@@ -125,12 +135,21 @@ input_callback (GIOChannel   *channel,
     status = g_io_channel_read_line (channel, &line, NULL, NULL, &error);
 
     switch (status) {
-    case G_IO_STATUS_NORMAL:
+    case G_IO_STATUS_NORMAL: {
+        gsize line_len = 0;
+
+        /* remove \r\n before running as AT command */
+        line_len = strlen (line);
+        while (line_len > 0 && (line[line_len - 1] == '\r' || line[line_len - 1] == '\n')) {
+            line[line_len - 1] = '\0';
+            line_len--;
+        }
+
         mm_port_serial_at_command (port, line, 60, FALSE, FALSE, NULL,
                                    (GAsyncReadyCallback) at_command_ready, NULL);
         g_free (line);
         return TRUE;
-
+    }
     case G_IO_STATUS_ERROR:
         g_printerr ("error: %s\n", error->message);
         g_error_free (error);
@@ -203,6 +222,18 @@ start_cb (void)
         g_object_set (port, MM_PORT_SERIAL_AT_REMOVE_ECHO, FALSE, NULL);
     }
 
+    /* Setup spew control */
+    if (spew_control_flag) {
+        g_print ("enabling spew control...\n");
+        g_object_set (port, MM_PORT_SERIAL_SPEW_CONTROL, TRUE, NULL);
+    }
+
+    /* Setup LF */
+    if (send_lf_flag) {
+        g_print ("enabling LF...\n");
+        g_object_set (port, MM_PORT_SERIAL_AT_SEND_LF, TRUE, NULL);
+    }
+
     /* Set common response parser */
     mm_port_serial_at_set_response_parser (MM_PORT_SERIAL_AT (port),
                                            mm_serial_parser_v1_parse,
@@ -231,6 +262,45 @@ start_cb (void)
                           (GAsyncReadyCallback) flash_ready,
                           NULL);
     return G_SOURCE_REMOVE;
+}
+
+void
+_mm_log (gpointer     obj,
+         const gchar *module,
+         const gchar *loc,
+         const gchar *func,
+         guint32      level,
+         const gchar *fmt,
+         ...)
+{
+    va_list           args;
+    g_autofree gchar *msg = NULL;
+    const gchar      *level_str = NULL;
+
+    if (!verbose_flag)
+        return;
+
+    switch (level) {
+    case MM_LOG_LEVEL_DEBUG:
+        level_str = "debug";
+        break;
+    case MM_LOG_LEVEL_WARN:
+        level_str = "warning";
+        break;
+    case MM_LOG_LEVEL_INFO:
+        level_str = "info";
+        break;
+    case MM_LOG_LEVEL_ERR:
+        level_str = "error";
+        break;
+    default:
+        break;
+    }
+
+    va_start (args, fmt);
+    msg = g_strdup_vprintf (fmt, args);
+    va_end (args);
+    g_print ("[%s] %s\n", level_str ? level_str : "unknown", msg);
 }
 
 int main (int argc, char **argv)

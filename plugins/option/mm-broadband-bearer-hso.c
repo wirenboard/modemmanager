@@ -191,7 +191,7 @@ get_ip_config_3gpp (MMBroadbandBearer *self,
     gchar *command;
 
     ctx = g_slice_new0 (GetIpConfig3gppContext);
-    ctx->modem = g_object_ref (modem);
+    ctx->modem = MM_BASE_MODEM (g_object_ref (modem));
     ctx->primary = g_object_ref (primary);
     ctx->cid = cid;
 
@@ -232,6 +232,15 @@ dial_3gpp_context_free (Dial3gppContext *ctx)
     g_clear_object (&ctx->primary);
     g_clear_object (&ctx->modem);
     g_slice_free (Dial3gppContext, ctx);
+}
+
+static guint
+dial_3gpp_get_connecting_cid (GTask *task)
+{
+    Dial3gppContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+    return ctx->cid;
 }
 
 static MMPort *
@@ -697,9 +706,20 @@ disconnect_3gpp (MMBroadbandBearer *self,
 
 /*****************************************************************************/
 
+gint
+mm_broadband_bearer_hso_get_connecting_profile_id (MMBroadbandBearerHso *self)
+{
+    return (self->priv->connect_pending ?
+            (gint)dial_3gpp_get_connecting_cid (self->priv->connect_pending) :
+            MM_3GPP_PROFILE_ID_UNKNOWN);
+}
+
+/*****************************************************************************/
+
 static void
 report_connection_status (MMBaseBearer             *_self,
-                          MMBearerConnectionStatus  status)
+                          MMBearerConnectionStatus  status,
+                          const GError             *connection_error)
 {
     MMBroadbandBearerHso *self = MM_BROADBAND_BEARER_HSO (_self);
 
@@ -719,9 +739,7 @@ report_connection_status (MMBaseBearer             *_self,
     if (status == MM_BEARER_CONNECTION_STATUS_DISCONNECTED) {
         /* If no connection attempt on-going, make sure we mark ourselves as
          * disconnected */
-        MM_BASE_BEARER_CLASS (mm_broadband_bearer_hso_parent_class)->report_connection_status (
-            _self,
-            status);
+        MM_BASE_BEARER_CLASS (mm_broadband_bearer_hso_parent_class)->report_connection_status (_self, status,connection_error);
     }
 }
 
@@ -786,6 +804,10 @@ mm_broadband_bearer_hso_class_init (MMBroadbandBearerHsoClass *klass)
     base_bearer_class->report_connection_status = report_connection_status;
     base_bearer_class->load_connection_status = NULL;
     base_bearer_class->load_connection_status_finish = NULL;
+#if defined WITH_SYSTEMD_SUSPEND_RESUME
+    base_bearer_class->reload_connection_status = NULL;
+    base_bearer_class->reload_connection_status_finish = NULL;
+#endif
 
     broadband_bearer_class->dial_3gpp = dial_3gpp;
     broadband_bearer_class->dial_3gpp_finish = dial_3gpp_finish;

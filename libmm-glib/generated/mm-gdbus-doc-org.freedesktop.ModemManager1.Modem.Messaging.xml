@@ -53,6 +53,7 @@ List (OUT ao result);
         retrieved either by listening for the
         <link linkend="gdbus-signal-org-freedesktop-ModemManager1-Modem-Messaging.Added">"Added"</link> signal,
         or by querying the specific SMS object of interest.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -68,6 +69,7 @@ List (OUT ao result);
 Delete (IN  o path);
 </programlisting>
 <para>        Delete an SMS message.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -91,6 +93,7 @@ Create (IN  a{sv} properties,
         properties are mandatory, others are optional.
 </para><para>        If the SMSC is not specified and one is required, the default SMSC is
         used.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -120,6 +123,7 @@ Added (o path,
 </para><para>        Check the
         '<link linkend="gdbus-property-org-freedesktop-ModemManager1-Sms.State">State</link>'
         property to determine if the message is complete.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -139,6 +143,7 @@ Added (o path,
 Deleted (o path);
 </programlisting>
 <para>        Emitted when a message has been deleted.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -157,6 +162,7 @@ Deleted (o path);
 Messages  readable   ao
 </programlisting>
 <para>        The list of SMS object paths.
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Messaging.SupportedStorages">
@@ -168,6 +174,7 @@ SupportedStorages  readable   au
 <para>        A list of <link linkend="MMSmsStorage">MMSmsStorage</link> values,
         specifying the storages supported by this modem for storing and
         receiving SMS.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Messaging.DefaultStorage">
@@ -178,6 +185,7 @@ DefaultStorage  readable   u
 </programlisting>
 <para>        A <link linkend="MMSmsStorage">MMSmsStorage</link> value,
         specifying the storage to be used when receiving or storing SMS.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 </refsect1>
