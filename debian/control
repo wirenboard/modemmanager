@@ -1,7 +1,11 @@
 Source: modemmanager
 Section: net
 Priority: optional
-Maintainer: Mathieu Trudel-Lapierre <mathieu.tl@gmail.com>
+Maintainer: DebianOnMobile Maintainers <debian-on-mobile-maintainers@alioth-lists.debian.net>
+Uploaders: Arnaud Ferraris <arnaud.ferraris@gmail.com>,
+           Guido Günther <agx@sigxcpu.org>,
+           Henry-Nicolas Tourneur <debian@nilux.be>,
+           Martin <debacle@debian.org>
 Build-Depends: debhelper-compat (= 10),
                automake,
                libtool,
@@ -23,8 +27,8 @@ Build-Depends: debhelper-compat (= 10),
                dbus <!nocheck>,
 Standards-Version: 4.2.1
 Rules-Requires-Root: no
-Vcs-Git: https://salsa.debian.org/debian/modemmanager.git
-Vcs-Browser: https://salsa.debian.org/debian/modemmanager
+Vcs-Git: https://salsa.debian.org/DebianOnMobile-team/modemmanager.git
+Vcs-Browser: https://salsa.debian.org/DebianOnMobile-team/modemmanager
 Homepage: https://www.freedesktop.org/wiki/Software/ModemManager/
 
 Package: modemmanager
