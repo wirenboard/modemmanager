@@ -1,6 +1,30 @@
 libmm-glib.so.0 libmm-glib0 #MINVER#
+ mm_3gpp_profile_cmp@Base 1.18.2
+ mm_3gpp_profile_consume_string@Base 1.18.2
+ mm_3gpp_profile_consume_variant@Base 1.18.2
+ mm_3gpp_profile_get_allowed_auth@Base 1.18.2
+ mm_3gpp_profile_get_apn@Base 1.18.2
+ mm_3gpp_profile_get_apn_type@Base 1.18.2
+ mm_3gpp_profile_get_dictionary@Base 1.18.2
+ mm_3gpp_profile_get_ip_type@Base 1.18.2
+ mm_3gpp_profile_get_password@Base 1.18.2
+ mm_3gpp_profile_get_profile_id@Base 1.18.2
+ mm_3gpp_profile_get_type@Base 1.18.2
+ mm_3gpp_profile_get_user@Base 1.18.2
+ mm_3gpp_profile_new@Base 1.18.2
+ mm_3gpp_profile_new_from_dictionary@Base 1.18.2
+ mm_3gpp_profile_new_from_string@Base 1.18.2
+ mm_3gpp_profile_set_allowed_auth@Base 1.18.2
+ mm_3gpp_profile_set_apn@Base 1.18.2
+ mm_3gpp_profile_set_apn_type@Base 1.18.2
+ mm_3gpp_profile_set_ip_type@Base 1.18.2
+ mm_3gpp_profile_set_password@Base 1.18.2
+ mm_3gpp_profile_set_profile_id@Base 1.18.2
+ mm_3gpp_profile_set_user@Base 1.18.2
  mm_bearer_allowed_auth_build_string_from_mask@Base 0.7.991
  mm_bearer_allowed_auth_get_type@Base 0.7.991
+ mm_bearer_apn_type_build_string_from_mask@Base 1.18.2
+ mm_bearer_apn_type_get_type@Base 1.18.2
  mm_bearer_connect@Base 0.7.991
  mm_bearer_connect_finish@Base 0.7.991
  mm_bearer_connect_sync@Base 0.7.991
@@ -11,11 +35,14 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_bearer_dup_path@Base 0.7.991
  mm_bearer_get_bearer_type@Base 1.10.0
  mm_bearer_get_connected@Base 0.7.991
+ mm_bearer_get_connection_error@Base 1.18.2
  mm_bearer_get_interface@Base 0.7.991
  mm_bearer_get_ip_timeout@Base 0.7.991
  mm_bearer_get_ipv4_config@Base 0.7.991
  mm_bearer_get_ipv6_config@Base 0.7.991
+ mm_bearer_get_multiplexed@Base 1.18.2
  mm_bearer_get_path@Base 0.7.991
+ mm_bearer_get_profile_id@Base 1.18.2
  mm_bearer_get_properties@Base 0.7.991
  mm_bearer_get_stats@Base 1.5.993
  mm_bearer_get_suspended@Base 0.7.991
@@ -40,6 +67,9 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_bearer_ip_family_get_type@Base 0.7.991
  mm_bearer_ip_method_get_string@Base 0.7.991
  mm_bearer_ip_method_get_type@Base 0.7.991
+ mm_bearer_multiplex_support_get_string@Base 1.18.2
+ mm_bearer_multiplex_support_get_type@Base 1.18.2
+ mm_bearer_peek_connection_error@Base 1.18.2
  mm_bearer_peek_ipv4_config@Base 0.7.991
  mm_bearer_peek_ipv6_config@Base 0.7.991
  mm_bearer_peek_properties@Base 0.7.991
@@ -50,22 +80,30 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_bearer_properties_get_allow_roaming@Base 0.7.991
  mm_bearer_properties_get_allowed_auth@Base 0.7.991
  mm_bearer_properties_get_apn@Base 0.7.991
+ mm_bearer_properties_get_apn_type@Base 1.18.2
  mm_bearer_properties_get_dictionary@Base 0.7.991
  mm_bearer_properties_get_ip_type@Base 0.7.991
+ mm_bearer_properties_get_multiplex@Base 1.18.2
  mm_bearer_properties_get_number@Base 0.7.991
  mm_bearer_properties_get_password@Base 0.7.991
+ mm_bearer_properties_get_profile_id@Base 1.18.2
  mm_bearer_properties_get_rm_protocol@Base 0.7.991
  mm_bearer_properties_get_type@Base 0.7.991
  mm_bearer_properties_get_user@Base 0.7.991
  mm_bearer_properties_new@Base 0.7.991
  mm_bearer_properties_new_from_dictionary@Base 0.7.991
+ mm_bearer_properties_new_from_profile@Base 1.18.2
  mm_bearer_properties_new_from_string@Base 0.7.991
+ mm_bearer_properties_peek_3gpp_profile@Base 1.18.2
  mm_bearer_properties_set_allow_roaming@Base 0.7.991
  mm_bearer_properties_set_allowed_auth@Base 0.7.991
  mm_bearer_properties_set_apn@Base 0.7.991
+ mm_bearer_properties_set_apn_type@Base 1.18.2
  mm_bearer_properties_set_ip_type@Base 0.7.991
+ mm_bearer_properties_set_multiplex@Base 1.18.2
  mm_bearer_properties_set_number@Base 0.7.991
  mm_bearer_properties_set_password@Base 0.7.991
+ mm_bearer_properties_set_profile_id@Base 1.18.2
  mm_bearer_properties_set_rm_protocol@Base 0.7.991
  mm_bearer_properties_set_user@Base 0.7.991
  mm_bearer_stats_get_attempts@Base 1.13.900
@@ -186,13 +224,11 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_common_bands_garray_lookup@Base 1.12.6
  mm_common_bands_garray_sort@Base 1.7.990
  mm_common_bands_garray_to_variant@Base 0.7.991
- mm_common_bands_variant_to_array@Base 0.7.991
  mm_common_bands_variant_to_garray@Base 0.7.991
  mm_common_build_bands_any@Base 0.7.991
  mm_common_build_bands_string@Base 0.7.991
  mm_common_build_bands_unknown@Base 0.7.991
  mm_common_build_capabilities_string@Base 0.7.991
-#MISSING: 1.13.900# mm_common_build_capability_combinations_any@Base 0.7.991
  mm_common_build_capability_combinations_none@Base 0.7.991
  mm_common_build_mode_combinations_default@Base 0.7.991
  mm_common_build_mode_combinations_string@Base 0.7.991
@@ -201,9 +237,13 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_common_build_sms_storages_string@Base 0.7.991
  mm_common_capability_combinations_array_to_variant@Base 0.7.991
  mm_common_capability_combinations_garray_to_variant@Base 0.7.991
- mm_common_capability_combinations_variant_to_array@Base 0.7.991
  mm_common_capability_combinations_variant_to_garray@Base 0.7.991
+ mm_common_error_from_tuple@Base 1.18.2
+ mm_common_error_to_tuple@Base 1.18.2
+ mm_common_get_3gpp_facility_from_string@Base 1.18.2
+ mm_common_get_access_technology_from_string@Base 1.18.2
  mm_common_get_allowed_auth_from_string@Base 0.7.991
+ mm_common_get_apn_type_from_string@Base 1.18.2
  mm_common_get_bands_from_string@Base 0.7.991
  mm_common_get_boolean_from_string@Base 0.7.991
  mm_common_get_call_direction_from_string@Base 1.5.993
@@ -213,6 +253,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_common_get_eps_ue_mode_operation_from_string@Base 1.7.990
  mm_common_get_ip_type_from_string@Base 0.7.991
  mm_common_get_modes_from_string@Base 0.7.991
+ mm_common_get_multiplex_support_from_string@Base 1.18.2
  mm_common_get_oma_features_from_string@Base 1.2.0
  mm_common_get_oma_session_type_from_string@Base 1.2.0
  mm_common_get_rm_protocol_from_string@Base 0.7.991
@@ -221,20 +262,18 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_common_get_sms_storage_from_string@Base 0.7.991
  mm_common_mode_combinations_array_to_variant@Base 0.7.991
  mm_common_mode_combinations_garray_to_variant@Base 0.7.991
- mm_common_mode_combinations_variant_to_array@Base 0.7.991
  mm_common_mode_combinations_variant_to_garray@Base 0.7.991
  mm_common_oma_pending_network_initiated_sessions_array_to_variant@Base 1.2.0
  mm_common_oma_pending_network_initiated_sessions_garray_to_variant@Base 1.2.0
- mm_common_oma_pending_network_initiated_sessions_variant_to_array@Base 1.2.0
  mm_common_oma_pending_network_initiated_sessions_variant_to_garray@Base 1.2.0
  mm_common_parse_key_value_string@Base 0.7.991
  mm_common_ports_array_to_variant@Base 1.0.0
+ mm_common_ports_garray_to_array@Base 1.18.2
  mm_common_ports_garray_to_variant@Base 1.0.0
- mm_common_ports_variant_to_array@Base 1.0.0
  mm_common_ports_variant_to_garray@Base 1.0.0
+ mm_common_register_errors@Base 1.18.2
  mm_common_sms_storages_array_to_variant@Base 0.7.991
  mm_common_sms_storages_garray_to_variant@Base 0.7.991
- mm_common_sms_storages_variant_to_array@Base 0.7.991
  mm_common_sms_storages_variant_to_garray@Base 0.7.991
  mm_connection_error_get_type@Base 0.7.991
  mm_connection_error_quark@Base 0.7.991
@@ -277,6 +316,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_bearer_call_disconnect_sync@Base 0.7.991
  mm_gdbus_bearer_complete_connect@Base 0.7.991
  mm_gdbus_bearer_complete_disconnect@Base 0.7.991
+ mm_gdbus_bearer_dup_connection_error@Base 1.18.2
  mm_gdbus_bearer_dup_interface@Base 0.7.991
  mm_gdbus_bearer_dup_ip4_config@Base 0.7.991
  mm_gdbus_bearer_dup_ip6_config@Base 0.7.991
@@ -284,10 +324,13 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_bearer_dup_stats@Base 1.5.993
  mm_gdbus_bearer_get_bearer_type@Base 1.10.0
  mm_gdbus_bearer_get_connected@Base 0.7.991
+ mm_gdbus_bearer_get_connection_error@Base 1.18.2
  mm_gdbus_bearer_get_interface@Base 0.7.991
  mm_gdbus_bearer_get_ip4_config@Base 0.7.991
  mm_gdbus_bearer_get_ip6_config@Base 0.7.991
  mm_gdbus_bearer_get_ip_timeout@Base 0.7.991
+ mm_gdbus_bearer_get_multiplexed@Base 1.18.2
+ mm_gdbus_bearer_get_profile_id@Base 1.18.2
  mm_gdbus_bearer_get_properties@Base 0.7.991
  mm_gdbus_bearer_get_stats@Base 1.5.993
  mm_gdbus_bearer_get_suspended@Base 0.7.991
@@ -303,10 +346,13 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_bearer_proxy_new_sync@Base 0.7.991
  mm_gdbus_bearer_set_bearer_type@Base 1.10.0
  mm_gdbus_bearer_set_connected@Base 0.7.991
+ mm_gdbus_bearer_set_connection_error@Base 1.18.2
  mm_gdbus_bearer_set_interface@Base 0.7.991
  mm_gdbus_bearer_set_ip4_config@Base 0.7.991
  mm_gdbus_bearer_set_ip6_config@Base 0.7.991
  mm_gdbus_bearer_set_ip_timeout@Base 0.7.991
+ mm_gdbus_bearer_set_multiplexed@Base 1.18.2
+ mm_gdbus_bearer_set_profile_id@Base 1.18.2
  mm_gdbus_bearer_set_properties@Base 0.7.991
  mm_gdbus_bearer_set_stats@Base 1.5.993
  mm_gdbus_bearer_set_suspended@Base 0.7.991
@@ -371,6 +417,9 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_call_set_state_reason@Base 1.5.993
  mm_gdbus_call_skeleton_get_type@Base 1.5.993
  mm_gdbus_call_skeleton_new@Base 1.5.993
+ mm_gdbus_modem3gpp_call_disable_facility_lock@Base 1.18.2
+ mm_gdbus_modem3gpp_call_disable_facility_lock_finish@Base 1.18.2
+ mm_gdbus_modem3gpp_call_disable_facility_lock_sync@Base 1.18.2
  mm_gdbus_modem3gpp_call_register@Base 0.7.991
  mm_gdbus_modem3gpp_call_register_finish@Base 0.7.991
  mm_gdbus_modem3gpp_call_register_sync@Base 0.7.991
@@ -383,6 +432,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem3gpp_call_set_initial_eps_bearer_settings@Base 1.10.0
  mm_gdbus_modem3gpp_call_set_initial_eps_bearer_settings_finish@Base 1.10.0
  mm_gdbus_modem3gpp_call_set_initial_eps_bearer_settings_sync@Base 1.10.0
+ mm_gdbus_modem3gpp_complete_disable_facility_lock@Base 1.18.2
  mm_gdbus_modem3gpp_complete_register@Base 0.7.991
  mm_gdbus_modem3gpp_complete_scan@Base 0.7.991
  mm_gdbus_modem3gpp_complete_set_eps_ue_mode_operation@Base 1.7.990
@@ -406,6 +456,31 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem3gpp_get_type@Base 0.7.991
  mm_gdbus_modem3gpp_interface_info@Base 0.7.991
  mm_gdbus_modem3gpp_override_properties@Base 0.7.991
+ mm_gdbus_modem3gpp_profile_manager_call_delete@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_call_delete_finish@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_call_delete_sync@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_call_list@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_call_list_finish@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_call_list_sync@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_call_set@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_call_set_finish@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_call_set_sync@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_complete_delete@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_complete_list@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_complete_set@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_emit_updated@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_get_type@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_interface_info@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_override_properties@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_proxy_get_type@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_proxy_new@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_proxy_new_finish@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_proxy_new_for_bus@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_proxy_new_for_bus_finish@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_proxy_new_for_bus_sync@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_proxy_new_sync@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_skeleton_get_type@Base 1.18.2
+ mm_gdbus_modem3gpp_profile_manager_skeleton_new@Base 1.18.2
  mm_gdbus_modem3gpp_proxy_get_type@Base 0.7.991
  mm_gdbus_modem3gpp_proxy_new@Base 0.7.991
  mm_gdbus_modem3gpp_proxy_new_finish@Base 0.7.991
@@ -604,6 +679,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_get_hardware_revision@Base 1.7.990
  mm_gdbus_modem_get_manufacturer@Base 0.7.991
  mm_gdbus_modem_get_max_active_bearers@Base 0.7.991
+ mm_gdbus_modem_get_max_active_multiplexed_bearers@Base 1.18.2
  mm_gdbus_modem_get_max_bearers@Base 0.7.991
  mm_gdbus_modem_get_model@Base 0.7.991
  mm_gdbus_modem_get_own_numbers@Base 0.7.991
@@ -771,6 +847,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_set_hardware_revision@Base 1.7.990
  mm_gdbus_modem_set_manufacturer@Base 0.7.991
  mm_gdbus_modem_set_max_active_bearers@Base 0.7.991
+ mm_gdbus_modem_set_max_active_multiplexed_bearers@Base 1.18.2
  mm_gdbus_modem_set_max_bearers@Base 0.7.991
  mm_gdbus_modem_set_model@Base 0.7.991
  mm_gdbus_modem_set_own_numbers@Base 0.7.991
@@ -929,6 +1006,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_voice_skeleton_get_type@Base 1.5.993
  mm_gdbus_modem_voice_skeleton_new@Base 1.5.993
  mm_gdbus_object_get_modem3gpp@Base 0.7.991
+ mm_gdbus_object_get_modem3gpp_profile_manager@Base 1.18.2
  mm_gdbus_object_get_modem3gpp_ussd@Base 0.7.991
  mm_gdbus_object_get_modem@Base 0.7.991
  mm_gdbus_object_get_modem_cdma@Base 0.7.991
@@ -950,6 +1028,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_object_manager_client_new_for_bus_sync@Base 0.7.991
  mm_gdbus_object_manager_client_new_sync@Base 0.7.991
  mm_gdbus_object_peek_modem3gpp@Base 0.7.991
+ mm_gdbus_object_peek_modem3gpp_profile_manager@Base 1.18.2
  mm_gdbus_object_peek_modem3gpp_ussd@Base 0.7.991
  mm_gdbus_object_peek_modem@Base 0.7.991
  mm_gdbus_object_peek_modem_cdma@Base 0.7.991
@@ -966,6 +1045,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_object_skeleton_get_type@Base 0.7.991
  mm_gdbus_object_skeleton_new@Base 0.7.991
  mm_gdbus_object_skeleton_set_modem3gpp@Base 0.7.991
+ mm_gdbus_object_skeleton_set_modem3gpp_profile_manager@Base 1.18.2
  mm_gdbus_object_skeleton_set_modem3gpp_ussd@Base 0.7.991
  mm_gdbus_object_skeleton_set_modem@Base 0.7.991
  mm_gdbus_object_skeleton_set_modem_cdma@Base 0.7.991
@@ -1020,15 +1100,20 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_sim_call_send_puk@Base 0.7.991
  mm_gdbus_sim_call_send_puk_finish@Base 0.7.991
  mm_gdbus_sim_call_send_puk_sync@Base 0.7.991
+ mm_gdbus_sim_call_set_preferred_networks@Base 1.18.2
+ mm_gdbus_sim_call_set_preferred_networks_finish@Base 1.18.2
+ mm_gdbus_sim_call_set_preferred_networks_sync@Base 1.18.2
  mm_gdbus_sim_complete_change_pin@Base 0.7.991
  mm_gdbus_sim_complete_enable_pin@Base 0.7.991
  mm_gdbus_sim_complete_send_pin@Base 0.7.991
  mm_gdbus_sim_complete_send_puk@Base 0.7.991
+ mm_gdbus_sim_complete_set_preferred_networks@Base 1.18.2
  mm_gdbus_sim_dup_eid@Base 1.16.6
  mm_gdbus_sim_dup_emergency_numbers@Base 1.12.6
  mm_gdbus_sim_dup_imsi@Base 0.7.991
  mm_gdbus_sim_dup_operator_identifier@Base 0.7.991
  mm_gdbus_sim_dup_operator_name@Base 0.7.991
+ mm_gdbus_sim_dup_preferred_networks@Base 1.18.2
  mm_gdbus_sim_dup_sim_identifier@Base 0.7.991
  mm_gdbus_sim_get_active@Base 1.16.6
  mm_gdbus_sim_get_eid@Base 1.16.6
@@ -1036,6 +1121,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_sim_get_imsi@Base 0.7.991
  mm_gdbus_sim_get_operator_identifier@Base 0.7.991
  mm_gdbus_sim_get_operator_name@Base 0.7.991
+ mm_gdbus_sim_get_preferred_networks@Base 1.18.2
  mm_gdbus_sim_get_sim_identifier@Base 0.7.991
  mm_gdbus_sim_get_type@Base 0.7.991
  mm_gdbus_sim_interface_info@Base 0.7.991
@@ -1053,6 +1139,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_sim_set_imsi@Base 0.7.991
  mm_gdbus_sim_set_operator_identifier@Base 0.7.991
  mm_gdbus_sim_set_operator_name@Base 0.7.991
+ mm_gdbus_sim_set_preferred_networks@Base 1.18.2
  mm_gdbus_sim_set_sim_identifier@Base 0.7.991
  mm_gdbus_sim_skeleton_get_type@Base 0.7.991
  mm_gdbus_sim_skeleton_new@Base 0.7.991
@@ -1128,6 +1215,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_get_uint_from_hex_str@Base 1.7.990
  mm_get_uint_from_match_info@Base 0.7.991
  mm_get_uint_from_str@Base 0.7.991
+ mm_is_string_mccmnc@Base 1.18.2
  mm_kernel_event_properties_get_action@Base 1.7.990
  mm_kernel_event_properties_get_dictionary@Base 1.7.990
  mm_kernel_event_properties_get_name@Base 1.7.990
@@ -1145,6 +1233,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_location_3gpp_get_location_area_code@Base 0.7.991
  mm_location_3gpp_get_mobile_country_code@Base 0.7.991
  mm_location_3gpp_get_mobile_network_code@Base 0.7.991
+ mm_location_3gpp_get_operator_code@Base 1.18.2
  mm_location_3gpp_get_string_variant@Base 0.7.991
  mm_location_3gpp_get_tracking_area_code@Base 1.10.0
  mm_location_3gpp_get_type@Base 0.7.991
@@ -1153,8 +1242,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_location_3gpp_reset@Base 1.10.0
  mm_location_3gpp_set_cell_id@Base 0.7.991
  mm_location_3gpp_set_location_area_code@Base 0.7.991
- mm_location_3gpp_set_mobile_country_code@Base 0.7.991
- mm_location_3gpp_set_mobile_network_code@Base 0.7.991
+ mm_location_3gpp_set_operator_code@Base 1.18.2
  mm_location_3gpp_set_tracking_area_code@Base 1.10.0
  mm_location_cdma_bs_get_dictionary@Base 0.7.991
  mm_location_cdma_bs_get_latitude@Base 0.7.991
@@ -1206,6 +1294,9 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_message_error_quark@Base 0.7.991
  mm_mobile_equipment_error_get_type@Base 0.7.991
  mm_mobile_equipment_error_quark@Base 0.7.991
+ mm_modem_3gpp_disable_facility_lock@Base 1.18.2
+ mm_modem_3gpp_disable_facility_lock_finish@Base 1.18.2
+ mm_modem_3gpp_disable_facility_lock_sync@Base 1.18.2
  mm_modem_3gpp_dup_imei@Base 0.7.991
  mm_modem_3gpp_dup_initial_eps_bearer_path@Base 1.10.0
  mm_modem_3gpp_dup_operator_code@Base 0.7.991
@@ -1240,6 +1331,18 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_3gpp_network_get_operator_short@Base 0.7.991
  mm_modem_3gpp_network_get_type@Base 1.12.6
  mm_modem_3gpp_peek_initial_eps_bearer_settings@Base 1.10.0
+ mm_modem_3gpp_profile_manager_delete@Base 1.18.2
+ mm_modem_3gpp_profile_manager_delete_finish@Base 1.18.2
+ mm_modem_3gpp_profile_manager_delete_sync@Base 1.18.2
+ mm_modem_3gpp_profile_manager_dup_path@Base 1.18.2
+ mm_modem_3gpp_profile_manager_get_path@Base 1.18.2
+ mm_modem_3gpp_profile_manager_get_type@Base 1.18.2
+ mm_modem_3gpp_profile_manager_list@Base 1.18.2
+ mm_modem_3gpp_profile_manager_list_finish@Base 1.18.2
+ mm_modem_3gpp_profile_manager_list_sync@Base 1.18.2
+ mm_modem_3gpp_profile_manager_set@Base 1.18.2
+ mm_modem_3gpp_profile_manager_set_finish@Base 1.18.2
+ mm_modem_3gpp_profile_manager_set_sync@Base 1.18.2
  mm_modem_3gpp_register@Base 0.7.991
  mm_modem_3gpp_register_finish@Base 0.7.991
  mm_modem_3gpp_register_sync@Base 0.7.991
@@ -1369,6 +1472,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_get_hardware_revision@Base 1.7.990
  mm_modem_get_manufacturer@Base 0.7.991
  mm_modem_get_max_active_bearers@Base 0.7.991
+ mm_modem_get_max_active_multiplexed_bearers@Base 1.18.2
  mm_modem_get_max_bearers@Base 0.7.991
  mm_modem_get_model@Base 0.7.991
  mm_modem_get_own_numbers@Base 0.7.991
@@ -1426,12 +1530,20 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_location_get_gps_raw_sync@Base 0.7.991
  mm_modem_location_get_gps_refresh_rate@Base 1.5.993
  mm_modem_location_get_path@Base 0.7.991
+ mm_modem_location_get_signaled_3gpp@Base 1.18.2
+ mm_modem_location_get_signaled_cdma_bs@Base 1.18.2
+ mm_modem_location_get_signaled_gps_nmea@Base 1.18.2
+ mm_modem_location_get_signaled_gps_raw@Base 1.18.2
  mm_modem_location_get_supl_server@Base 1.5.993
  mm_modem_location_get_supported_assistance_data@Base 1.10.0
  mm_modem_location_get_type@Base 0.7.991
  mm_modem_location_inject_assistance_data@Base 1.10.0
  mm_modem_location_inject_assistance_data_finish@Base 1.10.0
  mm_modem_location_inject_assistance_data_sync@Base 1.10.0
+ mm_modem_location_peek_signaled_3gpp@Base 1.18.2
+ mm_modem_location_peek_signaled_cdma_bs@Base 1.18.2
+ mm_modem_location_peek_signaled_gps_nmea@Base 1.18.2
+ mm_modem_location_peek_signaled_gps_raw@Base 1.18.2
  mm_modem_location_set_gps_refresh_rate@Base 1.5.993
  mm_modem_location_set_gps_refresh_rate_finish@Base 1.5.993
  mm_modem_location_set_gps_refresh_rate_sync@Base 1.5.993
@@ -1472,9 +1584,11 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_oma_dup_path@Base 1.2.0
  mm_modem_oma_get_features@Base 1.2.0
  mm_modem_oma_get_path@Base 1.2.0
+ mm_modem_oma_get_pending_network_initiated_sessions@Base 1.18.2
  mm_modem_oma_get_session_state@Base 1.2.0
  mm_modem_oma_get_session_type@Base 1.2.0
  mm_modem_oma_get_type@Base 1.2.0
+ mm_modem_oma_peek_pending_network_initiated_sessions@Base 1.18.2
  mm_modem_oma_setup@Base 1.2.0
  mm_modem_oma_setup_finish@Base 1.2.0
  mm_modem_oma_setup_sync@Base 1.2.0
@@ -1600,6 +1714,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_object_dup_path@Base 0.7.991
  mm_object_get_modem@Base 0.7.991
  mm_object_get_modem_3gpp@Base 0.7.991
+ mm_object_get_modem_3gpp_profile_manager@Base 1.18.2
  mm_object_get_modem_3gpp_ussd@Base 0.7.991
  mm_object_get_modem_cdma@Base 0.7.991
  mm_object_get_modem_firmware@Base 0.7.991
@@ -1614,6 +1729,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_object_get_type@Base 0.7.991
  mm_object_peek_modem@Base 0.7.991
  mm_object_peek_modem_3gpp@Base 0.7.991
+ mm_object_peek_modem_3gpp_profile_manager@Base 1.18.2
  mm_object_peek_modem_3gpp_ussd@Base 0.7.991
  mm_object_peek_modem_cdma@Base 0.7.991
  mm_object_peek_modem_firmware@Base 0.7.991
@@ -1690,23 +1806,43 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_sim_get_operator_identifier@Base 0.7.991
  mm_sim_get_operator_name@Base 0.7.991
  mm_sim_get_path@Base 0.7.991
+ mm_sim_get_preferred_networks@Base 1.18.2
  mm_sim_get_type@Base 0.7.991
+ mm_sim_preferred_network_free@Base 1.18.2
+ mm_sim_preferred_network_get_access_technology@Base 1.18.2
+ mm_sim_preferred_network_get_operator_code@Base 1.18.2
+ mm_sim_preferred_network_get_tuple@Base 1.18.2
+ mm_sim_preferred_network_get_type@Base 1.18.2
+ mm_sim_preferred_network_list_copy@Base 1.18.2
+ mm_sim_preferred_network_list_free@Base 1.18.2
+ mm_sim_preferred_network_list_get_variant@Base 1.18.2
+ mm_sim_preferred_network_list_new_from_variant@Base 1.18.2
+ mm_sim_preferred_network_new@Base 1.18.2
+ mm_sim_preferred_network_new_from_variant@Base 1.18.2
+ mm_sim_preferred_network_set_access_technology@Base 1.18.2
+ mm_sim_preferred_network_set_operator_code@Base 1.18.2
  mm_sim_send_pin@Base 0.7.991
  mm_sim_send_pin_finish@Base 0.7.991
  mm_sim_send_pin_sync@Base 0.7.991
  mm_sim_send_puk@Base 0.7.991
  mm_sim_send_puk_finish@Base 0.7.991
  mm_sim_send_puk_sync@Base 0.7.991
+ mm_sim_set_preferred_networks@Base 1.18.2
+ mm_sim_set_preferred_networks_finish@Base 1.18.2
+ mm_sim_set_preferred_networks_sync@Base 1.18.2
  mm_simple_connect_properties_get_allow_roaming@Base 0.7.991
  mm_simple_connect_properties_get_allowed_auth@Base 0.7.991
  mm_simple_connect_properties_get_apn@Base 0.7.991
+ mm_simple_connect_properties_get_apn_type@Base 1.18.2
  mm_simple_connect_properties_get_bearer_properties@Base 0.7.991
  mm_simple_connect_properties_get_dictionary@Base 0.7.991
  mm_simple_connect_properties_get_ip_type@Base 0.7.991
+ mm_simple_connect_properties_get_multiplex@Base 1.18.2
  mm_simple_connect_properties_get_number@Base 0.7.991
  mm_simple_connect_properties_get_operator_id@Base 0.7.991
  mm_simple_connect_properties_get_password@Base 0.7.991
  mm_simple_connect_properties_get_pin@Base 0.7.991
+ mm_simple_connect_properties_get_profile_id@Base 1.18.2
  mm_simple_connect_properties_get_rm_protocol@Base 1.16.6
  mm_simple_connect_properties_get_type@Base 0.7.991
  mm_simple_connect_properties_get_user@Base 0.7.991
@@ -1716,11 +1852,14 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_simple_connect_properties_set_allow_roaming@Base 0.7.991
  mm_simple_connect_properties_set_allowed_auth@Base 0.7.991
  mm_simple_connect_properties_set_apn@Base 0.7.991
+ mm_simple_connect_properties_set_apn_type@Base 1.18.2
  mm_simple_connect_properties_set_ip_type@Base 0.7.991
+ mm_simple_connect_properties_set_multiplex@Base 1.18.2
  mm_simple_connect_properties_set_number@Base 0.7.991
  mm_simple_connect_properties_set_operator_id@Base 0.7.991
  mm_simple_connect_properties_set_password@Base 0.7.991
  mm_simple_connect_properties_set_pin@Base 0.7.991
+ mm_simple_connect_properties_set_profile_id@Base 1.18.2
  mm_simple_connect_properties_set_rm_protocol@Base 1.16.6
  mm_simple_connect_properties_set_user@Base 0.7.991
  mm_simple_status_get_3gpp_operator_code@Base 0.7.991
