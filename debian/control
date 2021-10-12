@@ -6,7 +6,7 @@ Uploaders: Arnaud Ferraris <arnaud.ferraris@gmail.com>,
            Guido Günther <agx@sigxcpu.org>,
            Henry-Nicolas Tourneur <debian@nilux.be>,
            Martin <debacle@debian.org>
-Build-Depends: debhelper-compat (= 10),
+Build-Depends: debhelper-compat (= 13),
                automake,
                libtool,
                intltool,
@@ -25,7 +25,7 @@ Build-Depends: debhelper-compat (= 10),
                python3-gi,
                valac (>= 0.22),
                dbus <!nocheck>,
-Standards-Version: 4.2.1
+Standards-Version: 4.6.0
 Rules-Requires-Root: no
 Vcs-Git: https://salsa.debian.org/DebianOnMobile-team/modemmanager.git
 Vcs-Browser: https://salsa.debian.org/DebianOnMobile-team/modemmanager
