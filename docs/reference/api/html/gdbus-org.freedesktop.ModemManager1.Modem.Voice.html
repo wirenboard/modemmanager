@@ -49,14 +49,14 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.5.5.14.4"></a><h2>Signals</h2>
+<a name="id-1.5.5.15.4"></a><h2>Signals</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Voice.CallAdded" title='The "CallAdded" signal'>CallAdded</a>   (o path);
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Voice.CallDeleted" title='The "CallDeleted" signal'>CallDeleted</a> (o path);
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.5.5.14.5"></a><h2>Properties</h2>
+<a name="id-1.5.5.15.5"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Voice.Calls" title='The "Calls" property'>Calls</a>          readable   ao
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Voice.EmergencyOnly" title='The "EmergencyOnly" property'>EmergencyOnly</a>  readable   b
@@ -86,6 +86,8 @@ ListCalls (OUT ao result);
         <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-interface-org-freedesktop-ModemManager1-Modem-Voice.top_of_page">org.freedesktop.ModemManager1.Modem.Voice</a>::Added signal,
         or by querying the specific Call object of interest.
 </p>
+<p>        Since: 1.6
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -106,6 +108,8 @@ DeleteCall (IN  o path);
 <p>        Delete a Call from the list of calls.
 </p>
 <p>        The call will be hangup if it is still active.
+</p>
+<p>        Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -129,6 +133,8 @@ CreateCall (IN  a{sv} properties,
 </p>
 <p>        The '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Number" title='The "Number" property'>Number</a>' is the only
         expected property to set by the user.
+</p>
+<p>        Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -165,6 +171,8 @@ HoldAndAccept ();
 </p>
 <p>        No error is returned if there are no waiting or held calls.
 </p>
+<p>        Since: 1.12
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -186,6 +194,8 @@ HangupAndAccept ();
         <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Hangup" title="The Hangup() method">Hangup()</a>
         on the active call.
 </p>
+<p>        Since: 1.12
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -200,6 +210,8 @@ HangupAll ();
 </p>
 <p>        No error is returned if there are no ongoing calls.
 </p>
+<p>        Since: 1.12
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -213,6 +225,8 @@ Transfer ();
 <p>        The affected calls will be considered terminated from the point of
         view of the subscriber.
 </p>
+<p>        Since: 1.12
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -225,6 +239,8 @@ CallWaitingSetup (IN  b enable);
 </p>
 <p>        This operation requires communication with the network in order to
         complete, so the modem must be successfully registered.
+</p>
+<p>        Since: 1.12
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -249,6 +265,8 @@ CallWaitingQuery (OUT b status);
 <p>        This operation requires communication with the network in order to
         complete, so the modem must be successfully registered.
 </p>
+<p>        Since: 1.12
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -270,6 +288,8 @@ CallAdded (o path);
 </pre>
 <p>        Emitted when a call has been added.
 </p>
+<p>        Since: 1.6
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -288,6 +308,8 @@ CallAdded (o path);
 CallDeleted (o path);
 </pre>
 <p>        Emitted when a call has been deleted.
+</p>
+<p>        Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -310,6 +332,8 @@ Calls  readable   ao
 </pre>
 <p>        The list of calls object paths.
 </p>
+<p>        Since: 1.6
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -321,6 +345,8 @@ EmergencyOnly  readable   b
 </p>
 <p>        If this flag is set, users should only attempt voice calls to
         emergency numbers, as standard voice calls will likely fail.
+</p>
+<p>        Since: 1.12
 </p>
 </div>
 </div>

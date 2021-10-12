@@ -14,7 +14,6 @@
         <sub name="Generic interfaces" link="ch03.html#id-1.2.4.3">
           <sub name="MMModem" link="MMModem.html"/>
           <sub name="MMModem3gpp" link="MMModem3gpp.html"/>
-          <sub name="MMModem3gppUssd" link="MMModem3gppUssd.html"/>
           <sub name="MMModemCdma" link="MMModemCdma.html"/>
           <sub name="MMCdmaManualActivationProperties" link="MMCdmaManualActivationProperties.html"/>
           <sub name="MMUnlockRetries" link="MMUnlockRetries.html"/>
@@ -24,36 +23,43 @@
           <sub name="MMSimpleConnectProperties" link="MMSimpleConnectProperties.html"/>
           <sub name="MMSimpleStatus" link="MMSimpleStatus.html"/>
         </sub>
-        <sub name="Location support" link="ch03s03.html">
+        <sub name="USSD support" link="ch03s03.html">
+          <sub name="MMModem3gppUssd" link="MMModem3gppUssd.html"/>
+        </sub>
+        <sub name="Profile management support" link="ch03s04.html">
+          <sub name="MMModem3gppProfileManager" link="MMModem3gppProfileManager.html"/>
+          <sub name="MM3gppProfile" link="libmm-glib-3GPP-profile.html"/>
+        </sub>
+        <sub name="Location support" link="ch03s05.html">
           <sub name="MMModemLocation" link="MMModemLocation.html"/>
           <sub name="MMLocation3gpp" link="MMLocation3gpp.html"/>
           <sub name="MMLocationGpsNmea" link="MMLocationGpsNmea.html"/>
           <sub name="MMLocationGpsRaw" link="MMLocationGpsRaw.html"/>
           <sub name="MMLocationCdmaBs" link="MMLocationCdmaBs.html"/>
         </sub>
-        <sub name="Messaging support" link="ch03s04.html">
+        <sub name="Messaging support" link="ch03s06.html">
           <sub name="MMModemMessaging" link="MMModemMessaging.html"/>
         </sub>
-        <sub name="Time support" link="ch03s05.html">
+        <sub name="Time support" link="ch03s07.html">
           <sub name="MMModemTime" link="MMModemTime.html"/>
           <sub name="MMNetworkTimezone" link="MMNetworkTimezone.html"/>
         </sub>
-        <sub name="Firmware support" link="ch03s06.html">
+        <sub name="Firmware support" link="ch03s08.html">
           <sub name="MMModemFirmware" link="MMModemFirmware.html"/>
           <sub name="MMFirmwareProperties" link="MMFirmwareProperties.html"/>
           <sub name="MMFirmwareUpdateSettings" link="MMFirmwareUpdateSettings.html"/>
         </sub>
-        <sub name="Extended signal information" link="ch03s07.html">
+        <sub name="Extended signal information" link="ch03s09.html">
           <sub name="MMModemSignal" link="MMModemSignal.html"/>
           <sub name="MMSignal" link="MMSignal.html"/>
         </sub>
-        <sub name="OMA support" link="ch03s08.html">
+        <sub name="OMA support" link="ch03s10.html">
           <sub name="MMModemOma" link="MMModemOma.html"/>
         </sub>
-        <sub name="Voice support" link="ch03s09.html">
+        <sub name="Voice support" link="ch03s11.html">
           <sub name="MMModemVoice" link="MMModemVoice.html"/>
         </sub>
-        <sub name="PCO support" link="ch03s10.html">
+        <sub name="PCO support" link="ch03s12.html">
           <sub name="MMPco" link="MMPco.html"/>
         </sub>
       </sub>
@@ -65,6 +71,7 @@
       </sub>
       <sub name="The SIM object" link="ch05.html">
         <sub name="MMSim" link="MMSim.html"/>
+        <sub name="MMSimPreferredNetwork" link="MMSimPreferredNetwork.html"/>
       </sub>
       <sub name="The SMS object" link="ch06.html">
         <sub name="MMSms" link="MMSms.html"/>
@@ -90,6 +97,9 @@
       <sub name="MmGdbusModem3gpp" link="MmGdbusModem3gpp.html"/>
       <sub name="MmGdbusModem3gppProxy" link="MmGdbusModem3gppProxy.html"/>
       <sub name="MmGdbusModem3gppSkeleton" link="MmGdbusModem3gppSkeleton.html"/>
+      <sub name="MmGdbusModem3gppProfileManager" link="MmGdbusModem3gppProfileManager.html"/>
+      <sub name="MmGdbusModem3gppProfileManagerProxy" link="MmGdbusModem3gppProfileManagerProxy.html"/>
+      <sub name="MmGdbusModem3gppProfileManagerSkeleton" link="MmGdbusModem3gppProfileManagerSkeleton.html"/>
       <sub name="MmGdbusModem3gppUssd" link="MmGdbusModem3gppUssd.html"/>
       <sub name="MmGdbusModem3gppUssdProxy" link="MmGdbusModem3gppUssdProxy.html"/>
       <sub name="MmGdbusModem3gppUssdSkeleton" link="MmGdbusModem3gppUssdSkeleton.html"/>
@@ -133,6 +143,9 @@
       <sub name="MmGdbusCallProxy" link="MmGdbusCallProxy.html"/>
       <sub name="MmGdbusCallSkeleton" link="MmGdbusCallSkeleton.html"/>
     </sub>
+    <sub name="Compatibility with older versions" link="ch08.html">
+      <sub name="Deprecated Interface" link="libmm-glib-Deprecated-Interface.html"/>
+    </sub>
     <sub name="Object Hierarchy" link="object-tree.html"/>
     <sub name="Index" link="api-index-full.html"/>
     <sub name="Index of deprecated symbols" link="deprecated-api-index.html"/>
@@ -145,6 +158,7 @@
     <sub name="Index of new symbols in 1.12" link="api-index-1-12.html"/>
     <sub name="Index of new symbols in 1.14" link="api-index-1-14.html"/>
     <sub name="Index of new symbols in 1.16" link="api-index-1-16.html"/>
+    <sub name="Index of new symbols in 1.18" link="api-index-1-18.html"/>
     <sub name="Annotation Glossary" link="annotation-glossary.html"/>
   </chapters>
   <functions>
@@ -152,6 +166,8 @@
     <keyword type="function" name="mm_bearer_ip_method_get_string ()" link="libmm-glib-Flags-and-Enumerations.html#mm-bearer-ip-method-get-string"/>
     <keyword type="function" name="mm_bearer_ip_family_get_string ()" link="libmm-glib-Flags-and-Enumerations.html#mm-bearer-ip-family-get-string"/>
     <keyword type="function" name="mm_bearer_allowed_auth_build_string_from_mask ()" link="libmm-glib-Flags-and-Enumerations.html#mm-bearer-allowed-auth-build-string-from-mask"/>
+    <keyword type="function" name="mm_bearer_multiplex_support_get_string ()" link="libmm-glib-Flags-and-Enumerations.html#mm-bearer-multiplex-support-get-string"/>
+    <keyword type="function" name="mm_bearer_apn_type_build_string_from_mask ()" link="libmm-glib-Flags-and-Enumerations.html#mm-bearer-apn-type-build-string-from-mask"/>
     <keyword type="function" name="mm_modem_capability_build_string_from_mask ()" link="libmm-glib-Flags-and-Enumerations.html#mm-modem-capability-build-string-from-mask"/>
     <keyword type="function" name="mm_modem_state_get_string ()" link="libmm-glib-Flags-and-Enumerations.html#mm-modem-state-get-string"/>
     <keyword type="function" name="mm_modem_state_failed_reason_get_string ()" link="libmm-glib-Flags-and-Enumerations.html#mm-modem-state-failed-reason-get-string"/>
@@ -228,6 +244,8 @@
     <keyword type="function" name="mm_object_get_modem ()" link="MMObject.html#mm-object-get-modem" since="1.0"/>
     <keyword type="function" name="mm_object_peek_modem_3gpp ()" link="MMObject.html#mm-object-peek-modem-3gpp" since="1.0"/>
     <keyword type="function" name="mm_object_get_modem_3gpp ()" link="MMObject.html#mm-object-get-modem-3gpp" since="1.0"/>
+    <keyword type="function" name="mm_object_peek_modem_3gpp_profile_manager ()" link="MMObject.html#mm-object-peek-modem-3gpp-profile-manager" since="1.18"/>
+    <keyword type="function" name="mm_object_get_modem_3gpp_profile_manager ()" link="MMObject.html#mm-object-get-modem-3gpp-profile-manager" since="1.18"/>
     <keyword type="function" name="mm_object_peek_modem_3gpp_ussd ()" link="MMObject.html#mm-object-peek-modem-3gpp-ussd" since="1.0"/>
     <keyword type="function" name="mm_object_get_modem_3gpp_ussd ()" link="MMObject.html#mm-object-get-modem-3gpp-ussd" since="1.0"/>
     <keyword type="function" name="mm_object_peek_modem_cdma ()" link="MMObject.html#mm-object-peek-modem-cdma" since="1.0"/>
@@ -286,8 +304,9 @@
     <keyword type="function" name="mm_modem_get_unlock_required ()" link="MMModem.html#mm-modem-get-unlock-required" since="1.0"/>
     <keyword type="function" name="mm_modem_peek_unlock_retries ()" link="MMModem.html#mm-modem-peek-unlock-retries" since="1.0"/>
     <keyword type="function" name="mm_modem_get_unlock_retries ()" link="MMModem.html#mm-modem-get-unlock-retries" since="1.0"/>
-    <keyword type="function" name="mm_modem_get_max_bearers ()" link="MMModem.html#mm-modem-get-max-bearers" since="1.0"/>
+    <keyword type="function" name="mm_modem_get_max_bearers ()" link="MMModem.html#mm-modem-get-max-bearers" deprecated="" since="1.0"/>
     <keyword type="function" name="mm_modem_get_max_active_bearers ()" link="MMModem.html#mm-modem-get-max-active-bearers" since="1.0"/>
+    <keyword type="function" name="mm_modem_get_max_active_multiplexed_bearers ()" link="MMModem.html#mm-modem-get-max-active-multiplexed-bearers" since="1.18"/>
     <keyword type="function" name="mm_modem_get_bearer_paths ()" link="MMModem.html#mm-modem-get-bearer-paths" since="1.0"/>
     <keyword type="function" name="mm_modem_dup_bearer_paths ()" link="MMModem.html#mm-modem-dup-bearer-paths" since="1.0"/>
     <keyword type="function" name="mm_modem_get_own_numbers ()" link="MMModem.html#mm-modem-get-own-numbers" since="1.0"/>
@@ -372,7 +391,6 @@
     <keyword type="function" name="mm_modem_3gpp_dup_operator_name ()" link="MMModem3gpp.html#mm-modem-3gpp-dup-operator-name" since="1.0"/>
     <keyword type="function" name="mm_modem_3gpp_get_enabled_facility_locks ()" link="MMModem3gpp.html#mm-modem-3gpp-get-enabled-facility-locks" since="1.0"/>
     <keyword type="function" name="mm_modem_3gpp_get_registration_state ()" link="MMModem3gpp.html#mm-modem-3gpp-get-registration-state" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_get_subscription_state ()" link="MMModem3gpp.html#mm-modem-3gpp-get-subscription-state" deprecated="" since="1.0"/>
     <keyword type="function" name="mm_modem_3gpp_get_pco ()" link="MMModem3gpp.html#mm-modem-3gpp-get-pco" since="1.10"/>
     <keyword type="function" name="mm_modem_3gpp_get_eps_ue_mode_operation ()" link="MMModem3gpp.html#mm-modem-3gpp-get-eps-ue-mode-operation" since="1.8"/>
     <keyword type="function" name="mm_modem_3gpp_get_initial_eps_bearer_path ()" link="MMModem3gpp.html#mm-modem-3gpp-get-initial-eps-bearer-path" since="1.10"/>
@@ -394,25 +412,11 @@
     <keyword type="function" name="mm_modem_3gpp_set_initial_eps_bearer_settings ()" link="MMModem3gpp.html#mm-modem-3gpp-set-initial-eps-bearer-settings" since="1.10"/>
     <keyword type="function" name="mm_modem_3gpp_set_initial_eps_bearer_settings_finish ()" link="MMModem3gpp.html#mm-modem-3gpp-set-initial-eps-bearer-settings-finish" since="1.10"/>
     <keyword type="function" name="mm_modem_3gpp_set_initial_eps_bearer_settings_sync ()" link="MMModem3gpp.html#mm-modem-3gpp-set-initial-eps-bearer-settings-sync" since="1.10"/>
+    <keyword type="function" name="mm_modem_3gpp_disable_facility_lock ()" link="MMModem3gpp.html#mm-modem-3gpp-disable-facility-lock"/>
+    <keyword type="function" name="mm_modem_3gpp_disable_facility_lock_finish ()" link="MMModem3gpp.html#mm-modem-3gpp-disable-facility-lock-finish"/>
+    <keyword type="function" name="mm_modem_3gpp_disable_facility_lock_sync ()" link="MMModem3gpp.html#mm-modem-3gpp-disable-facility-lock-sync"/>
     <keyword type="struct" name="struct MMModem3gpp" link="MMModem3gpp.html#MMModem3gpp-struct"/>
     <keyword type="struct" name="MMModem3gppNetwork" link="MMModem3gpp.html#MMModem3gppNetwork-struct"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_get_path ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-get-path" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_dup_path ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-dup-path" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_get_state ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-get-state" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_get_network_request ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-get-network-request" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_dup_network_request ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-dup-network-request" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_get_network_notification ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-get-network-notification" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_dup_network_notification ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-dup-network-notification" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_initiate ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_initiate_finish ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate-finish" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_initiate_sync ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate-sync" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_respond ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_respond_finish ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond-finish" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_respond_sync ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond-sync" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_cancel ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_cancel_finish ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel-finish" since="1.0"/>
-    <keyword type="function" name="mm_modem_3gpp_ussd_cancel_sync ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel-sync" since="1.0"/>
-    <keyword type="struct" name="struct MMModem3gppUssd" link="MMModem3gppUssd.html#MMModem3gppUssd-struct"/>
     <keyword type="function" name="mm_modem_cdma_get_path ()" link="MMModemCdma.html#mm-modem-cdma-get-path" since="1.0"/>
     <keyword type="function" name="mm_modem_cdma_dup_path ()" link="MMModemCdma.html#mm-modem-cdma-dup-path" since="1.0"/>
     <keyword type="function" name="mm_modem_cdma_get_esn ()" link="MMModemCdma.html#mm-modem-cdma-get-esn" since="1.0"/>
@@ -476,6 +480,8 @@
     <keyword type="function" name="mm_simple_connect_properties_set_operator_id ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-operator-id" since="1.0"/>
     <keyword type="function" name="mm_simple_connect_properties_get_apn ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-apn" since="1.0"/>
     <keyword type="function" name="mm_simple_connect_properties_set_apn ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-apn" since="1.0"/>
+    <keyword type="function" name="mm_simple_connect_properties_get_apn_type ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-apn-type" since="1.18"/>
+    <keyword type="function" name="mm_simple_connect_properties_set_apn_type ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-apn-type" since="1.18"/>
     <keyword type="function" name="mm_simple_connect_properties_get_allowed_auth ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-allowed-auth" since="1.0"/>
     <keyword type="function" name="mm_simple_connect_properties_set_allowed_auth ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-allowed-auth" since="1.0"/>
     <keyword type="function" name="mm_simple_connect_properties_get_user ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-user" since="1.0"/>
@@ -484,12 +490,14 @@
     <keyword type="function" name="mm_simple_connect_properties_set_password ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-password" since="1.0"/>
     <keyword type="function" name="mm_simple_connect_properties_get_ip_type ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-ip-type" since="1.0"/>
     <keyword type="function" name="mm_simple_connect_properties_set_ip_type ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-ip-type" since="1.0"/>
+    <keyword type="function" name="mm_simple_connect_properties_get_profile_id ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-profile-id" since="1.18"/>
+    <keyword type="function" name="mm_simple_connect_properties_set_profile_id ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-profile-id" since="1.18"/>
     <keyword type="function" name="mm_simple_connect_properties_get_allow_roaming ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-allow-roaming" since="1.0"/>
     <keyword type="function" name="mm_simple_connect_properties_set_allow_roaming ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-allow-roaming" since="1.0"/>
     <keyword type="function" name="mm_simple_connect_properties_get_rm_protocol ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-rm-protocol" since="1.16"/>
     <keyword type="function" name="mm_simple_connect_properties_set_rm_protocol ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-rm-protocol" since="1.16"/>
-    <keyword type="function" name="mm_simple_connect_properties_get_number ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-number" deprecated="" since="1.0"/>
-    <keyword type="function" name="mm_simple_connect_properties_set_number ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-number" deprecated="" since="1.0"/>
+    <keyword type="function" name="mm_simple_connect_properties_get_multiplex ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-get-multiplex" since="1.18"/>
+    <keyword type="function" name="mm_simple_connect_properties_set_multiplex ()" link="MMSimpleConnectProperties.html#mm-simple-connect-properties-set-multiplex" since="1.18"/>
     <keyword type="struct" name="struct MMSimpleConnectProperties" link="MMSimpleConnectProperties.html#MMSimpleConnectProperties-struct"/>
     <keyword type="function" name="mm_simple_status_get_state ()" link="MMSimpleStatus.html#mm-simple-status-get-state" since="1.0"/>
     <keyword type="function" name="mm_simple_status_get_signal_quality ()" link="MMSimpleStatus.html#mm-simple-status-get-signal-quality" since="1.0"/>
@@ -498,7 +506,6 @@
     <keyword type="function" name="mm_simple_status_get_3gpp_registration_state ()" link="MMSimpleStatus.html#mm-simple-status-get-3gpp-registration-state" since="1.0"/>
     <keyword type="function" name="mm_simple_status_get_3gpp_operator_code ()" link="MMSimpleStatus.html#mm-simple-status-get-3gpp-operator-code" since="1.0"/>
     <keyword type="function" name="mm_simple_status_get_3gpp_operator_name ()" link="MMSimpleStatus.html#mm-simple-status-get-3gpp-operator-name" since="1.0"/>
-    <keyword type="function" name="mm_simple_status_get_3gpp_subscription_state ()" link="MMSimpleStatus.html#mm-simple-status-get-3gpp-subscription-state" deprecated="" since="1.0"/>
     <keyword type="function" name="mm_simple_status_get_cdma_cdma1x_registration_state ()" link="MMSimpleStatus.html#mm-simple-status-get-cdma-cdma1x-registration-state" since="1.0"/>
     <keyword type="function" name="mm_simple_status_get_cdma_evdo_registration_state ()" link="MMSimpleStatus.html#mm-simple-status-get-cdma-evdo-registration-state" since="1.0"/>
     <keyword type="function" name="mm_simple_status_get_cdma_nid ()" link="MMSimpleStatus.html#mm-simple-status-get-cdma-nid" since="1.0"/>
@@ -516,6 +523,52 @@
     <keyword type="property" name="The “m3gpp-subscription-state” property" link="MMSimpleStatus.html#MMSimpleStatus--m3gpp-subscription-state"/>
     <keyword type="property" name="The “signal-quality” property" link="MMSimpleStatus.html#MMSimpleStatus--signal-quality"/>
     <keyword type="property" name="The “state” property" link="MMSimpleStatus.html#MMSimpleStatus--state"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_get_path ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-get-path" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_dup_path ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-dup-path" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_get_state ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-get-state" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_get_network_request ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-get-network-request" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_dup_network_request ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-dup-network-request" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_get_network_notification ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-get-network-notification" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_dup_network_notification ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-dup-network-notification" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_initiate ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_initiate_finish ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate-finish" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_initiate_sync ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-initiate-sync" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_respond ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_respond_finish ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond-finish" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_respond_sync ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-respond-sync" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_cancel ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_cancel_finish ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel-finish" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_ussd_cancel_sync ()" link="MMModem3gppUssd.html#mm-modem-3gpp-ussd-cancel-sync" since="1.0"/>
+    <keyword type="struct" name="struct MMModem3gppUssd" link="MMModem3gppUssd.html#MMModem3gppUssd-struct"/>
+    <keyword type="function" name="mm_modem_3gpp_profile_manager_get_path ()" link="MMModem3gppProfileManager.html#mm-modem-3gpp-profile-manager-get-path" since="1.18"/>
+    <keyword type="function" name="mm_modem_3gpp_profile_manager_dup_path ()" link="MMModem3gppProfileManager.html#mm-modem-3gpp-profile-manager-dup-path" since="1.18"/>
+    <keyword type="function" name="mm_modem_3gpp_profile_manager_list ()" link="MMModem3gppProfileManager.html#mm-modem-3gpp-profile-manager-list" since="1.18"/>
+    <keyword type="function" name="mm_modem_3gpp_profile_manager_list_finish ()" link="MMModem3gppProfileManager.html#mm-modem-3gpp-profile-manager-list-finish" since="1.18"/>
+    <keyword type="function" name="mm_modem_3gpp_profile_manager_list_sync ()" link="MMModem3gppProfileManager.html#mm-modem-3gpp-profile-manager-list-sync" since="1.18"/>
+    <keyword type="function" name="mm_modem_3gpp_profile_manager_set ()" link="MMModem3gppProfileManager.html#mm-modem-3gpp-profile-manager-set" since="1.18"/>
+    <keyword type="function" name="mm_modem_3gpp_profile_manager_set_finish ()" link="MMModem3gppProfileManager.html#mm-modem-3gpp-profile-manager-set-finish" since="1.18"/>
+    <keyword type="function" name="mm_modem_3gpp_profile_manager_set_sync ()" link="MMModem3gppProfileManager.html#mm-modem-3gpp-profile-manager-set-sync" since="1.18"/>
+    <keyword type="function" name="mm_modem_3gpp_profile_manager_delete ()" link="MMModem3gppProfileManager.html#mm-modem-3gpp-profile-manager-delete" since="1.18"/>
+    <keyword type="function" name="mm_modem_3gpp_profile_manager_delete_finish ()" link="MMModem3gppProfileManager.html#mm-modem-3gpp-profile-manager-delete-finish" since="1.18"/>
+    <keyword type="function" name="mm_modem_3gpp_profile_manager_delete_sync ()" link="MMModem3gppProfileManager.html#mm-modem-3gpp-profile-manager-delete-sync" since="1.18"/>
+    <keyword type="struct" name="struct MMModem3gppProfileManager" link="MMModem3gppProfileManager.html#MMModem3gppProfileManager-struct"/>
+    <keyword type="function" name="mm_3gpp_profile_new ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-new" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_get_apn ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-get-apn" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_set_apn ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-set-apn" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_get_apn_type ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-get-apn-type" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_set_apn_type ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-set-apn-type" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_get_allowed_auth ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-get-allowed-auth" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_set_allowed_auth ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-set-allowed-auth" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_get_user ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-get-user" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_set_user ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-set-user" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_get_password ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-get-password" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_set_password ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-set-password" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_get_ip_type ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-get-ip-type" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_set_ip_type ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-set-ip-type" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_get_profile_id ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-get-profile-id" since="1.18"/>
+    <keyword type="function" name="mm_3gpp_profile_set_profile_id ()" link="libmm-glib-3GPP-profile.html#mm-3gpp-profile-set-profile-id" since="1.18"/>
+    <keyword type="macro" name="MM_3GPP_PROFILE_ID_UNKNOWN" link="libmm-glib-3GPP-profile.html#MM-3GPP-PROFILE-ID-UNKNOWN:CAPS"/>
+    <keyword type="struct" name="struct MM3gppProfile" link="libmm-glib-3GPP-profile.html#MM3gppProfile-struct"/>
     <keyword type="function" name="mm_modem_location_get_path ()" link="MMModemLocation.html#mm-modem-location-get-path" since="1.0"/>
     <keyword type="function" name="mm_modem_location_dup_path ()" link="MMModemLocation.html#mm-modem-location-dup-path" since="1.0"/>
     <keyword type="function" name="mm_modem_location_get_capabilities ()" link="MMModemLocation.html#mm-modem-location-get-capabilities" since="1.0"/>
@@ -542,15 +595,23 @@
     <keyword type="function" name="mm_modem_location_get_3gpp ()" link="MMModemLocation.html#mm-modem-location-get-3gpp" since="1.0"/>
     <keyword type="function" name="mm_modem_location_get_3gpp_finish ()" link="MMModemLocation.html#mm-modem-location-get-3gpp-finish" since="1.0"/>
     <keyword type="function" name="mm_modem_location_get_3gpp_sync ()" link="MMModemLocation.html#mm-modem-location-get-3gpp-sync" since="1.0"/>
+    <keyword type="function" name="mm_modem_location_peek_signaled_3gpp ()" link="MMModemLocation.html#mm-modem-location-peek-signaled-3gpp" since="1.18"/>
+    <keyword type="function" name="mm_modem_location_get_signaled_3gpp ()" link="MMModemLocation.html#mm-modem-location-get-signaled-3gpp" since="1.18"/>
     <keyword type="function" name="mm_modem_location_get_gps_nmea ()" link="MMModemLocation.html#mm-modem-location-get-gps-nmea" since="1.0"/>
     <keyword type="function" name="mm_modem_location_get_gps_nmea_finish ()" link="MMModemLocation.html#mm-modem-location-get-gps-nmea-finish" since="1.0"/>
     <keyword type="function" name="mm_modem_location_get_gps_nmea_sync ()" link="MMModemLocation.html#mm-modem-location-get-gps-nmea-sync" since="1.0"/>
+    <keyword type="function" name="mm_modem_location_peek_signaled_gps_nmea ()" link="MMModemLocation.html#mm-modem-location-peek-signaled-gps-nmea" since="1.18"/>
+    <keyword type="function" name="mm_modem_location_get_signaled_gps_nmea ()" link="MMModemLocation.html#mm-modem-location-get-signaled-gps-nmea" since="1.18"/>
     <keyword type="function" name="mm_modem_location_get_gps_raw ()" link="MMModemLocation.html#mm-modem-location-get-gps-raw" since="1.0"/>
     <keyword type="function" name="mm_modem_location_get_gps_raw_finish ()" link="MMModemLocation.html#mm-modem-location-get-gps-raw-finish" since="1.0"/>
     <keyword type="function" name="mm_modem_location_get_gps_raw_sync ()" link="MMModemLocation.html#mm-modem-location-get-gps-raw-sync" since="1.0"/>
+    <keyword type="function" name="mm_modem_location_peek_signaled_gps_raw ()" link="MMModemLocation.html#mm-modem-location-peek-signaled-gps-raw" since="1.18"/>
+    <keyword type="function" name="mm_modem_location_get_signaled_gps_raw ()" link="MMModemLocation.html#mm-modem-location-get-signaled-gps-raw" since="1.18"/>
     <keyword type="function" name="mm_modem_location_get_cdma_bs ()" link="MMModemLocation.html#mm-modem-location-get-cdma-bs" since="1.0"/>
     <keyword type="function" name="mm_modem_location_get_cdma_bs_finish ()" link="MMModemLocation.html#mm-modem-location-get-cdma-bs-finish" since="1.0"/>
     <keyword type="function" name="mm_modem_location_get_cdma_bs_sync ()" link="MMModemLocation.html#mm-modem-location-get-cdma-bs-sync" since="1.0"/>
+    <keyword type="function" name="mm_modem_location_peek_signaled_cdma_bs ()" link="MMModemLocation.html#mm-modem-location-peek-signaled-cdma-bs" since="1.18"/>
+    <keyword type="function" name="mm_modem_location_get_signaled_cdma_bs ()" link="MMModemLocation.html#mm-modem-location-get-signaled-cdma-bs" since="1.18"/>
     <keyword type="function" name="mm_modem_location_get_full ()" link="MMModemLocation.html#mm-modem-location-get-full" since="1.0"/>
     <keyword type="function" name="mm_modem_location_get_full_finish ()" link="MMModemLocation.html#mm-modem-location-get-full-finish" since="1.0"/>
     <keyword type="function" name="mm_modem_location_get_full_sync ()" link="MMModemLocation.html#mm-modem-location-get-full-sync" since="1.0"/>
@@ -559,14 +620,14 @@
     <keyword type="macro" name="MM_LOCATION_LATITUDE_UNKNOWN" link="MMModemLocation.html#MM-LOCATION-LATITUDE-UNKNOWN:CAPS" since="1.0"/>
     <keyword type="macro" name="MM_LOCATION_ALTITUDE_UNKNOWN" link="MMModemLocation.html#MM-LOCATION-ALTITUDE-UNKNOWN:CAPS" since="1.0"/>
     <keyword type="function" name="mm_location_3gpp_get_mobile_country_code ()" link="MMLocation3gpp.html#mm-location-3gpp-get-mobile-country-code" since="1.0"/>
-    <keyword type="function" name="mm_location_3gpp_get_mobile_network_code ()" link="MMLocation3gpp.html#mm-location-3gpp-get-mobile-network-code" since="1.0"/>
+    <keyword type="function" name="mm_location_3gpp_get_mobile_network_code ()" link="MMLocation3gpp.html#mm-location-3gpp-get-mobile-network-code" deprecated="" since="1.0"/>
+    <keyword type="function" name="mm_location_3gpp_get_operator_code ()" link="MMLocation3gpp.html#mm-location-3gpp-get-operator-code" since="1.18"/>
     <keyword type="function" name="mm_location_3gpp_get_location_area_code ()" link="MMLocation3gpp.html#mm-location-3gpp-get-location-area-code" since="1.0"/>
     <keyword type="function" name="mm_location_3gpp_get_tracking_area_code ()" link="MMLocation3gpp.html#mm-location-3gpp-get-tracking-area-code" since="1.10"/>
     <keyword type="function" name="mm_location_3gpp_get_cell_id ()" link="MMLocation3gpp.html#mm-location-3gpp-get-cell-id" since="1.0"/>
     <keyword type="struct" name="struct MMLocation3gpp" link="MMLocation3gpp.html#MMLocation3gpp-struct"/>
     <keyword type="function" name="mm_location_gps_nmea_get_trace ()" link="MMLocationGpsNmea.html#mm-location-gps-nmea-get-trace" since="1.0"/>
     <keyword type="function" name="mm_location_gps_nmea_get_traces ()" link="MMLocationGpsNmea.html#mm-location-gps-nmea-get-traces" since="1.14"/>
-    <keyword type="function" name="mm_location_gps_nmea_build_full ()" link="MMLocationGpsNmea.html#mm-location-gps-nmea-build-full" deprecated="" since="1.0"/>
     <keyword type="struct" name="struct MMLocationGpsNmea" link="MMLocationGpsNmea.html#MMLocationGpsNmea-struct"/>
     <keyword type="function" name="mm_location_gps_raw_get_utc_time ()" link="MMLocationGpsRaw.html#mm-location-gps-raw-get-utc-time" since="1.0"/>
     <keyword type="function" name="mm_location_gps_raw_get_longitude ()" link="MMLocationGpsRaw.html#mm-location-gps-raw-get-longitude" since="1.0"/>
@@ -675,8 +736,8 @@
     <keyword type="function" name="mm_modem_oma_get_features ()" link="MMModemOma.html#mm-modem-oma-get-features" since="1.2"/>
     <keyword type="function" name="mm_modem_oma_get_session_type ()" link="MMModemOma.html#mm-modem-oma-get-session-type" since="1.2"/>
     <keyword type="function" name="mm_modem_oma_get_session_state ()" link="MMModemOma.html#mm-modem-oma-get-session-state" since="1.2"/>
-    <keyword type="function" name="mm_modem_peek_pending_network_initiated_sessions ()" link="MMModemOma.html#mm-modem-peek-pending-network-initiated-sessions" since="1.2"/>
-    <keyword type="function" name="mm_modem_get_pending_network_initiated_sessions ()" link="MMModemOma.html#mm-modem-get-pending-network-initiated-sessions" since="1.2"/>
+    <keyword type="function" name="mm_modem_oma_peek_pending_network_initiated_sessions ()" link="MMModemOma.html#mm-modem-oma-peek-pending-network-initiated-sessions" since="1.18"/>
+    <keyword type="function" name="mm_modem_oma_get_pending_network_initiated_sessions ()" link="MMModemOma.html#mm-modem-oma-get-pending-network-initiated-sessions" since="1.18"/>
     <keyword type="struct" name="struct MMModemOma" link="MMModemOma.html#MMModemOma-struct"/>
     <keyword type="struct" name="struct MMOmaPendingNetworkInitiatedSession" link="MMModemOma.html#MMOmaPendingNetworkInitiatedSession" since="1.2"/>
     <keyword type="function" name="mm_modem_voice_get_path ()" link="MMModemVoice.html#mm-modem-voice-get-path" since="1.6"/>
@@ -713,7 +774,6 @@
     <keyword type="function" name="mm_pco_get_session_id ()" link="MMPco.html#mm-pco-get-session-id" since="1.10"/>
     <keyword type="function" name="mm_pco_is_complete ()" link="MMPco.html#mm-pco-is-complete" since="1.10"/>
     <keyword type="function" name="mm_pco_get_data ()" link="MMPco.html#mm-pco-get-data" since="1.10"/>
-    <keyword type="function" name="mm_pco_list_free ()" link="MMPco.html#mm-pco-list-free" deprecated="" since="1.10"/>
     <keyword type="struct" name="struct MMPco" link="MMPco.html#MMPco-struct"/>
     <keyword type="function" name="mm_bearer_get_path ()" link="MMBearer.html#mm-bearer-get-path" since="1.0"/>
     <keyword type="function" name="mm_bearer_dup_path ()" link="MMBearer.html#mm-bearer-dup-path" since="1.0"/>
@@ -721,8 +781,10 @@
     <keyword type="function" name="mm_bearer_dup_interface ()" link="MMBearer.html#mm-bearer-dup-interface" since="1.0"/>
     <keyword type="function" name="mm_bearer_get_connected ()" link="MMBearer.html#mm-bearer-get-connected" since="1.0"/>
     <keyword type="function" name="mm_bearer_get_suspended ()" link="MMBearer.html#mm-bearer-get-suspended" since="1.0"/>
+    <keyword type="function" name="mm_bearer_get_multiplexed ()" link="MMBearer.html#mm-bearer-get-multiplexed" since="1.18"/>
     <keyword type="function" name="mm_bearer_get_ip_timeout ()" link="MMBearer.html#mm-bearer-get-ip-timeout" since="1.0"/>
     <keyword type="function" name="mm_bearer_get_bearer_type ()" link="MMBearer.html#mm-bearer-get-bearer-type" since="1.0"/>
+    <keyword type="function" name="mm_bearer_get_profile_id ()" link="MMBearer.html#mm-bearer-get-profile-id" since="1.18"/>
     <keyword type="function" name="mm_bearer_peek_ipv4_config ()" link="MMBearer.html#mm-bearer-peek-ipv4-config" since="1.0"/>
     <keyword type="function" name="mm_bearer_get_ipv4_config ()" link="MMBearer.html#mm-bearer-get-ipv4-config" since="1.0"/>
     <keyword type="function" name="mm_bearer_peek_ipv6_config ()" link="MMBearer.html#mm-bearer-peek-ipv6-config" since="1.0"/>
@@ -731,6 +793,8 @@
     <keyword type="function" name="mm_bearer_get_properties ()" link="MMBearer.html#mm-bearer-get-properties" since="1.0"/>
     <keyword type="function" name="mm_bearer_peek_stats ()" link="MMBearer.html#mm-bearer-peek-stats" since="1.6"/>
     <keyword type="function" name="mm_bearer_get_stats ()" link="MMBearer.html#mm-bearer-get-stats" since="1.6"/>
+    <keyword type="function" name="mm_bearer_get_connection_error ()" link="MMBearer.html#mm-bearer-get-connection-error" since="1.18"/>
+    <keyword type="function" name="mm_bearer_peek_connection_error ()" link="MMBearer.html#mm-bearer-peek-connection-error" since="1.18"/>
     <keyword type="function" name="mm_bearer_connect ()" link="MMBearer.html#mm-bearer-connect" since="1.0"/>
     <keyword type="function" name="mm_bearer_connect_finish ()" link="MMBearer.html#mm-bearer-connect-finish" since="1.0"/>
     <keyword type="function" name="mm_bearer_connect_sync ()" link="MMBearer.html#mm-bearer-connect-sync" since="1.0"/>
@@ -741,6 +805,8 @@
     <keyword type="function" name="mm_bearer_properties_new ()" link="MMBearerProperties.html#mm-bearer-properties-new" since="1.0"/>
     <keyword type="function" name="mm_bearer_properties_get_apn ()" link="MMBearerProperties.html#mm-bearer-properties-get-apn" since="1.0"/>
     <keyword type="function" name="mm_bearer_properties_set_apn ()" link="MMBearerProperties.html#mm-bearer-properties-set-apn" since="1.0"/>
+    <keyword type="function" name="mm_bearer_properties_get_apn_type ()" link="MMBearerProperties.html#mm-bearer-properties-get-apn-type" since="1.18"/>
+    <keyword type="function" name="mm_bearer_properties_set_apn_type ()" link="MMBearerProperties.html#mm-bearer-properties-set-apn-type" since="1.18"/>
     <keyword type="function" name="mm_bearer_properties_get_allowed_auth ()" link="MMBearerProperties.html#mm-bearer-properties-get-allowed-auth" since="1.0"/>
     <keyword type="function" name="mm_bearer_properties_set_allowed_auth ()" link="MMBearerProperties.html#mm-bearer-properties-set-allowed-auth" since="1.0"/>
     <keyword type="function" name="mm_bearer_properties_get_user ()" link="MMBearerProperties.html#mm-bearer-properties-get-user" since="1.0"/>
@@ -749,12 +815,14 @@
     <keyword type="function" name="mm_bearer_properties_set_password ()" link="MMBearerProperties.html#mm-bearer-properties-set-password" since="1.0"/>
     <keyword type="function" name="mm_bearer_properties_get_ip_type ()" link="MMBearerProperties.html#mm-bearer-properties-get-ip-type" since="1.0"/>
     <keyword type="function" name="mm_bearer_properties_set_ip_type ()" link="MMBearerProperties.html#mm-bearer-properties-set-ip-type" since="1.0"/>
+    <keyword type="function" name="mm_bearer_properties_get_profile_id ()" link="MMBearerProperties.html#mm-bearer-properties-get-profile-id" since="1.18"/>
+    <keyword type="function" name="mm_bearer_properties_set_profile_id ()" link="MMBearerProperties.html#mm-bearer-properties-set-profile-id" since="1.18"/>
     <keyword type="function" name="mm_bearer_properties_get_allow_roaming ()" link="MMBearerProperties.html#mm-bearer-properties-get-allow-roaming" since="1.0"/>
     <keyword type="function" name="mm_bearer_properties_set_allow_roaming ()" link="MMBearerProperties.html#mm-bearer-properties-set-allow-roaming" since="1.0"/>
-    <keyword type="function" name="mm_bearer_properties_get_number ()" link="MMBearerProperties.html#mm-bearer-properties-get-number" deprecated="" since="1.0"/>
-    <keyword type="function" name="mm_bearer_properties_set_number ()" link="MMBearerProperties.html#mm-bearer-properties-set-number" deprecated="" since="1.0"/>
     <keyword type="function" name="mm_bearer_properties_get_rm_protocol ()" link="MMBearerProperties.html#mm-bearer-properties-get-rm-protocol" since="1.0"/>
     <keyword type="function" name="mm_bearer_properties_set_rm_protocol ()" link="MMBearerProperties.html#mm-bearer-properties-set-rm-protocol" since="1.0"/>
+    <keyword type="function" name="mm_bearer_properties_get_multiplex ()" link="MMBearerProperties.html#mm-bearer-properties-get-multiplex" since="1.18"/>
+    <keyword type="function" name="mm_bearer_properties_set_multiplex ()" link="MMBearerProperties.html#mm-bearer-properties-set-multiplex" since="1.18"/>
     <keyword type="struct" name="struct MMBearerProperties" link="MMBearerProperties.html#MMBearerProperties-struct"/>
     <keyword type="function" name="mm_bearer_ip_config_get_method ()" link="MMBearerIpConfig.html#mm-bearer-ip-config-get-method" since="1.0"/>
     <keyword type="function" name="mm_bearer_ip_config_get_address ()" link="MMBearerIpConfig.html#mm-bearer-ip-config-get-address" since="1.0"/>
@@ -787,6 +855,7 @@
     <keyword type="function" name="mm_sim_dup_operator_name ()" link="MMSim.html#mm-sim-dup-operator-name" since="1.0"/>
     <keyword type="function" name="mm_sim_get_emergency_numbers ()" link="MMSim.html#mm-sim-get-emergency-numbers" since="1.12"/>
     <keyword type="function" name="mm_sim_dup_emergency_numbers ()" link="MMSim.html#mm-sim-dup-emergency-numbers" since="1.12"/>
+    <keyword type="function" name="mm_sim_get_preferred_networks ()" link="MMSim.html#mm-sim-get-preferred-networks" since="1.18"/>
     <keyword type="function" name="mm_sim_send_pin ()" link="MMSim.html#mm-sim-send-pin" since="1.0"/>
     <keyword type="function" name="mm_sim_send_pin_finish ()" link="MMSim.html#mm-sim-send-pin-finish" since="1.0"/>
     <keyword type="function" name="mm_sim_send_pin_sync ()" link="MMSim.html#mm-sim-send-pin-sync" since="1.0"/>
@@ -802,7 +871,17 @@
     <keyword type="function" name="mm_sim_change_pin ()" link="MMSim.html#mm-sim-change-pin" since="1.0"/>
     <keyword type="function" name="mm_sim_change_pin_finish ()" link="MMSim.html#mm-sim-change-pin-finish" since="1.0"/>
     <keyword type="function" name="mm_sim_change_pin_sync ()" link="MMSim.html#mm-sim-change-pin-sync" since="1.0"/>
+    <keyword type="function" name="mm_sim_set_preferred_networks ()" link="MMSim.html#mm-sim-set-preferred-networks" since="1.18"/>
+    <keyword type="function" name="mm_sim_set_preferred_networks_finish ()" link="MMSim.html#mm-sim-set-preferred-networks-finish" since="1.18"/>
+    <keyword type="function" name="mm_sim_set_preferred_networks_sync ()" link="MMSim.html#mm-sim-set-preferred-networks-sync" since="1.18"/>
     <keyword type="struct" name="struct MMSim" link="MMSim.html#MMSim-struct"/>
+    <keyword type="function" name="mm_sim_preferred_network_new ()" link="MMSimPreferredNetwork.html#mm-sim-preferred-network-new" since="1.18"/>
+    <keyword type="function" name="mm_sim_preferred_network_get_operator_code ()" link="MMSimPreferredNetwork.html#mm-sim-preferred-network-get-operator-code" since="1.18"/>
+    <keyword type="function" name="mm_sim_preferred_network_set_operator_code ()" link="MMSimPreferredNetwork.html#mm-sim-preferred-network-set-operator-code" since="1.18"/>
+    <keyword type="function" name="mm_sim_preferred_network_get_access_technology ()" link="MMSimPreferredNetwork.html#mm-sim-preferred-network-get-access-technology" since="1.18"/>
+    <keyword type="function" name="mm_sim_preferred_network_set_access_technology ()" link="MMSimPreferredNetwork.html#mm-sim-preferred-network-set-access-technology" since="1.18"/>
+    <keyword type="function" name="mm_sim_preferred_network_free ()" link="MMSimPreferredNetwork.html#mm-sim-preferred-network-free" since="1.18"/>
+    <keyword type="struct" name="MMSimPreferredNetwork" link="MMSimPreferredNetwork.html#MMSimPreferredNetwork-struct"/>
     <keyword type="function" name="mm_sms_get_path ()" link="MMSms.html#mm-sms-get-path" since="1.0"/>
     <keyword type="function" name="mm_sms_dup_path ()" link="MMSms.html#mm-sms-dup-path" since="1.0"/>
     <keyword type="function" name="mm_sms_get_state ()" link="MMSms.html#mm-sms-get-state" since="1.0"/>
@@ -896,12 +975,6 @@
     <keyword type="function" name="mm_call_properties_new ()" link="MMCallProperties.html#mm-call-properties-new" since="1.6"/>
     <keyword type="function" name="mm_call_properties_get_number ()" link="MMCallProperties.html#mm-call-properties-get-number" since="1.6"/>
     <keyword type="function" name="mm_call_properties_set_number ()" link="MMCallProperties.html#mm-call-properties-set-number" since="1.6"/>
-    <keyword type="function" name="mm_call_properties_get_direction ()" link="MMCallProperties.html#mm-call-properties-get-direction" deprecated="" since="1.6"/>
-    <keyword type="function" name="mm_call_properties_set_direction ()" link="MMCallProperties.html#mm-call-properties-set-direction" deprecated="" since="1.6"/>
-    <keyword type="function" name="mm_call_properties_get_state ()" link="MMCallProperties.html#mm-call-properties-get-state" deprecated="" since="1.6"/>
-    <keyword type="function" name="mm_call_properties_set_state ()" link="MMCallProperties.html#mm-call-properties-set-state" deprecated="" since="1.6"/>
-    <keyword type="function" name="mm_call_properties_get_state_reason ()" link="MMCallProperties.html#mm-call-properties-get-state-reason" deprecated="" since="1.6"/>
-    <keyword type="function" name="mm_call_properties_set_state_reason ()" link="MMCallProperties.html#mm-call-properties-set-state-reason" deprecated="" since="1.6"/>
     <keyword type="struct" name="struct MMCallProperties" link="MMCallProperties.html#MMCallProperties-struct"/>
     <keyword type="function" name="mm_call_audio_format_get_encoding ()" link="MMCallAudioFormat.html#mm-call-audio-format-get-encoding" since="1.10"/>
     <keyword type="function" name="mm_call_audio_format_get_resolution ()" link="MMCallAudioFormat.html#mm-call-audio-format-get-resolution" since="1.10"/>
@@ -951,6 +1024,8 @@
     <keyword type="function" name="mm_gdbus_object_get_modem3gpp ()" link="MmGdbusObject.html#mm-gdbus-object-get-modem3gpp"/>
     <keyword type="function" name="mm_gdbus_object_peek_modem3gpp_ussd ()" link="MmGdbusObject.html#mm-gdbus-object-peek-modem3gpp-ussd"/>
     <keyword type="function" name="mm_gdbus_object_get_modem3gpp_ussd ()" link="MmGdbusObject.html#mm-gdbus-object-get-modem3gpp-ussd"/>
+    <keyword type="function" name="mm_gdbus_object_peek_modem3gpp_profile_manager ()" link="MmGdbusObject.html#mm-gdbus-object-peek-modem3gpp-profile-manager"/>
+    <keyword type="function" name="mm_gdbus_object_get_modem3gpp_profile_manager ()" link="MmGdbusObject.html#mm-gdbus-object-get-modem3gpp-profile-manager"/>
     <keyword type="function" name="mm_gdbus_object_peek_modem_cdma ()" link="MmGdbusObject.html#mm-gdbus-object-peek-modem-cdma"/>
     <keyword type="function" name="mm_gdbus_object_get_modem_cdma ()" link="MmGdbusObject.html#mm-gdbus-object-get-modem-cdma"/>
     <keyword type="function" name="mm_gdbus_object_peek_modem_location ()" link="MmGdbusObject.html#mm-gdbus-object-peek-modem-location"/>
@@ -982,6 +1057,7 @@
     <keyword type="property" name="The “modem-time” property" link="MmGdbusObject.html#MmGdbusObject--modem-time"/>
     <keyword type="property" name="The “modem-voice” property" link="MmGdbusObject.html#MmGdbusObject--modem-voice"/>
     <keyword type="property" name="The “modem3gpp” property" link="MmGdbusObject.html#MmGdbusObject--modem3gpp"/>
+    <keyword type="property" name="The “modem3gpp-profile-manager” property" link="MmGdbusObject.html#MmGdbusObject--modem3gpp-profile-manager"/>
     <keyword type="property" name="The “modem3gpp-ussd” property" link="MmGdbusObject.html#MmGdbusObject--modem3gpp-ussd"/>
     <keyword type="function" name="mm_gdbus_object_proxy_new ()" link="MmGdbusObjectProxy.html#mm-gdbus-object-proxy-new"/>
     <keyword type="struct" name="struct MmGdbusObjectProxy" link="MmGdbusObjectProxy.html#MmGdbusObjectProxy-struct"/>
@@ -989,6 +1065,7 @@
     <keyword type="function" name="mm_gdbus_object_skeleton_set_modem ()" link="MmGdbusObjectSkeleton.html#mm-gdbus-object-skeleton-set-modem"/>
     <keyword type="function" name="mm_gdbus_object_skeleton_set_modem3gpp ()" link="MmGdbusObjectSkeleton.html#mm-gdbus-object-skeleton-set-modem3gpp"/>
     <keyword type="function" name="mm_gdbus_object_skeleton_set_modem3gpp_ussd ()" link="MmGdbusObjectSkeleton.html#mm-gdbus-object-skeleton-set-modem3gpp-ussd"/>
+    <keyword type="function" name="mm_gdbus_object_skeleton_set_modem3gpp_profile_manager ()" link="MmGdbusObjectSkeleton.html#mm-gdbus-object-skeleton-set-modem3gpp-profile-manager"/>
     <keyword type="function" name="mm_gdbus_object_skeleton_set_modem_cdma ()" link="MmGdbusObjectSkeleton.html#mm-gdbus-object-skeleton-set-modem-cdma"/>
     <keyword type="function" name="mm_gdbus_object_skeleton_set_modem_firmware ()" link="MmGdbusObjectSkeleton.html#mm-gdbus-object-skeleton-set-modem-firmware"/>
     <keyword type="function" name="mm_gdbus_object_skeleton_set_modem_oma ()" link="MmGdbusObjectSkeleton.html#mm-gdbus-object-skeleton-set-modem-oma"/>
@@ -1018,6 +1095,7 @@
     <keyword type="function" name="mm_gdbus_modem_get_manufacturer ()" link="MmGdbusModem.html#mm-gdbus-modem-get-manufacturer"/>
     <keyword type="function" name="mm_gdbus_modem_dup_manufacturer ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-manufacturer"/>
     <keyword type="function" name="mm_gdbus_modem_get_max_active_bearers ()" link="MmGdbusModem.html#mm-gdbus-modem-get-max-active-bearers"/>
+    <keyword type="function" name="mm_gdbus_modem_get_max_active_multiplexed_bearers ()" link="MmGdbusModem.html#mm-gdbus-modem-get-max-active-multiplexed-bearers"/>
     <keyword type="function" name="mm_gdbus_modem_get_max_bearers ()" link="MmGdbusModem.html#mm-gdbus-modem-get-max-bearers"/>
     <keyword type="function" name="mm_gdbus_modem_get_model ()" link="MmGdbusModem.html#mm-gdbus-modem-get-model"/>
     <keyword type="function" name="mm_gdbus_modem_dup_model ()" link="MmGdbusModem.html#mm-gdbus-modem-dup-model"/>
@@ -1109,6 +1187,7 @@
     <keyword type="property" name="The “hardware-revision” property" link="MmGdbusModem.html#MmGdbusModem--hardware-revision"/>
     <keyword type="property" name="The “manufacturer” property" link="MmGdbusModem.html#MmGdbusModem--manufacturer"/>
     <keyword type="property" name="The “max-active-bearers” property" link="MmGdbusModem.html#MmGdbusModem--max-active-bearers"/>
+    <keyword type="property" name="The “max-active-multiplexed-bearers” property" link="MmGdbusModem.html#MmGdbusModem--max-active-multiplexed-bearers"/>
     <keyword type="property" name="The “max-bearers” property" link="MmGdbusModem.html#MmGdbusModem--max-bearers"/>
     <keyword type="property" name="The “model” property" link="MmGdbusModem.html#MmGdbusModem--model"/>
     <keyword type="property" name="The “own-numbers” property" link="MmGdbusModem.html#MmGdbusModem--own-numbers"/>
@@ -1179,6 +1258,9 @@
     <keyword type="function" name="mm_gdbus_modem3gpp_call_set_initial_eps_bearer_settings ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-set-initial-eps-bearer-settings"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_call_set_initial_eps_bearer_settings_finish ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-set-initial-eps-bearer-settings-finish"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_call_set_initial_eps_bearer_settings_sync ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-set-initial-eps-bearer-settings-sync"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_call_disable_facility_lock ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-disable-facility-lock"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_call_disable_facility_lock_finish ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-disable-facility-lock-finish"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_call_disable_facility_lock_sync ()" link="MmGdbusModem3gpp.html#mm-gdbus-modem3gpp-call-disable-facility-lock-sync"/>
     <keyword type="struct" name="MmGdbusModem3gpp" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp-struct"/>
     <keyword type="struct" name="struct MmGdbusModem3gppIface" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface"/>
     <keyword type="property" name="The “enabled-facility-locks” property" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp--enabled-facility-locks"/>
@@ -1191,6 +1273,7 @@
     <keyword type="property" name="The “pco” property" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp--pco"/>
     <keyword type="property" name="The “registration-state” property" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp--registration-state"/>
     <keyword type="property" name="The “subscription-state” property" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp--subscription-state"/>
+    <keyword type="signal" name="The “handle-disable-facility-lock” signal" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp-handle-disable-facility-lock"/>
     <keyword type="signal" name="The “handle-register” signal" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp-handle-register"/>
     <keyword type="signal" name="The “handle-scan” signal" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp-handle-scan"/>
     <keyword type="signal" name="The “handle-set-eps-ue-mode-operation” signal" link="MmGdbusModem3gpp.html#MmGdbusModem3gpp-handle-set-eps-ue-mode-operation"/>
@@ -1204,6 +1287,30 @@
     <keyword type="struct" name="struct MmGdbusModem3gppProxy" link="MmGdbusModem3gppProxy.html#MmGdbusModem3gppProxy-struct"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_skeleton_new ()" link="MmGdbusModem3gppSkeleton.html#mm-gdbus-modem3gpp-skeleton-new"/>
     <keyword type="struct" name="struct MmGdbusModem3gppSkeleton" link="MmGdbusModem3gppSkeleton.html#MmGdbusModem3gppSkeleton-struct"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_call_delete ()" link="MmGdbusModem3gppProfileManager.html#mm-gdbus-modem3gpp-profile-manager-call-delete"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_call_delete_finish ()" link="MmGdbusModem3gppProfileManager.html#mm-gdbus-modem3gpp-profile-manager-call-delete-finish"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_call_delete_sync ()" link="MmGdbusModem3gppProfileManager.html#mm-gdbus-modem3gpp-profile-manager-call-delete-sync"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_call_list ()" link="MmGdbusModem3gppProfileManager.html#mm-gdbus-modem3gpp-profile-manager-call-list"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_call_list_finish ()" link="MmGdbusModem3gppProfileManager.html#mm-gdbus-modem3gpp-profile-manager-call-list-finish"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_call_list_sync ()" link="MmGdbusModem3gppProfileManager.html#mm-gdbus-modem3gpp-profile-manager-call-list-sync"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_call_set ()" link="MmGdbusModem3gppProfileManager.html#mm-gdbus-modem3gpp-profile-manager-call-set"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_call_set_finish ()" link="MmGdbusModem3gppProfileManager.html#mm-gdbus-modem3gpp-profile-manager-call-set-finish"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_call_set_sync ()" link="MmGdbusModem3gppProfileManager.html#mm-gdbus-modem3gpp-profile-manager-call-set-sync"/>
+    <keyword type="struct" name="MmGdbusModem3gppProfileManager" link="MmGdbusModem3gppProfileManager.html#MmGdbusModem3gppProfileManager-struct"/>
+    <keyword type="struct" name="struct MmGdbusModem3gppProfileManagerIface" link="MmGdbusModem3gppProfileManager.html#MmGdbusModem3gppProfileManagerIface"/>
+    <keyword type="signal" name="The “handle-delete” signal" link="MmGdbusModem3gppProfileManager.html#MmGdbusModem3gppProfileManager-handle-delete"/>
+    <keyword type="signal" name="The “handle-list” signal" link="MmGdbusModem3gppProfileManager.html#MmGdbusModem3gppProfileManager-handle-list"/>
+    <keyword type="signal" name="The “handle-set” signal" link="MmGdbusModem3gppProfileManager.html#MmGdbusModem3gppProfileManager-handle-set"/>
+    <keyword type="signal" name="The “updated” signal" link="MmGdbusModem3gppProfileManager.html#MmGdbusModem3gppProfileManager-updated"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_proxy_new ()" link="MmGdbusModem3gppProfileManagerProxy.html#mm-gdbus-modem3gpp-profile-manager-proxy-new"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_proxy_new_finish ()" link="MmGdbusModem3gppProfileManagerProxy.html#mm-gdbus-modem3gpp-profile-manager-proxy-new-finish"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_proxy_new_for_bus ()" link="MmGdbusModem3gppProfileManagerProxy.html#mm-gdbus-modem3gpp-profile-manager-proxy-new-for-bus"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_proxy_new_for_bus_finish ()" link="MmGdbusModem3gppProfileManagerProxy.html#mm-gdbus-modem3gpp-profile-manager-proxy-new-for-bus-finish"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_proxy_new_for_bus_sync ()" link="MmGdbusModem3gppProfileManagerProxy.html#mm-gdbus-modem3gpp-profile-manager-proxy-new-for-bus-sync"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_proxy_new_sync ()" link="MmGdbusModem3gppProfileManagerProxy.html#mm-gdbus-modem3gpp-profile-manager-proxy-new-sync"/>
+    <keyword type="struct" name="struct MmGdbusModem3gppProfileManagerProxy" link="MmGdbusModem3gppProfileManagerProxy.html#MmGdbusModem3gppProfileManagerProxy-struct"/>
+    <keyword type="function" name="mm_gdbus_modem3gpp_profile_manager_skeleton_new ()" link="MmGdbusModem3gppProfileManagerSkeleton.html#mm-gdbus-modem3gpp-profile-manager-skeleton-new"/>
+    <keyword type="struct" name="struct MmGdbusModem3gppProfileManagerSkeleton" link="MmGdbusModem3gppProfileManagerSkeleton.html#MmGdbusModem3gppProfileManagerSkeleton-struct"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_ussd_get_state ()" link="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-get-state"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_ussd_get_network_request ()" link="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-get-network-request"/>
     <keyword type="function" name="mm_gdbus_modem3gpp_ussd_dup_network_request ()" link="MmGdbusModem3gppUssd.html#mm-gdbus-modem3gpp-ussd-dup-network-request"/>
@@ -1554,8 +1661,12 @@
     <keyword type="function" name="mm_gdbus_bearer_get_properties ()" link="MmGdbusBearer.html#mm-gdbus-bearer-get-properties"/>
     <keyword type="function" name="mm_gdbus_bearer_dup_properties ()" link="MmGdbusBearer.html#mm-gdbus-bearer-dup-properties"/>
     <keyword type="function" name="mm_gdbus_bearer_get_connected ()" link="MmGdbusBearer.html#mm-gdbus-bearer-get-connected"/>
+    <keyword type="function" name="mm_gdbus_bearer_get_connection_error ()" link="MmGdbusBearer.html#mm-gdbus-bearer-get-connection-error"/>
+    <keyword type="function" name="mm_gdbus_bearer_dup_connection_error ()" link="MmGdbusBearer.html#mm-gdbus-bearer-dup-connection-error"/>
     <keyword type="function" name="mm_gdbus_bearer_get_suspended ()" link="MmGdbusBearer.html#mm-gdbus-bearer-get-suspended"/>
+    <keyword type="function" name="mm_gdbus_bearer_get_multiplexed ()" link="MmGdbusBearer.html#mm-gdbus-bearer-get-multiplexed"/>
     <keyword type="function" name="mm_gdbus_bearer_get_bearer_type ()" link="MmGdbusBearer.html#mm-gdbus-bearer-get-bearer-type"/>
+    <keyword type="function" name="mm_gdbus_bearer_get_profile_id ()" link="MmGdbusBearer.html#mm-gdbus-bearer-get-profile-id"/>
     <keyword type="function" name="mm_gdbus_bearer_get_stats ()" link="MmGdbusBearer.html#mm-gdbus-bearer-get-stats"/>
     <keyword type="function" name="mm_gdbus_bearer_dup_stats ()" link="MmGdbusBearer.html#mm-gdbus-bearer-dup-stats"/>
     <keyword type="function" name="mm_gdbus_bearer_call_connect ()" link="MmGdbusBearer.html#mm-gdbus-bearer-call-connect"/>
@@ -1568,10 +1679,13 @@
     <keyword type="struct" name="struct MmGdbusBearerIface" link="MmGdbusBearer.html#MmGdbusBearerIface"/>
     <keyword type="property" name="The “bearer-type” property" link="MmGdbusBearer.html#MmGdbusBearer--bearer-type"/>
     <keyword type="property" name="The “connected” property" link="MmGdbusBearer.html#MmGdbusBearer--connected"/>
+    <keyword type="property" name="The “connection-error” property" link="MmGdbusBearer.html#MmGdbusBearer--connection-error"/>
     <keyword type="property" name="The “interface” property" link="MmGdbusBearer.html#MmGdbusBearer--interface"/>
     <keyword type="property" name="The “ip-timeout” property" link="MmGdbusBearer.html#MmGdbusBearer--ip-timeout"/>
     <keyword type="property" name="The “ip4-config” property" link="MmGdbusBearer.html#MmGdbusBearer--ip4-config"/>
     <keyword type="property" name="The “ip6-config” property" link="MmGdbusBearer.html#MmGdbusBearer--ip6-config"/>
+    <keyword type="property" name="The “multiplexed” property" link="MmGdbusBearer.html#MmGdbusBearer--multiplexed"/>
+    <keyword type="property" name="The “profile-id” property" link="MmGdbusBearer.html#MmGdbusBearer--profile-id"/>
     <keyword type="property" name="The “properties” property" link="MmGdbusBearer.html#MmGdbusBearer--properties"/>
     <keyword type="property" name="The “stats” property" link="MmGdbusBearer.html#MmGdbusBearer--stats"/>
     <keyword type="property" name="The “suspended” property" link="MmGdbusBearer.html#MmGdbusBearer--suspended"/>
@@ -1599,6 +1713,8 @@
     <keyword type="function" name="mm_gdbus_sim_dup_operator_name ()" link="MmGdbusSim.html#mm-gdbus-sim-dup-operator-name"/>
     <keyword type="function" name="mm_gdbus_sim_get_emergency_numbers ()" link="MmGdbusSim.html#mm-gdbus-sim-get-emergency-numbers"/>
     <keyword type="function" name="mm_gdbus_sim_dup_emergency_numbers ()" link="MmGdbusSim.html#mm-gdbus-sim-dup-emergency-numbers"/>
+    <keyword type="function" name="mm_gdbus_sim_dup_preferred_networks ()" link="MmGdbusSim.html#mm-gdbus-sim-dup-preferred-networks"/>
+    <keyword type="function" name="mm_gdbus_sim_get_preferred_networks ()" link="MmGdbusSim.html#mm-gdbus-sim-get-preferred-networks"/>
     <keyword type="function" name="mm_gdbus_sim_call_send_pin ()" link="MmGdbusSim.html#mm-gdbus-sim-call-send-pin"/>
     <keyword type="function" name="mm_gdbus_sim_call_send_pin_finish ()" link="MmGdbusSim.html#mm-gdbus-sim-call-send-pin-finish"/>
     <keyword type="function" name="mm_gdbus_sim_call_send_pin_sync ()" link="MmGdbusSim.html#mm-gdbus-sim-call-send-pin-sync"/>
@@ -1611,6 +1727,9 @@
     <keyword type="function" name="mm_gdbus_sim_call_change_pin ()" link="MmGdbusSim.html#mm-gdbus-sim-call-change-pin"/>
     <keyword type="function" name="mm_gdbus_sim_call_change_pin_finish ()" link="MmGdbusSim.html#mm-gdbus-sim-call-change-pin-finish"/>
     <keyword type="function" name="mm_gdbus_sim_call_change_pin_sync ()" link="MmGdbusSim.html#mm-gdbus-sim-call-change-pin-sync"/>
+    <keyword type="function" name="mm_gdbus_sim_call_set_preferred_networks ()" link="MmGdbusSim.html#mm-gdbus-sim-call-set-preferred-networks"/>
+    <keyword type="function" name="mm_gdbus_sim_call_set_preferred_networks_finish ()" link="MmGdbusSim.html#mm-gdbus-sim-call-set-preferred-networks-finish"/>
+    <keyword type="function" name="mm_gdbus_sim_call_set_preferred_networks_sync ()" link="MmGdbusSim.html#mm-gdbus-sim-call-set-preferred-networks-sync"/>
     <keyword type="struct" name="MmGdbusSim" link="MmGdbusSim.html#MmGdbusSim-struct"/>
     <keyword type="struct" name="struct MmGdbusSimIface" link="MmGdbusSim.html#MmGdbusSimIface"/>
     <keyword type="property" name="The “active” property" link="MmGdbusSim.html#MmGdbusSim--active"/>
@@ -1619,11 +1738,13 @@
     <keyword type="property" name="The “imsi” property" link="MmGdbusSim.html#MmGdbusSim--imsi"/>
     <keyword type="property" name="The “operator-identifier” property" link="MmGdbusSim.html#MmGdbusSim--operator-identifier"/>
     <keyword type="property" name="The “operator-name” property" link="MmGdbusSim.html#MmGdbusSim--operator-name"/>
+    <keyword type="property" name="The “preferred-networks” property" link="MmGdbusSim.html#MmGdbusSim--preferred-networks"/>
     <keyword type="property" name="The “sim-identifier” property" link="MmGdbusSim.html#MmGdbusSim--sim-identifier"/>
     <keyword type="signal" name="The “handle-change-pin” signal" link="MmGdbusSim.html#MmGdbusSim-handle-change-pin"/>
     <keyword type="signal" name="The “handle-enable-pin” signal" link="MmGdbusSim.html#MmGdbusSim-handle-enable-pin"/>
     <keyword type="signal" name="The “handle-send-pin” signal" link="MmGdbusSim.html#MmGdbusSim-handle-send-pin"/>
     <keyword type="signal" name="The “handle-send-puk” signal" link="MmGdbusSim.html#MmGdbusSim-handle-send-puk"/>
+    <keyword type="signal" name="The “handle-set-preferred-networks” signal" link="MmGdbusSim.html#MmGdbusSim-handle-set-preferred-networks"/>
     <keyword type="function" name="mm_gdbus_sim_proxy_new ()" link="MmGdbusSimProxy.html#mm-gdbus-sim-proxy-new"/>
     <keyword type="function" name="mm_gdbus_sim_proxy_new_finish ()" link="MmGdbusSimProxy.html#mm-gdbus-sim-proxy-new-finish"/>
     <keyword type="function" name="mm_gdbus_sim_proxy_new_for_bus ()" link="MmGdbusSimProxy.html#mm-gdbus-sim-proxy-new-for-bus"/>
@@ -1749,6 +1870,22 @@
     <keyword type="struct" name="struct MmGdbusCallProxy" link="MmGdbusCallProxy.html#MmGdbusCallProxy-struct"/>
     <keyword type="function" name="mm_gdbus_call_skeleton_new ()" link="MmGdbusCallSkeleton.html#mm-gdbus-call-skeleton-new"/>
     <keyword type="struct" name="struct MmGdbusCallSkeleton" link="MmGdbusCallSkeleton.html#MmGdbusCallSkeleton-struct"/>
+    <keyword type="function" name="mm_simple_connect_properties_get_number ()" link="libmm-glib-Deprecated-Interface.html#mm-simple-connect-properties-get-number" deprecated="" since="1.0"/>
+    <keyword type="function" name="mm_simple_connect_properties_set_number ()" link="libmm-glib-Deprecated-Interface.html#mm-simple-connect-properties-set-number" deprecated="" since="1.0"/>
+    <keyword type="function" name="mm_bearer_properties_get_number ()" link="libmm-glib-Deprecated-Interface.html#mm-bearer-properties-get-number" deprecated="" since="1.0"/>
+    <keyword type="function" name="mm_bearer_properties_set_number ()" link="libmm-glib-Deprecated-Interface.html#mm-bearer-properties-set-number" deprecated="" since="1.0"/>
+    <keyword type="function" name="mm_call_properties_get_direction ()" link="libmm-glib-Deprecated-Interface.html#mm-call-properties-get-direction" deprecated="" since="1.6"/>
+    <keyword type="function" name="mm_call_properties_set_direction ()" link="libmm-glib-Deprecated-Interface.html#mm-call-properties-set-direction" deprecated="" since="1.6"/>
+    <keyword type="function" name="mm_call_properties_get_state ()" link="libmm-glib-Deprecated-Interface.html#mm-call-properties-get-state" deprecated="" since="1.6"/>
+    <keyword type="function" name="mm_call_properties_set_state ()" link="libmm-glib-Deprecated-Interface.html#mm-call-properties-set-state" deprecated="" since="1.6"/>
+    <keyword type="function" name="mm_call_properties_get_state_reason ()" link="libmm-glib-Deprecated-Interface.html#mm-call-properties-get-state-reason" deprecated="" since="1.6"/>
+    <keyword type="function" name="mm_call_properties_set_state_reason ()" link="libmm-glib-Deprecated-Interface.html#mm-call-properties-set-state-reason" deprecated="" since="1.6"/>
+    <keyword type="function" name="mm_location_gps_nmea_build_full ()" link="libmm-glib-Deprecated-Interface.html#mm-location-gps-nmea-build-full" deprecated="" since="1.0"/>
+    <keyword type="function" name="mm_pco_list_free ()" link="libmm-glib-Deprecated-Interface.html#mm-pco-list-free" deprecated="" since="1.10"/>
+    <keyword type="function" name="mm_simple_status_get_3gpp_subscription_state ()" link="libmm-glib-Deprecated-Interface.html#mm-simple-status-get-3gpp-subscription-state" deprecated="" since="1.0"/>
+    <keyword type="function" name="mm_modem_3gpp_get_subscription_state ()" link="libmm-glib-Deprecated-Interface.html#mm-modem-3gpp-get-subscription-state" deprecated="" since="1.0"/>
+    <keyword type="function" name="mm_modem_peek_pending_network_initiated_sessions ()" link="libmm-glib-Deprecated-Interface.html#mm-modem-peek-pending-network-initiated-sessions" deprecated="1.18: Use mm_modem_oma_peek_pending_network_initiated_sessions() instead." since="1.2"/>
+    <keyword type="function" name="mm_modem_get_pending_network_initiated_sessions ()" link="libmm-glib-Deprecated-Interface.html#mm-modem-get-pending-network-initiated-sessions" deprecated="1.18: Use mm_modem_oma_get_pending_network_initiated_sessions() instead." since="1.2"/>
     <keyword type="member" name="MMModemModeCombination.allowed" link="MMModem.html#MMModemModeCombination.allowed"/>
     <keyword type="member" name="MMModemModeCombination.preferred" link="MMModem.html#MMModemModeCombination.preferred"/>
     <keyword type="member" name="MMModemPortInfo.name" link="MMModem.html#MMModemPortInfo.name"/>
@@ -1789,6 +1926,7 @@
     <keyword type="member" name="MmGdbusModemIface.get-hardware-revision" link="MmGdbusModem.html#MmGdbusModemIface.get-hardware-revision"/>
     <keyword type="member" name="MmGdbusModemIface.get-manufacturer" link="MmGdbusModem.html#MmGdbusModemIface.get-manufacturer"/>
     <keyword type="member" name="MmGdbusModemIface.get-max-active-bearers" link="MmGdbusModem.html#MmGdbusModemIface.get-max-active-bearers"/>
+    <keyword type="member" name="MmGdbusModemIface.get-max-active-multiplexed-bearers" link="MmGdbusModem.html#MmGdbusModemIface.get-max-active-multiplexed-bearers"/>
     <keyword type="member" name="MmGdbusModemIface.get-max-bearers" link="MmGdbusModem.html#MmGdbusModemIface.get-max-bearers"/>
     <keyword type="member" name="MmGdbusModemIface.get-model" link="MmGdbusModem.html#MmGdbusModemIface.get-model"/>
     <keyword type="member" name="MmGdbusModemIface.get-own-numbers" link="MmGdbusModem.html#MmGdbusModemIface.get-own-numbers"/>
@@ -1811,6 +1949,7 @@
     <keyword type="member" name="MmGdbusModemIface.get-unlock-retries" link="MmGdbusModem.html#MmGdbusModemIface.get-unlock-retries"/>
     <keyword type="member" name="MmGdbusModemIface.state-changed" link="MmGdbusModem.html#MmGdbusModemIface.state-changed"/>
     <keyword type="member" name="MmGdbusModem3gppIface.parent-iface" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.parent-iface"/>
+    <keyword type="member" name="MmGdbusModem3gppIface.handle-disable-facility-lock" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.handle-disable-facility-lock"/>
     <keyword type="member" name="MmGdbusModem3gppIface.handle-register" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.handle-register"/>
     <keyword type="member" name="MmGdbusModem3gppIface.handle-scan" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.handle-scan"/>
     <keyword type="member" name="MmGdbusModem3gppIface.handle-set-eps-ue-mode-operation" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.handle-set-eps-ue-mode-operation"/>
@@ -1825,6 +1964,11 @@
     <keyword type="member" name="MmGdbusModem3gppIface.get-pco" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.get-pco"/>
     <keyword type="member" name="MmGdbusModem3gppIface.get-registration-state" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.get-registration-state"/>
     <keyword type="member" name="MmGdbusModem3gppIface.get-subscription-state" link="MmGdbusModem3gpp.html#MmGdbusModem3gppIface.get-subscription-state"/>
+    <keyword type="member" name="MmGdbusModem3gppProfileManagerIface.parent-iface" link="MmGdbusModem3gppProfileManager.html#MmGdbusModem3gppProfileManagerIface.parent-iface"/>
+    <keyword type="member" name="MmGdbusModem3gppProfileManagerIface.handle-delete" link="MmGdbusModem3gppProfileManager.html#MmGdbusModem3gppProfileManagerIface.handle-delete"/>
+    <keyword type="member" name="MmGdbusModem3gppProfileManagerIface.handle-list" link="MmGdbusModem3gppProfileManager.html#MmGdbusModem3gppProfileManagerIface.handle-list"/>
+    <keyword type="member" name="MmGdbusModem3gppProfileManagerIface.handle-set" link="MmGdbusModem3gppProfileManager.html#MmGdbusModem3gppProfileManagerIface.handle-set"/>
+    <keyword type="member" name="MmGdbusModem3gppProfileManagerIface.updated" link="MmGdbusModem3gppProfileManager.html#MmGdbusModem3gppProfileManagerIface.updated"/>
     <keyword type="member" name="MmGdbusModem3gppUssdIface.parent-iface" link="MmGdbusModem3gppUssd.html#MmGdbusModem3gppUssdIface.parent-iface"/>
     <keyword type="member" name="MmGdbusModem3gppUssdIface.handle-cancel" link="MmGdbusModem3gppUssd.html#MmGdbusModem3gppUssdIface.handle-cancel"/>
     <keyword type="member" name="MmGdbusModem3gppUssdIface.handle-initiate" link="MmGdbusModem3gppUssd.html#MmGdbusModem3gppUssdIface.handle-initiate"/>
@@ -1916,10 +2060,13 @@
     <keyword type="member" name="MmGdbusBearerIface.handle-disconnect" link="MmGdbusBearer.html#MmGdbusBearerIface.handle-disconnect"/>
     <keyword type="member" name="MmGdbusBearerIface.get-bearer-type" link="MmGdbusBearer.html#MmGdbusBearerIface.get-bearer-type"/>
     <keyword type="member" name="MmGdbusBearerIface.get-connected" link="MmGdbusBearer.html#MmGdbusBearerIface.get-connected"/>
+    <keyword type="member" name="MmGdbusBearerIface.get-connection-error" link="MmGdbusBearer.html#MmGdbusBearerIface.get-connection-error"/>
     <keyword type="member" name="MmGdbusBearerIface.get-interface" link="MmGdbusBearer.html#MmGdbusBearerIface.get-interface"/>
     <keyword type="member" name="MmGdbusBearerIface.get-ip4-config" link="MmGdbusBearer.html#MmGdbusBearerIface.get-ip4-config"/>
     <keyword type="member" name="MmGdbusBearerIface.get-ip6-config" link="MmGdbusBearer.html#MmGdbusBearerIface.get-ip6-config"/>
     <keyword type="member" name="MmGdbusBearerIface.get-ip-timeout" link="MmGdbusBearer.html#MmGdbusBearerIface.get-ip-timeout"/>
+    <keyword type="member" name="MmGdbusBearerIface.get-multiplexed" link="MmGdbusBearer.html#MmGdbusBearerIface.get-multiplexed"/>
+    <keyword type="member" name="MmGdbusBearerIface.get-profile-id" link="MmGdbusBearer.html#MmGdbusBearerIface.get-profile-id"/>
     <keyword type="member" name="MmGdbusBearerIface.get-properties" link="MmGdbusBearer.html#MmGdbusBearerIface.get-properties"/>
     <keyword type="member" name="MmGdbusBearerIface.get-stats" link="MmGdbusBearer.html#MmGdbusBearerIface.get-stats"/>
     <keyword type="member" name="MmGdbusBearerIface.get-suspended" link="MmGdbusBearer.html#MmGdbusBearerIface.get-suspended"/>
@@ -1928,12 +2075,14 @@
     <keyword type="member" name="MmGdbusSimIface.handle-enable-pin" link="MmGdbusSim.html#MmGdbusSimIface.handle-enable-pin"/>
     <keyword type="member" name="MmGdbusSimIface.handle-send-pin" link="MmGdbusSim.html#MmGdbusSimIface.handle-send-pin"/>
     <keyword type="member" name="MmGdbusSimIface.handle-send-puk" link="MmGdbusSim.html#MmGdbusSimIface.handle-send-puk"/>
+    <keyword type="member" name="MmGdbusSimIface.handle-set-preferred-networks" link="MmGdbusSim.html#MmGdbusSimIface.handle-set-preferred-networks"/>
     <keyword type="member" name="MmGdbusSimIface.get-active" link="MmGdbusSim.html#MmGdbusSimIface.get-active"/>
     <keyword type="member" name="MmGdbusSimIface.get-eid" link="MmGdbusSim.html#MmGdbusSimIface.get-eid"/>
     <keyword type="member" name="MmGdbusSimIface.get-emergency-numbers" link="MmGdbusSim.html#MmGdbusSimIface.get-emergency-numbers"/>
     <keyword type="member" name="MmGdbusSimIface.get-imsi" link="MmGdbusSim.html#MmGdbusSimIface.get-imsi"/>
     <keyword type="member" name="MmGdbusSimIface.get-operator-identifier" link="MmGdbusSim.html#MmGdbusSimIface.get-operator-identifier"/>
     <keyword type="member" name="MmGdbusSimIface.get-operator-name" link="MmGdbusSim.html#MmGdbusSimIface.get-operator-name"/>
+    <keyword type="member" name="MmGdbusSimIface.get-preferred-networks" link="MmGdbusSim.html#MmGdbusSimIface.get-preferred-networks"/>
     <keyword type="member" name="MmGdbusSimIface.get-sim-identifier" link="MmGdbusSim.html#MmGdbusSimIface.get-sim-identifier"/>
     <keyword type="member" name="MmGdbusSmsIface.parent-iface" link="MmGdbusSms.html#MmGdbusSmsIface.parent-iface"/>
     <keyword type="member" name="MmGdbusSmsIface.handle-send" link="MmGdbusSms.html#MmGdbusSmsIface.handle-send"/>

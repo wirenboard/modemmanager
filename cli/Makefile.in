@@ -93,7 +93,18 @@ bin_PROGRAMS = mmcli$(EXEEXT)
 @WITH_UDEV_TRUE@am__append_2 = $(GUDEV_LIBS)
 subdir = cli
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_code_coverage.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_append_compile_flags.m4 \
+	$(top_srcdir)/m4/ax_append_flag.m4 \
+	$(top_srcdir)/m4/ax_append_link_flags.m4 \
+	$(top_srcdir)/m4/ax_check_compile_flag.m4 \
+	$(top_srcdir)/m4/ax_check_link_flag.m4 \
+	$(top_srcdir)/m4/ax_code_coverage.m4 \
+	$(top_srcdir)/m4/ax_compiler_flags.m4 \
+	$(top_srcdir)/m4/ax_compiler_flags_cflags.m4 \
+	$(top_srcdir)/m4/ax_compiler_flags_gir.m4 \
+	$(top_srcdir)/m4/ax_compiler_flags_ldflags.m4 \
+	$(top_srcdir)/m4/ax_is_release.m4 \
+	$(top_srcdir)/m4/ax_require_defined.m4 \
 	$(top_srcdir)/m4/gettext.m4 $(top_srcdir)/m4/gtk-doc.m4 \
 	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
 	$(top_srcdir)/m4/introspection.m4 $(top_srcdir)/m4/lib-ld.m4 \
@@ -116,6 +127,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_mmcli_OBJECTS = mmcli-mmcli.$(OBJEXT) mmcli-mmcli-common.$(OBJEXT) \
 	mmcli-mmcli-output.$(OBJEXT) mmcli-mmcli-manager.$(OBJEXT) \
 	mmcli-mmcli-modem.$(OBJEXT) mmcli-mmcli-modem-3gpp.$(OBJEXT) \
+	mmcli-mmcli-modem-3gpp-profile-manager.$(OBJEXT) \
+	mmcli-mmcli-modem-3gpp-ussd.$(OBJEXT) \
 	mmcli-mmcli-modem-cdma.$(OBJEXT) \
 	mmcli-mmcli-modem-simple.$(OBJEXT) \
 	mmcli-mmcli-modem-location.$(OBJEXT) \
@@ -155,6 +168,8 @@ am__depfiles_remade = ./$(DEPDIR)/mmcli-mmcli-bearer.Po \
 	./$(DEPDIR)/mmcli-mmcli-call.Po \
 	./$(DEPDIR)/mmcli-mmcli-common.Po \
 	./$(DEPDIR)/mmcli-mmcli-manager.Po \
+	./$(DEPDIR)/mmcli-mmcli-modem-3gpp-profile-manager.Po \
+	./$(DEPDIR)/mmcli-mmcli-modem-3gpp-ussd.Po \
 	./$(DEPDIR)/mmcli-mmcli-modem-3gpp.Po \
 	./$(DEPDIR)/mmcli-mmcli-modem-cdma.Po \
 	./$(DEPDIR)/mmcli-mmcli-modem-firmware.Po \
@@ -344,6 +359,8 @@ POLKIT_LIBS = @POLKIT_LIBS@
 POSUB = @POSUB@
 QMI_CFLAGS = @QMI_CFLAGS@
 QMI_LIBS = @QMI_LIBS@
+QRTR_CFLAGS = @QRTR_CFLAGS@
+QRTR_LIBS = @QRTR_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -363,6 +380,8 @@ XGETTEXT = @XGETTEXT@
 XGETTEXT_015 = @XGETTEXT_015@
 XGETTEXT_EXTRA_OPTIONS = @XGETTEXT_EXTRA_OPTIONS@
 XSLTPROC_CHECK = @XSLTPROC_CHECK@
+_GI_EXP_DATADIR = @_GI_EXP_DATADIR@
+_GI_EXP_LIBDIR = @_GI_EXP_LIBDIR@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -429,6 +448,8 @@ mmcli_SOURCES = \
 	mmcli-manager.c \
 	mmcli-modem.c \
 	mmcli-modem-3gpp.c \
+	mmcli-modem-3gpp-profile-manager.c \
+	mmcli-modem-3gpp-ussd.c \
 	mmcli-modem-cdma.c \
 	mmcli-modem-simple.c \
 	mmcli-modem-location.c \
@@ -548,6 +569,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmcli-mmcli-call.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmcli-mmcli-common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmcli-mmcli-manager.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmcli-mmcli-modem-3gpp-profile-manager.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmcli-mmcli-modem-3gpp-ussd.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmcli-mmcli-modem-3gpp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmcli-mmcli-modem-cdma.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmcli-mmcli-modem-firmware.Po@am__quote@ # am--include-marker
@@ -677,6 +700,34 @@ mmcli-mmcli-modem-3gpp.obj: mmcli-modem-3gpp.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mmcli-modem-3gpp.c' object='mmcli-mmcli-modem-3gpp.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmcli_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mmcli-mmcli-modem-3gpp.obj `if test -f 'mmcli-modem-3gpp.c'; then $(CYGPATH_W) 'mmcli-modem-3gpp.c'; else $(CYGPATH_W) '$(srcdir)/mmcli-modem-3gpp.c'; fi`
+
+mmcli-mmcli-modem-3gpp-profile-manager.o: mmcli-modem-3gpp-profile-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmcli_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mmcli-mmcli-modem-3gpp-profile-manager.o -MD -MP -MF $(DEPDIR)/mmcli-mmcli-modem-3gpp-profile-manager.Tpo -c -o mmcli-mmcli-modem-3gpp-profile-manager.o `test -f 'mmcli-modem-3gpp-profile-manager.c' || echo '$(srcdir)/'`mmcli-modem-3gpp-profile-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mmcli-mmcli-modem-3gpp-profile-manager.Tpo $(DEPDIR)/mmcli-mmcli-modem-3gpp-profile-manager.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mmcli-modem-3gpp-profile-manager.c' object='mmcli-mmcli-modem-3gpp-profile-manager.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmcli_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mmcli-mmcli-modem-3gpp-profile-manager.o `test -f 'mmcli-modem-3gpp-profile-manager.c' || echo '$(srcdir)/'`mmcli-modem-3gpp-profile-manager.c
+
+mmcli-mmcli-modem-3gpp-profile-manager.obj: mmcli-modem-3gpp-profile-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmcli_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mmcli-mmcli-modem-3gpp-profile-manager.obj -MD -MP -MF $(DEPDIR)/mmcli-mmcli-modem-3gpp-profile-manager.Tpo -c -o mmcli-mmcli-modem-3gpp-profile-manager.obj `if test -f 'mmcli-modem-3gpp-profile-manager.c'; then $(CYGPATH_W) 'mmcli-modem-3gpp-profile-manager.c'; else $(CYGPATH_W) '$(srcdir)/mmcli-modem-3gpp-profile-manager.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mmcli-mmcli-modem-3gpp-profile-manager.Tpo $(DEPDIR)/mmcli-mmcli-modem-3gpp-profile-manager.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mmcli-modem-3gpp-profile-manager.c' object='mmcli-mmcli-modem-3gpp-profile-manager.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmcli_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mmcli-mmcli-modem-3gpp-profile-manager.obj `if test -f 'mmcli-modem-3gpp-profile-manager.c'; then $(CYGPATH_W) 'mmcli-modem-3gpp-profile-manager.c'; else $(CYGPATH_W) '$(srcdir)/mmcli-modem-3gpp-profile-manager.c'; fi`
+
+mmcli-mmcli-modem-3gpp-ussd.o: mmcli-modem-3gpp-ussd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmcli_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mmcli-mmcli-modem-3gpp-ussd.o -MD -MP -MF $(DEPDIR)/mmcli-mmcli-modem-3gpp-ussd.Tpo -c -o mmcli-mmcli-modem-3gpp-ussd.o `test -f 'mmcli-modem-3gpp-ussd.c' || echo '$(srcdir)/'`mmcli-modem-3gpp-ussd.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mmcli-mmcli-modem-3gpp-ussd.Tpo $(DEPDIR)/mmcli-mmcli-modem-3gpp-ussd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mmcli-modem-3gpp-ussd.c' object='mmcli-mmcli-modem-3gpp-ussd.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmcli_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mmcli-mmcli-modem-3gpp-ussd.o `test -f 'mmcli-modem-3gpp-ussd.c' || echo '$(srcdir)/'`mmcli-modem-3gpp-ussd.c
+
+mmcli-mmcli-modem-3gpp-ussd.obj: mmcli-modem-3gpp-ussd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmcli_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mmcli-mmcli-modem-3gpp-ussd.obj -MD -MP -MF $(DEPDIR)/mmcli-mmcli-modem-3gpp-ussd.Tpo -c -o mmcli-mmcli-modem-3gpp-ussd.obj `if test -f 'mmcli-modem-3gpp-ussd.c'; then $(CYGPATH_W) 'mmcli-modem-3gpp-ussd.c'; else $(CYGPATH_W) '$(srcdir)/mmcli-modem-3gpp-ussd.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mmcli-mmcli-modem-3gpp-ussd.Tpo $(DEPDIR)/mmcli-mmcli-modem-3gpp-ussd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mmcli-modem-3gpp-ussd.c' object='mmcli-mmcli-modem-3gpp-ussd.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmcli_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mmcli-mmcli-modem-3gpp-ussd.obj `if test -f 'mmcli-modem-3gpp-ussd.c'; then $(CYGPATH_W) 'mmcli-modem-3gpp-ussd.c'; else $(CYGPATH_W) '$(srcdir)/mmcli-modem-3gpp-ussd.c'; fi`
 
 mmcli-mmcli-modem-cdma.o: mmcli-modem-cdma.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mmcli_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mmcli-mmcli-modem-cdma.o -MD -MP -MF $(DEPDIR)/mmcli-mmcli-modem-cdma.Tpo -c -o mmcli-mmcli-modem-cdma.o `test -f 'mmcli-modem-cdma.c' || echo '$(srcdir)/'`mmcli-modem-cdma.c
@@ -997,6 +1048,8 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/mmcli-mmcli-call.Po
 	-rm -f ./$(DEPDIR)/mmcli-mmcli-common.Po
 	-rm -f ./$(DEPDIR)/mmcli-mmcli-manager.Po
+	-rm -f ./$(DEPDIR)/mmcli-mmcli-modem-3gpp-profile-manager.Po
+	-rm -f ./$(DEPDIR)/mmcli-mmcli-modem-3gpp-ussd.Po
 	-rm -f ./$(DEPDIR)/mmcli-mmcli-modem-3gpp.Po
 	-rm -f ./$(DEPDIR)/mmcli-mmcli-modem-cdma.Po
 	-rm -f ./$(DEPDIR)/mmcli-mmcli-modem-firmware.Po
@@ -1062,6 +1115,8 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/mmcli-mmcli-call.Po
 	-rm -f ./$(DEPDIR)/mmcli-mmcli-common.Po
 	-rm -f ./$(DEPDIR)/mmcli-mmcli-manager.Po
+	-rm -f ./$(DEPDIR)/mmcli-mmcli-modem-3gpp-profile-manager.Po
+	-rm -f ./$(DEPDIR)/mmcli-mmcli-modem-3gpp-ussd.Po
 	-rm -f ./$(DEPDIR)/mmcli-mmcli-modem-3gpp.Po
 	-rm -f ./$(DEPDIR)/mmcli-mmcli-modem-cdma.Po
 	-rm -f ./$(DEPDIR)/mmcli-mmcli-modem-firmware.Po

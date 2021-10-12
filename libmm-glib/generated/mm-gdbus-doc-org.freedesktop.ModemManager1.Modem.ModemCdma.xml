@@ -54,6 +54,7 @@ Activate (IN  s carrier_code);
         <ulink url="http://en.wikipedia.org/wiki/Over-the-air_programming">Over-The-Air (OTA)</ulink>
         activation functionality, if any.
 </para><para>        Some modems will reboot after this call is made.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -145,6 +146,7 @@ ActivationStateChanged (u     activation_state,
                         a{sv} status_changes);
 </programlisting>
 <para>        The device activation state changed.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -172,6 +174,7 @@ ActivationState  readable   u
 </programlisting>
 <para>        A <link linkend="MMModemCdmaActivationState">MMModemCdmaActivationState</link>
         value specifying the state of the activation in the 3GPP2 network.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Meid">
@@ -181,6 +184,7 @@ ActivationState  readable   u
 Meid  readable   s
 </programlisting>
 <para>        The modem's <ulink url="http://en.wikipedia.org/wiki/MEID">Mobile Equipment Identifier</ulink>.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Esn">
@@ -192,6 +196,7 @@ Esn  readable   s
 <para>        The modem's
         <ulink url="http://en.wikipedia.org/wiki/Electronic_serial_number">Electronic Serial Number</ulink>
         (superceded by MEID but still used by older devices).
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Sid">
@@ -206,6 +211,7 @@ Sid  readable   u
         if the modem is registered with a CDMA 1x network.
 </para><para>        See <ulink url="http://ifast.org">ifast.org</ulink> or the mobile
         broadband provider database for mappings of SIDs to network providers.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Nid">
@@ -218,6 +224,7 @@ Nid  readable   u
         <ulink url="http://en.wikipedia.org/wiki/Network_Identification_Number">Network Identifier</ulink>
         of the serving CDMA 1x network, if known, and
         if the modem is registered with a CDMA 1x network.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Cdma1xRegistrationState">
@@ -228,6 +235,7 @@ Cdma1xRegistrationState  readable   u
 </programlisting>
 <para>        A <link linkend="MMModemCdmaRegistrationState">MMModemCdmaRegistrationState</link>
         value specifying the CDMA 1x registration state.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.EvdoRegistrationState">
@@ -238,6 +246,7 @@ EvdoRegistrationState  readable   u
 </programlisting>
 <para>        A <link linkend="MMModemCdmaRegistrationState">MMModemCdmaRegistrationState</link>
         value specifying the EVDO registration state.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 </refsect1>

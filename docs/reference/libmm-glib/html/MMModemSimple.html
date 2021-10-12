@@ -322,7 +322,7 @@ mm_modem_simple_connect_finish (<em class="parameter"><code><a class="link" href
 <a name="mm-modem-simple-connect-finish.returns"></a><h4>Returns</h4>
 <p>A <a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a>, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set. The
-returned value must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-ref"><code class="function">g_object_ref()</code></a>. </p>
+returned value must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a>. </p>
 <p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
@@ -375,7 +375,7 @@ mm_modem_simple_connect_sync (<em class="parameter"><code><a class="link" href="
 <a name="mm-modem-simple-connect-sync.returns"></a><h4>Returns</h4>
 <p>A <a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a>, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set. The
-returned value must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-ref"><code class="function">g_object_ref()</code></a>. </p>
+returned value must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a>. </p>
 <p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
@@ -625,7 +625,7 @@ mm_modem_simple_get_status_finish (<em class="parameter"><code><a class="link" h
 <a name="mm-modem-simple-get-status-finish.returns"></a><h4>Returns</h4>
 <p>A <a class="link" href="MMSimpleStatus.html" title="MMSimpleStatus"><span class="type">MMSimpleStatus</span></a>, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set. The
-returned value must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-ref"><code class="function">g_object_ref()</code></a>. </p>
+returned value must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a>. </p>
 <p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
@@ -671,7 +671,7 @@ mm_modem_simple_get_status_sync (<em class="parameter"><code><a class="link" hre
 <a name="mm-modem-simple-get-status-sync.returns"></a><h4>Returns</h4>
 <p>A <a class="link" href="MMSimpleStatus.html" title="MMSimpleStatus"><span class="type">MMSimpleStatus</span></a>, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> if <em class="parameter"><code>error</code></em>
 is set. The
-returned value must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-ref"><code class="function">g_object_ref()</code></a>. </p>
+returned value must be freed with <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a>. </p>
 <p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>

@@ -15,15 +15,18 @@
   <refsect1 role="properties">
     <title role="properties.title">Properties</title>
     <synopsis>
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Interface">Interface</link>   readable   s
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Connected">Connected</link>   readable   b
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Suspended">Suspended</link>   readable   b
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip4Config">Ip4Config</link>   readable   a{sv}
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip6Config">Ip6Config</link>   readable   a{sv}
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Stats">Stats</link>       readable   a{sv}
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.IpTimeout">IpTimeout</link>   readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.BearerType">BearerType</link>  readable   u
-<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties">Properties</link>  readable   a{sv}
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Interface">Interface</link>        readable   s
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Connected">Connected</link>        readable   b
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.ConnectionError">ConnectionError</link>  readable   (ss)
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Suspended">Suspended</link>        readable   b
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Multiplexed">Multiplexed</link>      readable   b
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip4Config">Ip4Config</link>        readable   a{sv}
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip6Config">Ip6Config</link>        readable   a{sv}
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Stats">Stats</link>            readable   a{sv}
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.IpTimeout">IpTimeout</link>        readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.BearerType">BearerType</link>       readable   u
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.ProfileId">ProfileId</link>        readable   i
+<link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties">Properties</link>       readable   a{sv}
 </synopsis>
   </refsect1>
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Bearer">
@@ -51,6 +54,7 @@ Connect ();
         <link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip6Config">"Ip6Config"</link>
         properties become valid and may contain IP configuration information for
         the data interface associated with this bearer.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1-Bearer.Disconnect">
@@ -62,6 +66,7 @@ Disconnect ();
 <para>        Disconnect and deactivate this packet data connection.
 </para><para>        Any ongoing data session will be terminated and IP addresses become
         invalid when this method is called.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 </refsect1>
@@ -90,6 +95,7 @@ Interface  readable   s
         <link linkend="MM-BEARER-IP-METHOD-PPP:CAPS">MM_BEARER_IP_METHOD_PPP</link>
         method is given, the interface
         will be a serial TTY which must then have PPP run over it.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.Connected">
@@ -100,6 +106,21 @@ Connected  readable   b
 </programlisting>
 <para>        Indicates whether or not the bearer is connected and thus whether
         packet data communication using this bearer is possible.
+</para><para>        Since: 1.0
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.ConnectionError">
+  <title>The "ConnectionError" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Bearer.ConnectionError"><primary sortas="Bearer:ConnectionError">org.freedesktop.ModemManager1.Bearer:ConnectionError</primary></indexterm>
+<programlisting>
+ConnectionError  readable   (ss)
+</programlisting>
+<para>        Provides additional information specifying the reason why the modem is
+	not connected (either due to a failed connection attempt, or due to a
+	a network initiated disconnection).
+</para><para>        The value is composed of two strings: the registered DBus error name,
+	and an optional error message.
+</para><para>        Since: 1.18
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.Suspended">
@@ -111,6 +132,18 @@ Suspended  readable   b
 <para>        In some devices, packet data service will be suspended while the device
         is handling other communication, like a voice call. If packet data
         service is suspended (but not deactivated) this property will be <constant>TRUE</constant>.
+</para><para>        Since: 1.0
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.Multiplexed">
+  <title>The "Multiplexed" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Bearer.Multiplexed"><primary sortas="Bearer:Multiplexed">org.freedesktop.ModemManager1.Bearer:Multiplexed</primary></indexterm>
+<programlisting>
+Multiplexed  readable   b
+</programlisting>
+<para>        This property will be <constant>TRUE</constant> if the bearer is connected through a
+        multiplexed network link.
+</para><para>        Since: 1.18
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip4Config">
@@ -176,6 +209,7 @@ Ip4Config  readable   a{sv}
             </listitem>
           </varlistentry>
         </variablelist>
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip6Config">
@@ -242,10 +276,11 @@ Ip6Config  readable   a{sv}
         <variablelist>
           <varlistentry><term><literal>"mtu"</literal></term>
             <listitem>
-              Maximum transmission unit (MTU), given as an unsigned integer value (signature <literal>"u"</literal>).
+              Maximum transmission unit (MTU), given as an unsigned integer value (signature <literal>"u"</literal>). Since 1.4.
             </listitem>
           </varlistentry>
         </variablelist>
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.Stats">
@@ -288,37 +323,39 @@ Stats  readable   a{sv}
             <listitem>
               Total number of connection attempts done with this bearer, given
               as an unsigned integer value (signature <literal>"u"</literal>).
+              Since 1.14.
             </listitem>
           </varlistentry>
           <varlistentry><term><literal>"failed-attempts"</literal></term>
             <listitem>
               Number of failed connection attempts done with this bearer,
               given as an unsigned integer value (signature
-              <literal>"u"</literal>).
+              <literal>"u"</literal>). Since 1.14.
             </listitem>
           </varlistentry>
           <varlistentry><term><literal>"total-rx-bytes"</literal></term>
             <listitem>
               Total number of bytes received without error in all the successful
               connection establishments, given as an unsigned 64-bit integer
-              value (signature <literal>"t"</literal>).
+              value (signature <literal>"t"</literal>). Since 1.14.
             </listitem>
           </varlistentry>
           <varlistentry><term><literal>"total-tx-bytes"</literal></term>
             <listitem>
               Total number of bytes transmitted without error in all the
               successful connection establishments, given as an unsigned 64-bit
-              integer value (signature <literal>"t"</literal>).
+              integer value (signature <literal>"t"</literal>). Since 1.14.
             </listitem>
           </varlistentry>
           <varlistentry><term><literal>"total-duration"</literal></term>
             <listitem>
               Total duration of all the successful connection establishments, in
               seconds, given as an unsigned integer value (signature
-              <literal>"u"</literal>).
+              <literal>"u"</literal>). Since 1.14.
             </listitem>
           </varlistentry>
         </variablelist>
+</para><para>        Since: 1.6
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.IpTimeout">
@@ -328,6 +365,7 @@ Stats  readable   a{sv}
 IpTimeout  readable   u
 </programlisting>
 <para>        Maximum time to wait for a successful IP establishment, when PPP is used.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.BearerType">
@@ -337,6 +375,21 @@ IpTimeout  readable   u
 BearerType  readable   u
 </programlisting>
 <para>        A <link linkend="MMBearerType">MMBearerType</link>
+</para><para>        Since: 1.10
+</para>
+</refsect2>
+<refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.ProfileId">
+  <title>The "ProfileId" property</title>
+  <indexterm zone="gdbus-property-org-freedesktop-ModemManager1-Bearer.ProfileId"><primary sortas="Bearer:ProfileId">org.freedesktop.ModemManager1.Bearer:ProfileId</primary></indexterm>
+<programlisting>
+ProfileId  readable   i
+</programlisting>
+<para>        The profile ID this bearer object is associated with, only applicable if
+        the modem supports profile management operations, and if the bearer is
+        connected.
+</para><para>        If the bearer is disconnected, or if profile management operations are
+        not supported, -1 will be reported.
+</para><para>        Since: 1.18
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties">
@@ -345,7 +398,106 @@ BearerType  readable   u
 <programlisting>
 Properties  readable   a{sv}
 </programlisting>
-<para>        List of properties used when creating the bearer.
+<para>        List of settings used to create the bearer.
+</para><para>        Bearers may be implicitly created (e.g. the default initial EPS bearer
+        created during the network registration process in 4G and 5G networks)
+        or explicitly created by the user (e.g. via the
+        <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem.CreateBearer">CreateBearer()</link>
+        or <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Simple.Connect">Connect()</link>
+        calls).
+</para><para>        The following settings apply to 3GPP (GSM/UMTS/LTE/5GNR) devices:
+</para><para>        <variablelist>
+          <varlistentry><term><literal>"apn"</literal></term>
+            <listitem><para>
+              The Access Point Name to use in the connection, given as a string
+              value (signature <literal>"s"</literal>).
+            </para></listitem>
+          </varlistentry>
+          <varlistentry><term><literal>"ip-type"</literal></term>
+            <listitem>
+              The IP addressing type to use, given as a
+              <link linkend="MMBearerIpFamily">MMBearerIpFamily</link>
+              value (signature <literal>"u"</literal>).
+            </listitem>
+          </varlistentry>
+          <varlistentry><term><literal>"apn-type"</literal></term>
+            <listitem>
+              The purposes of the specified APN, given as a
+              <link linkend="MMBearerApnType">MMBearerApnType</link>
+              value (signature <literal>"u"</literal>).
+            </listitem>
+          </varlistentry>
+          <varlistentry><term><literal>"allowed-auth"</literal></term>
+            <listitem>
+              The authentication method to use, given as a
+              <link linkend="MMBearerAllowedAuth">MMBearerAllowedAuth</link>
+              value (signature <literal>"u"</literal>).
+            </listitem>
+          </varlistentry>
+          <varlistentry><term><literal>"user"</literal></term>
+            <listitem>
+              The user name (if any) required by the network, given as a string
+              value (signature <literal>"s"</literal>).
+            </listitem>
+          </varlistentry>
+          <varlistentry><term><literal>"password"</literal></term>
+            <listitem>
+              The password (if any) required by the network, given as a string
+              value (signature <literal>"s"</literal>).
+            </listitem>
+          </varlistentry>
+          <varlistentry><term><literal>"profile-id"</literal></term>
+            <listitem>
+              The ID of the 3GPP profile to connect to (signature
+              <literal>"i"</literal>), as given in the
+              <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.List">profile list</link>.
+              In this case, if additional profile settings are given in the properties
+              and they already exist in the profile (e.g. <literal>"apn"</literal>),
+              the new settings will be explicitly ignored; the settings stored in the
+              profile itself always take preference. The value -1 is used to
+	      indicate an invalid or uninitialized profile id. Since 1.18.
+            </listitem>
+          </varlistentry>
+        </variablelist>
+</para><para>        The following settings apply to 3GPP2 (CDMA/EVDO) devices:
+</para><para>        <variablelist>
+          <varlistentry><term><literal>"rm-protocol"</literal></term>
+            <listitem>
+              The protocol of the Rm interface, given as a
+              <link linkend="MMModemCdmaRmProtocol">MMModemCdmaRmProtocol</link>
+              value (signature <literal>"u"</literal>).
+            </listitem>
+          </varlistentry>
+        </variablelist>
+</para><para>        The following settings apply to all devices types:
+</para><para>        <variablelist>
+          <varlistentry><term><literal>"allow-roaming"</literal></term>
+            <listitem>
+              Specifies whether the connections are allowed even when the device
+              is registered in a roaming network, given as a boolean value (signature
+              <literal>"b"</literal>).
+            </listitem>
+          </varlistentry>
+          <varlistentry><term><literal>"multiplex"</literal></term>
+            <listitem>
+              The multiplex support requested by the user, given as a
+              <link linkend="MMBearerMultiplexSupport">MMBearerMultiplexSupport</link>
+              value (signature <literal>"u"</literal>). Since 1.18.
+            </listitem>
+          </varlistentry>
+        </variablelist>
+</para><para>        The following settings are no longer supported, but they are kept on the
+        interface for compatibility purposes:
+</para><para>        <variablelist>
+          <varlistentry><term><literal>"number"</literal></term>
+            <listitem>
+              Number to dial for the data connection, given as a string value
+              (signature <literal>"s"</literal>).
+              Deprecated since version 1.10.0.
+            </listitem>
+          </varlistentry>
+        </variablelist>
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 </refsect1>

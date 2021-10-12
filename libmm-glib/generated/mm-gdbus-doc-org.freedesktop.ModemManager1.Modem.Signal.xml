@@ -41,6 +41,7 @@
 Setup (IN  u rate);
 </programlisting>
 <para>        Setup extended signal quality information retrieval.
+</para><para>        Since: 1.2
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -60,6 +61,7 @@ Rate  readable   u
 </programlisting>
 <para>        Refresh rate for the extended signal quality information updates,
         in seconds. A value of 0 disables the retrieval of the values.
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Cdma">
@@ -90,6 +92,7 @@ Cdma  readable   a{sv}
           </listitem>
         </varlistentry>
         </variablelist>
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Evdo">
@@ -136,6 +139,7 @@ Evdo  readable   a{sv}
           </listitem>
         </varlistentry>
         </variablelist>
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Gsm">
@@ -158,6 +162,7 @@ Gsm  readable   a{sv}
           </listitem>
         </varlistentry>
         </variablelist>
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Umts">
@@ -196,6 +201,7 @@ Umts  readable   a{sv}
           </listitem>
         </varlistentry>
         </variablelist>
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Lte">
@@ -242,6 +248,7 @@ Lte  readable   a{sv}
           </listitem>
         </varlistentry>
         </variablelist>
+</para><para>        Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Signal.Nr5g">
@@ -280,6 +287,7 @@ Nr5g  readable   a{sv}
           </listitem>
         </varlistentry>
         </variablelist>
+</para><para>        Since: 1.16
 </para>
 </refsect2>
 </refsect1>

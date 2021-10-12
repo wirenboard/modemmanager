@@ -81,6 +81,7 @@ Setup (IN  u sources,
         and
         <link linkend="MM-MODEM-LOCATION-SOURCE-AGPS-MSB:CAPS">MM_MODEM_LOCATION_SOURCE_AGPS_MSB</link>
         cannot be given at the same time, and if none given, standalone GPS is assumed.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -104,6 +105,7 @@ GetLocation (OUT a{uv} Location);
         <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Location">"Location"</link> property
         for more information on the dictionary returned at <parameter>location</parameter>.
 </para><para>        This method may require the client to authenticate itself.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -119,6 +121,7 @@ GetLocation (OUT a{uv} Location);
 SetSuplServer (IN  s supl);
 </programlisting>
 <para>        Configure the SUPL server for A-GPS.
+</para><para>        Since: 1.6
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -143,6 +146,7 @@ InjectAssistanceData (IN  ay data);
         itself, and therefore it cannot use any A-GPS server to improve the accuracy of the
         position. In this case, the user can instead download the assistance data files using
         a WiFi or LAN network, and inject them to the GNSS engine manually.
+</para><para>        Since: 1.10
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -161,6 +165,7 @@ SetGpsRefreshRate (IN  u rate);
         set, a default of 30s will be used.
 </para><para>        The refresh rate can be set to 0 to disable it, so that every update reported by
         the modem is published in the interface.
+</para><para>        Since: 1.6
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -180,6 +185,7 @@ Capabilities  readable   u
 </programlisting>
 <para>        Bitmask of <link linkend="MMModemLocationSource">MMModemLocationSource</link>
         values, specifying the supported location sources.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SupportedAssistanceData">
@@ -190,6 +196,7 @@ SupportedAssistanceData  readable   u
 </programlisting>
 <para>        Bitmask of <link linkend="MMModemLocationAssistanceDataType">MMModemLocationAssistanceDataType</link>
         values, specifying the supported types of assistance data.
+</para><para>        Since: 1.10
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Enabled">
@@ -201,6 +208,7 @@ Enabled  readable   u
 <para>        Bitmask specifying which of the supported
         <link linkend="MMModemLocationSource">MMModemLocationSource</link>
         location sources is currently enabled in the device.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SignalsLocation">
@@ -214,6 +222,7 @@ SignalsLocation  readable   b
 </para><para>        See the
         <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.Setup">Setup()</link>
         method for more information.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.Location">
@@ -280,10 +289,10 @@ Location  readable   a{uv}
               </varlistentry>
               <varlistentry><term><literal>TAC</literal></term>
                 <listitem>
-                  This is the two-byte Location Area Code of the LTE base
-                  station with which the mobile is registered, in upper-case
+                  This is the two- or three-byte Tracking Area Code of the LTE/5GNR
+                  base station with which the mobile is registered, in upper-case
                   hexadecimal format without leading zeros, as specified in
-                  3GPP TS 27.007. E.g. <literal>"6FFE"</literal>.
+                  3GPP TS 27.007. E.g. <literal>"6FFE"</literal>. Since 1.10.
                 </listitem>
               </varlistentry>
             </variablelist>
@@ -403,6 +412,7 @@ Location  readable   a{uv}
           </listitem>
         </varlistentry>
         </variablelist>
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.SuplServer">
@@ -412,6 +422,7 @@ Location  readable   a{uv}
 SuplServer  readable   s
 </programlisting>
 <para>        SUPL server configuration for A-GPS, given either as IP:PORT or FQDN:PORT.
+</para><para>        Since: 1.6
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.AssistanceDataServers">
@@ -422,6 +433,7 @@ AssistanceDataServers  readable   as
 </programlisting>
 <para>        URLs from where the user can download assistance data files to inject with
         <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Location.InjectAssistanceData">InjectAssistanceData()</link>.
+</para><para>        Since: 1.10
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Location.GpsRefreshRate">
@@ -431,6 +443,7 @@ AssistanceDataServers  readable   as
 GpsRefreshRate  readable   u
 </programlisting>
 <para>        Rate of refresh of the GPS information in the interface.
+</para><para>        Since: 1.6
 </para>
 </refsect2>
 </refsect1>

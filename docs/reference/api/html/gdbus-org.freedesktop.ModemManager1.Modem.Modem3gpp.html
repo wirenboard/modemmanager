@@ -7,7 +7,7 @@
 <link rel="home" href="index.html" title="ModemManager Reference Manual">
 <link rel="up" href="ref-dbus-object-modem.html" title="The /org/freedesktop/ModemManager/Modems objects">
 <link rel="prev" href="gdbus-org.freedesktop.ModemManager1.Modem.Simple.html" title="org.freedesktop.ModemManager1.Modem.Simple">
-<link rel="next" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html" title="org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd">
+<link rel="next" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager.html" title="org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager">
 <meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
@@ -21,7 +21,7 @@
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
 <td><a accesskey="u" href="ref-dbus-object-modem.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
 <td><a accesskey="p" href="gdbus-org.freedesktop.ModemManager1.Modem.Simple.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
-<td><a accesskey="n" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+<td><a accesskey="n" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
 </tr></table>
 <div class="refentry">
 <a name="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp"></a><div class="titlepage"></div>
@@ -39,6 +39,7 @@
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.Scan" title="The Scan() method">Scan</a>                        (OUT aa{sv} results);
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetEpsUeModeOperation" title="The SetEpsUeModeOperation() method">SetEpsUeModeOperation</a>       (IN  u      mode);
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings" title="The SetInitialEpsBearerSettings() method">SetInitialEpsBearerSettings</a> (IN  a{sv}  settings);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.DisableFacilityLock" title="The DisableFacilityLock() method">DisableFacilityLock</a>         (IN  (us)   properties);
 </pre>
 </div>
 <div class="refsect1">
@@ -75,6 +76,8 @@
 Register (IN  s operator_id);
 </pre>
 <p>        Request registration with a given mobile network.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -153,6 +156,8 @@ Scan (OUT aa{sv} results);
 </table></div>
 <p>
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -171,6 +176,8 @@ Scan (OUT aa{sv} results);
 SetEpsUeModeOperation (IN  u mode);
 </pre>
 <p>        Sets the UE mode of operation for EPS.
+</p>
+<p>        Since: 1.10
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -191,8 +198,34 @@ SetInitialEpsBearerSettings (IN  a{sv} settings);
 </pre>
 <p>        Updates the default settings to be used in the initial default EPS bearer when registering to the LTE network.
 </p>
-<p>        Allowed properties are:
-        </p>
+<p>        The allowed properties in this method are all the 3GPP-specific ones specified
+        in the <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties" title='The "Properties" property'>bearer properties</a>;
+        i.e.: <code class="literal">"apn"</code>, <code class="literal">"ip-type"</code>,
+        <code class="literal">"allowed-auth"</code>, <code class="literal">"user"</code>, and
+        <code class="literal">"password"</code>.
+</p>
+<p>        Since: 1.10
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><code class="literal">IN a{sv} <em class="parameter"><code>settings</code></em></code>:</span></p></td>
+<td><p>List of properties to use when requesting the LTE attach procedure.</p></td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.DisableFacilityLock"></a><h3>The DisableFacilityLock() method</h3>
+<pre class="programlisting">
+DisableFacilityLock (IN  (us) properties);
+</pre>
+<p>        Sends control key to modem to disable selected facility lock
+</p>
+<p>        </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -200,24 +233,17 @@ SetInitialEpsBearerSettings (IN  a{sv} settings);
 </colgroup>
 <tbody>
 <tr>
-<td><p><span class="term"><code class="literal">"apn"</code></span></p></td>
-<td><p>Access Point Name, given as a string value (signature <code class="literal">"s"</code>).</p></td>
+<td><p><span class="term">"facility"</span></p></td>
+<td><p>
+              A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppFacility" title="enum MMModem3gppFacility">MMModem3gppFacility</a> value
+              representing the type of the facility lock to disable.
+            </p></td>
 </tr>
 <tr>
-<td><p><span class="term"><code class="literal">"ip-type"</code></span></p></td>
-<td><p>Addressing type, given as a <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerIpFamily" title="enum MMBearerIpFamily">MMBearerIpFamily</a> value (signature <code class="literal">"u"</code>).</p></td>
-</tr>
-<tr>
-<td><p><span class="term"><code class="literal">"allowed-auth"</code></span></p></td>
-<td><p>The authentication method to use, given as a <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerAllowedAuth" title="enum MMBearerAllowedAuth">MMBearerAllowedAuth</a> value (signature <code class="literal">"u"</code>).</p></td>
-</tr>
-<tr>
-<td><p><span class="term"><code class="literal">"user"</code></span></p></td>
-<td><p>User name (if any) required by the network, given as a string value (signature <code class="literal">"s"</code>).</p></td>
-</tr>
-<tr>
-<td><p><span class="term"><code class="literal">"password"</code></span></p></td>
-<td><p>Password (if any) required by the network, given as a string value (signature <code class="literal">"s"</code>).</p></td>
+<td><p><span class="term">"control key"</span></p></td>
+<td><p>
+              Alphanumeric key required to unlock facility.
+            </p></td>
 </tr>
 </tbody>
 </table></div>
@@ -229,8 +255,8 @@ SetInitialEpsBearerSettings (IN  a{sv} settings);
 <col>
 </colgroup>
 <tbody><tr>
-<td><p><span class="term"><code class="literal">IN a{sv} <em class="parameter"><code>settings</code></em></code>:</span></p></td>
-<td><p>List of properties to use when requesting the LTE attach procedure.</p></td>
+<td><p><span class="term"><code class="literal">IN (us) <em class="parameter"><code>properties</code></em></code>:</span></p></td>
+<td><p>A tuple of facility type and control key.</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -244,6 +270,8 @@ Imei  readable   s
 </pre>
 <p>        The <a class="ulink" href="http://en.wikipedia.org/wiki/Imei" target="_top">IMEI</a> of the device.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -254,6 +282,8 @@ RegistrationState  readable   u
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppRegistrationState" title="enum MMModem3gppRegistrationState">MMModem3gppRegistrationState</a>
         value specifying the mobile registration status as defined in 3GPP TS 27.007
         section 10.1.19.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -273,6 +303,8 @@ OperatorCode  readable   s
         or the mobile is not registered to a mobile network, this property will
         be a zero-length (blank) string.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -286,6 +318,8 @@ OperatorName  readable   s
         registered to a mobile network, this property will be a zero-length
         (blank) string.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -295,6 +329,8 @@ EnabledFacilityLocks  readable   u
 </pre>
 <p>        Bitmask of <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppFacility" title="enum MMModem3gppFacility">MMModem3gppFacility</a> values
         for which PIN locking is enabled.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -306,6 +342,8 @@ SubscriptionState  readable   u
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppSubscriptionState" title="enum MMModem3gppSubscriptionState">MMModem3gppSubscriptionState</a>
         value representing the subscription status of the account and whether there
         is any data remaining, given as an unsigned integer (signature <code class="literal">"u"</code>).
+</p>
+<p>        Since: 1.2
 </p>
 <p>        Deprecated: 1.10.0. The value of this property can only be obtained with operator
         specific logic (e.g. processing specific PCO info), and therefore it doesn't make sense
@@ -321,6 +359,8 @@ EpsUeModeOperation  readable   u
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppEpsUeModeOperation" title="enum MMModem3gppEpsUeModeOperation">MMModem3gppEpsUeModeOperation</a>
         value representing the UE mode of operation for EPS, given as an unsigned integer
         (signature <code class="literal">"u"</code>).
+</p>
+<p>        Since: 1.10
 </p>
 </div>
 <hr>
@@ -351,6 +391,8 @@ Pco  readable   a(ubay)
 </ol></div>
 <p>
 </p>
+<p>        Since: 1.10
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -359,6 +401,8 @@ Pco  readable   a(ubay)
 InitialEpsBearer  readable   o
 </pre>
 <p>        The object path for the initial default EPS bearer.
+</p>
+<p>        Since: 1.10
 </p>
 </div>
 <hr>
@@ -379,6 +423,8 @@ InitialEpsBearerSettings  readable   a{sv}
 <p>        This is a read-only property, updating these settings should be done using the
         <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings" title="The SetInitialEpsBearerSettings() method">SetInitialEpsBearerSettings()</a>
         method.
+</p>
+<p>        Since: 1.10
 </p>
 </div>
 </div>

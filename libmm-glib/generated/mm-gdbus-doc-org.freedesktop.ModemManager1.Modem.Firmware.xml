@@ -99,6 +99,7 @@ List (OUT s      selected,
             </listitem>
           </varlistentry>
         </variablelist>
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -124,6 +125,7 @@ Select (IN  s uniqueid);
         <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Firmware.List">List()</link>,
         or if the image could not be selected for some reason.
 </para><para>        Installed images can be selected non-destructively.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -193,6 +195,7 @@ UpdateSettings  readable   (ua{sv})
             </listitem>
           </varlistentry>
         </variablelist>
+</para><para>        Since: 1.10
 </para>
 </refsect2>
 </refsect1>

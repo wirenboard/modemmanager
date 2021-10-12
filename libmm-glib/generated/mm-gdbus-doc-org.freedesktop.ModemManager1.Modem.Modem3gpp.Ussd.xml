@@ -46,6 +46,7 @@ Initiate (IN  s command,
         response or an appropriate error. The network may be awaiting further
         response from the ME after returning from this method and no new command
         can be initiated until this one is cancelled or ended.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -69,6 +70,7 @@ Respond (IN  s response,
         or that is awaiting further input after
         <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Initiate">Initiate()</link>
         was called.
+</para><para>        Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
@@ -88,6 +90,7 @@ Respond (IN  s response,
 Cancel ();
 </programlisting>
 <para>        Cancel an ongoing USSD session, either mobile or network initiated.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 </refsect1>
@@ -101,6 +104,7 @@ State  readable   u
 </programlisting>
 <para>        A <link linkend="MMModem3gppUssdSessionState">MMModem3gppUssdSessionState</link> value,
         indicating the state of any ongoing USSD session.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.NetworkNotification">
@@ -113,6 +117,7 @@ NetworkNotification  readable   s
         required.
 </para><para>        When no USSD session is active, or when there is no network-
         initiated request, this property will be a zero-length string.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.NetworkRequest">
@@ -127,6 +132,7 @@ NetworkRequest  readable   s
         with the appropriate response to this request.
 </para><para>        When no USSD session is active, or when there is no pending
         network-initiated request, this property will be a zero-length string.
+</para><para>        Since: 1.0
 </para>
 </refsect2>
 </refsect1>

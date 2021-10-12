@@ -44,7 +44,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.5.5.17.4"></a><h2>Signals</h2>
+<a name="id-1.5.5.18.4"></a><h2>Signals</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Oma.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Oma.SessionStateChanged" title='The "SessionStateChanged" signal'>SessionStateChanged</a> (i old_session_state,
                      i new_session_state,
@@ -52,7 +52,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.5.5.17.5"></a><h2>Properties</h2>
+<a name="id-1.5.5.18.5"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Oma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Oma.Features" title='The "Features" property'>Features</a>                         readable   u
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Oma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Oma.PendingNetworkInitiatedSessions" title='The "PendingNetworkInitiatedSessions" property'>PendingNetworkInitiatedSessions</a>  readable   a(uu)
@@ -83,6 +83,8 @@ Setup (IN  u features);
 </pre>
 <p>        Configures which OMA device management features should be enabled.
 </p>
+<p>        Since: 1.2
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -101,6 +103,8 @@ Setup (IN  u features);
 StartClientInitiatedSession (IN  u session_type);
 </pre>
 <p>        Starts a client-initiated device management session.
+</p>
+<p>        Since: 1.2
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -121,6 +125,8 @@ AcceptNetworkInitiatedSession (IN  u session_id,
                                IN  b accept);
 </pre>
 <p>        Accepts or rejects a network-initiated device management session.
+</p>
+<p>        Since: 1.2
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -147,6 +153,8 @@ CancelSession ();
 </pre>
 <p>        Cancels the current on-going device management session.
 </p>
+<p>        Since: 1.2
+</p>
 </div>
 </div>
 <div class="refsect1">
@@ -159,6 +167,8 @@ SessionStateChanged (i old_session_state,
                      u session_state_failed_reason);
 </pre>
 <p>        The session state changed.
+</p>
+<p>        Since: 1.2
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -193,6 +203,8 @@ Features  readable   u
         flags, specifying which device management features are enabled or
         disabled.
 </p>
+<p>        Since: 1.2
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -226,6 +238,8 @@ PendingNetworkInitiatedSessions  readable   a(uu)
 </table></div>
 <p>
 </p>
+<p>        Since: 1.2
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -236,6 +250,8 @@ SessionType  readable   u
 <p>        Type of the current on-going device management session, given as a
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMOmaSessionType" title="enum MMOmaSessionType">MMOmaSessionType</a>.
 </p>
+<p>        Since: 1.2
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -245,6 +261,8 @@ SessionState  readable   i
 </pre>
 <p>        State of the current on-going device management session, given as a
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMOmaSessionState" title="enum MMOmaSessionState">MMOmaSessionState</a>.
+</p>
+<p>        Since: 1.2
 </p>
 </div>
 </div>

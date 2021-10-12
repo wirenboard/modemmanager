@@ -61,14 +61,6 @@
 </tr>
 <tr>
 <td class="define_keyword">#define</td>
-<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-TTY-BLACKLIST:CAPS" title="ID_MM_TTY_BLACKLIST">ID_MM_TTY_BLACKLIST</a></td>
-</tr>
-<tr>
-<td class="define_keyword">#define</td>
-<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-TTY-MANUAL-SCAN-ONLY:CAPS" title="ID_MM_TTY_MANUAL_SCAN_ONLY">ID_MM_TTY_MANUAL_SCAN_ONLY</a></td>
-</tr>
-<tr>
-<td class="define_keyword">#define</td>
 <td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-PORT-TYPE-AT-PPP:CAPS" title="ID_MM_PORT_TYPE_AT_PPP">ID_MM_PORT_TYPE_AT_PPP</a></td>
 </tr>
 <tr>
@@ -106,6 +98,14 @@
 <tr>
 <td class="define_keyword">#define</td>
 <td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-TTY-FLOW-CONTROL:CAPS" title="ID_MM_TTY_FLOW_CONTROL">ID_MM_TTY_FLOW_CONTROL</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-TTY-BLACKLIST:CAPS" title="ID_MM_TTY_BLACKLIST">ID_MM_TTY_BLACKLIST</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="ModemManager-Common-udev-tags.html#ID-MM-TTY-MANUAL-SCAN-ONLY:CAPS" title="ID_MM_TTY_MANUAL_SCAN_ONLY">ID_MM_TTY_MANUAL_SCAN_ONLY</a></td>
 </tr>
 </tbody>
 </table></div>
@@ -169,10 +169,9 @@ exposes a single platform port without any parent device.</p>
 <p>This is a device-specific tag that allows explicitly requesting to
 ignore all ports exposed by the device.</p>
 <p>This tag was originally applicable to TTY ports and only when running
-in DEFAULT or PARANOID filter policy types. Since 1.12, this tag
-applies to all filter types (including STRICT), and to all port types
-(not only TTYs), and is associated to the
-MM_FILTER_RULE_EXPLICIT_BLACKLIST rule.</p>
+in certain filter policy types. Since 1.12, this tag applies to all
+filter types and to all port types (not only TTYs), and is associated
+to the MM_FILTER_RULE_EXPLICIT_BLACKLIST rule.</p>
 <p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
 </div>
 <hr>
@@ -184,35 +183,6 @@ MM_FILTER_RULE_EXPLICIT_BLACKLIST rule.</p>
 in a device.</p>
 <p>This tag applies to all types of ports.</p>
 <p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
-</div>
-<hr>
-<div class="refsect2">
-<a name="ID-MM-TTY-BLACKLIST:CAPS"></a><h3>ID_MM_TTY_BLACKLIST</h3>
-<pre class="programlisting">#define ID_MM_TTY_BLACKLIST "ID_MM_TTY_BLACKLIST"
-</pre>
-<p>This is a device-specific tag that allows explicitly blacklisting
-devices that expose TTY devices so that they are never probed.</p>
-<p>This tag is used when the daemon runs with DEFAULT or PARANOID
-filter policy type, and is associated to the MM_FILTER_RULE_TTY_BLACKLIST
-rule.</p>
-<p>This tag is ignored when the STRICT filter policy is used.</p>
-<p class="since">Since: <a class="link" href="api-index-1-12.html#api-index-1.12">1.12</a></p>
-</div>
-<hr>
-<div class="refsect2">
-<a name="ID-MM-TTY-MANUAL-SCAN-ONLY:CAPS"></a><h3>ID_MM_TTY_MANUAL_SCAN_ONLY</h3>
-<pre class="programlisting">#define ID_MM_TTY_MANUAL_SCAN_ONLY "ID_MM_TTY_MANUAL_SCAN_ONLY"
-</pre>
-<p>This is a device-specific tag that allows explicitly greylisting
-devices that expose TTY devices so that they are never probed
-automatically. Instead, an explicit manual scan request may be sent
-to the daemon so that the TTY ports exposed by the device are
-probed.</p>
-<p>This tag is used when the daemon runs with DEFAULT or PARANOID
-filter policy type, and is associated to the MM_FILTER_RULE_TTY_MANUAL_SCAN_ONLY
-rule.</p>
-<p>This tag is ignored when the STRICT filter policy is used.</p>
-<p class="since">Since: <a class="link" href="api-index-1-12.html#api-index-1.12">1.12</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -325,6 +295,33 @@ control mode.</p>
 where it's configured. If not given, it is assumed that the TTYs
 don't require any specific flow control setting in command mode.</p>
 <p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="ID-MM-TTY-BLACKLIST:CAPS"></a><h3>ID_MM_TTY_BLACKLIST</h3>
+<pre class="programlisting">#define ID_MM_TTY_BLACKLIST "ID_MM_TTY_BLACKLIST"
+</pre>
+<div class="warning"><p><code class="literal">ID_MM_TTY_BLACKLIST</code> has been deprecated since version 1.18.0 and should not be used in newly-written code.</p></div>
+<p>This was a device-specific tag that allowed explicitly blacklisting
+devices that exposed TTY devices so that they were never probed.</p>
+<p>This tag was applicable only when running in certain filter policy types,
+and is no longer used since 1.18.</p>
+<p class="since">Since: <a class="link" href="api-index-1-12.html#api-index-1.12">1.12</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="ID-MM-TTY-MANUAL-SCAN-ONLY:CAPS"></a><h3>ID_MM_TTY_MANUAL_SCAN_ONLY</h3>
+<pre class="programlisting">#define ID_MM_TTY_MANUAL_SCAN_ONLY "ID_MM_TTY_MANUAL_SCAN_ONLY"
+</pre>
+<div class="warning"><p><code class="literal">ID_MM_TTY_MANUAL_SCAN_ONLY</code> has been deprecated since version 1.18.0 and should not be used in newly-written code.</p></div>
+<p>This was a device-specific tag that allowed explicitly greylisting
+devices that exposed TTY devices so that they were never probed
+automatically. Instead, an explicit manual scan request could
+be sent to the daemon so that the TTY ports exposed by the device
+were probed.</p>
+<p>This tag was applicable only when running in certain filter policy types,
+and is no longer used since 1.18.</p>
+<p class="since">Since: <a class="link" href="api-index-1-12.html#api-index-1.12">1.12</a></p>
 </div>
 </div>
 </div>

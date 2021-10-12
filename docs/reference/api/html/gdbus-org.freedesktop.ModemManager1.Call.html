@@ -83,6 +83,8 @@ Start ();
 <p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-UNKNOWN:CAPS"><code class="constant">MM_CALL_STATE_UNKNOWN</code></a> and direction is
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-DIRECTION-OUTGOING:CAPS"><code class="constant">MM_CALL_DIRECTION_OUTGOING</code></a>.
 </p>
+<p>        Since: 1.6
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -94,6 +96,8 @@ Accept ();
 </p>
 <p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-RINGING-IN:CAPS"><code class="constant">MM_CALL_STATE_RINGING_IN</code></a> and direction is
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-DIRECTION-INCOMING:CAPS"><code class="constant">MM_CALL_DIRECTION_INCOMING</code></a>.
+</p>
+<p>        Since: 1.6
 </p>
 </div>
 <hr>
@@ -108,6 +112,8 @@ Deflect (IN  s number);
 <p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-RINGING-IN:CAPS"><code class="constant">MM_CALL_STATE_RINGING_IN</code></a> or
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-WAITING:CAPS"><code class="constant">MM_CALL_STATE_WAITING</code></a> and direction is
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-DIRECTION-INCOMING:CAPS"><code class="constant">MM_CALL_DIRECTION_INCOMING</code></a>.
+</p>
+<p>        Since: 1.12
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -135,6 +141,8 @@ JoinMultiparty ();
 </p>
 <p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-HELD:CAPS"><code class="constant">MM_CALL_STATE_HELD</code></a>.
 </p>
+<p>        Since: 1.12
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -150,6 +158,8 @@ LeaveMultiparty ();
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-HELD:CAPS"><code class="constant">MM_CALL_STATE_HELD</code></a> and
         the call is a multiparty call.
 </p>
+<p>        Since: 1.12
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -161,6 +171,8 @@ Hangup ();
 </p>
 <p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-UNKNOWN:CAPS"><code class="constant">MM_CALL_STATE_UNKNOWN</code></a>.
 </p>
+<p>        Since: 1.6
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -171,6 +183,8 @@ SendDtmf (IN  s dtmf);
 <p>        Send a DTMF tone (Dual Tone Multi-Frequency) (only on supported modem).
 </p>
 <p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-ACTIVE:CAPS"><code class="constant">MM_CALL_STATE_ACTIVE</code></a>.
+</p>
+<p>        Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -193,6 +207,8 @@ DtmfReceived (s dtmf);
 </pre>
 <p>        Emitted when a DTMF tone is received (only on supported modem)
 </p>
+<p>        Since: 1.6
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -213,6 +229,8 @@ StateChanged (i old,
               u reason);
 </pre>
 <p>        Emitted when call changes state
+</p>
+<p>        Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -246,6 +264,8 @@ State  readable   i
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMCallState" title="enum MMCallState">MMCallState</a> value,
         describing the state of the call.
 </p>
+<p>        Since: 1.6
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -254,6 +274,8 @@ State  readable   i
 StateReason  readable   i
 </pre>
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMCallStateReason" title="enum MMCallStateReason">MMCallStateReason</a> value, describing why the state is changed.
+</p>
+<p>        Since: 1.6
 </p>
 </div>
 <hr>
@@ -265,6 +287,8 @@ Direction  readable   i
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMCallDirection" title="enum MMCallDirection">MMCallDirection</a> value,
         describing the direction of the call.
 </p>
+<p>        Since: 1.6
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -274,6 +298,8 @@ Number  readable   s
 </pre>
 <p>        The remote phone number.
 </p>
+<p>        Since: 1.6
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -282,6 +308,8 @@ Number  readable   s
 Multiparty  readable   b
 </pre>
 <p>        Whether the call is currently part of a multiparty conference call.
+</p>
+<p>        Since: 1.12
 </p>
 </div>
 <hr>
@@ -294,6 +322,8 @@ AudioPort  readable   s
         provides the audio.  For example, with certain Huawei USB modems, this
         property might be "ttyUSB2" indicating audio is available via ttyUSB2 in
         the format described by the AudioFormat property.
+</p>
+<p>        Since: 1.10
 </p>
 </div>
 <hr>
@@ -336,6 +366,8 @@ AudioFormat  readable   a{sv}
 </tbody>
 </table></div>
 <p>
+</p>
+<p>        Since: 1.10
 </p>
 </div>
 </div>

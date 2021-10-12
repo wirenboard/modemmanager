@@ -40,6 +40,18 @@
 
 G_DEFINE_TYPE (MMModemLocation, mm_modem_location, MM_GDBUS_TYPE_MODEM_LOCATION_PROXY)
 
+struct _MMModemLocationPrivate {
+    /* Common mutex to sync access */
+    GMutex mutex;
+
+    MMLocation3gpp    *signaled_3gpp;
+    MMLocationGpsNmea *signaled_gps_nmea;
+    MMLocationGpsRaw  *signaled_gps_raw;
+    MMLocationCdmaBs  *signaled_cdma_bs;
+
+    PROPERTY_COMMON_DECLARE (signaled_location)
+};
+
 /*****************************************************************************/
 
 /**
@@ -566,25 +578,24 @@ mm_modem_location_set_gps_refresh_rate_sync (MMModemLocation *self,
 /*****************************************************************************/
 
 static gboolean
-build_locations (GVariant *dictionary,
-                 MMLocation3gpp **location_3gpp,
+build_locations (GVariant           *dictionary,
+                 MMLocation3gpp    **location_3gpp,
                  MMLocationGpsNmea **location_gps_nmea,
-                 MMLocationGpsRaw **location_gps_raw,
-                 MMLocationCdmaBs **location_cdma_bs,
-                 GError **error)
+                 MMLocationGpsRaw  **location_gps_raw,
+                 MMLocationCdmaBs  **location_cdma_bs,
+                 GError            **error)
 {
-    GError *inner_error = NULL;
-    GVariant *value;
-    guint source;
-    GVariantIter iter;
+    GError       *inner_error = NULL;
+    GVariant     *value;
+    guint         source;
+    GVariantIter  iter;
 
     if (!dictionary)
         /* No location provided. Not actually an error. */
         return TRUE;
 
     g_variant_iter_init (&iter, dictionary);
-    while (!inner_error &&
-           g_variant_iter_next (&iter, "{uv}", &source, &value)) {
+    while (!inner_error && g_variant_iter_next (&iter, "{uv}", &source, &value)) {
         switch (source) {
         case MM_MODEM_LOCATION_SOURCE_3GPP_LAC_CI:
             if (location_3gpp)
@@ -606,16 +617,12 @@ build_locations (GVariant *dictionary,
             g_warn_if_reached ();
             break;
         }
-
         g_variant_unref (value);
     }
 
-    g_variant_unref (dictionary);
-
     if (inner_error) {
         g_propagate_error (error, inner_error);
-        g_prefix_error (error,
-                        "Couldn't build locations result: ");
+        g_prefix_error (error, "Couldn't build locations result: ");
         return FALSE;
     }
 
@@ -656,7 +663,7 @@ mm_modem_location_get_full_finish (MMModemLocation *self,
                                    MMLocationCdmaBs **location_cdma_bs,
                                    GError **error)
 {
-    GVariant *dictionary = NULL;
+    g_autoptr(GVariant) dictionary = NULL;
 
     g_return_val_if_fail (MM_IS_MODEM_LOCATION (self), FALSE);
 
@@ -736,7 +743,7 @@ mm_modem_location_get_full_sync (MMModemLocation *self,
                                  GCancellable *cancellable,
                                  GError **error)
 {
-    GVariant *dictionary = NULL;
+    g_autoptr(GVariant) dictionary = NULL;
 
     g_return_val_if_fail (MM_IS_MODEM_LOCATION (self), FALSE);
 
@@ -1211,12 +1218,275 @@ mm_modem_location_get_gps_refresh_rate (MMModemLocation *self)
 
 /*****************************************************************************/
 
+/* custom refresh method instead of PROPERTY_OBJECT_DEFINE_REFRESH() */
+static void
+signaled_location_refresh (MMModemLocation *self)
+{
+    g_autoptr(GVariant) variant = NULL;
+    g_autoptr(GError)   inner_error = NULL;
+
+    g_clear_object (&self->priv->signaled_3gpp);
+    g_clear_object (&self->priv->signaled_gps_nmea);
+    g_clear_object (&self->priv->signaled_gps_raw);
+    g_clear_object (&self->priv->signaled_cdma_bs);
+
+    variant = mm_gdbus_modem_location_dup_location (MM_GDBUS_MODEM_LOCATION (self));
+    if (!variant)
+        return;
+
+    if (!build_locations (variant,
+                          &self->priv->signaled_3gpp,
+                          &self->priv->signaled_gps_nmea,
+                          &self->priv->signaled_gps_raw,
+                          &self->priv->signaled_cdma_bs,
+                          &inner_error))
+        g_warning ("Invalid signaled location received: %s", inner_error->message);
+}
+
+PROPERTY_DEFINE_UPDATED (signaled_location, ModemLocation)
+
+/**
+ * mm_modem_location_peek_signaled_3gpp:
+ * @self: A #MMModemLocation.
+ *
+ * Gets a #MMLocation3gpp object with the current 3GPP location information.
+ *
+ * Unlike mm_modem_location_get_3gpp() or mm_modem_location_get_3gpp_sync(),
+ * this method does not perform an explicit query. Instead, this method will
+ * return the location information that may have been signaled by the modem.
+ * Therefore, this method will only succeed if location signaling is enabled
+ * (e.g. with mm_modem_location_setup() in the #MMModemLocation).
+ *
+ * <warning>The returned value is only valid until the property changes so
+ * it is only safe to use this function on the thread where
+ * @self was constructed. Use mm_modem_location_get_signaled_3gpp() if on
+ * another thread.</warning>
+ *
+ * Returns: (transfer none): A #MMLocation3gpp, or %NULL if none available. Do
+ * not free the returned value, it belongs to @self.
+ *
+ * Since: 1.18
+ */
+
+PROPERTY_OBJECT_DEFINE_PEEK (signaled_location, signaled_3gpp, ModemLocation, modem_location, MODEM_LOCATION, MMLocation3gpp)
+
+/**
+ * mm_modem_location_get_signaled_3gpp:
+ * @self: A #MMModemLocation.
+ *
+ * Gets a #MMLocation3gpp object with the current 3GPP location information.
+ *
+ * Unlike mm_modem_location_get_3gpp() or mm_modem_location_get_3gpp_sync(),
+ * this method does not perform an explicit query. Instead, this method will
+ * return the location information that may have been signaled by the modem.
+ * Therefore, this method will only succeed if location signaling is enabled
+ * (e.g. with mm_modem_location_setup() in the #MMModemLocation).
+ *
+ * <warning>The values reported by @self are not updated when the values in the
+ * interface change. Instead, the client is expected to call
+ * mm_modem_location_get_signaled_3gpp() again to get a new #MMLocation3gpp
+ * with the new values.</warning>
+ *
+ * Returns: (transfer full): A #MMLocation3gpp that must be freed with
+ * g_object_unref() or %NULL if none available.
+ *
+ * Since: 1.18
+ */
+
+PROPERTY_OBJECT_DEFINE_GET (signaled_location, signaled_3gpp, ModemLocation, modem_location, MODEM_LOCATION, MMLocation3gpp)
+
+/**
+ * mm_modem_location_peek_signaled_gps_nmea:
+ * @self: A #MMModemLocation.
+ *
+ * Gets a #MMLocationGpsNmea object with the current GPS NMEA location
+ * information.
+ *
+ * Unlike mm_modem_location_get_gps_nmea() or
+ * mm_modem_location_get_gps_nmea_sync(), this method does not perform an
+ * explicit query. Instead, this method will return the location information
+ * that may have been signaled by the modem. Therefore, this method will only
+ * succeed if location signaling is enabled (e.g. with mm_modem_location_setup()
+ * in the #MMModemLocation).
+ *
+ * <warning>The returned value is only valid until the property changes so
+ * it is only safe to use this function on the thread where
+ * @self was constructed. Use mm_modem_location_get_signaled_gps_nmea() if on
+ * another thread.</warning>
+ *
+ * Returns: (transfer none): A #MMLocationGpsNmea, or %NULL if none available. Do
+ * not free the returned value, it belongs to @self.
+ *
+ * Since: 1.18
+ */
+
+PROPERTY_OBJECT_DEFINE_PEEK (signaled_location, signaled_gps_nmea, ModemLocation, modem_location, MODEM_LOCATION, MMLocationGpsNmea)
+
+/**
+ * mm_modem_location_get_signaled_gps_nmea:
+ * @self: A #MMModemLocation.
+ *
+ * Gets a #MMLocationGpsNmea object with the current GPS NMEA location
+ * information.
+ *
+ * Unlike mm_modem_location_get_gps_nmea() or
+ * mm_modem_location_get_gps_nmea_sync(), this method does not perform an
+ * explicit query. Instead, this method will return the location information
+ * that may have been signaled by the modem. Therefore, this method will only
+ * succeed if location signaling is enabled (e.g. with mm_modem_location_setup()
+ * in the #MMModemLocation).
+ *
+ * <warning>The values reported by @self are not updated when the values in the
+ * interface change. Instead, the client is expected to call
+ * mm_modem_location_get_signaled_gps_nmea() again to get a new #MMLocationGpsNmea
+ * with the new values.</warning>
+ *
+ * Returns: (transfer full): A #MMLocationGpsNmea that must be freed with
+ * g_object_unref() or %NULL if none available.
+ *
+ * Since: 1.18
+ */
+PROPERTY_OBJECT_DEFINE_GET (signaled_location, signaled_gps_nmea, ModemLocation, modem_location, MODEM_LOCATION, MMLocationGpsNmea)
+
+/**
+ * mm_modem_location_peek_signaled_gps_raw:
+ * @self: A #MMModemLocation.
+ *
+ * Gets a #MMLocationGpsRaw object with the current GPS raw location
+ * information.
+ *
+ * Unlike mm_modem_location_get_gps_raw() or
+ * mm_modem_location_get_gps_raw_sync(), this method does not perform an
+ * explicit query. Instead, this method will return the location information
+ * that may have been signaled by the modem. Therefore, this method will only
+ * succeed if location signaling is enabled (e.g. with mm_modem_location_setup()
+ * in the #MMModemLocation).
+ *
+ * <warning>The returned value is only valid until the property changes so
+ * it is only safe to use this function on the thread where
+ * @self was constructed. Use mm_modem_location_get_signaled_gps_raw() if on
+ * another thread.</warning>
+ *
+ * Returns: (transfer none): A #MMLocationGpsRaw, or %NULL if none available. Do
+ * not free the returned value, it belongs to @self.
+ *
+ * Since: 1.18
+ */
+
+PROPERTY_OBJECT_DEFINE_PEEK (signaled_location, signaled_gps_raw, ModemLocation, modem_location, MODEM_LOCATION, MMLocationGpsRaw)
+
+/**
+ * mm_modem_location_get_signaled_gps_raw:
+ * @self: A #MMModemLocation.
+ *
+ * Gets a #MMLocationGpsRaw object with the current GPS raw location
+ * information.
+ *
+ * Unlike mm_modem_location_get_gps_raw() or
+ * mm_modem_location_get_gps_raw_sync(), this method does not perform an
+ * explicit query. Instead, this method will return the location information
+ * that may have been signaled by the modem. Therefore, this method will only
+ * succeed if location signaling is enabled (e.g. with mm_modem_location_setup()
+ * in the #MMModemLocation).
+ *
+ * <warning>The values reported by @self are not updated when the values in the
+ * interface change. Instead, the client is expected to call
+ * mm_modem_location_get_signaled_gps_raw() again to get a new #MMLocationGpsRaw
+ * with the new values.</warning>
+ *
+ * Returns: (transfer full): A #MMLocationGpsRaw that must be freed with
+ * g_object_unref() or %NULL if none available.
+ *
+ * Since: 1.18
+ */
+
+PROPERTY_OBJECT_DEFINE_GET (signaled_location, signaled_gps_raw, ModemLocation, modem_location, MODEM_LOCATION, MMLocationGpsRaw)
+
+/**
+ * mm_modem_location_peek_signaled_cdma_bs:
+ * @self: A #MMModemLocation.
+ *
+ * Gets a #MMLocationCdmaBs object with the current CDMA base station location
+ * information.
+ *
+ * Unlike mm_modem_location_get_cdma_bs() or
+ * mm_modem_location_get_cdma_bs_sync(), this method does not perform an
+ * explicit query. Instead, this method will return the location information
+ * that may have been signaled by the modem. Therefore, this method will only
+ * succeed if location signaling is enabled (e.g. with mm_modem_location_setup()
+ * in the #MMModemLocation).
+ *
+ * <warning>The returned value is only valid until the property changes so
+ * it is only safe to use this function on the thread where
+ * @self was constructed. Use mm_modem_location_get_signaled_cdma_bs() if on
+ * another thread.</warning>
+ *
+ * Returns: (transfer none): A #MMLocationCdmaBs, or %NULL if none available. Do
+ * not free the returned value, it belongs to @self.
+ *
+ * Since: 1.18
+ */
+
+PROPERTY_OBJECT_DEFINE_PEEK (signaled_location, signaled_cdma_bs, ModemLocation, modem_location, MODEM_LOCATION, MMLocationCdmaBs)
+
+/**
+ * mm_modem_location_get_signaled_cdma_bs:
+ * @self: A #MMModemLocation.
+ *
+ * Gets a #MMLocationCdmaBs object with the current CDMA base station location
+ * information.
+ *
+ * Unlike mm_modem_location_get_cdma_bs() or
+ * mm_modem_location_get_cdma_bs_sync(), this method does not perform an
+ * explicit query. Instead, this method will return the location information
+ * that may have been signaled by the modem. Therefore, this method will only
+ * succeed if location signaling is enabled (e.g. with mm_modem_location_setup()
+ * in the #MMModemLocation).
+ *
+ * <warning>The values reported by @self are not updated when the values in the
+ * interface change. Instead, the client is expected to call
+ * mm_modem_location_get_signaled_cdma_bs() again to get a new #MMLocationCdmaBs
+ * with the new values.</warning>
+ *
+ * Returns: (transfer full): A #MMLocationCdmaBs that must be freed with
+ * g_object_unref() or %NULL if none available.
+ *
+ * Since: 1.18
+ */
+PROPERTY_OBJECT_DEFINE_GET (signaled_location, signaled_cdma_bs, ModemLocation, modem_location, MODEM_LOCATION, MMLocationCdmaBs)
+
+/*****************************************************************************/
+
 static void
 mm_modem_location_init (MMModemLocation *self)
 {
+    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, MM_TYPE_MODEM_LOCATION, MMModemLocationPrivate);
+    g_mutex_init (&self->priv->mutex);
+
+    PROPERTY_INITIALIZE (signaled_location, "location")
+}
+
+static void
+finalize (GObject *object)
+{
+    MMModemLocation *self = MM_MODEM_LOCATION (object);
+
+    g_mutex_clear (&self->priv->mutex);
+
+    PROPERTY_OBJECT_FINALIZE (signaled_3gpp)
+    PROPERTY_OBJECT_FINALIZE (signaled_gps_nmea)
+    PROPERTY_OBJECT_FINALIZE (signaled_gps_raw)
+    PROPERTY_OBJECT_FINALIZE (signaled_cdma_bs)
+
+    G_OBJECT_CLASS (mm_modem_location_parent_class)->finalize (object);
 }
 
 static void
 mm_modem_location_class_init (MMModemLocationClass *modem_class)
 {
+    GObjectClass *object_class = G_OBJECT_CLASS (modem_class);
+
+    g_type_class_add_private (object_class, sizeof (MMModemLocationPrivate));
+
+    object_class->finalize = finalize;
 }

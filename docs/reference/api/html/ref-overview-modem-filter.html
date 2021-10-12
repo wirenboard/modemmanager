@@ -80,6 +80,24 @@ $ sudo udevadm trigger
             </pre>
 </li>
 <li class="listitem">
+<p><span class="emphasis"><em>MM_FILTER_RULE_PLUGIN_WHITELIST</em></span></p>
+<p>
+              This filter will automatically whitelist devices that are explicitly referenced
+              by plugins, either with plugin-specific whitelist tags, with exact
+              <span class="emphasis"><em>vid:pid</em></span> matches, or just with <span class="emphasis"><em>vid</em></span> matches.
+            </p>
+</li>
+<li class="listitem">
+<p><span class="emphasis"><em>MM_FILTER_RULE_QRTR</em></span></p>
+<p>
+              This filter will automatically flag as allowed all QRTR nodes that have been
+              notified as being modem management capable.
+            </p>
+<p>
+              This filter rule is available since 1.18.0.
+            </p>
+</li>
+<li class="listitem">
 <p><span class="emphasis"><em>MM_FILTER_RULE_VIRTUAL</em></span></p>
 <p>
               This filter will automatically flag as forbidden all ports exposed by virtual
@@ -105,36 +123,33 @@ $ sudo udevadm trigger
             </p>
 </li>
 <li class="listitem">
-<p><span class="emphasis"><em>MM_FILTER_RULE_TTY, MM_FILTER_RULE_TTY_DEFAULT_ALLOWED and MM_FILTER_RULE_TTY_DEFAULT_FORBIDDEN</em></span></p>
+<p><span class="emphasis"><em>MM_FILTER_RULE_RPMSG</em></span></p>
+<p>
+              This filter will automatically flag as allowed all rpmsg ports exposed in the
+              rpmsg subsystem. Unless there is a will to explicitly forbid the rpmsg ports,
+              this filter should always be enabled.
+            </p>
+<p>
+              This filter rule is available since 1.16.0.
+            </p>
+</li>
+<li class="listitem">
+<p><span class="emphasis"><em>MM_FILTER_RULE_WWAN</em></span></p>
+<p>
+              This filter will automatically flag as allowed all wwan control ports exposed
+              in the wwan subsystem. Unless there is a will to explicitly forbid the wwan control
+              ports, this filter should always be enabled.
+            </p>
+<p>
+              This filter rule is available since 1.18.0.
+            </p>
+</li>
+<li class="listitem">
+<p><span class="emphasis"><em>MM_FILTER_RULE_TTY</em></span></p>
 <p>
               If the MM_FILTER_RULE_TTY filter is disabled, no TTY port will be allowed. If this
               filter is enabled, TTY ports will only be allowed if the TTY-specific filters (defined
               next) allow it.
-            </p>
-<p>
-              The MM_FILTER_RULE_TTY_DEFAULT_ALLOWED and MM_FILTER_RULE_TTY_DEFAULT_FORBIDDEN rules allow
-              defining what happens when a TTY port isn't explicitly forbidden or accepted by any of
-              the TTY-specific filters. When MM_FILTER_RULE_TTY is enabled, one of these other two options
-              must be set.
-            </p>
-</li>
-<li class="listitem">
-<p><span class="emphasis"><em>MM_FILTER_RULE_TTY_BLACKLIST</em></span></p>
-<p>
-              This filter will not allow probing any of the devices flagged as
-              <span class="emphasis"><em>ID_MM_TTY_BLACKLIST</em></span>, like the ones in the default blacklist
-              shipped by ModemManager.
-            </p>
-</li>
-<li class="listitem">
-<p><span class="emphasis"><em>MM_FILTER_RULE_TTY_MANUAL_SCAN_ONLY</em></span></p>
-<p>
-              This filter will not allow automatic probing any of the devices flagged as
-              <span class="emphasis"><em>ID_MM_TTY_MANUAL_SCAN_ONLY</em></span>, like the ones in the default
-              USB serial adapters greylist shipped by ModemManager. Devices flagged like
-              this will only be probed when a manual scan is requested via the
-              <a class="link" href="gdbus-org.freedesktop.ModemManager1.html#gdbus-method-org-freedesktop-ModemManager1.ScanDevices" title="The ScanDevices() method">ScanDevices</a>
-              method.
             </p>
 </li>
 <li class="listitem">
@@ -163,6 +178,32 @@ $ sudo udevadm trigger
 <p>
               If this filter is enabled, all TTY ports for devices that also expose a network
               interface port will be allowed automatically.
+            </p>
+</li>
+<li class="listitem">
+<p><span class="emphasis"><em>MM_FILTER_RULE_TTY_DEFAULT_FORBIDDEN</em></span></p>
+<p>
+              This rule is the implicit one defining what happens when a TTY port isn't explicitly
+              accepted by any of the TTY-specific filters; i.e. the TTY port will be forbidden.
+            </p>
+</li>
+</ul></div>
+<p>
+      </p>
+<p>
+        The following filter rules have been deprecated and are no longer used.
+        </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+<p><span class="emphasis"><em>MM_FILTER_RULE_TTY_BLACKLIST</em></span></p>
+<p>
+              Deprecated in 1.18.0.
+            </p>
+</li>
+<li class="listitem">
+<p><span class="emphasis"><em>MM_FILTER_RULE_TTY_MANUAL_SCAN_ONLY</em></span></p>
+<p>
+              Deprecated in 1.18.0.
             </p>
 </li>
 </ul></div>

@@ -57,6 +57,14 @@
 </tr>
 <tr>
 <td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerMultiplexSupport" title="enum MMBearerMultiplexSupport">MMBearerMultiplexSupport</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerApnType" title="enum MMBearerApnType">MMBearerApnType</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
 <td class="function_name"><a class="link" href="ModemManager-Flags-and-Enumerations.html#MMCallDirection" title="enum MMCallDirection">MMCallDirection</a></td>
 </tr>
 <tr>
@@ -447,6 +455,152 @@ is started to obtain the rest of the configuration.</p>
 </table></div>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MMBearerMultiplexSupport"></a><h3>enum MMBearerMultiplexSupport</h3>
+<p>Multiplex support requested by the user.</p>
+<div class="refsect3">
+<a name="MMBearerMultiplexSupport.members"></a><h4>Members</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-MULTIPLEX-SUPPORT-UNKNOWN:CAPS"></a>MM_BEARER_MULTIPLEX_SUPPORT_UNKNOWN</p></td>
+<td class="enum_member_description">
+<p>Unknown.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-MULTIPLEX-SUPPORT-NONE:CAPS"></a>MM_BEARER_MULTIPLEX_SUPPORT_NONE</p></td>
+<td class="enum_member_description">
+<p>No multiplex support should be used.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-MULTIPLEX-SUPPORT-REQUESTED:CAPS"></a>MM_BEARER_MULTIPLEX_SUPPORT_REQUESTED</p></td>
+<td class="enum_member_description">
+<p>If available, multiplex support should be used.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-MULTIPLEX-SUPPORT-REQUIRED:CAPS"></a>MM_BEARER_MULTIPLEX_SUPPORT_REQUIRED</p></td>
+<td class="enum_member_description">
+<p>Multiplex support must be used or otherwise the connection attempt will fail.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MMBearerApnType"></a><h3>enum MMBearerApnType</h3>
+<p>Purpose of the APN used in a given Bearer.</p>
+<p>This information may be stored in the device configuration (e.g. if carrier
+specific configurations have been enabled for the SIM in use), or provided
+explicitly by the user.</p>
+<p>If the mask of types includes <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-APN-TYPE-DEFAULT:CAPS"><code class="literal">MM_BEARER_APN_TYPE_DEFAULT</code></a>, it is expected
+that the connection manager will include a default route through the specific
+bearer connection to the public Internet.</p>
+<p>For any other mask type, it is expected that the connection manager will
+not setup a default route and will therefore require additional custom
+routing rules to provide access to the different services. E.g. a bearer
+connected with <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-APN-TYPE-MMS:CAPS"><code class="literal">MM_BEARER_APN_TYPE_MMS</code></a> will probably require an explicit
+additional route in the host to access the MMSC server at the address
+specified by the operator. If this address relies on a domain name instead
+of a fixed IP address, the name resolution should be performed using the
+DNS servers specified in the corresponding bearer connection settings.</p>
+<p>If not explicitly specified during a connection attempt, the connection
+manager should be free to treat it with its own logic. E.g. a good default
+could be to treat the first connection as <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-APN-TYPE-DEFAULT:CAPS"><code class="literal">MM_BEARER_APN_TYPE_DEFAULT</code></a> (with
+a default route) and any other additional connection as
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-APN-TYPE-PRIVATE:CAPS"><code class="literal">MM_BEARER_APN_TYPE_PRIVATE</code></a> (without a default route).</p>
+<div class="refsect3">
+<a name="MMBearerApnType.members"></a><h4>Members</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-APN-TYPE-NONE:CAPS"></a>MM_BEARER_APN_TYPE_NONE</p></td>
+<td class="enum_member_description">
+<p>Unknown or unsupported.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-APN-TYPE-INITIAL:CAPS"></a>MM_BEARER_APN_TYPE_INITIAL</p></td>
+<td class="enum_member_description">
+<p>APN used for the initial attach procedure.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-APN-TYPE-DEFAULT:CAPS"></a>MM_BEARER_APN_TYPE_DEFAULT</p></td>
+<td class="enum_member_description">
+<p>Default connection APN providing access to the Internet.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-APN-TYPE-IMS:CAPS"></a>MM_BEARER_APN_TYPE_IMS</p></td>
+<td class="enum_member_description">
+<p>APN providing access to IMS services.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-APN-TYPE-MMS:CAPS"></a>MM_BEARER_APN_TYPE_MMS</p></td>
+<td class="enum_member_description">
+<p>APN providing access to MMS services.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-APN-TYPE-MANAGEMENT:CAPS"></a>MM_BEARER_APN_TYPE_MANAGEMENT</p></td>
+<td class="enum_member_description">
+<p>APN providing access to over-the-air device management procedures.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-APN-TYPE-VOICE:CAPS"></a>MM_BEARER_APN_TYPE_VOICE</p></td>
+<td class="enum_member_description">
+<p>APN providing access to voice-over-IP services.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-APN-TYPE-EMERGENCY:CAPS"></a>MM_BEARER_APN_TYPE_EMERGENCY</p></td>
+<td class="enum_member_description">
+<p>APN providing access to emergency services.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-BEARER-APN-TYPE-PRIVATE:CAPS"></a>MM_BEARER_APN_TYPE_PRIVATE</p></td>
+<td class="enum_member_description">
+<p>APN providing access to private networks.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -3043,6 +3197,20 @@ preferred in a given device.</p>
 <td class="enum_member_name"><p><a name="MM-MODEM-FIRMWARE-UPDATE-METHOD-QMI-PDC:CAPS"></a>MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC</p></td>
 <td class="enum_member_description">
 <p>Device supports QMI PDC based update.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-FIRMWARE-UPDATE-METHOD-MBIM-QDU:CAPS"></a>MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU</p></td>
+<td class="enum_member_description">
+<p>Device supports MBIM QDU based update. Since 1.18.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="MM-MODEM-FIRMWARE-UPDATE-METHOD-FIREHOSE:CAPS"></a>MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE</p></td>
+<td class="enum_member_description">
+<p>Device supports Firehose based update. Since 1.18.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>

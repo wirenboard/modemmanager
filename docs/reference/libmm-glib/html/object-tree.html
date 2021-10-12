@@ -6,7 +6,7 @@
 <meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
 <link rel="home" href="index.html" title="libmm-glib Reference Manual">
 <link rel="up" href="index.html" title="libmm-glib Reference Manual">
-<link rel="prev" href="MmGdbusCallSkeleton.html" title="MmGdbusCallSkeleton">
+<link rel="prev" href="libmm-glib-Deprecated-Interface.html" title="Deprecated Interface">
 <link rel="next" href="api-index-full.html" title="Index">
 <meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
@@ -16,7 +16,7 @@
 <td width="100%" align="left" class="shortcuts"></td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
 <td><img src="up-insensitive.png" width="16" height="16" border="0"></td>
-<td><a accesskey="p" href="MmGdbusCallSkeleton.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="p" href="libmm-glib-Deprecated-Interface.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
 <td><a accesskey="n" href="api-index-full.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
 </tr></table>
 <div class="chapter">
@@ -24,11 +24,14 @@
 <a name="object-tree"></a>Object Hierarchy</h1></div></div></div>
 <pre class="screen">
     <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject-struct">GObject</a>
+    <span class="lineart">├──</span> <a class="link" href="libmm-glib-3GPP-profile.html#MM3gppProfile">MM3gppProfile</a>
     <span class="lineart">├──</span> <a href="https://developer.gnome.org/gio/unstable/GDBusProxy.html#GDBusProxy-struct">GDBusProxy</a>
     <span class="lineart">│</span>   <span class="lineart">├──</span> <a class="link" href="MmGdbusBearerProxy.html" title="MmGdbusBearerProxy">MmGdbusBearerProxy</a>
     <span class="lineart">│</span>   <span class="lineart">│</span>   <span class="lineart">╰──</span> <a class="link" href="MMBearer.html" title="MMBearer">MMBearer</a>
     <span class="lineart">│</span>   <span class="lineart">├──</span> <a class="link" href="MmGdbusCallProxy.html" title="MmGdbusCallProxy">MmGdbusCallProxy</a>
     <span class="lineart">│</span>   <span class="lineart">│</span>   <span class="lineart">╰──</span> <a class="link" href="MMCall.html" title="MMCall">MMCall</a>
+    <span class="lineart">│</span>   <span class="lineart">├──</span> <a class="link" href="MmGdbusModem3gppProfileManagerProxy.html" title="MmGdbusModem3gppProfileManagerProxy">MmGdbusModem3gppProfileManagerProxy</a>
+    <span class="lineart">│</span>   <span class="lineart">│</span>   <span class="lineart">╰──</span> <a class="link" href="MMModem3gppProfileManager.html" title="MMModem3gppProfileManager">MMModem3gppProfileManager</a>
     <span class="lineart">│</span>   <span class="lineart">├──</span> <a class="link" href="MmGdbusModem3gppProxy.html" title="MmGdbusModem3gppProxy">MmGdbusModem3gppProxy</a>
     <span class="lineart">│</span>   <span class="lineart">│</span>   <span class="lineart">╰──</span> <a class="link" href="MMModem3gpp.html" title="MMModem3gpp">MMModem3gpp</a>
     <span class="lineart">│</span>   <span class="lineart">├──</span> <a class="link" href="MmGdbusModem3gppUssdProxy.html" title="MmGdbusModem3gppUssdProxy">MmGdbusModem3gppUssdProxy</a>
@@ -69,6 +72,7 @@
     <span class="lineart">├──</span> <a href="https://developer.gnome.org/gio/unstable/GDBusInterfaceSkeleton.html#GDBusInterfaceSkeleton-struct">GDBusInterfaceSkeleton</a>
     <span class="lineart">│</span>   <span class="lineart">├──</span> <a class="link" href="MmGdbusBearerSkeleton.html" title="MmGdbusBearerSkeleton">MmGdbusBearerSkeleton</a>
     <span class="lineart">│</span>   <span class="lineart">├──</span> <a class="link" href="MmGdbusCallSkeleton.html" title="MmGdbusCallSkeleton">MmGdbusCallSkeleton</a>
+    <span class="lineart">│</span>   <span class="lineart">├──</span> <a class="link" href="MmGdbusModem3gppProfileManagerSkeleton.html" title="MmGdbusModem3gppProfileManagerSkeleton">MmGdbusModem3gppProfileManagerSkeleton</a>
     <span class="lineart">│</span>   <span class="lineart">├──</span> <a class="link" href="MmGdbusModem3gppSkeleton.html" title="MmGdbusModem3gppSkeleton">MmGdbusModem3gppSkeleton</a>
     <span class="lineart">│</span>   <span class="lineart">├──</span> <a class="link" href="MmGdbusModem3gppUssdSkeleton.html" title="MmGdbusModem3gppUssdSkeleton">MmGdbusModem3gppUssdSkeleton</a>
     <span class="lineart">│</span>   <span class="lineart">├──</span> <a class="link" href="MmGdbusModemCdmaSkeleton.html" title="MmGdbusModemCdmaSkeleton">MmGdbusModemCdmaSkeleton</a>
@@ -108,6 +112,7 @@
     <span class="lineart">├──</span> <a class="link" href="MmGdbusBearer.html" title="MmGdbusBearer">MmGdbusBearer</a>
     <span class="lineart">├──</span> <a class="link" href="MmGdbusCall.html" title="MmGdbusCall">MmGdbusCall</a>
     <span class="lineart">├──</span> <a class="link" href="MmGdbusModem3gpp.html" title="MmGdbusModem3gpp">MmGdbusModem3gpp</a>
+    <span class="lineart">├──</span> <a class="link" href="MmGdbusModem3gppProfileManager.html" title="MmGdbusModem3gppProfileManager">MmGdbusModem3gppProfileManager</a>
     <span class="lineart">├──</span> <a class="link" href="MmGdbusModem3gppUssd.html" title="MmGdbusModem3gppUssd">MmGdbusModem3gppUssd</a>
     <span class="lineart">├──</span> <a class="link" href="MmGdbusModemCdma.html" title="MmGdbusModemCdma">MmGdbusModemCdma</a>
     <span class="lineart">├──</span> <a class="link" href="MmGdbusModemFirmware.html" title="MmGdbusModemFirmware">MmGdbusModemFirmware</a>
@@ -124,7 +129,8 @@
     <span class="lineart">├──</span> <a class="link" href="MmGdbusSim.html" title="MmGdbusSim">MmGdbusSim</a>
     <span class="lineart">╰──</span> <a class="link" href="MmGdbusSms.html" title="MmGdbusSms">MmGdbusSms</a>
     <a href="/usr/share/gtk-doc/html/gobject/gobject-Boxed-Types.html">GBoxed</a>
-    <span class="lineart">╰──</span> <a class="link" href="MMModem3gpp.html#MMModem3gppNetwork">MMModem3gppNetwork</a>
+    <span class="lineart">├──</span> <a class="link" href="MMModem3gpp.html#MMModem3gppNetwork">MMModem3gppNetwork</a>
+    <span class="lineart">╰──</span> <a class="link" href="MMSimPreferredNetwork.html" title="MMSimPreferredNetwork">MMSimPreferredNetwork</a>
 </pre>
 </div>
 <div class="footer">

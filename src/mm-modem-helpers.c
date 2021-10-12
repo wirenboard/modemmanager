@@ -645,6 +645,29 @@ mm_3gpp_parse_clcc_response (const gchar  *str,
         }
         call_info->state = call_state[aux];
 
+        if (!mm_get_uint_from_match_info (match_info, 4, &aux)) {
+            mm_obj_warn (log_object, "couldn't parse mode from +CLCC line");
+            goto next;
+        }
+
+        /*
+         * Skip calls in Fax-only and DATA-only mode (3GPP TS 27.007):
+         * 0: Voice
+         * 1: Data
+         * 2: Fax
+         * 3: Voice followed by data, voice mode
+         * 4: Alternating voice/data, voice mode
+         * 5: Alternating voice/fax, voice mode
+         * 6: Voice followed by data, data mode
+         * 7: Alternating voice/data, data mode
+         * 8: Alternating voice/fax, fax mode
+         * 9: unknown
+         */
+        if (aux != 0 && aux != 3 && aux != 4 && aux != 5) {
+            mm_obj_dbg (log_object, "+CLCC line is not a voice call, skipping.");
+            goto next;
+        }
+
         if (g_match_info_get_match_count (match_info) >= 7)
             call_info->number = mm_get_string_unquoted_from_match_info (match_info, 6);
 
@@ -995,6 +1018,7 @@ static const Ws46Mode ws46_modes[] = {
 
 GArray *
 mm_3gpp_parse_ws46_test_response (const gchar  *response,
+                                  gpointer      log_object,
                                   GError      **error)
 {
     GArray     *modes = NULL;
@@ -1060,7 +1084,7 @@ mm_3gpp_parse_ws46_test_response (const gchar  *response,
         }
 
         if (j == G_N_ELEMENTS (ws46_modes))
-            g_warning ("Unknown +WS46 mode reported: %u", val);
+            mm_obj_warn (log_object, "Unknown +WS46 mode reported: %u", val);
     }
 
     if (supported_mode_25) {
@@ -1477,131 +1501,224 @@ mm_3gpp_cmp_apn_name (const gchar *requested,
 
 /*************************************************************************/
 
-static guint
-find_max_allowed_cid (GList            *context_format_list,
-                      MMBearerIpFamily  ip_family)
+gboolean
+mm_3gpp_pdp_context_format_list_find_range (GList            *pdp_format_list,
+                                            MMBearerIpFamily  ip_family,
+                                            guint            *out_min_cid,
+                                            guint            *out_max_cid)
 {
     GList *l;
 
-    for (l = context_format_list; l; l = g_list_next (l)) {
+    for (l = pdp_format_list; l; l = g_list_next (l)) {
         MM3gppPdpContextFormat *format = l->data;
 
         /* Found exact PDP type? */
-        if (format->pdp_type == ip_family)
-            return format->max_cid;
+        if (format->pdp_type == ip_family) {
+            if (out_min_cid)
+                *out_min_cid = format->min_cid;
+            if (out_max_cid)
+                *out_max_cid = format->max_cid;
+            return TRUE;
+        }
     }
-    return 0;
+    return FALSE;
 }
 
-guint
-mm_3gpp_select_best_cid (const gchar      *apn,
-                         MMBearerIpFamily  ip_family,
-                         GList            *context_list,
-                         GList            *context_format_list,
-                         gpointer          log_object,
-                         gboolean         *out_cid_reused,
-                         gboolean         *out_cid_overwritten)
+/*************************************************************************/
+
+MM3gppProfile *
+mm_3gpp_profile_new_from_pdp_context (MM3gppPdpContext *pdp_context)
+{
+    MM3gppProfile *profile;
+
+    profile = mm_3gpp_profile_new ();
+    mm_3gpp_profile_set_profile_id (profile, pdp_context->cid);
+    mm_3gpp_profile_set_apn        (profile, pdp_context->apn);
+    mm_3gpp_profile_set_ip_type    (profile, pdp_context->pdp_type);
+    return profile;
+}
+
+GList *
+mm_3gpp_profile_list_new_from_pdp_context_list (GList *pdp_context_list)
+{
+    GList *profile_list = NULL;
+    GList *l;
+
+    for (l = pdp_context_list; l; l = g_list_next (l)) {
+        MM3gppPdpContext *pdp_context;
+        MM3gppProfile    *profile;
+
+        pdp_context = (MM3gppPdpContext *)l->data;
+        profile = mm_3gpp_profile_new_from_pdp_context (pdp_context);
+        profile_list = g_list_append (profile_list, profile);
+    }
+    return profile_list;
+}
+
+void
+mm_3gpp_profile_list_free (GList *profile_list)
+{
+    g_list_free_full (profile_list, g_object_unref);
+}
+
+MM3gppProfile *
+mm_3gpp_profile_list_find_by_profile_id (GList   *profile_list,
+                                         gint     profile_id,
+                                         GError **error)
 {
     GList *l;
-    guint  prev_cid = 0;
-    guint  exact_cid = 0;
-    guint  unused_cid = 0;
-    guint  max_cid = 0;
-    guint  max_allowed_cid = 0;
-    guint  blank_cid = 0;
-    gchar *ip_family_str;
 
-    g_assert (out_cid_reused);
-    g_assert (out_cid_overwritten);
+    for (l = profile_list; l; l = g_list_next (l)) {
+        MM3gppProfile *iter_profile = l->data;
 
-    ip_family_str = mm_bearer_ip_family_build_string_from_mask (ip_family);
-    mm_obj_dbg (log_object, "looking for best CID matching APN '%s' and PDP type '%s'...",
-                apn, ip_family_str);
-    g_free (ip_family_str);
+        if (mm_3gpp_profile_get_profile_id (iter_profile) == profile_id)
+            return g_object_ref (iter_profile);
+    }
+
+    g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
+                 "Profile '%d' not found", profile_id);
+    return NULL;
+}
+
+gint
+mm_3gpp_profile_list_find_empty (GList   *profile_list,
+                                 gint     min_profile_id,
+                                 gint     max_profile_id,
+                                 GError **error)
+{
+    GList *l;
+    gint   profile_id;
+
+    profile_id = min_profile_id;
+    for (l = profile_list; l; l = g_list_next (l)) {
+        MM3gppProfile *iter_profile = l->data;
+        gint           iter_profile_id;
+
+        iter_profile_id = mm_3gpp_profile_get_profile_id (iter_profile);
+        if (iter_profile_id > profile_id)
+            break;
+        if (iter_profile_id == profile_id)
+            profile_id++;
+    }
+
+    if (profile_id > max_profile_id) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
+                     "No empty profile available");
+        return MM_3GPP_PROFILE_ID_UNKNOWN;
+    }
+
+    return profile_id;
+}
+
+gint
+mm_3gpp_profile_list_find_best (GList                  *profile_list,
+                                MM3gppProfile          *requested,
+                                GEqualFunc              cmp_apn,
+                                MM3gppProfileCmpFlags   cmp_flags,
+                                gint                    min_profile_id,
+                                gint                    max_profile_id,
+                                gpointer                log_object,
+                                MM3gppProfile         **out_reused,
+                                gboolean               *out_overwritten)
+{
+    GList            *l;
+    MMBearerIpFamily  requested_ip_type;
+    gint              prev_profile_id = 0;
+    gint              unused_profile_id = 0;
+    gint              max_found_profile_id = 0;
+    gint              max_allowed_profile_id = 0;
+    gint              blank_profile_id = 0;
+
+    g_assert (out_reused);
+    g_assert (out_overwritten);
+
+    requested_ip_type = mm_3gpp_profile_get_ip_type (requested);
+
+    /* When looking for exact profile matches we should not compare
+     * the profile id, as the requested profile won't have one set */
+    cmp_flags |= MM_3GPP_PROFILE_CMP_FLAGS_NO_PROFILE_ID;
 
     /* Look for the exact PDP context we want */
-    for (l = context_list; l; l = g_list_next (l)) {
-        MM3gppPdpContext *pdp = l->data;
+    for (l = profile_list; l; l = g_list_next (l)) {
+        MM3gppProfile    *iter_profile = l->data;
+        MMBearerIpFamily  iter_ip_type;
+        const gchar      *iter_apn;
+        gint              iter_profile_id;
 
-        /* Match PDP type */
-        if (pdp->pdp_type == ip_family) {
-            /* Try to match exact APN and PDP type */
-            if (mm_3gpp_cmp_apn_name (apn, pdp->apn)) {
-                exact_cid = pdp->cid;
-                break;
-            }
+        iter_profile_id = mm_3gpp_profile_get_profile_id (iter_profile);
 
-            /* Same PDP type but with no APN set? we may use that one if no exact match found */
-            if ((!pdp->apn || !pdp->apn[0]) && !blank_cid)
-                blank_cid = pdp->cid;
+        /* Always prefer an exact match; compare all supported fields except for profile id */
+        if (mm_3gpp_profile_cmp (iter_profile, requested, cmp_apn, cmp_flags)) {
+            mm_obj_dbg (log_object, "found exact context at profile %d", iter_profile_id);
+            *out_reused = g_object_ref (iter_profile);
+            *out_overwritten = FALSE;
+            return iter_profile_id;
         }
+
+        /* Same PDP type but with no APN set? we may use that one if no exact match found */
+        iter_ip_type = mm_3gpp_profile_get_ip_type (iter_profile);
+        iter_apn     = mm_3gpp_profile_get_apn     (iter_profile);
+        if ((iter_ip_type == requested_ip_type) && (!iter_apn || !iter_apn[0]) && !blank_profile_id)
+            blank_profile_id = iter_profile_id;
 
         /* If an unused CID was not found yet and the previous CID is not (CID - 1),
          * this means that (previous CID + 1) is an unused CID that can be used.
          * This logic will allow us using unused CIDs that are available in the gaps
          * between already defined contexts.
          */
-        if (!unused_cid && prev_cid && ((prev_cid + 1) < pdp->cid))
-            unused_cid = prev_cid + 1;
+        if (!unused_profile_id && prev_profile_id && ((prev_profile_id + 1) < iter_profile_id))
+            unused_profile_id = prev_profile_id + 1;
 
         /* Update previous CID value to the current CID for use in the next loop,
          * unless an unused CID was already found.
          */
-        if (!unused_cid)
-            prev_cid = pdp->cid;
+        if (!unused_profile_id)
+            prev_profile_id = iter_profile_id;
 
         /* Update max CID if we found a bigger one */
-        if (max_cid < pdp->cid)
-            max_cid = pdp->cid;
-    }
-
-    /* Always prefer an exact match */
-    if (exact_cid) {
-        mm_obj_dbg (log_object, "found exact context at CID %u", exact_cid);
-        *out_cid_reused = TRUE;
-        *out_cid_overwritten = FALSE;
-        return exact_cid;
+        if (max_found_profile_id < iter_profile_id)
+            max_found_profile_id = iter_profile_id;
     }
 
     /* Try to use an unused CID detected in between the already defined contexts */
-    if (unused_cid) {
-        mm_obj_dbg (log_object, "found unused context at CID %u", unused_cid);
-        *out_cid_reused = FALSE;
-        *out_cid_overwritten = FALSE;
-        return unused_cid;
+    if (unused_profile_id) {
+        mm_obj_dbg (log_object, "found unused profile %d", unused_profile_id);
+        *out_reused = NULL;
+        *out_overwritten = FALSE;
+        return unused_profile_id;
     }
 
     /* If the max existing CID found during CGDCONT? is below the max allowed
      * CID, then we can use the next available CID because it's an unused one. */
-    max_allowed_cid = find_max_allowed_cid (context_format_list, ip_family);
-    if (max_cid && (max_cid < max_allowed_cid)) {
-        mm_obj_dbg (log_object, "found unused context at CID %u (<%u)", max_cid + 1, max_allowed_cid);
-        *out_cid_reused = FALSE;
-        *out_cid_overwritten = FALSE;
-        return (max_cid + 1);
+    max_allowed_profile_id = max_profile_id;
+    if (max_found_profile_id && (max_found_profile_id < max_allowed_profile_id)) {
+        mm_obj_dbg (log_object, "found unused profile %d (<%d)", max_found_profile_id + 1, max_allowed_profile_id);
+        *out_reused = NULL;
+        *out_overwritten = FALSE;
+        return (max_found_profile_id + 1);
     }
 
     /* Rewrite a context defined with no APN, if any */
-    if (blank_cid) {
-        mm_obj_dbg (log_object, "rewriting context with empty APN at CID %u", blank_cid);
-        *out_cid_reused = FALSE;
-        *out_cid_overwritten = TRUE;
-        return blank_cid;
+    if (blank_profile_id) {
+        mm_obj_dbg (log_object, "rewriting profile %d with empty APN", blank_profile_id);
+        *out_reused = NULL;
+        *out_overwritten = TRUE;
+        return blank_profile_id;
     }
 
     /* Rewrite the last existing one found */
-    if (max_cid) {
-        mm_obj_dbg (log_object, "rewriting last context detected at CID %u", max_cid);
-        *out_cid_reused = FALSE;
-        *out_cid_overwritten = TRUE;
-        return max_cid;
+    if (max_found_profile_id) {
+        mm_obj_dbg (log_object, "rewriting last profile %d detected", max_found_profile_id);
+        *out_reused = NULL;
+        *out_overwritten = TRUE;
+        return max_found_profile_id;
     }
 
-    /* Otherwise, just fallback to CID=1 */
-    mm_obj_dbg (log_object, "falling back to CID 1");
-    *out_cid_reused = FALSE;
-    *out_cid_overwritten = TRUE;
-    return 1;
+    /* Otherwise, just fallback to min CID */
+    mm_obj_dbg (log_object, "falling back to profile %d", min_profile_id);
+    *out_reused = NULL;
+    *out_overwritten = TRUE;
+    return min_profile_id;
 }
 
 /*************************************************************************/
@@ -4099,6 +4216,19 @@ mm_3gpp_get_ip_family_from_pdp_type (const gchar *pdp_type)
     return MM_BEARER_IP_FAMILY_NONE;
 }
 
+gboolean
+mm_3gpp_normalize_ip_family (MMBearerIpFamily *family)
+{
+    /* if nothing specific requested, default to IPv4 */
+    if (*family == MM_BEARER_IP_FAMILY_NONE || *family == MM_BEARER_IP_FAMILY_ANY) {
+        *family = MM_BEARER_IP_FAMILY_IPV4;
+        return TRUE;
+    }
+
+    /* no need to normalize */
+    return FALSE;
+}
+
 /*************************************************************************/
 /* ICCID validation */
 /*
@@ -4216,6 +4346,7 @@ gboolean
 mm_3gpp_parse_operator_id (const gchar *operator_id,
                            guint16 *mcc,
                            guint16 *mnc,
+                           gboolean *three_digit_mnc,
                            GError **error)
 {
     guint len;
@@ -4266,6 +4397,9 @@ mm_3gpp_parse_operator_id (const gchar *operator_id,
             memcpy (&aux[0], &operator_id[3], 3);
         *mnc = atoi (aux);
     }
+
+    if (three_digit_mnc)
+        *three_digit_mnc = len == 6;
 
     return TRUE;
 }
@@ -5125,4 +5259,145 @@ mm_parse_supl_address (const gchar  *supl,
 out:
     g_strfreev (split);
     return valid;
+}
+
+/*****************************************************************************/
+
+gboolean
+mm_sim_parse_cpol_query_response (const gchar  *response,
+                                  guint        *out_index,
+                                  gchar       **out_operator_code,
+                                  gboolean     *out_gsm_act,
+                                  gboolean     *out_gsm_compact_act,
+                                  gboolean     *out_utran_act,
+                                  gboolean     *out_eutran_act,
+                                  gboolean     *out_ngran_act,
+                                  guint        *out_act_count,
+                                  GError      **error)
+{
+    g_autoptr(GMatchInfo)  match_info = NULL;
+    g_autoptr(GRegex)      r = NULL;
+    g_autofree gchar      *operator_code = NULL;
+    guint                  format = 0;
+    guint                  act = 0;
+    guint                  match_count;
+
+    r = g_regex_new ("\\+CPOL:\\s*(\\d+),\\s*(\\d+),\\s*\"?(\\d+)\"?"
+                     "(?:,\\s*(\\d+))?"     /* GSM_AcTn */
+                     "(?:,\\s*(\\d+))?"     /* GSM_Compact_AcTn */
+                     "(?:,\\s*(\\d+))?"     /* UTRAN_AcTn */
+                     "(?:,\\s*(\\d+))?"     /* E-UTRAN_AcTn */
+                     "(?:,\\s*(\\d+))?",    /* NG-RAN_AcTn */
+                     G_REGEX_RAW, 0, NULL);
+    g_regex_match (r, response, 0, &match_info);
+
+    if (!g_match_info_matches (match_info)) {
+        g_set_error (error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "Couldn't parse +CPOL reply: %s", response);
+        return FALSE;
+    }
+
+    match_count = g_match_info_get_match_count (match_info);
+    /* Remember that g_match_info_get_match_count() includes match #0 */
+    g_assert (match_count >= 4);
+
+    if (!mm_get_uint_from_match_info (match_info, 2, &format) ||
+        !(operator_code = mm_get_string_unquoted_from_match_info (match_info, 3))) {
+        g_set_error (error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "Couldn't parse +CPOL reply parameters: %s", response);
+        return FALSE;
+    }
+
+    if (format != 2) {
+        g_set_error (error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "+CPOL reply not using numeric operator code: %s", response);
+        return FALSE;
+    }
+
+    if (out_index)
+        if (!mm_get_uint_from_match_info (match_info, 1, out_index)) {
+            g_set_error (error,
+                         MM_CORE_ERROR,
+                         MM_CORE_ERROR_FAILED,
+                         "Couldn't parse +CPOL index: %s", response);
+            return FALSE;
+        }
+    if (out_operator_code)
+        *out_operator_code = g_steal_pointer (&operator_code);
+    if (out_gsm_act)
+        *out_gsm_act = match_count >= 5 &&
+                       mm_get_uint_from_match_info (match_info, 4, &act) &&
+                       act != 0;
+    if (out_gsm_compact_act)
+        *out_gsm_compact_act = match_count >= 6 &&
+                               mm_get_uint_from_match_info (match_info, 5, &act) &&
+                               act != 0;
+    if (out_utran_act)
+        *out_utran_act = match_count >= 7 &&
+                         mm_get_uint_from_match_info (match_info, 6, &act) &&
+                         act != 0;
+    if (out_eutran_act)
+        *out_eutran_act = match_count >= 8 &&
+                          mm_get_uint_from_match_info (match_info, 7, &act) &&
+                          act != 0;
+    if (out_ngran_act)
+        *out_ngran_act = match_count >= 9 &&
+                         mm_get_uint_from_match_info (match_info, 8, &act) &&
+                         act != 0;
+    /* number of access technologies (0...5) in modem response */
+    if (out_act_count)
+        *out_act_count = match_count - 4;
+
+    return TRUE;
+}
+
+gboolean
+mm_sim_parse_cpol_test_response (const gchar  *response,
+                                 guint        *out_min_index,
+                                 guint        *out_max_index,
+                                 GError      **error)
+{
+    g_autoptr(GMatchInfo)  match_info = NULL;
+    g_autoptr(GRegex)      r = NULL;
+    guint                  match_count;
+    guint                  min_index;
+    guint                  max_index;
+
+    r = g_regex_new ("\\+CPOL:\\s*\\((\\d+)\\s*-\\s*(\\d+)\\)",
+                     G_REGEX_RAW, 0, NULL);
+    g_regex_match (r, response, 0, &match_info);
+
+    if (!g_match_info_matches (match_info)) {
+        g_set_error (error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "Couldn't parse +CPOL=? reply: %s", response);
+        return FALSE;
+    }
+
+    match_count = g_match_info_get_match_count (match_info);
+    /* Remember that g_match_info_get_match_count() includes match #0 */
+    g_assert (match_count >= 3);
+
+    if (!mm_get_uint_from_match_info (match_info, 1, &min_index) ||
+        !mm_get_uint_from_match_info (match_info, 2, &max_index)) {
+        g_set_error (error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "Couldn't parse indices in +CPOL=? reply: %s", response);
+        return FALSE;
+    }
+
+    if (out_min_index)
+        *out_min_index = min_index;
+    if (out_max_index)
+        *out_max_index = max_index;
+
+    return TRUE;
 }

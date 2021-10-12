@@ -40,6 +40,7 @@
 # include <mm-bearer.h>
 # include <mm-modem.h>
 # include <mm-modem-3gpp.h>
+# include <mm-modem-3gpp-profile-manager.h>
 # include <mm-modem-3gpp-ussd.h>
 # include <mm-modem-cdma.h>
 # include <mm-modem-simple.h>
@@ -80,6 +81,9 @@
 #include <mm-signal.h>
 #include <mm-kernel-event-properties.h>
 #include <mm-pco.h>
+#include <mm-sim-preferred-network.h>
+#include <mm-3gpp-profile.h>
+#include <mm-compat.h>
 
 /* generated */
 #include <mm-errors-types.h>

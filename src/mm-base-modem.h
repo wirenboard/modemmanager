@@ -29,8 +29,9 @@
 #include <mm-gdbus-modem.h>
 
 #include "mm-auth-provider.h"
-#include "mm-port.h"
 #include "mm-kernel-device.h"
+#include "mm-port.h"
+#include "mm-port-net.h"
 #include "mm-port-serial-at.h"
 #include "mm-port-serial-qcdm.h"
 #include "mm-port-serial-gps.h"
@@ -54,15 +55,20 @@ typedef struct _MMBaseModem MMBaseModem;
 typedef struct _MMBaseModemClass MMBaseModemClass;
 typedef struct _MMBaseModemPrivate MMBaseModemPrivate;
 
-#define MM_BASE_MODEM_CONNECTION     "base-modem-connection"
-#define MM_BASE_MODEM_MAX_TIMEOUTS   "base-modem-max-timeouts"
-#define MM_BASE_MODEM_VALID          "base-modem-valid"
-#define MM_BASE_MODEM_DEVICE         "base-modem-device"
-#define MM_BASE_MODEM_DRIVERS        "base-modem-drivers"
-#define MM_BASE_MODEM_PLUGIN         "base-modem-plugin"
-#define MM_BASE_MODEM_VENDOR_ID      "base-modem-vendor-id"
-#define MM_BASE_MODEM_PRODUCT_ID     "base-modem-product-id"
-#define MM_BASE_MODEM_REPROBE        "base-modem-reprobe"
+#define MM_BASE_MODEM_CONNECTION         "base-modem-connection"
+#define MM_BASE_MODEM_MAX_TIMEOUTS       "base-modem-max-timeouts"
+#define MM_BASE_MODEM_VALID              "base-modem-valid"
+#define MM_BASE_MODEM_DEVICE             "base-modem-device"
+#define MM_BASE_MODEM_DRIVERS            "base-modem-drivers"
+#define MM_BASE_MODEM_PLUGIN             "base-modem-plugin"
+#define MM_BASE_MODEM_VENDOR_ID          "base-modem-vendor-id"
+#define MM_BASE_MODEM_PRODUCT_ID         "base-modem-product-id"
+#define MM_BASE_MODEM_REPROBE            "base-modem-reprobe"
+#define MM_BASE_MODEM_DATA_NET_SUPPORTED "base-modem-data-net-supported"
+#define MM_BASE_MODEM_DATA_TTY_SUPPORTED "base-modem-data-tty-supported"
+
+#define MM_BASE_MODEM_SIGNAL_LINK_PORT_GRABBED  "base-modem-link-port-grabbed"
+#define MM_BASE_MODEM_SIGNAL_LINK_PORT_RELEASED "base-modem-link-port-released"
 
 struct _MMBaseModem {
     MmGdbusObjectSkeleton parent;
@@ -101,6 +107,24 @@ struct _MMBaseModemClass {
     gboolean (*disable_finish) (MMBaseModem *self,
                                 GAsyncResult *res,
                                 GError **error);
+
+#if defined WITH_SYSTEMD_SUSPEND_RESUME
+    /* Modem synchronization.
+     * When resuming in quick suspend/resume mode,
+     * this method triggers a synchronization of all modem interfaces */
+    void (* sync) (MMBaseModem *self,
+                   GAsyncReadyCallback callback,
+                   gpointer user_data);
+    gboolean (* sync_finish) (MMBaseModem *self,
+                              GAsyncResult *res,
+                              GError **error);
+#endif
+
+    /* signals */
+    void (* link_port_grabbed)  (MMBaseModem *self,
+                                 MMPort      *link_port);
+    void (* link_port_released) (MMBaseModem *self,
+                                 MMPort      *link_port);
 };
 
 GType mm_base_modem_get_type (void);
@@ -108,11 +132,28 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (MMBaseModem, g_object_unref)
 
 guint     mm_base_modem_get_dbus_id  (MMBaseModem *self);
 
-gboolean  mm_base_modem_grab_port    (MMBaseModem         *self,
-                                      MMKernelDevice      *kernel_device,
-                                      MMPortType           ptype,
-                                      MMPortSerialAtFlag   at_pflags,
-                                      GError             **error);
+gboolean  mm_base_modem_grab_port         (MMBaseModem         *self,
+                                           MMKernelDevice      *kernel_device,
+                                           MMPortType           ptype,
+                                           MMPortSerialAtFlag   at_pflags,
+                                           GError             **error);
+gboolean  mm_base_modem_grab_link_port    (MMBaseModem         *self,
+                                           MMKernelDevice      *kernel_device,
+                                           GError             **error);
+gboolean  mm_base_modem_release_link_port (MMBaseModem         *self,
+                                           const gchar         *subsystem,
+                                           const gchar         *name,
+                                           GError             **error);
+
+void      mm_base_modem_wait_link_port        (MMBaseModem          *self,
+                                               const gchar          *subsystem,
+                                               const gchar          *name,
+                                               guint                 timeout_ms,
+                                               GAsyncReadyCallback   callback,
+                                               gpointer              user_data);
+MMPort   *mm_base_modem_wait_link_port_finish (MMBaseModem          *self,
+                                               GAsyncResult         *res,
+                                               GError              **error);
 
 gboolean  mm_base_modem_has_at_port  (MMBaseModem *self);
 
@@ -142,10 +183,13 @@ GList            *mm_base_modem_get_data_ports        (MMBaseModem *self);
 MMModemPortInfo *mm_base_modem_get_port_infos         (MMBaseModem *self,
                                                        guint *n_port_infos);
 
-GList            *mm_base_modem_find_ports            (MMBaseModem *self,
-                                                       MMPortSubsys subsys,
-                                                       MMPortType type,
-                                                       const gchar *name);
+GList            *mm_base_modem_find_ports            (MMBaseModem  *self,
+                                                       MMPortSubsys  subsys,
+                                                       MMPortType    type);
+MMPort           *mm_base_modem_peek_port             (MMBaseModem  *self,
+                                                       const gchar  *name);
+MMPort           *mm_base_modem_get_port              (MMBaseModem  *self,
+                                                       const gchar  *name);
 
 void     mm_base_modem_set_hotplugged (MMBaseModem *self,
                                        gboolean hotplugged);
@@ -198,6 +242,17 @@ void     mm_base_modem_disable        (MMBaseModem *self,
 gboolean mm_base_modem_disable_finish (MMBaseModem *self,
                                        GAsyncResult *res,
                                        GError **error);
+
+#if defined WITH_SYSTEMD_SUSPEND_RESUME
+
+void     mm_base_modem_sync           (MMBaseModem *self,
+                                       GAsyncReadyCallback callback,
+                                       gpointer user_data);
+gboolean mm_base_modem_sync_finish    (MMBaseModem *self,
+                                       GAsyncResult *res,
+                                       GError **error);
+
+#endif
 
 void mm_base_modem_process_sim_event (MMBaseModem *self);
 

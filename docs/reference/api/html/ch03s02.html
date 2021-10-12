@@ -34,34 +34,6 @@
 <pre class="programlisting"># /usr/sbin/ModemManager --filter-policy=WHITELIST-ONLY</pre>
 </li>
 <li class="listitem">
-<p><span class="emphasis"><em>Default</em></span></p>
-<p>
-              This is a policy where the following rules are enabled:
-              </p>
-<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
-<li class="listitem">MM_FILTER_RULE_EXPLICIT_WHITELIST</li>
-<li class="listitem">MM_FILTER_RULE_EXPLICIT_BLACKLIST</li>
-<li class="listitem">MM_FILTER_RULE_VIRTUAL</li>
-<li class="listitem">MM_FILTER_RULE_NET</li>
-<li class="listitem">MM_FILTER_RULE_USBMISC</li>
-<li class="listitem">MM_FILTER_RULE_TTY</li>
-<li class="listitem">MM_FILTER_RULE_TTY_BLACKLIST</li>
-<li class="listitem">MM_FILTER_RULE_TTY_MANUAL_SCAN_ONLY</li>
-<li class="listitem">MM_FILTER_RULE_TTY_PLATFORM_DRIVER</li>
-<li class="listitem">MM_FILTER_RULE_TTY_DEFAULT_ALLOWED</li>
-</ul></div>
-<p>
-            </p>
-<p>
-              This policy is the default one when a different one not explicitly
-              selected, and is equivalent to the way ModemManager has worked in previous
-              releases. This policy is the least restrictive one, and will end up
-              allowing port probing of all TTYs not explicitly blacklisted in one way
-              or another.
-            </p>
-<pre class="programlisting"># /usr/sbin/ModemManager --filter-policy=DEFAULT</pre>
-</li>
-<li class="listitem">
 <p><span class="emphasis"><em>Strict</em></span></p>
 <p>
               This is a policy where the following rules are enabled:
@@ -69,57 +41,28 @@
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
 <li class="listitem">MM_FILTER_RULE_EXPLICIT_WHITELIST</li>
 <li class="listitem">MM_FILTER_RULE_EXPLICIT_BLACKLIST</li>
+<li class="listitem">MM_FILTER_RULE_PLUGIN_WHITELIST</li>
+<li class="listitem">MM_FILTER_RULE_QRTR</li>
 <li class="listitem">MM_FILTER_RULE_VIRTUAL</li>
 <li class="listitem">MM_FILTER_RULE_NET</li>
 <li class="listitem">MM_FILTER_RULE_USBMISC</li>
+<li class="listitem">MM_FILTER_RULE_RPMSG</li>
 <li class="listitem">MM_FILTER_RULE_TTY</li>
 <li class="listitem">MM_FILTER_RULE_TTY_PLATFORM_DRIVER</li>
 <li class="listitem">MM_FILTER_RULE_TTY_DRIVER</li>
 <li class="listitem">MM_FILTER_RULE_TTY_ACM_INTERFACE</li>
 <li class="listitem">MM_FILTER_RULE_TTY_WITH_NET</li>
 <li class="listitem">MM_FILTER_RULE_TTY_DEFAULT_FORBIDDEN</li>
+<li class="listitem">MM_FILTER_RULE_WWAN</li>
 </ul></div>
 <p>
             </p>
 <p>
-              This policy is stricter than the default one, as by default all TTYs are
-              forbidden except for the ones explicitly allowed by one of the TTY-specific
-              rules. Distributions or users should use this policy if they don't want
-              ModemManager to mess around with TTY ports that may not be exposed by
-              actual modems.
+              This policy is the default one when a different one is not explicitly
+              selected. In this policy, all TTYs are forbidden except for the ones
+              explicitly allowed by one of the TTY-specific rules.
             </p>
 <pre class="programlisting"># /usr/sbin/ModemManager --filter-policy=STRICT</pre>
-</li>
-<li class="listitem">
-<p><span class="emphasis"><em>Paranoid</em></span></p>
-<p>
-              This policy is a mix of the Default and Strict ones:
-              </p>
-<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
-<li class="listitem">MM_FILTER_RULE_EXPLICIT_WHITELIST</li>
-<li class="listitem">MM_FILTER_RULE_EXPLICIT_BLACKLIST</li>
-<li class="listitem">MM_FILTER_RULE_VIRTUAL</li>
-<li class="listitem">MM_FILTER_RULE_NET</li>
-<li class="listitem">MM_FILTER_RULE_USBMISC</li>
-<li class="listitem">MM_FILTER_RULE_TTY</li>
-<li class="listitem">MM_FILTER_RULE_TTY_BLACKLIST</li>
-<li class="listitem">MM_FILTER_RULE_TTY_MANUAL_SCAN_ONLY</li>
-<li class="listitem">MM_FILTER_RULE_TTY_PLATFORM_DRIVER</li>
-<li class="listitem">MM_FILTER_RULE_TTY_DRIVER</li>
-<li class="listitem">MM_FILTER_RULE_TTY_ACM_INTERFACE</li>
-<li class="listitem">MM_FILTER_RULE_TTY_WITH_NET</li>
-<li class="listitem">MM_FILTER_RULE_TTY_DEFAULT_FORBIDDEN</li>
-</ul></div>
-<p>
-            </p>
-<p>
-              This policy is equivalent to the Strict policy, but where the ModemManager
-              provided blacklist and manual scan only greylist are also used. It is not
-              recommended to use this option in normal setups as the blacklists may be
-              obsoleted in future ModemManager versions (in favor of using the Strict
-              policy as default).
-            </p>
-<pre class="programlisting"># /usr/sbin/ModemManager --filter-policy=PARANOID</pre>
 </li>
 <li class="listitem">
 <p><span class="emphasis"><em>Custom</em></span></p>
@@ -128,13 +71,13 @@
               by explicitly enabling or disabling rules via environment variables.
             </p>
 <p>
-              E.g. this would launch ModemManager with the Default filter policy but with all
+              E.g. this would launch ModemManager with the Strict filter policy but with all
               net and cdc-wdm ports forbidden completely:
               </p>
 <pre class="programlisting">
 # MM_FILTER_RULE_NET=0 \
   MM_FILTER_RULE_USBMISC=0 \
-  /usr/sbin/ModemManager --filter-policy=DEFAULT</pre>
+  /usr/sbin/ModemManager --filter-policy=STRICT</pre>
 <p>
             </p>
 <p>

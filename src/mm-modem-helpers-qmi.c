@@ -21,6 +21,7 @@
 
 #include "mm-modem-helpers-qmi.h"
 #include "mm-modem-helpers.h"
+#include "mm-error-helpers.h"
 #include "mm-enums-types.h"
 #include "mm-log-object.h"
 
@@ -1467,16 +1468,36 @@ mm_sms_state_from_qmi_message_tag (QmiWmsMessageTagType tag)
 /*****************************************************************************/
 
 QmiWdsAuthentication
-mm_bearer_allowed_auth_to_qmi_authentication (MMBearerAllowedAuth auth)
+mm_bearer_allowed_auth_to_qmi_authentication (MMBearerAllowedAuth   auth,
+                                              gpointer              log_object,
+                                              GError              **error)
 {
     QmiWdsAuthentication out;
 
+    if (auth == MM_BEARER_ALLOWED_AUTH_UNKNOWN) {
+        mm_obj_dbg (log_object, "using default (CHAP) authentication method");
+        return QMI_WDS_AUTHENTICATION_CHAP;
+    }
+
+    if (auth == MM_BEARER_ALLOWED_AUTH_NONE)
+        return QMI_WDS_AUTHENTICATION_NONE;
+
+    /* otherwise find a bitmask that matches the input bitmask */
     out = QMI_WDS_AUTHENTICATION_NONE;
     if (auth & MM_BEARER_ALLOWED_AUTH_PAP)
         out |= QMI_WDS_AUTHENTICATION_PAP;
     if (auth & MM_BEARER_ALLOWED_AUTH_CHAP)
         out |= QMI_WDS_AUTHENTICATION_CHAP;
 
+    /* and if the bitmask cannot be built, error out */
+    if (out == QMI_WDS_AUTHENTICATION_NONE) {
+        g_autofree gchar *str = NULL;
+
+        str = mm_bearer_allowed_auth_build_string_from_mask (auth);
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                     "Unsupported authentication methods (%s)",
+                     str);
+    }
     return out;
 }
 
@@ -1484,6 +1505,10 @@ MMBearerAllowedAuth
 mm_bearer_allowed_auth_from_qmi_authentication (QmiWdsAuthentication auth)
 {
     MMBearerAllowedAuth out = 0;
+
+    /* Exact match for NONE */
+    if (auth == QMI_WDS_AUTHENTICATION_NONE)
+        return MM_BEARER_ALLOWED_AUTH_NONE;
 
     if (auth & QMI_WDS_AUTHENTICATION_PAP)
         out |= MM_BEARER_ALLOWED_AUTH_PAP;
@@ -1543,6 +1568,153 @@ mm_bearer_ip_family_to_qmi_pdp_type (MMBearerIpFamily  ip_family,
     default:
         /* there is no valid conversion, so just return FALSE to indicate it */
         return FALSE;
+    }
+}
+
+QmiWdsApnTypeMask
+mm_bearer_apn_type_to_qmi_apn_type (MMBearerApnType apn_type,
+                                    gpointer        log_object)
+{
+    guint64 value = 0;
+
+    if (apn_type == MM_BEARER_APN_TYPE_NONE) {
+        mm_obj_dbg (log_object, "using default (internet) APN type");
+        return QMI_WDS_APN_TYPE_MASK_DEFAULT;
+    }
+
+    if (apn_type & MM_BEARER_APN_TYPE_DEFAULT)
+        value |= QMI_WDS_APN_TYPE_MASK_DEFAULT;
+    if (apn_type & MM_BEARER_APN_TYPE_IMS)
+        value |= QMI_WDS_APN_TYPE_MASK_IMS;
+    if (apn_type & MM_BEARER_APN_TYPE_MMS)
+        value |= QMI_WDS_APN_TYPE_MASK_MMS;
+    if (apn_type & MM_BEARER_APN_TYPE_MANAGEMENT)
+        value |= QMI_WDS_APN_TYPE_MASK_FOTA;
+    if (apn_type & MM_BEARER_APN_TYPE_INITIAL)
+        value |= QMI_WDS_APN_TYPE_MASK_IA;
+    if (apn_type & MM_BEARER_APN_TYPE_EMERGENCY)
+        value |= QMI_WDS_APN_TYPE_MASK_EMERGENCY;
+    return value;
+}
+
+MMBearerApnType
+mm_bearer_apn_type_from_qmi_apn_type (QmiWdsApnTypeMask apn_type)
+{
+    MMBearerApnType value = MM_BEARER_APN_TYPE_NONE;
+
+    if (apn_type & QMI_WDS_APN_TYPE_MASK_DEFAULT)
+        value |= MM_BEARER_APN_TYPE_DEFAULT;
+    if (apn_type & QMI_WDS_APN_TYPE_MASK_IMS)
+        value |= MM_BEARER_APN_TYPE_IMS;
+    if (apn_type & QMI_WDS_APN_TYPE_MASK_MMS)
+        value |= MM_BEARER_APN_TYPE_MMS;
+    if (apn_type & QMI_WDS_APN_TYPE_MASK_FOTA)
+        value |= MM_BEARER_APN_TYPE_MANAGEMENT;
+    if (apn_type & QMI_WDS_APN_TYPE_MASK_IA)
+        value |= MM_BEARER_APN_TYPE_INITIAL;
+    if (apn_type & QMI_WDS_APN_TYPE_MASK_EMERGENCY)
+        value |= MM_BEARER_APN_TYPE_EMERGENCY;
+    return value;
+}
+
+/*****************************************************************************/
+
+static const MMMobileEquipmentError qmi_vcer_3gpp_errors[] = {
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_OPERATOR_DETERMINED_BARRING] = MM_MOBILE_EQUIPMENT_ERROR_OPERATOR_DETERMINED_BARRING,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_INSUFFICIENT_RESOURCES] = MM_MOBILE_EQUIPMENT_ERROR_INSUFFICIENT_RESOURCES,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_UNKNOWN_APN] = MM_MOBILE_EQUIPMENT_ERROR_MISSING_OR_UNKNOWN_APN,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_UNKNOWN_PDP] = MM_MOBILE_EQUIPMENT_ERROR_UNKNOWN_PDP_ADDRESS_OR_TYPE,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_AUTHENTICATION_FAILED] = MM_MOBILE_EQUIPMENT_ERROR_USER_AUTHENTICATION_FAILED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_GGSN_REJECT] = MM_MOBILE_EQUIPMENT_ERROR_ACTIVATION_REJECTED_BY_GGSN_OR_GW,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_ACTIVATION_REJECT] = MM_MOBILE_EQUIPMENT_ERROR_ACTIVATION_REJECTED_UNSPECIFIED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_OPTION_NOT_SUPPORTED] = MM_MOBILE_EQUIPMENT_ERROR_SERVICE_OPTION_NOT_SUPPORTED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_OPTION_UNSUBSCRIBED] = MM_MOBILE_EQUIPMENT_ERROR_SERVICE_OPTION_NOT_SUBSCRIBED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_OPTION_TEMPORARILY_OUT_OF_ORDER] = MM_MOBILE_EQUIPMENT_ERROR_SERVICE_OPTION_OUT_OF_ORDER,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_NSAPI_ALREADY_USED] = MM_MOBILE_EQUIPMENT_ERROR_NSAPI_OR_PTI_ALREADY_IN_USE,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_REGULAR_DEACTIVATION] =  MM_MOBILE_EQUIPMENT_ERROR_REGULAR_DEACTIVATION,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_QOS_NOT_ACCEPTED] = MM_MOBILE_EQUIPMENT_ERROR_QOS_NOT_ACCEPTED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_NETWORK_FAILURE] = MM_MOBILE_EQUIPMENT_ERROR_NETWORK_FAILURE_ATTACH,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_REATTACH_REQUIRED] = MM_MOBILE_EQUIPMENT_ERROR_NETWORK_FAILURE_ATTACH,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_FEATURE_NOT_SUPPORTED] = MM_MOBILE_EQUIPMENT_ERROR_FEATURE_NOT_SUPPORTED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_TFT_SEMANTIC_ERROR] = MM_MOBILE_EQUIPMENT_ERROR_SEMANTIC_ERROR_IN_TFT_OPERATION,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_TFT_SYNTAX_ERROR] = MM_MOBILE_EQUIPMENT_ERROR_SYNTACTICAL_ERROR_IN_TFT_OPERATION,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_UNKNOWN_PDP_CONTEXT] = MM_MOBILE_EQUIPMENT_ERROR_UNKNOWN_PDP_CONTEXT,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_FILTER_SEMANTIC_ERROR] = MM_MOBILE_EQUIPMENT_ERROR_SEMANTIC_ERRORS_IN_PACKET_FILTER,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_FILTER_SYNTAX_ERROR] = MM_MOBILE_EQUIPMENT_ERROR_SYNTACTICAL_ERROR_IN_PACKET_FILTER,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_PDP_WITHOUT_ACTIVE_TFT] = MM_MOBILE_EQUIPMENT_ERROR_PDP_CONTEXT_WITHOUT_TFT_ALREADY_ACTIVATED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_IPV4_ONLY_ALLOWED] = MM_MOBILE_EQUIPMENT_ERROR_IPV4_ONLY_ALLOWED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_IPV6_ONLY_ALLOWED] = MM_MOBILE_EQUIPMENT_ERROR_IPV6_ONLY_ALLOWED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_SINGLE_ADDRESS_BEARER_ONLY] = MM_MOBILE_EQUIPMENT_ERROR_SINGLE_ADDRESS_BEARERS_ONLY_ALLOWED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_ESM_INFO_NOT_RECEIVED] = MM_MOBILE_EQUIPMENT_ERROR_ESM_INFORMATION_NOT_RECEIVED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_PDN_CONNECTION_DOES_NOT_EXIST] = MM_MOBILE_EQUIPMENT_ERROR_PDN_CONNECTION_NONEXISTENT,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_MULTIPLE_CONNECTION_TO_SAME_PDN_NOT_ALLOWED] = MM_MOBILE_EQUIPMENT_ERROR_MULTIPLE_PDN_CONNECTION_SAME_APN_NOT_ALLOWED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_INVALID_TRANSACTION_ID] = MM_MOBILE_EQUIPMENT_ERROR_INVALID_TRANSACTION_ID_VALUE,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_MESSAGE_INCORRECT_SEMANTIC] = MM_MOBILE_EQUIPMENT_ERROR_SEMANTICALLY_INCORRECT_MESSAGE,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_INVALID_MANDATORY_INFO] = MM_MOBILE_EQUIPMENT_ERROR_INVALID_MANDATORY_INFORMATION,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_MESSAGE_TYPE_UNSUPPORTED] = MM_MOBILE_EQUIPMENT_ERROR_MESSAGE_TYPE_NOT_IMPLEMENTED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_MESSAGE_TYPE_NONCOMPATIBLE_STATE] = MM_MOBILE_EQUIPMENT_ERROR_MESSAGE_TYPE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_UNKNOWN_INFO_ELEMENT] = MM_MOBILE_EQUIPMENT_ERROR_IE_NOT_IMPLEMENTED,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_CONDITIONAL_IE_ERROR] = MM_MOBILE_EQUIPMENT_ERROR_CONDITIONAL_IE_ERROR,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_MESSAGE_AND_PROTOCOL_STATE_UNCOMPATIBLE] = MM_MOBILE_EQUIPMENT_ERROR_MESSAGE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE,
+    [QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_PROTOCOL_ERROR] = MM_MOBILE_EQUIPMENT_ERROR_UNSPECIFIED_PROTOCOL_ERROR,
+    /* unmapped errors */
+    /* QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_LLC_SNDCP_FAILURE */
+    /* QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_APN_TYPE_CONFLICT */
+    /* QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_INVALID_PROXY_CALL_SESSION_CONTROL_FUNCTION_ADDRESS */
+};
+
+GError *
+qmi_mobile_equipment_error_from_verbose_call_end_reason_3gpp (QmiWdsVerboseCallEndReason3gpp vcer_3gpp,
+                                                              gpointer                       log_object)
+{
+    MMMobileEquipmentError  error_code;
+    const gchar            *msg;
+
+    /* convert to mobile equipment error */
+    error_code = qmi_vcer_3gpp_errors[vcer_3gpp];
+    if (error_code)
+        return mm_mobile_equipment_error_for_code (error_code, log_object);
+
+    /* provide a nicer error message on unmapped errors */
+    msg = qmi_wds_verbose_call_end_reason_3gpp_get_string (vcer_3gpp);
+    if (msg)
+        return g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
+                            MM_MOBILE_EQUIPMENT_ERROR_UNKNOWN,
+                            "Unsupported error (%u): %s",
+                            vcer_3gpp, msg);
+
+    /* fallback */
+    return g_error_new_literal (MM_MOBILE_EQUIPMENT_ERROR,
+                                MM_MOBILE_EQUIPMENT_ERROR_UNKNOWN,
+                                "Unknown error");
+}
+
+/*****************************************************************************/
+/* QMI/WDA to MM translations */
+
+QmiDataEndpointType
+mm_port_subsys_to_qmi_endpoint_type (MMPortSubsys subsys)
+{
+    switch (subsys) {
+        case MM_PORT_SUBSYS_USBMISC:
+            return QMI_DATA_ENDPOINT_TYPE_HSUSB;
+        case MM_PORT_SUBSYS_RPMSG:
+        case MM_PORT_SUBSYS_QRTR:
+            return QMI_DATA_ENDPOINT_TYPE_EMBEDDED;
+        /* The WWAN subsystem abstracts the underlying transport bus, and so
+         * endpoint type can not be deducted from that. This function should
+         * then be revisited, but in practice, only MHI/PCI modem ports are
+         * exposed through the WWAN subsystem for now.
+         */
+        case MM_PORT_SUBSYS_WWAN:
+            return QMI_DATA_ENDPOINT_TYPE_PCIE;
+        case MM_PORT_SUBSYS_UNKNOWN:
+        case MM_PORT_SUBSYS_TTY:
+        case MM_PORT_SUBSYS_NET:
+        case MM_PORT_SUBSYS_UNIX:
+        default:
+            g_assert_not_reached ();
+            break;
     }
 }
 
@@ -2003,6 +2175,7 @@ mm_qmi_uim_get_card_status_output_parse (gpointer                           log_
     if (app->state != QMI_UIM_CARD_APPLICATION_STATE_READY &&
         app->state != QMI_UIM_CARD_APPLICATION_STATE_PIN1_OR_UPIN_PIN_REQUIRED &&
         app->state != QMI_UIM_CARD_APPLICATION_STATE_PUK1_OR_UPIN_PUK_REQUIRED &&
+        app->state != QMI_UIM_CARD_APPLICATION_STATE_CHECK_PERSONALIZATION_STATE &&
         app->state != QMI_UIM_CARD_APPLICATION_STATE_PIN1_BLOCKED) {
         mm_obj_dbg (log_object, "neither SIM nor USIM are ready");
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_RETRY,
@@ -2068,6 +2241,59 @@ mm_qmi_uim_get_card_status_output_parse (gpointer                           log_
         return FALSE;
     }
 
+    /* Personalization */
+    if (lock == MM_MODEM_LOCK_NONE &&
+        app->state == QMI_UIM_CARD_APPLICATION_STATE_CHECK_PERSONALIZATION_STATE) {
+        if (app->personalization_state == QMI_UIM_CARD_APPLICATION_PERSONALIZATION_STATE_IN_PROGRESS ||
+            app->personalization_state == QMI_UIM_CARD_APPLICATION_PERSONALIZATION_STATE_UNKNOWN) {
+            g_set_error (error,
+                         MM_CORE_ERROR,
+                         MM_CORE_ERROR_RETRY,
+                         "Personalization check in progress");
+            return FALSE;
+        }
+        if (app->personalization_state == QMI_UIM_CARD_APPLICATION_PERSONALIZATION_STATE_CODE_REQUIRED ||
+            app->personalization_state == QMI_UIM_CARD_APPLICATION_PERSONALIZATION_STATE_PUK_CODE_REQUIRED) {
+            gboolean pin;
+
+            pin = app->personalization_state == QMI_UIM_CARD_APPLICATION_PERSONALIZATION_STATE_CODE_REQUIRED;
+
+            switch (app->personalization_feature) {
+            case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_NETWORK:
+                lock = (pin ? MM_MODEM_LOCK_PH_NET_PIN : MM_MODEM_LOCK_PH_NET_PUK);
+                break;
+            case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_NETWORK_SUBSET:
+                lock = (pin ? MM_MODEM_LOCK_PH_NETSUB_PIN : MM_MODEM_LOCK_PH_NETSUB_PUK);
+                break;
+            case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_SERVICE_PROVIDER:
+                lock = (pin ? MM_MODEM_LOCK_PH_SP_PIN : MM_MODEM_LOCK_PH_SP_PUK);
+                break;
+            case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_CORPORATE:
+                lock = (pin ? MM_MODEM_LOCK_PH_CORP_PIN : MM_MODEM_LOCK_PH_CORP_PUK);
+                break;
+            case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_UIM:
+                if (pin) {
+                    lock = MM_MODEM_LOCK_PH_SIM_PIN;
+                    break;
+                }
+                /* fall through */
+            case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_1X_NETWORK_TYPE_1:
+            case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_1X_NETWORK_TYPE_2:
+            case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_1X_HRPD:
+            case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_1X_SERVICE_PROVIDER:
+            case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_1X_CORPORATE:
+            case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_1X_RUIM:
+            case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_UNKNOWN:
+            default:
+                g_set_error (error,
+                             MM_MOBILE_EQUIPMENT_ERROR,
+                             MM_MOBILE_EQUIPMENT_ERROR_SIM_WRONG,
+                             "Unsupported personalization feature");
+                return FALSE;
+            }
+        }
+    }
+
     /* PIN2 */
     if (lock == MM_MODEM_LOCK_NONE) {
         switch (app->pin2_state) {
@@ -2112,4 +2338,86 @@ mm_qmi_uim_decode_eid (const gchar *eid, gsize eid_len)
         return NULL;
 
     return mm_bcd_to_string ((const guint8 *) eid, eid_len, FALSE /* low_nybble_first */);
+}
+
+/*****************************************************************************/
+
+gboolean
+mm_qmi_uim_get_configuration_output_parse (gpointer                              log_object,
+                                           QmiMessageUimGetConfigurationOutput  *output,
+                                           MMModem3gppFacility                  *o_lock,
+                                           GError                              **error)
+{
+    QmiMessageUimGetConfigurationOutputPersonalizationStatusElement *element;
+    GArray *elements;
+    guint idx;
+
+    *o_lock = MM_MODEM_3GPP_FACILITY_NONE;
+
+    if (!qmi_message_uim_get_configuration_output_get_personalization_status (output, &elements, error)) {
+        g_prefix_error (error, "UIM Get Personalization Status failed: ");
+        return FALSE;
+    }
+
+    for (idx = 0; idx < elements->len; idx++) {
+        element = &g_array_index (elements,
+                                  QmiMessageUimGetConfigurationOutputPersonalizationStatusElement,
+                                  idx);
+        switch (element->feature) {
+        case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_NETWORK:
+            *o_lock |= MM_MODEM_3GPP_FACILITY_NET_PERS;
+            break;
+        case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_NETWORK_SUBSET:
+            *o_lock |= MM_MODEM_3GPP_FACILITY_NET_SUB_PERS;
+            break;
+        case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_SERVICE_PROVIDER:
+            *o_lock |= MM_MODEM_3GPP_FACILITY_PROVIDER_PERS;
+            break;
+        case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_CORPORATE:
+            *o_lock |= MM_MODEM_3GPP_FACILITY_CORP_PERS;
+            break;
+        case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_UIM:
+            *o_lock |= MM_MODEM_3GPP_FACILITY_PH_SIM;
+            break;
+        case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_1X_NETWORK_TYPE_1:
+        case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_1X_NETWORK_TYPE_2:
+        case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_1X_HRPD:
+        case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_1X_SERVICE_PROVIDER:
+        case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_1X_CORPORATE:
+        case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_1X_RUIM:
+        case QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_UNKNOWN:
+            mm_obj_dbg (log_object, "ignoring lock in UIM feature: %s",
+                        qmi_uim_card_application_personalization_feature_get_string (element->feature));
+            break;
+        default:
+            mm_obj_dbg (log_object, "ignoring lock in unhandled UIM feature: 0x%x",
+                        (guint)element->feature);
+        }
+    }
+    return TRUE;
+}
+
+/*****************************************************************************/
+
+QmiUimCardApplicationPersonalizationFeature
+qmi_personalization_feature_from_mm_modem_3gpp_facility (MMModem3gppFacility facility)
+{
+    switch (facility) {
+    case MM_MODEM_3GPP_FACILITY_NET_PERS:
+        return QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_NETWORK;
+    case MM_MODEM_3GPP_FACILITY_NET_SUB_PERS:
+        return QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_NETWORK_SUBSET;
+    case MM_MODEM_3GPP_FACILITY_PROVIDER_PERS:
+        return QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_SERVICE_PROVIDER;
+    case MM_MODEM_3GPP_FACILITY_CORP_PERS:
+        return QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_CORPORATE;
+    case MM_MODEM_3GPP_FACILITY_PH_SIM:
+        return QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_UIM;
+    case MM_MODEM_3GPP_FACILITY_NONE:
+    case MM_MODEM_3GPP_FACILITY_SIM:
+    case MM_MODEM_3GPP_FACILITY_FIXED_DIALING:
+    case MM_MODEM_3GPP_FACILITY_PH_FSIM:
+    default:
+        return QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_UNKNOWN;
+    }
 }

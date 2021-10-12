@@ -93,7 +93,18 @@ host_triplet = @host@
 @HAVE_INTROSPECTION_TRUE@am__append_1 = $(nodist_gir_DATA) $(nodist_typelib_DATA)
 subdir = libmm-glib
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_code_coverage.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_append_compile_flags.m4 \
+	$(top_srcdir)/m4/ax_append_flag.m4 \
+	$(top_srcdir)/m4/ax_append_link_flags.m4 \
+	$(top_srcdir)/m4/ax_check_compile_flag.m4 \
+	$(top_srcdir)/m4/ax_check_link_flag.m4 \
+	$(top_srcdir)/m4/ax_code_coverage.m4 \
+	$(top_srcdir)/m4/ax_compiler_flags.m4 \
+	$(top_srcdir)/m4/ax_compiler_flags_cflags.m4 \
+	$(top_srcdir)/m4/ax_compiler_flags_gir.m4 \
+	$(top_srcdir)/m4/ax_compiler_flags_ldflags.m4 \
+	$(top_srcdir)/m4/ax_is_release.m4 \
+	$(top_srcdir)/m4/ax_require_defined.m4 \
 	$(top_srcdir)/m4/gettext.m4 $(top_srcdir)/m4/gtk-doc.m4 \
 	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
 	$(top_srcdir)/m4/introspection.m4 $(top_srcdir)/m4/lib-ld.m4 \
@@ -147,6 +158,7 @@ libmm_glib_la_DEPENDENCIES =  \
 am_libmm_glib_la_OBJECTS = libmm_glib_la-mm-helper-types.lo \
 	libmm_glib_la-mm-manager.lo libmm_glib_la-mm-object.lo \
 	libmm_glib_la-mm-modem.lo libmm_glib_la-mm-modem-3gpp.lo \
+	libmm_glib_la-mm-modem-3gpp-profile-manager.lo \
 	libmm_glib_la-mm-modem-3gpp-ussd.lo \
 	libmm_glib_la-mm-modem-cdma.lo \
 	libmm_glib_la-mm-modem-simple.lo \
@@ -176,7 +188,9 @@ am_libmm_glib_la_OBJECTS = libmm_glib_la-mm-helper-types.lo \
 	libmm_glib_la-mm-cdma-manual-activation-properties.lo \
 	libmm_glib_la-mm-signal.lo \
 	libmm_glib_la-mm-kernel-event-properties.lo \
-	libmm_glib_la-mm-pco.lo libmm_glib_la-mm-call-audio-format.lo
+	libmm_glib_la-mm-pco.lo libmm_glib_la-mm-call-audio-format.lo \
+	libmm_glib_la-mm-sim-preferred-network.lo \
+	libmm_glib_la-mm-3gpp-profile.lo libmm_glib_la-mm-compat.lo
 libmm_glib_la_OBJECTS = $(am_libmm_glib_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -200,7 +214,7 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade =  \
+am__depfiles_remade = ./$(DEPDIR)/libmm_glib_la-mm-3gpp-profile.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-bearer-ip-config.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-bearer-properties.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-bearer-stats.Plo \
@@ -210,6 +224,7 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/libmm_glib_la-mm-call.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-cdma-manual-activation-properties.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-common-helpers.Plo \
+	./$(DEPDIR)/libmm_glib_la-mm-compat.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-firmware-properties.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-firmware-update-settings.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-helper-types.Plo \
@@ -219,6 +234,7 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/libmm_glib_la-mm-location-gps-nmea.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-location-gps-raw.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-manager.Plo \
+	./$(DEPDIR)/libmm_glib_la-mm-modem-3gpp-profile-manager.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-modem-3gpp-ussd.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-modem-3gpp.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-modem-cdma.Plo \
@@ -235,6 +251,7 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/libmm_glib_la-mm-object.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-pco.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-signal.Plo \
+	./$(DEPDIR)/libmm_glib_la-mm-sim-preferred-network.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-sim.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-simple-connect-properties.Plo \
 	./$(DEPDIR)/libmm_glib_la-mm-simple-status.Plo \
@@ -460,6 +477,8 @@ POLKIT_LIBS = @POLKIT_LIBS@
 POSUB = @POSUB@
 QMI_CFLAGS = @QMI_CFLAGS@
 QMI_LIBS = @QMI_LIBS@
+QRTR_CFLAGS = @QRTR_CFLAGS@
+QRTR_LIBS = @QRTR_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -479,6 +498,8 @@ XGETTEXT = @XGETTEXT@
 XGETTEXT_015 = @XGETTEXT_015@
 XGETTEXT_EXTRA_OPTIONS = @XGETTEXT_EXTRA_OPTIONS@
 XSLTPROC_CHECK = @XSLTPROC_CHECK@
+_GI_EXP_DATADIR = @_GI_EXP_DATADIR@
+_GI_EXP_LIBDIR = @_GI_EXP_LIBDIR@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -549,6 +570,8 @@ libmm_glib_la_SOURCES = \
 	mm-modem.c \
 	mm-modem-3gpp.h \
 	mm-modem-3gpp.c \
+	mm-modem-3gpp-profile-manager.h \
+	mm-modem-3gpp-profile-manager.c \
 	mm-modem-3gpp-ussd.h \
 	mm-modem-3gpp-ussd.c \
 	mm-modem-cdma.h \
@@ -620,6 +643,12 @@ libmm_glib_la_SOURCES = \
 	mm-pco.c \
 	mm-call-audio-format.h \
 	mm-call-audio-format.c \
+	mm-sim-preferred-network.h \
+	mm-sim-preferred-network.c \
+	mm-3gpp-profile.h \
+	mm-3gpp-profile.c \
+	mm-compat.h \
+	mm-compat.c \
 	$(NULL)
 
 libmm_glib_la_CPPFLAGS = \
@@ -655,6 +684,7 @@ include_HEADERS = \
 	mm-object.h \
 	mm-modem.h \
 	mm-modem-3gpp.h \
+	mm-modem-3gpp-profile-manager.h \
 	mm-modem-3gpp-ussd.h \
 	mm-modem-cdma.h \
 	mm-modem-messaging.h \
@@ -690,6 +720,9 @@ include_HEADERS = \
 	mm-kernel-event-properties.h \
 	mm-pco.h \
 	mm-call-audio-format.h \
+	mm-sim-preferred-network.h \
+	mm-3gpp-profile.h \
+	mm-compat.h \
 	$(NULL)
 
 CLEANFILES = $(am__append_1)
@@ -701,6 +734,7 @@ CLEANFILES = $(am__append_1)
 @HAVE_INTROSPECTION_TRUE@	mm-gdbus-manager.h \
 @HAVE_INTROSPECTION_TRUE@	mm-gdbus-sim.h \
 @HAVE_INTROSPECTION_TRUE@	mm-gdbus-sms.h \
+@HAVE_INTROSPECTION_TRUE@	mm-gdbus-call.h \
 @HAVE_INTROSPECTION_TRUE@	mm-gdbus-bearer.h \
 @HAVE_INTROSPECTION_TRUE@	mm-gdbus-modem.h \
 @HAVE_INTROSPECTION_TRUE@	$(NULL)
@@ -712,6 +746,7 @@ CLEANFILES = $(am__append_1)
 @HAVE_INTROSPECTION_TRUE@	mm-gdbus-manager.c \
 @HAVE_INTROSPECTION_TRUE@	mm-gdbus-sim.c \
 @HAVE_INTROSPECTION_TRUE@	mm-gdbus-sms.c \
+@HAVE_INTROSPECTION_TRUE@	mm-gdbus-call.c \
 @HAVE_INTROSPECTION_TRUE@	mm-gdbus-bearer.c \
 @HAVE_INTROSPECTION_TRUE@	mm-gdbus-modem.c \
 @HAVE_INTROSPECTION_TRUE@	$(NULL)
@@ -826,6 +861,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-3gpp-profile.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-bearer-ip-config.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-bearer-properties.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-bearer-stats.Plo@am__quote@ # am--include-marker
@@ -835,6 +871,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-call.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-cdma-manual-activation-properties.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-common-helpers.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-compat.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-firmware-properties.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-firmware-update-settings.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-helper-types.Plo@am__quote@ # am--include-marker
@@ -844,6 +881,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-location-gps-nmea.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-location-gps-raw.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-manager.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-modem-3gpp-profile-manager.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-modem-3gpp-ussd.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-modem-3gpp.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-modem-cdma.Plo@am__quote@ # am--include-marker
@@ -860,6 +898,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-object.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-pco.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-signal.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-sim-preferred-network.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-sim.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-simple-connect-properties.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmm_glib_la-mm-simple-status.Plo@am__quote@ # am--include-marker
@@ -931,6 +970,13 @@ libmm_glib_la-mm-modem-3gpp.lo: mm-modem-3gpp.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-3gpp.c' object='libmm_glib_la-mm-modem-3gpp.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-3gpp.lo `test -f 'mm-modem-3gpp.c' || echo '$(srcdir)/'`mm-modem-3gpp.c
+
+libmm_glib_la-mm-modem-3gpp-profile-manager.lo: mm-modem-3gpp-profile-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-3gpp-profile-manager.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-3gpp-profile-manager.Tpo -c -o libmm_glib_la-mm-modem-3gpp-profile-manager.lo `test -f 'mm-modem-3gpp-profile-manager.c' || echo '$(srcdir)/'`mm-modem-3gpp-profile-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-modem-3gpp-profile-manager.Tpo $(DEPDIR)/libmm_glib_la-mm-modem-3gpp-profile-manager.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-modem-3gpp-profile-manager.c' object='libmm_glib_la-mm-modem-3gpp-profile-manager.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-modem-3gpp-profile-manager.lo `test -f 'mm-modem-3gpp-profile-manager.c' || echo '$(srcdir)/'`mm-modem-3gpp-profile-manager.c
 
 libmm_glib_la-mm-modem-3gpp-ussd.lo: mm-modem-3gpp-ussd.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-modem-3gpp-ussd.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-modem-3gpp-ussd.Tpo -c -o libmm_glib_la-mm-modem-3gpp-ussd.lo `test -f 'mm-modem-3gpp-ussd.c' || echo '$(srcdir)/'`mm-modem-3gpp-ussd.c
@@ -1176,6 +1222,27 @@ libmm_glib_la-mm-call-audio-format.lo: mm-call-audio-format.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-call-audio-format.c' object='libmm_glib_la-mm-call-audio-format.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-call-audio-format.lo `test -f 'mm-call-audio-format.c' || echo '$(srcdir)/'`mm-call-audio-format.c
+
+libmm_glib_la-mm-sim-preferred-network.lo: mm-sim-preferred-network.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-sim-preferred-network.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-sim-preferred-network.Tpo -c -o libmm_glib_la-mm-sim-preferred-network.lo `test -f 'mm-sim-preferred-network.c' || echo '$(srcdir)/'`mm-sim-preferred-network.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-sim-preferred-network.Tpo $(DEPDIR)/libmm_glib_la-mm-sim-preferred-network.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-sim-preferred-network.c' object='libmm_glib_la-mm-sim-preferred-network.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-sim-preferred-network.lo `test -f 'mm-sim-preferred-network.c' || echo '$(srcdir)/'`mm-sim-preferred-network.c
+
+libmm_glib_la-mm-3gpp-profile.lo: mm-3gpp-profile.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-3gpp-profile.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-3gpp-profile.Tpo -c -o libmm_glib_la-mm-3gpp-profile.lo `test -f 'mm-3gpp-profile.c' || echo '$(srcdir)/'`mm-3gpp-profile.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-3gpp-profile.Tpo $(DEPDIR)/libmm_glib_la-mm-3gpp-profile.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-3gpp-profile.c' object='libmm_glib_la-mm-3gpp-profile.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-3gpp-profile.lo `test -f 'mm-3gpp-profile.c' || echo '$(srcdir)/'`mm-3gpp-profile.c
+
+libmm_glib_la-mm-compat.lo: mm-compat.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libmm_glib_la-mm-compat.lo -MD -MP -MF $(DEPDIR)/libmm_glib_la-mm-compat.Tpo -c -o libmm_glib_la-mm-compat.lo `test -f 'mm-compat.c' || echo '$(srcdir)/'`mm-compat.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmm_glib_la-mm-compat.Tpo $(DEPDIR)/libmm_glib_la-mm-compat.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-compat.c' object='libmm_glib_la-mm-compat.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmm_glib_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libmm_glib_la-mm-compat.lo `test -f 'mm-compat.c' || echo '$(srcdir)/'`mm-compat.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1448,7 +1515,8 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-recursive
-		-rm -f ./$(DEPDIR)/libmm_glib_la-mm-bearer-ip-config.Plo
+		-rm -f ./$(DEPDIR)/libmm_glib_la-mm-3gpp-profile.Plo
+	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-bearer-ip-config.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-bearer-properties.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-bearer-stats.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-bearer.Plo
@@ -1457,6 +1525,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-call.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-cdma-manual-activation-properties.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-common-helpers.Plo
+	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-compat.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-firmware-properties.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-firmware-update-settings.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-helper-types.Plo
@@ -1466,6 +1535,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-location-gps-nmea.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-location-gps-raw.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-manager.Plo
+	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-modem-3gpp-profile-manager.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-modem-3gpp-ussd.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-modem-3gpp.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-modem-cdma.Plo
@@ -1482,6 +1552,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-object.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-pco.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-signal.Plo
+	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-sim-preferred-network.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-sim.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-simple-connect-properties.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-simple-status.Plo
@@ -1534,7 +1605,8 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-		-rm -f ./$(DEPDIR)/libmm_glib_la-mm-bearer-ip-config.Plo
+		-rm -f ./$(DEPDIR)/libmm_glib_la-mm-3gpp-profile.Plo
+	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-bearer-ip-config.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-bearer-properties.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-bearer-stats.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-bearer.Plo
@@ -1543,6 +1615,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-call.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-cdma-manual-activation-properties.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-common-helpers.Plo
+	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-compat.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-firmware-properties.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-firmware-update-settings.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-helper-types.Plo
@@ -1552,6 +1625,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-location-gps-nmea.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-location-gps-raw.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-manager.Plo
+	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-modem-3gpp-profile-manager.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-modem-3gpp-ussd.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-modem-3gpp.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-modem-cdma.Plo
@@ -1568,6 +1642,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-object.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-pco.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-signal.Plo
+	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-sim-preferred-network.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-sim.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-simple-connect-properties.Plo
 	-rm -f ./$(DEPDIR)/libmm_glib_la-mm-simple-status.Plo

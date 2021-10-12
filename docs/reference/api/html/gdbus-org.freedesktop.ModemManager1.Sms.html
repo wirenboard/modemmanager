@@ -74,6 +74,8 @@ Send ();
 </pre>
 <p>        If the message has not yet been sent, queue it for delivery.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -87,6 +89,8 @@ Store (IN  u storage);
         value, describing the storage where this message is to be kept; or
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-SMS-STORAGE-UNKNOWN:CAPS"><code class="constant">MM_SMS_STORAGE_UNKNOWN</code></a>
         if the default storage should be used.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -110,6 +114,8 @@ State  readable   u
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMSmsState" title="enum MMSmsState">MMSmsState</a> value,
         describing the state of the message.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -120,6 +126,8 @@ PduType  readable   u
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMSmsPduType" title="enum MMSmsPduType">MMSmsPduType</a> value,
         describing the type of PDUs used in the SMS message.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -128,6 +136,8 @@ PduType  readable   u
 Number  readable   s
 </pre>
 <p>        Number to which the message is addressed.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -143,6 +153,8 @@ Text  readable   s
 </p>
 <p>        Note that Text and Data are never given at the same time.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -157,6 +169,8 @@ Data  readable   ay
 </p>
 <p>        Note that Text and Data are never given at the same time.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -167,6 +181,8 @@ SMSC  readable   s
 <p>        Indicates the SMS service center number.
 </p>
 <p>        Always empty for 3GPP2/CDMA.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -198,6 +214,8 @@ Validity  readable   (uv)
 </table></div>
 <p>
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -210,6 +228,8 @@ Class  readable   i
 </p>
 <p>        Always -1 for 3GPP2/CDMA.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -220,6 +240,8 @@ TeleserviceId  readable   u
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMSmsCdmaTeleserviceId" title="enum MMSmsCdmaTeleserviceId">MMSmsCdmaTeleserviceId</a> value.
 </p>
 <p>        Always <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-SMS-CDMA-TELESERVICE-ID-UNKNOWN:CAPS">MM_SMS_CDMA_TELESERVICE_ID_UNKNOWN</a> for 3GPP.
+</p>
+<p>        Since: 1.2
 </p>
 </div>
 <hr>
@@ -232,6 +254,8 @@ ServiceCategory  readable   u
 </p>
 <p>        Always <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-SMS-CDMA-SERVICE-CATEGORY-UNKNOWN:CAPS">MM_SMS_CDMA_SERVICE_CATEGORY_UNKNOWN</a> for 3GPP.
 </p>
+<p>        Since: 1.2
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -240,6 +264,8 @@ ServiceCategory  readable   u
 DeliveryReportRequest  readable   b
 </pre>
 <p>        #TRUE if delivery report request is required, #FALSE otherwise.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -253,6 +279,8 @@ MessageReference  readable   u
 <p>        If the PDU type is
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><code class="constant">MM_SMS_PDU_TYPE_STATUS_REPORT</code></a>,
         this field identifies the Message Reference of the PDU associated to the status report.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -269,6 +297,8 @@ Timestamp  readable   s
         or
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><code class="constant">MM_SMS_PDU_TYPE_STATUS_REPORT</code></a>.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -283,6 +313,8 @@ DischargeTimestamp  readable   s
 <p>        This field is only applicable if the PDU type is
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><code class="constant">MM_SMS_PDU_TYPE_STATUS_REPORT</code></a>.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -296,6 +328,8 @@ DeliveryState  readable   u
 <p>        This field is only applicable if the PDU type is
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><code class="constant">MM_SMS_PDU_TYPE_STATUS_REPORT</code></a>.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -305,6 +339,8 @@ Storage  readable   u
 </pre>
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMSmsStorage" title="enum MMSmsStorage">MMSmsStorage</a> value,
         describing the storage where this message is kept.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 </div>

@@ -442,30 +442,6 @@ messaging_check_support (MMIfaceModemMessaging *self,
 }
 
 /*****************************************************************************/
-/* Reset (Modem interface) */
-
-static gboolean
-modem_reset_finish (MMIfaceModem  *self,
-                    GAsyncResult  *res,
-                    GError       **error)
-{
-    return !!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, error);
-}
-
-static void
-modem_reset (MMIfaceModem        *self,
-             GAsyncReadyCallback  callback,
-             gpointer             user_data)
-{
-    mm_base_modem_at_command (MM_BASE_MODEM (self),
-                              "+CFUN=1,1",
-                              3,
-                              FALSE,
-                              callback,
-                              user_data);
-}
-
-/*****************************************************************************/
 /* Power down */
 
 static gboolean
@@ -1686,7 +1662,7 @@ common_load_initial_eps_step (GTask *task)
         return;
 
     case COMMON_LOAD_INITIAL_EPS_STEP_LAST:
-        g_task_return_pointer (task, ctx->properties, g_object_unref);
+        g_task_return_pointer (task, g_steal_pointer (&ctx->properties), g_object_unref);
         g_object_unref (task);
         return;
 
@@ -2056,9 +2032,14 @@ load_current_bands (MMIfaceModem        *self,
 
     task = g_task_new (self, NULL, callback, user_data);
 
+    /* The timeout in this command is extremely large, because there are some
+     * modules like the EGS5 that build the response based on the current network
+     * registration, and that implies the module needs to be registered. If for
+     * any reason there is no serving network where to register, the response
+     * comes after a very long time, up to 100s. */
     mm_base_modem_at_command (MM_BASE_MODEM (self),
                               "AT^SCFG?",
-                              3,
+                              120,
                               FALSE,
                               (GAsyncReadyCallback)get_band_ready,
                               task);
@@ -2903,6 +2884,9 @@ mm_broadband_modem_cinterion_new (const gchar *device,
                          MM_BASE_MODEM_PLUGIN, plugin,
                          MM_BASE_MODEM_VENDOR_ID, vendor_id,
                          MM_BASE_MODEM_PRODUCT_ID, product_id,
+                         /* Generic bearer (TTY) or Cinterion bearer (NET) supported */
+                         MM_BASE_MODEM_DATA_NET_SUPPORTED, TRUE,
+                         MM_BASE_MODEM_DATA_TTY_SUPPORTED, TRUE,
                          MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED, TRUE,
                          MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED, FALSE,
                          NULL);
@@ -2981,14 +2965,20 @@ iface_modem_init (MMIfaceModem *iface)
     iface->modem_after_sim_unlock_finish = after_sim_unlock_finish;
     iface->load_unlock_retries = load_unlock_retries;
     iface->load_unlock_retries_finish = load_unlock_retries_finish;
-    iface->reset = modem_reset;
-    iface->reset_finish = modem_reset_finish;
+    iface->reset = mm_shared_cinterion_modem_reset;
+    iface->reset_finish = mm_shared_cinterion_modem_reset_finish;
     iface->modem_power_down = modem_power_down;
     iface->modem_power_down_finish = modem_power_down_finish;
     iface->modem_power_off = modem_power_off;
     iface->modem_power_off_finish = modem_power_off_finish;
     iface->setup_sim_hot_swap = modem_setup_sim_hot_swap;
     iface->setup_sim_hot_swap_finish = modem_setup_sim_hot_swap_finish;
+}
+
+static MMIfaceModem *
+peek_parent_interface (MMSharedCinterion *self)
+{
+    return iface_modem_parent;
 }
 
 static void
@@ -3088,6 +3078,7 @@ peek_parent_time_interface (MMSharedCinterion *self)
 static void
 shared_cinterion_init (MMSharedCinterion *iface)
 {
+    iface->peek_parent_interface          = peek_parent_interface;
     iface->peek_parent_location_interface = peek_parent_location_interface;
     iface->peek_parent_voice_interface    = peek_parent_voice_interface;
     iface->peek_parent_time_interface     = peek_parent_time_interface;

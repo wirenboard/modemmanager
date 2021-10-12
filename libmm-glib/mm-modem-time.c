@@ -41,10 +41,10 @@
 G_DEFINE_TYPE (MMModemTime, mm_modem_time, MM_GDBUS_TYPE_MODEM_TIME_PROXY)
 
 struct _MMModemTimePrivate {
-    /* Timezone */
-    GMutex timezone_mutex;
-    guint timezone_id;
-    MMNetworkTimezone *timezone;
+    /* Common mutex to sync access */
+    GMutex mutex;
+
+    PROPERTY_OBJECT_DECLARE (network_timezone, MMNetworkTimezone)
 };
 
 /*****************************************************************************/
@@ -191,54 +191,6 @@ mm_modem_time_get_network_time_sync (MMModemTime *self,
 
 /*****************************************************************************/
 
-static void
-timezone_updated (MMModemTime *self,
-                  GParamSpec *pspec)
-{
-    g_mutex_lock (&self->priv->timezone_mutex);
-    {
-        GVariant *dictionary;
-
-        g_clear_object (&self->priv->timezone);
-        dictionary = mm_gdbus_modem_time_get_network_timezone (MM_GDBUS_MODEM_TIME (self));
-        self->priv->timezone = (dictionary ?
-                                mm_network_timezone_new_from_dictionary (dictionary, NULL) :
-                                NULL);
-    }
-    g_mutex_unlock (&self->priv->timezone_mutex);
-}
-
-static void
-ensure_internal_timezone (MMModemTime *self,
-                          MMNetworkTimezone **dup)
-{
-    g_mutex_lock (&self->priv->timezone_mutex);
-    {
-        /* If this is the first time ever asking for the object, setup the
-         * update listener and the initial object, if any. */
-        if (!self->priv->timezone_id) {
-            GVariant *dictionary;
-
-            dictionary = mm_gdbus_modem_time_dup_network_timezone (MM_GDBUS_MODEM_TIME (self));
-            if (dictionary) {
-                self->priv->timezone = mm_network_timezone_new_from_dictionary (dictionary, NULL);
-                g_variant_unref (dictionary);
-            }
-
-            /* No need to clear this signal connection when freeing self */
-            self->priv->timezone_id =
-                g_signal_connect (self,
-                                  "notify::network-timezone",
-                                  G_CALLBACK (timezone_updated),
-                                  NULL);
-        }
-
-        if (dup && self->priv->timezone)
-            *dup = g_object_ref (self->priv->timezone);
-    }
-    g_mutex_unlock (&self->priv->timezone_mutex);
-}
-
 /**
  * mm_modem_time_get_network_timezone:
  * @self: A #MMModemTime.
@@ -255,16 +207,6 @@ ensure_internal_timezone (MMModemTime *self,
  *
  * Since: 1.0
  */
-MMNetworkTimezone *
-mm_modem_time_get_network_timezone (MMModemTime *self)
-{
-    MMNetworkTimezone *tz = NULL;
-
-    g_return_val_if_fail (MM_IS_MODEM_TIME (self), NULL);
-
-    ensure_internal_timezone (self, &tz);
-    return tz;
-}
 
 /**
  * mm_modem_time_peek_network_timezone:
@@ -281,35 +223,21 @@ mm_modem_time_get_network_timezone (MMModemTime *self)
  *
  * Since: 1.0
  */
-MMNetworkTimezone *
-mm_modem_time_peek_network_timezone (MMModemTime *self)
-{
-    g_return_val_if_fail (MM_IS_MODEM_TIME (self), NULL);
 
-    ensure_internal_timezone (self, NULL);
-    return self->priv->timezone;
-}
+PROPERTY_OBJECT_DEFINE_FAILABLE (network_timezone,
+                                 ModemTime, modem_time, MODEM_TIME,
+                                 MMNetworkTimezone,
+                                 mm_network_timezone_new_from_dictionary)
 
 /*****************************************************************************/
 
 static void
 mm_modem_time_init (MMModemTime *self)
 {
-    /* Setup private data */
-    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                              MM_TYPE_MODEM_TIME,
-                                              MMModemTimePrivate);
-    g_mutex_init (&self->priv->timezone_mutex);
-}
+    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, MM_TYPE_MODEM_TIME, MMModemTimePrivate);
+    g_mutex_init (&self->priv->mutex);
 
-static void
-dispose (GObject *object)
-{
-    MMModemTime *self = MM_MODEM_TIME (object);
-
-    g_clear_object (&self->priv->timezone);
-
-    G_OBJECT_CLASS (mm_modem_time_parent_class)->dispose (object);
+    PROPERTY_INITIALIZE (network_timezone, "network-timezone")
 }
 
 static void
@@ -317,7 +245,9 @@ finalize (GObject *object)
 {
     MMModemTime *self = MM_MODEM_TIME (object);
 
-    g_mutex_clear (&self->priv->timezone_mutex);
+    g_mutex_clear (&self->priv->mutex);
+
+    PROPERTY_OBJECT_FINALIZE (network_timezone)
 
     G_OBJECT_CLASS (mm_modem_time_parent_class)->finalize (object);
 }
@@ -329,7 +259,5 @@ mm_modem_time_class_init (MMModemTimeClass *modem_class)
 
     g_type_class_add_private (object_class, sizeof (MMModemTimePrivate));
 
-    /* Virtual methods */
     object_class->finalize = finalize;
-    object_class->dispose = dispose;
 }

@@ -7,7 +7,7 @@
 <link rel="home" href="index.html" title="libmm-glib Reference Manual">
 <link rel="up" href="ch03.html#id-1.2.4.3" title="Generic interfaces">
 <link rel="prev" href="MMModem.html" title="MMModem">
-<link rel="next" href="MMModem3gppUssd.html" title="MMModem3gppUssd">
+<link rel="next" href="MMModemCdma.html" title="MMModemCdma">
 <meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
@@ -22,7 +22,7 @@
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
 <td><a accesskey="u" href="ch03.html#id-1.2.4.3"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
 <td><a accesskey="p" href="MMModem.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
-<td><a accesskey="n" href="MMModem3gppUssd.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+<td><a accesskey="n" href="MMModemCdma.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
 </tr></table>
 <div class="refentry">
 <a name="MMModem3gpp"></a><div class="titlepage"></div>
@@ -160,14 +160,6 @@
 </td>
 <td class="function_name">
 <a class="link" href="MMModem3gpp.html#mm-modem-3gpp-get-registration-state" title="mm_modem_3gpp_get_registration_state ()">mm_modem_3gpp_get_registration_state</a> <span class="c_punctuation">()</span>
-</td>
-</tr>
-<tr>
-<td class="function_type">
-<a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/ModemManager-Flags-and-Enumerations.html#MMModem3gppSubscriptionState"><span class="returnvalue">MMModem3gppSubscriptionState</span></a>
-</td>
-<td class="function_name">
-<a class="link" href="MMModem3gpp.html#mm-modem-3gpp-get-subscription-state" title="mm_modem_3gpp_get_subscription_state ()">mm_modem_3gpp_get_subscription_state</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -335,6 +327,30 @@
 </td>
 <td class="function_name">
 <a class="link" href="MMModem3gpp.html#mm-modem-3gpp-set-initial-eps-bearer-settings-sync" title="mm_modem_3gpp_set_initial_eps_bearer_settings_sync ()">mm_modem_3gpp_set_initial_eps_bearer_settings_sync</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a class="link" href="MMModem3gpp.html#mm-modem-3gpp-disable-facility-lock" title="mm_modem_3gpp_disable_facility_lock ()">mm_modem_3gpp_disable_facility_lock</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
+</td>
+<td class="function_name">
+<a class="link" href="MMModem3gpp.html#mm-modem-3gpp-disable-facility-lock-finish" title="mm_modem_3gpp_disable_facility_lock_finish ()">mm_modem_3gpp_disable_facility_lock_finish</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
+</td>
+<td class="function_name">
+<a class="link" href="MMModem3gpp.html#mm-modem-3gpp-disable-facility-lock-sync" title="mm_modem_3gpp_disable_facility_lock_sync ()">mm_modem_3gpp_disable_facility_lock_sync</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 </tbody>
@@ -862,44 +878,6 @@ section 10.1.19.</p>
 <a name="mm-modem-3gpp-get-registration-state.returns"></a><h4>Returns</h4>
 <p> A <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/ModemManager-Flags-and-Enumerations.html#MMModem3gppRegistrationState"><span class="type">MMModem3gppRegistrationState</span></a> value, specifying the current
 registration state.</p>
-</div>
-<p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
-</div>
-<hr>
-<div class="refsect2">
-<a name="mm-modem-3gpp-get-subscription-state"></a><h3>mm_modem_3gpp_get_subscription_state ()</h3>
-<pre class="programlisting"><a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/ModemManager-Flags-and-Enumerations.html#MMModem3gppSubscriptionState"><span class="returnvalue">MMModem3gppSubscriptionState</span></a>
-mm_modem_3gpp_get_subscription_state (<em class="parameter"><code><a class="link" href="MMModem3gpp.html" title="MMModem3gpp"><span class="type">MMModem3gpp</span></a> *self</code></em>);</pre>
-<div class="warning">
-<p><code class="literal">mm_modem_3gpp_get_subscription_state</code> has been deprecated since version 1.10.0. and should not be used in newly-written code.</p>
-<p>The value of this property can only be obtained with
-operator specific logic (e.g. processing specific PCO info), and therefore
-it doesn't make sense to expose it in the ModemManager interface.</p>
-</div>
-<p>Get the current subscription status of the account. This value is only
-available after the modem attempts to register with the network.</p>
-<p>The value of this property can only be obtained with operator specific logic
-(e.g. processing specific PCO info), and therefore it doesn't make sense to
-expose it in the ModemManager interface.</p>
-<div class="refsect3">
-<a name="mm-modem-3gpp-get-subscription-state.parameters"></a><h4>Parameters</h4>
-<div class="informaltable"><table class="informaltable" width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>self</p></td>
-<td class="parameter_description"><p>A <a class="link" href="MMModem.html" title="MMModem"><span class="type">MMModem</span></a>.</p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="mm-modem-3gpp-get-subscription-state.returns"></a><h4>Returns</h4>
-<p> A <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/ModemManager-Flags-and-Enumerations.html#MMModem3gppSubscriptionState"><span class="type">MMModem3gppSubscriptionState</span></a> value, specifying the current
-subscription state.</p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
 </div>
@@ -1855,6 +1833,37 @@ version of this method.</p>
 is set.</p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-10.html#api-index-1.10">1.10</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-3gpp-disable-facility-lock"></a><h3>mm_modem_3gpp_disable_facility_lock ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+mm_modem_3gpp_disable_facility_lock (<em class="parameter"><code><a class="link" href="MMModem3gpp.html" title="MMModem3gpp"><span class="type">MMModem3gpp</span></a> *self</code></em>,
+                                     <em class="parameter"><code><a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/ModemManager-Flags-and-Enumerations.html#MMModem3gppFacility"><span class="type">MMModem3gppFacility</span></a> facility</code></em>,
+                                     <em class="parameter"><code>const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *control_key</code></em>,
+                                     <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> *cancellable</code></em>,
+                                     <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncReadyCallback"><span class="type">GAsyncReadyCallback</span></a> callback</code></em>,
+                                     <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-3gpp-disable-facility-lock-finish"></a><h3>mm_modem_3gpp_disable_facility_lock_finish ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
+mm_modem_3gpp_disable_facility_lock_finish
+                               (<em class="parameter"><code><a class="link" href="MMModem3gpp.html" title="MMModem3gpp"><span class="type">MMModem3gpp</span></a> *self</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GAsyncResult.html#GAsyncResult-struct"><span class="type">GAsyncResult</span></a> *res</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-3gpp-disable-facility-lock-sync"></a><h3>mm_modem_3gpp_disable_facility_lock_sync ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
+mm_modem_3gpp_disable_facility_lock_sync
+                               (<em class="parameter"><code><a class="link" href="MMModem3gpp.html" title="MMModem3gpp"><span class="type">MMModem3gpp</span></a> *self</code></em>,
+                                <em class="parameter"><code><a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/ModemManager-Flags-and-Enumerations.html#MMModem3gppFacility"><span class="type">MMModem3gppFacility</span></a> facility</code></em>,
+                                <em class="parameter"><code>const <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *control_key</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/gio/unstable/GCancellable.html#GCancellable-struct"><span class="type">GCancellable</span></a> *cancellable</code></em>,
+                                <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 </div>
 </div>
 <div class="refsect1">

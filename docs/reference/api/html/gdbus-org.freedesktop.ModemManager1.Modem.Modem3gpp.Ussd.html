@@ -6,7 +6,7 @@
 <meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
 <link rel="home" href="index.html" title="ModemManager Reference Manual">
 <link rel="up" href="ref-dbus-object-modem.html" title="The /org/freedesktop/ModemManager/Modems objects">
-<link rel="prev" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html" title="org.freedesktop.ModemManager1.Modem.Modem3gpp">
+<link rel="prev" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager.html" title="org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager">
 <link rel="next" href="gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html" title="org.freedesktop.ModemManager1.Modem.ModemCdma">
 <meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
@@ -20,7 +20,7 @@
 </td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
 <td><a accesskey="u" href="ref-dbus-object-modem.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
-<td><a accesskey="p" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="p" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
 <td><a accesskey="n" href="gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
 </tr></table>
 <div class="refentry">
@@ -43,7 +43,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.5.5.9.4"></a><h2>Properties</h2>
+<a name="id-1.5.5.10.4"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.State" title='The "State" property'>State</a>                readable   u
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.NetworkNotification" title='The "NetworkNotification" property'>NetworkNotification</a>  readable   s
@@ -75,6 +75,8 @@ Initiate (IN  s command,
         response from the ME after returning from this method and no new command
         can be initiated until this one is cancelled or ended.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -104,6 +106,8 @@ Respond (IN  s response,
         <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Initiate" title="The Initiate() method">Initiate()</a>
         was called.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -129,6 +133,8 @@ Cancel ();
 </pre>
 <p>        Cancel an ongoing USSD session, either mobile or network initiated.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 </div>
 <div class="refsect1">
@@ -140,6 +146,8 @@ State  readable   u
 </pre>
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppUssdSessionState" title="enum MMModem3gppUssdSessionState">MMModem3gppUssdSessionState</a> value,
         indicating the state of any ongoing USSD session.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -153,6 +161,8 @@ NetworkNotification  readable   s
 </p>
 <p>        When no USSD session is active, or when there is no network-
         initiated request, this property will be a zero-length string.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -168,6 +178,8 @@ NetworkRequest  readable   s
 </p>
 <p>        When no USSD session is active, or when there is no pending
         network-initiated request, this property will be a zero-length string.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 </div>

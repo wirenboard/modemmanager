@@ -39,16 +39,20 @@
 
         This call may make a large number of changes to modem configuration
         based on properties passed in. For example, given a PIN-locked, disabled
-        GSM/UMTS modem, this call may unlock the SIM PIN, alter the access
-        technology preference, wait for network registration (or force
-        registration to a specific provider), create a new packet data bearer
-        using the given "apn", and connect that bearer.
+        GSM/UMTS modem, this call may unlock the SIM PIN, wait for network
+        registration (or force registration to a specific provider), create a
+        new packet data bearer using the given "apn", and connect that bearer.
 
-        Allowed key/value pairs in @properties are:
+        The list of allowed properties includes all the ones defined in the
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties">bearer properties</link>
+        plus these additional ones that are only applicable to this method,
+        and only to 3GPP (GSM/UMTS/LTE/5GNR) devices:
+
         <variablelist>
           <varlistentry><term><literal>"pin"</literal></term>
             <listitem>
-              SIM-PIN unlock code, given as a string value (signature <literal>"s"</literal>).
+              SIM-PIN unlock code, given as a string value (signature
+              <literal>"s"</literal>).
             </listitem>
           </varlistentry>
           <varlistentry><term><literal>"operator-id"</literal></term>
@@ -57,59 +61,12 @@
               given as a string value (signature <literal>"s"</literal>).
             </listitem>
           </varlistentry>
-          <varlistentry><term><literal>"apn"</literal></term>
-            <listitem>
-              For GSM/UMTS and LTE devices the APN to use,
-              given as a string value (signature <literal>"s"</literal>).
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"ip-type"</literal></term>
-            <listitem>
-              For GSM/UMTS and LTE devices the IP addressing type to use,
-              given as a <link linkend="MMBearerIpFamily">MMBearerIpFamily</link>
-              value (signature <literal>"u"</literal>).
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"allowed-auth"</literal></term>
-            <listitem>
-              The authentication method to use, given as a
-              <link linkend="MMBearerAllowedAuth">MMBearerAllowedAuth</link>
-              value (signature <literal>"u"</literal>). Optional in 3GPP.
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"user"</literal></term>
-            <listitem>
-              User name (if any) required by the network, given as a string
-              value (signature <literal>"s"</literal>). Optional in 3GPP.
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"password"</literal></term>
-            <listitem>
-              Password (if any) required by the network, given as a string value
-              (signature <literal>"s"</literal>). Optional in 3GPP.
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"number"</literal></term>
-            <listitem>
-              Number to dial for the data connection,
-              given as a string value (signature <literal>"s"</literal>).
-              Deprecated since version 1.10.0.
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"allow-roaming"</literal></term>
-            <listitem>
-              %FALSE to allow only connections to home networks,
-              given as a boolean value (signature <literal>"b"</literal>).
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"rm-protocol"</literal></term>
-            <listitem>
-              For CDMA devices, the protocol of the Rm interface, given as a
-              <link linkend="MMModemCdmaRmProtocol">MMModemCdmaRmProtocol</link>
-              value (signature <literal>"u"</literal>).
-            </listitem>
-          </varlistentry>
         </variablelist>
+
+        There are no settings specific to this call that would apply to 3GPP2
+        (CDMA/EVDO) devices.
+
+        Since: 1.0
     -->
     <method name="Connect">
       <arg name="properties" type="a{sv}" direction="in"  />
@@ -123,6 +80,8 @@
         disconnect all active packet data bearers.
 
         Disconnect an active packet data connection.
+
+        Since: 1.0
     -->
     <method name="Disconnect">
       <arg name="bearer" type="o" direction="in" />
@@ -146,8 +105,9 @@
           <varlistentry><term><literal>"signal-quality"</literal></term>
             <listitem>
               Signal quality value, given only when registered,
-              as an unsigned integer value
-              (signature <literal>"u"</literal>).
+              as unsigned integer value and an additional boolean value 
+              indicating if the value was recently taken.
+              (signature <literal>"(ub)"</literal>).
             </listitem>
           </varlistentry>
           <varlistentry><term><literal>"current-bands"</literal></term>
@@ -213,6 +173,8 @@
             </listitem>
           </varlistentry>
         </variablelist>
+
+        Since: 1.0
     -->
     <method name="GetStatus">
       <arg name="properties" type="a{sv}" direction="out" />

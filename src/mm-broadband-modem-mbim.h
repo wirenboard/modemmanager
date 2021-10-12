@@ -30,6 +30,7 @@ typedef struct _MMBroadbandModemMbimClass MMBroadbandModemMbimClass;
 typedef struct _MMBroadbandModemMbimPrivate MMBroadbandModemMbimPrivate;
 
 #define MM_BROADBAND_MODEM_MBIM_QMI_UNSUPPORTED "broadband-modem-mbim-qmi-unsupported"
+#define MM_BROADBAND_MODEM_MBIM_INTEL_FIRMWARE_UPDATE_UNSUPPORTED "broadband-modem-mbim-intel-firmware-update-unsupported"
 
 struct _MMBroadbandModemMbim {
     MMBroadbandModem parent;
@@ -61,5 +62,4 @@ MMPortMbim *mm_broadband_modem_mbim_get_port_mbim           (MMBroadbandModemMbi
 MMPortMbim *mm_broadband_modem_mbim_get_port_mbim_for_data  (MMBroadbandModemMbim  *self,
                                                              MMPort                *data,
                                                              GError               **error);
-
 #endif /* MM_BROADBAND_MODEM_MBIM_H */

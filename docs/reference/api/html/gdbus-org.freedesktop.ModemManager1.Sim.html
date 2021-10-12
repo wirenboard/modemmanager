@@ -35,13 +35,14 @@
 <div class="refsynopsisdiv">
 <h2>Methods</h2>
 <pre class="synopsis">
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.SendPin" title="The SendPin() method">SendPin</a>   (IN  s pin);
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.SendPuk" title="The SendPuk() method">SendPuk</a>   (IN  s puk,
-           IN  s pin);
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.EnablePin" title="The EnablePin() method">EnablePin</a> (IN  s pin,
-           IN  b enabled);
-<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.ChangePin" title="The ChangePin() method">ChangePin</a> (IN  s old_pin,
-           IN  s new_pin);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.SendPin" title="The SendPin() method">SendPin</a>              (IN  s     pin);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.SendPuk" title="The SendPuk() method">SendPuk</a>              (IN  s     puk,
+                      IN  s     pin);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.EnablePin" title="The EnablePin() method">EnablePin</a>            (IN  s     pin,
+                      IN  b     enabled);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.ChangePin" title="The ChangePin() method">ChangePin</a>            (IN  s     old_pin,
+                      IN  s     new_pin);
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-method-org-freedesktop-ModemManager1-Sim.SetPreferredNetworks" title="The SetPreferredNetworks() method">SetPreferredNetworks</a> (IN  a(su) preferred_networks);
 </pre>
 </div>
 <div class="refsect1">
@@ -54,6 +55,7 @@
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorIdentifier" title='The "OperatorIdentifier" property'>OperatorIdentifier</a>  readable   s
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorName" title='The "OperatorName" property'>OperatorName</a>        readable   s
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers" title='The "EmergencyNumbers" property'>EmergencyNumbers</a>    readable   as
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.PreferredNetworks" title='The "PreferredNetworks" property'>PreferredNetworks</a>   readable   a(su)
 </pre>
 </div>
 <div class="refsect1">
@@ -70,6 +72,8 @@
 SendPin (IN  s pin);
 </pre>
 <p>        Send the PIN to unlock the SIM card.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -90,6 +94,8 @@ SendPuk (IN  s puk,
          IN  s pin);
 </pre>
 <p>        Send the PUK and a new PIN to unlock the SIM card.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -117,6 +123,8 @@ EnablePin (IN  s pin,
 </pre>
 <p>        Enable or disable the PIN checking.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -143,6 +151,8 @@ ChangePin (IN  s old_pin,
 </pre>
 <p>        Change the PIN code.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -158,6 +168,35 @@ ChangePin (IN  s old_pin,
 <td><p>A string containing the new PIN code.</p></td>
 </tr>
 </tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-method-org-freedesktop-ModemManager1-Sim.SetPreferredNetworks"></a><h3>The SetPreferredNetworks() method</h3>
+<pre class="programlisting">
+SetPreferredNetworks (IN  a(su) preferred_networks);
+</pre>
+<p>        Stores the provided preferred network list to the SIM card. Each entry contains
+        an operator id string (<code class="literal">"MCCMNC"</code>) consisting of 5 or 6 digits,
+        and an <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemAccessTechnology" title="enum MMModemAccessTechnology">MMModemAccessTechnology</a> mask
+        to store to SIM card if supported.
+</p>
+<p>        This method removes any pre-existing entries of the preferred network list. Note
+        that even if this operation fails, the preferred network list on the SIM card may
+        have changed. Read the <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.PreferredNetworks" title='The "PreferredNetworks" property'>
+        PreferredNetworks</a> property to get the up-to-date list.
+</p>
+<p>        Since: 1.18
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><code class="literal">IN a(su) <em class="parameter"><code>preferred_networks</code></em></code>:</span></p></td>
+<td><p></p></td>
+</tr></tbody>
 </table></div>
 </div>
 </div>
@@ -176,6 +215,8 @@ Active  readable   b
 <p>        On systems that support Multi SIM Multi Standby, more than one SIM may
         be active at any given time, but only one of them is considered primary.
 </p>
+<p>        Since: 1.16
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -188,6 +229,8 @@ SimIdentifier  readable   s
 <p>        This may be available before the PIN has been entered depending
         on the device itself.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -197,6 +240,8 @@ Imsi  readable   s
 </pre>
 <p>        The IMSI of the SIM card, if any.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -205,6 +250,8 @@ Imsi  readable   s
 Eid  readable   s
 </pre>
 <p>        The EID of the SIM card, if any.
+</p>
+<p>        Since: 1.16
 </p>
 </div>
 <hr>
@@ -223,6 +270,8 @@ OperatorName  readable   s
 </pre>
 <p>        The name of the network operator, as given by the SIM card, if known.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -234,6 +283,26 @@ EmergencyNumbers  readable   as
 </p>
 <p>        These numbers should be treated as numbers for emergency calls in
         addition to 112 and 911.
+</p>
+<p>        Since: 1.12
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Sim.PreferredNetworks"></a><h3>The "PreferredNetworks" property</h3>
+<pre class="programlisting">
+PreferredNetworks  readable   a(su)
+</pre>
+<p>        List of preferred networks with access technologies configured in the SIM card.
+</p>
+<p>        Each entry contains an operator id string (<code class="literal">"MCCMNC"</code>)
+        consisting of 5 or 6 digits, and an
+        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemAccessTechnology" title="enum MMModemAccessTechnology">MMModemAccessTechnology</a> mask.
+        If the SIM card does not support access technology storage, the mask will be
+        set to <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-MODEM-ACCESS-TECHNOLOGY-UNKNOWN:CAPS">
+        MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN</a>.
+</p>
+<p>        Since: 1.18
 </p>
 </div>
 </div>

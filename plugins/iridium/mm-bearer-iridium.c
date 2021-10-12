@@ -183,6 +183,15 @@ connect (MMBaseBearer *self,
     GTask *task;
     MMBaseModem *modem  = NULL;
 
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    if (mm_bearer_properties_get_multiplex (mm_base_bearer_peek_config (self)) == MM_BEARER_MULTIPLEX_SUPPORT_REQUIRED) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                 "Multiplex support not available");
+        g_object_unref (task);
+        return;
+    }
+
     g_object_get (self,
                   MM_BASE_BEARER_MODEM, &modem,
                   NULL);
@@ -194,8 +203,6 @@ connect (MMBaseBearer *self,
     /* In this context, we only keep the stuff we'll need later */
     ctx = g_new0 (ConnectContext, 1);
     ctx->primary = mm_base_modem_get_port_primary (modem);
-
-    task = g_task_new (self, cancellable, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify) connect_context_free);
 
     /* Bearer service type set to 9600bps (V.110), which behaves better than the
@@ -252,4 +259,8 @@ mm_bearer_iridium_class_init (MMBearerIridiumClass *klass)
     base_bearer_class->connect_finish = connect_finish;
     base_bearer_class->load_connection_status = NULL;
     base_bearer_class->load_connection_status_finish = NULL;
+#if defined WITH_SYSTEMD_SUSPEND_RESUME
+    base_bearer_class->reload_connection_status = NULL;
+    base_bearer_class->reload_connection_status_finish = NULL;
+#endif
 }

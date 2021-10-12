@@ -26,7 +26,7 @@
           </p></div></div>
 </div></div></div>
 <div><p class="releaseinfo">
-      For libmm-glib version 1.16.6
+      For libmm-glib version 1.18.2
 
       The latest version of this documentation can be found on-line at
       <a class="ulink" href="https://www.freedesktop.org/software/ModemManager/doc/latest/libmm-glib/" target="_top">https://www.freedesktop.org/software/ModemManager/doc/latest/libmm-glib/</a>.
@@ -86,9 +86,6 @@
 <span class="refentrytitle"><a href="MMModem3gpp.html">MMModem3gpp</a></span><span class="refpurpose"> — The 3GPP interface</span>
 </dt>
 <dt>
-<span class="refentrytitle"><a href="MMModem3gppUssd.html">MMModem3gppUssd</a></span><span class="refpurpose"> — The 3GPP USSD interface</span>
-</dt>
-<dt>
 <span class="refentrytitle"><a href="MMModemCdma.html">MMModemCdma</a></span><span class="refpurpose"> — The CDMA interface</span>
 </dt>
 <dt>
@@ -110,7 +107,20 @@
 <span class="refentrytitle"><a href="MMSimpleStatus.html">MMSimpleStatus</a></span><span class="refpurpose"> — Helper object to handle overall modem status.</span>
 </dt>
 </dl></dd>
-<dt><span class="section"><a href="ch03s03.html">Location support</a></span></dt>
+<dt><span class="section"><a href="ch03s03.html">USSD support</a></span></dt>
+<dd><dl><dt>
+<span class="refentrytitle"><a href="MMModem3gppUssd.html">MMModem3gppUssd</a></span><span class="refpurpose"> — The 3GPP USSD interface</span>
+</dt></dl></dd>
+<dt><span class="section"><a href="ch03s04.html">Profile management support</a></span></dt>
+<dd><dl>
+<dt>
+<span class="refentrytitle"><a href="MMModem3gppProfileManager.html">MMModem3gppProfileManager</a></span><span class="refpurpose"> — The 3GPP profile manager interface</span>
+</dt>
+<dt>
+<span class="refentrytitle"><a href="libmm-glib-3GPP-profile.html">MM3gppProfile</a></span><span class="refpurpose"> — Helper object to handle 3GPP profile settings.</span>
+</dt>
+</dl></dd>
+<dt><span class="section"><a href="ch03s05.html">Location support</a></span></dt>
 <dd><dl>
 <dt>
 <span class="refentrytitle"><a href="MMModemLocation.html">MMModemLocation</a></span><span class="refpurpose"> — The Location interface</span>
@@ -128,11 +138,11 @@
 <span class="refentrytitle"><a href="MMLocationCdmaBs.html">MMLocationCdmaBs</a></span><span class="refpurpose"> — Helper object to handle CDMA Base Station location information.</span>
 </dt>
 </dl></dd>
-<dt><span class="section"><a href="ch03s04.html">Messaging support</a></span></dt>
+<dt><span class="section"><a href="ch03s06.html">Messaging support</a></span></dt>
 <dd><dl><dt>
 <span class="refentrytitle"><a href="MMModemMessaging.html">MMModemMessaging</a></span><span class="refpurpose"> — The Messaging interface</span>
 </dt></dl></dd>
-<dt><span class="section"><a href="ch03s05.html">Time support</a></span></dt>
+<dt><span class="section"><a href="ch03s07.html">Time support</a></span></dt>
 <dd><dl>
 <dt>
 <span class="refentrytitle"><a href="MMModemTime.html">MMModemTime</a></span><span class="refpurpose"> — The Time interface</span>
@@ -141,7 +151,7 @@
 <span class="refentrytitle"><a href="MMNetworkTimezone.html">MMNetworkTimezone</a></span><span class="refpurpose"> — Helper object to handle network timezone information.</span>
 </dt>
 </dl></dd>
-<dt><span class="section"><a href="ch03s06.html">Firmware support</a></span></dt>
+<dt><span class="section"><a href="ch03s08.html">Firmware support</a></span></dt>
 <dd><dl>
 <dt>
 <span class="refentrytitle"><a href="MMModemFirmware.html">MMModemFirmware</a></span><span class="refpurpose"> — The Firmware interface</span>
@@ -153,7 +163,7 @@
 <span class="refentrytitle"><a href="MMFirmwareUpdateSettings.html">MMFirmwareUpdateSettings</a></span><span class="refpurpose"> — Helper object to handle firmware update settings.</span>
 </dt>
 </dl></dd>
-<dt><span class="section"><a href="ch03s07.html">Extended signal information</a></span></dt>
+<dt><span class="section"><a href="ch03s09.html">Extended signal information</a></span></dt>
 <dd><dl>
 <dt>
 <span class="refentrytitle"><a href="MMModemSignal.html">MMModemSignal</a></span><span class="refpurpose"> — The extended Signal interface</span>
@@ -162,15 +172,15 @@
 <span class="refentrytitle"><a href="MMSignal.html">MMSignal</a></span><span class="refpurpose"> — Helper object to handle extended Signal information.</span>
 </dt>
 </dl></dd>
-<dt><span class="section"><a href="ch03s08.html">OMA support</a></span></dt>
+<dt><span class="section"><a href="ch03s10.html">OMA support</a></span></dt>
 <dd><dl><dt>
 <span class="refentrytitle"><a href="MMModemOma.html">MMModemOma</a></span><span class="refpurpose"> — The OMA interface</span>
 </dt></dl></dd>
-<dt><span class="section"><a href="ch03s09.html">Voice support</a></span></dt>
+<dt><span class="section"><a href="ch03s11.html">Voice support</a></span></dt>
 <dd><dl><dt>
 <span class="refentrytitle"><a href="MMModemVoice.html">MMModemVoice</a></span><span class="refpurpose"> — The Voice interface</span>
 </dt></dl></dd>
-<dt><span class="section"><a href="ch03s10.html">PCO support</a></span></dt>
+<dt><span class="section"><a href="ch03s12.html">PCO support</a></span></dt>
 <dd><dl><dt>
 <span class="refentrytitle"><a href="MMPco.html">MMPco</a></span><span class="refpurpose"> — Helper object to handle 3GPP PCO.</span>
 </dt></dl></dd>
@@ -191,9 +201,14 @@
 </dt>
 </dl></dd>
 <dt><span class="chapter"><a href="ch05.html">The SIM object</a></span></dt>
-<dd><dl><dt>
+<dd><dl>
+<dt>
 <span class="refentrytitle"><a href="MMSim.html">MMSim</a></span><span class="refpurpose"> — The SIM interface</span>
-</dt></dl></dd>
+</dt>
+<dt>
+<span class="refentrytitle"><a href="MMSimPreferredNetwork.html">MMSimPreferredNetwork</a></span><span class="refpurpose"></span>
+</dt>
+</dl></dd>
 <dt><span class="chapter"><a href="ch06.html">The SMS object</a></span></dt>
 <dd><dl>
 <dt>
@@ -256,6 +271,15 @@
 </dt>
 <dt>
 <span class="refentrytitle"><a href="MmGdbusModem3gppSkeleton.html">MmGdbusModem3gppSkeleton</a></span><span class="refpurpose"></span>
+</dt>
+<dt>
+<span class="refentrytitle"><a href="MmGdbusModem3gppProfileManager.html">MmGdbusModem3gppProfileManager</a></span><span class="refpurpose"> — Generated C code for the org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager D-Bus interface</span>
+</dt>
+<dt>
+<span class="refentrytitle"><a href="MmGdbusModem3gppProfileManagerProxy.html">MmGdbusModem3gppProfileManagerProxy</a></span><span class="refpurpose"></span>
+</dt>
+<dt>
+<span class="refentrytitle"><a href="MmGdbusModem3gppProfileManagerSkeleton.html">MmGdbusModem3gppProfileManagerSkeleton</a></span><span class="refpurpose"></span>
 </dt>
 <dt>
 <span class="refentrytitle"><a href="MmGdbusModem3gppUssd.html">MmGdbusModem3gppUssd</a></span><span class="refpurpose"> — Generated C code for the org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd D-Bus interface</span>
@@ -384,6 +408,10 @@
 <span class="refentrytitle"><a href="MmGdbusCallSkeleton.html">MmGdbusCallSkeleton</a></span><span class="refpurpose"></span>
 </dt>
 </dl></dd>
+<dt><span class="chapter"><a href="ch08.html">Compatibility with older versions</a></span></dt>
+<dd><dl><dt>
+<span class="refentrytitle"><a href="libmm-glib-Deprecated-Interface.html">Deprecated Interface</a></span><span class="refpurpose"> — Deprecated types and methods.</span>
+</dt></dl></dd>
 <dt><span class="chapter"><a href="object-tree.html">Object Hierarchy</a></span></dt>
 <dt><span class="chapter"><a href="api-index-full.html">Index</a></span></dt>
 <dt><span class="chapter"><a href="deprecated-api-index.html">Index of deprecated symbols</a></span></dt>
@@ -396,6 +424,7 @@
 <dt><span class="chapter"><a href="api-index-1-12.html">Index of new symbols in 1.12</a></span></dt>
 <dt><span class="chapter"><a href="api-index-1-14.html">Index of new symbols in 1.14</a></span></dt>
 <dt><span class="chapter"><a href="api-index-1-16.html">Index of new symbols in 1.16</a></span></dt>
+<dt><span class="chapter"><a href="api-index-1-18.html">Index of new symbols in 1.18</a></span></dt>
 <dt><span class="glossary"><a href="annotation-glossary.html">Annotation Glossary</a></span></dt>
 </dl></div>
 </div>

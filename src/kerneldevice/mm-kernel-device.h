@@ -28,9 +28,11 @@
 
 typedef struct _MMKernelDevice MMKernelDevice;
 typedef struct _MMKernelDeviceClass MMKernelDeviceClass;
+typedef struct _MMKernelDevicePrivate MMKernelDevicePrivate;
 
 struct _MMKernelDevice {
     GObject parent;
+    MMKernelDevicePrivate *priv;
 };
 
 struct _MMKernelDeviceClass {
@@ -41,6 +43,9 @@ struct _MMKernelDeviceClass {
     const gchar * (* get_driver)      (MMKernelDevice *self);
     const gchar * (* get_sysfs_path)  (MMKernelDevice *self);
 
+    const gchar * (* get_wwandev_sysfs_path) (MMKernelDevice *self);
+
+    gint          (* get_interface_number)      (MMKernelDevice *self);
     gint          (* get_interface_class)       (MMKernelDevice *self);
     gint          (* get_interface_subclass)    (MMKernelDevice *self);
     gint          (* get_interface_protocol)    (MMKernelDevice *self);
@@ -74,6 +79,9 @@ const gchar *mm_kernel_device_get_name        (MMKernelDevice *self);
 const gchar *mm_kernel_device_get_driver      (MMKernelDevice *self);
 const gchar *mm_kernel_device_get_sysfs_path  (MMKernelDevice *self);
 
+const gchar *mm_kernel_device_get_wwandev_sysfs_path  (MMKernelDevice *self);
+
+gint         mm_kernel_device_get_interface_number      (MMKernelDevice *self);
 gint         mm_kernel_device_get_interface_class       (MMKernelDevice *self);
 gint         mm_kernel_device_get_interface_subclass    (MMKernelDevice *self);
 gint         mm_kernel_device_get_interface_protocol    (MMKernelDevice *self);
@@ -88,6 +96,8 @@ const gchar *mm_kernel_device_get_physdev_sysfs_path   (MMKernelDevice *self);
 const gchar *mm_kernel_device_get_physdev_subsystem    (MMKernelDevice *self);
 const gchar *mm_kernel_device_get_physdev_manufacturer (MMKernelDevice *self);
 const gchar *mm_kernel_device_get_physdev_product      (MMKernelDevice *self);
+
+MMKernelDevice *mm_kernel_device_peek_lower_device (MMKernelDevice *self);
 
 gboolean     mm_kernel_device_cmp (MMKernelDevice *a, MMKernelDevice *b);
 

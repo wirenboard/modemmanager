@@ -1495,7 +1495,7 @@ modem_time_load_network_timezone_finish (MMIfaceModemTime *self,
     const gchar *response;
     MMNetworkTimezone *tz = NULL;
 
-    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, NULL);
+    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, error);
     if (response)
         parse_nwltime_reply (response, NULL, &tz, error);
     return tz;
@@ -1554,6 +1554,9 @@ mm_broadband_modem_novatel_new (const gchar *device,
                          MM_BASE_MODEM_PLUGIN, plugin,
                          MM_BASE_MODEM_VENDOR_ID, vendor_id,
                          MM_BASE_MODEM_PRODUCT_ID, product_id,
+                         /* Generic bearer supports TTY only */
+                         MM_BASE_MODEM_DATA_NET_SUPPORTED, FALSE,
+                         MM_BASE_MODEM_DATA_TTY_SUPPORTED, TRUE,
                          NULL);
 }
 

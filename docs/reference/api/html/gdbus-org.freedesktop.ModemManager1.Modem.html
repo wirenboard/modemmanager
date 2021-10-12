@@ -72,6 +72,7 @@
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.CurrentCapabilities" title='The "CurrentCapabilities" property'>CurrentCapabilities</a>           readable   u
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.MaxBearers" title='The "MaxBearers" property'>MaxBearers</a>                    readable   u
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveBearers" title='The "MaxActiveBearers" property'>MaxActiveBearers</a>              readable   u
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveMultiplexedBearers" title='The "MaxActiveMultiplexedBearers" property'>MaxActiveMultiplexedBearers</a>   readable   u
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Manufacturer" title='The "Manufacturer" property'>Manufacturer</a>                  readable   s
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Model" title='The "Model" property'>Model</a>                         readable   s
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Revision" title='The "Revision" property'>Revision</a>                      readable   s
@@ -124,6 +125,8 @@ Enable (IN  b enable);
 <p>        When disabled, the modem enters low-power state and no network-related
         operations are available.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -143,6 +146,8 @@ ListBearers (OUT ao bearers);
 </pre>
 <p>        List configured packet data bearers (EPS Bearers, PDP Contexts, or
         CDMA2000 Packet Data Sessions).
+</p>
+<p>        Since: 1.0
 </p>
 <p>        Deprecated: 1.10.0. Use <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Bearers" title='The "Bearers" property'>"Bearers"</a>
         property instead.
@@ -170,53 +175,10 @@ CreateBearer (IN  a{sv} properties,
 <p>        This request may fail if the modem does not support additional bearers,
         if too many bearers are already defined, or if properties are invalid.
 </p>
-<p>        Allowed properties are:
-        </p>
-<div class="variablelist"><table border="0" class="variablelist">
-<colgroup>
-<col align="left" valign="top">
-<col>
-</colgroup>
-<tbody>
-<tr>
-<td><p><span class="term"><code class="literal">"apn"</code></span></p></td>
-<td><p>Access Point Name, given as a string value (signature <code class="literal">"s"</code>). Required in 3GPP.</p></td>
-</tr>
-<tr>
-<td><p><span class="term"><code class="literal">"ip-type"</code></span></p></td>
-<td><p>Addressing type, given as a <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerIpFamily" title="enum MMBearerIpFamily">MMBearerIpFamily</a> value (signature <code class="literal">"u"</code>). Optional in 3GPP and CDMA.</p></td>
-</tr>
-<tr>
-<td><p><span class="term"><code class="literal">"allowed-auth"</code></span></p></td>
-<td><p>The authentication method to use, given as a <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerAllowedAuth" title="enum MMBearerAllowedAuth">MMBearerAllowedAuth</a> value (signature <code class="literal">"u"</code>). Optional in 3GPP.</p></td>
-</tr>
-<tr>
-<td><p><span class="term"><code class="literal">"user"</code></span></p></td>
-<td><p>User name (if any) required by the network, given as a string value (signature <code class="literal">"s"</code>). Optional in 3GPP.</p></td>
-</tr>
-<tr>
-<td><p><span class="term"><code class="literal">"password"</code></span></p></td>
-<td><p>Password (if any) required by the network, given as a string value (signature <code class="literal">"s"</code>). Optional in 3GPP.</p></td>
-</tr>
-<tr>
-<td><p><span class="term"><code class="literal">"allow-roaming"</code></span></p></td>
-<td><p>Flag to tell whether connection is allowed during roaming, given as a boolean value (signature <code class="literal">"b"</code>). Optional in 3GPP.</p></td>
-</tr>
-<tr>
-<td><p><span class="term"><code class="literal">"rm-protocol"</code></span></p></td>
-<td><p>Protocol of the Rm interface, given as a <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRmProtocol" title="enum MMModemCdmaRmProtocol">MMModemCdmaRmProtocol</a> value (signature <code class="literal">"u"</code>). Optional in CDMA.</p></td>
-</tr>
-<tr>
-<td><p><span class="term"><code class="literal">"number"</code></span></p></td>
-<td><p>Number to dial for the data connection, given as a string value (signature <code class="literal">"s"</code>). Deprecated since version 1.10.0.</p></td>
-</tr>
-</tbody>
-</table></div>
-<p>
+<p>        The properties allowed are any of the ones defined in the
+        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties" title='The "Properties" property'>bearer properties</a>.
 </p>
-<p>        Some properties are only applicable to a bearer of certain access
-        technologies, for example the <code class="literal">"apn"</code> property is not
-        applicable to CDMA2000 Packet Data Session bearers.
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -246,6 +208,8 @@ DeleteBearer (IN  o bearer);
 <p>        If the bearer is currently active and providing packet data server, it
         will be disconnected and that packet data service will terminate.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -268,6 +232,8 @@ Reset ();
 </p>
 <p>        This command may power-cycle the device.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -281,6 +247,8 @@ FactoryReset (IN  s code);
 <p>        If not required by the modem, <em class="parameter"><code>code</code></em> may be ignored.
 </p>
 <p>        This command may or may not power-cycle the device.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -302,6 +270,8 @@ SetPowerState (IN  u state);
 <p>        Set the power state of the modem. This action can only be run when the
         modem is in <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-MODEM-STATE-DISABLED:CAPS"><code class="constant">MM_MODEM_STATE_DISABLED</code></a>
         state.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -327,6 +297,8 @@ SetCurrentCapabilities (IN  u capabilities);
 </p>
 <p>        This command may power-cycle the device.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -350,6 +322,8 @@ SetCurrentModes (IN  (uu) modes);
 <p>        The given combination should be supported by the modem, as specified in the
         <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedModes" title='The "SupportedModes" property'>"SupportedModes"</a> property.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -369,6 +343,8 @@ SetCurrentBands (IN  au bands);
 </pre>
 <p>        Set the radio frequency and technology bands the device is currently
         allowed to use when connecting to a network.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -397,6 +373,8 @@ SetPrimarySimSlot (IN  u sim_slot);
 <p>        There is no limitation on which SIM slot to select, so the user may also set as
 	primary a slot that doesn't currently have any valid SIM card inserted.
 </p>
+<p>        Since: 1.16
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -416,11 +394,13 @@ Command (IN  s cmd,
          IN  u timeout,
          OUT s response);
 </pre>
-<p>       Send an arbitrary AT command to a modem and get the response.
+<p>        Send an arbitrary AT command to a modem and get the response.
 </p>
-<p>       Note that using this interface call is only allowed when running
-       ModemManager in debug mode or if the project was built using
-       the <code class="literal">with-at-command-via-dbus</code> configure option.
+<p>        Note that using this interface call is only allowed when running
+        ModemManager in debug mode or if the project was built using
+        the <code class="literal">with-at-command-via-dbus</code> configure option.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -454,6 +434,8 @@ StateChanged (i old,
               u reason);
 </pre>
 <p>        The modem's state (see <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.State" title='The "State" property'>"State"</a>) changed.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -495,6 +477,8 @@ Sim  readable   o
         index value specifies which is the slot number where this SIM card
         is available.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -513,6 +497,8 @@ SimSlots  readable   ao
 <p>        This list includes the SIM object considered as primary active SIM slot
         (<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-interface-org-freedesktop-ModemManager1-Modem.top_of_page">org.freedesktop.ModemManager1.Modem</a>.Sim) at index
         <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-interface-org-freedesktop-ModemManager1-Modem.top_of_page">org.freedesktop.ModemManager1.Modem</a>.ActiveSimSlot.
+</p>
+<p>        Since: 1.16
 </p>
 </div>
 <hr>
@@ -535,6 +521,8 @@ PrimarySimSlot  readable   u
         that is considered primary, i.e. the one that will be used when a data
         connection is setup.
 </p>
+<p>        Since: 1.16
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -547,6 +535,8 @@ Bearers  readable   ao
 </p>
 <p>        This list does not include the initial EPS bearer details (see
         <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer" title='The "InitialEpsBearer" property'>"InitialEpsBearer"</a>).
+</p>
+<p>        Since: 1.2
 </p>
 </div>
 <hr>
@@ -567,6 +557,8 @@ SupportedCapabilities  readable   au
         3GPP2 (CDMA/EVDO) specs will report more than one combination of
         capabilities.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -580,6 +572,8 @@ CurrentCapabilities  readable   u
 </p>
 <p>        This bitmask will be one of the ones listed in
         <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedCapabilities" title='The "SupportedCapabilities" property'>"SupportedCapabilities"</a>.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -597,6 +591,14 @@ MaxBearers  readable   u
         LTE-capable device (whether LTE-only, GSM/UMTS-capable, and/or
         CDMA2000-capable) also typically support three or more.
 </p>
+<p>        Deprecated: 1.18.0. There is no way to query the modem how many bearers
+        it supports, so the value exposed in this property in all the different
+        implementations is always equal to the value in
+        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveBearers" title='The "MaxActiveBearers" property'>"MaxActiveBearers"</a>, so there is no
+        point in using this property.
+</p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -606,11 +608,31 @@ MaxActiveBearers  readable   u
 </pre>
 <p>        The maximum number of active
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-DEFAULT:CAPS"><code class="constant">MM_BEARER_TYPE_DEFAULT</code></a>
-        bearers that may be explicitly enabled by the user.
+        bearers that may be explicitly enabled by the user without multiplexing support.
 </p>
 <p>        POTS and CDMA2000-only devices support one active bearer, while GSM/UMTS
-        and LTE-capable devices (including LTE/CDMA devices) typically support
-        at least two active bearers.
+        and LTE/5GNR capable devices (including 3GPP+3GPP3 multimode devices) may support
+        one or more active bearers, depending on the amount of physical ports exposed
+        by the device.
+</p>
+<p>        Since: 1.0
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="gdbus-property-org-freedesktop-ModemManager1-Modem.MaxActiveMultiplexedBearers"></a><h3>The "MaxActiveMultiplexedBearers" property</h3>
+<pre class="programlisting">
+MaxActiveMultiplexedBearers  readable   u
+</pre>
+<p>        The maximum number of active
+        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-TYPE-DEFAULT:CAPS"><code class="constant">MM_BEARER_TYPE_DEFAULT</code></a>
+        bearers that may be explicitly enabled by the user with multiplexing support
+        on one single network interface.
+</p>
+<p>        If the modem doesn't support multiplexing of data sessiones, a value of 0 will
+        be reported.
+</p>
+<p>        Since: 1.18
 </p>
 </div>
 <hr>
@@ -621,6 +643,8 @@ Manufacturer  readable   s
 </pre>
 <p>        The equipment manufacturer, as reported by the modem.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -629,6 +653,8 @@ Manufacturer  readable   s
 Model  readable   s
 </pre>
 <p>        The equipment model, as reported by the modem.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -639,6 +665,8 @@ Revision  readable   s
 </pre>
 <p>        The revision identification of the software, as reported by the modem.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -647,6 +675,8 @@ Revision  readable   s
 CarrierConfiguration  readable   s
 </pre>
 <p>        The description of the carrier-specific configuration (MCFG) in use by the modem.
+</p>
+<p>        Since: 1.12
 </p>
 </div>
 <hr>
@@ -657,6 +687,8 @@ CarrierConfigurationRevision  readable   s
 </pre>
 <p>        The revision identification of the carrier-specific configuration (MCFG) in use by the modem.
 </p>
+<p>        Since: 1.12
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -665,6 +697,8 @@ CarrierConfigurationRevision  readable   s
 HardwareRevision  readable   s
 </pre>
 <p>        The revision identification of the hardware, as reported by the modem.
+</p>
+<p>        Since: 1.8
 </p>
 </div>
 <hr>
@@ -684,6 +718,8 @@ DeviceIdentifier  readable   s
 <p>        This is not the device's IMEI or ESN since those may not be available
         before unlocking the device via a PIN.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -700,6 +736,8 @@ Device  readable   s
 <p>        This value may also be set by the user using the MM_ID_PHYSDEV_UID udev
         tag (e.g. binding the tag to a specific sysfs path).
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -710,6 +748,8 @@ Drivers  readable   as
 <p>        The Operating System device drivers handling communication with the modem
         hardware.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -719,6 +759,8 @@ Plugin  readable   s
 </pre>
 <p>        The name of the plugin handling this modem.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -727,6 +769,8 @@ Plugin  readable   s
 PrimaryPort  readable   s
 </pre>
 <p>        The name of the primary port using to control the modem.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -740,6 +784,8 @@ Ports  readable   a(su)
         the port type given as a
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemPortType" title="enum MMModemPortType">MMModemPortType</a> value.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -752,6 +798,8 @@ EquipmentIdentifier  readable   s
 <p>        This will be the IMEI number for GSM devices and the hex-format ESN/MEID
         for CDMA devices.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -761,6 +809,8 @@ UnlockRequired  readable   u
 </pre>
 <p>        Current lock state of the device, given as a
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemLock" title="enum MMModemLock">MMModemLock</a> value.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -774,6 +824,8 @@ UnlockRetries  readable   a{uu}
         before the code becomes blocked (requiring a PUK) or permanently blocked. Dictionary
         entries exist only for the codes for which the modem is able to report retry
         counts.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -789,6 +841,8 @@ State  readable   i
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-MODEM-STATE-UNKNOWN:CAPS"><code class="constant">MM_MODEM_STATE_UNKNOWN</code></a>
         will be reported.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -800,6 +854,8 @@ StateFailedReason  readable   u
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-MODEM-STATE-FAILED:CAPS"><code class="constant">MM_MODEM_STATE_FAILED</code></a>
         state, given as a
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemStateFailedReason" title="enum MMModemStateFailedReason">MMModemStateFailedReason</a> value.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -816,6 +872,8 @@ AccessTechnologies  readable   u
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-MODEM-ACCESS-TECHNOLOGY-UNKNOWN:CAPS"><code class="constant">MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN</code></a>
         will be reported.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -830,6 +888,8 @@ SignalQuality  readable   (ub)
 <p>        The additional boolean value indicates if the quality value given was
         recently taken.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -840,6 +900,8 @@ OwnNumbers  readable   as
 <p>        List of numbers (e.g. MSISDN in 3GPP) being currently handled by this
         modem.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -849,6 +911,8 @@ PowerState  readable   u
 </pre>
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemPowerState" title="enum MMModemPowerState">MMModemPowerState</a> value
         specifying the current power state of the modem.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -885,6 +949,8 @@ SupportedModes  readable   a(uu)
 </table></div>
 <p>
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -899,6 +965,8 @@ CurrentModes  readable   (uu)
 </p>
 <p>        The pair must be one of those specified in
         <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedModes" title='The "SupportedModes" property'>"SupportedModes"</a>.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -915,6 +983,8 @@ SupportedBands  readable   au
         <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-MODEM-BAND-ANY:CAPS"><code class="constant">MM_MODEM_BAND_ANY</code></a>
         mode will be returned.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -928,6 +998,8 @@ CurrentBands  readable   au
 </p>
 <p>        It must be a subset of <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.SupportedBands" title='The "SupportedBands" property'>"SupportedBands"</a>.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -937,6 +1009,8 @@ SupportedIpFamilies  readable   u
 </pre>
 <p>        Bitmask of <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerIpFamily" title="enum MMBearerIpFamily">MMBearerIpFamily</a> values,
         specifying the IP families supported by the device.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 </div>

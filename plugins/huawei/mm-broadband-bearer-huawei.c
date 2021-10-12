@@ -345,16 +345,7 @@ connect_3gpp_context_step (GTask *task)
         MMBearerIpFamily ip_family;
 
         ip_family = mm_bearer_properties_get_ip_type (mm_base_bearer_peek_config (MM_BASE_BEARER (self)));
-        if (ip_family == MM_BEARER_IP_FAMILY_NONE ||
-            ip_family == MM_BEARER_IP_FAMILY_ANY) {
-            gchar *ip_family_str;
-
-            ip_family = mm_base_bearer_get_default_ip_family (MM_BASE_BEARER (self));
-            ip_family_str = mm_bearer_ip_family_build_string_from_mask (ip_family);
-            mm_obj_dbg (self, "no specific IP family requested, defaulting to %s", ip_family_str);
-            g_free (ip_family_str);
-        }
-
+        mm_3gpp_normalize_ip_family (&ip_family);
         if (ip_family != MM_BEARER_IP_FAMILY_IPV4) {
             g_task_return_new_error (task,
                                      MM_CORE_ERROR,
@@ -518,7 +509,7 @@ connect_3gpp (MMBroadbandBearer *_self,
 
     /* Setup connection context */
     ctx = g_slice_new0 (Connect3gppContext);
-    ctx->modem = g_object_ref (modem);
+    ctx->modem = MM_BASE_MODEM (g_object_ref (modem));
     ctx->data = g_object_ref (data);
     ctx->step = CONNECT_3GPP_CONTEXT_STEP_FIRST;
 
@@ -786,8 +777,9 @@ disconnect_3gpp (MMBroadbandBearer *_self,
 /*****************************************************************************/
 
 static void
-report_connection_status (MMBaseBearer *bearer,
-                          MMBearerConnectionStatus status)
+report_connection_status (MMBaseBearer             *bearer,
+                          MMBearerConnectionStatus  status,
+                          const GError             *connection_error)
 {
     MMBroadbandBearerHuawei *self = MM_BROADBAND_BEARER_HUAWEI (bearer);
 
@@ -810,7 +802,8 @@ report_connection_status (MMBaseBearer *bearer,
     /* Report disconnected right away */
     MM_BASE_BEARER_CLASS (mm_broadband_bearer_huawei_parent_class)->report_connection_status (
         bearer,
-        MM_BEARER_CONNECTION_STATUS_DISCONNECTED);
+        MM_BEARER_CONNECTION_STATUS_DISCONNECTED,
+        NULL);
 }
 
 /*****************************************************************************/
@@ -874,6 +867,10 @@ mm_broadband_bearer_huawei_class_init (MMBroadbandBearerHuaweiClass *klass)
     base_bearer_class->report_connection_status = report_connection_status;
     base_bearer_class->load_connection_status = NULL;
     base_bearer_class->load_connection_status_finish = NULL;
+#if defined WITH_SYSTEMD_SUSPEND_RESUME
+    base_bearer_class->reload_connection_status = NULL;
+    base_bearer_class->reload_connection_status_finish = NULL;
+#endif
 
     broadband_bearer_class->connect_3gpp = connect_3gpp;
     broadband_bearer_class->connect_3gpp_finish = connect_3gpp_finish;

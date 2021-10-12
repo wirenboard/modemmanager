@@ -41,7 +41,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.5.5.10.4"></a><h2>Signals</h2>
+<a name="id-1.5.5.11.4"></a><h2>Signals</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-ModemCdma.ActivationStateChanged" title='The "ActivationStateChanged" signal'>ActivationStateChanged</a> (u     activation_state,
                         u     activation_error,
@@ -49,7 +49,7 @@
 </pre>
 </div>
 <div class="refsect1">
-<a name="id-1.5.5.10.5"></a><h2>Properties</h2>
+<a name="id-1.5.5.11.5"></a><h2>Properties</h2>
 <pre class="synopsis">
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.ActivationState" title='The "ActivationState" property'>ActivationState</a>          readable   u
 <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.ModemCdma.html#gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Meid" title='The "Meid" property'>Meid</a>                     readable   s
@@ -83,6 +83,8 @@ Activate (IN  s carrier_code);
         activation functionality, if any.
 </p>
 <p>        Some modems will reboot after this call is made.
+</p>
+<p>        Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -186,6 +188,8 @@ ActivationStateChanged (u     activation_state,
 </pre>
 <p>        The device activation state changed.
 </p>
+<p>        Since: 1.0
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -218,6 +222,8 @@ ActivationState  readable   u
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaActivationState" title="enum MMModemCdmaActivationState">MMModemCdmaActivationState</a>
         value specifying the state of the activation in the 3GPP2 network.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -226,6 +232,8 @@ ActivationState  readable   u
 Meid  readable   s
 </pre>
 <p>        The modem's <a class="ulink" href="http://en.wikipedia.org/wiki/MEID" target="_top">Mobile Equipment Identifier</a>.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -237,6 +245,8 @@ Esn  readable   s
 <p>        The modem's
         <a class="ulink" href="http://en.wikipedia.org/wiki/Electronic_serial_number" target="_top">Electronic Serial Number</a>
         (superceded by MEID but still used by older devices).
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 <hr>
@@ -253,6 +263,8 @@ Sid  readable   u
 <p>        See <a class="ulink" href="http://ifast.org" target="_top">ifast.org</a> or the mobile
         broadband provider database for mappings of SIDs to network providers.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -265,6 +277,8 @@ Nid  readable   u
         of the serving CDMA 1x network, if known, and
         if the modem is registered with a CDMA 1x network.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -275,6 +289,8 @@ Cdma1xRegistrationState  readable   u
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRegistrationState" title="enum MMModemCdmaRegistrationState">MMModemCdmaRegistrationState</a>
         value specifying the CDMA 1x registration state.
 </p>
+<p>        Since: 1.0
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -284,6 +300,8 @@ EvdoRegistrationState  readable   u
 </pre>
 <p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRegistrationState" title="enum MMModemCdmaRegistrationState">MMModemCdmaRegistrationState</a>
         value specifying the EVDO registration state.
+</p>
+<p>        Since: 1.0
 </p>
 </div>
 </div>

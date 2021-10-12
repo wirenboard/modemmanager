@@ -89,6 +89,14 @@
 </tr>
 <tr>
 <td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
+</td>
+<td class="function_name">
+<a class="link" href="MMBearer.html#mm-bearer-get-multiplexed" title="mm_bearer_get_multiplexed ()">mm_bearer_get_multiplexed</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
 <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>
 </td>
 <td class="function_name">
@@ -101,6 +109,14 @@
 </td>
 <td class="function_name">
 <a class="link" href="MMBearer.html#mm-bearer-get-bearer-type" title="mm_bearer_get_bearer_type ()">mm_bearer_get_bearer_type</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="returnvalue">gint</span></a>
+</td>
+<td class="function_name">
+<a class="link" href="MMBearer.html#mm-bearer-get-profile-id" title="mm_bearer_get_profile_id ()">mm_bearer_get_profile_id</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -165,6 +181,22 @@
 </td>
 <td class="function_name">
 <a class="link" href="MMBearer.html#mm-bearer-get-stats" title="mm_bearer_get_stats ()">mm_bearer_get_stats</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="returnvalue">GError</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMBearer.html#mm-bearer-get-connection-error" title="mm_bearer_get_connection_error ()">mm_bearer_get_connection_error</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="returnvalue">GError</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMBearer.html#mm-bearer-peek-connection-error" title="mm_bearer_peek_connection_error ()">mm_bearer_peek_connection_error</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -435,6 +467,35 @@ otherwise.</p>
 </div>
 <hr>
 <div class="refsect2">
+<a name="mm-bearer-get-multiplexed"></a><h3>mm_bearer_get_multiplexed ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
+mm_bearer_get_multiplexed (<em class="parameter"><code><a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a> *self</code></em>);</pre>
+<p>Checks whether or not the <a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a> is connected through a multiplexed
+network likn.</p>
+<div class="refsect3">
+<a name="mm-bearer-get-multiplexed.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-bearer-get-multiplexed.returns"></a><h4>Returns</h4>
+<p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if packet data service is connected via a multiplexed network
+link in the <a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a>, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><span class="type">FALSE</span></a> otherwise.</p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
+</div>
+<hr>
+<div class="refsect2">
 <a name="mm-bearer-get-ip-timeout"></a><h3>mm_bearer_get_ip_timeout ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>
 mm_bearer_get_ip_timeout (<em class="parameter"><code><a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a> *self</code></em>);</pre>
@@ -486,6 +547,35 @@ mm_bearer_get_bearer_type (<em class="parameter"><code><a class="link" href="MMB
 <p> a <a href="https://www.freedesktop.org/software/ModemManager/doc/latest/ModemManager/ModemManager-Flags-and-Enumerations.html#MMBearerType"><span class="type">MMBearerType</span></a>.</p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-bearer-get-profile-id"></a><h3>mm_bearer_get_profile_id ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="returnvalue">gint</span></a>
+mm_bearer_get_profile_id (<em class="parameter"><code><a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a> *self</code></em>);</pre>
+<p>Gets profile ID associated to the bearer connection, if known.</p>
+<p>If the bearer is disconnected or the modem doesn't support profile management
+features, <a class="link" href="libmm-glib-3GPP-profile.html#MM-3GPP-PROFILE-ID-UNKNOWN:CAPS" title="MM_3GPP_PROFILE_ID_UNKNOWN"><code class="literal">MM_3GPP_PROFILE_ID_UNKNOWN</code></a>.</p>
+<div class="refsect3">
+<a name="mm-bearer-get-profile-id.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-bearer-get-profile-id.returns"></a><h4>Returns</h4>
+<p> a profile id.</p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -762,6 +852,73 @@ new values.</div>
 <p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-6.html#api-index-1.6">1.6</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-bearer-get-connection-error"></a><h3>mm_bearer_get_connection_error ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="returnvalue">GError</span></a> *
+mm_bearer_get_connection_error (<em class="parameter"><code><a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a> *self</code></em>);</pre>
+<p>Gets a <a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> specifying the connection error details, if any.</p>
+<div class="warning">The values reported by <em class="parameter"><code>self</code></em> are not updated when the values in the
+interface change. Instead, the client is expected to call
+<a class="link" href="MMBearer.html#mm-bearer-get-connection-error" title="mm_bearer_get_connection_error ()"><code class="function">mm_bearer_get_connection_error()</code></a> again to get a new <a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> with the
+new values.</div>
+<div class="refsect3">
+<a name="mm-bearer-get-connection-error.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-bearer-get-connection-error.returns"></a><h4>Returns</h4>
+<p>A <a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> that must be freed with
+<a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#g-error-free"><code class="function">g_error_free()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none. </p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-bearer-peek-connection-error"></a><h3>mm_bearer_peek_connection_error ()</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="returnvalue">GError</span></a> *
+mm_bearer_peek_connection_error (<em class="parameter"><code><a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a> *self</code></em>);</pre>
+<p>Gets a <a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> specifying the connection error details, if any.</p>
+<div class="warning">The returned value is only valid until the property changes so
+it is only safe to use this function on the thread where
+<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMBearer.html#mm-bearer-get-connection-error" title="mm_bearer_get_connection_error ()"><code class="function">mm_bearer_get_connection_error()</code></a> if on another
+thread.</div>
+<div class="refsect3">
+<a name="mm-bearer-peek-connection-error.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMBearer.html" title="MMBearer"><span class="type">MMBearer</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-bearer-peek-connection-error.returns"></a><h4>Returns</h4>
+<p>A <a href="https://developer.gnome.org/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a>, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none. Do not
+free the returned value, it belongs to <em class="parameter"><code>self</code></em>
+. </p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
 </div>
 <hr>
 <div class="refsect2">

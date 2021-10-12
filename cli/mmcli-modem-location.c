@@ -65,6 +65,7 @@ static gboolean disable_gps_unmanaged_flag;
 static gboolean set_enable_signal_flag;
 static gboolean set_disable_signal_flag;
 static gboolean get_flag;
+static gboolean monitor_flag;
 static gchar *set_supl_server_str;
 static gchar *inject_assistance_data_str;
 static gchar *set_gps_refresh_rate_str;
@@ -76,6 +77,10 @@ static GOptionEntry entries[] = {
     },
     { "location-get", 0, 0, G_OPTION_ARG_NONE, &get_flag,
       "Get all available location information.",
+      NULL
+    },
+    { "location-monitor", 0, 0, G_OPTION_ARG_NONE, &monitor_flag,
+      "Monitor all available location information.",
       NULL
     },
     { "location-enable-3gpp", 0, 0, G_OPTION_ARG_NONE, &enable_3gpp_flag,
@@ -210,6 +215,7 @@ mmcli_modem_location_options_enabled (void)
     n_actions = (status_flag +
                  any_location_setup_flag +
                  get_flag +
+                 monitor_flag +
                  !!set_supl_server_str +
                  !!inject_assistance_data_str +
                  !!set_gps_refresh_rate_str);
@@ -219,7 +225,9 @@ mmcli_modem_location_options_enabled (void)
         exit (EXIT_FAILURE);
     }
 
-    if (status_flag)
+    if (monitor_flag)
+        mmcli_force_async_operation ();
+    else if (status_flag)
         mmcli_force_sync_operation ();
 
     checked = TRUE;
@@ -530,10 +538,13 @@ get_location_process_reply (MMLocation3gpp *location_3gpp,
     }
 
     if (location_3gpp) {
-        mcc = g_strdup_printf ("%u", mm_location_3gpp_get_mobile_country_code (location_3gpp));
-        mnc = g_strdup_printf ("%u", mm_location_3gpp_get_mobile_network_code (location_3gpp));
+        const gchar *operator_code;
+
+        operator_code = mm_location_3gpp_get_operator_code (location_3gpp);
+        mcc = g_strndup (operator_code ? operator_code : "0", 3);
+        mnc = g_strdup (operator_code ? operator_code + 3 : "0");
         lac = g_strdup_printf ("%04lX", mm_location_3gpp_get_location_area_code (location_3gpp));
-        tac = g_strdup_printf ("%04lX", mm_location_3gpp_get_tracking_area_code (location_3gpp));
+        tac = g_strdup_printf ("%06lX", mm_location_3gpp_get_tracking_area_code (location_3gpp));
         cid = g_strdup_printf ("%08lX", mm_location_3gpp_get_cell_id (location_3gpp));
     }
 
@@ -557,7 +568,7 @@ get_location_process_reply (MMLocation3gpp *location_3gpp,
     mmcli_output_string_take           (MMC_F_LOCATION_3GPP_LAC,    lac);
     mmcli_output_string_take           (MMC_F_LOCATION_3GPP_TAC,    tac);
     mmcli_output_string_take           (MMC_F_LOCATION_3GPP_CID,    cid);
-    mmcli_output_string_array_take     (MMC_F_LOCATION_GPS_NMEA,    nmea, TRUE);
+    mmcli_output_string_array_multiline_take (MMC_F_LOCATION_GPS_NMEA, nmea);
     mmcli_output_string                (MMC_F_LOCATION_GPS_UTC,     gps_utc);
     mmcli_output_string_take           (MMC_F_LOCATION_GPS_LONG,    gps_longitude);
     mmcli_output_string_take           (MMC_F_LOCATION_GPS_LAT,     gps_latitude);
@@ -570,6 +581,34 @@ get_location_process_reply (MMLocation3gpp *location_3gpp,
     g_clear_object (&location_gps_nmea);
     g_clear_object (&location_gps_raw);
     g_clear_object (&location_cdma_bs);
+}
+
+static void
+cancelled (GCancellable *cancellable)
+{
+    mmcli_async_operation_done ();
+}
+
+static void
+print_signaled_location (MMModemLocation *modem_location)
+{
+    MMLocation3gpp    *location_3gpp;
+    MMLocationGpsNmea *location_gps_nmea;
+    MMLocationGpsRaw  *location_gps_raw;
+    MMLocationCdmaBs  *location_cdma_bs;
+
+    location_3gpp     = mm_modem_location_get_signaled_3gpp     (modem_location);
+    location_gps_nmea = mm_modem_location_get_signaled_gps_nmea (modem_location);
+    location_gps_raw  = mm_modem_location_get_signaled_gps_raw  (modem_location);
+    location_cdma_bs  = mm_modem_location_get_signaled_cdma_bs  (modem_location);
+
+    get_location_process_reply (location_3gpp, location_gps_nmea, location_gps_raw, location_cdma_bs, NULL);
+}
+
+static void
+signaled_location_updated (MMModemLocation *modem_location)
+{
+    print_signaled_location (modem_location);
 }
 
 static void
@@ -629,6 +668,22 @@ get_modem_ready (GObject      *source,
                                     ctx->cancellable,
                                     (GAsyncReadyCallback)get_location_ready,
                                     NULL);
+        return;
+    }
+
+    /* Request to monitor location? */
+    if (monitor_flag) {
+        print_signaled_location (ctx->modem_location);
+        g_signal_connect (ctx->modem_location,
+                          "notify::location",
+                          G_CALLBACK (signaled_location_updated),
+                          NULL);
+
+        /* If we get cancelled, operation done */
+        g_cancellable_connect (ctx->cancellable,
+                               G_CALLBACK (cancelled),
+                               NULL,
+                               NULL);
         return;
     }
 

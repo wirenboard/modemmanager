@@ -146,6 +146,7 @@ GRegex    *mm_3gpp_cds_regex_get (void);
 
 /* AT+WS46=? response parser: returns array of MMModemMode values */
 GArray *mm_3gpp_parse_ws46_test_response (const gchar  *response,
+                                          gpointer      log_object,
                                           GError      **error);
 
 /* AT+COPS=? (network scan) response parser */
@@ -185,6 +186,11 @@ GList *mm_3gpp_parse_cgdcont_test_response (const gchar  *reply,
                                             gpointer      log_object,
                                             GError      **error);
 
+gboolean mm_3gpp_pdp_context_format_list_find_range (GList            *pdp_format_list,
+                                                     MMBearerIpFamily  ip_family,
+                                                     guint            *out_min_cid,
+                                                     guint            *out_max_cid);
+
 /* AT+CGDCONT? (PDP context query) response parser */
 typedef struct {
     guint cid;
@@ -194,15 +200,6 @@ typedef struct {
 void mm_3gpp_pdp_context_list_free (GList *pdp_list);
 GList *mm_3gpp_parse_cgdcont_read_response (const gchar *reply,
                                             GError **error);
-
-/* Select best CID to use during connection */
-guint mm_3gpp_select_best_cid (const gchar      *apn,
-                               MMBearerIpFamily  ip_family,
-                               GList            *context_list,
-                               GList            *context_format_list,
-                               gpointer          log_object,
-                               gboolean         *out_cid_reused,
-                               gboolean         *out_cid_overwritten);
 
 /* AT+CGACT? (active PDP context query) response parser */
 typedef struct {
@@ -435,10 +432,12 @@ void mm_3gpp_normalize_operator (gchar          **operator,
 gboolean mm_3gpp_parse_operator_id (const gchar *operator_id,
                                     guint16 *mcc,
                                     guint16 *mnc,
+                                    gboolean *three_digit_mnc,
                                     GError **error);
 
-const gchar      *mm_3gpp_get_pdp_type_from_ip_family (MMBearerIpFamily family);
-MMBearerIpFamily  mm_3gpp_get_ip_family_from_pdp_type (const gchar *pdp_type);
+const gchar      *mm_3gpp_get_pdp_type_from_ip_family (MMBearerIpFamily  family);
+MMBearerIpFamily  mm_3gpp_get_ip_family_from_pdp_type (const gchar      *pdp_type);
+gboolean          mm_3gpp_normalize_ip_family         (MMBearerIpFamily *family);
 
 char *mm_3gpp_parse_iccid (const char *raw_iccid, GError **error);
 
@@ -463,6 +462,31 @@ gboolean mm_3gpp_rssnr_level_to_rssnr (gint      rssnr_level,
                                        gdouble  *out_rssnr);
 
 GStrv mm_3gpp_parse_emergency_numbers (const char *raw, GError **error);
+
+/* PDP context -> profile */
+MM3gppProfile *mm_3gpp_profile_new_from_pdp_context (MM3gppPdpContext *pdp_context);
+
+/* Profile list operations */
+GList *mm_3gpp_profile_list_new_from_pdp_context_list (GList *pdp_context_list);
+void   mm_3gpp_profile_list_free                      (GList *profile_list);
+
+gint   mm_3gpp_profile_list_find_empty (GList                  *profile_list,
+                                        gint                    min_profile_id,
+                                        gint                    max_profile_id,
+                                        GError                **error);
+gint   mm_3gpp_profile_list_find_best  (GList                  *profile_list,
+                                        MM3gppProfile          *requested,
+                                        GEqualFunc              cmp_apn,
+                                        MM3gppProfileCmpFlags   cmp_flags,
+                                        gint                    min_profile_id,
+                                        gint                    max_profile_id,
+                                        gpointer                log_object,
+                                        MM3gppProfile         **out_reused,
+                                        gboolean               *out_overwritten);
+
+MM3gppProfile *mm_3gpp_profile_list_find_by_profile_id (GList   *profile_list,
+                                                        gint     profile_id,
+                                                        GError **error);
 
 /*****************************************************************************/
 /* CDMA specific helpers and utilities */
@@ -519,6 +543,28 @@ gboolean mm_parse_supl_address (const gchar  *supl,
                                 guint32      *out_ip,
                                 guint16      *out_port,
                                 GError      **error);
+
+/*****************************************************************************/
+/* SIM specific helpers and utilities */
+/*****************************************************************************/
+
+/* +CPOL? response parser (for a single entry) - accepts only numeric operator format*/
+gboolean mm_sim_parse_cpol_query_response (const gchar  *response,
+                                           guint        *out_index,
+                                           gchar       **out_operator_code,
+                                           gboolean     *out_gsm_act,
+                                           gboolean     *out_gsm_compact_act,
+                                           gboolean     *out_utran_act,
+                                           gboolean     *out_eutran_act,
+                                           gboolean     *out_ngran_act,
+                                           guint        *out_act_count,
+                                           GError      **error);
+
+/* +CPOL=? response parser for getting supported min and max index */
+gboolean mm_sim_parse_cpol_test_response (const gchar  *response,
+                                          guint        *out_min_index,
+                                          guint        *out_max_index,
+                                          GError      **error);
 
 /*****************************************************************************/
 

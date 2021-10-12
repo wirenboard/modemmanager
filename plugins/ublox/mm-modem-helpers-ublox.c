@@ -361,6 +361,8 @@ static const MMModemMode ublox_combinations[] = {
     ( MM_MODEM_MODE_2G | MM_MODEM_MODE_3G | MM_MODEM_MODE_4G ),
     ( MM_MODEM_MODE_2G |                    MM_MODEM_MODE_4G ),
     (                    MM_MODEM_MODE_3G | MM_MODEM_MODE_4G ),
+    (                                       MM_MODEM_MODE_4G ),
+    (                                       MM_MODEM_MODE_4G ),
 };
 
 GArray *
@@ -886,7 +888,7 @@ static const BandConfiguration band_configuration[] = {
         .model    = "SARA-R410M-52B",
         .method   = SETTINGS_UPDATE_METHOD_COPS,
         .uact     = FEATURE_UNSUPPORTED,
-        .ubandsel = FEATURE_SUPPORTED,
+        .ubandsel = FEATURE_UNSUPPORTED,
         .mode     = MM_MODEM_MODE_4G,
         .bands_4g = { MM_MODEM_BAND_EUTRAN_2,  MM_MODEM_BAND_EUTRAN_4, MM_MODEM_BAND_EUTRAN_5,
                       MM_MODEM_BAND_EUTRAN_12, MM_MODEM_BAND_EUTRAN_13 }
@@ -895,7 +897,7 @@ static const BandConfiguration band_configuration[] = {
         .model    = "SARA-R410M-02B",
         .method   = SETTINGS_UPDATE_METHOD_COPS,
         .uact     = FEATURE_UNSUPPORTED,
-        .ubandsel = FEATURE_SUPPORTED,
+        .ubandsel = FEATURE_UNSUPPORTED,
         .mode     = MM_MODEM_MODE_4G,
         .bands_4g = { MM_MODEM_BAND_EUTRAN_1,  MM_MODEM_BAND_EUTRAN_2, MM_MODEM_BAND_EUTRAN_3,
                       MM_MODEM_BAND_EUTRAN_4, MM_MODEM_BAND_EUTRAN_5, MM_MODEM_BAND_EUTRAN_8,
@@ -906,7 +908,7 @@ static const BandConfiguration band_configuration[] = {
         .model    = "SARA-R412M-02B",
         .method   = SETTINGS_UPDATE_METHOD_COPS,
         .uact     = FEATURE_UNSUPPORTED,
-        .ubandsel = FEATURE_SUPPORTED,
+        .ubandsel = FEATURE_UNSUPPORTED,
         .mode     = MM_MODEM_MODE_2G | MM_MODEM_MODE_4G,
         .bands_2g = { MM_MODEM_BAND_G850, MM_MODEM_BAND_EGSM, MM_MODEM_BAND_DCS, MM_MODEM_BAND_PCS },
         .bands_4g = { MM_MODEM_BAND_EUTRAN_1,  MM_MODEM_BAND_EUTRAN_2,  MM_MODEM_BAND_EUTRAN_3,
@@ -918,7 +920,7 @@ static const BandConfiguration band_configuration[] = {
         .model    = "SARA-N410-02B",
         .method   = SETTINGS_UPDATE_METHOD_COPS,
         .uact     = FEATURE_UNSUPPORTED,
-        .ubandsel = FEATURE_SUPPORTED,
+        .ubandsel = FEATURE_UNSUPPORTED,
         .mode     = MM_MODEM_MODE_4G,
         .bands_4g = { MM_MODEM_BAND_EUTRAN_1,  MM_MODEM_BAND_EUTRAN_2,  MM_MODEM_BAND_EUTRAN_3,
                       MM_MODEM_BAND_EUTRAN_4,  MM_MODEM_BAND_EUTRAN_5,  MM_MODEM_BAND_EUTRAN_8,

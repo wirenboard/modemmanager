@@ -5,8 +5,8 @@
 <title>MMModemLocation: libmm-glib Reference Manual</title>
 <meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
 <link rel="home" href="index.html" title="libmm-glib Reference Manual">
-<link rel="up" href="ch03s03.html" title="Location support">
-<link rel="prev" href="ch03s03.html" title="Location support">
+<link rel="up" href="ch03s05.html" title="Location support">
+<link rel="prev" href="ch03s05.html" title="Location support">
 <link rel="next" href="MMLocation3gpp.html" title="MMLocation3gpp">
 <meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
@@ -20,8 +20,8 @@
                   <a href="#MMModemLocation.implemented-interfaces" class="shortcut">Implemented Interfaces</a></span>
 </td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
-<td><a accesskey="u" href="ch03s03.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
-<td><a accesskey="p" href="ch03s03.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="ch03s05.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="p" href="ch03s05.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
 <td><a accesskey="n" href="MMLocation3gpp.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
 </tr></table>
 <div class="refentry">
@@ -248,6 +248,22 @@
 </tr>
 <tr>
 <td class="function_type">
+<a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="returnvalue">MMLocation3gpp</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-peek-signaled-3gpp" title="mm_modem_location_peek_signaled_3gpp ()">mm_modem_location_peek_signaled_3gpp</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="returnvalue">MMLocation3gpp</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-signaled-3gpp" title="mm_modem_location_get_signaled_3gpp ()">mm_modem_location_get_signaled_3gpp</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
 <span class="returnvalue">void</span>
 </td>
 <td class="function_name">
@@ -268,6 +284,22 @@
 </td>
 <td class="function_name">
 <a class="link" href="MMModemLocation.html#mm-modem-location-get-gps-nmea-sync" title="mm_modem_location_get_gps_nmea_sync ()">mm_modem_location_get_gps_nmea_sync</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a class="link" href="MMLocationGpsNmea.html" title="MMLocationGpsNmea"><span class="returnvalue">MMLocationGpsNmea</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-peek-signaled-gps-nmea" title="mm_modem_location_peek_signaled_gps_nmea ()">mm_modem_location_peek_signaled_gps_nmea</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a class="link" href="MMLocationGpsNmea.html" title="MMLocationGpsNmea"><span class="returnvalue">MMLocationGpsNmea</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-signaled-gps-nmea" title="mm_modem_location_get_signaled_gps_nmea ()">mm_modem_location_get_signaled_gps_nmea</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -296,6 +328,22 @@
 </tr>
 <tr>
 <td class="function_type">
+<a class="link" href="MMLocationGpsRaw.html" title="MMLocationGpsRaw"><span class="returnvalue">MMLocationGpsRaw</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-peek-signaled-gps-raw" title="mm_modem_location_peek_signaled_gps_raw ()">mm_modem_location_peek_signaled_gps_raw</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a class="link" href="MMLocationGpsRaw.html" title="MMLocationGpsRaw"><span class="returnvalue">MMLocationGpsRaw</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-signaled-gps-raw" title="mm_modem_location_get_signaled_gps_raw ()">mm_modem_location_get_signaled_gps_raw</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
 <span class="returnvalue">void</span>
 </td>
 <td class="function_name">
@@ -316,6 +364,22 @@
 </td>
 <td class="function_name">
 <a class="link" href="MMModemLocation.html#mm-modem-location-get-cdma-bs-sync" title="mm_modem_location_get_cdma_bs_sync ()">mm_modem_location_get_cdma_bs_sync</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a class="link" href="MMLocationCdmaBs.html" title="MMLocationCdmaBs"><span class="returnvalue">MMLocationCdmaBs</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-peek-signaled-cdma-bs" title="mm_modem_location_peek_signaled_cdma_bs ()">mm_modem_location_peek_signaled_cdma_bs</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a class="link" href="MMLocationCdmaBs.html" title="MMLocationCdmaBs"><span class="returnvalue">MMLocationCdmaBs</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-signaled-cdma-bs" title="mm_modem_location_get_signaled_cdma_bs ()">mm_modem_location_get_signaled_cdma_bs</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -1508,6 +1572,83 @@ returned value should be freed with <a href="https://developer.gnome.org/gobject
 </div>
 <hr>
 <div class="refsect2">
+<a name="mm-modem-location-peek-signaled-3gpp"></a><h3>mm_modem_location_peek_signaled_3gpp ()</h3>
+<pre class="programlisting"><a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="returnvalue">MMLocation3gpp</span></a> *
+mm_modem_location_peek_signaled_3gpp (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
+<p>Gets a <a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="type">MMLocation3gpp</span></a> object with the current 3GPP location information.</p>
+<p>Unlike <a class="link" href="MMModemLocation.html#mm-modem-location-get-3gpp" title="mm_modem_location_get_3gpp ()"><code class="function">mm_modem_location_get_3gpp()</code></a> or <a class="link" href="MMModemLocation.html#mm-modem-location-get-3gpp-sync" title="mm_modem_location_get_3gpp_sync ()"><code class="function">mm_modem_location_get_3gpp_sync()</code></a>,
+this method does not perform an explicit query. Instead, this method will
+return the location information that may have been signaled by the modem.
+Therefore, this method will only succeed if location signaling is enabled
+(e.g. with <a class="link" href="MMModemLocation.html#mm-modem-location-setup" title="mm_modem_location_setup ()"><code class="function">mm_modem_location_setup()</code></a> in the <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>).</p>
+<div class="warning">The returned value is only valid until the property changes so
+it is only safe to use this function on the thread where
+<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMModemLocation.html#mm-modem-location-get-signaled-3gpp" title="mm_modem_location_get_signaled_3gpp ()"><code class="function">mm_modem_location_get_signaled_3gpp()</code></a> if on
+another thread.</div>
+<div class="refsect3">
+<a name="mm-modem-location-peek-signaled-3gpp.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-peek-signaled-3gpp.returns"></a><h4>Returns</h4>
+<p>A <a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="type">MMLocation3gpp</span></a>, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. Do
+not free the returned value, it belongs to <em class="parameter"><code>self</code></em>
+. </p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-location-get-signaled-3gpp"></a><h3>mm_modem_location_get_signaled_3gpp ()</h3>
+<pre class="programlisting"><a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="returnvalue">MMLocation3gpp</span></a> *
+mm_modem_location_get_signaled_3gpp (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
+<p>Gets a <a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="type">MMLocation3gpp</span></a> object with the current 3GPP location information.</p>
+<p>Unlike <a class="link" href="MMModemLocation.html#mm-modem-location-get-3gpp" title="mm_modem_location_get_3gpp ()"><code class="function">mm_modem_location_get_3gpp()</code></a> or <a class="link" href="MMModemLocation.html#mm-modem-location-get-3gpp-sync" title="mm_modem_location_get_3gpp_sync ()"><code class="function">mm_modem_location_get_3gpp_sync()</code></a>,
+this method does not perform an explicit query. Instead, this method will
+return the location information that may have been signaled by the modem.
+Therefore, this method will only succeed if location signaling is enabled
+(e.g. with <a class="link" href="MMModemLocation.html#mm-modem-location-setup" title="mm_modem_location_setup ()"><code class="function">mm_modem_location_setup()</code></a> in the <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>).</p>
+<div class="warning">The values reported by <em class="parameter"><code>self</code></em> are not updated when the values in the
+interface change. Instead, the client is expected to call
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-signaled-3gpp" title="mm_modem_location_get_signaled_3gpp ()"><code class="function">mm_modem_location_get_signaled_3gpp()</code></a> again to get a new <a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="type">MMLocation3gpp</span></a>
+with the new values.</div>
+<div class="refsect3">
+<a name="mm-modem-location-get-signaled-3gpp.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-get-signaled-3gpp.returns"></a><h4>Returns</h4>
+<p>A <a class="link" href="MMLocation3gpp.html" title="MMLocation3gpp"><span class="type">MMLocation3gpp</span></a> that must be freed with
+<a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. </p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
+</div>
+<hr>
+<div class="refsect2">
 <a name="mm-modem-location-get-gps-nmea"></a><h3>mm_modem_location_get_gps_nmea ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
 mm_modem_location_get_gps_nmea (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>,
@@ -1645,6 +1786,89 @@ The returned value should be freed with <a href="https://developer.gnome.org/gob
 <p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-location-peek-signaled-gps-nmea"></a><h3>mm_modem_location_peek_signaled_gps_nmea ()</h3>
+<pre class="programlisting"><a class="link" href="MMLocationGpsNmea.html" title="MMLocationGpsNmea"><span class="returnvalue">MMLocationGpsNmea</span></a> *
+mm_modem_location_peek_signaled_gps_nmea
+                               (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
+<p>Gets a <a class="link" href="MMLocationGpsNmea.html" title="MMLocationGpsNmea"><span class="type">MMLocationGpsNmea</span></a> object with the current GPS NMEA location
+information.</p>
+<p>Unlike <a class="link" href="MMModemLocation.html#mm-modem-location-get-gps-nmea" title="mm_modem_location_get_gps_nmea ()"><code class="function">mm_modem_location_get_gps_nmea()</code></a> or
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-gps-nmea-sync" title="mm_modem_location_get_gps_nmea_sync ()"><code class="function">mm_modem_location_get_gps_nmea_sync()</code></a>, this method does not perform an
+explicit query. Instead, this method will return the location information
+that may have been signaled by the modem. Therefore, this method will only
+succeed if location signaling is enabled (e.g. with <a class="link" href="MMModemLocation.html#mm-modem-location-setup" title="mm_modem_location_setup ()"><code class="function">mm_modem_location_setup()</code></a>
+in the <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>).</p>
+<div class="warning">The returned value is only valid until the property changes so
+it is only safe to use this function on the thread where
+<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMModemLocation.html#mm-modem-location-get-signaled-gps-nmea" title="mm_modem_location_get_signaled_gps_nmea ()"><code class="function">mm_modem_location_get_signaled_gps_nmea()</code></a> if on
+another thread.</div>
+<div class="refsect3">
+<a name="mm-modem-location-peek-signaled-gps-nmea.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-peek-signaled-gps-nmea.returns"></a><h4>Returns</h4>
+<p>A <a class="link" href="MMLocationGpsNmea.html" title="MMLocationGpsNmea"><span class="type">MMLocationGpsNmea</span></a>, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. Do
+not free the returned value, it belongs to <em class="parameter"><code>self</code></em>
+. </p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-location-get-signaled-gps-nmea"></a><h3>mm_modem_location_get_signaled_gps_nmea ()</h3>
+<pre class="programlisting"><a class="link" href="MMLocationGpsNmea.html" title="MMLocationGpsNmea"><span class="returnvalue">MMLocationGpsNmea</span></a> *
+mm_modem_location_get_signaled_gps_nmea
+                               (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
+<p>Gets a <a class="link" href="MMLocationGpsNmea.html" title="MMLocationGpsNmea"><span class="type">MMLocationGpsNmea</span></a> object with the current GPS NMEA location
+information.</p>
+<p>Unlike <a class="link" href="MMModemLocation.html#mm-modem-location-get-gps-nmea" title="mm_modem_location_get_gps_nmea ()"><code class="function">mm_modem_location_get_gps_nmea()</code></a> or
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-gps-nmea-sync" title="mm_modem_location_get_gps_nmea_sync ()"><code class="function">mm_modem_location_get_gps_nmea_sync()</code></a>, this method does not perform an
+explicit query. Instead, this method will return the location information
+that may have been signaled by the modem. Therefore, this method will only
+succeed if location signaling is enabled (e.g. with <a class="link" href="MMModemLocation.html#mm-modem-location-setup" title="mm_modem_location_setup ()"><code class="function">mm_modem_location_setup()</code></a>
+in the <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>).</p>
+<div class="warning">The values reported by <em class="parameter"><code>self</code></em> are not updated when the values in the
+interface change. Instead, the client is expected to call
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-signaled-gps-nmea" title="mm_modem_location_get_signaled_gps_nmea ()"><code class="function">mm_modem_location_get_signaled_gps_nmea()</code></a> again to get a new <a class="link" href="MMLocationGpsNmea.html" title="MMLocationGpsNmea"><span class="type">MMLocationGpsNmea</span></a>
+with the new values.</div>
+<div class="refsect3">
+<a name="mm-modem-location-get-signaled-gps-nmea.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-get-signaled-gps-nmea.returns"></a><h4>Returns</h4>
+<p>A <a class="link" href="MMLocationGpsNmea.html" title="MMLocationGpsNmea"><span class="type">MMLocationGpsNmea</span></a> that must be freed with
+<a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. </p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -1788,6 +2012,89 @@ The returned value should be freed with <a href="https://developer.gnome.org/gob
 </div>
 <hr>
 <div class="refsect2">
+<a name="mm-modem-location-peek-signaled-gps-raw"></a><h3>mm_modem_location_peek_signaled_gps_raw ()</h3>
+<pre class="programlisting"><a class="link" href="MMLocationGpsRaw.html" title="MMLocationGpsRaw"><span class="returnvalue">MMLocationGpsRaw</span></a> *
+mm_modem_location_peek_signaled_gps_raw
+                               (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
+<p>Gets a <a class="link" href="MMLocationGpsRaw.html" title="MMLocationGpsRaw"><span class="type">MMLocationGpsRaw</span></a> object with the current GPS raw location
+information.</p>
+<p>Unlike <a class="link" href="MMModemLocation.html#mm-modem-location-get-gps-raw" title="mm_modem_location_get_gps_raw ()"><code class="function">mm_modem_location_get_gps_raw()</code></a> or
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-gps-raw-sync" title="mm_modem_location_get_gps_raw_sync ()"><code class="function">mm_modem_location_get_gps_raw_sync()</code></a>, this method does not perform an
+explicit query. Instead, this method will return the location information
+that may have been signaled by the modem. Therefore, this method will only
+succeed if location signaling is enabled (e.g. with <a class="link" href="MMModemLocation.html#mm-modem-location-setup" title="mm_modem_location_setup ()"><code class="function">mm_modem_location_setup()</code></a>
+in the <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>).</p>
+<div class="warning">The returned value is only valid until the property changes so
+it is only safe to use this function on the thread where
+<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMModemLocation.html#mm-modem-location-get-signaled-gps-raw" title="mm_modem_location_get_signaled_gps_raw ()"><code class="function">mm_modem_location_get_signaled_gps_raw()</code></a> if on
+another thread.</div>
+<div class="refsect3">
+<a name="mm-modem-location-peek-signaled-gps-raw.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-peek-signaled-gps-raw.returns"></a><h4>Returns</h4>
+<p>A <a class="link" href="MMLocationGpsRaw.html" title="MMLocationGpsRaw"><span class="type">MMLocationGpsRaw</span></a>, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. Do
+not free the returned value, it belongs to <em class="parameter"><code>self</code></em>
+. </p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-location-get-signaled-gps-raw"></a><h3>mm_modem_location_get_signaled_gps_raw ()</h3>
+<pre class="programlisting"><a class="link" href="MMLocationGpsRaw.html" title="MMLocationGpsRaw"><span class="returnvalue">MMLocationGpsRaw</span></a> *
+mm_modem_location_get_signaled_gps_raw
+                               (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
+<p>Gets a <a class="link" href="MMLocationGpsRaw.html" title="MMLocationGpsRaw"><span class="type">MMLocationGpsRaw</span></a> object with the current GPS raw location
+information.</p>
+<p>Unlike <a class="link" href="MMModemLocation.html#mm-modem-location-get-gps-raw" title="mm_modem_location_get_gps_raw ()"><code class="function">mm_modem_location_get_gps_raw()</code></a> or
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-gps-raw-sync" title="mm_modem_location_get_gps_raw_sync ()"><code class="function">mm_modem_location_get_gps_raw_sync()</code></a>, this method does not perform an
+explicit query. Instead, this method will return the location information
+that may have been signaled by the modem. Therefore, this method will only
+succeed if location signaling is enabled (e.g. with <a class="link" href="MMModemLocation.html#mm-modem-location-setup" title="mm_modem_location_setup ()"><code class="function">mm_modem_location_setup()</code></a>
+in the <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>).</p>
+<div class="warning">The values reported by <em class="parameter"><code>self</code></em> are not updated when the values in the
+interface change. Instead, the client is expected to call
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-signaled-gps-raw" title="mm_modem_location_get_signaled_gps_raw ()"><code class="function">mm_modem_location_get_signaled_gps_raw()</code></a> again to get a new <a class="link" href="MMLocationGpsRaw.html" title="MMLocationGpsRaw"><span class="type">MMLocationGpsRaw</span></a>
+with the new values.</div>
+<div class="refsect3">
+<a name="mm-modem-location-get-signaled-gps-raw.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-get-signaled-gps-raw.returns"></a><h4>Returns</h4>
+<p>A <a class="link" href="MMLocationGpsRaw.html" title="MMLocationGpsRaw"><span class="type">MMLocationGpsRaw</span></a> that must be freed with
+<a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. </p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
+</div>
+<hr>
+<div class="refsect2">
 <a name="mm-modem-location-get-cdma-bs"></a><h3>mm_modem_location_get_cdma_bs ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
 mm_modem_location_get_cdma_bs (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>,
@@ -1925,6 +2232,89 @@ The returned value should be freed with <a href="https://developer.gnome.org/gob
 <p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: <a class="link" href="api-index-1-0.html#api-index-1.0">1.0</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-location-peek-signaled-cdma-bs"></a><h3>mm_modem_location_peek_signaled_cdma_bs ()</h3>
+<pre class="programlisting"><a class="link" href="MMLocationCdmaBs.html" title="MMLocationCdmaBs"><span class="returnvalue">MMLocationCdmaBs</span></a> *
+mm_modem_location_peek_signaled_cdma_bs
+                               (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
+<p>Gets a <a class="link" href="MMLocationCdmaBs.html" title="MMLocationCdmaBs"><span class="type">MMLocationCdmaBs</span></a> object with the current CDMA base station location
+information.</p>
+<p>Unlike <a class="link" href="MMModemLocation.html#mm-modem-location-get-cdma-bs" title="mm_modem_location_get_cdma_bs ()"><code class="function">mm_modem_location_get_cdma_bs()</code></a> or
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-cdma-bs-sync" title="mm_modem_location_get_cdma_bs_sync ()"><code class="function">mm_modem_location_get_cdma_bs_sync()</code></a>, this method does not perform an
+explicit query. Instead, this method will return the location information
+that may have been signaled by the modem. Therefore, this method will only
+succeed if location signaling is enabled (e.g. with <a class="link" href="MMModemLocation.html#mm-modem-location-setup" title="mm_modem_location_setup ()"><code class="function">mm_modem_location_setup()</code></a>
+in the <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>).</p>
+<div class="warning">The returned value is only valid until the property changes so
+it is only safe to use this function on the thread where
+<em class="parameter"><code>self</code></em> was constructed. Use <a class="link" href="MMModemLocation.html#mm-modem-location-get-signaled-cdma-bs" title="mm_modem_location_get_signaled_cdma_bs ()"><code class="function">mm_modem_location_get_signaled_cdma_bs()</code></a> if on
+another thread.</div>
+<div class="refsect3">
+<a name="mm-modem-location-peek-signaled-cdma-bs.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-peek-signaled-cdma-bs.returns"></a><h4>Returns</h4>
+<p>A <a class="link" href="MMLocationCdmaBs.html" title="MMLocationCdmaBs"><span class="type">MMLocationCdmaBs</span></a>, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. Do
+not free the returned value, it belongs to <em class="parameter"><code>self</code></em>
+. </p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="mm-modem-location-get-signaled-cdma-bs"></a><h3>mm_modem_location_get_signaled_cdma_bs ()</h3>
+<pre class="programlisting"><a class="link" href="MMLocationCdmaBs.html" title="MMLocationCdmaBs"><span class="returnvalue">MMLocationCdmaBs</span></a> *
+mm_modem_location_get_signaled_cdma_bs
+                               (<em class="parameter"><code><a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a> *self</code></em>);</pre>
+<p>Gets a <a class="link" href="MMLocationCdmaBs.html" title="MMLocationCdmaBs"><span class="type">MMLocationCdmaBs</span></a> object with the current CDMA base station location
+information.</p>
+<p>Unlike <a class="link" href="MMModemLocation.html#mm-modem-location-get-cdma-bs" title="mm_modem_location_get_cdma_bs ()"><code class="function">mm_modem_location_get_cdma_bs()</code></a> or
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-cdma-bs-sync" title="mm_modem_location_get_cdma_bs_sync ()"><code class="function">mm_modem_location_get_cdma_bs_sync()</code></a>, this method does not perform an
+explicit query. Instead, this method will return the location information
+that may have been signaled by the modem. Therefore, this method will only
+succeed if location signaling is enabled (e.g. with <a class="link" href="MMModemLocation.html#mm-modem-location-setup" title="mm_modem_location_setup ()"><code class="function">mm_modem_location_setup()</code></a>
+in the <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>).</p>
+<div class="warning">The values reported by <em class="parameter"><code>self</code></em> are not updated when the values in the
+interface change. Instead, the client is expected to call
+<a class="link" href="MMModemLocation.html#mm-modem-location-get-signaled-cdma-bs" title="mm_modem_location_get_signaled_cdma_bs ()"><code class="function">mm_modem_location_get_signaled_cdma_bs()</code></a> again to get a new <a class="link" href="MMLocationCdmaBs.html" title="MMLocationCdmaBs"><span class="type">MMLocationCdmaBs</span></a>
+with the new values.</div>
+<div class="refsect3">
+<a name="mm-modem-location-get-signaled-cdma-bs.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>A <a class="link" href="MMModemLocation.html" title="MMModemLocation"><span class="type">MMModemLocation</span></a>.</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="mm-modem-location-get-signaled-cdma-bs.returns"></a><h4>Returns</h4>
+<p>A <a class="link" href="MMLocationCdmaBs.html" title="MMLocationCdmaBs"><span class="type">MMLocationCdmaBs</span></a> that must be freed with
+<a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#g-object-unref"><code class="function">g_object_unref()</code></a> or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none available. </p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
+</div>
+<p class="since">Since: <a class="link" href="api-index-1-18.html#api-index-1.18">1.18</a></p>
 </div>
 <hr>
 <div class="refsect2">

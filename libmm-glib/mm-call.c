@@ -37,10 +37,10 @@
 G_DEFINE_TYPE (MMCall, mm_call, MM_GDBUS_TYPE_CALL_PROXY)
 
 struct _MMCallPrivate {
-    /* Audio Format */
-    GMutex audio_format_mutex;
-    guint audio_format_id;
-    MMCallAudioFormat *audio_format;
+    /* Common mutex to sync access */
+    GMutex mutex;
+
+    PROPERTY_OBJECT_DECLARE (audio_format, MMCallAudioFormat)
 };
 
 /*****************************************************************************/
@@ -261,68 +261,6 @@ mm_call_dup_audio_port (MMCall *self)
 
 /*****************************************************************************/
 
-static void
-audio_format_updated (MMCall *self,
-                      GParamSpec *pspec)
-{
-    g_mutex_lock (&self->priv->audio_format_mutex);
-    {
-        GVariant *dictionary;
-
-        g_clear_object (&self->priv->audio_format);
-
-        /* TODO: update existing object instead of re-creating? */
-        dictionary = mm_gdbus_call_get_audio_format (MM_GDBUS_CALL (self));
-        if (dictionary) {
-            GError *error = NULL;
-
-            self->priv->audio_format = mm_call_audio_format_new_from_dictionary (dictionary, &error);
-            if (error) {
-                g_warning ("Invalid audio format update received: %s", error->message);
-                g_error_free (error);
-            }
-        }
-    }
-    g_mutex_unlock (&self->priv->audio_format_mutex);
-}
-
-static void
-ensure_internal_audio_format (MMCall *self,
-                             MMCallAudioFormat **dup)
-{
-    g_mutex_lock (&self->priv->audio_format_mutex);
-    {
-        /* If this is the first time ever asking for the object, setup the
-         * update listener and the initial object, if any. */
-        if (!self->priv->audio_format_id) {
-            GVariant *dictionary;
-
-            dictionary = mm_gdbus_call_dup_audio_format (MM_GDBUS_CALL (self));
-            if (dictionary) {
-                GError *error = NULL;
-
-                self->priv->audio_format = mm_call_audio_format_new_from_dictionary (dictionary, &error);
-                if (error) {
-                    g_warning ("Invalid initial audio format: %s", error->message);
-                    g_error_free (error);
-                }
-                g_variant_unref (dictionary);
-            }
-
-            /* No need to clear this signal connection when freeing self */
-            self->priv->audio_format_id =
-                g_signal_connect (self,
-                                  "notify::audio-format",
-                                  G_CALLBACK (audio_format_updated),
-                                  NULL);
-        }
-
-        if (dup && self->priv->audio_format)
-            *dup = g_object_ref (self->priv->audio_format);
-    }
-    g_mutex_unlock (&self->priv->audio_format_mutex);
-}
-
 /**
  * mm_call_get_audio_format:
  * @self: A #MMCall.
@@ -340,16 +278,6 @@ ensure_internal_audio_format (MMCall *self,
  *
  * Since: 1.10
  */
-MMCallAudioFormat *
-mm_call_get_audio_format (MMCall *self)
-{
-    MMCallAudioFormat *format = NULL;
-
-    g_return_val_if_fail (MM_IS_CALL (self), NULL);
-
-    ensure_internal_audio_format (self, &format);
-    return format;
-}
 
 /**
  * mm_call_peek_audio_format:
@@ -368,14 +296,11 @@ mm_call_get_audio_format (MMCall *self)
  *
  * Since: 1.10
  */
-MMCallAudioFormat *
-mm_call_peek_audio_format (MMCall *self)
-{
-    g_return_val_if_fail (MM_IS_CALL (self), NULL);
 
-    ensure_internal_audio_format (self, NULL);
-    return self->priv->audio_format;
-}
+PROPERTY_OBJECT_DEFINE_FAILABLE (audio_format,
+                                 Call, call, CALL,
+                                 MMCallAudioFormat,
+                                 mm_call_audio_format_new_from_dictionary)
 
 /*****************************************************************************/
 
@@ -1013,10 +938,10 @@ mm_call_send_dtmf_sync (MMCall *self,
 static void
 mm_call_init (MMCall *self)
 {
-    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                              MM_TYPE_CALL,
-                                              MMCallPrivate);
-    g_mutex_init (&self->priv->audio_format_mutex);
+    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, MM_TYPE_CALL, MMCallPrivate);
+    g_mutex_init (&self->priv->mutex);
+
+    PROPERTY_INITIALIZE (audio_format, "audio-format")
 }
 
 static void
@@ -1024,19 +949,11 @@ finalize (GObject *object)
 {
     MMCall *self = MM_CALL (object);
 
-    g_mutex_clear (&self->priv->audio_format_mutex);
+    g_mutex_clear (&self->priv->mutex);
+
+    PROPERTY_OBJECT_FINALIZE (audio_format)
 
     G_OBJECT_CLASS (mm_call_parent_class)->finalize (object);
-}
-
-static void
-dispose (GObject *object)
-{
-    MMCall *self = MM_CALL (object);
-
-    g_clear_object (&self->priv->audio_format);
-
-    G_OBJECT_CLASS (mm_call_parent_class)->dispose (object);
 }
 
 static void
@@ -1046,7 +963,5 @@ mm_call_class_init (MMCallClass *call_class)
 
     g_type_class_add_private (object_class, sizeof (MMCallPrivate));
 
-    /* Virtual methods */
-    object_class->dispose = dispose;
     object_class->finalize = finalize;
 }

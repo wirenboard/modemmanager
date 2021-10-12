@@ -242,6 +242,7 @@
     <description xml:lang="pl">Odpytywanie informacji o czasie sieciowym i strefie czasowej</description>
     <description xml:lang="it">Interroga le informazioni sull'ora di rete e sul fuso orario</description>
     <description xml:lang="id">Tanyakan waktu jaringan dan informasi zona waktu</description>
+    <description xml:lang="hu">Hálózati idő és időzóna-információk lekérdezése</description>
     <description xml:lang="he">לתשאל את פרטי השעה ואזור הזמן מהרשת</description>
     <description xml:lang="fi">Tarkista verkon aika ja aikavyöhyketiedot</description>
     <message>System policy prevents querying network time information.</message>
@@ -254,6 +255,7 @@
     <message xml:lang="pl">Ustawienia systemu uniemożliwiają odpytywanie informacji o czasie sieciowym.</message>
     <message xml:lang="it">La politica di sistema impedisce di interrogare le informazioni sull'ora di rete</message>
     <message xml:lang="id">Kebijakan sistem mencegah kuiri informasi waktu jaringan.</message>
+    <message xml:lang="hu">A rendszer házirendje nem teszi lehetővé a hálózati idő információinak lekérdezését.</message>
     <message xml:lang="he">מדיניות מערכת מונעת תשאול פרטי זמן מהרשת.</message>
     <message xml:lang="fi">Järjestelmän sääntö estää tarkastamasta verkon aikaa ja aikavyöhyketietoja.</message>
     <defaults>
