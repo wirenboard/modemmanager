@@ -31,4 +31,4 @@ override_dh_strip:
 override_dh_install:
 	find $(CURDIR)/debian/tmp/ -name \*.a -exec rm {} \;
 	find $(CURDIR)/debian/tmp/ -name \*.la -exec rm {} \;
-	dh_install --fail-missing
+	dh_install
