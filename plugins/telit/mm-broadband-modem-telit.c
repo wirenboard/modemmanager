@@ -607,6 +607,27 @@ next_step:
 }
 
 static void
+telit_qss_support_ready (MMBaseModem *self,
+                         GAsyncResult *res,
+                         GTask *task)
+{
+    GError *error = NULL;
+    QssSetupContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    if (!mm_base_modem_at_command_finish (self, res, &error)) {
+        mm_obj_dbg (self, "#QSS command unsupported: '%s'", error->message);
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    ctx->step++;
+    qss_setup_step (task);
+}
+
+static void
 qss_setup_step (GTask *task)
 {
     QssSetupContext *ctx;
@@ -617,8 +638,13 @@ qss_setup_step (GTask *task)
 
     switch (ctx->step) {
         case QSS_SETUP_STEP_FIRST:
-            ctx->step++;
-            /* fall through */
+            mm_base_modem_at_command (MM_BASE_MODEM (self),
+                                      "#QSS=?",
+                                      3,
+                                      TRUE,
+                                      (GAsyncReadyCallback) telit_qss_support_ready,
+                                      task);
+            return;
         case QSS_SETUP_STEP_QUERY:
             mm_base_modem_at_command (MM_BASE_MODEM (self),
                                       "#QSS?",
@@ -723,7 +749,8 @@ static void load_unlock_retries_step (GTask *task);
 static void
 load_unlock_retries_context_free (LoadUnlockRetriesContext *ctx)
 {
-    g_object_unref (ctx->retries);
+    if (ctx->retries)
+        g_object_unref (ctx->retries);
     g_slice_free (LoadUnlockRetriesContext, ctx);
 }
 
@@ -803,7 +830,10 @@ csim_lock_ready (MMBaseModem  *_self,
     if (!response) {
         if (g_error_matches (error,
                              MM_MOBILE_EQUIPMENT_ERROR,
-                             MM_MOBILE_EQUIPMENT_ERROR_NOT_SUPPORTED)) {
+                             MM_MOBILE_EQUIPMENT_ERROR_NOT_SUPPORTED) ||
+            g_error_matches (error,
+                             MM_MOBILE_EQUIPMENT_ERROR,
+                             MM_MOBILE_EQUIPMENT_ERROR_UNKNOWN)) {
             self->priv->csim_lock_support = FEATURE_NOT_SUPPORTED;
             mm_obj_warn (self, "couldn't lock SIM card: %s; continuing without CSIM lock", error->message);
             g_error_free (error);

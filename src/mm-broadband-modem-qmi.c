@@ -2061,7 +2061,7 @@ get_sim_lock_status_via_pin_status_ready (QmiClientDms *client,
     LoadEnabledFacilityLocksContext *ctx;
     QmiMessageDmsUimGetPinStatusOutput *output;
     QmiDmsUimPinStatus current_status;
-    GError *error;
+    GError *error = NULL;
     gboolean pin1_enabled;
     gboolean pin2_enabled;
 
@@ -8615,7 +8615,7 @@ modem_3gpp_ussd_send (MMIfaceModem3gppUssd *_self,
     MMBroadbandModemQmi         *self = MM_BROADBAND_MODEM_QMI (_self);
     GTask                       *task;
     QmiClient                   *client;
-    QmiVoiceUssDataCodingScheme  scheme;
+    QmiVoiceUssDataCodingScheme  scheme = QMI_VOICE_USS_DATA_CODING_SCHEME_UNKNOWN;
     g_autoptr(GArray)            encoded = NULL;
     GError                      *error = NULL;
     MMModem3gppUssdSessionState  state;
@@ -12185,8 +12185,6 @@ iface_modem_init (MMIfaceModem *iface)
     /* Enabling/disabling */
     iface->modem_power_up = modem_power_up;
     iface->modem_power_up_finish = modem_power_up_down_off_finish;
-    iface->fcc_unlock = mm_shared_qmi_fcc_unlock;
-    iface->fcc_unlock_finish = mm_shared_qmi_fcc_unlock_finish;
     iface->modem_after_power_up = NULL;
     iface->modem_after_power_up_finish = NULL;
     iface->modem_power_down = modem_power_down;

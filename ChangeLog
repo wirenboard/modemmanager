@@ -1,3 +1,1035 @@
+commit ac6d31e463168e894269d2a7c949de4577026eea
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Nov 26 10:17:53 2021 +0100
+
+    release: bump version to 1.18.4
+
+ configure.ac | 2 +-
+ meson.build  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit 941b9c1d185df8753b5950ea593d9b5fa9eac1e7
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Nov 26 10:17:26 2021 +0100
+
+    NEWS: update for 1.18.4
+
+ NEWS | 82
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 82 insertions(+)
+
+commit 80d62f2f68bff8b55026fc7e815603394ad729ec
+Author: Matthew Via <via@matthewvia.info>
+Date:   Sat Oct 23 18:23:32 2021 -0400
+
+    sms-part-cdma: merge WDP multipart CDMA WAP messages.
+
+    CDMA WAPs have multipart message information in a 3 byte header
+    in-band
+    with the user data, as described in WAP-259-WDP-20010614-a.  Set the
+    message concat parameters and use the message-id as the reference.
+
+    (cherry picked from commit 6db9a48c343690c808aea92e29daf13e021d3fc8)
+
+ src/mm-sms-part-cdma.c | 30 ++++++++++++++++++++++++++++++
+ src/mm-sms-part.c      |  3 +++
+ src/mm-sms-part.h      |  4 ++++
+ 3 files changed, 37 insertions(+)
+
+commit 7a90b42035d3b11d9da6fee8f3edd2c3749cd617
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Nov 22 14:03:48 2021 +0100
+
+    libmm-glib,modem: fix warning when loading SIM slots
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/465
+
+    (cherry picked from commit d2b620c5fa2b9d389b0d543be1f10860d4404612)
+
+ libmm-glib/mm-modem.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+commit 9900187976bb6b7d32f17c8e336ba26ad2abec1c
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Nov 21 15:04:55 2021 +0100
+
+    bearer-mbim: fix error handling in connection status reload
+
+    We should not set the GError as autoptr(), as we're returning it as
+    part of the GTask.
+
+    (cherry picked from commit afb213ac05aa72db010e17e0326408bf655f66fd)
+
+ src/mm-bearer-mbim.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 7d79e3f67dc34a72b321660f02ec535299f972be
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Nov 21 14:50:07 2021 +0100
+
+    bearer-mbim: plug leak when checking if already disconnected fails
+
+    If the modem reports any error during the connection status check,
+    we're creating a GError but never disposing it. We don't need that
+    GError for anything, so just discard it.
+
+    (cherry picked from commit 647a438b435e9dc21c123602b4be758515c51c57)
+
+ src/mm-bearer-mbim.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+commit 3a1d578c4d0f1be4658b5657999fc40f68931b65
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Oct 26 01:06:10 2021 +0200
+
+    data,fcc-unlock: add example unlock scripts
+
+    Added scripts for Foxconn SDX55, Quectel EM120, and several old Sierra
+    Wireless manufactured devices:
+     * Installed but not used by default, the user needs to setup manual
+       links from ${pkgdatadir}/fcc-unlock.available.d, to
+       ${pkgsysconfdir}/fcc-unlock.d in order to enable them.
+     * Installed with rights only for the owner, so that the dispatcher in
+       ModemManager can validate them.
+     * They rely on $PATH to find the qmicli/mbimcli tools.
+
+    In addition to these scripts, per-vid:pid links are created in the
+    same ${pkgdatadir}/fcc-unlock.available.d directory, specifying which
+    are the specific devices that require the FCC unlock operation.
+
+    This patch also creates the ${pkgsysconfdir}/fcc-unlock.d and
+    ${pkglibdir}/fcc-unlock.d directories where ModemManager looks for the
+    enabled tools.
+
+    Note that the meson setup doesn't support creating/deleting links
+    officially yet, so we use a workaround using meson.add_install_script
+    that is not perfect (i.e. doesn't handle the symlink removal during
+    uninstall). See https://github.com/mesonbuild/meson/issues/1602
+
+    (cherry picked from commit e7a6bb7504403b60d098ef8dde39b036c8c31f8d)
+
+ configure.ac                |  2 ++
+ data/Makefile.am            |  2 +-
+ data/fcc-unlock/105b        | 34 ++++++++++++++++++++++++++++++++++
+ data/fcc-unlock/1199        | 33 +++++++++++++++++++++++++++++++++
+ data/fcc-unlock/1eac        | 34 ++++++++++++++++++++++++++++++++++
+ data/fcc-unlock/Makefile.am | 32 ++++++++++++++++++++++++++++++++
+ data/fcc-unlock/meson.build | 41
+ +++++++++++++++++++++++++++++++++++++++++
+ meson.build                 |  1 +
+ 8 files changed, 178 insertions(+), 1 deletion(-)
+
+commit f47905440dbd2102850bfb30ad059e05310ba526
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Oct 25 21:39:46 2021 +0200
+
+    iface-modem: use external dispatcher to attempt FCC unlock
+
+    We remove the built-in FCC unlock procedures from the ModemManager, we
+    will no longer run them automatically, and instead rely on external
+    scripts/programs to do that.
+
+    Packages providing the external FCC unlock tools can install them in
+    ${pkglibdir}/fcc-unlock.d.
+
+    Users manually enabling external FCC unlock tools can install them in
+    ${pkgsysconfdir}/fcc-unlock.d.
+
+    The user-enabled path takes precedence over the package-enabled one.
+
+    (cherry picked from commit 81302efa661f848455a1bfe44b27608b11d6d49b)
+
+ configure.ac                                      |   5 +
+ meson.build                                       |   2 +
+ plugins/foxconn/mm-broadband-modem-mbim-foxconn.c |  62 -----
+ src/Makefile.am                                   |   4 +
+ src/meson.build                                   |   3 +
+ src/mm-broadband-modem-mbim.c                     |   2 -
+ src/mm-broadband-modem-qmi.c                      |   2 -
+ src/mm-fcc-unlock-dispatcher.c                    | 319
+ ++++++++++++++++++++++
+ src/mm-fcc-unlock-dispatcher.h                    |  47 ++++
+ src/mm-iface-modem.c                              |  68 ++++-
+ src/mm-iface-modem.h                              |   8 -
+ src/mm-shared-qmi.c                               |  50 ----
+ src/mm-shared-qmi.h                               |   6 -
+ 13 files changed, 439 insertions(+), 139 deletions(-)
+
+commit 6b1db4b4f99e490adf306bab4ff60319d8e80df2
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Nov 16 17:53:22 2021 +0100
+
+    libmm-glib: fix license in sources
+
+    The libmm-glib library is LGPLv2+, not GPLv2+.
+
+    (cherry picked from commit 21c775703c9e3852fdda206a9658cb236613ef85)
+
+ libmm-glib/libmm-glib.h                           |  2 +-
+ libmm-glib/mm-3gpp-profile.c                      | 21
+ ++++++++++++++-------
+ libmm-glib/mm-3gpp-profile.h                      | 21
+ ++++++++++++++-------
+ libmm-glib/mm-bearer-ip-config.c                  | 21
+ ++++++++++++++-------
+ libmm-glib/mm-bearer-ip-config.h                  | 21
+ ++++++++++++++-------
+ libmm-glib/mm-bearer-properties.c                 | 21
+ ++++++++++++++-------
+ libmm-glib/mm-bearer-properties.h                 | 21
+ ++++++++++++++-------
+ libmm-glib/mm-bearer-stats.c                      | 21
+ ++++++++++++++-------
+ libmm-glib/mm-bearer-stats.h                      | 21
+ ++++++++++++++-------
+ libmm-glib/mm-bearer.c                            |  2 +-
+ libmm-glib/mm-bearer.h                            |  2 +-
+ libmm-glib/mm-call-audio-format.c                 | 21
+ ++++++++++++++-------
+ libmm-glib/mm-call-audio-format.h                 | 21
+ ++++++++++++++-------
+ libmm-glib/mm-call-properties.c                   | 21
+ ++++++++++++++-------
+ libmm-glib/mm-call-properties.h                   | 21
+ ++++++++++++++-------
+ libmm-glib/mm-call.c                              | 21
+ +++++++++++++--------
+ libmm-glib/mm-call.h                              | 21
+ +++++++++++++--------
+ libmm-glib/mm-cdma-manual-activation-properties.c | 21
+ ++++++++++++++-------
+ libmm-glib/mm-cdma-manual-activation-properties.h | 21
+ ++++++++++++++-------
+ libmm-glib/mm-common-helpers.c                    | 21
+ ++++++++++++++-------
+ libmm-glib/mm-common-helpers.h                    | 21
+ ++++++++++++++-------
+ libmm-glib/mm-compat.c                            |  2 +-
+ libmm-glib/mm-compat.h                            |  2 +-
+ libmm-glib/mm-firmware-properties.c               | 21
+ ++++++++++++++-------
+ libmm-glib/mm-firmware-properties.h               | 21
+ ++++++++++++++-------
+ libmm-glib/mm-firmware-update-settings.c          | 21
+ ++++++++++++++-------
+ libmm-glib/mm-firmware-update-settings.h          | 21
+ ++++++++++++++-------
+ libmm-glib/mm-helper-types.c                      |  2 +-
+ libmm-glib/mm-helper-types.h                      |  2 +-
+ libmm-glib/mm-helpers.h                           |  2 +-
+ libmm-glib/mm-kernel-event-properties.c           | 21
+ ++++++++++++++-------
+ libmm-glib/mm-kernel-event-properties.h           | 21
+ ++++++++++++++-------
+ libmm-glib/mm-location-3gpp.c                     | 21
+ ++++++++++++++-------
+ libmm-glib/mm-location-3gpp.h                     | 21
+ ++++++++++++++-------
+ libmm-glib/mm-location-cdma-bs.c                  | 21
+ ++++++++++++++-------
+ libmm-glib/mm-location-cdma-bs.h                  | 21
+ ++++++++++++++-------
+ libmm-glib/mm-location-common.h                   | 21
+ ++++++++++++++-------
+ libmm-glib/mm-location-gps-nmea.c                 | 21
+ ++++++++++++++-------
+ libmm-glib/mm-location-gps-nmea.h                 | 21
+ ++++++++++++++-------
+ libmm-glib/mm-location-gps-raw.c                  | 21
+ ++++++++++++++-------
+ libmm-glib/mm-location-gps-raw.h                  | 21
+ ++++++++++++++-------
+ libmm-glib/mm-manager.c                           |  2 +-
+ libmm-glib/mm-manager.h                           |  2 +-
+ libmm-glib/mm-modem-3gpp-profile-manager.c        |  2 +-
+ libmm-glib/mm-modem-3gpp-profile-manager.h        |  2 +-
+ libmm-glib/mm-modem-3gpp-ussd.c                   |  2 +-
+ libmm-glib/mm-modem-3gpp-ussd.h                   |  2 +-
+ libmm-glib/mm-modem-3gpp.c                        |  2 +-
+ libmm-glib/mm-modem-3gpp.h                        |  2 +-
+ libmm-glib/mm-modem-cdma.c                        |  2 +-
+ libmm-glib/mm-modem-cdma.h                        |  2 +-
+ libmm-glib/mm-modem-firmware.c                    |  2 +-
+ libmm-glib/mm-modem-firmware.h                    |  2 +-
+ libmm-glib/mm-modem-location.c                    |  2 +-
+ libmm-glib/mm-modem-location.h                    |  2 +-
+ libmm-glib/mm-modem-messaging.c                   |  2 +-
+ libmm-glib/mm-modem-messaging.h                   |  2 +-
+ libmm-glib/mm-modem-oma.c                         |  2 +-
+ libmm-glib/mm-modem-oma.h                         |  2 +-
+ libmm-glib/mm-modem-signal.c                      |  2 +-
+ libmm-glib/mm-modem-signal.h                      |  2 +-
+ libmm-glib/mm-modem-simple.c                      |  2 +-
+ libmm-glib/mm-modem-simple.h                      |  2 +-
+ libmm-glib/mm-modem-time.c                        |  2 +-
+ libmm-glib/mm-modem-time.h                        |  2 +-
+ libmm-glib/mm-modem-voice.c                       |  2 +-
+ libmm-glib/mm-modem-voice.h                       |  2 +-
+ libmm-glib/mm-modem.c                             |  2 +-
+ libmm-glib/mm-modem.h                             |  2 +-
+ libmm-glib/mm-network-timezone.c                  | 21
+ ++++++++++++++-------
+ libmm-glib/mm-network-timezone.h                  | 21
+ ++++++++++++++-------
+ libmm-glib/mm-object.c                            |  2 +-
+ libmm-glib/mm-object.h                            |  2 +-
+ libmm-glib/mm-pco.c                               | 21
+ ++++++++++++++-------
+ libmm-glib/mm-pco.h                               | 21
+ ++++++++++++++-------
+ libmm-glib/mm-signal.c                            | 21
+ ++++++++++++++-------
+ libmm-glib/mm-signal.h                            | 21
+ ++++++++++++++-------
+ libmm-glib/mm-sim-preferred-network.c             | 21
+ ++++++++++++++-------
+ libmm-glib/mm-sim-preferred-network.h             | 21
+ ++++++++++++++-------
+ libmm-glib/mm-sim.c                               |  2 +-
+ libmm-glib/mm-sim.h                               |  2 +-
+ libmm-glib/mm-simple-connect-properties.c         | 21
+ ++++++++++++++-------
+ libmm-glib/mm-simple-connect-properties.h         | 21
+ ++++++++++++++-------
+ libmm-glib/mm-simple-status.c                     | 21
+ ++++++++++++++-------
+ libmm-glib/mm-simple-status.h                     | 21
+ ++++++++++++++-------
+ libmm-glib/mm-sms-properties.c                    | 21
+ ++++++++++++++-------
+ libmm-glib/mm-sms-properties.h                    | 21
+ ++++++++++++++-------
+ libmm-glib/mm-sms.c                               |  2 +-
+ libmm-glib/mm-sms.h                               |  2 +-
+ libmm-glib/mm-unlock-retries.c                    | 21
+ ++++++++++++++-------
+ libmm-glib/mm-unlock-retries.h                    | 21
+ ++++++++++++++-------
+ 91 files changed, 726 insertions(+), 387 deletions(-)
+
+commit 2beae71a60a1881bb5513b01143f1b394c51d07a
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Nov 9 10:49:20 2021 +0100
+
+    kerneldevice,generic: simplify DEVPATH matching logic
+
+    Use autoptr to avoid the embedded goto.
+
+    (cherry picked from commit 59ad8409a6088b3592b537122b39d4d609ee829a)
+
+ src/kerneldevice/mm-kernel-device-generic.c | 30
+ ++++++++---------------------
+ 1 file changed, 8 insertions(+), 22 deletions(-)
+
+commit 1bd70df8a0c97991c4fa785ba7c0b4a6af7895b0
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Nov 9 10:43:58 2021 +0100
+
+    kerneldevice,generic: input pattern to string match is not regex
+
+    The input pattern given to the string_match() method is not a regex
+    pattern and we cannot use it as that, because all the special
+    characters (e.g. '.') would not be treated correctly.
+
+    Also, the prefix matching with the wildcard at the end of the string
+    needs to be converted to a proper regex wildcard, i.e. '.*'.
+
+    This logic also adds support for suffix matching, with a wildcard at
+    the beginning of the string, e.g. as the ones used for the wwan kernel
+    device name matching rules (i.e. '*MBIM').
+
+    Unit tests are added to cover all cases, most of these tests were
+    failing without the fixes implemented here.
+
+    (cherry picked from commit 03fce4775e5a1cf2fa8859a5074ea5bd37e1828a)
+
+ src/kerneldevice/mm-kernel-device-generic.c |  27 -------
+ src/kerneldevice/mm-kernel-device-helpers.c |  66 ++++++++++++++--
+ src/tests/Makefile.am                       |   1 +
+ src/tests/meson.build                       |   1 +
+ src/tests/test-kernel-device-helpers.c      | 118
+ ++++++++++++++++++++++++++++
+ 5 files changed, 179 insertions(+), 34 deletions(-)
+
+commit a013ea79caa8abb4daf4d451ea4d6edd62329cc0
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Nov 8 23:22:48 2021 +0100
+
+    kerneldevice,generic: move string match method to helpers
+
+    So that we can propertly unit-test it.
+
+    (cherry picked from commit 73b44ea51b84e8c8259e07a64fbb9f22a599b774)
+
+ src/kerneldevice/mm-kernel-device-generic.c | 10 ++++-----
+ src/kerneldevice/mm-kernel-device-helpers.c | 32
+ +++++++++++++++++++++++++++++
+ src/kerneldevice/mm-kernel-device-helpers.h |  7 ++++++-
+ 3 files changed, 43 insertions(+), 6 deletions(-)
+
+commit 5d26ab9f802602603175ea171c0e327667dd5908
+Author: Iñigo Martínez <inigomartinez@gmail.com>
+Date:   Fri Nov 5 12:45:56 2021 +0100
+
+    build,meson: Make feature options boolean
+
+    Different options are set as `feature`, also every possible plugin,
+    but this may cause confusion.
+
+    All options set as `feature` but plugins have been made `boolean` to
+    avoid further confusions.
+
+    `help2man` is also installed in the CI image because is required to
+    build different libraries.
+
+    (cherry picked from commit ec2e5403f14892047f391f63982bf5e4b30438c2)
+
+ .gitlab-ci.yml      | 36 ++++++++++++++++++------------------
+ cli/meson.build     |  9 +++++----
+ meson.build         | 33 ++++++++++++++++++++++-----------
+ meson_options.txt   | 10 +++++-----
+ plugins/meson.build | 14 +++++++++-----
+ src/meson.build     | 20 ++++++++++----------
+ test/meson.build    |  2 +-
+ 7 files changed, 70 insertions(+), 54 deletions(-)
+
+commit ee2dc47de72488b2b3cc746247b6da8665853e6e
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Oct 14 13:03:11 2021 +0200
+
+    cli,signal: fix error message without EOL
+
+    (cherry picked from commit a1e6f911dd20eeca91a864e42d3458549c4cc36a)
+
+ cli/mmcli-modem-signal.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 81a0f845acb96b667b38035c56d9af73c947018c
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Mon Oct 25 10:49:30 2021 +0200
+
+    telit: allow unlock retries loading for unknown error csim reply
+
+    When trying to lock the modem LE910S1 replies:
+
+    'AT+CSIM=1<CR>'
+    '<CR><LF>ERROR<CR><LF>'
+
+    but the modem actually supports CSIM unlock retries reporting.
+
+    (cherry picked from commit 2b196d897b5bcfb04072df16c1bf5c025239eba6)
+
+ plugins/telit/mm-broadband-modem-telit.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+commit f17f5c16ae26b14ba24a4aeb877f7989695f723c
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Mon Oct 25 09:34:04 2021 +0200
+
+    telit: avoid sim hot swap procedure if #QSS is not supported
+
+    (cherry picked from commit 1058c1c69dba15bd9fc7cf3da2c191cc29aa1ddb)
+
+ plugins/telit/mm-broadband-modem-telit.c | 30
+ ++++++++++++++++++++++++++++--
+ 1 file changed, 28 insertions(+), 2 deletions(-)
+
+commit 55b0bead2c633590f357386d2dfab21595eb185f
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Mon Oct 25 09:13:43 2021 +0200
+
+    telit: add port type hints for LE910S1 0x7010, 0x7011 compositions
+
+    (cherry picked from commit 3a02c3187bd0842e7d5ff74509d2051894146b56)
+
+ plugins/telit/77-mm-telit-port-types.rules | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+commit 41655f416a61264406991b1dc4cff28832d7a6c1
+Author: Frederic Martinsons <frederic.martinsons@sigfox.com>
+Date:   Sat Oct 23 10:57:26 2021 +0200
+
+    iface-modem-firmware: Initialize context to null
+
+    Without setting memory to NULL it is possible that ctx->list
+    point to an unitialized pointer and trig a segfault when we
+    free it (for example when the firmware list is not supported)
+
+    Signed-off-by: Frederic Martinsons <frederic.martinsons@sigfox.com>
+    (cherry picked from commit 2ae5f3cc27425a2b53872bb7c783aa032ac6aa6b)
+
+ src/mm-iface-modem-firmware.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit d377c10599c4a57150bdf39d033a82e14e50f1d0
+Author: Michal Mazur <mkm@semihalf.com>
+Date:   Fri Oct 22 15:37:25 2021 +0200
+
+    libmm-glib: add documentation for disable_facility_lock
+
+    (cherry picked from commit c487ca1b36dd1aa14cb45e4555fbf3235b7ca784)
+
+ libmm-glib/mm-modem-3gpp.c | 51
+ ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
+
+commit 876bfd229f1a8323d9e333f6b86a15fb2ea08283
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Oct 17 21:29:05 2021 +0200
+
+    modem-helpers: remove unexistent method header
+
+    (cherry picked from commit e1bc4b0999aa268358d2ab2c3182e87119cd255f)
+
+ src/mm-modem-helpers.h | 3 ---
+ 1 file changed, 3 deletions(-)
+
+commit eb795223a9131e0c633ad9ca8ff800e7133d3bc1
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Oct 15 23:35:20 2021 +0200
+
+    introspection,signal: minor doc fix in 5G RSRP
+
+    (cherry picked from commit 5f043e47bfb133da7738202bb5248cc9dcda7f86)
+
+ introspection/org.freedesktop.ModemManager1.Modem.Signal.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 136904fa1c6571eb210472c4171de22d3b26cc34
+Author: Freedom Liu <tianyu28658@gmail.com>
+Date:   Fri Oct 15 11:50:52 2021 +0800
+
+    foxconn: add T99W265 modules, support for QDU.
+
+    (cherry picked from commit f5ab3c4678247e8eade0e8ff0a812d6b1e1c569d)
+
+ plugins/foxconn/mm-broadband-modem-mbim-foxconn.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+commit 9bde138095159aa27a917b4e8d9163fd0c13b182
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 13 13:36:24 2021 +0200
+
+    qcom-soc: require udev tag for ports
+
+    Since the 'wwan' subsystem addition to the qcom-soc plugin, the rules
+    to say a modem is handled by this plugin are too broad, and the plugin
+    attempts to support any kind of device exposed by the WWAN subsystem,
+    not just those from Qualcomm SoCs.
+
+    Update the plugin to require a new ID_MM_QCOM_SOC udev tag that is set
+    in the plugin udev rules, given that these rules already check for the
+    expected SoC drivers (bam-dmux, ipa, qcom-q6v5-mss).
+
+    (cherry picked from commit c06ca6df3f096a53665611b26b4add933317e873)
+
+ plugins/qcom-soc/77-mm-qcom-soc.rules    | 5 ++++-
+ plugins/qcom-soc/mm-plugin-qcom-soc.c    | 5 +++++
+ src/kerneldevice/mm-kernel-device-qrtr.c | 3 ++-
+ 3 files changed, 11 insertions(+), 2 deletions(-)
+
+commit fa9157895de2e572f7edf01759afc6b18868d8c5
+Author: Iñigo Martínez <inigomartinez@gmail.com>
+Date:   Mon Oct 18 09:26:59 2021 +0200
+
+    build,meson: Allow plugins to depend on build options
+
+    At the moment plugins might depend only on shared plugins. However,
+    plugins may depend also in different build options. For example,
+    `qcom-soc` plugin needs `qmi` option to be enabled.
+
+    Plugins build check has been changed to allow to depend on different
+    build options.
+
+    Fixes #447
+
+    (cherry picked from commit 7663a2e6c383bb68f31c91ca51ba2801ee990c6e)
+
+ meson.build | 83
+ +++++++++++++++++++++++++++++++------------------------------
+ 1 file changed, 42 insertions(+), 41 deletions(-)
+
+commit a0cdc8648d5d719f98e6c49448236453e39fb8fe
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Oct 14 10:13:36 2021 +0200
+
+    ci: switch single plugins build to use meson
+
+    (cherry picked from commit a5f2f84f44f2265739bc96d152128a107e9cebed)
+
+ .gitlab-ci.yml | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+commit 94c5e58c055783877ca88555e9dd0ee840288cd0
+Author: Iñigo Martínez <inigomartinez@gmail.com>
+Date:   Thu Sep 16 22:30:50 2021 +0200
+
+    build,meson: Add an empty line to split includes and dependencies
+
+    (cherry picked from commit 86fcf2592fa33d034ee02c6dd8dd4a3527126210)
+
+ plugins/meson.build | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit 8699d0665a66f386aca8bde273fe0401e91c3e2f
+Author: Iñigo Martínez <inigomartinez@gmail.com>
+Date:   Thu Sep 16 22:28:58 2021 +0200
+
+    build,meson: Remove unnecessary empty line
+
+    (cherry picked from commit 803ce03d6a657f5d7c96ebfb2c36d4e65dd28e4f)
+
+ src/meson.build | 1 -
+ 1 file changed, 1 deletion(-)
+
+commit 380c8efe56cf4d12d65c7fe707bb64bfc857d2d9
+Author: Iñigo Martínez <inigomartinez@gmail.com>
+Date:   Thu Sep 16 22:20:34 2021 +0200
+
+    build,meson: Make use of _opt suffix for option variables
+
+    To make option names consistent, an `_opt` suffix has been added.
+
+    This was not applied to `polkit` option at the time and this is
+    fixed now.
+
+    (cherry picked from commit 7c4f8f6cc50054e1818c1f8e03cb2fa08218aa77)
+
+ meson.build | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+commit 43445df7494523c72e58b3514218ba512955a8e9
+Author: Iñigo Martínez <inigomartinez@gmail.com>
+Date:   Thu Sep 16 22:15:39 2021 +0200
+
+    build,meson: Make use of partial_dependency for generated dependency
+
+    The generated objects in `libmm-glib` are include in
+    `libmm_glib_dep` one by one to avoid the link to the generated
+    library that is included as a whole in `libmm-glib`.
+
+    meson includes a way to include partial objects of a dependency by
+    using the `partial_dependency` method, so by taking advantage of it
+    almost all objects are included.
+
+    (cherry picked from commit b3b16b3dc2608242a2e88d6b2870c403fb5a5d9c)
+
+ libmm-glib/meson.build | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+commit 82480238a93065e8c6985d1dc2f5b6d353dfee96
+Author: Iñigo Martínez <inigomartinez@gmail.com>
+Date:   Thu Sep 16 21:50:58 2021 +0200
+
+    build,meson: Sort files alphabetically
+
+    (cherry picked from commit 3974b8b98f1c402865b06598d1f26f7db5824d50)
+
+ examples/sms-c/meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 2c5a6dc659d023f832604bd0fd19f18d373e70fb
+Author: Iñigo Martínez <inigomartinez@gmail.com>
+Date:   Thu Sep 16 10:04:51 2021 +0200
+
+    build,meson: Remove unused option
+
+    (cherry picked from commit c3b6a2876eb5f884e195832cdc195353ba8cf59b)
+
+ meson_options.txt | 2 --
+ 1 file changed, 2 deletions(-)
+
+commit f6c24a955d4a74cf5b6b39a742b18d8c0d9d5dc2
+Author: Iñigo Martínez <inigomartinez@gmail.com>
+Date:   Wed Sep 8 14:42:08 2021 +0200
+
+    build,meson: Improve plugins option set
+
+    Improved the way the plugins are set to allow a smaller summary.
+
+    (cherry picked from commit bbc157688d9ff82e548a155be1a54a8220fb0f09)
+
+ meson.build         | 97
+ ++++++++++++++++-------------------------------------
+ meson_options.txt   | 82 ++++++++++++++++++++++----------------------
+ plugins/meson.build | 92
+ +++++++++++++++++++++++++-------------------------
+ 3 files changed, 114 insertions(+), 157 deletions(-)
+
+commit aaadae356ec22c064725ebe9bfee7df77cf49449
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 13 22:13:40 2021 +0200
+
+    ci: use libmbim and libqmi stable branches
+
+    We keep libqrtr-glib git master just because it builds with meson.
+
+ .gitlab-ci.yml | 31 +++++++++++++++++--------------
+ 1 file changed, 17 insertions(+), 14 deletions(-)
+
+commit 58327cbebcc7f8fae8ae9d4c0b685c103735c518
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 13 22:05:27 2021 +0200
+
+    broadband-modem-qmi: fix non-initialized GError
+
+    (cherry picked from commit 85a99ae028f42d5b35ffb42888a5c2201fd0e91d)
+
+ src/mm-broadband-modem-qmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 86b52c27f86ea928197db42524515461bf852b2e
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Oct 13 22:04:53 2021 +0200
+
+    quectel: fix non-initialized GError
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/442
+
+    (cherry picked from commit 8852cef8175bb5421cd14986ac3803985d5e6eae)
+
+ plugins/quectel/mm-shared-quectel.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit ddee7b840a0441e1d25bba1e4889ed0574eb8625
+Author: Amol Lad <amol.lad@4rf.com>
+Date:   Mon Oct 4 14:48:05 2021 +0530
+
+    mm-bearer-mbim: unref not needed and it is causing crash
+
+    (cherry picked from commit 11b83e4cb8d310fc88a4e0152e625b7eafefe516)
+
+ src/mm-bearer-mbim.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+commit a34535e305424da4d9797c029f7c56ab3b5ec2d9
+Author: Lubomir Rintel <lkundrak@v3.sk>
+Date:   Fri Oct 1 16:13:42 2021 +0200
+
+    iface-modem-3gpp-profile-manager: correct a GError instance ownership
+
+    The call to g_task_return_error() takes ownership of the GError passed
+    to it; we must not free it ourselves upon automatic pointer cleanup.
+
+    Otherwise a crash can be triggered in the error handling path:
+
+      ModemManager[259816]: <debug> [1633088468.157848] [modem0/modemu/at]
+      <-- '<CR><LF>OK<CR><LF>'
+      ModemManager[259816]: <debug> [1633088468.159832] [modem0] stored
+      profile with id '1'
+      ModemManager[259816]: <debug> [1633088468.160501] [modem0] set
+      profile state (7/8): list after
+      ModemManager[259816]: <debug> [1633088468.161686] [modem0/modemu/at]
+      device open count is 3 (open)
+      ModemManager[259816]: <debug> [1633088468.162320] [modem0/modemu/at]
+      device open count is 2 (close)
+      ModemManager[259816]: <debug> [1633088468.162746] [modem0/modemu/at]
+      --> 'AT+CGDCONT?<CR>'
+      ModemManager[259816]: <debug> [1633088468.177437] [modem0/modemu/at]
+      <-- '<CR><LF>ERROR<CR><LF>'
+      ModemManager[259816]: <debug> [1633088468.178011] [modem0/modemu/at]
+      operation failure: 100 (Unknown error)
+      ModemManager[259816]: <warn>  [1633088468.182420] [modem0/bearer0]
+      connection attempt #1 failed: Couldn't validate update of profile
+      '1': Unknown error
+      ModemManager[259816]: <info>  [1633088468.193156] [modem0/bearer0]
+      connection #1 finished: duration 0s, tx: 0 bytes, rx: 0 bytes
+      ModemManager[259816]: <debug> [1633088468.194280] [modem0]
+      couldn't connect bearer: Couldn't validate update of profile '1':
+      Unknown error
+      ==259816== Invalid read of size 4
+      ==259816==    at 0x4FF66CF: UnknownInlinedFun (gerror.c:535)
+      ==259816==    by 0x4FF66CF: g_error_free (gerror.c:832)
+      ==259816==    by 0x1A7F49: UnknownInlinedFun
+      (glib-autocleanups.h:52)
+      ==259816==    by 0x1A7F49: UnknownInlinedFun
+      (glib-autocleanups.h:52)
+      ==259816==    by 0x1A7F49: profile_manager_get_profile_after_ready
+      (mm-iface-modem-3gpp-profile-manager.c:140)
+      ==259816==    by 0x4E342C9: g_task_return_now (gtask.c:1219)
+      ==259816==    by 0x4E344CA: UnknownInlinedFun (gtask.c:1289)
+      ==259816==    by 0x4E344CA: g_task_return (gtask.c:1245)
+      ==259816==    by 0x1A867C: get_profile_list_ready
+      (mm-iface-modem-3gpp-profile-manager.c:680)
+      ==259816==    by 0x4E342C9: g_task_return_now (gtask.c:1219)
+      ==259816==    by 0x4E344CA: UnknownInlinedFun (gtask.c:1289)
+      ==259816==    by 0x4E344CA: g_task_return (gtask.c:1245)
+      ==259816==    by 0x1A3DB5: internal_list_profiles_ready
+      (mm-iface-modem-3gpp-profile-manager.c:774)
+      ==259816==    by 0x4E342C9: g_task_return_now (gtask.c:1219)
+      ==259816==    by 0x4E344CA: UnknownInlinedFun (gtask.c:1289)
+      ==259816==    by 0x4E344CA: g_task_return (gtask.c:1245)
+      ==259816==    by 0x1D7B8B: profile_manager_cgdcont_query_ready
+      (mm-broadband-modem.c:10240)
+      ==259816==    by 0x4E1DB61: g_simple_async_result_complete
+      (gsimpleasyncresult.c:802)
+      ==259816==  Address 0x9286da0 is 0 bytes inside a block of size
+      16 free'd
+      ==259816==    at 0x48440E4: free (vg_replace_malloc.c:755)
+      ==259816==    by 0x500FD1C: g_free (gmem.c:199)
+      ==259816==    by 0x502A22F: g_slice_free1 (gslice.c:1180)
+      ==259816==    by 0x4FF6780: g_error_free (gerror.c:864)
+      ==259816==    by 0x1B22D2: connect_bearer_ready
+      (mm-iface-modem-simple.c:286)
+      ==259816==    by 0x4E342C9: g_task_return_now (gtask.c:1219)
+      ==259816==    by 0x4E344CA: UnknownInlinedFun (gtask.c:1289)
+      ==259816==    by 0x4E344CA: g_task_return (gtask.c:1245)
+      ==259816==    by 0x18031A: connect_ready (mm-base-bearer.c:917)
+      ==259816==    by 0x4E342C9: g_task_return_now (gtask.c:1219)
+      ==259816==    by 0x4E344CA: UnknownInlinedFun (gtask.c:1289)
+      ==259816==    by 0x4E344CA: g_task_return (gtask.c:1245)
+      ==259816==    by 0x18329B: connect_3gpp_ready
+      (mm-broadband-bearer.c:918)
+      ==259816==    by 0x4E342C9: g_task_return_now (gtask.c:1219)
+      ==259816==  Block was alloc'd at
+      ==259816==    at 0x484186F: malloc (vg_replace_malloc.c:380)
+      ==259816==    by 0x5013408: g_malloc (gmem.c:106)
+      ==259816==    by 0x502ACB4: g_slice_alloc (gslice.c:1069)
+      ==259816==    by 0x502B33D: g_slice_alloc0 (gslice.c:1095)
+      ==259816==    by 0x4FF64E6: g_error_allocate (gerror.c:702)
+      ==259816==    by 0x4FF6F03: UnknownInlinedFun (gerror.c:716)
+      ==259816==    by 0x4FF6F03: g_error_copy (gerror.c:886)
+      ==259816==    by 0x4E1D0A0: g_simple_async_result_set_from_error
+      (gsimpleasyncresult.c:676)
+      ==259816==    by 0x236AAB: port_serial_got_response
+      (mm-port-serial.c:744)
+      ==259816==    by 0x23B0F1: UnknownInlinedFun (mm-port-serial.c:934)
+      ==259816==    by 0x23B0F1: common_input_available
+      (mm-port-serial.c:1035)
+      ==259816==    by 0x500AF9E: UnknownInlinedFun (gmain.c:3337)
+      ==259816==    by 0x500AF9E: g_main_context_dispatch (gmain.c:4055)
+      ==259816==    by 0x505F607: g_main_context_iterate.constprop.0
+      (gmain.c:4131)
+      ==259816==    by 0x500A562: g_main_loop_run (gmain.c:4329)
+
+    (cherry picked from commit 90ea3ef5db2bc5846dcb3382a15ec95ce366e04a)
+
+ src/mm-iface-modem-3gpp-profile-manager.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit ace5d2db5cba2ce84ff27b0e17ee6d834c09ff0b
+Author: Lubomir Rintel <lkundrak@v3.sk>
+Date:   Fri Oct 1 16:13:48 2021 +0200
+
+    broadband-modem: ensure mm_broadband_modem_create_device_identifier()
+    sets an error on all bad returns
+
+    modem_load_device_identifier_finish() expect it to do so and trips an
+    assertion failure in g_propagate_error():
+
+      ModemManager[256038]: <warn>  [1633083601.491190] [modem0] couldn't
+      load equipment identifier: Unknown error
+      ModemManager[256038]: <debug> [1633083601.491204] [modem0] loading
+      device identifier...
+      ModemManager[256038]: <debug> [1633083601.491215] [modem0/modemu/at]
+      device open count is 3 (open)
+      ModemManager[256038]: <debug> [1633083601.491231] [modem0/modemu/at]
+      device open count is 2 (close)
+      ModemManager[256038]: <debug> [1633083601.491254] [modem0/modemu/at]
+      --> 'ATI<CR>'
+      ModemManager[256038]: <debug> [1633083601.494616] [modem0/modemu/at]
+      <-- '<CR><LF>ERROR<CR><LF>'
+      ModemManager[256038]: <debug> [1633083601.494643] [modem0/modemu/at]
+      operation failure: 100 (Unknown error)
+
+      (ModemManager:256038): GLib-CRITICAL **: 06:20:01.494:
+      g_propagate_error: assertion 'src != NULL' failed
+
+      Thread 1 "ModemManager" received signal SIGTRAP, Trace/breakpoint
+      trap.
+      g_logv (log_domain=0x7ffff77d1071 "GLib",
+      log_level=G_LOG_LEVEL_CRITICAL, format=<optimized out>,
+      args=<optimized out>) at ../glib/gmessages.c:1413
+      1413            g_private_set (&g_log_depth, GUINT_TO_POINTER
+      (depth));
+      Missing separate debuginfos, use: dnf debuginfo-install
+      libmbim-1.26.0-2.el9.x86_64 libqmi-1.30.2-1.el9.x86_64
+      (gdb) bt
+      #0  g_logv (log_domain=0x7ffff77d1071 "GLib",
+      log_level=G_LOG_LEVEL_CRITICAL, format=<optimized out>,
+      args=<optimized out>) at ../glib/gmessages.c:1413
+      #1  0x00007ffff77813d3 in g_log (log_domain=<optimized
+      out>, log_level=<optimized out>, format=<optimized out>) at
+      ../glib/gmessages.c:1451
+      #2  0x000055555561122d in modem_load_device_identifier_finish
+      (self=0x5555557e62d0, res=<optimized out>, error=0x7fffffffd320)
+          at
+          /usr/src/debug/ModemManager-1.18.2-1.el9.x86_64/src/mm-broadband-modem.c:1168
+      #3  0x00005555555ea69a in load_device_identifier_ready
+      (self=0x5555557e62d0, res=0x5555557ea6b0,
+      task=task@entry=0x7fffe8011e20 [GTask])
+          at
+          /usr/src/debug/ModemManager-1.18.2-1.el9.x86_64/src/mm-iface-modem.c:4727
+      #4  0x00007ffff7951b62 in g_simple_async_result_complete
+      (simple=0x5555557ea6b0 [GSimpleAsyncResult]) at
+      ../gio/gsimpleasyncresult.c:802
+      #5  0x00005555555d1b0a in at_sequence_parse_response
+      (port=<optimized out>, res=<optimized out>,
+      ctx=ctx@entry=0x5555557ed7f0)
+          at
+          /usr/src/debug/ModemManager-1.18.2-1.el9.x86_64/src/mm-base-modem-at.c:250
+      #6  0x00007ffff7951b62 in g_simple_async_result_complete
+      (simple=0x5555557e5440 [GSimpleAsyncResult]) at
+      ../gio/gsimpleasyncresult.c:802
+      #7  0x00005555556805dc in serial_command_ready (port=<optimized
+      out>, res=<optimized out>, simple=simple@entry=0x5555557e5440
+      [GSimpleAsyncResult])
+          at
+          /usr/src/debug/ModemManager-1.18.2-1.el9.x86_64/src/mm-port-serial-at.c:378
+      #8  0x00007ffff7951b62 in g_simple_async_result_complete
+      (simple=0x5555557d6730 [GSimpleAsyncResult]) at
+      ../gio/gsimpleasyncresult.c:802
+      #9  0x000055555567fb35 in command_context_complete_and_free
+      (ctx=ctx@entry=0x7fffe800c200, idle=idle@entry=0) at
+      /usr/src/debug/ModemManager-1.18.2-1.el9.x86_64/src/mm-port-serial.c:141
+      #10 0x0000555555682a96 in port_serial_got_response
+      (self=0x5555557dd4e0 [MMPortSerialAt], parsed_response=0x0,
+      error=0x5555557d5040)
+          at
+          /usr/src/debug/ModemManager-1.18.2-1.el9.x86_64/src/mm-port-serial.c:755
+      #11 0x00005555556870d2 in parse_response_buffer
+      (self=<optimized out>) at
+      /usr/src/debug/ModemManager-1.18.2-1.el9.x86_64/src/mm-port-serial.c:934
+      #12 common_input_available (self=0x5555557dd4e0
+      [MMPortSerialAt], condition=(G_IO_NVAL | unknown: 0xf762a5c0)) at
+      /usr/src/debug/ModemManager-1.18.2-1.el9.x86_64/src/mm-port-serial.c:1035
+      #13 0x00007ffff7778f9f in g_main_dispatch (context=0x5555557527c0)
+      at ../glib/gmain.c:3337
+      #14 g_main_context_dispatch (context=0x5555557527c0) at
+      ../glib/gmain.c:4055
+      #15 0x00007ffff77cd608 in g_main_context_iterate.constprop.0
+      (context=0x5555557527c0, block=block@entry=1,
+      dispatch=dispatch@entry=1, self=<optimized out>) at
+      ../glib/gmain.c:4131
+      #16 0x00007ffff7778563 in g_main_loop_run (loop=0x55555576da60)
+      at ../glib/gmain.c:4329
+      #17 0x00005555555b7b60 in main
+      (argc=<optimized out>, argv=<optimized out>) at
+      /usr/src/debug/ModemManager-1.18.2-1.el9.x86_64/src/main.c:216
+
+    (cherry picked from commit e3d108de0f3f5d2ac32b3ad09ec0dae8fb5fc2e5)
+
+ src/mm-broadband-modem.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+commit 24639d890d958ff5110e2c9c25fa0375fc5c23f1
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Oct 3 14:35:06 2021 +0200
+
+    ci: bump image template to refresh CA certificates
+
+    At the end of September 2021, Let's Encrypt's DST Root CA X3
+    certificate expired, and the new ISRG Root X1 took over.
+    Update the CI template so that the new certificate is available and we
+    can keep on cloning the libmbim/libqmi/libqrtr-glib repos without
+    failures.
+
+    (cherry picked from commit 7c30471d9469d54607fba376df772fff3c823a33)
+
+ .gitlab-ci.yml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 9e296220c8d1e4f68b3cc3e46227e29392deb792
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Wed Sep 29 16:13:45 2021 +0200
+
+    telit: fix g_object_unref failed assertion
+
+    Fix the following g_object_unref failed assertion:
+
+    ModemManager[385967]: <debug> [1632924639.132023] [modem0/ttyUSB2/at]
+    --> 'AT+CSIM=1<CR>'
+    ModemManager[385967]: <debug> [1632924639.144892] [modem0/ttyUSB2/at]
+    <-- '<CR><LF>ERROR<CR><LF>'
+    ModemManager[385967]: <debug> [1632924639.145021] [modem0/ttyUSB2/at]
+    operation failure: 100 (Unknown error)
+    (ModemManager:385967): GLib-GObject-CRITICAL **: 16:10:39.145:
+    g_object_unref: assertion 'G_IS_OBJECT (object)' failed
+
+    (cherry picked from commit 9c47c54f067f15afea7ff1e9c89d1ab41fe3e4bb)
+
+ plugins/telit/mm-broadband-modem-telit.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+commit 5a68b53a6084a52e36f0d2d0bd34e5a65409dbf4
+Author: Benoît Monin <benoit.monin@gmx.fr>
+Date:   Thu Sep 23 11:48:35 2021 +0200
+
+    sms: increase send timeout to 5 minutes
+
+    The timeout for sms send operation can exceed the current value, so
+    increase it to 5 minutes. Timeouts up to 4 minutes have been observed
+    in the following test scenario:
+    * Power up the modem and wait for registration.
+    * Right when the modem is registered, attenuate the rf signal
+      or remove the antenna.
+    * Immediately try to send an sms.
+
+    Increasing the timeout cover this corner case.
+
+    (cherry picked from commit 8755e85d13b1170882cd5108cf20a63d94573155)
+
+ src/mm-base-sms.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 864ed4f805f1941fe4fefa170c5b84f9ce209256
+Author: Yegor Yefremov <yegorslists@googlemail.com>
+Date:   Sat Sep 18 22:32:42 2021 +0200
+
+    Fix -Wmaybe-uninitialized warning
+
+    Initialize the scheme variable to
+    QMI_VOICE_USS_DATA_CODING_SCHEME_UNKNOWN
+    to avoid the warning.
+
+    (cherry picked from commit 8b80da152b3dd5f6d20a4f08cce1f7eaa2bbf730)
+
+ src/mm-broadband-modem-qmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit a40807720551824a68e08172abdc8a1b617fd9bb
+Author: Yegor Yefremov <yegorslists@googlemail.com>
+Date:   Fri Sep 17 11:14:31 2021 +0200
+
+    Tests: fix -Wformat compiler warning
+
+    Use G_GUINT64_FORMAT to properly format a guint64 type.
+
+    (cherry picked from commit 4875817f19d035694e234dd26448d43d92422468)
+
+ test/lsudev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 3f99eb377274dbd5da998769f82652a7d016075a
+Author: Shawn Guo <shawn.guo@linaro.org>
+Date:   Fri Sep 17 03:59:38 2021 -0400
+
+    build: enable qcom-soc plugin by default
+
+    As people are running distros like Debian, Archlinux, Fedora, etc., on
+    laptops powered by Qualcomm Snapdragon SoCs, e.g. Lenovo Yoga C630, it
+    makes sense to enable qcom-soc plugin by default, so that MM aarch64
+    package can be built by those distros more easily.
+
+    Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+    (cherry picked from commit 57eb2390896ec4b8f310ac77a0a71344caa6596e)
+
+ configure.ac      | 2 +-
+ meson_options.txt | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit 262847d97dd6e749aee77d5fc0b84b1731926aea
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Sep 16 12:41:05 2021 +0200
+
+    build: post-release version bump to 1.18.3
+
+ configure.ac | 2 +-
+ meson.build  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
 commit 5a2c9229411fa6c5905b61e777122a9b49809134
 Author: Aleksander Morgado <aleksander@aleksander.es>
 Date:   Thu Sep 16 12:31:32 2021 +0200

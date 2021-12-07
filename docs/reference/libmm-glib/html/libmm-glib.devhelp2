@@ -412,9 +412,9 @@
     <keyword type="function" name="mm_modem_3gpp_set_initial_eps_bearer_settings ()" link="MMModem3gpp.html#mm-modem-3gpp-set-initial-eps-bearer-settings" since="1.10"/>
     <keyword type="function" name="mm_modem_3gpp_set_initial_eps_bearer_settings_finish ()" link="MMModem3gpp.html#mm-modem-3gpp-set-initial-eps-bearer-settings-finish" since="1.10"/>
     <keyword type="function" name="mm_modem_3gpp_set_initial_eps_bearer_settings_sync ()" link="MMModem3gpp.html#mm-modem-3gpp-set-initial-eps-bearer-settings-sync" since="1.10"/>
-    <keyword type="function" name="mm_modem_3gpp_disable_facility_lock ()" link="MMModem3gpp.html#mm-modem-3gpp-disable-facility-lock"/>
-    <keyword type="function" name="mm_modem_3gpp_disable_facility_lock_finish ()" link="MMModem3gpp.html#mm-modem-3gpp-disable-facility-lock-finish"/>
-    <keyword type="function" name="mm_modem_3gpp_disable_facility_lock_sync ()" link="MMModem3gpp.html#mm-modem-3gpp-disable-facility-lock-sync"/>
+    <keyword type="function" name="mm_modem_3gpp_disable_facility_lock ()" link="MMModem3gpp.html#mm-modem-3gpp-disable-facility-lock" since="1.20"/>
+    <keyword type="function" name="mm_modem_3gpp_disable_facility_lock_finish ()" link="MMModem3gpp.html#mm-modem-3gpp-disable-facility-lock-finish" since="1.20"/>
+    <keyword type="function" name="mm_modem_3gpp_disable_facility_lock_sync ()" link="MMModem3gpp.html#mm-modem-3gpp-disable-facility-lock-sync" since="1.20"/>
     <keyword type="struct" name="struct MMModem3gpp" link="MMModem3gpp.html#MMModem3gpp-struct"/>
     <keyword type="struct" name="MMModem3gppNetwork" link="MMModem3gpp.html#MMModem3gppNetwork-struct"/>
     <keyword type="function" name="mm_modem_cdma_get_path ()" link="MMModemCdma.html#mm-modem-cdma-get-path" since="1.0"/>

@@ -406,7 +406,6 @@ ip_configuration_query_ready (MbimDevice   *device,
                     str = g_inet_address_to_string (addr);
                     mm_obj_dbg (self, "    DNS [%u]: '%s'", i, str);
                 }
-                g_object_unref (addr);
             }
         }
 
@@ -681,7 +680,6 @@ check_disconnected_ready (MbimDevice   *device,
 {
     MMBearerMbim           *self;
     ConnectContext         *ctx;
-    GError                 *error = NULL;
     g_autoptr(MbimMessage)  response = NULL;
     guint32                 session_id;
     MbimActivationState     activation_state;
@@ -689,9 +687,9 @@ check_disconnected_ready (MbimDevice   *device,
     self = g_task_get_source_object (task);
     ctx  = g_task_get_task_data (task);
 
-    response = mbim_device_command_finish (device, res, &error);
+    response = mbim_device_command_finish (device, res, NULL);
     if (response &&
-        mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error) &&
+        mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, NULL) &&
         mbim_message_connect_response_parse (
             response,
             &session_id,
@@ -700,7 +698,7 @@ check_disconnected_ready (MbimDevice   *device,
             NULL, /* ip_type */
             NULL, /* context_type */
             NULL, /* nw_error */
-            &error)) {
+            NULL)) {
         mm_obj_dbg (self, "session ID '%u': %s", session_id, mbim_activation_state_get_string (activation_state));
     } else
         activation_state = MBIM_ACTIVATION_STATE_UNKNOWN;
@@ -1567,8 +1565,8 @@ reload_connection_status_ready (MbimDevice   *device,
     guint32                   session_id;
     MbimActivationState       activation_state;
     MMBearerConnectionStatus  bearer_connection_status = MM_BEARER_CONNECTION_STATUS_UNKNOWN;
+    GError                   *error = NULL;
     g_autoptr(MbimMessage)    response = NULL;
-    g_autoptr(GError)         error = NULL;
 
     self = g_task_get_source_object (task);
 
