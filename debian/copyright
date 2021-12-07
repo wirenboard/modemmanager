@@ -15,7 +15,7 @@ Copyright: 2011 - 2012 Aleksander Morgado <aleksander@aleksander.es>
            2011, 2012 Google, Inc.
 License: GPL-3.0+
 
-Files: libwmc/*
+Files: libqcdm/*
 Copyright: 2010, 2011 Red Hat, Inc.
 License: GPL-2.0
 
