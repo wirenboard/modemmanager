@@ -96,7 +96,7 @@ noinst_PROGRAMS = test-modem-helpers$(EXEEXT) test-charsets$(EXEEXT) \
 	test-qcdm-serial-port$(EXEEXT) test-at-serial-port$(EXEEXT) \
 	test-sms-part-3gpp$(EXEEXT) test-sms-part-cdma$(EXEEXT) \
 	test-udev-rules$(EXEEXT) test-error-helpers$(EXEEXT) \
-	$(am__EXEEXT_1)
+	test-kernel-device-helpers$(EXEEXT) $(am__EXEEXT_1)
 @WITH_QMI_TRUE@am__append_5 = test-modem-helpers-qmi
 subdir = src/tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -151,6 +151,14 @@ test_error_helpers_SOURCES = test-error-helpers.c
 test_error_helpers_OBJECTS = test-error-helpers.$(OBJEXT)
 test_error_helpers_LDADD = $(LDADD)
 test_error_helpers_DEPENDENCIES = $(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/src/libport.la \
+	$(top_builddir)/src/libkerneldevice.la
+test_kernel_device_helpers_SOURCES = test-kernel-device-helpers.c
+test_kernel_device_helpers_OBJECTS =  \
+	test-kernel-device-helpers.$(OBJEXT)
+test_kernel_device_helpers_LDADD = $(LDADD)
+test_kernel_device_helpers_DEPENDENCIES =  \
+	$(top_builddir)/src/libhelpers.la \
 	$(top_builddir)/src/libport.la \
 	$(top_builddir)/src/libkerneldevice.la
 test_modem_helpers_SOURCES = test-modem-helpers.c
@@ -208,6 +216,7 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/test-at-serial-port.Po \
 	./$(DEPDIR)/test-charsets.Po ./$(DEPDIR)/test-error-helpers.Po \
+	./$(DEPDIR)/test-kernel-device-helpers.Po \
 	./$(DEPDIR)/test-modem-helpers-qmi.Po \
 	./$(DEPDIR)/test-modem-helpers.Po \
 	./$(DEPDIR)/test-qcdm-serial-port.Po \
@@ -234,13 +243,14 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = test-at-serial-port.c test-charsets.c test-error-helpers.c \
+	test-kernel-device-helpers.c test-modem-helpers.c \
+	test-modem-helpers-qmi.c test-qcdm-serial-port.c \
+	test-sms-part-3gpp.c test-sms-part-cdma.c test-udev-rules.c
+DIST_SOURCES = test-at-serial-port.c test-charsets.c \
+	test-error-helpers.c test-kernel-device-helpers.c \
 	test-modem-helpers.c test-modem-helpers-qmi.c \
 	test-qcdm-serial-port.c test-sms-part-3gpp.c \
 	test-sms-part-cdma.c test-udev-rules.c
-DIST_SOURCES = test-at-serial-port.c test-charsets.c \
-	test-error-helpers.c test-modem-helpers.c \
-	test-modem-helpers-qmi.c test-qcdm-serial-port.c \
-	test-sms-part-3gpp.c test-sms-part-cdma.c test-udev-rules.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -460,6 +470,7 @@ mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
+pkgsysconfdir = @pkgsysconfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
@@ -554,6 +565,10 @@ test-error-helpers$(EXEEXT): $(test_error_helpers_OBJECTS) $(test_error_helpers_
 	@rm -f test-error-helpers$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_error_helpers_OBJECTS) $(test_error_helpers_LDADD) $(LIBS)
 
+test-kernel-device-helpers$(EXEEXT): $(test_kernel_device_helpers_OBJECTS) $(test_kernel_device_helpers_DEPENDENCIES) $(EXTRA_test_kernel_device_helpers_DEPENDENCIES) 
+	@rm -f test-kernel-device-helpers$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_kernel_device_helpers_OBJECTS) $(test_kernel_device_helpers_LDADD) $(LIBS)
+
 test-modem-helpers$(EXEEXT): $(test_modem_helpers_OBJECTS) $(test_modem_helpers_DEPENDENCIES) $(EXTRA_test_modem_helpers_DEPENDENCIES) 
 	@rm -f test-modem-helpers$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_modem_helpers_OBJECTS) $(test_modem_helpers_LDADD) $(LIBS)
@@ -587,6 +602,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-at-serial-port.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-charsets.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-error-helpers.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-kernel-device-helpers.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-modem-helpers-qmi.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-modem-helpers.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-qcdm-serial-port.Po@am__quote@ # am--include-marker
@@ -759,6 +775,7 @@ distclean: distclean-am
 		-rm -f ./$(DEPDIR)/test-at-serial-port.Po
 	-rm -f ./$(DEPDIR)/test-charsets.Po
 	-rm -f ./$(DEPDIR)/test-error-helpers.Po
+	-rm -f ./$(DEPDIR)/test-kernel-device-helpers.Po
 	-rm -f ./$(DEPDIR)/test-modem-helpers-qmi.Po
 	-rm -f ./$(DEPDIR)/test-modem-helpers.Po
 	-rm -f ./$(DEPDIR)/test-qcdm-serial-port.Po
@@ -813,6 +830,7 @@ maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/test-at-serial-port.Po
 	-rm -f ./$(DEPDIR)/test-charsets.Po
 	-rm -f ./$(DEPDIR)/test-error-helpers.Po
+	-rm -f ./$(DEPDIR)/test-kernel-device-helpers.Po
 	-rm -f ./$(DEPDIR)/test-modem-helpers-qmi.Po
 	-rm -f ./$(DEPDIR)/test-modem-helpers.Po
 	-rm -f ./$(DEPDIR)/test-qcdm-serial-port.Po
