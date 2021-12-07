@@ -1,3 +1,38 @@
+modemmanager (1.18.4-1) unstable; urgency=medium
+
+  [ Cyril Brulebois ]
+  * Fix missing dependency on policykit-1 (Closes: #991223).
+    Without it, a lot of operations would result in the following error at
+    the D-Bus level:
+        The name org.freedesktop.PolicyKit1 was not provided by any .service files
+    In bullseye, ModemManager.service wouldn't even start, because of the
+    missing polkit.service dependency at the systemd level.
+
+  [ Arnaud Ferraris ]
+  * New upstream version 1.18.4
+  * d/copyright: fix wrong path for libqcdm
+    `libqcdm` was previously `libwmc`, but the corresponding copyright entry
+    wasn't updated when the folder was renamed.
+  * d/control: update packages descriptions.
+    As it was pointed out, ModemManager now supports 5G modems, make sure
+    the packages descriptions reflect that.
+  * debian: address lintian issues.
+    This commit addresses multiple issues reported by lintian:
+    - doc installed into `/usr/share/gtk-doc` instead of `/usr/share/doc`,
+      which is normal behavior for glib-based software
+    - missing `Build-Depends-Package` in `libmm-glib0` symbols file
+    - ModemManager plugins not including dependency information
+    - system-wide `fcc-unlock.d` folder installed even though we don't ship
+      any distro-specific configuration which would be included there
+  * d/modemmanager.prerm: don't call systemctl directly.
+    Debian provides a helper tool for avoiding direct calls to systemctl in
+    maintainer scripts, so let's use it.
+  * d/control: sort build dependencies.
+    Also avoid installing unnecessary dependencies when using the `nodoc`
+    build profile.
+
+ -- Arnaud Ferraris <arnaud.ferraris@gmail.com>  Tue, 14 Dec 2021 10:09:29 +0100
+
 modemmanager (1.18.2-1) unstable; urgency=medium
 
   [ Henry-Nicolas Tourneur ]
