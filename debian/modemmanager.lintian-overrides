@@ -1,0 +1,4 @@
+# ModemManager ships many plugins as .so files. These are not proper shared
+# libraries though, and therefore don't need to include information about
+# other libraries against which they would be linked.
+modemmanager: shared-library-lacks-prerequisites

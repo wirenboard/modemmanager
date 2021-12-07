@@ -1,4 +1,5 @@
 libmm-glib.so.0 libmm-glib0 #MINVER#
+* Build-Depends-Package: libmm-glib-dev
  mm_3gpp_profile_cmp@Base 1.18.2
  mm_3gpp_profile_consume_string@Base 1.18.2
  mm_3gpp_profile_consume_variant@Base 1.18.2
