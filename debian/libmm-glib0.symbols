@@ -308,6 +308,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_firmware_update_settings_new_from_variant@Base 1.10.0
  mm_firmware_update_settings_set_device_ids@Base 1.10.0
  mm_firmware_update_settings_set_fastboot_at@Base 1.10.0
+ mm_firmware_update_settings_set_method@Base 1.18.6
  mm_firmware_update_settings_set_version@Base 1.10.0
  mm_gdbus_bearer_call_connect@Base 0.7.991
  mm_gdbus_bearer_call_connect_finish@Base 0.7.991
