@@ -1,3 +1,677 @@
+commit a7bcf2036b34d5043dbc33fee7d98bae5859c4d3
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Feb 11 11:31:48 2022 +0100
+
+    release: bump version to 1.18.6
+
+ configure.ac | 2 +-
+ meson.build  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit 3eb3e3d63710087836848de5278496826ab940dc
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Feb 11 11:31:14 2022 +0100
+
+    NEWS: update for 1.18.6
+
+ NEWS | 43 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
+
+commit be9b04a03382dc78ba927899eab700e8476e8723
+Author: Xeonacid <h.dwwwwww@gmail.com>
+Date:   Wed Dec 22 12:17:22 2021 +0000
+
+    build,meson: Remove incorrect args for i18n.merge_file
+
+    `i18n.merge_file` has been ignoring positional arguments for a time
+    and explicitly rejects with error since meson 0.60.0.
+
+    (cherry picked from commit 922bc2df5f9242c8052abbab08ceddeef9e20de9)
+
+ data/meson.build | 1 -
+ 1 file changed, 1 deletion(-)
+
+commit 030372d990d103ae12e8fda1562290693ee9138d
+Author: Dylan Van Assche <me@dylanvanassche.be>
+Date:   Sun Feb 6 18:49:16 2022 +0100
+
+    quectel: add name to device IDs
+
+    fwupd expects device IDs which are unique for each device and its
+    variants. However, Quectel re-uses the same USB VID & PID among
+    different variants such as EG25, EC25, EC20, etc. Moreover, each
+    variant may have subvariants such as EG25GGB, EG25GGC, EG25AFF,
+    EG25AFX, etc.
+
+    Add the name of the modem to the device IDs to build more unique
+    device
+    IDs such as USB\VID_2C7C&PID_0125&REV_0001&NAME_EC25GGB.
+
+    (cherry picked from commit b70fd64417d8fbed10aa1eb5e5c720fcf1074782)
+
+ plugins/quectel/mm-shared-quectel.c | 87
+ +++++++++++++++++++++++++++++++------
+ 1 file changed, 74 insertions(+), 13 deletions(-)
+
+commit 1a9b7d2ee0a7902715c6db95dd9892647a5c6784
+Author: Dylan Van Assche <me@dylanvanassche.be>
+Date:   Sun Feb 6 18:47:24 2022 +0100
+
+    iface-modem-firmware: expose device id builder
+
+    Expose the generic device id method as a public API for plugins.
+    Plugins can call this method first and then add their own device
+    ids on
+    top in case the generic ones aren't specific enough like in the
+    case of
+    Quectel modems.
+
+    (cherry picked from commit 90397fa1bbae2297aca169f8fbfa981fa0f5d4e6)
+
+ src/mm-iface-modem-firmware.c | 39
+ +++++++++++++++++++++------------------
+ src/mm-iface-modem-firmware.h |  4 ++++
+ 2 files changed, 25 insertions(+), 18 deletions(-)
+
+commit 8b901058dd5723d54d2b045ae672e1c6dd24e47e
+Author: Dylan Van Assche <me@dylanvanassche.be>
+Date:   Sun Feb 6 18:44:12 2022 +0100
+
+    libmm-glib,firmware-update-settings: setter for method
+
+    Allow to set the firmware update method even after
+    initialization of the MMFirmwareUpdateSettings object.
+
+    (cherry picked from commit bdf4d898f6a490ce2c1c9dc41871c4baced1e37b)
+
+ docs/reference/libmm-glib/libmm-glib-sections.txt |  1 +
+ libmm-glib/mm-firmware-update-settings.c          | 12 ++++++++++++
+ libmm-glib/mm-firmware-update-settings.h          | 10 ++++++----
+ 3 files changed, 19 insertions(+), 4 deletions(-)
+
+commit 4805251f2d374f54f18c73b3526ee29342a0d03e
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jan 31 23:11:11 2022 +0100
+
+    broadband-modem-mbim: minor alignment fix
+
+    (cherry picked from commit 8ae31be1beffec3c7642dfa4bad5fbb447c763b8)
+
+ src/mm-broadband-modem-mbim.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 3265f184bcd05c5ceb79573a64592a2bd290dbd0
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jan 31 22:42:48 2022 +0100
+
+    shared-qmi: filter out modes not currently available
+
+    Do not build the mask of "all" modes based only on the supported radio
+    interfaces, also filter out those modes that would not be available
+    based on the current capabilities enabled.
+
+    (cherry picked from commit 9c08e54fb9d2f0b9341c2c98291551d8c9917c78)
+
+ src/mm-shared-qmi.c                | 8 ++++++++
+ src/tests/test-modem-helpers-qmi.c | 2 +-
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+commit 7d5a8db27339bff91b5f0b0320ae714c890c6344
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jan 31 22:34:56 2022 +0100
+
+    modem-helpers-qmi: multimode devices shouldn't always have 4G/5G
+    only modes
+
+    In GSM/UMTS+CDMA/EVDO multimode devices, the 4G and 5G mode switching
+    operations are exclusively limited to the capability selection that
+    has LTE+5GNR exclusively.
+
+    We cannot allow switching to 4G-only, 5G-only or 4G+5G if the current
+    capabilities have GSM/UMTS or CDMA/EVDO.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/503
+
+    (cherry picked from commit c7ff014e07ee5bfcfa4ba7e235c1c234ad77245a)
+
+ src/mm-modem-helpers-qmi.c         | 65
+ +++++++++++++++++++-------------------
+ src/mm-modem-helpers-qmi.h         |  8 +++++
+ src/mm-shared-qmi.c                |  9 ++++++
+ src/tests/test-modem-helpers-qmi.c | 51 ++++++++++++++++++++++++++++++
+ 4 files changed, 101 insertions(+), 32 deletions(-)
+
+commit 0b0362054a004e6313bdbdd4a544b5004275d336
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Jan 30 23:04:15 2022 +0100
+
+    tests,modem-helpers-qmi: add tests for supported modes loading
+
+    (cherry picked from commit ccf0b7eba2bf2abc2c81e5d68dc5872a15b515c2)
+
+ src/tests/test-modem-helpers-qmi.c | 473
+ +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 473 insertions(+)
+
+commit 53b0095cbfd96131e706365465804eb0bf7b56b0
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Jan 30 21:33:38 2022 +0100
+
+    modem-helpers-qmi: new helper to build array of supported modes
+
+    (cherry picked from commit b323a731370be607f2529b1df976ec64a4f7c2e8)
+
+ src/mm-modem-helpers-qmi.c |  96 +++++++++++++++++++++++++++++++++++++++
+ src/mm-modem-helpers-qmi.h |  17 +++++++
+ src/mm-shared-qmi.c        | 110
+ +++++----------------------------------------
+ 3 files changed, 125 insertions(+), 98 deletions(-)
+
+commit 8270de785debce715e194cfe41df4e66618cf8be
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Jan 30 17:48:50 2022 +0100
+
+    tests,modem-helpers-qmi: add additional tests for supported
+    capabilities loading
+
+    Including tests for 5G-only and non-multimode 5G+4G and 5G+4G+3G
+    devices.
+
+    (cherry picked from commit 6efde107142692996a5b9f44f323710baa8f40bc)
+
+ src/tests/test-modem-helpers-qmi.c | 270
+ ++++++++++++++++++++++++++++++++++---
+ 1 file changed, 250 insertions(+), 20 deletions(-)
+
+commit 888da10d8f0ba5b0d58c4ab4966d1e7be828a1a4
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Jan 30 17:43:34 2022 +0100
+
+    tests,modem-helpers-qmi: add tests for supported capabilities loading
+
+    (cherry picked from commit ff51fe637d8a87b265f9cf4558987d2e698e9e62)
+
+ src/tests/test-modem-helpers-qmi.c | 217
+ +++++++++++++++++++++++++++++++++++--
+ 1 file changed, 207 insertions(+), 10 deletions(-)
+
+commit 680edfa2253c92d46f24455f741ee20fe8b2a931
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Jan 30 17:11:31 2022 +0100
+
+    modem-helpers-qmi: new helper to build array of supported capabilities
+
+    (cherry picked from commit d0c87c5877b247ee34fb133604904404581e7814)
+
+ src/mm-modem-helpers-qmi.c | 45
+ +++++++++++++++++++++++++++++++++++++++++-
+ src/mm-modem-helpers-qmi.h | 15 ++++++++++++++
+ src/mm-shared-qmi.c        | 49
+ +++++++++++-----------------------------------
+ 3 files changed, 70 insertions(+), 39 deletions(-)
+
+commit dcd0b5826add3f0086ce2cbb9e944cce4ee0a7d4
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Jan 30 16:51:07 2022 +0100
+
+    modem-helpers-qmi: refer explicitly to current capabilities in
+    helper method
+
+    The helper method for which we have unit tests available refers
+    exclusively to the current capabilities loading, so rename it to
+    clarify that.
+
+    (cherry picked from commit f370c096ec53c35e9b28a4ba966eade42c07f375)
+
+ src/mm-modem-helpers-qmi.c         |   4 +-
+ src/mm-modem-helpers-qmi.h         |   6 +-
+ src/mm-shared-qmi.c                |  10 +--
+ src/tests/test-modem-helpers-qmi.c | 179
+ ++++++++++++++++++-------------------
+ 4 files changed, 98 insertions(+), 101 deletions(-)
+
+commit 5aed9da9858bc6b78170df5d00ecc310801944a8
+Author: Prakash Pabba <quic_ppabba@quicinc.com>
+Date:   Fri Jan 21 16:45:14 2022 +0530
+
+    test-modem-helpers-qmi: add unit test for generic 5g modem
+
+    (cherry picked from commit 23229888553fd453797da89c12605aa40f3ba378)
+
+ src/tests/test-modem-helpers-qmi.c | 135
+ ++++++++++++++++++++++++++++++++++---
+ 1 file changed, 126 insertions(+), 9 deletions(-)
+
+commit 39a527f9912af7bfa47b2e63d1b2cc4a38295296
+Author: Prakash Pabba <quic_ppabba@quicinc.com>
+Date:   Thu Dec 16 14:02:01 2021 +0530
+
+    test-modem-helpers-qmi: Fix tests for UML290
+
+    Change due to update in current capabilities loading logic.
+
+    (cherry picked from commit 3a1390f1dda4acf73dc8bec8d2ccf9dcddfcf5c4)
+
+ src/tests/test-modem-helpers-qmi.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+commit 2ca9c262c746bfa83e9086b69045d190c21d637c
+Author: Prakash Pabba <quic_ppabba@quicinc.com>
+Date:   Tue Dec 14 14:25:45 2021 +0530
+
+    mm-shared-qmi,mm-modem-helpers: Fix supported capabilities and modes
+    for multimode device
+
+    We use capability switching logic exclusively for configuring
+    GSM/UMTS+CDMA/EVDO devices
+    (regardless of whether it has LTE/5GNR or not) to add or remove the
+    GSM/UMTS and CDMA/EVDO
+    capabilities.
+
+    Based on the same logic, we will allow 4 combinations for
+    GSM/UMTS+CDMA/EVDO+LTE+5GNR device:
+    "GSM/UMTS+CDMA/EVDO+LTE+5GNR", "GSM/UMTS+LTE+5GNR",
+    "CDMA/EVDO+LTE+5GNR" and "LTE+5GNR"
+
+    Similarly, we will allow 4 combinations for GSM/UMTS+CDMA/EVDO+LTE
+    device:
+    "GSM/UMTS+CDMA/EVDO+LTE", "GSM/UMTS+LTE", "CDMA/EVDO+LTE" and "LTE"
+
+    And, we will allow 3 combinations for GSM/UMTS+CDMA/EVDO device:
+    "GSM/UMTS+CDMA/EVDO", "GSM/UMTS" and "CDMA/EVDO"
+
+    Also, supported combination modes should be based on current
+    capabilities and not entirely
+    upon supported radio interfaces.
+
+    1) If current capability has "gsm-umts" or "cdma-evdo" or both, do not
+       support 4G only, 5G only, or 4G+5G combination modes
+    2) If current capability neither has "gsm-umts" nor "cdma-evdo",
+    only support
+       combination modes involving 4G and 5G.
+
+    (cherry picked from commit 38f067c4e44d7f994c3fd75e29d36ee199002ff4)
+
+ src/mm-modem-helpers.c | 10 +-----
+ src/mm-shared-qmi.c    | 84
+ ++++++++++++++++++++++++--------------------------
+ 2 files changed, 41 insertions(+), 53 deletions(-)
+
+commit 8d737cc6482a9d6e409d9d80936b448dd1af0b7b
+Author: Prakash Pabba <quic_ppabba@quicinc.com>
+Date:   Thu Dec 9 16:54:54 2021 +0530
+
+    mm-modem-helpers-qmi: Fix current capabilities for multimode device
+
+    Keep LTE or 5GNR always in current capabilities if supported by
+    device.
+
+    Since capability switching logic is exclusively used for configuring
+    GSM/UMTS+CDMA/EVDO devices, decide if to have GSM/UMTS or CDMA/EVDO
+    or both
+    or none when loading current capabilities.
+
+    (cherry picked from commit f05258e757558b93559b4d36087e89ec926c5423)
+
+ src/mm-modem-helpers-qmi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+commit ec3eb3283541ad73cd0f99c29c451911399a360e
+Author: Michal Mazur <mkm@semihalf.com>
+Date:   Thu Jan 27 16:07:07 2022 +0100
+
+    iface-modem: make update_unlock_retries method static
+
+    (cherry picked from commit 9843546a490c34bf0f8adb1bcce9503eccbb3115)
+
+ src/mm-iface-modem.c | 8 ++++----
+ src/mm-iface-modem.h | 3 ---
+ 2 files changed, 4 insertions(+), 7 deletions(-)
+
+commit cf7533caa854b1ff12226261f64e2fb27206edfb
+Author: Michal Mazur <mkm@semihalf.com>
+Date:   Wed Dec 15 16:07:36 2021 +0100
+
+    sim-mbim,broadband-modem-mbim: store number of remaining attempts
+
+    On MBIM modems the type of PIN cannot be specified in MBIM_CID_PIN
+    query
+    command and the modem responds only remaining attempts for the
+    currently
+    active lock.
+    If PIN1 is unlocked and user tries to disable (or enable) it, MM won't
+    get an update of remaining attempts in response to PIN Query. This
+    value
+    is returned only after the Set command and MM need to store it in
+    all (pin/puk)_set_(enter/enable/change)_ready functions.
+
+    Previous solution was to call the mm_iface_modem_update_unlock_retries
+    directly from these functions but it caused the notification to
+    be send
+    too early and invalid number was displayed to user sometimes.
+    Instead of this MM will store numbers of remaining attempts and send
+    them in a single notification from modem_load_unlock_retries.
+
+    (cherry picked from commit 5d4957935ba17c7c24ae92b82fc3fb90851f3235)
+
+ src/mm-broadband-modem-mbim.c | 67
+ +++++++++++++++++--------------------------
+ src/mm-broadband-modem-mbim.h |  4 +++
+ src/mm-sim-mbim.c             | 11 ++-----
+ 3 files changed, 33 insertions(+), 49 deletions(-)
+
+commit 5788f52e50fd2325e072717bd63b063f156b19f2
+Author: Michal Mazur <mkm@semihalf.com>
+Date:   Thu Dec 16 14:11:23 2021 +0100
+
+    Revert "mm-sim-mbim: Remove update of remaining attempts"
+
+    This reverts commit 46c5cd8b7279e6139466664f87d744a0553fa1c3.
+
+    (cherry picked from commit ee87a6853228e0b4b5e6c132f0c90e8d094af441)
+
+ src/mm-sim-mbim.c | 53
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+
+commit 08ad95ce9872957a9e4c0956ff2f756d963f4018
+Author: Nagi Marupaka <nmarupaka@google.com>
+Date:   Tue Jan 25 17:32:48 2022 +0000
+
+    mm-kernel-device-helpers: fix memory leak
+
+    Newly refactored string manipulation function is leaking memory as per
+    our tests. This submission fixes that memory leak.
+
+    (cherry picked from commit 73e3da3a1035deb8a748d162c52281f94a537904)
+
+ src/kerneldevice/mm-kernel-device-helpers.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+commit 85becf883be55639c8725d29095269f9cfbd96d4
+Author: Iñigo Martínez <inigomartinez@gmail.com>
+Date:   Wed Jan 26 16:37:57 2022 +0100
+
+    build,meson: Fix gdbus code generation
+
+    Changes on meson 0.61 makes the build to fail due to empty
+    annotations in some gdbus code generation[0].
+
+    Taking advantage of `kwargs` support, it has been changed to avoid
+    the issue.
+
+    Fixes #499
+
+    [0]
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/499
+
+    (cherry picked from commit 0ab9fc343fdc21235bc24c80c78a13b1ea078208)
+
+ libmm-glib/generated/meson.build | 24 +++++++++++-------------
+ 1 file changed, 11 insertions(+), 13 deletions(-)
+
+commit 259f2eedd62a6895f5282b3e1666ca8480a38c7c
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Jan 22 14:38:22 2022 +0100
+
+    plugin-manager: longer extra probing time when not using udev
+
+    When using udev, we rely on the kernel to timely report port additions
+    in the same device.
+
+    When not using udev, e.g. when using hotplug scripts in openwrt, we
+    use mmcli --report-kernel-event operations to report the port
+    additions, which may end up requiring much more time to process,
+    especially during bootup as we would be reporting a lot of port
+    addition events one after the other.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/493
+
+    (cherry picked from commit 86496bd326f2ec139101049fb19a10b255ee8ad5)
+
+ src/mm-plugin-manager.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+commit 5d28712d2cc5c17d784f658cdfad73490ff818da
+Author: Daniele <dnlplm@gmail.com>
+Date:   Fri Jan 21 17:52:38 2022 +0100
+
+    telit: add port hints for Telit LE910C1-EUX
+
+    (cherry picked from commit 9bc084c94a797bf9fd364087cf8d2b838120cd18)
+
+ plugins/telit/77-mm-telit-port-types.rules | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+commit 279d41f7459d4eae51284b090b2728082f8d5a26
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Jan 20 13:46:23 2022 +0100
+
+    foxconn: firmware info loading only if MBIM-QMUX enabled in libqmi
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/477
+
+    (cherry picked from commit 6ec97a29ae79636f3bf63e616e0b3904befa1dbd)
+
+ plugins/foxconn/mm-broadband-modem-mbim-foxconn.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+commit c40382dbe238e73452abf78581783e662c71afcf
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Jan 18 10:29:45 2022 +0100
+
+    quectel: fix reference cycle
+
+    The 'update_settings' object must be referenced before the task
+    is completed.
+
+    (cherry picked from commit c9ffa2c9e5bb1168210f9b6b1acdace778ee175a)
+
+ plugins/quectel/mm-shared-quectel.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+commit 2bea70a78c54a616072dd637e42f17dfe1f9b159
+Author: Dylan Van Assche <me@dylanvanassche.be>
+Date:   Mon Dec 27 17:59:53 2021 +0100
+
+    plugins/quectel/mm-shared-quectel: use QGMR to set version
+
+    Quectel modems report only their major firmware version through
+    AT+GMR, use AT+QGMR instead to report the full firmware version.
+
+    (cherry picked from commit 07d7f596d381ae1bc823c1a3b3b2707d17a0ad61)
+
+ plugins/quectel/mm-shared-quectel.c | 31 +++++++++++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 2 deletions(-)
+
+commit 59c46dcc92666e556e71bb62552bbaadd1cc2eb1
+Author: Dylan Van Assche <me@dylanvanassche.be>
+Date:   Sun Dec 26 11:35:55 2021 +0100
+
+    plugins/quectel/mm-broadband-modem-qmi-quectel: ignore carrier
+    revision
+
+    Quectel EG25-G QMI modem firmware revisions are not matched with
+    carrier configs.
+    Different VoLTE profiles might be selected by the user causing
+    the carrier config revision to change.
+
+    Since fwupd uses this string for firmware updates, it gets confused
+    and
+    thinks the user has an update available.
+
+    (cherry picked from commit 3f76b3b7d1abe10d2809c80891789cde81de5fa2)
+
+ plugins/quectel/mm-broadband-modem-qmi-quectel.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit c4a18113027b69ca31ea611105b479c798309653
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Jan 7 21:30:57 2022 +0100
+
+    libmm-glib,modem-3gpp: fix leak when processing scan results
+
+    (cherry picked from commit 4515b00020bdf173ca3ae7434a3abc0d287f93d6)
+
+ libmm-glib/mm-modem-3gpp.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit d177d54d5d579a960abd66c03f64fc17483483a7
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Jan 7 16:26:27 2022 +0100
+
+    iface-modem-3gpp: fix variant ref handling in scan output
+
+    (cherry picked from commit fb0dfb875172225d3bb82906a49118ceb7f938ba)
+
+ src/mm-iface-modem-3gpp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 714ce29110a478806cc9ba18ec81a2b67f53d3f6
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Nov 3 14:02:33 2021 +0100
+
+    docs,libmm-glib: add missing references to
+    object_{peek|get}_modem_ssr()
+
+    (cherry picked from commit 61266a4e848d2ac0acd170b3756aced44a26af1b)
+
+ docs/reference/libmm-glib/libmm-glib-sections.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit c143f8eefc3049d5420cf6752d2d4fc9f553ef93
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Dec 17 10:08:07 2021 +0100
+
+    iface-modem: minor coding style changes
+
+    (cherry picked from commit 59c79b07ae602d3664fb5098cc42f998bc644193)
+
+ src/mm-iface-modem.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+commit d872ddc92f9d544b5ffb04dcb1bf431ce3ef7d00
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Dec 17 11:20:57 2021 +0100
+
+    cli: fix 3GPP location mcc/mnc field names
+
+    (cherry picked from commit 791fb38417566b3cbde2450000049bd62c356305)
+
+ cli/mmcli-output.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 3a505f802fd314510fc2b5a97844dd879d09e6d4
+Author: Jakob Hauser <jahau@rocketmail.com>
+Date:   Mon Dec 20 05:10:14 2021 +0100
+
+    broadband-modem-qmi: Introduce udev flag for reduced facility
+    lock query
+
+    The udev flag "ID_MM_QMI_FACILITY_LOCK_QUERY_REDUCED" allows to skip
+    facility lock state query "get_ck_status" on the DMS path for devices
+    where this isn't implemented properly.
+
+    On devices that have enabled "device locks", this flag won't work
+    well.
+    Skipping the query doesn't disable the locks.
+
+    Fixes #448
+
+    (cherry picked from commit db228b28597c002174145c4a06b94a24f5dbdf9b)
+
+ src/mm-broadband-modem-qmi.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
+
+commit 508495966068b02daec93d8191f6f7469619b7a2
+Author: Mingjie Zhang <superzmj@fibocom.com>
+Date:   Thu Dec 9 20:48:50 2021 +0800
+
+    fibocom: update FM101 port type hints to final layout
+
+    The port type hints for the FM101 were updated to be in line with
+    the final product layout,
+    where USB interface #2 is now used as an AT port (not ignored)
+    and USB interface #4 is now
+    used as debug port. USB interface #6 is removed as it no longer
+    exists.
+
+    (cherry picked from commit 2bad8f5a0dc56b82cacc0982a15c2a32016f7975)
+
+ plugins/fibocom/77-mm-fibocom-port-types.rules | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
+
+commit a470b02f12f95679705eec28f2d7d5f0e2224f35
+Author: ZhangMingjie <superzmj@fibocom.com>
+Date:   Wed Nov 10 20:19:47 2021 +0800
+
+    plugins: add fibocom FM101 to fibocom port types rules file
+
+    This patch add fibocom FM101 to 77-mm-fibocom-port-types.rules file.
+    which contains two sets of vid and pid pairs, "2cb7:01a2" and
+    "2cb7:01a4".
+
+    (cherry picked from commit 3a880fd832a2826f812aef451e40c8f1241dccff)
+
+ plugins/fibocom/77-mm-fibocom-port-types.rules | 24
+ ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+commit 3e28b6829d3860f24f3acdc498e3670a47af8076
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Dec 8 14:30:08 2021 +0100
+
+    filter: allow 'option' string in the TTY driver filter list
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/475
+
+    (cherry picked from commit 559df16debd03d0ba00a68633f43cbda32f4aa8a)
+
+ src/mm-filter.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+commit 74f0caaaec000860d7c7ce1e795da67441ee6009
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Dec 1 21:40:00 2021 +0100
+
+    udev: avoid [0-9]* as shell globbing patterns
+
+    The udev rules expect matches based on shell globbing pattern, not
+    based on regex. This means that "[0-9]*" doesn't mean "zero or more
+    digits", it actually means "one digit and zero or more other
+    characters".
+
+    So, avoid the regex like match, even if it worked for us, because it
+    didn't mean what we thought it meant, plus, it breaks our custom udev
+    rules processing logic, in which we convert the input patterns into
+    real regex expressions.
+
+    See https://bbs.archlinux.org/viewtopic.php?pid=1415916#p1415916
+
+    While at it, also make sure that the wildcard matching is done
+    exclusively for prefix and suffix matches, never in the middle of
+    a string, or our custom rules parser would not match correctly.
+
+    (cherry picked from commit e9f254ba3f923248efffe4fd458dc5e5469e0f73)
+
+ plugins/qcom-soc/77-mm-qcom-soc.rules | 8 ++++----
+ src/80-mm-candidate.rules             | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+commit 2a6b6b22bfc351479e4692508924dcee3a9c0a23
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Nov 26 10:43:38 2021 +0100
+
+    build: post-release version bump to 1.18.5
+
+ configure.ac | 2 +-
+ meson.build  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
 commit ac6d31e463168e894269d2a7c949de4577026eea
 Author: Aleksander Morgado <aleksander@aleksander.es>
 Date:   Fri Nov 26 10:17:53 2021 +0100
