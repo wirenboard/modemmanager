@@ -1,3 +1,19 @@
+modemmanager (1.18.6-1) unstable; urgency=medium
+
+  [ Bjørn Bürger ]
+  * Add README.Debian.
+     * Added upgrade notice regarding changed fcc-unlock.d defaults:
+       https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1004447
+
+  [ Guido Günther ]
+  * Mention FCC unlock in NEWS.Debian
+
+  [ Arnaud Ferraris ]
+  * New upstream version 1.18.6
+  * d/libmm-glib0: update symbols file for new version.
+
+ -- Arnaud Ferraris <arnaud.ferraris@gmail.com>  Wed, 16 Feb 2022 17:00:52 +0100
+
 modemmanager (1.18.4-1) unstable; urgency=medium
 
   [ Cyril Brulebois ]
@@ -444,7 +460,7 @@ modemmanager (1.0.0-1) experimental; urgency=low
     version 1.4.
   * debian/control: build-depends on libmbim-glib-dev 1.4
   * debian/rules: run the local autogen.sh rather than gnome-autogen.sh.
-  * debian/rules: drop --with-tests. 
+  * debian/rules: drop --with-tests.
   * debian/rules: clean up after gtk-doc files left around.
   * debian/patches/glib_fixes.patch: link against glib explicitly for the
     huawei modem helper tests.
@@ -636,7 +652,7 @@ modemmanager (0.5.2.0-2) unstable; urgency=low
     32. However, since 2007 the default limit has been 8192, so this is actually
     a reduction. (Closes: #678964)
 
- -- Michael Biebl <biebl@debian.org>  Thu, 06 Sep 2012 17:07:18 +0200 
+ -- Michael Biebl <biebl@debian.org>  Thu, 06 Sep 2012 17:07:18 +0200
 
 modemmanager (0.6~git201206221719.8289a64-0ubuntu1) quantal; urgency=low
 
@@ -785,7 +801,7 @@ modemmanager (0.4.997-1) unstable; urgency=low
 modemmanager (0.4.997-0ubuntu1) oneiric; urgency=low
 
   * New upstream release 0.4.997.
-    + switch to git branch MM_05. 
+    + switch to git branch MM_05.
 
  -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Thu, 09 Jun 2011 09:41:20 -0400
 
@@ -967,9 +983,9 @@ modemmanager (0.3-0ubuntu1) lucid; urgency=low
     - cdma: handle interim enabling/disabling states better
     - cdma: update for new modem states and make connect actually work
     - mbm: update state after enabling the device
-    - core: schedule enabled/disabled callbacks to avoid infinite recursion	
+    - core: schedule enabled/disabled callbacks to avoid infinite recursion
     - cdma: set correct modem state on connect failure
-    - build: require glib-2.0 >= 2.6.18 for g_set_error_literal()	
+    - build: require glib-2.0 >= 2.6.18 for g_set_error_literal()
     - zte: add missing ZTE device aux port tags
     - gsm: more complete parsing of PIN responses
     - gsm: fix unsolicited registration segfaults
@@ -1048,7 +1064,7 @@ modemmanager (0.2.git.20091003t063318.aa78b5f-0ubuntu1) karmic; urgency=low
   New upstream snapshot: 2009-10-03 06:33:18 (GMT)
   + aa78b5f5e5319e04f5b57f928bfab69dd4b93d88
   * fixes
-    - LP: #430576 - refuse to connect over Nokia N85, turns off the handset  
+    - LP: #430576 - refuse to connect over Nokia N85, turns off the handset
     - LP: #416126 - various unsolicited messages for mbm cause fail on connect
 
  -- Alexander Sack <asac@ubuntu.com>  Tue, 06 Oct 2009 01:02:12 +0200
@@ -1132,7 +1148,7 @@ modemmanager (0.2.git.20090806t105932.354a4cb-0ubuntu3) karmic; urgency=low
 
 modemmanager (0.2.git.20090806t105932.354a4cb-0ubuntu2) karmic; urgency=low
 
-  * fix LP: #409943 - modemmanager debian/copyright has LGPL, 
+  * fix LP: #409943 - modemmanager debian/copyright has LGPL,
     but upstream source is GPL
     - update debian/copyright
 
