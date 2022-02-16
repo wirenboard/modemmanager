@@ -23,6 +23,8 @@
 
 #include "mm-port.h"
 
+#define MM_MODEM_CAPABILITY_MULTIMODE (MM_MODEM_CAPABILITY_GSM_UMTS | MM_MODEM_CAPABILITY_CDMA_EVDO)
+
 /*****************************************************************************/
 /* QMI/DMS to MM translations */
 
@@ -154,16 +156,54 @@ gboolean mm_error_from_qmi_loc_indication_status (QmiLocIndicationStatus   statu
 /* Utility to gather current capabilities from various sources */
 
 typedef struct {
+    /* Whether this is a multimode device or not */
+    gboolean multimode;
     /* NAS System Selection Preference */
     QmiNasRatModePreference nas_ssp_mode_preference_mask;
     /* NAS Technology Preference */
     QmiNasRadioTechnologyPreference nas_tp_mask;
     /* DMS Capabilities */
     MMModemCapability dms_capabilities;
-} MMQmiCapabilitiesContext;
+} MMQmiCurrentCapabilitiesContext;
 
-MMModemCapability mm_modem_capability_from_qmi_capabilities_context (MMQmiCapabilitiesContext *ctx,
-                                                                     gpointer                  log_object);
+MMModemCapability mm_current_capability_from_qmi_current_capabilities_context (MMQmiCurrentCapabilitiesContext *ctx,
+                                                                               gpointer                         log_object);
+
+/*****************************************************************************/
+/* Utility to build list of supported capabilities from various sources */
+
+typedef struct {
+    /* Whether this is a multimode device or not */
+    gboolean multimode;
+    /* NAS System Selection Preference */
+    gboolean nas_ssp_supported;
+    /* NAS Technology Preference */
+    gboolean nas_tp_supported;
+    /* DMS Capabilities */
+    MMModemCapability dms_capabilities;
+} MMQmiSupportedCapabilitiesContext;
+
+GArray *mm_supported_capabilities_from_qmi_supported_capabilities_context (MMQmiSupportedCapabilitiesContext *ctx,
+                                                                           gpointer                           log_object);
+
+/*****************************************************************************/
+/* Utility to build list of supported modes from various sources */
+
+typedef struct {
+    /* Whether this is a multimode device or not */
+    gboolean multimode;
+    /* NAS System Selection Preference */
+    gboolean nas_ssp_supported;
+    /* NAS Technology Preference */
+    gboolean nas_tp_supported;
+    /* Mask with all supported modes */
+    MMModemMode all;
+    /* Current Capabilities */
+    MMModemCapability current_capabilities;
+} MMQmiSupportedModesContext;
+
+GArray *mm_supported_modes_from_qmi_supported_modes_context (MMQmiSupportedModesContext *ctx,
+                                                             gpointer                    log_object);
 
 /*****************************************************************************/
 /* QMI unique id manipulation */
