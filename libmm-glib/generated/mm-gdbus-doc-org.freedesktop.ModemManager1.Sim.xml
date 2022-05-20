@@ -33,8 +33,9 @@
   </refsect1>
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Sim">
   <title role="desc.title">Description</title>
-  <para>      The SIM interface handles communication with SIM, USIM, and RUIM (CDMA
-      SIM) cards.
+  <para>
+The SIM interface handles communication with SIM, USIM, and RUIM (CDMA
+SIM) cards.
 </para>
 </refsect1>
 <refsect1 role="details" id="gdbus-methods-org.freedesktop.ModemManager1.Sim">
@@ -45,13 +46,17 @@
 <programlisting>
 SendPin (IN  s pin);
 </programlisting>
-<para>        Send the PIN to unlock the SIM card.
-</para><para>        Since: 1.0
+<para>
+Send the PIN to unlock the SIM card.
+</para><para>
+Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN s <parameter>pin</parameter></literal>:</term>
-  <listitem><para>A string containing the PIN code.</para></listitem>
+  <listitem><para>
+A string containing the PIN code.
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -62,17 +67,23 @@ SendPin (IN  s pin);
 SendPuk (IN  s puk,
          IN  s pin);
 </programlisting>
-<para>        Send the PUK and a new PIN to unlock the SIM card.
-</para><para>        Since: 1.0
+<para>
+Send the PUK and a new PIN to unlock the SIM card.
+</para><para>
+Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN s <parameter>puk</parameter></literal>:</term>
-  <listitem><para>A string containing the PUK code.</para></listitem>
+  <listitem><para>
+A string containing the PUK code.
+</para></listitem>
 </varlistentry>
 <varlistentry>
   <term><literal>IN s <parameter>pin</parameter></literal>:</term>
-  <listitem><para>A string containing the PIN code.</para></listitem>
+  <listitem><para>
+A string containing the PIN code.
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -83,17 +94,23 @@ SendPuk (IN  s puk,
 EnablePin (IN  s pin,
            IN  b enabled);
 </programlisting>
-<para>        Enable or disable the PIN checking.
-</para><para>        Since: 1.0
+<para>
+Enable or disable the PIN checking.
+</para><para>
+Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN s <parameter>pin</parameter></literal>:</term>
-  <listitem><para>A string containing the PIN code.</para></listitem>
+  <listitem><para>
+A string containing the PIN code.
+</para></listitem>
 </varlistentry>
 <varlistentry>
   <term><literal>IN b <parameter>enabled</parameter></literal>:</term>
-  <listitem><para><constant>TRUE</constant> to enable PIN checking, <constant>FALSE</constant> otherwise.</para></listitem>
+  <listitem><para>
+<constant>TRUE</constant> to enable PIN checking, <constant>FALSE</constant> otherwise.
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -104,17 +121,23 @@ EnablePin (IN  s pin,
 ChangePin (IN  s old_pin,
            IN  s new_pin);
 </programlisting>
-<para>        Change the PIN code.
-</para><para>        Since: 1.0
+<para>
+Change the PIN code.
+</para><para>
+Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN s <parameter>old_pin</parameter></literal>:</term>
-  <listitem><para>A string containing the current PIN code.</para></listitem>
+  <listitem><para>
+A string containing the current PIN code.
+</para></listitem>
 </varlistentry>
 <varlistentry>
   <term><literal>IN s <parameter>new_pin</parameter></literal>:</term>
-  <listitem><para>A string containing the new PIN code.</para></listitem>
+  <listitem><para>
+A string containing the new PIN code.
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -124,20 +147,25 @@ ChangePin (IN  s old_pin,
 <programlisting>
 SetPreferredNetworks (IN  a(su) preferred_networks);
 </programlisting>
-<para>        Stores the provided preferred network list to the SIM card. Each entry contains
-        an operator id string (<literal>"MCCMNC"</literal>) consisting of 5 or 6 digits,
-        and an <link linkend="MMModemAccessTechnology">MMModemAccessTechnology</link> mask
-        to store to SIM card if supported.
-</para><para>        This method removes any pre-existing entries of the preferred network list. Note
-        that even if this operation fails, the preferred network list on the SIM card may
-        have changed. Read the <link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.PreferredNetworks">
-        PreferredNetworks</link> property to get the up-to-date list.
-</para><para>        Since: 1.18
+<para>
+Stores the provided preferred network list to the SIM card. Each entry contains
+an operator id string (<literal>"MCCMNC"</literal>) consisting of 5 or 6 digits,
+and an <link linkend="MMModemAccessTechnology">MMModemAccessTechnology</link> mask
+to store to SIM card if supported.
+</para><para>
+This method removes any pre-existing entries of the preferred network list. Note
+that even if this operation fails, the preferred network list on the SIM card may
+have changed. Read the <link linkend="gdbus-property-org-freedesktop-ModemManager1-Sim.PreferredNetworks">
+PreferredNetworks</link> property to get the up-to-date list.
+</para><para>
+Since: 1.18
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN a(su) <parameter>preferred_networks</parameter></literal>:</term>
-  <listitem><para></para></listitem>
+  <listitem><para>
+</para><para>
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -150,12 +178,16 @@ SetPreferredNetworks (IN  a(su) preferred_networks);
 <programlisting>
 Active  readable   b
 </programlisting>
-<para>        Boolean indicating whether the SIM is currently active.
-</para><para>        On systems that support Multi SIM Single Standby, only one SIM may be
-        active at any given time, which will be the one considered primary.
-</para><para>        On systems that support Multi SIM Multi Standby, more than one SIM may
-        be active at any given time, but only one of them is considered primary.
-</para><para>        Since: 1.16
+<para>
+Boolean indicating whether the SIM is currently active.
+</para><para>
+On systems that support Multi SIM Single Standby, only one SIM may be
+active at any given time, which will be the one considered primary.
+</para><para>
+On systems that support Multi SIM Multi Standby, more than one SIM may
+be active at any given time, but only one of them is considered primary.
+</para><para>
+Since: 1.16
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sim.SimIdentifier">
@@ -164,10 +196,13 @@ Active  readable   b
 <programlisting>
 SimIdentifier  readable   s
 </programlisting>
-<para>        The ICCID of the SIM card.
-</para><para>        This may be available before the PIN has been entered depending
-        on the device itself.
-</para><para>        Since: 1.0
+<para>
+The ICCID of the SIM card.
+</para><para>
+This may be available before the PIN has been entered depending
+on the device itself.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sim.Imsi">
@@ -176,8 +211,10 @@ SimIdentifier  readable   s
 <programlisting>
 Imsi  readable   s
 </programlisting>
-<para>        The IMSI of the SIM card, if any.
-</para><para>        Since: 1.0
+<para>
+The IMSI of the SIM card, if any.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sim.Eid">
@@ -186,8 +223,10 @@ Imsi  readable   s
 <programlisting>
 Eid  readable   s
 </programlisting>
-<para>        The EID of the SIM card, if any.
-</para><para>        Since: 1.16
+<para>
+The EID of the SIM card, if any.
+</para><para>
+Since: 1.16
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorIdentifier">
@@ -196,7 +235,9 @@ Eid  readable   s
 <programlisting>
 OperatorIdentifier  readable   s
 </programlisting>
-<para></para>
+<para>
+</para><para>
+</para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sim.OperatorName">
   <title>The "OperatorName" property</title>
@@ -204,8 +245,10 @@ OperatorIdentifier  readable   s
 <programlisting>
 OperatorName  readable   s
 </programlisting>
-<para>        The name of the network operator, as given by the SIM card, if known.
-</para><para>        Since: 1.0
+<para>
+The name of the network operator, as given by the SIM card, if known.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sim.EmergencyNumbers">
@@ -214,10 +257,13 @@ OperatorName  readable   s
 <programlisting>
 EmergencyNumbers  readable   as
 </programlisting>
-<para>        List of emergency numbers programmed in the SIM card.
-</para><para>        These numbers should be treated as numbers for emergency calls in
-        addition to 112 and 911.
-</para><para>        Since: 1.12
+<para>
+List of emergency numbers programmed in the SIM card.
+</para><para>
+These numbers should be treated as numbers for emergency calls in
+addition to 112 and 911.
+</para><para>
+Since: 1.12
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sim.PreferredNetworks">
@@ -226,14 +272,17 @@ EmergencyNumbers  readable   as
 <programlisting>
 PreferredNetworks  readable   a(su)
 </programlisting>
-<para>        List of preferred networks with access technologies configured in the SIM card.
-</para><para>        Each entry contains an operator id string (<literal>"MCCMNC"</literal>)
-        consisting of 5 or 6 digits, and an
-        <link linkend="MMModemAccessTechnology">MMModemAccessTechnology</link> mask.
-        If the SIM card does not support access technology storage, the mask will be
-        set to <link linkend="MM-MODEM-ACCESS-TECHNOLOGY-UNKNOWN:CAPS">
-        MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN</link>.
-</para><para>        Since: 1.18
+<para>
+List of preferred networks with access technologies configured in the SIM card.
+</para><para>
+Each entry contains an operator id string (<literal>"MCCMNC"</literal>)
+consisting of 5 or 6 digits, and an
+<link linkend="MMModemAccessTechnology">MMModemAccessTechnology</link> mask.
+If the SIM card does not support access technology storage, the mask will be
+set to <link linkend="MM-MODEM-ACCESS-TECHNOLOGY-UNKNOWN:CAPS">
+MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN</link>.
+</para><para>
+Since: 1.18
 </para>
 </refsect2>
 </refsect1>

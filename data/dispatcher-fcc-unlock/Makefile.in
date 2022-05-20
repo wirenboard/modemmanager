@@ -88,7 +88,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = data/fcc-unlock
+subdir = data/dispatcher-fcc-unlock
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_append_compile_flags.m4 \
 	$(top_srcdir)/m4/ax_append_flag.m4 \
@@ -202,6 +202,7 @@ EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+FILECMD = @FILECMD@
 GCOV = @GCOV@
 GDBUS_CODEGEN = @GDBUS_CODEGEN@
 GENHTML = @GENHTML@
@@ -406,9 +407,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu data/fcc-unlock/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu data/dispatcher-fcc-unlock/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu data/fcc-unlock/Makefile
+	  $(AUTOMAKE) --gnu data/dispatcher-fcc-unlock/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \

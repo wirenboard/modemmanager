@@ -34,12 +34,14 @@
   </refsect1>
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Modem-ModemCdma">
   <title role="desc.title">Description</title>
-  <para>      This interface provides access to specific actions that may be performed
-      in modems with CDMA capabilities.
-</para><para>      This interface will only be available once the modem is ready to be
-      registered in the cellular network. Mixed 3GPP+3GPP2 devices will require
-      a valid unlocked SIM card before any of the features in the interface can
-      be used.
+  <para>
+This interface provides access to specific actions that may be performed
+in modems with CDMA capabilities.
+</para><para>
+This interface will only be available once the modem is ready to be
+registered in the cellular network. Mixed 3GPP+3GPP2 devices will require
+a valid unlocked SIM card before any of the features in the interface can
+be used.
 </para>
 </refsect1>
 <refsect1 role="details" id="gdbus-methods-org.freedesktop.ModemManager1.Modem.ModemCdma">
@@ -50,16 +52,21 @@
 <programlisting>
 Activate (IN  s carrier_code);
 </programlisting>
-<para>        Provisions the modem for use with a given carrier using the modem's
-        <ulink url="http://en.wikipedia.org/wiki/Over-the-air_programming">Over-The-Air (OTA)</ulink>
-        activation functionality, if any.
-</para><para>        Some modems will reboot after this call is made.
-</para><para>        Since: 1.0
+<para>
+Provisions the modem for use with a given carrier using the modem's
+<ulink url="http://en.wikipedia.org/wiki/Over-the-air_programming">Over-The-Air (OTA)</ulink>
+activation functionality, if any.
+</para><para>
+Some modems will reboot after this call is made.
+</para><para>
+Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN s <parameter>carrier_code</parameter></literal>:</term>
-  <listitem><para>Name of carrier, or carrier-specific code.</para></listitem>
+  <listitem><para>
+Name of carrier, or carrier-specific code.
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -69,68 +76,74 @@ Activate (IN  s carrier_code);
 <programlisting>
 ActivateManual (IN  a{sv} properties);
 </programlisting>
-<para>        Sets the modem provisioning data directly, without contacting the
-        carrier over the air.
-</para><para>        Some modems will reboot after this call is made.
-</para><para>        This dictionary is composed of a string identifier key
-        with an associated data which contains type-specific location
-        information:
-</para><para>        <variablelist>
-        <varlistentry><term>"spc"</term>
-          <listitem>
-            <para>
-              The Service Programming Code, given as a string of exactly 6 digit characters. Mandatory parameter.
-            </para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>"sid"</term>
-          <listitem>
-            <para>
-              The System Identification Number, given as a 16-bit unsigned integer (signature <literal>"q"</literal>). Mandatory parameter.
-            </para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>"mdn"</term>
-          <listitem>
-            <para>
-              The Mobile Directory Number, given as a string of maximum 15 characters. Mandatory parameter.
-            </para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>"min"</term>
-          <listitem>
-            <para>
-              The Mobile Identification Number, given as a string of maximum 15 characters. Mandatory parameter.
-            </para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>"mn-ha-key"</term>
-          <listitem>
-            <para>
-              The MN-HA key, given as a string of maximum 16 characters.
-            </para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>"mn-aaa-key"</term>
-          <listitem>
-            <para>
-              The MN-AAA key, given as a string of maximum 16 characters.
-            </para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>"prl"</term>
-          <listitem>
-            <para>
-              The Preferred Roaming List, given as an array of maximum 16384 bytes.
-            </para>
-          </listitem>
-        </varlistentry>
-        </variablelist>
+<para>
+Sets the modem provisioning data directly, without contacting the
+carrier over the air.
+</para><para>
+Some modems will reboot after this call is made.
+</para><para>
+This dictionary is composed of a string identifier key
+with an associated data which contains type-specific location
+information:
+</para><para>
+<variablelist>
+<varlistentry><term>"spc"</term>
+<listitem>
+<para>
+The Service Programming Code, given as a string of exactly 6 digit characters. Mandatory parameter.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>"sid"</term>
+<listitem>
+<para>
+The System Identification Number, given as a 16-bit unsigned integer (signature <literal>"q"</literal>). Mandatory parameter.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>"mdn"</term>
+<listitem>
+<para>
+The Mobile Directory Number, given as a string of maximum 15 characters. Mandatory parameter.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>"min"</term>
+<listitem>
+<para>
+The Mobile Identification Number, given as a string of maximum 15 characters. Mandatory parameter.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>"mn-ha-key"</term>
+<listitem>
+<para>
+The MN-HA key, given as a string of maximum 16 characters.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>"mn-aaa-key"</term>
+<listitem>
+<para>
+The MN-AAA key, given as a string of maximum 16 characters.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>"prl"</term>
+<listitem>
+<para>
+The Preferred Roaming List, given as an array of maximum 16384 bytes.
+</para>
+</listitem>
+</varlistentry>
+</variablelist>
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN a{sv} <parameter>properties</parameter></literal>:</term>
-  <listitem><para>A dictionary of properties to set on the modem.</para></listitem>
+  <listitem><para>
+A dictionary of properties to set on the modem.
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -145,21 +158,29 @@ ActivationStateChanged (u     activation_state,
                         u     activation_error,
                         a{sv} status_changes);
 </programlisting>
-<para>        The device activation state changed.
-</para><para>        Since: 1.0
+<para>
+The device activation state changed.
+</para><para>
+Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>u <parameter>activation_state</parameter></literal>:</term>
-  <listitem><para>Current activation state, given as a <link linkend="MMModemCdmaActivationState">MMModemCdmaActivationState</link>.</para></listitem>
+  <listitem><para>
+Current activation state, given as a <link linkend="MMModemCdmaActivationState">MMModemCdmaActivationState</link>.
+</para></listitem>
 </varlistentry>
 <varlistentry>
   <term><literal>u <parameter>activation_error</parameter></literal>:</term>
-  <listitem><para>Carrier-specific error code, given as a <link linkend="MMCdmaActivationError">MMCdmaActivationError</link>.</para></listitem>
+  <listitem><para>
+Carrier-specific error code, given as a <link linkend="MMCdmaActivationError">MMCdmaActivationError</link>.
+</para></listitem>
 </varlistentry>
 <varlistentry>
   <term><literal>a{sv} <parameter>status_changes</parameter></literal>:</term>
-  <listitem><para>Properties that have changed as a result of this activation state change, including <literal>"mdn"</literal> and <literal>"min"</literal>. The dictionary may be empty if the changed properties are unknown.</para></listitem>
+  <listitem><para>
+Properties that have changed as a result of this activation state change, including <literal>"mdn"</literal> and <literal>"min"</literal>. The dictionary may be empty if the changed properties are unknown.
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -172,9 +193,11 @@ ActivationStateChanged (u     activation_state,
 <programlisting>
 ActivationState  readable   u
 </programlisting>
-<para>        A <link linkend="MMModemCdmaActivationState">MMModemCdmaActivationState</link>
-        value specifying the state of the activation in the 3GPP2 network.
-</para><para>        Since: 1.0
+<para>
+A <link linkend="MMModemCdmaActivationState">MMModemCdmaActivationState</link>
+value specifying the state of the activation in the 3GPP2 network.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Meid">
@@ -183,8 +206,10 @@ ActivationState  readable   u
 <programlisting>
 Meid  readable   s
 </programlisting>
-<para>        The modem's <ulink url="http://en.wikipedia.org/wiki/MEID">Mobile Equipment Identifier</ulink>.
-</para><para>        Since: 1.0
+<para>
+The modem's <ulink url="http://en.wikipedia.org/wiki/MEID">Mobile Equipment Identifier</ulink>.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Esn">
@@ -193,10 +218,12 @@ Meid  readable   s
 <programlisting>
 Esn  readable   s
 </programlisting>
-<para>        The modem's
-        <ulink url="http://en.wikipedia.org/wiki/Electronic_serial_number">Electronic Serial Number</ulink>
-        (superceded by MEID but still used by older devices).
-</para><para>        Since: 1.0
+<para>
+The modem's
+<ulink url="http://en.wikipedia.org/wiki/Electronic_serial_number">Electronic Serial Number</ulink>
+(superceded by MEID but still used by older devices).
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Sid">
@@ -205,13 +232,16 @@ Esn  readable   s
 <programlisting>
 Sid  readable   u
 </programlisting>
-<para>        The
-        <ulink url="http://en.wikipedia.org/wiki/System_Identification_Number">System Identifier</ulink>
-        of the serving CDMA 1x network, if known, and
-        if the modem is registered with a CDMA 1x network.
-</para><para>        See <ulink url="http://ifast.org">ifast.org</ulink> or the mobile
-        broadband provider database for mappings of SIDs to network providers.
-</para><para>        Since: 1.0
+<para>
+The
+<ulink url="http://en.wikipedia.org/wiki/System_Identification_Number">System Identifier</ulink>
+of the serving CDMA 1x network, if known, and
+if the modem is registered with a CDMA 1x network.
+</para><para>
+See <ulink url="http://ifast.org">ifast.org</ulink> or the mobile
+broadband provider database for mappings of SIDs to network providers.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Nid">
@@ -220,11 +250,13 @@ Sid  readable   u
 <programlisting>
 Nid  readable   u
 </programlisting>
-<para>        The
-        <ulink url="http://en.wikipedia.org/wiki/Network_Identification_Number">Network Identifier</ulink>
-        of the serving CDMA 1x network, if known, and
-        if the modem is registered with a CDMA 1x network.
-</para><para>        Since: 1.0
+<para>
+The
+<ulink url="http://en.wikipedia.org/wiki/Network_Identification_Number">Network Identifier</ulink>
+of the serving CDMA 1x network, if known, and
+if the modem is registered with a CDMA 1x network.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.Cdma1xRegistrationState">
@@ -233,9 +265,11 @@ Nid  readable   u
 <programlisting>
 Cdma1xRegistrationState  readable   u
 </programlisting>
-<para>        A <link linkend="MMModemCdmaRegistrationState">MMModemCdmaRegistrationState</link>
-        value specifying the CDMA 1x registration state.
-</para><para>        Since: 1.0
+<para>
+A <link linkend="MMModemCdmaRegistrationState">MMModemCdmaRegistrationState</link>
+value specifying the CDMA 1x registration state.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-ModemCdma.EvdoRegistrationState">
@@ -244,9 +278,11 @@ Cdma1xRegistrationState  readable   u
 <programlisting>
 EvdoRegistrationState  readable   u
 </programlisting>
-<para>        A <link linkend="MMModemCdmaRegistrationState">MMModemCdmaRegistrationState</link>
-        value specifying the EVDO registration state.
-</para><para>        Since: 1.0
+<para>
+A <link linkend="MMModemCdmaRegistrationState">MMModemCdmaRegistrationState</link>
+value specifying the EVDO registration state.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 </refsect1>

@@ -50,8 +50,9 @@
 </div>
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1"></a><h2>Description</h2>
-<p>      The Manager interface allows controlling and querying the status of the
-      ModemManager daemon.
+<p>
+The Manager interface allows controlling and querying the status of the
+ModemManager daemon.
 </p>
 </div>
 <div class="refsect1">
@@ -61,9 +62,11 @@
 <pre class="programlisting">
 ScanDevices ();
 </pre>
-<p>        Start a new scan for connected modem devices.
+<p>
+Start a new scan for connected modem devices.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -72,9 +75,11 @@ ScanDevices ();
 <pre class="programlisting">
 SetLogging (IN  s level);
 </pre>
-<p>        Set logging verbosity.
+<p>
+Set logging verbosity.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -83,7 +88,9 @@ SetLogging (IN  s level);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>level</code></em></code>:</span></p></td>
-<td><p>One of <code class="literal">"ERR"</code>, <code class="literal">"WARN"</code>, <code class="literal">"INFO"</code>, <code class="literal">"DEBUG"</code>.</p></td>
+<td><p>
+One of <code class="literal">"ERR"</code>, <code class="literal">"WARN"</code>, <code class="literal">"INFO"</code>, <code class="literal">"DEBUG"</code>.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -93,15 +100,19 @@ SetLogging (IN  s level);
 <pre class="programlisting">
 ReportKernelEvent (IN  a{sv} properties);
 </pre>
-<p>        Reports a kernel event to ModemManager.
+<p>
+Reports a kernel event to ModemManager.
 </p>
-<p>        This method is only available if udev is not being used to report kernel
-        events.
+<p>
+This method is only available if udev is not being used to report kernel
+events.
 </p>
-<p>        The <em class="parameter"><code>properties</code></em> dictionary is composed of key/value string pairs. The
-        possible keys are:
+<p>
+The <em class="parameter"><code>properties</code></em> dictionary is composed of key/value string pairs. The
+possible keys are:
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -112,10 +123,10 @@ ReportKernelEvent (IN  a{sv} properties);
 <td><p><span class="term"><code class="literal">action</code></span></p></td>
 <td>
 <p>
-                The type of action, given as a string value (signature
-                <code class="literal">"s"</code>).
-                This parameter is MANDATORY.
-              </p>
+The type of action, given as a string value (signature
+<code class="literal">"s"</code>).
+This parameter is MANDATORY.
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -125,14 +136,14 @@ ReportKernelEvent (IN  a{sv} properties);
 <tr>
 <td><p><span class="term"><code class="literal">add</code></span></p></td>
 <td>
-                    A new kernel device has been added.
-                  </td>
+A new kernel device has been added.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">remove</code></span></p></td>
 <td>
-                    An existing kernel device has been removed.
-                  </td>
+An existing kernel device has been removed.
+</td>
 </tr>
 </tbody>
 </table></div>
@@ -141,34 +152,35 @@ ReportKernelEvent (IN  a{sv} properties);
 <tr>
 <td><p><span class="term"><code class="literal">name</code></span></p></td>
 <td><p>
-                The device name, given as a string value (signature
-                <code class="literal">"s"</code>).
-                This parameter is MANDATORY.
-              </p></td>
+The device name, given as a string value (signature
+<code class="literal">"s"</code>).
+This parameter is MANDATORY.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">subsystem</code></span></p></td>
 <td><p>
-                The device subsystem, given as a string value (signature
-                <code class="literal">"s"</code>).
-                This parameter is MANDATORY.
-              </p></td>
+The device subsystem, given as a string value (signature
+<code class="literal">"s"</code>).
+This parameter is MANDATORY.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">uid</code></span></p></td>
 <td><p>
-                The unique ID of the physical device, given as a string value
-                (signature <code class="literal">"s"</code>).
-                This parameter is OPTIONAL, if not given the sysfs path of the
-                physical device will be used. This parameter must be the same
-                for all devices exposed by the same physical device.
-              </p></td>
+The unique ID of the physical device, given as a string value
+(signature <code class="literal">"s"</code>).
+This parameter is OPTIONAL, if not given the sysfs path of the
+physical device will be used. This parameter must be the same
+for all devices exposed by the same physical device.
+</p></td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.8
+<p>
+Since: 1.8
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -177,7 +189,9 @@ ReportKernelEvent (IN  a{sv} properties);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN a{sv} <em class="parameter"><code>properties</code></em></code>:</span></p></td>
-<td><p>event properties.</p></td>
+<td><p>
+event properties.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -188,20 +202,25 @@ ReportKernelEvent (IN  a{sv} properties);
 InhibitDevice (IN  s uid,
                IN  b inhibit);
 </pre>
-<p>              <a class="link" href="gdbus-org.freedesktop.ModemManager1.html#gdbus-interface-org-freedesktop-ModemManager1.top_of_page">org.freedesktop.ModemManager1</a>.Modem:Device property.
-        <em class="parameter"><code>inhibit</code></em>: <code class="constant">TRUE</code> to inhibit the modem and <code class="constant">FALSE</code> to uninhibit it.
+<p>
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.html#gdbus-interface-org-freedesktop-ModemManager1.top_of_page">org.freedesktop.ModemManager1</a>.Modem:Device property.
+<em class="parameter"><code>inhibit</code></em>: <code class="constant">TRUE</code> to inhibit the modem and <code class="constant">FALSE</code> to uninhibit it.
 </p>
-<p>        Inhibit or uninhibit the device.
+<p>
+Inhibit or uninhibit the device.
 </p>
-<p>        When the modem is inhibited ModemManager will close all its ports and
-        unexport it from the bus, so that users of the interface are no longer
-        able to operate with it.
+<p>
+When the modem is inhibited ModemManager will close all its ports and
+unexport it from the bus, so that users of the interface are no longer
+able to operate with it.
 </p>
-<p>        This operation binds the inhibition request to the existence of the
-        caller in the DBus bus. If the caller disappears from the bus, the
-        inhibition will automatically removed.
+<p>
+This operation binds the inhibition request to the existence of the
+caller in the DBus bus. If the caller disappears from the bus, the
+inhibition will automatically removed.
 </p>
-<p>        Since: 1.10
+<p>
+Since: 1.10
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -211,11 +230,18 @@ InhibitDevice (IN  s uid,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>uid</code></em></code>:</span></p></td>
-<td><p>the unique ID of the physical device, given in the</p></td>
+<td><p>
+the unique ID of the physical device, given in the
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">IN b <em class="parameter"><code>inhibit</code></em></code>:</span></p></td>
-<td><p></p></td>
+<td>
+<p>
+</p>
+<p>
+</p>
+</td>
 </tr>
 </tbody>
 </table></div>
@@ -228,9 +254,11 @@ InhibitDevice (IN  s uid,
 <pre class="programlisting">
 Version  readable   s
 </pre>
-<p>        The runtime version of the ModemManager daemon.
+<p>
+The runtime version of the ModemManager daemon.
 </p>
-<p>        Since: 1.10
+<p>
+Since: 1.10
 </p>
 </div>
 </div>
