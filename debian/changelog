@@ -1,3 +1,20 @@
+modemmanager (1.18.8-1) unstable; urgency=medium
+
+  * debian: lintian-driven fixes and small improvements.
+    This commit includes minor changes spotted by `lintian-brush`:
+    - remove obsolete/empty maintainer scripts
+    - `d/upstream/metadata`: append `.git` to repo URL
+    - `d/rules`: drop symbols migration (1.4.14 is long gone)
+  * d/control: drop build dependency on libqrtr-glib
+    `libqrtr-glib-dev` is now a dependency to `libqmi-glib-dev`, and as such
+    can be safely omitted from this package's build deps.
+    We must however increase the required `libqmi` version to ensure we
+    avoid build failures.
+  * New upstream version 1.18.8
+  * d/symbols: update for new release.
+
+ -- Arnaud Ferraris <arnaud.ferraris@gmail.com>  Fri, 20 May 2022 10:19:43 +0200
+
 modemmanager (1.18.6-2) unstable; urgency=medium
 
   * d/control: build-depend on libqrtr-glib.
