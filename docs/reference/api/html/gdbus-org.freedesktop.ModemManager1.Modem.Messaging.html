@@ -60,13 +60,15 @@
 </div>
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Modem-Messaging"></a><h2>Description</h2>
-<p>      The Messaging interface handles sending SMS messages and notification of new
-      incoming messages.
+<p>
+The Messaging interface handles sending SMS messages and notification of new
+incoming messages.
 </p>
-<p>      This interface will only be available once the modem is ready to be
-      registered in the cellular network. 3GPP devices will require a valid
-      unlocked SIM card before any of the features in the interface can be
-      used (including listing stored messages).
+<p>
+This interface will only be available once the modem is ready to be
+registered in the cellular network. 3GPP devices will require a valid
+unlocked SIM card before any of the features in the interface can be
+used (including listing stored messages).
 </p>
 </div>
 <div class="refsect1">
@@ -76,14 +78,17 @@
 <pre class="programlisting">
 List (OUT ao result);
 </pre>
-<p>        Retrieve all SMS messages.
+<p>
+Retrieve all SMS messages.
 </p>
-<p>        This method should only be used once and subsequent information
-        retrieved either by listening for the
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Messaging.Added" title='The "Added" signal'>"Added"</a> signal,
-        or by querying the specific SMS object of interest.
+<p>
+This method should only be used once and subsequent information
+retrieved either by listening for the
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Messaging.html#gdbus-signal-org-freedesktop-ModemManager1-Modem-Messaging.Added" title='The "Added" signal'>"Added"</a> signal,
+or by querying the specific SMS object of interest.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -92,7 +97,9 @@ List (OUT ao result);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">OUT ao <em class="parameter"><code>result</code></em></code>:</span></p></td>
-<td><p>The list of SMS object paths.</p></td>
+<td><p>
+The list of SMS object paths.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -102,9 +109,11 @@ List (OUT ao result);
 <pre class="programlisting">
 Delete (IN  o path);
 </pre>
-<p>        Delete an SMS message.
+<p>
+Delete an SMS message.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -113,7 +122,9 @@ Delete (IN  o path);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN o <em class="parameter"><code>path</code></em></code>:</span></p></td>
-<td><p>The object path of the SMS to delete.</p></td>
+<td><p>
+The object path of the SMS to delete.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -124,18 +135,22 @@ Delete (IN  o path);
 Create (IN  a{sv} properties,
         OUT o     path);
 </pre>
-<p>        Creates a new message object.
+<p>
+Creates a new message object.
 </p>
-<p>        The '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Number" title='The "Number" property'>Number</a>'
-        and
-        either '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Text" title='The "Text" property'>Text</a>' or
-        '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Data" title='The "Data" property'>Data</a>'
-        properties are mandatory, others are optional.
+<p>
+The '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Number" title='The "Number" property'>Number</a>'
+and
+either '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Text" title='The "Text" property'>Text</a>' or
+'<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.Data" title='The "Data" property'>Data</a>'
+properties are mandatory, others are optional.
 </p>
-<p>        If the SMSC is not specified and one is required, the default SMSC is
-        used.
+<p>
+If the SMSC is not specified and one is required, the default SMSC is
+used.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -145,11 +160,15 @@ Create (IN  a{sv} properties,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">IN a{sv} <em class="parameter"><code>properties</code></em></code>:</span></p></td>
-<td><p>Message properties from the <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sms.html" title="org.freedesktop.ModemManager1.Sms">SMS D-Bus interface</a>.</p></td>
+<td><p>
+Message properties from the <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sms.html" title="org.freedesktop.ModemManager1.Sms">SMS D-Bus interface</a>.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">OUT o <em class="parameter"><code>path</code></em></code>:</span></p></td>
-<td><p>The object path of the new message object.</p></td>
+<td><p>
+The object path of the new message object.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -163,16 +182,19 @@ Create (IN  a{sv} properties,
 Added (o path,
        b received);
 </pre>
-<p>        Emitted when any part of a new SMS has been received or added (but not
-        for subsequent parts, if any). For messages received from the network,
-        not all parts may have been received and the message may not be
-        complete.
+<p>
+Emitted when any part of a new SMS has been received or added (but not
+for subsequent parts, if any). For messages received from the network,
+not all parts may have been received and the message may not be
+complete.
 </p>
-<p>        Check the
-        '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.State" title='The "State" property'>State</a>'
-        property to determine if the message is complete.
+<p>
+Check the
+'<a class="link" href="gdbus-org.freedesktop.ModemManager1.Sms.html#gdbus-property-org-freedesktop-ModemManager1-Sms.State" title='The "State" property'>State</a>'
+property to determine if the message is complete.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -182,11 +204,15 @@ Added (o path,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">o <em class="parameter"><code>path</code></em></code>:</span></p></td>
-<td><p>Object path of the new SMS.</p></td>
+<td><p>
+Object path of the new SMS.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">b <em class="parameter"><code>received</code></em></code>:</span></p></td>
-<td><p><code class="constant">TRUE</code> if the message was received from the network, as opposed to being added locally.</p></td>
+<td><p>
+<code class="constant">TRUE</code> if the message was received from the network, as opposed to being added locally.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -197,9 +223,11 @@ Added (o path,
 <pre class="programlisting">
 Deleted (o path);
 </pre>
-<p>        Emitted when a message has been deleted.
+<p>
+Emitted when a message has been deleted.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -208,7 +236,9 @@ Deleted (o path);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">o <em class="parameter"><code>path</code></em></code>:</span></p></td>
-<td><p>Object path of the now deleted SMS.</p></td>
+<td><p>
+Object path of the now deleted SMS.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -220,9 +250,11 @@ Deleted (o path);
 <pre class="programlisting">
 Messages  readable   ao
 </pre>
-<p>        The list of SMS object paths.
+<p>
+The list of SMS object paths.
 </p>
-<p>        Since: 1.2
+<p>
+Since: 1.2
 </p>
 </div>
 <hr>
@@ -231,11 +263,13 @@ Messages  readable   ao
 <pre class="programlisting">
 SupportedStorages  readable   au
 </pre>
-<p>        A list of <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMSmsStorage" title="enum MMSmsStorage">MMSmsStorage</a> values,
-        specifying the storages supported by this modem for storing and
-        receiving SMS.
+<p>
+A list of <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMSmsStorage" title="enum MMSmsStorage">MMSmsStorage</a> values,
+specifying the storages supported by this modem for storing and
+receiving SMS.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -244,10 +278,12 @@ SupportedStorages  readable   au
 <pre class="programlisting">
 DefaultStorage  readable   u
 </pre>
-<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMSmsStorage" title="enum MMSmsStorage">MMSmsStorage</a> value,
-        specifying the storage to be used when receiving or storing SMS.
+<p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMSmsStorage" title="enum MMSmsStorage">MMSmsStorage</a> value,
+specifying the storage to be used when receiving or storing SMS.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 </div>

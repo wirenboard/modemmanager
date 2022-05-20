@@ -53,13 +53,15 @@
 </div>
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Modem-Time"></a><h2>Description</h2>
-<p>      This interface allows clients to receive network time and timezone
-      updates broadcast by mobile networks.
+<p>
+This interface allows clients to receive network time and timezone
+updates broadcast by mobile networks.
 </p>
-<p>      This interface will only be available once the modem is ready to be
-      registered in the cellular network. 3GPP devices will require a valid
-      unlocked SIM card before any of the features in the interface can be
-      used.
+<p>
+This interface will only be available once the modem is ready to be
+registered in the cellular network. 3GPP devices will require a valid
+unlocked SIM card before any of the features in the interface can be
+used.
 </p>
 </div>
 <div class="refsect1">
@@ -69,16 +71,20 @@
 <pre class="programlisting">
 GetNetworkTime (OUT s time);
 </pre>
-<p>        time, and (if available) UTC offset in ISO 8601 format. If the network
-        time is unknown, the empty string.
+<p>
+time, and (if available) UTC offset in ISO 8601 format. If the network
+time is unknown, the empty string.
 </p>
-<p>        Gets the current network time in local time.
+<p>
+Gets the current network time in local time.
 </p>
-<p>        This method will only work if the modem tracks, or can request, the
-        current network time; it will not attempt to use previously-received
-        network time updates on the host to guess the current network time.
+<p>
+This method will only work if the modem tracks, or can request, the
+current network time; it will not attempt to use previously-received
+network time updates on the host to guess the current network time.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -87,7 +93,9 @@ GetNetworkTime (OUT s time);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">OUT s <em class="parameter"><code>time</code></em></code>:</span></p></td>
-<td><p>If the network time is known, a string containing local date,</p></td>
+<td><p>
+If the network time is known, a string containing local date,
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -99,9 +107,11 @@ GetNetworkTime (OUT s time);
 <pre class="programlisting">
 NetworkTimeChanged (s time);
 </pre>
-<p>        Sent when the network time is updated.
+<p>
+Sent when the network time is updated.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -110,7 +120,9 @@ NetworkTimeChanged (s time);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">s <em class="parameter"><code>time</code></em></code>:</span></p></td>
-<td><p>A string containing date and time in ISO 8601 format.</p></td>
+<td><p>
+A string containing date and time in ISO 8601 format.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -122,10 +134,12 @@ NetworkTimeChanged (s time);
 <pre class="programlisting">
 NetworkTimezone  readable   a{sv}
 </pre>
-<p>        The timezone data provided by the network. It may include one or more
-        of the following fields:
+<p>
+The timezone data provided by the network. It may include one or more
+of the following fields:
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -135,29 +149,30 @@ NetworkTimezone  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"offset"</code></span></p></td>
 <td>
-              Offset of the timezone from UTC, in minutes (including DST, if applicable),
-              given as a signed integer value (signature <code class="literal">"i"</code>).
-            </td>
+Offset of the timezone from UTC, in minutes (including DST, if applicable),
+given as a signed integer value (signature <code class="literal">"i"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"dst-offset"</code></span></p></td>
 <td>
-              Amount of offset that is due to DST (daylight saving time),
-              given as a signed integer value (signature <code class="literal">"i"</code>).
-            </td>
+Amount of offset that is due to DST (daylight saving time),
+given as a signed integer value (signature <code class="literal">"i"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"leap-seconds"</code></span></p></td>
 <td>
-              Number of leap seconds included in the network time,
-              given as a signed integer value (signature <code class="literal">"i"</code>).
-            </td>
+Number of leap seconds included in the network time,
+given as a signed integer value (signature <code class="literal">"i"</code>).
+</td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 </div>

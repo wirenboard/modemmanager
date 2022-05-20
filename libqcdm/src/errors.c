@@ -23,8 +23,8 @@ void
 _qcdm_log (const char *file,
            int line,
            const char *func,
-           int level,
            int domain,
+           int level,
            const char *format,
            ...)
 {
@@ -53,7 +53,7 @@ _qcdm_log (const char *file,
         prefix = "dbg";
 
     if (n >= 0) {
-        fprintf (stderr, "<%s> [%s:%u] %s(): %s\n", prefix, file, line, func, message);
+        fprintf (stderr, "<%s> [%s:%d] %s(): %s\n", prefix, file, line, func, message);
         free (message);
     }
 }

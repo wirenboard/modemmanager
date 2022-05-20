@@ -274,18 +274,19 @@ libport_la_OBJECTS = $(am_libport_la_OBJECTS) \
 	$(nodist_libport_la_OBJECTS)
 am__ModemManager_SOURCES_DIST = main.c mm-context.h mm-context.c \
 	mm-utils.h mm-private-boxed-types.h mm-private-boxed-types.c \
-	mm-auth-provider.h mm-auth-provider.c \
-	mm-fcc-unlock-dispatcher.h mm-fcc-unlock-dispatcher.c \
-	mm-filter.h mm-filter.c mm-base-manager.c mm-base-manager.h \
-	mm-device.c mm-device.h mm-plugin-manager.c \
-	mm-plugin-manager.h mm-base-sim.h mm-base-sim.c \
-	mm-base-bearer.h mm-base-bearer.c mm-broadband-bearer.h \
-	mm-broadband-bearer.c mm-bearer-list.h mm-bearer-list.c \
-	mm-base-modem-at.h mm-base-modem-at.c mm-base-modem.h \
-	mm-base-modem.c mm-base-sms.h mm-base-sms.c mm-base-call.h \
-	mm-base-call.c mm-sms-list.h mm-sms-list.c mm-call-list.h \
-	mm-call-list.c mm-iface-modem.h mm-iface-modem.c \
-	mm-iface-modem-3gpp.h mm-iface-modem-3gpp.c \
+	mm-auth-provider.h mm-auth-provider.c mm-dispatcher.h \
+	mm-dispatcher.c mm-dispatcher-connection.h \
+	mm-dispatcher-connection.c mm-dispatcher-fcc-unlock.h \
+	mm-dispatcher-fcc-unlock.c mm-filter.h mm-filter.c \
+	mm-base-manager.c mm-base-manager.h mm-device.c mm-device.h \
+	mm-plugin-manager.c mm-plugin-manager.h mm-base-sim.h \
+	mm-base-sim.c mm-base-bearer.h mm-base-bearer.c \
+	mm-broadband-bearer.h mm-broadband-bearer.c mm-bearer-list.h \
+	mm-bearer-list.c mm-base-modem-at.h mm-base-modem-at.c \
+	mm-base-modem.h mm-base-modem.c mm-base-sms.h mm-base-sms.c \
+	mm-base-call.h mm-base-call.c mm-sms-list.h mm-sms-list.c \
+	mm-call-list.h mm-call-list.c mm-iface-modem.h \
+	mm-iface-modem.c mm-iface-modem-3gpp.h mm-iface-modem-3gpp.c \
 	mm-iface-modem-3gpp-profile-manager.h \
 	mm-iface-modem-3gpp-profile-manager.c \
 	mm-iface-modem-3gpp-ussd.h mm-iface-modem-3gpp-ussd.c \
@@ -325,7 +326,9 @@ am_ModemManager_OBJECTS = ModemManager-main.$(OBJEXT) \
 	ModemManager-mm-context.$(OBJEXT) \
 	ModemManager-mm-private-boxed-types.$(OBJEXT) \
 	ModemManager-mm-auth-provider.$(OBJEXT) \
-	ModemManager-mm-fcc-unlock-dispatcher.$(OBJEXT) \
+	ModemManager-mm-dispatcher.$(OBJEXT) \
+	ModemManager-mm-dispatcher-connection.$(OBJEXT) \
+	ModemManager-mm-dispatcher-fcc-unlock.$(OBJEXT) \
 	ModemManager-mm-filter.$(OBJEXT) \
 	ModemManager-mm-base-manager.$(OBJEXT) \
 	ModemManager-mm-device.$(OBJEXT) \
@@ -402,7 +405,9 @@ am__depfiles_remade = ./$(DEPDIR)/ModemManager-main.Po \
 	./$(DEPDIR)/ModemManager-mm-context.Po \
 	./$(DEPDIR)/ModemManager-mm-daemon-enums-types.Po \
 	./$(DEPDIR)/ModemManager-mm-device.Po \
-	./$(DEPDIR)/ModemManager-mm-fcc-unlock-dispatcher.Po \
+	./$(DEPDIR)/ModemManager-mm-dispatcher-connection.Po \
+	./$(DEPDIR)/ModemManager-mm-dispatcher-fcc-unlock.Po \
+	./$(DEPDIR)/ModemManager-mm-dispatcher.Po \
 	./$(DEPDIR)/ModemManager-mm-filter.Po \
 	./$(DEPDIR)/ModemManager-mm-iface-modem-3gpp-profile-manager.Po \
 	./$(DEPDIR)/ModemManager-mm-iface-modem-3gpp-ussd.Po \
@@ -604,6 +609,7 @@ EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+FILECMD = @FILECMD@
 GCOV = @GCOV@
 GDBUS_CODEGEN = @GDBUS_CODEGEN@
 GENHTML = @GENHTML@
@@ -897,6 +903,8 @@ ModemManager_CPPFLAGS = \
 	-DPLUGINDIR=\"$(pkglibdir)\" \
 	-DFCCUNLOCKDIRPACKAGE=\"${pkglibdir}/fcc-unlock.d\" \
 	-DFCCUNLOCKDIRUSER=\"${pkgsysconfdir}/fcc-unlock.d\" \
+	-DCONNECTIONDIRPACKAGE=\"${pkglibdir}/connection.d\" \
+	-DCONNECTIONDIRUSER=\"${pkgsysconfdir}/connection.d\" \
 	-DMM_COMPILATION \
 	$(NULL)
 
@@ -909,18 +917,19 @@ ModemManager_LDADD = \
 
 ModemManager_SOURCES = main.c mm-context.h mm-context.c mm-utils.h \
 	mm-private-boxed-types.h mm-private-boxed-types.c \
-	mm-auth-provider.h mm-auth-provider.c \
-	mm-fcc-unlock-dispatcher.h mm-fcc-unlock-dispatcher.c \
-	mm-filter.h mm-filter.c mm-base-manager.c mm-base-manager.h \
-	mm-device.c mm-device.h mm-plugin-manager.c \
-	mm-plugin-manager.h mm-base-sim.h mm-base-sim.c \
-	mm-base-bearer.h mm-base-bearer.c mm-broadband-bearer.h \
-	mm-broadband-bearer.c mm-bearer-list.h mm-bearer-list.c \
-	mm-base-modem-at.h mm-base-modem-at.c mm-base-modem.h \
-	mm-base-modem.c mm-base-sms.h mm-base-sms.c mm-base-call.h \
-	mm-base-call.c mm-sms-list.h mm-sms-list.c mm-call-list.h \
-	mm-call-list.c mm-iface-modem.h mm-iface-modem.c \
-	mm-iface-modem-3gpp.h mm-iface-modem-3gpp.c \
+	mm-auth-provider.h mm-auth-provider.c mm-dispatcher.h \
+	mm-dispatcher.c mm-dispatcher-connection.h \
+	mm-dispatcher-connection.c mm-dispatcher-fcc-unlock.h \
+	mm-dispatcher-fcc-unlock.c mm-filter.h mm-filter.c \
+	mm-base-manager.c mm-base-manager.h mm-device.c mm-device.h \
+	mm-plugin-manager.c mm-plugin-manager.h mm-base-sim.h \
+	mm-base-sim.c mm-base-bearer.h mm-base-bearer.c \
+	mm-broadband-bearer.h mm-broadband-bearer.c mm-bearer-list.h \
+	mm-bearer-list.c mm-base-modem-at.h mm-base-modem-at.c \
+	mm-base-modem.h mm-base-modem.c mm-base-sms.h mm-base-sms.c \
+	mm-base-call.h mm-base-call.c mm-sms-list.h mm-sms-list.c \
+	mm-call-list.h mm-call-list.c mm-iface-modem.h \
+	mm-iface-modem.c mm-iface-modem-3gpp.h mm-iface-modem-3gpp.c \
 	mm-iface-modem-3gpp-profile-manager.h \
 	mm-iface-modem-3gpp-profile-manager.c \
 	mm-iface-modem-3gpp-ussd.h mm-iface-modem-3gpp-ussd.c \
@@ -1099,7 +1108,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-context.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-daemon-enums-types.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-device.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-fcc-unlock-dispatcher.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-dispatcher-connection.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-dispatcher-fcc-unlock.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-dispatcher.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-filter.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-iface-modem-3gpp-profile-manager.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModemManager-mm-iface-modem-3gpp-ussd.Po@am__quote@ # am--include-marker
@@ -1284,19 +1295,47 @@ ModemManager-mm-auth-provider.obj: mm-auth-provider.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ModemManager-mm-auth-provider.obj `if test -f 'mm-auth-provider.c'; then $(CYGPATH_W) 'mm-auth-provider.c'; else $(CYGPATH_W) '$(srcdir)/mm-auth-provider.c'; fi`
 
-ModemManager-mm-fcc-unlock-dispatcher.o: mm-fcc-unlock-dispatcher.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ModemManager-mm-fcc-unlock-dispatcher.o -MD -MP -MF $(DEPDIR)/ModemManager-mm-fcc-unlock-dispatcher.Tpo -c -o ModemManager-mm-fcc-unlock-dispatcher.o `test -f 'mm-fcc-unlock-dispatcher.c' || echo '$(srcdir)/'`mm-fcc-unlock-dispatcher.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ModemManager-mm-fcc-unlock-dispatcher.Tpo $(DEPDIR)/ModemManager-mm-fcc-unlock-dispatcher.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-fcc-unlock-dispatcher.c' object='ModemManager-mm-fcc-unlock-dispatcher.o' libtool=no @AMDEPBACKSLASH@
+ModemManager-mm-dispatcher.o: mm-dispatcher.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ModemManager-mm-dispatcher.o -MD -MP -MF $(DEPDIR)/ModemManager-mm-dispatcher.Tpo -c -o ModemManager-mm-dispatcher.o `test -f 'mm-dispatcher.c' || echo '$(srcdir)/'`mm-dispatcher.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ModemManager-mm-dispatcher.Tpo $(DEPDIR)/ModemManager-mm-dispatcher.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-dispatcher.c' object='ModemManager-mm-dispatcher.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ModemManager-mm-fcc-unlock-dispatcher.o `test -f 'mm-fcc-unlock-dispatcher.c' || echo '$(srcdir)/'`mm-fcc-unlock-dispatcher.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ModemManager-mm-dispatcher.o `test -f 'mm-dispatcher.c' || echo '$(srcdir)/'`mm-dispatcher.c
 
-ModemManager-mm-fcc-unlock-dispatcher.obj: mm-fcc-unlock-dispatcher.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ModemManager-mm-fcc-unlock-dispatcher.obj -MD -MP -MF $(DEPDIR)/ModemManager-mm-fcc-unlock-dispatcher.Tpo -c -o ModemManager-mm-fcc-unlock-dispatcher.obj `if test -f 'mm-fcc-unlock-dispatcher.c'; then $(CYGPATH_W) 'mm-fcc-unlock-dispatcher.c'; else $(CYGPATH_W) '$(srcdir)/mm-fcc-unlock-dispatcher.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ModemManager-mm-fcc-unlock-dispatcher.Tpo $(DEPDIR)/ModemManager-mm-fcc-unlock-dispatcher.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-fcc-unlock-dispatcher.c' object='ModemManager-mm-fcc-unlock-dispatcher.obj' libtool=no @AMDEPBACKSLASH@
+ModemManager-mm-dispatcher.obj: mm-dispatcher.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ModemManager-mm-dispatcher.obj -MD -MP -MF $(DEPDIR)/ModemManager-mm-dispatcher.Tpo -c -o ModemManager-mm-dispatcher.obj `if test -f 'mm-dispatcher.c'; then $(CYGPATH_W) 'mm-dispatcher.c'; else $(CYGPATH_W) '$(srcdir)/mm-dispatcher.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ModemManager-mm-dispatcher.Tpo $(DEPDIR)/ModemManager-mm-dispatcher.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-dispatcher.c' object='ModemManager-mm-dispatcher.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ModemManager-mm-fcc-unlock-dispatcher.obj `if test -f 'mm-fcc-unlock-dispatcher.c'; then $(CYGPATH_W) 'mm-fcc-unlock-dispatcher.c'; else $(CYGPATH_W) '$(srcdir)/mm-fcc-unlock-dispatcher.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ModemManager-mm-dispatcher.obj `if test -f 'mm-dispatcher.c'; then $(CYGPATH_W) 'mm-dispatcher.c'; else $(CYGPATH_W) '$(srcdir)/mm-dispatcher.c'; fi`
+
+ModemManager-mm-dispatcher-connection.o: mm-dispatcher-connection.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ModemManager-mm-dispatcher-connection.o -MD -MP -MF $(DEPDIR)/ModemManager-mm-dispatcher-connection.Tpo -c -o ModemManager-mm-dispatcher-connection.o `test -f 'mm-dispatcher-connection.c' || echo '$(srcdir)/'`mm-dispatcher-connection.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ModemManager-mm-dispatcher-connection.Tpo $(DEPDIR)/ModemManager-mm-dispatcher-connection.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-dispatcher-connection.c' object='ModemManager-mm-dispatcher-connection.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ModemManager-mm-dispatcher-connection.o `test -f 'mm-dispatcher-connection.c' || echo '$(srcdir)/'`mm-dispatcher-connection.c
+
+ModemManager-mm-dispatcher-connection.obj: mm-dispatcher-connection.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ModemManager-mm-dispatcher-connection.obj -MD -MP -MF $(DEPDIR)/ModemManager-mm-dispatcher-connection.Tpo -c -o ModemManager-mm-dispatcher-connection.obj `if test -f 'mm-dispatcher-connection.c'; then $(CYGPATH_W) 'mm-dispatcher-connection.c'; else $(CYGPATH_W) '$(srcdir)/mm-dispatcher-connection.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ModemManager-mm-dispatcher-connection.Tpo $(DEPDIR)/ModemManager-mm-dispatcher-connection.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-dispatcher-connection.c' object='ModemManager-mm-dispatcher-connection.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ModemManager-mm-dispatcher-connection.obj `if test -f 'mm-dispatcher-connection.c'; then $(CYGPATH_W) 'mm-dispatcher-connection.c'; else $(CYGPATH_W) '$(srcdir)/mm-dispatcher-connection.c'; fi`
+
+ModemManager-mm-dispatcher-fcc-unlock.o: mm-dispatcher-fcc-unlock.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ModemManager-mm-dispatcher-fcc-unlock.o -MD -MP -MF $(DEPDIR)/ModemManager-mm-dispatcher-fcc-unlock.Tpo -c -o ModemManager-mm-dispatcher-fcc-unlock.o `test -f 'mm-dispatcher-fcc-unlock.c' || echo '$(srcdir)/'`mm-dispatcher-fcc-unlock.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ModemManager-mm-dispatcher-fcc-unlock.Tpo $(DEPDIR)/ModemManager-mm-dispatcher-fcc-unlock.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-dispatcher-fcc-unlock.c' object='ModemManager-mm-dispatcher-fcc-unlock.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ModemManager-mm-dispatcher-fcc-unlock.o `test -f 'mm-dispatcher-fcc-unlock.c' || echo '$(srcdir)/'`mm-dispatcher-fcc-unlock.c
+
+ModemManager-mm-dispatcher-fcc-unlock.obj: mm-dispatcher-fcc-unlock.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ModemManager-mm-dispatcher-fcc-unlock.obj -MD -MP -MF $(DEPDIR)/ModemManager-mm-dispatcher-fcc-unlock.Tpo -c -o ModemManager-mm-dispatcher-fcc-unlock.obj `if test -f 'mm-dispatcher-fcc-unlock.c'; then $(CYGPATH_W) 'mm-dispatcher-fcc-unlock.c'; else $(CYGPATH_W) '$(srcdir)/mm-dispatcher-fcc-unlock.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ModemManager-mm-dispatcher-fcc-unlock.Tpo $(DEPDIR)/ModemManager-mm-dispatcher-fcc-unlock.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mm-dispatcher-fcc-unlock.c' object='ModemManager-mm-dispatcher-fcc-unlock.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ModemManager-mm-dispatcher-fcc-unlock.obj `if test -f 'mm-dispatcher-fcc-unlock.c'; then $(CYGPATH_W) 'mm-dispatcher-fcc-unlock.c'; else $(CYGPATH_W) '$(srcdir)/mm-dispatcher-fcc-unlock.c'; fi`
 
 ModemManager-mm-filter.o: mm-filter.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ModemManager_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ModemManager-mm-filter.o -MD -MP -MF $(DEPDIR)/ModemManager-mm-filter.Tpo -c -o ModemManager-mm-filter.o `test -f 'mm-filter.c' || echo '$(srcdir)/'`mm-filter.c
@@ -2170,7 +2209,9 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/ModemManager-mm-context.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-daemon-enums-types.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-device.Po
-	-rm -f ./$(DEPDIR)/ModemManager-mm-fcc-unlock-dispatcher.Po
+	-rm -f ./$(DEPDIR)/ModemManager-mm-dispatcher-connection.Po
+	-rm -f ./$(DEPDIR)/ModemManager-mm-dispatcher-fcc-unlock.Po
+	-rm -f ./$(DEPDIR)/ModemManager-mm-dispatcher.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-filter.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-iface-modem-3gpp-profile-manager.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-iface-modem-3gpp-ussd.Po
@@ -2292,7 +2333,9 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/ModemManager-mm-context.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-daemon-enums-types.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-device.Po
-	-rm -f ./$(DEPDIR)/ModemManager-mm-fcc-unlock-dispatcher.Po
+	-rm -f ./$(DEPDIR)/ModemManager-mm-dispatcher-connection.Po
+	-rm -f ./$(DEPDIR)/ModemManager-mm-dispatcher-fcc-unlock.Po
+	-rm -f ./$(DEPDIR)/ModemManager-mm-dispatcher.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-filter.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-iface-modem-3gpp-profile-manager.Po
 	-rm -f ./$(DEPDIR)/ModemManager-mm-iface-modem-3gpp-ussd.Po

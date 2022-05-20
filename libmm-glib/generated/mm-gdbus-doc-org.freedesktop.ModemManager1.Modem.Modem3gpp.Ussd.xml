@@ -25,11 +25,13 @@
   </refsect1>
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd">
   <title role="desc.title">Description</title>
-  <para>      This interface provides access to actions based on the USSD protocol.
-</para><para>      This interface will only be available once the modem is ready to be
-      registered in the cellular network. 3GPP devices will require a valid
-      unlocked SIM card before any of the features in the interface can be
-      used.
+  <para>
+This interface provides access to actions based on the USSD protocol.
+</para><para>
+This interface will only be available once the modem is ready to be
+registered in the cellular network. 3GPP devices will require a valid
+unlocked SIM card before any of the features in the interface can be
+used.
 </para>
 </refsect1>
 <refsect1 role="details" id="gdbus-methods-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd">
@@ -41,21 +43,28 @@
 Initiate (IN  s command,
           OUT s reply);
 </programlisting>
-<para>        Sends a USSD command string to the network initiating a USSD session.
-</para><para>        When the request is handled by the network, the method returns the
-        response or an appropriate error. The network may be awaiting further
-        response from the ME after returning from this method and no new command
-        can be initiated until this one is cancelled or ended.
-</para><para>        Since: 1.0
+<para>
+Sends a USSD command string to the network initiating a USSD session.
+</para><para>
+When the request is handled by the network, the method returns the
+response or an appropriate error. The network may be awaiting further
+response from the ME after returning from this method and no new command
+can be initiated until this one is cancelled or ended.
+</para><para>
+Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN s <parameter>command</parameter></literal>:</term>
-  <listitem><para>The command to start the USSD session with.</para></listitem>
+  <listitem><para>
+The command to start the USSD session with.
+</para></listitem>
 </varlistentry>
 <varlistentry>
   <term><literal>OUT s <parameter>reply</parameter></literal>:</term>
-  <listitem><para>The network response to the command which started the USSD session.</para></listitem>
+  <listitem><para>
+The network response to the command which started the USSD session.
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -66,20 +75,26 @@ Initiate (IN  s command,
 Respond (IN  s response,
          OUT s reply);
 </programlisting>
-<para>        Respond to a USSD request that is either initiated by the mobile network,
-        or that is awaiting further input after
-        <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Initiate">Initiate()</link>
-        was called.
-</para><para>        Since: 1.0
+<para>
+Respond to a USSD request that is either initiated by the mobile network,
+or that is awaiting further input after
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Initiate">Initiate()</link>
+was called.
+</para><para>
+Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN s <parameter>response</parameter></literal>:</term>
-  <listitem><para>The response to network-initiated USSD command, or a response to a request for further input.</para></listitem>
+  <listitem><para>
+The response to network-initiated USSD command, or a response to a request for further input.
+</para></listitem>
 </varlistentry>
 <varlistentry>
   <term><literal>OUT s <parameter>reply</parameter></literal>:</term>
-  <listitem><para>The network reply to this response to the network-initiated USSD command. The reply may require further responses.</para></listitem>
+  <listitem><para>
+The network reply to this response to the network-initiated USSD command. The reply may require further responses.
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -89,8 +104,10 @@ Respond (IN  s response,
 <programlisting>
 Cancel ();
 </programlisting>
-<para>        Cancel an ongoing USSD session, either mobile or network initiated.
-</para><para>        Since: 1.0
+<para>
+Cancel an ongoing USSD session, either mobile or network initiated.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 </refsect1>
@@ -102,9 +119,11 @@ Cancel ();
 <programlisting>
 State  readable   u
 </programlisting>
-<para>        A <link linkend="MMModem3gppUssdSessionState">MMModem3gppUssdSessionState</link> value,
-        indicating the state of any ongoing USSD session.
-</para><para>        Since: 1.0
+<para>
+A <link linkend="MMModem3gppUssdSessionState">MMModem3gppUssdSessionState</link> value,
+indicating the state of any ongoing USSD session.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.NetworkNotification">
@@ -113,11 +132,14 @@ State  readable   u
 <programlisting>
 NetworkNotification  readable   s
 </programlisting>
-<para>        Contains any network-initiated request to which no USSD response is
-        required.
-</para><para>        When no USSD session is active, or when there is no network-
-        initiated request, this property will be a zero-length string.
-</para><para>        Since: 1.0
+<para>
+Contains any network-initiated request to which no USSD response is
+required.
+</para><para>
+When no USSD session is active, or when there is no network-
+initiated request, this property will be a zero-length string.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.NetworkRequest">
@@ -126,13 +148,16 @@ NetworkNotification  readable   s
 <programlisting>
 NetworkRequest  readable   s
 </programlisting>
-<para>        Contains any pending network-initiated request for a response. Client
-        should call
-        <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Respond">Respond()</link>
-        with the appropriate response to this request.
-</para><para>        When no USSD session is active, or when there is no pending
-        network-initiated request, this property will be a zero-length string.
-</para><para>        Since: 1.0
+<para>
+Contains any pending network-initiated request for a response. Client
+should call
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Respond">Respond()</link>
+with the appropriate response to this request.
+</para><para>
+When no USSD session is active, or when there is no pending
+network-initiated request, this property will be a zero-length string.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 </refsect1>

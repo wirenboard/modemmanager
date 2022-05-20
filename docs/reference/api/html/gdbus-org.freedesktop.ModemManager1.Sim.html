@@ -60,8 +60,9 @@
 </div>
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Sim"></a><h2>Description</h2>
-<p>      The SIM interface handles communication with SIM, USIM, and RUIM (CDMA
-      SIM) cards.
+<p>
+The SIM interface handles communication with SIM, USIM, and RUIM (CDMA
+SIM) cards.
 </p>
 </div>
 <div class="refsect1">
@@ -71,9 +72,11 @@
 <pre class="programlisting">
 SendPin (IN  s pin);
 </pre>
-<p>        Send the PIN to unlock the SIM card.
+<p>
+Send the PIN to unlock the SIM card.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -82,7 +85,9 @@ SendPin (IN  s pin);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>pin</code></em></code>:</span></p></td>
-<td><p>A string containing the PIN code.</p></td>
+<td><p>
+A string containing the PIN code.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -93,9 +98,11 @@ SendPin (IN  s pin);
 SendPuk (IN  s puk,
          IN  s pin);
 </pre>
-<p>        Send the PUK and a new PIN to unlock the SIM card.
+<p>
+Send the PUK and a new PIN to unlock the SIM card.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -105,11 +112,15 @@ SendPuk (IN  s puk,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>puk</code></em></code>:</span></p></td>
-<td><p>A string containing the PUK code.</p></td>
+<td><p>
+A string containing the PUK code.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>pin</code></em></code>:</span></p></td>
-<td><p>A string containing the PIN code.</p></td>
+<td><p>
+A string containing the PIN code.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -121,9 +132,11 @@ SendPuk (IN  s puk,
 EnablePin (IN  s pin,
            IN  b enabled);
 </pre>
-<p>        Enable or disable the PIN checking.
+<p>
+Enable or disable the PIN checking.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -133,11 +146,15 @@ EnablePin (IN  s pin,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>pin</code></em></code>:</span></p></td>
-<td><p>A string containing the PIN code.</p></td>
+<td><p>
+A string containing the PIN code.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">IN b <em class="parameter"><code>enabled</code></em></code>:</span></p></td>
-<td><p><code class="constant">TRUE</code> to enable PIN checking, <code class="constant">FALSE</code> otherwise.</p></td>
+<td><p>
+<code class="constant">TRUE</code> to enable PIN checking, <code class="constant">FALSE</code> otherwise.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -149,9 +166,11 @@ EnablePin (IN  s pin,
 ChangePin (IN  s old_pin,
            IN  s new_pin);
 </pre>
-<p>        Change the PIN code.
+<p>
+Change the PIN code.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -161,11 +180,15 @@ ChangePin (IN  s old_pin,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>old_pin</code></em></code>:</span></p></td>
-<td><p>A string containing the current PIN code.</p></td>
+<td><p>
+A string containing the current PIN code.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>new_pin</code></em></code>:</span></p></td>
-<td><p>A string containing the new PIN code.</p></td>
+<td><p>
+A string containing the new PIN code.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -176,17 +199,20 @@ ChangePin (IN  s old_pin,
 <pre class="programlisting">
 SetPreferredNetworks (IN  a(su) preferred_networks);
 </pre>
-<p>        Stores the provided preferred network list to the SIM card. Each entry contains
-        an operator id string (<code class="literal">"MCCMNC"</code>) consisting of 5 or 6 digits,
-        and an <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemAccessTechnology" title="enum MMModemAccessTechnology">MMModemAccessTechnology</a> mask
-        to store to SIM card if supported.
+<p>
+Stores the provided preferred network list to the SIM card. Each entry contains
+an operator id string (<code class="literal">"MCCMNC"</code>) consisting of 5 or 6 digits,
+and an <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemAccessTechnology" title="enum MMModemAccessTechnology">MMModemAccessTechnology</a> mask
+to store to SIM card if supported.
 </p>
-<p>        This method removes any pre-existing entries of the preferred network list. Note
-        that even if this operation fails, the preferred network list on the SIM card may
-        have changed. Read the <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.PreferredNetworks" title='The "PreferredNetworks" property'>
-        PreferredNetworks</a> property to get the up-to-date list.
+<p>
+This method removes any pre-existing entries of the preferred network list. Note
+that even if this operation fails, the preferred network list on the SIM card may
+have changed. Read the <a class="link" href="gdbus-org.freedesktop.ModemManager1.Sim.html#gdbus-property-org-freedesktop-ModemManager1-Sim.PreferredNetworks" title='The "PreferredNetworks" property'>
+PreferredNetworks</a> property to get the up-to-date list.
 </p>
-<p>        Since: 1.18
+<p>
+Since: 1.18
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -195,7 +221,12 @@ SetPreferredNetworks (IN  a(su) preferred_networks);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN a(su) <em class="parameter"><code>preferred_networks</code></em></code>:</span></p></td>
-<td><p></p></td>
+<td>
+<p>
+</p>
+<p>
+</p>
+</td>
 </tr></tbody>
 </table></div>
 </div>
@@ -207,15 +238,19 @@ SetPreferredNetworks (IN  a(su) preferred_networks);
 <pre class="programlisting">
 Active  readable   b
 </pre>
-<p>        Boolean indicating whether the SIM is currently active.
+<p>
+Boolean indicating whether the SIM is currently active.
 </p>
-<p>        On systems that support Multi SIM Single Standby, only one SIM may be
-        active at any given time, which will be the one considered primary.
+<p>
+On systems that support Multi SIM Single Standby, only one SIM may be
+active at any given time, which will be the one considered primary.
 </p>
-<p>        On systems that support Multi SIM Multi Standby, more than one SIM may
-        be active at any given time, but only one of them is considered primary.
+<p>
+On systems that support Multi SIM Multi Standby, more than one SIM may
+be active at any given time, but only one of them is considered primary.
 </p>
-<p>        Since: 1.16
+<p>
+Since: 1.16
 </p>
 </div>
 <hr>
@@ -224,12 +259,15 @@ Active  readable   b
 <pre class="programlisting">
 SimIdentifier  readable   s
 </pre>
-<p>        The ICCID of the SIM card.
+<p>
+The ICCID of the SIM card.
 </p>
-<p>        This may be available before the PIN has been entered depending
-        on the device itself.
+<p>
+This may be available before the PIN has been entered depending
+on the device itself.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -238,9 +276,11 @@ SimIdentifier  readable   s
 <pre class="programlisting">
 Imsi  readable   s
 </pre>
-<p>        The IMSI of the SIM card, if any.
+<p>
+The IMSI of the SIM card, if any.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -249,9 +289,11 @@ Imsi  readable   s
 <pre class="programlisting">
 Eid  readable   s
 </pre>
-<p>        The EID of the SIM card, if any.
+<p>
+The EID of the SIM card, if any.
 </p>
-<p>        Since: 1.16
+<p>
+Since: 1.16
 </p>
 </div>
 <hr>
@@ -260,7 +302,10 @@ Eid  readable   s
 <pre class="programlisting">
 OperatorIdentifier  readable   s
 </pre>
-<p></p>
+<p>
+</p>
+<p>
+</p>
 </div>
 <hr>
 <div class="refsect2">
@@ -268,9 +313,11 @@ OperatorIdentifier  readable   s
 <pre class="programlisting">
 OperatorName  readable   s
 </pre>
-<p>        The name of the network operator, as given by the SIM card, if known.
+<p>
+The name of the network operator, as given by the SIM card, if known.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -279,12 +326,15 @@ OperatorName  readable   s
 <pre class="programlisting">
 EmergencyNumbers  readable   as
 </pre>
-<p>        List of emergency numbers programmed in the SIM card.
+<p>
+List of emergency numbers programmed in the SIM card.
 </p>
-<p>        These numbers should be treated as numbers for emergency calls in
-        addition to 112 and 911.
+<p>
+These numbers should be treated as numbers for emergency calls in
+addition to 112 and 911.
 </p>
-<p>        Since: 1.12
+<p>
+Since: 1.12
 </p>
 </div>
 <hr>
@@ -293,16 +343,19 @@ EmergencyNumbers  readable   as
 <pre class="programlisting">
 PreferredNetworks  readable   a(su)
 </pre>
-<p>        List of preferred networks with access technologies configured in the SIM card.
+<p>
+List of preferred networks with access technologies configured in the SIM card.
 </p>
-<p>        Each entry contains an operator id string (<code class="literal">"MCCMNC"</code>)
-        consisting of 5 or 6 digits, and an
-        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemAccessTechnology" title="enum MMModemAccessTechnology">MMModemAccessTechnology</a> mask.
-        If the SIM card does not support access technology storage, the mask will be
-        set to <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-MODEM-ACCESS-TECHNOLOGY-UNKNOWN:CAPS">
-        MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN</a>.
+<p>
+Each entry contains an operator id string (<code class="literal">"MCCMNC"</code>)
+consisting of 5 or 6 digits, and an
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemAccessTechnology" title="enum MMModemAccessTechnology">MMModemAccessTechnology</a> mask.
+If the SIM card does not support access technology storage, the mask will be
+set to <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-MODEM-ACCESS-TECHNOLOGY-UNKNOWN:CAPS">
+MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN</a>.
 </p>
-<p>        Since: 1.18
+<p>
+Since: 1.18
 </p>
 </div>
 </div>

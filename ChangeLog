@@ -1,3 +1,753 @@
+commit 0d8b5e93fc62eb0f41e18a2d9d845331d7af36ec
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Apr 28 10:55:41 2022 +0200
+
+    release: bump version to 1.18.8
+
+ configure.ac | 2 +-
+ meson.build  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit c47735c4522d8807586e5fc9eabbb2a9ba5b15c5
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Apr 28 10:55:10 2022 +0200
+
+    NEWS: update for 1.18.8
+
+ NEWS | 55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
+
+commit b299b6ea67bb5a1d80da70d845fa50ecdab21164
+Author: Amol Lad <amol.lad@4rf.com>
+Date:   Thu Apr 28 14:45:13 2022 +0530
+
+    mmcli: correctly set key_length
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/559
+
+    (cherry picked from commit 4d0400b77f38f0d371a8dd018206029756343746)
+
+ cli/mmcli-output.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+commit 56972500943c9320ff1c866e6fbd5f875615e1ff
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Apr 22 10:07:43 2022 +0200
+
+    plugins,simtech: fix module name
+
+    This was fixed in git main in 0bc0831b22, along with the udev rules
+    tests. Don't really care much about fixing the tests in the stable
+    1.18, so just fixing the module name in the simtech plugin definition.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/554
+
+ plugins/meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 85da10c682f95e9642220706d9d50be3d7cbbb05
+Author: Maxim Anisimov <maxim.anisimov.ua@gmail.com>
+Date:   Fri Apr 22 09:50:13 2022 +0300
+
+    iface-modem-3gpp-profile-manager: fix copy-paste error on tags
+    for quarks
+
+    Ussd module initialization does not work correctly because the
+    tags match.
+
+    Signed-off-by: Maxim Anisimov <maxim.anisimov.ua@gmail.com>
+    (cherry picked from commit 17934810db87ee364fb7ad809cfd7b8887c7c849)
+
+ src/mm-iface-modem-3gpp-profile-manager.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 21475198b0fa619fbae66b5c09e5c30a404c67e2
+Author: Dylan Van Assche <me@dylanvanassche.be>
+Date:   Thu Apr 21 09:23:26 2022 +0200
+
+    introspection: add Modem Simple
+
+    (cherry picked from commit f00cb9f67c2da825c029773c4173d836b421333a)
+
+ introspection/all.xml | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit f5062175982f287f5dad66a5e26f30b2b25940fe
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Apr 15 15:22:23 2022 +0200
+
+    huawei: disable +CPOL based features in Huawei E226
+
+    Issue and bugfix suggestion by Alex Leopoldo Villacís Lasso.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/552
+
+    (cherry picked from commit 4207ee61b75e754785d8e94046642a61303c6e7d)
+
+ plugins/huawei/77-mm-huawei-net-port-types.rules | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit 5becc0cacb7387279fb42179bd3dcd6fc1532c14
+Author: Carlo Lobrano <c.lobrano@gmail.com>
+Date:   Fri Apr 8 11:46:11 2022 +0200
+
+    sms: prevent crash if date is out of range
+
+    g_date_time_new, and g_date_time_new_utc return NULL if inputs are out
+    of range, and currently mm_new_iso8601_time passes the GDateTime
+    created
+    by those two functions to date_time_format_iso8601 without checking
+    for
+    NULL values, causing a g_date_time_format_iso8601 crash if PDU data is
+    corrupted with wrong date.
+
+    To prevent this, mm_new_iso8601_time now can return NULL and set a new
+    GError if GDateTime created by g_date_time_new is NULL.
+
+    Fixes #546
+
+    (cherry picked from commit ac243f94676695d88e861d225e98ec5bb3c2861e)
+
+ libmm-glib/mm-common-helpers.c                 | 11 +++++++++-
+ libmm-glib/mm-common-helpers.h                 |  3 ++-
+ libmm-glib/tests/test-common-helpers.c         | 26
+ ++++++++++++++++++++--
+ plugins/cinterion/mm-modem-helpers-cinterion.c |  7 ++++--
+ plugins/huawei/mm-modem-helpers-huawei.c       | 19 +++++++++++-----
+ plugins/icera/mm-broadband-modem-icera.c       |  7 ++++--
+ plugins/novatel/mm-broadband-modem-novatel.c   |  4 ++--
+ plugins/sierra/mm-broadband-modem-sierra.c     |  2 +-
+ src/mm-modem-helpers.c                         |  8 ++++---
+ src/mm-sms-part-3gpp.c                         | 30
+ ++++++++++++++++++++------
+ 10 files changed, 91 insertions(+), 26 deletions(-)
+
+commit 670479a3bab25a90e080a56c6b7b684527c4173f
+Author: Frederic Martinsons <frederic.martinsons@sigfox.com>
+Date:   Fri Oct 15 17:02:20 2021 +0200
+
+    cli, plugins: factorize usage of iso8601 datetime format
+
+    Signed-off-by: Frederic Martinsons <frederic.martinsons@sigfox.com>
+
+    Includes updates by Aleksander Morgado to fix coding style issues.
+
+    (cherry picked from commit 9d82d309782c70ed7247db32902f48adebe90669)
+
+ libmm-glib/mm-common-helpers.c                     | 66
+ ++++++++++++++++++++++
+ libmm-glib/mm-common-helpers.h                     |  9 +++
+ libmm-glib/tests/test-common-helpers.c             | 19 +++++++
+ plugins/cinterion/mm-modem-helpers-cinterion.c     |  1 +
+ .../cinterion/tests/test-modem-helpers-cinterion.c |  4 +-
+ plugins/huawei/mm-modem-helpers-huawei.c           |  1 +
+ plugins/huawei/tests/test-modem-helpers-huawei.c   | 28 ++++-----
+ plugins/icera/mm-broadband-modem-icera.c           |  1 +
+ plugins/novatel/mm-broadband-modem-novatel.c       |  1 +
+ plugins/sierra/mm-broadband-modem-sierra.c         |  1 +
+ src/mm-modem-helpers.c                             | 33 +----------
+ src/mm-modem-helpers.h                             |  9 ---
+ src/mm-sms-part-3gpp.c                             |  1 +
+ src/tests/test-modem-helpers.c                     | 18 +++---
+ src/tests/test-sms-part-3gpp.c                     | 26 ++++-----
+ 15 files changed, 139 insertions(+), 79 deletions(-)
+
+commit e7c0d7dd8f9e27d8839e428be9e9bd2d035f3c4c
+Author: som <somashekhar.puttagangaiah@intel.com>
+Date:   Mon Apr 4 19:56:49 2022 +0530
+
+    modem-mbim: update default error when network error is out of range
+
+    When the modem sends an error which is outside the range
+    defined in MBIM_NW_ERROR list then MM should use a default
+    error(MBIM_NW_ERROR_NONE) instead of crash.
+
+    (cherry picked from commit 5c8c1136bd3bad2b542a0b3dc334dbd0686ba10d)
+
+ src/mm-modem-helpers-mbim.c | 29 ++++++++++++++++-------------
+ 1 file changed, 16 insertions(+), 13 deletions(-)
+
+commit 4cb6eb647e218568bebd5c9123974d9a81c5c88d
+Author: Theodore A. Roth <theodore_roth@trimble.com>
+Date:   Wed Aug 18 06:30:27 2021 -0600
+
+    cinterion: Add support for PLSx3w modems
+
+    Signed-off-by: Theodore A. Roth <theodore_roth@trimble.com>
+    (cherry picked from commit e8bb90e006179aa7f38fba1657d6f884ef488164)
+
+ plugins/cinterion/mm-broadband-bearer-cinterion.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+commit 3dae79c429f5484e9c242e5fb8019c2fbe7dc6d4
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Mar 16 11:57:53 2022 +0100
+
+    modem-helpers: improve and fix COPS=? numeric fields parsing
+
+    The numeric fields in the +COPS=? response were relying on a very weak
+    parsing logic, assuming that they were single-digit numeric values and
+    not using the common string to integer conversion utilities.
+
+    This commit improves the conversion from the 3GPP/ETSI defined network
+    availability and access technology values to the MM defined ones,
+    providing enum-based matches even if the numeric values are the same.
+
+    The commit also fixes the parsing of access technology values > 10,
+    required to report 5G related values.
+
+    (cherry picked from commit 2c8cfb47688da244e9312c291a250f7cceab02ff)
+
+ plugins/altair/mm-broadband-modem-altair-lte.c |  2 +
+ src/mm-broadband-modem.c                       |  2 +
+ src/mm-modem-helpers.c                         | 96
+ +++++++++++++-------------
+ src/mm-modem-helpers.h                         |  1 +
+ src/tests/test-modem-helpers.c                 |  1 +
+ 5 files changed, 54 insertions(+), 48 deletions(-)
+
+commit 5212f0cf456ed2a3b091a1856cb2689cd81a62ec
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Mar 16 11:56:08 2022 +0100
+
+    modem-helpers: act given in COPS=? may have more than one digit
+
+    The new 5GNR related values are >= 10, so don't expect one single
+    digit (\d), expect one or more (\d+).
+
+    (cherry picked from commit 5ba67aff826a13580d6352ef82ba3a36ae7642fa)
+
+ src/mm-modem-helpers.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit a242f4bc62fc692f0bb883491b5d5d63a73b8bf0
+Author: Simon Deziel <simon@sdeziel.info>
+Date:   Fri Mar 11 17:13:59 2022 -0500
+
+    systemd: don't run ModemManager in containers
+
+    This assumes the needed modem hardware is typically not available
+    inside containers. If however, the local admin configures the
+    container
+    to get access to the hardware in question, ModemManager can be
+    instructed to run in that specific container by doing:
+
+    `sudo systemctl edit ModemManager.service`
+
+    Then entering the following text in the editor:
+
+      [Unit]
+      # Remove condition of "not container"
+      ConditionVirtualization=
+
+    Upon saving/exiting, ModemManager can then be started with:
+
+    `sudo systemctl start ModemManager.service`
+
+    Signed-off-by: Simon Deziel <simon@sdeziel.info>
+    (cherry picked from commit 8ce4555a7996b415cf876384d5ecde76318bea0f)
+
+ data/ModemManager.service.in | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit 88a0f0e43064455ba720d26508b1680fef13b70c
+Author: Sven Schwermer <sven.schwermer@disruptive-technologies.com>
+Date:   Tue Mar 8 15:30:50 2022 +0100
+
+    modem-helpers: Consider minimum ID when choosing best profile
+
+    +CGDCONT? may list profiles with IDs that are illegal to write, i.e.
+    +CGDCONT=? returns a minimum ID larger than some of the existing
+    profiles. E.g. for Fibocom L610-EU, +CGDCONT=? returns
+
+    +CGDCONT: (1-7),"IP",,,(0-3),(0-4)
+    +CGDCONT: (1-7),"IPV6",,,(0-3),(0-4)
+    +CGDCONT: (1-7),"IPV4V6",,,(0-3),(0-4)
+    +CGDCONT: (1-7),"PPP",,,(0-3),(0-4)
+    +CGDCONT: (1-7),"Non-IP",,,(0-3),(0-4)
+
+    while the default EPS bearer is established at profile 0:
+
+    +CGDCONT: 0,"IP","xxx","xxx.xxx.xxx.xxx",0,0
+    [...]
+
+    Signed-off-by: Sven Schwermer
+    <sven.schwermer@disruptive-technologies.com>
+    (cherry picked from commit 95eef34d37948118c212962d63490f6f78caa30b)
+
+ src/mm-modem-helpers.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+commit b90959e2207545139ecc5407d0a57b593e39fdad
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Tue Mar 8 21:16:06 2022 +0100
+
+    broadband-bearer: remove unused cid_selection_3gpp() method
+
+    It was replaced by the profile management operations instead in the
+    1.18 release.
+
+    (cherry picked from commit f7656de12857b7a9d775f66415cc3059975d635d)
+
+ src/mm-broadband-bearer.h | 11 -----------
+ 1 file changed, 11 deletions(-)
+
+commit 8796cff1d70a40c3ef21f48bd2a716cbc90b4aa4
+Author: Sven Schwermer <sven.schwermer@disruptive-technologies.com>
+Date:   Fri Feb 25 21:37:13 2022 +0100
+
+    fcc-unlock: Make scripts POSIX shell compatible
+
+    This allows us to not rely on bash which may not be available on
+    constrained systems, e.g. Yocto-built embedded systems. The scripts
+    now
+    pass shellcheck.
+
+    Signed-off-by: Sven Schwermer
+    <sven.schwermer@disruptive-technologies.com>
+    (cherry picked from commit b64ffeee9c0fbbf326d4a20d5272ce2a42a1b703)
+
+ data/dispatcher-fcc-unlock/105b | 8 ++++----
+ data/dispatcher-fcc-unlock/1199 | 6 +++---
+ data/dispatcher-fcc-unlock/1eac | 8 ++++----
+ 3 files changed, 11 insertions(+), 11 deletions(-)
+
+commit 65a45098fde2e1f5b6d3ff06efaa33bed9077b8e
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Feb 17 09:59:24 2022 +0100
+
+    charsets: set error if UTF-8 validation fails
+
+    Otherwise, mm_modem_charset_bytearray_to_utf8() may return NULL
+    without error set, and that will trigger a crash in the caller.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/511
+
+    (cherry picked from commit 27f6679aa87b7b4a7b214d3f08f83bec16434580)
+
+ src/mm-charsets.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+commit 3e9cfe19ebd73ce7e4cdb30b5c66ddf523c29d26
+Author: Pablo Barciela <scow@riseup.net>
+Date:   Tue Feb 15 10:11:17 2022 +0100
+
+    libqcdm, errors: fix format specifier for integer
+
+    (cherry picked from commit 7c713b53a411629f297332fc189472ee8ec06b72)
+
+ libqcdm/src/errors.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 2f6c48ca70b061f852cd798dc9a72e23eedd5a6c
+Author: Pablo Barciela <scow@riseup.net>
+Date:   Tue Feb 15 09:20:17 2022 +0100
+
+    libqcdm, errors: Fix argument order
+
+    (cherry picked from commit 513fbaff61ef6fee76f0d0f0ffed5839e95a34ea)
+
+ libqcdm/src/errors.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 552df9644d56072af1cf11c004c071cc4466ceb6
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Feb 14 16:11:39 2022 +0100
+
+    build,meson: fix 'export_packages' in GIR setup
+
+    The 'export_packages' field in the generate_gir() command should
+    include the name of the pkg-config package being exported, not the
+    name of the library file.
+
+    Without this change, building GIR files depending on the one we
+    provide here would fail as the corresponding .pc file isn't found.
+
+    (cherry picked from commit 19ecd327dc4dea660147eb53c51b81b188db577d)
+
+ libmm-glib/meson.build | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+commit 00f3bfd191dc1a4cd119ff8d23b99c1b287dbfb7
+Author: Pablo Barciela <scow@riseup.net>
+Date:   Mon Feb 14 11:28:13 2022 +0100
+
+    libqcdm,commands: 'const' instead 'static' in 'char' variable
+
+    (cherry picked from commit a5cee46ba98f17cb6f7e24240cec4cd4e3b8b631)
+
+ libqcdm/src/commands.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit e76700a23c802a82b3829e373bf21c8ffc26bc77
+Author: Pablo Barciela <scow@riseup.net>
+Date:   Mon Feb 14 10:32:45 2022 +0100
+
+    mm-call-audio-format: avoid redundant condition
+
+    (cherry picked from commit 839af5553fb753bb3162997283e9b713f8c12dc8)
+
+ libmm-glib/mm-call-audio-format.c | 37
+ ++++++++++++++++++-------------------
+ 1 file changed, 18 insertions(+), 19 deletions(-)
+
+commit 0fe6d44f0094ff1a531bd97a169fc70027e86f0d
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Mar 26 15:35:16 2022 +0100
+
+    linktop: new port type hints
+
+    Flag ttyACM0 as data port and ttyACM1 as primary port, as per
+    https://bugzilla.gnome.org/show_bug.cgi?id=637140#c10
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/14
+
+    (cherry picked from commit 1fdc3ac703b03da7824c249c65c39d2499f75649)
+
+ plugins/Makefile.am                            |  4 ++++
+ plugins/linktop/77-mm-linktop-port-types.rules | 16 ++++++++++++++++
+ plugins/meson.build                            | 13 +++++++++----
+ plugins/tests/test-udev-rules.c                | 11 +++++++++++
+ 4 files changed, 40 insertions(+), 4 deletions(-)
+
+commit 19db841b642a84aec1f5d8cb23ca9de543039b17
+Author: Andrew Lassalle <andrewlassalle@chromium.org>
+Date:   Wed Mar 9 12:06:52 2022 -0800
+
+    broadband-modem-mbim: Set InitialEPSBearer's authentication to CHAP
+    when is UNKNOWN
+
+    This is the same behavior that is used when creating the bearer in
+    mm-bearer-mbim.
+
+    (cherry picked from commit 0fbab3c8dc82be0e764d72dd5236c86501deac58)
+
+ src/mm-broadband-modem-mbim.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
+
+commit ca9c34312d67a2a4946bf4e841016aa231c247c3
+Author: Andrew Lassalle <andrewlassalle@chromium.org>
+Date:   Wed Mar 9 12:02:35 2022 -0800
+
+    bearer-properties: Match UNKNOWN auth to CHAP for loose comparison
+
+    MBIM and QMI fallback to CHAP when a username or password is present
+    but no authentication type was provided. Consider CHAP==UNKNOWN when
+    using loose comparison.
+
+    (cherry picked from commit 97933788704d7ea9fbde3004ea92c388888cb426)
+
+ libmm-glib/mm-bearer-properties.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+commit fd07129f3f6f5033af59d3ed6790730fe35f4204
+Author: Bjørn Mork <bjorn@mork.no>
+Date:   Mon Mar 28 13:00:20 2022 +0200
+
+    mm-netlink: use unaligned netlink attribute length
+
+    Alignment padding is not accounted for in the netlink attribute
+    length.  Fix to avoid warnings later if we add shorter fixed
+    length attributes, even though it currently makes no difference
+    since we only add a 4 byte attribute
+
+    Signed-off-by: Bjørn Mork <bjorn@mork.no>
+    (cherry picked from commit afd3ce86c9c6801cd245e943c171fe2de20c9d7b)
+
+ src/mm-netlink.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit a80f8f45e2d2e5a1fca658064c1d857970e35bda
+Author: Bjørn Mork <bjorn@mork.no>
+Date:   Mon Mar 28 11:57:42 2022 +0200
+
+    mm-netlink: only change IFF_UP flag
+
+    This fixes the missing NOARP flag on the second and following VLAN
+    sub-interfaces when multiplexing over the cdc_mbim driver.
+
+    ifi_change specifies all the flags we want to change. Any listed
+    flag which isn't set in ifi_flags will be cleared by the kernel:
+
+            if (ifm->ifi_change)
+                    flags = (flags & ifm->ifi_change) |
+                            (rtnl_dev_get_flags(dev) & ~ifm->ifi_change);
+
+    Drivers like cdc_mbim set some netdev flags by default, indicating
+    supported or unsupported features. The driver emulates an ethernet
+    netdev but it doesn't implement ARP.  Clearing NOARP on cdc_mbim
+    netdevs will block IP transmissions, waiting for an ARP reply we
+    never will receive.
+
+    Signed-off-by: Bjørn Mork <bjorn@mork.no>
+    (cherry picked from commit 7bbf6c8a4aebfe33f9bebfe997288c45624d269a)
+
+ src/mm-netlink.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+commit 2be4af1ebf2b5463f9e759f0a077eff7bbfdaedb
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Mar 24 13:10:09 2022 +0100
+
+    data: add example connection dispatcher
+
+    Just a minimal example that prints the events in syslog
+
+    (cherry picked from commit 7960b365d50c2a9e687a75b46f044e8e52b72b65)
+
+ configure.ac                            |  1 +
+ data/Makefile.am                        |  2 +-
+ data/dispatcher-connection/99-log-event | 22 ++++++++++++++++++++++
+ data/dispatcher-connection/Makefile.am  | 21 +++++++++++++++++++++
+ data/dispatcher-connection/meson.build  | 25 +++++++++++++++++++++++++
+ meson.build                             |  1 +
+ 6 files changed, 71 insertions(+), 1 deletion(-)
+
+commit 8d0c150be5749429adb95dc2375814cd6d4f607b
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Mar 24 12:55:40 2022 +0100
+
+    build: rename directory where fcc unlocks are kept
+
+    (cherry picked from commit 99232154b34e0b8034e84678959454fd9763336e)
+
+ configure.ac                                           | 2 +-
+ data/Makefile.am                                       | 2 +-
+ data/{fcc-unlock => dispatcher-fcc-unlock}/105b        | 0
+ data/{fcc-unlock => dispatcher-fcc-unlock}/1199        | 0
+ data/{fcc-unlock => dispatcher-fcc-unlock}/1eac        | 0
+ data/{fcc-unlock => dispatcher-fcc-unlock}/Makefile.am | 0
+ data/{fcc-unlock => dispatcher-fcc-unlock}/meson.build | 0
+ meson.build                                            | 2 +-
+ 8 files changed, 3 insertions(+), 3 deletions(-)
+
+commit 05450564c22c0955e2a89463ba3d524ce3a74da1
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Mar 23 16:03:03 2022 +0100
+
+    base-bearer: integrate connection status dispatcher scripts
+
+    (cherry picked from commit 2dafb32d63e847f3855b898f024eb1465d2440df)
+
+ src/mm-base-bearer.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
+
+commit 6afb4def148c62ae82e1d867eafa09fa814cbd36
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Mar 23 15:38:51 2022 +0100
+
+    dispatcher-connection: new dispatcher for connection status scripts
+
+    The user or the packages can install custom dispatcher scripts that
+    will be run by the ModemManaer daemon itself upon bearer connection
+    status updates.
+
+    Scripts installed by users should go into the
+    /etc/ModemManager/connection.d directory.
+
+    Scripts installed by packages should go into the
+    /usr/lib/ModemManager/connection.d directory.
+
+    The name of the script will specify the order how it's run, so it's
+    suggested to name them with a numeric prefix, e.g. "99-something".
+
+    (cherry picked from commit e8612671ef6efcec9342d14506894ff5e5b5ddda)
+
+ src/Makefile.am                |   4 +
+ src/meson.build                |   3 +
+ src/mm-dispatcher-connection.c | 231
+ +++++++++++++++++++++++++++++++++++++++++
+ src/mm-dispatcher-connection.h |  49 +++++++++
+ 4 files changed, 287 insertions(+)
+
+commit 5ea39d04f7945acbd257b9c40481ae227c8c495d
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Feb 16 23:32:36 2022 +0100
+
+    dispatcher-fcc-unlock: inherit from the base dispatcher object
+
+    (cherry picked from commit e188a77eded065475cf94bbce9691ba2974b315b)
+
+ src/Makefile.am                |   4 +-
+ src/meson.build                |   2 +-
+ src/mm-dispatcher-fcc-unlock.c | 149 +++++++++++++++++++
+ src/mm-dispatcher-fcc-unlock.h |  49 +++++++
+ src/mm-fcc-unlock-dispatcher.c | 319
+ -----------------------------------------
+ src/mm-fcc-unlock-dispatcher.h |  47 ------
+ src/mm-iface-modem.c           |  14 +-
+ 7 files changed, 208 insertions(+), 376 deletions(-)
+
+commit 24329a5436246d13ed3b88b52350e9fc50541f9b
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Wed Feb 16 23:12:17 2022 +0100
+
+    dispatcher: new generic object to handle script dispatchers
+
+    Based on the FCC unlock specific one, but without any FCC unlock
+    specific constraint.
+
+    (cherry picked from commit 01c8edf68cdd32582e7fbc32a0d83f71811e31d6)
+
+ src/Makefile.am     |   2 +
+ src/meson.build     |   1 +
+ src/mm-dispatcher.c | 351
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/mm-dispatcher.h |  57 +++++++++
+ 4 files changed, 411 insertions(+)
+
+commit 8f9e53d64d430ffd43abd8220dc0336a50930904
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Apr 4 10:13:06 2022 +0200
+
+    port-serial: ensure the port object is valid after BUFFER_FULL
+    handling
+
+    The BUFFER_FULL signal handler is effectively working in the same way
+    as the response buffer processor, in both cases we may have scheduled
+    the completion of the serial command, and that in turn may end up
+    fully disposing the port object. We must make sure the port object is
+    valid for as long as we need it in this function, so we take a
+    reference while processing the response buffer.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/535
+
+    (cherry picked from commit 19f389949c2e15eb52a27d7b6236ef8a9ab76e97)
+
+ src/mm-port-serial.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+commit 9b12af986fcdd341ecfd6c4d38bf5f4392919d81
+Author: Prakash Pabba <quic_ppabba@quicinc.com>
+Date:   Wed Mar 9 13:15:05 2022 +0530
+
+    mm-shared-qmi: Return an error in load_current_capabilities() if
+    none is found.
+
+    (cherry picked from commit 92db190f377e68bced7ac15db600287dcf714484)
+
+ src/mm-shared-qmi.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+commit 9e9d2f0fc5b61051e5b6764673eed78223215136
+Author: Stephan Gerhold <stephan@gerhold.net>
+Date:   Wed Mar 23 17:54:08 2022 +0100
+
+    shared-qmi: ignore slot status indications until initial status
+    is known
+
+    Recent ModemManager versions no longer work on the Samsung A5
+    (Qualcomm
+    MSM8916) smartphone: MM ends up in an infinite loop trying to
+    probe the
+    modem over and over again.
+
+    Looking at the debug log it seems to be related to a "Slot Status"
+    indication that comes in during probe time and causes MM to restart
+    the probing process:
+
+        [/dev/wwan0qmi0] Sent generic request (translated)...
+          << QMUX: service = "uim"
+          << QMI: message = "Register Events" (0x002E)
+          << TLV: translated = physical-slot-status
+        [/dev/wwan0qmi0] Received generic indication (translated)...
+          << QMUX: service = "uim"
+          << QMI: message = "Slot Status" (0x0048)
+          << TLV: translated = { [0] = '[ physical_card_status =
+          'present', ...
+        [/dev/wwan0qmi0] Received generic response (translated)...
+          << QMUX: service = "uim"
+          << QMI: message = "Register Events" (0x002E)
+          << TLV: translated = SUCCESS
+        [modem42] registered for slot status indications
+        [/dev/wwan0qmi0] Sent generic request (translated)...
+          << QMUX: service = "uim"
+          << QMI: message = "Get Slot Status" (0x0047)
+        [modem42] received slot status indication
+        [modem42] An active slot had a status change, will reprobe
+        the modem
+         <infinite loop>
+
+    The "Slot Status" indication (uim_slot_status_indication_cb) arrives
+    immediately after starting to listen for the event, which is before
+    ModemManager has actually loaded the initial slot status in
+    uim_get_slot_status_ready. In this situation
+    !slot_array_status_equal()
+    will always cause the modem to reprobe, even though it is not
+    necessary
+    during the probe phase.
+
+    To fix this add a simple check to uim_slot_status_indication_cb() that
+    ignores the indication if the initial slot status was not loaded yet.
+
+    (cherry picked from commit 8d95c82f9c2d558148aec74cfcaf17e3941d806c)
+
+ src/mm-shared-qmi.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+commit 7a85bc243bc1be9f720ae1bda92e9eba7b277213
+Author: Iñigo Martínez <inigomartinez@gmail.com>
+Date:   Tue Mar 1 09:27:08 2022 +0100
+
+    build,meson: Fix daemon enums dependencies
+
+    meson generates the `mm-daemon-enums-types` source and header files.
+    These are used when building `ModemManager` executable and different
+    plugins. However, these enums are only stated as dependencies on the
+    `ModemManager` executable build.
+
+    This has been fixed by also adding the generated files targets as
+    dependencies in the required plugins.
+
+    (cherry picked from commit 81c3b59f75ccc09d87100196ca2932de371320de)
+
+ plugins/meson.build | 16 ++++++++--------
+ src/meson.build     |  7 ++++---
+ 2 files changed, 12 insertions(+), 11 deletions(-)
+
+commit 8143fb87a06b2d89f0a47396ba1a1f97505d30c4
+Author: Iñigo Martínez <inigomartinez@gmail.com>
+Date:   Tue Mar 1 08:29:54 2022 +0100
+
+    plugins: Fix port enums includes
+
+    The `broadmobi`, `dlink`, `telit` and `tplink` plugins include the
+    `mm-port-enums-types.h` header. However, they do not use any symbol
+    defined there.
+
+    The `huawei` plugin as includes the `mm-port-enums-types.h` header
+    but it does not include the build targets as dependencies.
+
+    These issues have been fixed by removing the unnecessary includes
+    from `broadmobi`, `dlink`, `telit` and `tplink` plugins and by
+    including the enums build target in the `huawei` target.
+
+    (cherry picked from commit 2bc697ce32877e2074ea19a8639e256ecfb3233a)
+
+ plugins/broadmobi/mm-plugin-broadmobi.c |  1 -
+ plugins/dlink/mm-plugin-dlink.c         |  1 -
+ plugins/meson.build                     |  2 +-
+ plugins/telit/mm-plugin-telit.c         |  1 -
+ plugins/tplink/mm-plugin-tplink.c       |  1 -
+ src/meson.build                         | 10 +++++-----
+ 6 files changed, 6 insertions(+), 10 deletions(-)
+
+commit 2e7242ba857795d70285eca0af5c044673a837f7
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Feb 11 11:44:37 2022 +0100
+
+    build: post-release version bump to 1.18.7
+
+ configure.ac | 2 +-
+ meson.build  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
 commit a7bcf2036b34d5043dbc33fee7d98bae5859c4d3
 Author: Aleksander Morgado <aleksander@aleksander.es>
 Date:   Fri Feb 11 11:31:48 2022 +0100

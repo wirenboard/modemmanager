@@ -21,16 +21,19 @@
   </refsect1>
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Modem-Firmware">
   <title role="desc.title">Description</title>
-  <para>      This interface provides access to perform different firmware-related operations
-      in the modem, including listing the available firmware images in the module and
-      selecting which of them to use.
-</para><para>      This interface does not provide direct access to perform firmware updates in
-      the device. Instead, it exposes information about the expected firmware update
-      method as well as method-specific details required for the upgrade to happen.
-      The actual firmware upgrade may be performed via the Linux Vendor Firmware Service
-      and the <ulink url="https://fwupd.org">fwupd</ulink> daemon.
-</para><para>      This interface will always be available as long a the modem is considered
-      valid.
+  <para>
+This interface provides access to perform different firmware-related operations
+in the modem, including listing the available firmware images in the module and
+selecting which of them to use.
+</para><para>
+This interface does not provide direct access to perform firmware updates in
+the device. Instead, it exposes information about the expected firmware update
+method as well as method-specific details required for the upgrade to happen.
+The actual firmware upgrade may be performed via the Linux Vendor Firmware Service
+and the <ulink url="https://fwupd.org">fwupd</ulink> daemon.
+</para><para>
+This interface will always be available as long a the modem is considered
+valid.
 </para>
 </refsect1>
 <refsect1 role="details" id="gdbus-methods-org.freedesktop.ModemManager1.Modem.Firmware">
@@ -42,73 +45,82 @@
 List (OUT s      selected,
       OUT aa{sv} installed);
 </programlisting>
-<para>        List installed firmware images.
-</para><para>        Firmware slots and firmware images are identified by arbitrary opaque
-        strings.
-</para><para>        Firmware images are represented as dictionaries of properties.
-        Certain properties are pre-defined, and some are required:
-</para><para>        <variablelist>
-          <varlistentry><term><literal>"image-type"</literal></term>
-            <listitem>
-              (Required) Type of the firmware image, given as a
-              <link linkend="MMFirmwareImageType">MMFirmwareImageType</link> value
-              (signature <literal>"u"</literal>). Firmware images of type
-              <link linkend="MM-FIRMWARE-IMAGE-TYPE-GENERIC:CAPS">MM_FIRMWARE_IMAGE_TYPE_GENERIC</link>
-              will only expose only the mandatory properties.
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"unique-id"</literal></term>
-            <listitem>
-              (Required) A user-readable unique ID for the firmware image, given as a
-              string value (signature <literal>"s"</literal>).
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"gobi-pri-version"</literal></term>
-            <listitem>
-              (Optional) The version of the PRI firmware image, in images of type
-              <link linkend="MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</link>,
-              given as a string value (signature <literal>"s"</literal>).
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"gobi-pri-info"</literal></term>
-            <listitem>
-              (Optional) Additional information of the PRI image, in images of type
-              <link linkend="MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</link>,
-              given as a string value (signature <literal>"s"</literal>).
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"gobi-boot-version"</literal></term>
-            <listitem>
-              (Optional) The boot version of the PRI firmware image, in images of type
-              <link linkend="MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</link>,
-              given as a string value (signature <literal>"s"</literal>).
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"gobi-pri-unique-id"</literal></term>
-            <listitem>
-              (Optional) The unique ID of the PRI firmware image, in images of type
-              <link linkend="MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</link>,
-              given as a string value (signature <literal>"s"</literal>).
-            </listitem>
-          </varlistentry>
-          <varlistentry><term><literal>"gobi-modem-unique-id"</literal></term>
-            <listitem>
-              (Optional) The unique ID of the Modem firmware image, in images of type
-              <link linkend="MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</link>,
-              given as a string value (signature <literal>"s"</literal>).
-            </listitem>
-          </varlistentry>
-        </variablelist>
-</para><para>        Since: 1.0
+<para>
+List installed firmware images.
+</para><para>
+Firmware slots and firmware images are identified by arbitrary opaque
+strings.
+</para><para>
+Firmware images are represented as dictionaries of properties.
+Certain properties are pre-defined, and some are required:
+</para><para>
+<variablelist>
+<varlistentry><term><literal>"image-type"</literal></term>
+<listitem>
+(Required) Type of the firmware image, given as a
+<link linkend="MMFirmwareImageType">MMFirmwareImageType</link> value
+(signature <literal>"u"</literal>). Firmware images of type
+<link linkend="MM-FIRMWARE-IMAGE-TYPE-GENERIC:CAPS">MM_FIRMWARE_IMAGE_TYPE_GENERIC</link>
+will only expose only the mandatory properties.
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>"unique-id"</literal></term>
+<listitem>
+(Required) A user-readable unique ID for the firmware image, given as a
+string value (signature <literal>"s"</literal>).
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>"gobi-pri-version"</literal></term>
+<listitem>
+(Optional) The version of the PRI firmware image, in images of type
+<link linkend="MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</link>,
+given as a string value (signature <literal>"s"</literal>).
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>"gobi-pri-info"</literal></term>
+<listitem>
+(Optional) Additional information of the PRI image, in images of type
+<link linkend="MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</link>,
+given as a string value (signature <literal>"s"</literal>).
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>"gobi-boot-version"</literal></term>
+<listitem>
+(Optional) The boot version of the PRI firmware image, in images of type
+<link linkend="MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</link>,
+given as a string value (signature <literal>"s"</literal>).
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>"gobi-pri-unique-id"</literal></term>
+<listitem>
+(Optional) The unique ID of the PRI firmware image, in images of type
+<link linkend="MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</link>,
+given as a string value (signature <literal>"s"</literal>).
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>"gobi-modem-unique-id"</literal></term>
+<listitem>
+(Optional) The unique ID of the Modem firmware image, in images of type
+<link linkend="MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</link>,
+given as a string value (signature <literal>"s"</literal>).
+</listitem>
+</varlistentry>
+</variablelist>
+</para><para>
+Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>OUT s <parameter>selected</parameter></literal>:</term>
-  <listitem><para>The unique name of the selected firmware image, or the empty string if no image is selected.</para></listitem>
+  <listitem><para>
+The unique name of the selected firmware image, or the empty string if no image is selected.
+</para></listitem>
 </varlistentry>
 <varlistentry>
   <term><literal>OUT aa{sv} <parameter>installed</parameter></literal>:</term>
-  <listitem><para>An array of dictionaries containing the properties of the installed firmware images.</para></listitem>
+  <listitem><para>
+An array of dictionaries containing the properties of the installed firmware images.
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -118,19 +130,25 @@ List (OUT s      selected,
 <programlisting>
 Select (IN  s uniqueid);
 </programlisting>
-<para>        Selects a different firmware image to use, and immediately resets the
-        modem so that it begins using the new firmware image.
-</para><para>        The method will fail if the identifier does not match any of the names
-        returned by
-        <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Firmware.List">List()</link>,
-        or if the image could not be selected for some reason.
-</para><para>        Installed images can be selected non-destructively.
-</para><para>        Since: 1.0
+<para>
+Selects a different firmware image to use, and immediately resets the
+modem so that it begins using the new firmware image.
+</para><para>
+The method will fail if the identifier does not match any of the names
+returned by
+<link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Firmware.List">List()</link>,
+or if the image could not be selected for some reason.
+</para><para>
+Installed images can be selected non-destructively.
+</para><para>
+Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN s <parameter>uniqueid</parameter></literal>:</term>
-  <listitem><para>The unique ID of the firmware image to select.</para></listitem>
+  <listitem><para>
+The unique ID of the firmware image to select.
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -143,59 +161,64 @@ Select (IN  s uniqueid);
 <programlisting>
 UpdateSettings  readable   (ua{sv})
 </programlisting>
-<para>        Detailed settings that provide information about how the module should be
-        updated.
-</para><para>        The settings are given as a bitmask of <link linkend="MMModemFirmwareUpdateMethod">MMModemFirmwareUpdateMethod</link>
-        values specifying the type of firmware update procedures expected followed by a
-        dictionary that includes other parameters applicable to the specific methods reported.
-</para><para>        <variablelist>
-          <varlistentry>
-            <listitem>
-              <para>
-                The following settings are mandatory as long as the reported update method is not
-                <link linkend="MM-MODEM-FIRMWARE-UPDATE-METHOD-NONE:CAPS">MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE</link>.
-              </para>
-              <variablelist>
-                <varlistentry><term><literal>"device-ids"</literal></term>
-                  <listitem>
-                    (Required) This property exposes the list of device IDs associated to a given
-                    device, from most specific to least specific. (signature <literal>'as'</literal>).
-                    E.g. a list containing: <literal>"USB\VID_413C&amp;PID_81D7&amp;REV_0001"</literal>,
-                    <literal>"USB\VID_413C&amp;PID_81D7"</literal> and <literal>"USB\VID_413C"</literal>.
-                  </listitem>
-                </varlistentry>
-                <varlistentry><term><literal>"version"</literal></term>
-                  <listitem>
-                    (Required) This property exposes the current firmware version string of the module.
-                    If the module uses separate version numbers for firmware version and carrier configuration,
-                    this version string will be a combination of both, and so it may be different to the
-                    version string showed in the <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Revision">"Revision"</link> property.
-                    (signature <literal>'s'</literal>)
-                  </listitem>
-                </varlistentry>
-              </variablelist>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-</para><para>        <variablelist>
-          <varlistentry><term><link linkend="MM-MODEM-FIRMWARE-UPDATE-METHOD-FASTBOOT:CAPS">MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT</link></term>
-            <listitem>
-              <para>
-                Devices supporting the fastboot firmware update method require exposing the
-                following additional settings:
-              </para>
-              <variablelist>
-                <varlistentry><term><literal>"fastboot-at"</literal></term>
-                  <listitem>
-                    (Required) This property exposes the AT command that should be sent to the
-                    module to trigger a reset into fastboot mode (signature <literal>'s'</literal>)
-                  </listitem>
-                </varlistentry>
-              </variablelist>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-</para><para>        Since: 1.10
+<para>
+Detailed settings that provide information about how the module should be
+updated.
+</para><para>
+The settings are given as a bitmask of <link linkend="MMModemFirmwareUpdateMethod">MMModemFirmwareUpdateMethod</link>
+values specifying the type of firmware update procedures expected followed by a
+dictionary that includes other parameters applicable to the specific methods reported.
+</para><para>
+<variablelist>
+<varlistentry>
+<listitem>
+<para>
+The following settings are mandatory as long as the reported update method is not
+<link linkend="MM-MODEM-FIRMWARE-UPDATE-METHOD-NONE:CAPS">MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE</link>.
+</para>
+<variablelist>
+<varlistentry><term><literal>"device-ids"</literal></term>
+<listitem>
+(Required) This property exposes the list of device IDs associated to a given
+device, from most specific to least specific. (signature <literal>'as'</literal>).
+E.g. a list containing: <literal>"USB\VID_413C&amp;PID_81D7&amp;REV_0001"</literal>,
+<literal>"USB\VID_413C&amp;PID_81D7"</literal> and <literal>"USB\VID_413C"</literal>.
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>"version"</literal></term>
+<listitem>
+(Required) This property exposes the current firmware version string of the module.
+If the module uses separate version numbers for firmware version and carrier configuration,
+this version string will be a combination of both, and so it may be different to the
+version string showed in the <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem.Revision">"Revision"</link> property.
+(signature <literal>'s'</literal>)
+</listitem>
+</varlistentry>
+</variablelist>
+</listitem>
+</varlistentry>
+</variablelist>
+</para><para>
+<variablelist>
+<varlistentry><term><link linkend="MM-MODEM-FIRMWARE-UPDATE-METHOD-FASTBOOT:CAPS">MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT</link></term>
+<listitem>
+<para>
+Devices supporting the fastboot firmware update method require exposing the
+following additional settings:
+</para>
+<variablelist>
+<varlistentry><term><literal>"fastboot-at"</literal></term>
+<listitem>
+(Required) This property exposes the AT command that should be sent to the
+module to trigger a reset into fastboot mode (signature <literal>'s'</literal>)
+</listitem>
+</varlistentry>
+</variablelist>
+</listitem>
+</varlistentry>
+</variablelist>
+</para><para>
+Since: 1.10
 </para>
 </refsect2>
 </refsect1>

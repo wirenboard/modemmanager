@@ -35,7 +35,8 @@
   </refsect1>
 <refsect1 role="desc" id="gdbus-interface-org-freedesktop-ModemManager1-Sms">
   <title role="desc.title">Description</title>
-  <para>      The SMS interface Defines operations and properties of a single SMS message.
+  <para>
+The SMS interface Defines operations and properties of a single SMS message.
 </para>
 </refsect1>
 <refsect1 role="details" id="gdbus-methods-org.freedesktop.ModemManager1.Sms">
@@ -46,8 +47,10 @@
 <programlisting>
 Send ();
 </programlisting>
-<para>        If the message has not yet been sent, queue it for delivery.
-</para><para>        Since: 1.0
+<para>
+If the message has not yet been sent, queue it for delivery.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="method" id="gdbus-method-org-freedesktop-ModemManager1-Sms.Store">
@@ -56,17 +59,22 @@ Send ();
 <programlisting>
 Store (IN  u storage);
 </programlisting>
-<para>        Store the message in the device if not already done.
-</para><para>        This method requires a <link linkend="MMSmsStorage">MMSmsStorage</link>
-        value, describing the storage where this message is to be kept; or
-        <link linkend="MM-SMS-STORAGE-UNKNOWN:CAPS"><constant>MM_SMS_STORAGE_UNKNOWN</constant></link>
-        if the default storage should be used.
-</para><para>        Since: 1.0
+<para>
+Store the message in the device if not already done.
+</para><para>
+This method requires a <link linkend="MMSmsStorage">MMSmsStorage</link>
+value, describing the storage where this message is to be kept; or
+<link linkend="MM-SMS-STORAGE-UNKNOWN:CAPS"><constant>MM_SMS_STORAGE_UNKNOWN</constant></link>
+if the default storage should be used.
+</para><para>
+Since: 1.0
 </para>
 <variablelist role="params">
 <varlistentry>
   <term><literal>IN u <parameter>storage</parameter></literal>:</term>
-  <listitem><para></para></listitem>
+  <listitem><para>
+</para><para>
+</para></listitem>
 </varlistentry>
 </variablelist>
 </refsect2>
@@ -79,9 +87,11 @@ Store (IN  u storage);
 <programlisting>
 State  readable   u
 </programlisting>
-<para>        A <link linkend="MMSmsState">MMSmsState</link> value,
-        describing the state of the message.
-</para><para>        Since: 1.0
+<para>
+A <link linkend="MMSmsState">MMSmsState</link> value,
+describing the state of the message.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.PduType">
@@ -90,9 +100,11 @@ State  readable   u
 <programlisting>
 PduType  readable   u
 </programlisting>
-<para>        A <link linkend="MMSmsPduType">MMSmsPduType</link> value,
-        describing the type of PDUs used in the SMS message.
-</para><para>        Since: 1.0
+<para>
+A <link linkend="MMSmsPduType">MMSmsPduType</link> value,
+describing the type of PDUs used in the SMS message.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.Number">
@@ -101,8 +113,10 @@ PduType  readable   u
 <programlisting>
 Number  readable   s
 </programlisting>
-<para>        Number to which the message is addressed.
-</para><para>        Since: 1.0
+<para>
+Number to which the message is addressed.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.Text">
@@ -111,11 +125,15 @@ Number  readable   s
 <programlisting>
 Text  readable   s
 </programlisting>
-<para>        Message text, in UTF-8.
-</para><para>        When sending, if the text is larger than the limit of the technology or
-        modem, the message will be broken into multiple parts or messages.
-</para><para>        Note that Text and Data are never given at the same time.
-</para><para>        Since: 1.0
+<para>
+Message text, in UTF-8.
+</para><para>
+When sending, if the text is larger than the limit of the technology or
+modem, the message will be broken into multiple parts or messages.
+</para><para>
+Note that Text and Data are never given at the same time.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.Data">
@@ -124,11 +142,15 @@ Text  readable   s
 <programlisting>
 Data  readable   ay
 </programlisting>
-<para>        Message data.
-</para><para>        When sending, if the data is larger than the limit of the technology or
-        modem, the message will be broken into multiple parts or messages.
-</para><para>        Note that Text and Data are never given at the same time.
-</para><para>        Since: 1.0
+<para>
+Message data.
+</para><para>
+When sending, if the data is larger than the limit of the technology or
+modem, the message will be broken into multiple parts or messages.
+</para><para>
+Note that Text and Data are never given at the same time.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.SMSC">
@@ -137,9 +159,12 @@ Data  readable   ay
 <programlisting>
 SMSC  readable   s
 </programlisting>
-<para>        Indicates the SMS service center number.
-</para><para>        Always empty for 3GPP2/CDMA.
-</para><para>        Since: 1.0
+<para>
+Indicates the SMS service center number.
+</para><para>
+Always empty for 3GPP2/CDMA.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.Validity">
@@ -148,22 +173,26 @@ SMSC  readable   s
 <programlisting>
 Validity  readable   (uv)
 </programlisting>
-<para>        Indicates when the SMS expires in the SMSC.
-</para><para>        This value is composed of a
-        <link linkend="MMSmsValidityType">MMSmsValidityType</link>
-        key, with an associated data which contains type-specific validity
-        information:
-</para><para>        <variablelist>
-         <varlistentry><term><link linkend="MM-SMS-VALIDITY-TYPE-RELATIVE:CAPS">MM_SMS_VALIDITY_TYPE_RELATIVE</link></term>
-          <listitem>
-           <para>
-             The value is the length of the validity period in minutes, given
-             as an unsigned integer (D-Bus signature <literal>'u'</literal>).
-            </para>
-          </listitem>
-         </varlistentry>
-        </variablelist>
-</para><para>        Since: 1.0
+<para>
+Indicates when the SMS expires in the SMSC.
+</para><para>
+This value is composed of a
+<link linkend="MMSmsValidityType">MMSmsValidityType</link>
+key, with an associated data which contains type-specific validity
+information:
+</para><para>
+<variablelist>
+<varlistentry><term><link linkend="MM-SMS-VALIDITY-TYPE-RELATIVE:CAPS">MM_SMS_VALIDITY_TYPE_RELATIVE</link></term>
+<listitem>
+<para>
+The value is the length of the validity period in minutes, given
+as an unsigned integer (D-Bus signature <literal>'u'</literal>).
+</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.Class">
@@ -172,10 +201,13 @@ Validity  readable   (uv)
 <programlisting>
 Class  readable   i
 </programlisting>
-<para>        3GPP message class (-1..3).  -1 means class is not available or
-        is not used for this message, otherwise the 3GPP SMS message class.
-</para><para>        Always -1 for 3GPP2/CDMA.
-</para><para>        Since: 1.0
+<para>
+3GPP message class (-1..3).  -1 means class is not available or
+is not used for this message, otherwise the 3GPP SMS message class.
+</para><para>
+Always -1 for 3GPP2/CDMA.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.TeleserviceId">
@@ -184,9 +216,12 @@ Class  readable   i
 <programlisting>
 TeleserviceId  readable   u
 </programlisting>
-<para>        A <link linkend="MMSmsCdmaTeleserviceId">MMSmsCdmaTeleserviceId</link> value.
-</para><para>        Always <link linkend="MM-SMS-CDMA-TELESERVICE-ID-UNKNOWN:CAPS">MM_SMS_CDMA_TELESERVICE_ID_UNKNOWN</link> for 3GPP.
-</para><para>        Since: 1.2
+<para>
+A <link linkend="MMSmsCdmaTeleserviceId">MMSmsCdmaTeleserviceId</link> value.
+</para><para>
+Always <link linkend="MM-SMS-CDMA-TELESERVICE-ID-UNKNOWN:CAPS">MM_SMS_CDMA_TELESERVICE_ID_UNKNOWN</link> for 3GPP.
+</para><para>
+Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.ServiceCategory">
@@ -195,9 +230,12 @@ TeleserviceId  readable   u
 <programlisting>
 ServiceCategory  readable   u
 </programlisting>
-<para>        A <link linkend="MMSmsCdmaServiceCategory">MMSmsCdmaServiceCategory</link> value.
-</para><para>        Always <link linkend="MM-SMS-CDMA-SERVICE-CATEGORY-UNKNOWN:CAPS">MM_SMS_CDMA_SERVICE_CATEGORY_UNKNOWN</link> for 3GPP.
-</para><para>        Since: 1.2
+<para>
+A <link linkend="MMSmsCdmaServiceCategory">MMSmsCdmaServiceCategory</link> value.
+</para><para>
+Always <link linkend="MM-SMS-CDMA-SERVICE-CATEGORY-UNKNOWN:CAPS">MM_SMS_CDMA_SERVICE_CATEGORY_UNKNOWN</link> for 3GPP.
+</para><para>
+Since: 1.2
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.DeliveryReportRequest">
@@ -206,8 +244,10 @@ ServiceCategory  readable   u
 <programlisting>
 DeliveryReportRequest  readable   b
 </programlisting>
-<para>        #TRUE if delivery report request is required, #FALSE otherwise.
-</para><para>        Since: 1.0
+<para>
+#TRUE if delivery report request is required, #FALSE otherwise.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.MessageReference">
@@ -216,11 +256,14 @@ DeliveryReportRequest  readable   b
 <programlisting>
 MessageReference  readable   u
 </programlisting>
-<para>        Message Reference of the last PDU sent/received within this SMS.
-</para><para>        If the PDU type is
-        <link linkend="MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><constant>MM_SMS_PDU_TYPE_STATUS_REPORT</constant></link>,
-        this field identifies the Message Reference of the PDU associated to the status report.
-</para><para>        Since: 1.0
+<para>
+Message Reference of the last PDU sent/received within this SMS.
+</para><para>
+If the PDU type is
+<link linkend="MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><constant>MM_SMS_PDU_TYPE_STATUS_REPORT</constant></link>,
+this field identifies the Message Reference of the PDU associated to the status report.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.Timestamp">
@@ -229,14 +272,16 @@ MessageReference  readable   u
 <programlisting>
 Timestamp  readable   s
 </programlisting>
-<para>        Time when the first PDU of the SMS message arrived the SMSC, in
-        <ulink url="http://en.wikipedia.org/wiki/ISO_8601">ISO8601</ulink>
-        format.
-        This field is only applicable if the PDU type is
-        <link linkend="MM-SMS-PDU-TYPE-DELIVER:CAPS"><constant>MM_SMS_PDU_TYPE_DELIVER</constant></link>.
-        or
-        <link linkend="MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><constant>MM_SMS_PDU_TYPE_STATUS_REPORT</constant></link>.
-</para><para>        Since: 1.0
+<para>
+Time when the first PDU of the SMS message arrived the SMSC, in
+<ulink url="http://en.wikipedia.org/wiki/ISO_8601">ISO8601</ulink>
+format.
+This field is only applicable if the PDU type is
+<link linkend="MM-SMS-PDU-TYPE-DELIVER:CAPS"><constant>MM_SMS_PDU_TYPE_DELIVER</constant></link>.
+or
+<link linkend="MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><constant>MM_SMS_PDU_TYPE_STATUS_REPORT</constant></link>.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.DischargeTimestamp">
@@ -245,12 +290,15 @@ Timestamp  readable   s
 <programlisting>
 DischargeTimestamp  readable   s
 </programlisting>
-<para>        Time when the first PDU of the SMS message left the SMSC, in
-        <ulink url="http://en.wikipedia.org/wiki/ISO_8601">ISO8601</ulink>
-        format.
-</para><para>        This field is only applicable if the PDU type is
-        <link linkend="MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><constant>MM_SMS_PDU_TYPE_STATUS_REPORT</constant></link>.
-</para><para>        Since: 1.0
+<para>
+Time when the first PDU of the SMS message left the SMSC, in
+<ulink url="http://en.wikipedia.org/wiki/ISO_8601">ISO8601</ulink>
+format.
+</para><para>
+This field is only applicable if the PDU type is
+<link linkend="MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><constant>MM_SMS_PDU_TYPE_STATUS_REPORT</constant></link>.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.DeliveryState">
@@ -259,11 +307,14 @@ DischargeTimestamp  readable   s
 <programlisting>
 DeliveryState  readable   u
 </programlisting>
-<para>        A <link linkend="MMSmsDeliveryState">MMSmsDeliveryState</link> value,
-        describing the state of the delivery reported in the Status Report message.
-</para><para>        This field is only applicable if the PDU type is
-        <link linkend="MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><constant>MM_SMS_PDU_TYPE_STATUS_REPORT</constant></link>.
-</para><para>        Since: 1.0
+<para>
+A <link linkend="MMSmsDeliveryState">MMSmsDeliveryState</link> value,
+describing the state of the delivery reported in the Status Report message.
+</para><para>
+This field is only applicable if the PDU type is
+<link linkend="MM-SMS-PDU-TYPE-STATUS-REPORT:CAPS"><constant>MM_SMS_PDU_TYPE_STATUS_REPORT</constant></link>.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 <refsect2 role="property" id="gdbus-property-org-freedesktop-ModemManager1-Sms.Storage">
@@ -272,9 +323,11 @@ DeliveryState  readable   u
 <programlisting>
 Storage  readable   u
 </programlisting>
-<para>        A <link linkend="MMSmsStorage">MMSmsStorage</link> value,
-        describing the storage where this message is kept.
-</para><para>        Since: 1.0
+<para>
+A <link linkend="MMSmsStorage">MMSmsStorage</link> value,
+describing the storage where this message is kept.
+</para><para>
+Since: 1.0
 </para>
 </refsect2>
 </refsect1>

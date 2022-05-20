@@ -59,13 +59,15 @@
 </div>
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Modem-Modem3gpp"></a><h2>Description</h2>
-<p>      This interface provides access to specific actions that may be performed
-      in modems with 3GPP capabilities.
+<p>
+This interface provides access to specific actions that may be performed
+in modems with 3GPP capabilities.
 </p>
-<p>      This interface will only be available once the modem is ready to be
-      registered in the cellular network. 3GPP devices will require a valid
-      unlocked SIM card before any of the features in the interface can be
-      used.
+<p>
+This interface will only be available once the modem is ready to be
+registered in the cellular network. 3GPP devices will require a valid
+unlocked SIM card before any of the features in the interface can be
+used.
 </p>
 </div>
 <div class="refsect1">
@@ -75,9 +77,11 @@
 <pre class="programlisting">
 Register (IN  s operator_id);
 </pre>
-<p>        Request registration with a given mobile network.
+<p>
+Request registration with a given mobile network.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -86,7 +90,9 @@ Register (IN  s operator_id);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>operator_id</code></em></code>:</span></p></td>
-<td><p>The operator ID (ie, <code class="literal">"MCCMNC"</code>, like <code class="literal">"310260"</code>) to register. An empty string can be used to register to the home network.</p></td>
+<td><p>
+The operator ID (ie, <code class="literal">"MCCMNC"</code>, like <code class="literal">"310260"</code>) to register. An empty string can be used to register to the home network.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -96,12 +102,14 @@ Register (IN  s operator_id);
 <pre class="programlisting">
 Scan (OUT aa{sv} results);
 </pre>
-<p>        Scan for available networks.
+<p>
+Scan for available networks.
 </p>
-<p>        <em class="parameter"><code>results</code></em> is an array of dictionaries with each array element describing
-        a mobile network found in the scan. Each dictionary may include one or
-        more of the following keys:
-        </p>
+<p>
+<em class="parameter"><code>results</code></em> is an array of dictionaries with each array element describing
+a mobile network found in the scan. Each dictionary may include one or
+more of the following keys:
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -111,52 +119,53 @@ Scan (OUT aa{sv} results);
 <tr>
 <td><p><span class="term"><code class="literal">"status"</code></span></p></td>
 <td>
-              A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppNetworkAvailability" title="enum MMModem3gppNetworkAvailability">MMModem3gppNetworkAvailability</a>
-              value representing network availability status, given as an
-              unsigned integer (signature <code class="literal">"u"</code>). This key will
-              always be present.
-            </td>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppNetworkAvailability" title="enum MMModem3gppNetworkAvailability">MMModem3gppNetworkAvailability</a>
+value representing network availability status, given as an
+unsigned integer (signature <code class="literal">"u"</code>). This key will
+always be present.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"operator-long"</code></span></p></td>
 <td>
-              Long-format name of operator, given as a string value (signature
-              <code class="literal">"s"</code>). If the name is unknown, this field
-              should not be present.
-            </td>
+Long-format name of operator, given as a string value (signature
+<code class="literal">"s"</code>). If the name is unknown, this field
+should not be present.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"operator-short"</code></span></p></td>
 <td>
-              Short-format name of operator, given as a string value (signature
-              <code class="literal">"s"</code>). If the name is unknown, this field
-              should not be present.
-            </td>
+Short-format name of operator, given as a string value (signature
+<code class="literal">"s"</code>). If the name is unknown, this field
+should not be present.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"operator-code"</code></span></p></td>
 <td>
-              Mobile code of the operator, given as a string value (signature
-              <code class="literal">"s"</code>). Returned in the format
-              <code class="literal">"MCCMNC"</code>, where <code class="literal">MCC</code> is the
-              three-digit ITU E.212 Mobile Country Code and <code class="literal">MNC</code>
-              is the two- or three-digit GSM Mobile Network Code. e.g.
-              <code class="literal">"31026"</code> or <code class="literal">"310260"</code>.
-            </td>
+Mobile code of the operator, given as a string value (signature
+<code class="literal">"s"</code>). Returned in the format
+<code class="literal">"MCCMNC"</code>, where <code class="literal">MCC</code> is the
+three-digit ITU E.212 Mobile Country Code and <code class="literal">MNC</code>
+is the two- or three-digit GSM Mobile Network Code. e.g.
+<code class="literal">"31026"</code> or <code class="literal">"310260"</code>.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"access-technology"</code></span></p></td>
 <td>
-              A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemAccessTechnology" title="enum MMModemAccessTechnology">MMModemAccessTechnology</a> value
-              representing the generic access technology used by this mobile network,
-              given as an unsigned integer (signature <code class="literal">"u"</code>).
-            </td>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemAccessTechnology" title="enum MMModemAccessTechnology">MMModemAccessTechnology</a> value
+representing the generic access technology used by this mobile network,
+given as an unsigned integer (signature <code class="literal">"u"</code>).
+</td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -165,7 +174,9 @@ Scan (OUT aa{sv} results);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">OUT aa{sv} <em class="parameter"><code>results</code></em></code>:</span></p></td>
-<td><p>Array of dictionaries with the found networks.</p></td>
+<td><p>
+Array of dictionaries with the found networks.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -175,9 +186,11 @@ Scan (OUT aa{sv} results);
 <pre class="programlisting">
 SetEpsUeModeOperation (IN  u mode);
 </pre>
-<p>        Sets the UE mode of operation for EPS.
+<p>
+Sets the UE mode of operation for EPS.
 </p>
-<p>        Since: 1.10
+<p>
+Since: 1.10
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -186,7 +199,9 @@ SetEpsUeModeOperation (IN  u mode);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN u <em class="parameter"><code>mode</code></em></code>:</span></p></td>
-<td><p>a <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppEpsUeModeOperation" title="enum MMModem3gppEpsUeModeOperation">MMModem3gppEpsUeModeOperation</a>.</p></td>
+<td><p>
+a <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppEpsUeModeOperation" title="enum MMModem3gppEpsUeModeOperation">MMModem3gppEpsUeModeOperation</a>.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -196,15 +211,18 @@ SetEpsUeModeOperation (IN  u mode);
 <pre class="programlisting">
 SetInitialEpsBearerSettings (IN  a{sv} settings);
 </pre>
-<p>        Updates the default settings to be used in the initial default EPS bearer when registering to the LTE network.
+<p>
+Updates the default settings to be used in the initial default EPS bearer when registering to the LTE network.
 </p>
-<p>        The allowed properties in this method are all the 3GPP-specific ones specified
-        in the <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties" title='The "Properties" property'>bearer properties</a>;
-        i.e.: <code class="literal">"apn"</code>, <code class="literal">"ip-type"</code>,
-        <code class="literal">"allowed-auth"</code>, <code class="literal">"user"</code>, and
-        <code class="literal">"password"</code>.
+<p>
+The allowed properties in this method are all the 3GPP-specific ones specified
+in the <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Properties" title='The "Properties" property'>bearer properties</a>;
+i.e.: <code class="literal">"apn"</code>, <code class="literal">"ip-type"</code>,
+<code class="literal">"allowed-auth"</code>, <code class="literal">"user"</code>, and
+<code class="literal">"password"</code>.
 </p>
-<p>        Since: 1.10
+<p>
+Since: 1.10
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -213,7 +231,9 @@ SetInitialEpsBearerSettings (IN  a{sv} settings);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN a{sv} <em class="parameter"><code>settings</code></em></code>:</span></p></td>
-<td><p>List of properties to use when requesting the LTE attach procedure.</p></td>
+<td><p>
+List of properties to use when requesting the LTE attach procedure.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -223,9 +243,11 @@ SetInitialEpsBearerSettings (IN  a{sv} settings);
 <pre class="programlisting">
 DisableFacilityLock (IN  (us) properties);
 </pre>
-<p>        Sends control key to modem to disable selected facility lock
+<p>
+Sends control key to modem to disable selected facility lock
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -235,15 +257,15 @@ DisableFacilityLock (IN  (us) properties);
 <tr>
 <td><p><span class="term">"facility"</span></p></td>
 <td><p>
-              A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppFacility" title="enum MMModem3gppFacility">MMModem3gppFacility</a> value
-              representing the type of the facility lock to disable.
-            </p></td>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppFacility" title="enum MMModem3gppFacility">MMModem3gppFacility</a> value
+representing the type of the facility lock to disable.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term">"control key"</span></p></td>
 <td><p>
-              Alphanumeric key required to unlock facility.
-            </p></td>
+Alphanumeric key required to unlock facility.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -256,7 +278,9 @@ DisableFacilityLock (IN  (us) properties);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN (us) <em class="parameter"><code>properties</code></em></code>:</span></p></td>
-<td><p>A tuple of facility type and control key.</p></td>
+<td><p>
+A tuple of facility type and control key.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -268,9 +292,11 @@ DisableFacilityLock (IN  (us) properties);
 <pre class="programlisting">
 Imei  readable   s
 </pre>
-<p>        The <a class="ulink" href="http://en.wikipedia.org/wiki/Imei" target="_top">IMEI</a> of the device.
+<p>
+The <a class="ulink" href="http://en.wikipedia.org/wiki/Imei" target="_top">IMEI</a> of the device.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -279,11 +305,13 @@ Imei  readable   s
 <pre class="programlisting">
 RegistrationState  readable   u
 </pre>
-<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppRegistrationState" title="enum MMModem3gppRegistrationState">MMModem3gppRegistrationState</a>
-        value specifying the mobile registration status as defined in 3GPP TS 27.007
-        section 10.1.19.
+<p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppRegistrationState" title="enum MMModem3gppRegistrationState">MMModem3gppRegistrationState</a>
+value specifying the mobile registration status as defined in 3GPP TS 27.007
+section 10.1.19.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -292,18 +320,22 @@ RegistrationState  readable   u
 <pre class="programlisting">
 OperatorCode  readable   s
 </pre>
-<p>        Code of the operator to which the mobile is currently registered.
+<p>
+Code of the operator to which the mobile is currently registered.
 </p>
-<p>        Returned in the format <code class="literal">"MCCMNC"</code>, where
-        <code class="literal">MCC</code> is the three-digit ITU E.212 Mobile Country Code
-        and <code class="literal">MNC</code> is the two- or three-digit GSM Mobile Network
-        Code. e.g. e<code class="literal">"31026"</code> or <code class="literal">"310260"</code>.
+<p>
+Returned in the format <code class="literal">"MCCMNC"</code>, where
+<code class="literal">MCC</code> is the three-digit ITU E.212 Mobile Country Code
+and <code class="literal">MNC</code> is the two- or three-digit GSM Mobile Network
+Code. e.g. e<code class="literal">"31026"</code> or <code class="literal">"310260"</code>.
 </p>
-<p>        If the <code class="literal">MCC</code> and <code class="literal">MNC</code> are not known
-        or the mobile is not registered to a mobile network, this property will
-        be a zero-length (blank) string.
+<p>
+If the <code class="literal">MCC</code> and <code class="literal">MNC</code> are not known
+or the mobile is not registered to a mobile network, this property will
+be a zero-length (blank) string.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -312,13 +344,16 @@ OperatorCode  readable   s
 <pre class="programlisting">
 OperatorName  readable   s
 </pre>
-<p>        Name of the operator to which the mobile is currently registered.
+<p>
+Name of the operator to which the mobile is currently registered.
 </p>
-<p>        If the operator name is not known or the mobile is not
-        registered to a mobile network, this property will be a zero-length
-        (blank) string.
+<p>
+If the operator name is not known or the mobile is not
+registered to a mobile network, this property will be a zero-length
+(blank) string.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -327,10 +362,12 @@ OperatorName  readable   s
 <pre class="programlisting">
 EnabledFacilityLocks  readable   u
 </pre>
-<p>        Bitmask of <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppFacility" title="enum MMModem3gppFacility">MMModem3gppFacility</a> values
-        for which PIN locking is enabled.
+<p>
+Bitmask of <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppFacility" title="enum MMModem3gppFacility">MMModem3gppFacility</a> values
+for which PIN locking is enabled.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -339,15 +376,18 @@ EnabledFacilityLocks  readable   u
 <pre class="programlisting">
 SubscriptionState  readable   u
 </pre>
-<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppSubscriptionState" title="enum MMModem3gppSubscriptionState">MMModem3gppSubscriptionState</a>
-        value representing the subscription status of the account and whether there
-        is any data remaining, given as an unsigned integer (signature <code class="literal">"u"</code>).
+<p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppSubscriptionState" title="enum MMModem3gppSubscriptionState">MMModem3gppSubscriptionState</a>
+value representing the subscription status of the account and whether there
+is any data remaining, given as an unsigned integer (signature <code class="literal">"u"</code>).
 </p>
-<p>        Since: 1.2
+<p>
+Since: 1.2
 </p>
-<p>        Deprecated: 1.10.0. The value of this property can only be obtained with operator
-        specific logic (e.g. processing specific PCO info), and therefore it doesn't make sense
-        to expose it in the ModemManager interface.
+<p>
+Deprecated: 1.10.0. The value of this property can only be obtained with operator
+specific logic (e.g. processing specific PCO info), and therefore it doesn't make sense
+to expose it in the ModemManager interface.
 </p>
 </div>
 <hr>
@@ -356,11 +396,13 @@ SubscriptionState  readable   u
 <pre class="programlisting">
 EpsUeModeOperation  readable   u
 </pre>
-<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppEpsUeModeOperation" title="enum MMModem3gppEpsUeModeOperation">MMModem3gppEpsUeModeOperation</a>
-        value representing the UE mode of operation for EPS, given as an unsigned integer
-        (signature <code class="literal">"u"</code>).
+<p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppEpsUeModeOperation" title="enum MMModem3gppEpsUeModeOperation">MMModem3gppEpsUeModeOperation</a>
+value representing the UE mode of operation for EPS, given as an unsigned integer
+(signature <code class="literal">"u"</code>).
 </p>
-<p>        Since: 1.10
+<p>
+Since: 1.10
 </p>
 </div>
 <hr>
@@ -369,29 +411,32 @@ EpsUeModeOperation  readable   u
 <pre class="programlisting">
 Pco  readable   a(ubay)
 </pre>
-<p>        The raw PCOs received from the network, given as array of PCO
-        elements (signature <code class="literal">"a(ubay)"</code>).
+<p>
+The raw PCOs received from the network, given as array of PCO
+elements (signature <code class="literal">"a(ubay)"</code>).
 </p>
-<p>        Each PCO is defined as a sequence of 3 fields:
-        </p>
+<p>
+Each PCO is defined as a sequence of 3 fields:
+</p>
 <div class="orderedlist"><ol class="orderedlist" type="1">
 <li class="listitem">
-            The session ID associated with the PCO, given as an
-            unsigned integer value (signature <code class="literal">"u"</code>).
-          </li>
+The session ID associated with the PCO, given as an
+unsigned integer value (signature <code class="literal">"u"</code>).
+</li>
 <li class="listitem">
-            The flag that indicates whether the PCO data contains the
-            complete PCO structure received from the network, given as
-            a boolean value (signature <code class="literal">"b"</code>).
-          </li>
+The flag that indicates whether the PCO data contains the
+complete PCO structure received from the network, given as
+a boolean value (signature <code class="literal">"b"</code>).
+</li>
 <li class="listitem">
-            The raw  PCO data, given as an array of bytes (signature
-            <code class="literal">"ay"</code>).
-          </li>
+The raw  PCO data, given as an array of bytes (signature
+<code class="literal">"ay"</code>).
+</li>
 </ol></div>
 <p>
 </p>
-<p>        Since: 1.10
+<p>
+Since: 1.10
 </p>
 </div>
 <hr>
@@ -400,9 +445,11 @@ Pco  readable   a(ubay)
 <pre class="programlisting">
 InitialEpsBearer  readable   o
 </pre>
-<p>        The object path for the initial default EPS bearer.
+<p>
+The object path for the initial default EPS bearer.
 </p>
-<p>        Since: 1.10
+<p>
+Since: 1.10
 </p>
 </div>
 <hr>
@@ -411,20 +458,24 @@ InitialEpsBearer  readable   o
 <pre class="programlisting">
 InitialEpsBearerSettings  readable   a{sv}
 </pre>
-<p>        List of properties requested by the device for the initial EPS bearer during
-        LTE network attach procedure.
+<p>
+List of properties requested by the device for the initial EPS bearer during
+LTE network attach procedure.
 </p>
-<p>        The network may decide to use different settings during the actual device attach
-        procedure, e.g. if the device is roaming or no explicit settings were requested,
-        so the values shown in the
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer" title='The "InitialEpsBearer" property'>"InitialEpsBearer"</a>
-        bearer object may be totally different.
+<p>
+The network may decide to use different settings during the actual device attach
+procedure, e.g. if the device is roaming or no explicit settings were requested,
+so the values shown in the
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.InitialEpsBearer" title='The "InitialEpsBearer" property'>"InitialEpsBearer"</a>
+bearer object may be totally different.
 </p>
-<p>        This is a read-only property, updating these settings should be done using the
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings" title="The SetInitialEpsBearerSettings() method">SetInitialEpsBearerSettings()</a>
-        method.
+<p>
+This is a read-only property, updating these settings should be done using the
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetInitialEpsBearerSettings" title="The SetInitialEpsBearerSettings() method">SetInitialEpsBearerSettings()</a>
+method.
 </p>
-<p>        Since: 1.10
+<p>
+Since: 1.10
 </p>
 </div>
 </div>
