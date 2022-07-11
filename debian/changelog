@@ -1,3 +1,19 @@
+modemmanager (1.18.10-1) unstable; urgency=medium
+
+  * New upstream version 1.18.10
+  * d/control: update my email address and bump libqmi dependency.
+    Upstream bumped the required version of `libqmi`, so let's ensure this
+    is reflected in this package.
+    This commit also bumps the Standards-Version, as no additional change is
+    required.
+  * debian: update linitian-overrides.
+    Due to recent changes in `lintian`, our overrides for the -doc packages
+    are no longer needed. However, a new `source-is-missing` lintian error
+    message must be overridden as it relates to HTML files, which are source
+    files themselves.
+
+ -- Arnaud Ferraris <aferraris@debian.org>  Mon, 11 Jul 2022 17:30:09 +0200
+
 modemmanager (1.18.8-1) unstable; urgency=medium
 
   * debian: lintian-driven fixes and small improvements.
