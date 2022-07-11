@@ -1,3 +1,261 @@
+commit 1338749739e0c01bdbc6ddf92388a781806ec3ac
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Jun 24 13:07:48 2022 +0200
+
+    release: bump version to 1.18.10
+
+ configure.ac | 2 +-
+ meson.build  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit 671c5d6aa149922eaed2ef2698fceecbbf059184
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri Jun 24 13:07:09 2022 +0200
+
+    MEWS: update for 1.18.10
+
+ NEWS | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+commit a4418a2c31ccabfbb99359314be5314efd50025d
+Author: Freedom Liu <tianyu28658@gmail.com>
+Date:   Tue Oct 26 11:40:30 2021 +0800
+
+    foxconn: delete the carrier mapping table of T99W175
+
+    For T99W175, Qualcomm realized mcfg switching mechanism
+    in FW side. It can work indepently without MM's help.
+    Therefore, delete mcfg switching mechanism in MM.
+
+    (cherry picked from commit 039ac40aab030ea9bfcc1821e42f3f81f290e458)
+
+ plugins/Makefile.am                                |   2 -
+ plugins/foxconn/mm-broadband-modem-mbim-foxconn.c  |   5 +-
+ .../mm-foxconn-t99w175-carrier-mapping.conf        | 344
+ ---------------------
+ plugins/meson.build                                |   2 -
+ plugins/tests/test-keyfiles.c                      |   7 -
+ 5 files changed, 1 insertion(+), 359 deletions(-)
+
+commit 5d35c2b3fdce2e67e0d810b66f4b3d897dc85be8
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri May 20 15:13:25 2022 +0200
+
+    cli: don't print signal quality unless modem is enabled
+
+    We don't have a clear way to report "unknown" signal quality, so for
+    now just skip printing it altogether in the mmcli human output if the
+    modem is not yet enabled.
+
+    (cherry picked from commit 9fa1b32e34e24a710b1badece7becaa44e83fb94)
+
+ cli/mmcli-modem.c  |  2 +-
+ cli/mmcli-output.c | 12 ++++++++----
+ cli/mmcli-output.h |  3 ++-
+ 3 files changed, 11 insertions(+), 6 deletions(-)
+
+commit 42d0ffa90ea89f35badcbb7379128bdaa38ec0ac
+Author: Thilo-Alexander Ginkel <thilo@ginkel.com>
+Date:   Sun May 29 20:40:51 2022 +0200
+
+    fcc-unlock: add support for new Lenovo T99W175 SDX55 FCC unlock method
+
+    Tested w/ Lenovo firmware T99W175.F0.1.0.0.9.DT.003.055 (old unlock
+    method) and
+    T99W175.F0.1.0.0.9.DT.003.079 (new unlock method)
+
+    (cherry picked from commit ac06052b97cc02e60ae1ed7a551727b3c14d6a22)
+
+ configure.ac                    |  2 +-
+ data/dispatcher-fcc-unlock/105b | 73
+ ++++++++++++++++++++++++++++++++++++++---
+ meson.build                     |  2 +-
+ 3 files changed, 71 insertions(+), 6 deletions(-)
+
+commit 5da00613b3fac15bedbd827195080b9a1f87a4d8
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri May 13 11:54:06 2022 +0200
+
+    broadband-modem-mbim: fix additional double GError free
+
+    We're returning the GError as GTask result, we should not explicitly
+    free it ourselves.
+
+    Same as the previous fix, should solve the crash sometimes seen in
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/550
+
+    (cherry picked from commit 5fbe7c0c82fb225d001c4aa0ceaacbc3fd30c986)
+
+ src/mm-broadband-modem-mbim.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 25521d3794995fd3223ff0ab4ab90c51c45ca02d
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri May 13 10:50:04 2022 +0200
+
+    broadband-modem-mbim: fix double GError free
+
+    We're returning the GError as GTask result, we should not explicitly
+    free it ourselves.
+
+    Fixes the crash sometimes seen in
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/550
+
+      ==15994== Invalid free() / delete / delete[] / realloc()
+      ==15994==    at 0x484B27F: free (in
+      /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+      ==15994==    by 0x4F9A8A0: g_error_free (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x2251CC: ??? (in /usr/sbin/ModemManager)
+      ==15994==    by 0x4DD2B48: ??? (in
+      /usr/lib/x86_64-linux-gnu/libgio-2.0.so.0.7102.0)
+      ==15994==    by 0x4DD2D4A: ??? (in
+      /usr/lib/x86_64-linux-gnu/libgio-2.0.so.0.7102.0)
+      ==15994==    by 0x4CA9049: ??? (in
+      /usr/lib/x86_64-linux-gnu/libmbim-glib.so.4.6.0)
+      ==15994==    by 0x4CB0367: ??? (in
+      /usr/lib/x86_64-linux-gnu/libmbim-glib.so.4.6.0)
+      ==15994==    by 0x4FAF287: ??? (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x4FAEC03: g_main_context_dispatch (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x5003497: ??? (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x4FAE282: g_main_loop_run (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x16916F: main (in /usr/sbin/ModemManager)
+      ==15994==  Address 0x80db490 is 0 bytes inside a block of size
+      16 free'd
+      ==15994==    at 0x484B27F: free (in
+      /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+      ==15994==    by 0x4F9A8A0: g_error_free (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x1984FA: ??? (in /usr/sbin/ModemManager)
+      ==15994==    by 0x4DD2B48: ??? (in
+      /usr/lib/x86_64-linux-gnu/libgio-2.0.so.0.7102.0)
+      ==15994==    by 0x4DD2D4A: ??? (in
+      /usr/lib/x86_64-linux-gnu/libgio-2.0.so.0.7102.0)
+      ==15994==    by 0x2251A6: ??? (in /usr/sbin/ModemManager)
+      ==15994==    by 0x4DD2B48: ??? (in
+      /usr/lib/x86_64-linux-gnu/libgio-2.0.so.0.7102.0)
+      ==15994==    by 0x4DD2D4A: ??? (in
+      /usr/lib/x86_64-linux-gnu/libgio-2.0.so.0.7102.0)
+      ==15994==    by 0x4CA9049: ??? (in
+      /usr/lib/x86_64-linux-gnu/libmbim-glib.so.4.6.0)
+      ==15994==    by 0x4CB0367: ??? (in
+      /usr/lib/x86_64-linux-gnu/libmbim-glib.so.4.6.0)
+      ==15994==    by 0x4FAF287: ??? (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x4FAEC03: g_main_context_dispatch (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==  Block was alloc'd at
+      ==15994==    at 0x4848899: malloc (in
+      /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+      ==15994==    by 0x4FB76F8: g_malloc (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x4FCF1A4: g_slice_alloc (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x4FCF80D: g_slice_alloc0 (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x4F9A3A6: ??? (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x4F9A5A3: g_error_copy (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x4CA903E: ??? (in
+      /usr/lib/x86_64-linux-gnu/libmbim-glib.so.4.6.0)
+      ==15994==    by 0x4CB0367: ??? (in
+      /usr/lib/x86_64-linux-gnu/libmbim-glib.so.4.6.0)
+      ==15994==    by 0x4FAF287: ??? (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x4FAEC03: g_main_context_dispatch (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x5003497: ??? (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+      ==15994==    by 0x4FAE282: g_main_loop_run (in
+      /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.7102.0)
+
+    (cherry picked from commit b4d0fc4adf52e408b364cb61a2984c07c3dc830d)
+
+ src/mm-broadband-modem-mbim.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit ba082342eb4281f4fda27340d25cb858fd6365aa
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon May 9 22:44:56 2022 +0200
+
+    broadband-modem-mbim: fix task completion when peeking device fails
+
+    We cannot call peek_device() when we have already created a GTask for
+    the async operation, because if the operation failed we would be
+    completing the async operation with a totally different GTask than the
+    one we had created ourselves, triggering memory leaks and leaving
+    modem references around that should not exist (as the GTask we create
+    holds a modem reference).
+
+    Issue found in the context of debugging this, may actually be fully
+    related:
+
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/550
+    (cherry picked from commit e163ab504a32fc68ed95b9b818ce648e1b3b50ab)
+
+ src/mm-broadband-modem-mbim.c | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
+
+commit e3883d252b43d132a3a65564e2fdd2640c8fa925
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon May 9 22:42:47 2022 +0200
+
+    broadband-modem-mbim: minor coding style changes
+
+    (cherry picked from commit acd5f466d7f3a8749405cd767ed16fae3e7a1638)
+
+ src/mm-broadband-modem-mbim.c | 32 ++++++++++++--------------------
+ 1 file changed, 12 insertions(+), 20 deletions(-)
+
+commit a5e7acccfc869558f70cad9322ca332cb1da4c5b
+Author: Dylan Van Assche <me@dylanvanassche.be>
+Date:   Tue May 3 13:47:57 2022 +0200
+
+    mm-iface-modem: mark signal strength as recent on init
+
+    When initializing the Modem interface, we set the signal strength
+    to the default value (0%) and we are certain this is the recent value
+    until the modem reports the actual signal strength if available.
+    Therefore, mark the signal strength as recent instead of cached.
+
+    (cherry picked from commit 3239fc22ff66819540830191f7b5462b0241713c)
+
+ src/mm-iface-modem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit fcc0e4d4f679caab1825737c0234fdb885d2abbc
+Author: Dylan Van Assche <me@dylanvanassche.be>
+Date:   Fri Apr 29 11:56:26 2022 +0200
+
+    mm-iface-modem: set signal quality to 0% on shutdown
+
+    If a modem is disabled, the signal quality is still set to the cached
+    value, even though the modem is not connected to any network anymore.
+    Set the signal quality to 0% when the interface is removed from DBus.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/558
+
+    (cherry picked from commit a1b52c14bf9e82f0c680c3476ae52dac105c304e)
+
+ src/mm-iface-modem.c | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+
+commit 5b86011d58aa7980f7503951789a9bc0420edc9d
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Apr 28 13:13:28 2022 +0200
+
+    build: post-release version to 1.18.9
+
+ configure.ac | 2 +-
+ meson.build  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
 commit 0d8b5e93fc62eb0f41e18a2d9d845331d7af36ec
 Author: Aleksander Morgado <aleksander@aleksander.es>
 Date:   Thu Apr 28 10:55:41 2022 +0200

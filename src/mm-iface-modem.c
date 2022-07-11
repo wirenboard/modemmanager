@@ -4118,7 +4118,23 @@ mm_iface_modem_disable (MMIfaceModem *self,
                         GAsyncReadyCallback callback,
                         gpointer user_data)
 {
-    GTask *task;
+    MmGdbusModem *skeleton = NULL;
+    GTask        *task;
+
+    g_object_get (self,
+                  MM_IFACE_MODEM_DBUS_SKELETON, &skeleton,
+                  NULL);
+
+    /*
+     * Set signal quality to 0% and access technologies to unknown since modem is disabled
+     */
+    if (skeleton) {
+        mm_gdbus_modem_set_signal_quality (MM_GDBUS_MODEM (skeleton),
+                                           g_variant_new ("(ub)", 0, TRUE));
+        mm_gdbus_modem_set_access_technologies (MM_GDBUS_MODEM (skeleton),
+                                                MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN);
+        g_object_unref (skeleton);
+    }
 
     /* Just complete, nothing to do */
     task = g_task_new (self, NULL, callback, user_data);
@@ -5957,7 +5973,7 @@ mm_iface_modem_initialize (MMIfaceModem *self,
         mm_gdbus_modem_set_unlock_required (skeleton, MM_MODEM_LOCK_UNKNOWN);
         mm_gdbus_modem_set_unlock_retries (skeleton, 0);
         mm_gdbus_modem_set_access_technologies (skeleton, MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN);
-        mm_gdbus_modem_set_signal_quality (skeleton, g_variant_new ("(ub)", 0, FALSE));
+        mm_gdbus_modem_set_signal_quality (skeleton, g_variant_new ("(ub)", 0, TRUE));
         mm_gdbus_modem_set_supported_modes (skeleton, mm_common_build_mode_combinations_default ());
         mm_gdbus_modem_set_current_modes (skeleton, g_variant_new ("(uu)", MM_MODEM_MODE_ANY, MM_MODEM_MODE_NONE));
         mm_gdbus_modem_set_supported_bands (skeleton, mm_common_build_bands_unknown ());
