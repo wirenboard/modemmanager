@@ -233,13 +233,11 @@ noinst_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3) \
 @ENABLE_PLUGIN_FOXCONN_TRUE@am__append_50 = foxconn/77-mm-foxconn-port-types.rules
 @ENABLE_PLUGIN_FOXCONN_TRUE@am__append_51 = \
 @ENABLE_PLUGIN_FOXCONN_TRUE@	foxconn/mm-foxconn-t77w968-carrier-mapping.conf \
-@ENABLE_PLUGIN_FOXCONN_TRUE@	foxconn/mm-foxconn-t99w175-carrier-mapping.conf \
 @ENABLE_PLUGIN_FOXCONN_TRUE@	$(NULL)
 
 @ENABLE_PLUGIN_FOXCONN_TRUE@am__append_52 = \
 @ENABLE_PLUGIN_FOXCONN_TRUE@	-DTESTUDEVRULESDIR_FOXCONN=\"${srcdir}/foxconn\" \
 @ENABLE_PLUGIN_FOXCONN_TRUE@	-DTESTKEYFILE_FOXCONN_T77W968=\"${srcdir}/foxconn/mm-foxconn-t77w968-carrier-mapping.conf\" \
-@ENABLE_PLUGIN_FOXCONN_TRUE@	-DTESTKEYFILE_FOXCONN_T99W175=\"${srcdir}/foxconn/mm-foxconn-t99w175-carrier-mapping.conf\" \
 @ENABLE_PLUGIN_FOXCONN_TRUE@	$(NULL)
 
 
@@ -1845,8 +1843,7 @@ am__can_run_installinfo = \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
 am__dist_pkgdata_DATA_DIST =  \
-	foxconn/mm-foxconn-t77w968-carrier-mapping.conf \
-	foxconn/mm-foxconn-t99w175-carrier-mapping.conf
+	foxconn/mm-foxconn-t77w968-carrier-mapping.conf
 am__dist_udevrules_DATA_DIST =  \
 	broadmobi/77-mm-broadmobi-port-types.rules \
 	cinterion/77-mm-cinterion-port-types.rules \
