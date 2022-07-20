@@ -1,1 +1,1 @@
-buildDebSbuild defaultTargets: 'wb7'
+buildDebSbuild defaultTargets: 'bullseye-armhf', defaultWbdevImage: 'contactless/devenv_test:bullseye'
