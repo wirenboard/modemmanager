@@ -22,6 +22,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <fcntl.h>
+#include <gpiod.h>
 
 #define _LIBMM_INSIDE_MM
 #include <libmm-glib.h>
@@ -66,7 +68,62 @@ struct _MMBroadbandModemSimtechPrivate {
     FeatureSupport  autocsq_support;
     GRegex         *cnsmod_regex;
     GRegex         *csq_regex;
+    GRegex         *ri_done_regex;
+    GRegex         *nitz_regex;
+    GRegex         *cpin_regex;
+    GRegex         *no_carrier_regex;
+    MMModemLock     sim_lock;
 };
+
+typedef struct {
+    const gchar *result;
+    MMModemLock code;
+} CPinResult;
+
+static CPinResult unlock_results[] = {
+    { "READY",         MM_MODEM_LOCK_NONE           },
+    { "SIM PIN2",      MM_MODEM_LOCK_SIM_PIN2       },
+    { "SIM PUK2",      MM_MODEM_LOCK_SIM_PUK2       },
+    { "SIM PIN",       MM_MODEM_LOCK_SIM_PIN        },
+    { "SIM PUK",       MM_MODEM_LOCK_SIM_PUK        },
+    { "PH-NETSUB PIN", MM_MODEM_LOCK_PH_NETSUB_PIN  },
+    { "PH-NETSUB PUK", MM_MODEM_LOCK_PH_NETSUB_PUK  },
+    { "PH-FSIM PIN",   MM_MODEM_LOCK_PH_FSIM_PIN    },
+    { "PH-FSIM PUK",   MM_MODEM_LOCK_PH_FSIM_PUK    },
+    { "PH-CORP PIN",   MM_MODEM_LOCK_PH_CORP_PIN    },
+    { "PH-CORP PUK",   MM_MODEM_LOCK_PH_CORP_PUK    },
+    { "PH-SIM PIN",    MM_MODEM_LOCK_PH_SIM_PIN     },
+    { "PH-NET PIN",    MM_MODEM_LOCK_PH_NET_PIN     },
+    { "PH-NET PUK",    MM_MODEM_LOCK_PH_NET_PUK     },
+    { "PH-SP PIN",     MM_MODEM_LOCK_PH_SP_PIN      },
+    { "PH-SP PUK",     MM_MODEM_LOCK_PH_SP_PUK      },
+    { NULL }
+};
+
+static void 
+simtech_ignore_no_carrier(MMIfaceModem *self,
+                          gboolean enable)
+{
+    MMPortSerialAt *ports[2];
+    guint i;
+    MMBroadbandModemSimtech *modem;
+    modem = MM_BROADBAND_MODEM_SIMTECH(self);
+
+    ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+
+    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
+        if (!ports[i])
+            continue;
+        ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+        ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+        /* Ignore NO CARRIER */
+        mm_port_serial_at_enable_unsolicited_msg_handler (
+            ports[i],
+            modem->priv->no_carrier_regex,
+            enable);
+    }
+}
 
 /*****************************************************************************/
 /* Setup/Cleanup unsolicited events (3GPP interface) */
@@ -121,6 +178,27 @@ simtech_signal_changed (MMPortSerialAt *port,
         quality = 0;
 
     mm_iface_modem_update_signal_quality (MM_IFACE_MODEM (self), quality);
+}
+
+static void
+simtech_cpin_changed (MMPortSerialAt *port,
+                      GMatchInfo *match_info,
+                      MMBroadbandModemSimtech *self)
+{
+    gchar* str;
+    CPinResult *iter;
+    str = mm_get_string_unquoted_from_match_info (match_info, 1);
+    if (str) {
+        iter = &unlock_results[0];
+        /* Translate the reply */
+        while (iter->result) {
+            if (g_str_has_prefix (str, iter->result)) {
+                self->priv->sim_lock = iter->code;
+                break;
+            }
+            iter++;
+        }
+    }
 }
 
 static void
@@ -1061,6 +1139,468 @@ load_current_modes (MMIfaceModem        *self,
 }
 
 /*****************************************************************************/
+/* Load supported IP families (Modem interface) */
+
+static void
+load_supported_ip_families (MMIfaceModem *self,
+                            GAsyncReadyCallback callback,
+                            gpointer user_data)
+{
+    GTask *task;
+    /* For SIM A7600E-H return all possible IP families without testing.
+       load_supported_ip_families is called once and SIM A7600E-H can return ERROR if internal logic is not ready
+       It will lead to errors during connection up in NetworkManager
+       So call callback without actual querying a modem
+     */
+    if (g_str_has_prefix (mm_iface_modem_get_model (self), "A7600E-H")) {
+        mm_obj_dbg (self, "loading supported IP families...");
+
+        task = g_task_new (self, NULL, callback, user_data);
+        /* Assume IPv4 + IPv6 + IPv4v6 supported */
+        g_task_return_int (task,
+                        MM_BEARER_IP_FAMILY_IPV4 |
+                        MM_BEARER_IP_FAMILY_IPV6 |
+                        MM_BEARER_IP_FAMILY_IPV4V6);
+        g_object_unref (task);
+        return;
+    }
+    /* fallback to default implementation */
+    iface_modem_parent->load_supported_ip_families(self, callback, user_data);
+}
+
+static MMBearerIpFamily
+load_supported_ip_families_finish (MMIfaceModem *self,
+                                   GAsyncResult *res,
+                                   GError **error)
+{
+    GError *inner_error = NULL;
+    gssize value;
+
+    value = g_task_propagate_int (G_TASK (res), &inner_error);
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return MM_BEARER_IP_FAMILY_NONE;
+    }
+    return (MMBearerIpFamily)value;
+}
+
+/*****************************************************************************/
+/* Check unlock required (Modem interface) */
+
+static void
+mm_broadband_modem_simtech_cpin_query_ready (MMIfaceModem *_self,
+                                             GAsyncResult *res,
+                                             GTask *task)
+{
+    GError *error = NULL;
+    MMBroadbandModemSimtech *self;
+
+    mm_base_modem_at_command_finish (MM_BASE_MODEM (_self), res, &error);
+    if (error) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    self = MM_BROADBAND_MODEM_SIMTECH (_self);
+    g_task_return_int (task, self->priv->sim_lock );
+    g_object_unref (task);
+}
+
+static void
+mm_broadband_modem_simtech_load_unlock_required (MMIfaceModem *self,
+                                                 gboolean last_attempt,
+                                                 GAsyncReadyCallback callback,
+                                                 gpointer user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    mm_obj_dbg (self, "checking if unlock required...");
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "+CPIN?",
+                              10,
+                              FALSE,
+                              (GAsyncReadyCallback)mm_broadband_modem_simtech_cpin_query_ready,
+                              task);
+}
+
+static MMModemLock
+mm_broadband_modem_simtech_load_unlock_required_finish (MMIfaceModem *self,
+                                                        GAsyncResult *res,
+                                                        GError **error)
+{
+    GError *inner_error = NULL;
+    gssize value;
+
+    value = g_task_propagate_int (G_TASK (res), &inner_error);
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return MM_MODEM_LOCK_UNKNOWN;
+    }
+    return (MMModemLock)value;
+}
+
+/*****************************************************************************/
+/* Load sim slots (Modem interface) */
+
+static const gchar *
+get_sim_switch_gpio_label (MMIfaceModem *modem)
+{
+    MMPort *primary;
+
+    primary = MM_PORT (mm_base_modem_peek_port_primary (MM_BASE_MODEM (modem)));
+    return mm_kernel_device_get_global_property (mm_port_peek_kernel_device (primary),
+                                                 "ID_MM_SIM_SWITCH_GPIO_LABEL");
+}
+
+static void
+mm_broadband_modem_simtech_sim_new_ready (GAsyncInitable *initable,
+                                          GAsyncResult *res,
+                                          GTask *task)
+{
+    MMBaseSim *sim;
+    GError *error = NULL;
+
+    sim = mm_base_sim_new_finish (res, &error);
+    if (error) {
+        g_task_return_error (task, error);
+    } else {
+        g_task_return_pointer (task, sim, g_object_unref);
+    }
+    g_object_unref (task);
+}
+
+static void
+mm_broadband_modem_simtech_cpin_ready (MMIfaceModem *self,
+                                       GAsyncResult *res,
+                                       GTask *task)
+{
+    GError *error = NULL;
+
+    if (!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    /* New generic SIM */
+    mm_base_sim_new (MM_BASE_MODEM (self),
+                     NULL, /* cancellable */
+                     (GAsyncReadyCallback)mm_broadband_modem_simtech_sim_new_ready,
+                     task);
+}
+
+static void
+mm_broadband_modem_simtech_load_sim_slots (MMIfaceModem       *self,
+                                           GAsyncReadyCallback callback,
+                                           gpointer            user_data)
+{
+    GTask *task;
+
+    mm_obj_dbg (self, "loading SIM slots...");
+    task = g_task_new (self, NULL, callback, user_data);
+
+    if (get_sim_switch_gpio_label (self)) {
+        /* Test SIM presence */
+        mm_base_modem_at_command (
+            MM_BASE_MODEM (self),
+            "+CPIN?",
+            9,
+            FALSE,
+            (GAsyncReadyCallback)mm_broadband_modem_simtech_cpin_ready,
+            task);
+    } else {
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_NOT_FOUND,
+                                 "no SIM switch gpio");
+        g_object_unref (task);
+    }
+}
+
+static void
+unexport_gpio (struct gpiod_line *line)
+{
+    int base;
+    gchar *base_str;
+    gsize length;
+    gchar base_path[50];
+    gchar *end;
+    struct gpiod_chip *chip;
+    FILE *unexport_file = NULL;
+
+    chip = gpiod_line_get_chip (line);
+    g_snprintf (base_path, sizeof (base_path), "/sys/class/gpio/%s/base", gpiod_chip_name (chip));
+    if (g_file_get_contents (base_path, &base_str, &length, NULL)) {
+        base = strtol (base_str, &end, 10);
+        if (base_str != end) {
+            unexport_file = fopen ("/sys/class/gpio/unexport", "w");
+            if (unexport_file) {
+                fprintf (unexport_file, "%d", base + gpiod_line_offset (line));
+                fclose (unexport_file);
+            }
+        }
+    }
+}
+
+static struct gpiod_line *
+get_gpio_line (const gchar *gpio_label)
+{
+    struct gpiod_line *line = NULL;
+    const char *consumer;
+
+    line = gpiod_line_find (gpio_label);
+    if (!line) {
+        return NULL;
+    }
+    consumer = gpiod_line_consumer (line);
+    if (consumer && (g_strcmp0 (consumer, "sysfs") == 0)) {
+        unexport_gpio (line);
+    }
+
+    return line;
+}
+
+static int
+get_gpio_line_value (const gchar *gpio_label, MMIfaceModem *self)
+{
+    int value;
+    struct gpiod_line *line;
+    int direction;
+    struct gpiod_line_request_config config;
+
+    line = get_gpio_line (gpio_label);
+    if (!line) {
+        mm_obj_warn (self, "can't find gpio line '%s'", gpio_label);
+        return 0;
+    }
+
+    direction = gpiod_line_direction (line);
+    if (direction != GPIOD_LINE_DIRECTION_OUTPUT) {
+        gpiod_line_close_chip (line);
+        return 0;
+    }
+
+    config.consumer = "ModemManager";
+    config.request_type = GPIOD_LINE_REQUEST_DIRECTION_AS_IS;
+    config.flags = 0;
+    if (gpiod_line_request(line, &config, 0) == -1) {
+        mm_obj_warn (self,
+                     "can't request gpio line '%s': (%d) '%s'",
+                     gpio_label, errno, strerror (errno));
+        gpiod_line_close_chip (line);
+        return 0;
+    }
+
+    value = gpiod_line_get_value (line);
+    if (value == -1) {
+        mm_obj_warn (self,
+                    "can't get gpio line '%s' value: (%d) '%s'",
+                    gpio_label, errno, strerror (errno));
+        value = 0;
+    }
+    gpiod_line_close_chip (line);
+    return value;
+}
+
+static gboolean
+mm_broadband_modem_simtech_load_sim_slots_finish (MMIfaceModem *self,
+                                                  GAsyncResult *res,
+                                                  GPtrArray   **sim_slots,
+                                                  guint        *primary_sim_slot,
+                                                  GError      **error)
+{
+    MMBaseSim *sim;
+    const gchar *gpio_label = NULL;
+
+    gpio_label = get_sim_switch_gpio_label (self);
+    if (gpio_label) {
+        *primary_sim_slot = get_gpio_line_value (gpio_label, self) + 1;
+        *sim_slots = g_ptr_array_new_full (2, NULL);
+        sim = g_task_propagate_pointer (G_TASK (res), error);
+        g_ptr_array_add (*sim_slots, *primary_sim_slot == 1 ? sim : NULL);
+        g_ptr_array_add (*sim_slots, *primary_sim_slot == 2 ? sim : NULL);
+    }
+
+    return TRUE;
+}
+
+/*****************************************************************************/
+/* Switch sim slot (Modem interface) */
+
+static void
+mm_broadband_modem_simtech_enable_me_ready (MMIfaceModem *self,
+                                             GAsyncResult *res,
+                                             GTask *task)
+{
+    GError *error = NULL;
+
+    if (!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error)) {
+        g_task_return_error (task, error);
+    } else {
+        g_task_return_boolean (task, TRUE);
+    }
+    g_object_unref (task);
+}
+
+static gboolean
+mm_broadband_modem_simtech_after_sim_switch_cb (GTask *task)
+{
+    MMIfaceModem *self;
+
+    self = g_task_get_source_object (task);
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "+CFUN=1",
+                              9,
+                              FALSE,
+                              (GAsyncReadyCallback) mm_broadband_modem_simtech_enable_me_ready,
+                              task);
+    return G_SOURCE_REMOVE;
+}
+
+static gboolean
+mm_broadband_modem_simtech_switch_sim (const gchar *gpio_label, int gpio_state, GError **error)
+{
+    GError* inner_error;
+    struct gpiod_line *line;
+
+    line = get_gpio_line (gpio_label);
+    if (!line) {
+        inner_error = g_error_new (MM_CORE_ERROR,
+                                   MM_CORE_ERROR_FAILED,
+                                   "can't find gpio line '%s'", gpio_label);
+        g_propagate_error (error, inner_error);
+        return FALSE;
+    }
+
+    if (gpiod_line_request_output (line, "ModemManager", gpio_state) != 0) {
+        inner_error = g_error_new (MM_CORE_ERROR,
+                                   MM_CORE_ERROR_FAILED,
+                                   "can't request gpio line '%s' as output: (%d) '%s'",
+                                   gpio_label, errno, strerror (errno));
+        g_propagate_error (error, inner_error);
+        gpiod_line_close_chip (line);
+        return FALSE;
+    }
+    gpiod_line_close_chip (line);
+    return TRUE;
+}
+
+static gboolean
+mm_broadband_modem_simtech_after_disable_me_cb (GTask *task)
+{
+    GError *error = NULL;
+    int gpio_state;
+    const gchar *gpio_label = NULL;
+    MMIfaceModem *self;
+
+    self = g_task_get_source_object (task);
+    gpio_label = get_sim_switch_gpio_label (self);
+    gpio_state = (GPOINTER_TO_UINT(g_task_get_task_data (task)) == 1 ? 0 : 1);
+    mm_obj_dbg (self, "gpio '%s' = %d", gpio_label, gpio_state);
+    if (gpio_label && mm_broadband_modem_simtech_switch_sim (gpio_label, gpio_state, &error)) {
+        g_timeout_add_seconds (1, (GSourceFunc)mm_broadband_modem_simtech_after_sim_switch_cb, task);
+    } else {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+    }
+    return G_SOURCE_REMOVE;
+}
+
+static void
+mm_broadband_modem_simtech_disable_me_ready (MMIfaceModem *self,
+                                             GAsyncResult *res,
+                                             GTask *task)
+{
+    GError *error = NULL;
+
+    simtech_ignore_no_carrier(self, FALSE);
+
+    if (!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_timeout_add_seconds (1, (GSourceFunc)mm_broadband_modem_simtech_after_disable_me_cb, task);
+}
+
+static void
+mm_broadband_modem_simtech_set_primary_sim_slot (MMIfaceModem        *self,
+                                                 guint                sim_slot,
+                                                 GAsyncReadyCallback  callback,
+                                                 gpointer             user_data)
+{
+    GTask *task;
+    const gchar *gpio_label = NULL;
+    struct gpiod_line *line;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    gpio_label = get_sim_switch_gpio_label (self);
+    if (gpio_label) {
+        line = get_gpio_line (gpio_label);
+        if (!line) {
+            g_task_return_new_error (task,
+                                     MM_CORE_ERROR,
+                                     MM_CORE_ERROR_FAILED,
+                                     "can't find gpio line '%s'", gpio_label);
+            g_object_unref (task);
+        } else {
+            gpiod_line_close_chip (line);
+            simtech_ignore_no_carrier(self, TRUE);
+            g_task_set_task_data (task, GUINT_TO_POINTER (sim_slot), NULL);
+            mm_base_modem_at_command (MM_BASE_MODEM (self),
+                                    "+CFUN=0",
+                                    9,
+                                    FALSE,
+                                    (GAsyncReadyCallback) mm_broadband_modem_simtech_disable_me_ready,
+                                    task);
+        }
+    } else {
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_UNSUPPORTED,
+                                 "SIM slots switching is unsupported");
+        g_object_unref (task);
+    }
+}
+
+static gboolean
+mm_broadband_modem_simtech_set_primary_sim_slot_finish (MMIfaceModem  *self,
+                                                        GAsyncResult  *res,
+                                                        GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+/*****************************************************************************/
+/* Reset (Modem interface) */
+
+static gboolean
+mm_broadband_modem_simtech_reset_finish (MMIfaceModem *self,
+                                         GAsyncResult *res,
+                                         GError **error)
+{
+    return !!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, error);
+}
+
+static void
+mm_broadband_modem_simtech_reset (MMIfaceModem *self,
+                                  GAsyncReadyCallback callback,
+                                  gpointer user_data)
+{
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "+CRESET",
+                              9,
+                              FALSE,
+                              callback,
+                              user_data);
+}
+
+/*****************************************************************************/
 /* Set allowed modes (Modem interface) */
 
 typedef struct {
@@ -1193,11 +1733,60 @@ set_current_modes (MMIfaceModem        *self,
 static void
 setup_ports (MMBroadbandModem *self)
 {
+    MMBroadbandModemSimtech *modem = (MM_BROADBAND_MODEM_SIMTECH (self));
+    MMPortSerialAt          *ports[2];
+    guint                    i;
+
     /* Call parent's setup ports first always */
     MM_BROADBAND_MODEM_CLASS (mm_broadband_modem_simtech_parent_class)->setup_ports (self);
 
     /* Now reset the unsolicited messages we'll handle when enabled */
     set_unsolicited_events_handlers (MM_BROADBAND_MODEM_SIMTECH (self), FALSE);
+
+    ports[0] = mm_base_modem_peek_port_primary   (MM_BASE_MODEM (modem));
+    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (modem));
+
+    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
+        if (!ports[i])
+            continue;
+
+        /* URC +CPIN: */
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            modem->priv->cpin_regex,
+            (MMPortSerialAtUnsolicitedMsgFn)simtech_cpin_changed,
+            self,
+            NULL);
+
+        /* Ignore PB DONE and SMS DONE */
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            modem->priv->ri_done_regex,
+            NULL,
+            NULL,
+            NULL);
+
+        /* Ignore +NITZ: */
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            modem->priv->nitz_regex,
+            NULL,
+            NULL,
+            NULL);
+
+        /* Ignore NO CARRIER */
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            modem->priv->no_carrier_regex,
+            NULL,
+            NULL,
+            NULL);
+        /* Disable handler */
+        mm_port_serial_at_enable_unsolicited_msg_handler (
+            ports[i],
+            modem->priv->no_carrier_regex,
+            FALSE);
+    }
 }
 
 /*****************************************************************************/
@@ -1233,10 +1822,20 @@ mm_broadband_modem_simtech_init (MMBroadbandModemSimtech *self)
     self->priv->cnsmod_support = FEATURE_SUPPORT_UNKNOWN;
     self->priv->autocsq_support = FEATURE_SUPPORT_UNKNOWN;
 
-    self->priv->cnsmod_regex = g_regex_new ("\\r\\n\\+CNSMOD:\\s*(\\d+)\\r\\n",
-                                            G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
-    self->priv->csq_regex    = g_regex_new ("\\r\\n\\+CSQ:\\s*(\\d+),(\\d+)\\r\\n",
-                                            G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->cnsmod_regex     = g_regex_new ("\\r\\n\\+CNSMOD:\\s*(\\d+)\\r\\n",
+                                                G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->csq_regex        = g_regex_new ("\\r\\n\\+CSQ:\\s*(\\d+),(\\d+)\\r\\n",
+                                                G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->ri_done_regex    = g_regex_new ("\\r\\n(PB DONE)|(SMS DONE)\\r\\n",
+                                                G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->nitz_regex       = g_regex_new ("\\r\\n\\+NITZ:(.*)\\r\\n",
+                                                G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->cpin_regex       = g_regex_new ("\\r\\n\\+CPIN: (.*)\\r\\n",
+                                                G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->no_carrier_regex = g_regex_new ("\\r\\n(NO CARRIER)\\r\\n",
+                                                G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->sim_lock = MM_MODEM_LOCK_UNKNOWN;
 }
 
 static void
@@ -1246,6 +1845,10 @@ finalize (GObject *object)
 
     g_regex_unref (self->priv->cnsmod_regex);
     g_regex_unref (self->priv->csq_regex);
+    g_regex_unref (self->priv->ri_done_regex);
+    g_regex_unref (self->priv->nitz_regex);
+    g_regex_unref (self->priv->cpin_regex);
+    g_regex_unref (self->priv->no_carrier_regex);
 
     G_OBJECT_CLASS (mm_broadband_modem_simtech_parent_class)->finalize (object);
 }
@@ -1263,8 +1866,18 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_supported_modes_finish = load_supported_modes_finish;
     iface->load_current_modes = load_current_modes;
     iface->load_current_modes_finish = load_current_modes_finish;
+    iface->load_supported_ip_families = load_supported_ip_families;
+    iface->load_supported_ip_families_finish = load_supported_ip_families_finish;
     iface->set_current_modes = set_current_modes;
     iface->set_current_modes_finish = set_current_modes_finish;
+    iface->load_sim_slots = mm_broadband_modem_simtech_load_sim_slots;
+    iface->load_sim_slots_finish = mm_broadband_modem_simtech_load_sim_slots_finish;
+    iface->set_primary_sim_slot = mm_broadband_modem_simtech_set_primary_sim_slot;
+    iface->set_primary_sim_slot_finish = mm_broadband_modem_simtech_set_primary_sim_slot_finish;
+    iface->reset = mm_broadband_modem_simtech_reset;
+    iface->reset_finish = mm_broadband_modem_simtech_reset_finish;
+    iface->load_unlock_required = mm_broadband_modem_simtech_load_unlock_required;
+    iface->load_unlock_required_finish = mm_broadband_modem_simtech_load_unlock_required_finish;
 }
 
 static void
