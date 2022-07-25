@@ -1061,6 +1061,42 @@ load_current_modes (MMIfaceModem        *self,
 }
 
 /*****************************************************************************/
+/* Load supported IP families (Modem interface) */
+
+static void
+load_supported_ip_families (MMIfaceModem *self,
+                            GAsyncReadyCallback callback,
+                            gpointer user_data)
+{
+    /* For SIM A7600E-H return all possible IP families without testing.
+       load_supported_ip_families is called once and SIM A7600E-H can return ERROR if internal logic is not ready
+       It will lead to errors during connection up in NetworkManager
+       So call callback without actual querying a modem
+     */
+    if (g_str_has_prefix (mm_iface_modem_get_model (self), "A7600E-H")) {
+        mm_obj_dbg (self, "loading supported IP families...");
+        callback(self, NULL, user_data);
+        return;
+    }
+    /* fallback to default implementation */
+    modem_load_supported_ip_families(self, callback, user_data);
+
+}
+
+static MMBearerIpFamily
+load_supported_ip_families_finish (MMIfaceModem *self,
+                                   GAsyncResult *res,
+                                   GError **error)
+{
+    /* For SIM A7600E-H return all possible IP families without testing */
+    if (g_str_has_prefix (mm_iface_modem_get_model (self), "A7600E-H")) {
+        return MM_BEARER_IP_FAMILY_IPV4 | MM_BEARER_IP_FAMILY_IPV6 | MM_BEARER_IP_FAMILY_IPV4V6;
+    }
+    /* fallback to default implementation */
+    return modem_load_supported_ip_families_finish(self, res, error);
+}
+
+/*****************************************************************************/
 /* Set allowed modes (Modem interface) */
 
 typedef struct {
@@ -1263,6 +1299,8 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_supported_modes_finish = load_supported_modes_finish;
     iface->load_current_modes = load_current_modes;
     iface->load_current_modes_finish = load_current_modes_finish;
+    iface->load_supported_ip_families = load_supported_ip_families;
+    iface->load_supported_ip_families_finish = load_supported_ip_families_finish;
     iface->set_current_modes = set_current_modes;
     iface->set_current_modes_finish = set_current_modes_finish;
 }
