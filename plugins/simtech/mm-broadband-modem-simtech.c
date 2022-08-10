@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <gpiod.h>
 
 #define _LIBMM_INSIDE_MM
 #include <libmm-glib.h>
@@ -1163,6 +1164,16 @@ load_supported_ip_families_finish (MMIfaceModem *self,
 /*****************************************************************************/
 /* Load sim slots (Modem interface) */
 
+static const gchar *
+get_sim_switch_gpio_label (MMIfaceModem *modem)
+{
+    MMPort *primary;
+
+    primary = MM_PORT (mm_base_modem_peek_port_primary (MM_BASE_MODEM (modem)));
+    return mm_kernel_device_get_global_property (mm_port_peek_kernel_device (primary),
+                                                 "ID_MM_SIM_SWITCH_GPIO_LABEL");
+}
+
 static void
 mm_broadband_modem_simtech_sim_new_ready (GAsyncInitable *initable,
                                           GAsyncResult *res,
@@ -1206,16 +1217,111 @@ mm_broadband_modem_simtech_load_sim_slots (MMIfaceModem       *self,
                                            gpointer            user_data)
 {
     GTask *task;
+
+    mm_obj_dbg (self, "loading SIM slots...");
     task = g_task_new (self, NULL, callback, user_data);
 
-    /* Test SIM presence */
-    mm_base_modem_at_command (
-        MM_BASE_MODEM (self),
-        "+CPIN?",
-        9,
-        FALSE,
-        (GAsyncReadyCallback)mm_broadband_modem_simtech_cpin_ready,
-        task);
+    if (get_sim_switch_gpio_label (self)) {
+        /* Test SIM presence */
+        mm_base_modem_at_command (
+            MM_BASE_MODEM (self),
+            "+CPIN?",
+            9,
+            FALSE,
+            (GAsyncReadyCallback)mm_broadband_modem_simtech_cpin_ready,
+            task);
+    } else {
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_NOT_FOUND,
+                                 "no SIM switch gpio");
+        g_object_unref (task);
+    }
+}
+
+static void
+unexport_gpio (struct gpiod_line *line)
+{
+    int base;
+    gchar *base_str;
+    gsize length;
+    gchar base_path[50];
+    gchar *end;
+    struct gpiod_chip *chip;
+    FILE *unexport_file = NULL;
+
+    chip = gpiod_line_get_chip (line);
+    g_snprintf (base_path, sizeof (base_path), "/sys/class/gpio/%s/base", gpiod_chip_name (chip));
+    if (g_file_get_contents (base_path, &base_str, &length, NULL)) {
+        base = strtol (base_str, &end, 10);
+        if (base_str != end) {
+            unexport_file = fopen ("/sys/class/gpio/unexport", "w");
+            if (unexport_file) {
+                fprintf (unexport_file, "%d", base + gpiod_line_offset (line));
+                fclose (unexport_file);
+            }
+        }
+    }
+}
+
+static struct gpiod_line *
+get_gpio_line (const gchar *gpio_label)
+{
+    struct gpiod_line *line = NULL;
+    const char *consumer;
+
+    line = gpiod_line_find (gpio_label);
+    if (!line) {
+        return NULL;
+    }
+    consumer = gpiod_line_consumer (line);
+    if (consumer && (g_strcmp0 (consumer, "sysfs") == 0)) {
+        unexport_gpio (line);
+    }
+
+    return line;
+}
+
+static int
+get_gpio_line_value (const gchar *gpio_label, MMIfaceModem *self)
+{
+    int value;
+    struct gpiod_line *line;
+    int direction;
+    struct gpiod_line_request_config config;
+
+    line = get_gpio_line (gpio_label);
+    if (!line) {
+        mm_obj_warn (self, "can't find gpio line '%s'", gpio_label);
+        return 0;
+    }
+
+    direction = gpiod_line_direction (line);
+    if (direction != GPIOD_LINE_DIRECTION_OUTPUT) {
+        gpiod_line_close_chip (line);
+        return 0;
+    }
+
+    config.consumer = "ModemManager";
+    config.request_type = GPIOD_LINE_REQUEST_DIRECTION_AS_IS;
+    config.flags = 0;
+    if (gpiod_line_request(line, &config, 0) == -1) {
+        mm_obj_warn (self,
+                     "can't request gpio line '%s': (%d) '%s'",
+                     gpio_label, errno, strerror (errno));
+        gpiod_line_close_chip (line);
+        return 0;
+    }
+
+    value = gpiod_line_get_value (line);
+    if (value == -1) {
+        mm_obj_warn (self,
+                    "can't get gpio line '%s' value: (%d) '%s'",
+                    gpio_label, errno, strerror (errno));
+        value = 0;
+    }
+    gpiod_line_close_chip (line);
+    return value;
 }
 
 static gboolean
@@ -1226,28 +1332,17 @@ mm_broadband_modem_simtech_load_sim_slots_finish (MMIfaceModem *self,
                                                   GError      **error)
 {
     MMBaseSim *sim;
-    gchar* direction;
-    gchar* value;
-    GError* file_error;
-    gsize length;
+    const gchar *gpio_label = NULL;
 
-    const char* gpio_value = "/sys/class/gpio/gpio34/value";
-    const char* gpio_direction = "/sys/class/gpio/gpio34/direction";
-
-    *primary_sim_slot = 1;
-    if (g_file_test (gpio_direction, G_FILE_TEST_EXISTS)) {
-        if (g_file_get_contents (gpio_direction, &direction, &length, &file_error)) {
-            if ((memcmp (direction, "out", 3) == 0) && g_file_get_contents (gpio_value, &value, &length, &file_error)) {
-                *primary_sim_slot = (value[0] == '0' ? 1 : 2);
-                g_free(value);
-            }
-            g_free(direction);
-        }
+    gpio_label = get_sim_switch_gpio_label (self);
+    if (gpio_label) {
+        *primary_sim_slot = get_gpio_line_value (gpio_label, self) + 1;
+        *sim_slots = g_ptr_array_new_full (2, NULL);
+        sim = g_task_propagate_pointer (G_TASK (res), error);
+        g_ptr_array_add (*sim_slots, *primary_sim_slot == 1 ? sim : NULL);
+        g_ptr_array_add (*sim_slots, *primary_sim_slot == 2 ? sim : NULL);
     }
-    *sim_slots = g_ptr_array_new_full (2, NULL);
-    sim = g_task_propagate_pointer (G_TASK (res), error);
-    g_ptr_array_add (*sim_slots, *primary_sim_slot == 1 ? sim : NULL);
-    g_ptr_array_add (*sim_slots, *primary_sim_slot == 2 ? sim : NULL);
+
     return TRUE;
 }
 
@@ -1285,84 +1380,50 @@ mm_broadband_modem_simtech_after_sim_switch_cb (GTask *task)
 }
 
 static gboolean
-gpio_export (GError** error)
+mm_broadband_modem_simtech_switch_sim (const gchar *gpio_label, int gpio_state, GError **error)
 {
-    return (g_file_test ("/sys/class/gpio/gpio34/direction", G_FILE_TEST_EXISTS) ||
-            write_to_file ("/sys/class/gpio/export", "34", 2, error));
-}
-
-static gboolean
-write_to_file (const gchar *file_name, const gchar *value, gsize length, GError **error)
-{
-    int fd;
-    ssize_t res;
     GError* inner_error;
+    struct gpiod_line *line;
 
-    fd = open (file_name, O_WRONLY);
-    if (fd < 0) {
+    line = get_gpio_line (gpio_label);
+    if (!line) {
         inner_error = g_error_new (MM_CORE_ERROR,
                                    MM_CORE_ERROR_FAILED,
-                                   "%s: write failed: (%d) %s", file_name, errno, strerror (errno));
+                                   "can't find gpio line '%s'", gpio_label);
         g_propagate_error (error, inner_error);
         return FALSE;
     }
 
-    if (write(fd, value, length) < 0) {
+    if (gpiod_line_request_output (line, "ModemManager", gpio_state) != 0) {
         inner_error = g_error_new (MM_CORE_ERROR,
                                    MM_CORE_ERROR_FAILED,
-                                   "%s: write failed: (%d) %s", file_name, errno, strerror (errno));
+                                   "can't request gpio line '%s' as output: (%d) '%s'",
+                                   gpio_label, errno, strerror (errno));
         g_propagate_error (error, inner_error);
-        close (fd);
+        gpiod_line_close_chip (line);
         return FALSE;
     }
-
-    close (fd);
+    gpiod_line_close_chip (line);
     return TRUE;
-}
-
-static gboolean
-set_gpio_direction (GError** error)
-{
-    gchar* dir;
-    gsize l;
-    if (g_file_get_contents ("/sys/class/gpio/gpio34/direction", &dir, &l, error)) {
-        if ((memcmp (dir, "out", 3) == 0) || write_to_file ("/sys/class/gpio/gpio34/direction", "out", 3, error)) {
-            g_free(dir);
-            return TRUE;
-        }
-        g_free(dir);
-    }
-    return FALSE;
-}
-
-static gboolean
-set_gpio_value (gchar val, GError** error)
-{
-    gchar* v;
-    gsize l;
-    if (g_file_get_contents ("/sys/class/gpio/gpio34/value", &v, &l, error)) {
-        if ((v[0] == val) || write_to_file ("/sys/class/gpio/gpio34/value", &val, 1, error)) {
-            g_free(v);
-            return TRUE;
-        }
-        g_free(v);
-    }
-    return FALSE;
 }
 
 static gboolean
 mm_broadband_modem_simtech_after_disable_me_cb (GTask *task)
 {
     GError *error = NULL;
-    gchar sim_slot;
-    sim_slot = (GPOINTER_TO_UINT(g_task_get_task_data (task)) == 1 ? '0' : '1');
-    if (gpio_export (&error) && set_gpio_direction (&error) && set_gpio_value (sim_slot, &error)) {
+    int sim_slot;
+    const gchar *gpio_label = NULL;
+    MMIfaceModem *self;
+
+    self = g_task_get_source_object (task);
+    gpio_label = get_sim_switch_gpio_label (self);
+    sim_slot = (GPOINTER_TO_UINT(g_task_get_task_data (task)) == 1 ? 0 : 1);
+    if (gpio_label && mm_broadband_modem_simtech_switch_sim (gpio_label, sim_slot, &error)) {
         g_timeout_add_seconds (1, (GSourceFunc)mm_broadband_modem_simtech_after_sim_switch_cb, task);
     } else {
         g_task_return_error (task, error);
         g_object_unref (task);
     }
-
     return G_SOURCE_REMOVE;
 }
 
@@ -1389,15 +1450,25 @@ mm_broadband_modem_simtech_set_primary_sim_slot (MMIfaceModem        *self,
                                                  gpointer             user_data)
 {
     GTask *task;
+    const gchar *gpio_label = NULL;
 
+    gpio_label = get_sim_switch_gpio_label (self);
     task = g_task_new (self, NULL, callback, user_data);
-    g_task_set_task_data (task, GUINT_TO_POINTER (sim_slot), NULL);
-    mm_base_modem_at_command (MM_BASE_MODEM (self),
-                              "+CFUN=0",
-                              9,
-                              FALSE,
-                              (GAsyncReadyCallback) mm_broadband_modem_simtech_disable_me_ready,
-                              task);
+    if (gpio_label) {
+        g_task_set_task_data (task, GUINT_TO_POINTER (sim_slot), NULL);
+        mm_base_modem_at_command (MM_BASE_MODEM (self),
+                                  "+CFUN=0",
+                                  9,
+                                  FALSE,
+                                  (GAsyncReadyCallback) mm_broadband_modem_simtech_disable_me_ready,
+                                  task);
+    } else {
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_UNSUPPORTED,
+                                 "SIM slots switching is unsupported");
+        g_object_unref (task);
+    }
 }
 
 static gboolean

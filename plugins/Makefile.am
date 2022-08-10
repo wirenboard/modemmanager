@@ -1423,7 +1423,7 @@ libmm_plugin_simtech_la_CPPFLAGS = \
 	-DMM_MODULE_NAME=\"simtech\" \
 	$(NULL)
 libmm_plugin_simtech_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_simtech_la_LIBADD = $(builddir)/libhelpers-simtech.la
+libmm_plugin_simtech_la_LIBADD = $(builddir)/libhelpers-simtech.la -lgpiod
 
 dist_udevrules_DATA += simtech/77-mm-simtech-port-types.rules
 
