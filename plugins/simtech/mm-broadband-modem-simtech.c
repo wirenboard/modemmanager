@@ -1451,17 +1451,29 @@ mm_broadband_modem_simtech_set_primary_sim_slot (MMIfaceModem        *self,
 {
     GTask *task;
     const gchar *gpio_label = NULL;
+    struct gpiod_line *line;
+
+    task = g_task_new (self, NULL, callback, user_data);
 
     gpio_label = get_sim_switch_gpio_label (self);
-    task = g_task_new (self, NULL, callback, user_data);
     if (gpio_label) {
-        g_task_set_task_data (task, GUINT_TO_POINTER (sim_slot), NULL);
-        mm_base_modem_at_command (MM_BASE_MODEM (self),
-                                  "+CFUN=0",
-                                  9,
-                                  FALSE,
-                                  (GAsyncReadyCallback) mm_broadband_modem_simtech_disable_me_ready,
-                                  task);
+        line = get_gpio_line (gpio_label);
+        if (!line) {
+            g_task_return_new_error (task,
+                                     MM_CORE_ERROR,
+                                     MM_CORE_ERROR_FAILED,
+                                     "can't find gpio line '%s'", gpio_label);
+            g_object_unref (task);
+        } else {
+            gpiod_line_close_chip (line);
+            g_task_set_task_data (task, GUINT_TO_POINTER (sim_slot), NULL);
+            mm_base_modem_at_command (MM_BASE_MODEM (self),
+                                    "+CFUN=0",
+                                    9,
+                                    FALSE,
+                                    (GAsyncReadyCallback) mm_broadband_modem_simtech_disable_me_ready,
+                                    task);
+        }
     } else {
         g_task_return_new_error (task,
                                  MM_CORE_ERROR,
