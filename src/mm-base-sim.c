@@ -2115,7 +2115,7 @@ load_operator_identifier (MMBaseSim *self,
     mm_base_modem_at_command (
         self->priv->modem,
         "+CRSM=176,28589,0,0,4",
-        10,
+        20,
         FALSE,
         (GAsyncReadyCallback)load_operator_identifier_command_ready,
         g_task_new (self, NULL, callback, user_data));
@@ -2205,7 +2205,7 @@ load_operator_name (MMBaseSim *self,
     mm_base_modem_at_command (
         self->priv->modem,
         "+CRSM=176,28486,0,0,17",
-        10,
+        20,
         FALSE,
         (GAsyncReadyCallback)load_operator_name_command_ready,
         g_task_new (self, NULL, callback, user_data));
