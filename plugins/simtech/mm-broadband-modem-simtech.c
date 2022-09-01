@@ -71,6 +71,7 @@ struct _MMBroadbandModemSimtechPrivate {
     GRegex         *ri_done_regex;
     GRegex         *nitz_regex;
     GRegex         *cpin_regex;
+    GRegex         *no_carrier_regex;
     MMModemLock     sim_lock;
 };
 
@@ -99,6 +100,31 @@ static CPinResult unlock_results[] = {
     { "PH-SP PUK",     MM_MODEM_LOCK_PH_SP_PUK      },
     { NULL }
 };
+
+static void 
+simtech_ignore_no_carrier(MMIfaceModem *self,
+                          gboolean enable)
+{
+    MMPortSerialAt *ports[2];
+    guint i;
+    MMBroadbandModemSimtech *modem;
+    modem = MM_BROADBAND_MODEM_SIMTECH(self);
+
+    ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+
+    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
+        if (!ports[i])
+            continue;
+        ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+        ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+        /* Ignore NO CARRIER */
+        mm_port_serial_at_enable_unsolicited_msg_handler (
+            ports[i],
+            modem->priv->no_carrier_regex,
+            enable);
+    }
+}
 
 /*****************************************************************************/
 /* Setup/Cleanup unsolicited events (3GPP interface) */
@@ -1467,14 +1493,15 @@ static gboolean
 mm_broadband_modem_simtech_after_disable_me_cb (GTask *task)
 {
     GError *error = NULL;
-    int sim_slot;
+    int gpio_state;
     const gchar *gpio_label = NULL;
     MMIfaceModem *self;
 
     self = g_task_get_source_object (task);
     gpio_label = get_sim_switch_gpio_label (self);
-    sim_slot = (GPOINTER_TO_UINT(g_task_get_task_data (task)) == 1 ? 0 : 1);
-    if (gpio_label && mm_broadband_modem_simtech_switch_sim (gpio_label, sim_slot, &error)) {
+    gpio_state = (GPOINTER_TO_UINT(g_task_get_task_data (task)) == 1 ? 0 : 1);
+    mm_obj_dbg (self, "gpio '%s' = %d", gpio_label, gpio_state);
+    if (gpio_label && mm_broadband_modem_simtech_switch_sim (gpio_label, gpio_state, &error)) {
         g_timeout_add_seconds (1, (GSourceFunc)mm_broadband_modem_simtech_after_sim_switch_cb, task);
     } else {
         g_task_return_error (task, error);
@@ -1489,6 +1516,8 @@ mm_broadband_modem_simtech_disable_me_ready (MMIfaceModem *self,
                                              GTask *task)
 {
     GError *error = NULL;
+
+    simtech_ignore_no_carrier(self, FALSE);
 
     if (!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error)) {
         g_task_return_error (task, error);
@@ -1522,6 +1551,7 @@ mm_broadband_modem_simtech_set_primary_sim_slot (MMIfaceModem        *self,
             g_object_unref (task);
         } else {
             gpiod_line_close_chip (line);
+            simtech_ignore_no_carrier(self, TRUE);
             g_task_set_task_data (task, GUINT_TO_POINTER (sim_slot), NULL);
             mm_base_modem_at_command (MM_BASE_MODEM (self),
                                     "+CFUN=0",
@@ -1744,6 +1774,19 @@ setup_ports (MMBroadbandModem *self)
             NULL,
             NULL,
             NULL);
+
+        /* Ignore NO CARRIER */
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            modem->priv->no_carrier_regex,
+            NULL,
+            NULL,
+            NULL);
+        /* Disable handler */
+        mm_port_serial_at_enable_unsolicited_msg_handler (
+            ports[i],
+            modem->priv->no_carrier_regex,
+            FALSE);
     }
 }
 
@@ -1780,16 +1823,18 @@ mm_broadband_modem_simtech_init (MMBroadbandModemSimtech *self)
     self->priv->cnsmod_support = FEATURE_SUPPORT_UNKNOWN;
     self->priv->autocsq_support = FEATURE_SUPPORT_UNKNOWN;
 
-    self->priv->cnsmod_regex = g_regex_new ("\\r\\n\\+CNSMOD:\\s*(\\d+)\\r\\n",
-                                            G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
-    self->priv->csq_regex    = g_regex_new ("\\r\\n\\+CSQ:\\s*(\\d+),(\\d+)\\r\\n",
-                                            G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
-    self->priv->ri_done_regex = g_regex_new ("\\r\\n(PB DONE)|(SMS DONE)\\r\\n",
-                                            G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
-    self->priv->nitz_regex    = g_regex_new ("\\r\\n\\+NITZ:(.*)\\r\\n",
-                                            G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
-    self->priv->cpin_regex    = g_regex_new ("\\r\\n\\+CPIN: (.*)\\r\\n",
-                                            G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->cnsmod_regex     = g_regex_new ("\\r\\n\\+CNSMOD:\\s*(\\d+)\\r\\n",
+                                                G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->csq_regex        = g_regex_new ("\\r\\n\\+CSQ:\\s*(\\d+),(\\d+)\\r\\n",
+                                                G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->ri_done_regex    = g_regex_new ("\\r\\n(PB DONE)|(SMS DONE)\\r\\n",
+                                                G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->nitz_regex       = g_regex_new ("\\r\\n\\+NITZ:(.*)\\r\\n",
+                                                G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->cpin_regex       = g_regex_new ("\\r\\n\\+CPIN: (.*)\\r\\n",
+                                                G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->no_carrier_regex = g_regex_new ("\\r\\n(NO CARRIER)\\r\\n",
+                                                G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
 
     self->priv->sim_lock = MM_MODEM_LOCK_UNKNOWN;
 }
@@ -1804,6 +1849,7 @@ finalize (GObject *object)
     g_regex_unref (self->priv->ri_done_regex);
     g_regex_unref (self->priv->nitz_regex);
     g_regex_unref (self->priv->cpin_regex);
+    g_regex_unref (self->priv->no_carrier_regex);
 
     G_OBJECT_CLASS (mm_broadband_modem_simtech_parent_class)->finalize (object);
 }
