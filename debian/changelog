@@ -1,11 +1,11 @@
-modemmanager (1.18.10-2) UNRELEASED; urgency=medium
+modemmanager (1.18.10-2) unstable; urgency=medium
 
   [ Matteo F. Vescovi <mfv@debian.org> 2022-09-07 ]
   * debian/patches/: patchset updated (Closes: #1017794, #1018198)
     - 0001-Fix_invalid_EXZ_error_parser.patch added
     - 0002-Fix_issue_with_EOL_for_pcre2.patch added
 
- --
+ -- Martin <debacle@debian.org>  Wed, 07 Sep 2022 21:55:00 +0000
 
 modemmanager (1.18.10-1) unstable; urgency=medium
 
