@@ -1,0 +1,21 @@
+From: Aleksander Morgado <aleksandermj@chromium.org>
+Date: Wed, 7 Sep 2022 22:54:32 +0200
+Subject: Fix_invalid_EXZ_error_parser
+
+---
+ src/mm-serial-parsers.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/mm-serial-parsers.c b/src/mm-serial-parsers.c
+index 0b60d60..fd01537 100644
+--- a/src/mm-serial-parsers.c
++++ b/src/mm-serial-parsers.c
+@@ -115,7 +115,7 @@ mm_serial_parser_v1_new (void)
+     parser->regex_cms_error = g_regex_new ("\\r\\n\\+CMS ERROR:\\s*(\\d+)\\r\\n", flags, 0, NULL);
+     parser->regex_cme_error_str = g_regex_new ("\\r\\n\\+CME ERROR:\\s*([^\\n\\r]+)\\r\\n", flags, 0, NULL);
+     parser->regex_cms_error_str = g_regex_new ("\\r\\n\\+CMS ERROR:\\s*([^\\n\\r]+)\\r\\n", flags, 0, NULL);
+-    parser->regex_ezx_error = g_regex_new ("\\r\\n\\MODEM ERROR:\\s*(\\d+)\\r\\n", flags, 0, NULL);
++    parser->regex_ezx_error = g_regex_new ("\\r\\nMODEM ERROR:\\s*(\\d+)\\r\\n", flags, 0, NULL);
+     parser->regex_unknown_error = g_regex_new ("\\r\\n(ERROR)|(COMMAND NOT SUPPORT)\\r\\n", flags, 0, NULL);
+     parser->regex_connect_failed = g_regex_new ("\\r\\n(NO CARRIER)|(BUSY)|(NO ANSWER)|(NO DIALTONE)\\r\\n", flags, 0, NULL);
+     /* Samsung Z810 may reply "NA" to report a not-available error */
