@@ -81,7 +81,6 @@ typedef struct {
 } CPinResult;
 
 static CPinResult unlock_results[] = {
-    /* Longer entries first so we catch the correct one with strcmp() */
     { "READY",         MM_MODEM_LOCK_NONE           },
     { "SIM PIN2",      MM_MODEM_LOCK_SIM_PIN2       },
     { "SIM PUK2",      MM_MODEM_LOCK_SIM_PUK2       },
@@ -1186,7 +1185,7 @@ load_supported_ip_families_finish (MMIfaceModem *self,
 }
 
 /*****************************************************************************/
-/* Load sim slots (Modem interface) */
+/* Check unlock required (Modem interface) */
 
 static void
 mm_broadband_modem_simtech_cpin_query_ready (MMIfaceModem *_self,
