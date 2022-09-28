@@ -1,3 +1,486 @@
+commit c234bd55c9d9618c1478b5e80aaf4b8f965be181
+Author: Aleksander Morgado <aleksandermj@chromium.org>
+Date:   Thu Sep 8 20:48:35 2022 +0000
+
+    release: bump version to 1.18.12
+
+ configure.ac | 2 +-
+ meson.build  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit 180c171e8d10340b2bb618f4e2bf2fc6eb13b0e6
+Author: Aleksander Morgado <aleksandermj@chromium.org>
+Date:   Thu Sep 8 20:47:56 2022 +0000
+
+    NEWS: update for 1.18.12
+
+ NEWS | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+
+commit cb103c09cb951505786ba28fc9f2d8d3afab087b
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Jul 24 14:54:49 2022 +0200
+
+    base-sms: don't clear parts on send/store error
+
+    The part generation logic is independent to whether the SMS send or
+    store operation failed, so just avoid doing the parts cleanup. E.g.
+    if we created the parts for store() but storing failed, the same parts
+    could still be used for send() successfully.
+
+    (cherry picked from commit 041f53af8b138fda6242ad1381fd3cd1c2ff6c81)
+
+ src/mm-base-sms.c | 51
+ ++++++++++++++++++++++++---------------------------
+ 1 file changed, 24 insertions(+), 27 deletions(-)
+
+commit 1a29b0cb86e217092e5a09b2c548129019b06edb
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Mon Jul 25 21:51:56 2022 +0200
+
+    helpers-mbim: report correct network availability from mbim bitmask
+
+    MbimProviderState is a bitset, so don't try to match exact values in a
+    switch statement when converting to MMModem3gppNetworkAvailability.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/524
+
+    (cherry picked from commit a32538fa3287aaedc2ecf7baa269ad1c4f3485a0)
+
+ src/mm-modem-helpers-mbim.c | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
+
+commit 00c5060f85596903032fd9416fbb9799dbc0bce7
+Author: Aleksander Morgado <aleksandermj@google.com>
+Date:   Fri Jul 29 14:55:59 2022 +0200
+
+    broadband-modem: quick sync the Modem interface also if disabled
+
+    If the modem was in disabled state, we still want to sync the Modem
+    interface, among other things to make sure no SIM event happened
+    during the system suspension.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/605
+
+    (cherry picked from commit dd51defd2be3aac7b31b67b4ae38677f98af1b76)
+
+ src/mm-broadband-modem.c | 24 ++++++------------------
+ 1 file changed, 6 insertions(+), 18 deletions(-)
+
+commit 9255691fecfd8f3273575e5574feb8606a62ccb5
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Thu Aug 4 17:51:34 2022 +0200
+
+    broadband-modem-mbim: SIM slots ptr array should have GDestroyNotify
+
+    The SIM slots ptr array should have a proper GDestroyNotify, so that
+    whenever the array is unref-ed as part of the modem disposal logic,
+    the SIM objects (and the modem object references they keep) are also
+    unref-ed.
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/571
+
+    (cherry picked from commit 4a62ea3e84aaf7690cd327c172efb0cf68f97d34)
+
+ src/mm-broadband-modem-mbim.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+commit 90d15f213b5a1ebababa3be72f1f228d423d67b6
+Author: Louis-Alexis Eyraud <louis-alexis.eyraud@unabiz.com>
+Date:   Tue Aug 9 14:53:34 2022 +0200
+
+    libmm-glib,profile-manager: fix memory leaks when listing connection
+    profiles
+
+    This commit fixes memory leaks that occur when invoking
+    mm_modem_3gpp_profile_manager_list function.
+
+    When processing the connection profile data retrieved from dbus
+    in build_list_results function, the iterator data (of GVariant type)
+    were not properly freed after use in the while loop.
+
+    ==7903== 2,697 (144 direct, 2,553 indirect) bytes in 3 blocks are
+    definitely lost in loss record 2,525 of 2,538
+    ==7903==    at 0x484086F: malloc (vg_replace_malloc.c:381)
+    ==7903==    by 0x4A13938: g_malloc (gmem.c:106)
+    ==7903==    by 0x4A2B1F4: g_slice_alloc (gslice.c:1069)
+    ==7903==    by 0x4A51322: UnknownInlinedFun (gvariant-core.c:486)
+    ==7903==    by 0x4A51322: UnknownInlinedFun (gvariant-core.c:624)
+    ==7903==    by 0x4A51322: g_variant_builder_end (gvariant.c:3718)
+    ==7903==    by 0x4C2FEC1: parse_value_from_blob.isra.0
+    (gdbusmessage.c:1866)
+    ==7903==    by 0x4C2FE8F: parse_value_from_blob.isra.0
+    (gdbusmessage.c:1766)
+    ==7903==    by 0x4C2FF37: parse_value_from_blob.isra.0
+    (gdbusmessage.c:1850)
+    ==7903==    by 0x4BF93A7: g_dbus_message_new_from_blob
+    (gdbusmessage.c:2226)
+    ==7903==    by 0x4C09334: _g_dbus_worker_do_read_cb
+    (gdbusprivate.c:750)
+    ==7903==    by 0x4B9EA79: g_task_return_now (gtask.c:1219)
+    ==7903==    by 0x4B9EABC: complete_in_idle_cb (gtask.c:1233)
+    ==7903==    by 0x4A0774A: g_idle_dispatch (gmain.c:5848)
+
+    Signed-off-by: Louis-Alexis Eyraud <louis-alexis.eyraud@unabiz.com>
+    (cherry picked from commit a97b58ebf742c3bae4fab73d66f35c959ddc0639)
+
+ libmm-glib/mm-modem-3gpp-profile-manager.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+commit c1e0da46234080d571f2c758ee39dfa9c9e40a94
+Author: Aleksander Morgado <aleksandermj@chromium.org>
+Date:   Mon Aug 15 21:59:17 2022 +0000
+
+    broadband-modem-mbim: remove context type comparison on disconnection
+    reports
+
+    Since 1.18 the user can request a different APN type during the
+    connection attempt, which translates into a different context type in
+    the actual MBIM Connect Set request. Therefore, the context type of a
+    given connection is no longer always INTERNET.
+
+    Matching by the session id to report disconnections should be more
+    than enough, which also helps to cover the case where the modem
+    doesn't report the original context type used during the
+    attempt (e.g. reporting NONE unconditionally).
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/614
+
+    (cherry picked from commit f6c1939f5c48ae7124212ef731c1fb552a8d6ee7)
+
+ src/mm-broadband-modem-mbim.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+commit e7becf3e9aae6c7e919daa16c1297450ade4196b
+Author: Aleksander Morgado <aleksandermj@chromium.org>
+Date:   Fri Aug 19 15:57:36 2022 +0000
+
+    cli,output: plug leak of OutputItemListItem items
+
+    (cherry picked from commit 129807c417de58d08ff9cb6072b0afbd045d2bb5)
+
+ cli/mmcli-output.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit 1aaf5c404f5ddef8db550742e5307841a6b105d7
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sun Jul 24 14:46:10 2022 +0200
+
+    base-sms: fix segfault when storing already sent messages
+
+    The internal list of parts in the base SMS object is created either
+    when the message is sent or when the message is stored.
+
+    The daemon should not expect the list of SMS parts to be empty upon a
+    store() operation requested via DBus, as the list of parts may have
+    already been created during send().
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/598
+
+    (cherry picked from commit 4aaea370228fdc873ac34c3fa542088a2893f2db)
+
+ src/mm-base-sms.c | 47 ++++++++++++++++++++++++++++-------------------
+ 1 file changed, 28 insertions(+), 19 deletions(-)
+
+commit dd2676104347f918f1b7a44331e035148eee813f
+Author: Aleksander Morgado <aleksandermj@chromium.org>
+Date:   Wed Aug 24 14:00:13 2022 +0000
+
+    icera: fix double free on %%IPSYS=? response processing
+
+    (cherry picked from commit 0d6b6ebcf1f849a3e41a1a582fd2bf6d21fc1c1e)
+
+ plugins/icera/mm-broadband-modem-icera.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+commit 690624aa758554f33d666db2291be12dc2b05240
+Author: Aleksander Morgado <aleksandermj@chromium.org>
+Date:   Wed Aug 24 13:51:12 2022 +0000
+
+    mtk: fix task completion when loading supported modes
+
+    (cherry picked from commit ff7e062e94fb779cae18be33d8d81f888033c98a)
+
+ plugins/mtk/mm-broadband-modem-mtk.c | 23 ++++++++++-------------
+ 1 file changed, 10 insertions(+), 13 deletions(-)
+
+commit 0dd648daf06dfd9ec969533adf8c12d811b49546
+Author: Aleksander Morgado <aleksandermj@chromium.org>
+Date:   Thu Aug 25 13:36:58 2022 +0000
+
+    base-modem: fix double GError free during quick sync
+
+      ==10719== Invalid free() / delete / delete[] / realloc()
+      ==10719==    at 0x4897D88: free (vg_replace_malloc.c:872)
+      ==10719==    by 0x52F091B: g_free (gmem.c:220)
+      ==10719==    by 0x530C36B: g_slice_free1 (gslice.c:1185)
+      ==10719==    by 0x52D632B: g_error_free (gerror.c:872)
+      ==10719==    by 0x192DBF: UnknownInlinedFun (glib-autocleanups.h:54)
+      ==10719==    by 0x192DBF: UnknownInlinedFun (glib-autocleanups.h:54)
+      ==10719==    by 0x192DBF: sync_ready (mm-base-modem.c:671)
+      ==10719==    by 0x50A82CB: g_task_return_now (gtask.c:1232)
+      ==10719==    by 0x50A854B: UnknownInlinedFun (gtask.c:1301)
+      ==10719==    by 0x50A854B: g_task_return (gtask.c:1258)
+      ==10719==    by 0x50AAA4F: g_task_return_new_error (gtask.c:1944)
+      ==10719==    by 0x1F44E3: iface_modem_sync_ready
+      (mm-broadband-modem.c:12205)
+      ==10719==    by 0x50A82CB: g_task_return_now (gtask.c:1232)
+      ==10719==    by 0x50A854B: UnknownInlinedFun (gtask.c:1301)
+      ==10719==    by 0x50A854B: g_task_return (gtask.c:1258)
+      ==10719==    by 0x1AB86B: interface_syncing_step.lto_priv.0
+      (mm-iface-modem.c:4644)
+      ==10719==  Address 0x910bf30 is 0 bytes inside a block of size
+      16 free'd
+      ==10719==    at 0x4897D88: free (vg_replace_malloc.c:872)
+      ==10719==    by 0x52F091B: g_free (gmem.c:220)
+      ==10719==    by 0x530C36B: g_slice_free1 (gslice.c:1185)
+      ==10719==    by 0x52D632B: g_error_free (gerror.c:872)
+      ==10719==    by 0x17565F: UnknownInlinedFun (glib-autocleanups.h:54)
+      ==10719==    by 0x17565F: UnknownInlinedFun (glib-autocleanups.h:54)
+      ==10719==    by 0x17565F: base_modem_sync_ready
+      (mm-base-manager.c:737)
+      ==10719==    by 0x50A82CB: g_task_return_now (gtask.c:1232)
+      ==10719==    by 0x50A854B: UnknownInlinedFun (gtask.c:1301)
+      ==10719==    by 0x50A854B: g_task_return (gtask.c:1258)
+      ==10719==    by 0x192DAB: sync_ready (mm-base-modem.c:674)
+      ==10719==    by 0x50A82CB: g_task_return_now (gtask.c:1232)
+      ==10719==    by 0x50A854B: UnknownInlinedFun (gtask.c:1301)
+      ==10719==    by 0x50A854B: g_task_return (gtask.c:1258)
+      ==10719==    by 0x50AAA4F: g_task_return_new_error (gtask.c:1944)
+      ==10719==    by 0x1F44E3: iface_modem_sync_ready
+      (mm-broadband-modem.c:12205)
+      ==10719==  Block was alloc'd at
+      ==10719==    at 0x48952CC: malloc (vg_replace_malloc.c:381)
+      ==10719==    by 0x52F3EF3: g_malloc (gmem.c:127)
+      ==10719==    by 0x530CD27: g_slice_alloc (gslice.c:1074)
+      ==10719==    by 0x530D2B7: g_slice_alloc0 (gslice.c:1100)
+      ==10719==    by 0x52D5E7B: g_error_allocate (gerror.c:710)
+      ==10719==    by 0x52D690F: UnknownInlinedFun (gerror.c:724)
+      ==10719==    by 0x52D690F: g_error_new_valist (gerror.c:766)
+      ==10719==    by 0x50AAA43: g_task_return_new_error (gtask.c:1941)
+      ==10719==    by 0x1F44E3: iface_modem_sync_ready
+      (mm-broadband-modem.c:12205)
+      ==10719==    by 0x50A82CB: g_task_return_now (gtask.c:1232)
+      ==10719==    by 0x50A854B: UnknownInlinedFun (gtask.c:1301)
+      ==10719==    by 0x50A854B: g_task_return (gtask.c:1258)
+      ==10719==    by 0x1AB86B: interface_syncing_step.lto_priv.0
+      (mm-iface-modem.c:4644)
+      ==10719==    by 0x1AB9A3: UnknownInlinedFun (mm-iface-modem.c:4543)
+      ==10719==    by 0x1AB9A3: interface_syncing_step.lto_priv.0
+      (mm-iface-modem.c:4639)
+
+    (cherry picked from commit ec50f148072d0b689349ce72fca7546eb009cd35)
+
+ src/mm-base-modem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 59b2f08c20c56c0dad3d37c0a71e8bcb51926df8
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Thu May 5 09:45:39 2022 +0200
+
+    telit: add LE910Cx MBIM composition port hints
+
+    (cherry picked from commit 0f1cd36e65bf8477cbd104781e590f64c23b8b96)
+
+ plugins/telit/77-mm-telit-port-types.rules | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+commit f4fd038412ccd759b6532ce0145a3d4f7c05e66a
+Author: Daniele Palmas <dnlplm@gmail.com>
+Date:   Fri Oct 8 15:33:56 2021 +0200
+
+    telit: add port type hints for LN920 0x1060, 0x1061 compositions
+
+    (cherry picked from commit 53f6c309bfbf87fe2ccb28dc3b9a3775e4e20897)
+
+ plugins/telit/77-mm-telit-port-types.rules | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+commit 68af7f28c0d3bb1088dc58b9e6408d9941c9614c
+Author: Aleksander Morgado <aleksandermj@chromium.org>
+Date:   Fri Sep 2 17:13:29 2022 +0200
+
+    test-modem-helpers: add EOL to strings matched with
+    G_REGEX_NEWLINE_CRLF
+
+    Looks like pcre2 (used since glib 2.73.2) requires EOLs to match if
+    G_REGEX_NEWLINE_CRLF is explicitly used. The tests are updated
+    accordingly, because the modem responses will anyway have the EOLs
+    as well.
+
+    See https://gitlab.gnome.org/GNOME/glib/-/issues/2729#note_1544130
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/601
+
+    (cherry picked from commit 51a333cd9a6707de7c623fd4c94cb6032477572f)
+
+ src/tests/test-modem-helpers.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+commit 99bddcee7f487bef50eb0b8133318f86e0e1f184
+Author: Aleksander Morgado <aleksandermj@chromium.org>
+Date:   Thu Sep 1 15:00:03 2022 +0200
+
+    serial-parsers: fix invalid EXZ error parser
+
+    Passed undetected when glib2 was using pcre1, it triggers an error now
+    with pcre2.
+
+    See https://gitlab.gnome.org/GNOME/glib/-/issues/2729#note_1542038
+
+    Reported and fix suggested by: Marco Trevisan (Treviño)
+    <mail@3v1n0.net>
+
+    (cherry picked from commit 79a5a4eed2189ea87d25cbe00bc824a2572cad66)
+
+ src/mm-serial-parsers.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 0c12b15cf08517ce6609b2f5efe1168c03788104
+Author: Jack Song <jinjian.song@fibocom.com>
+Date:   Wed Jul 6 11:07:06 2022 +0800
+
+    mm-bearer-mbim: ignore mbim status error 'SIM not inserted' while
+    disconnecting
+
+    Ignore the error SIM_NOT_INSERTED when ModemManager disable modem
+    after SIM card removed
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/578
+
+    (cherry picked from commit 71a3942b3fe712b95becab5159639ec6aecc0a7c)
+
+ src/mm-bearer-mbim.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+commit 87b7285211d198a064dece3c345731f928270918
+Author: Ulrich Mohr <u.mohr@semex-engcon.com>
+Date:   Thu Jul 14 08:25:58 2022 +0200
+
+    mm-sim-qmi: use shared qmi interface instead of using qmi modem
+    class directly
+
+    (cherry picked from commit 9f44dfa45e3daed6842548f0e3ada61d48046f10)
+
+ src/mm-sim-qmi.c | 26 +++++++++-----------------
+ 1 file changed, 9 insertions(+), 17 deletions(-)
+
+commit 8f0d3e4bf5663de0a70b8cc8ab403742aa4cc9bd
+Author: Ulrich Mohr <u.mohr@semex-engcon.com>
+Date:   Thu Jul 14 08:26:44 2022 +0200
+
+    mbim: Make use of uim qmi service if available
+
+    (cherry picked from commit 249e46a70a84290ff0be2b0ba74c27119be6ec87)
+
+ src/mm-broadband-modem-mbim.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit 8b63601ac06061f18f32d5d6590f71cc0fbdf547
+Author: Carlo Lobrano <c.lobrano@gmail.com>
+Date:   Thu Jul 14 12:14:13 2022 +0200
+
+    mm-iface-modem-3gpp-profile-manager: do not override Bearer 3gpp
+    profile properties during connection
+
+    When connecting via AT commands requiring a 3gpp profile with
+    undefined
+    profile-id, the corresponding bearer 3gpp profile is later modified
+    adding the selected PDP context.
+
+    For this reason when a next connection is requested with the same
+    properties (that is no profile-id) the already existing bearers is not
+    selected because of the different profile-id value and a new one is
+    created.
+
+    This change lets the connection logic use a copy of the user-requested
+    bearer's 3gpp profile which can be modified for the logic needs,
+    but it
+    is not stored and then does not compromise a bearer comparison in
+    a next
+    connection request.
+
+    (cherry picked from commit 7464940971ded3d550217872b42fef9f3120b1bf)
+
+ src/mm-iface-modem-3gpp-profile-manager.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
+
+commit 6042bf1cdc9e526c458fcc348d2b92cf9a024037
+Author: Carlo Lobrano <c.lobrano@gmail.com>
+Date:   Thu Jul 14 10:34:57 2022 +0200
+
+    mm-iface-modem-3gpp-profile-manager: do not try to deactivate
+    unused profile
+
+    'mm_3gpp_profile_list_find_best' can return an unused profile ID,
+    which
+    is later tested for being already activated in
+    'profile_manager_check_activated_profile_ready' with +GCACT?. Since
+    the
+    profile does not exist, this check always fails, but the profile
+    manager
+    still tries to deactivate it, which is unnecessary.
+
+    This change checks the return error from 'check_activated_profile'
+    and skips
+    SET_PROFILE_STEP_DEACTIVATE_PROFILE step if error is
+    MM_CORE_ERROR_NOT_FOUND.
+
+    (cherry picked from commit 85d4ad11580d52375675db81a4cb3799d43a89f8)
+
+ src/mm-iface-modem-3gpp-profile-manager.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+commit 14f1a7193b3cb2590a24f3eff47774d4ae0fc355
+Author: Dan Carpenter <dansebcar@gmail.com>
+Date:   Wed Jul 20 13:06:21 2022 +0200
+
+    sierra: disable CPOL in the GL7600
+
+    Similar to the EM7345 (also from Sierra Wireless), the GL7600 becomes
+    unresponsive after using "AT+CPOL?".
+
+    Fixes
+    https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/issues/595
+
+    (cherry picked from commit a8b9058a0c00dcaf6bde5fc7032e7f59169dd914)
+
+ plugins/sierra/77-mm-sierra.rules | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+commit a18e3ec98ddc7b81ea01dfc9bd6df0e8b2f4725c
+Author: Dmitry Skorykh <dmitry.skorykh@emlid.com>
+Date:   Fri Jun 24 13:35:40 2022 +0300
+
+    mm-sms-part-3gpp: sms_decode_text: avoid decoding an empty text
+    message
+
+    Fix segfault that can occur during message text decoding if there
+    are no
+    elements in SMS text
+
+    (cherry picked from commit a87a1f8ced054aba80ed6f15a0ce2c47827c394d)
+
+ src/mm-sms-part-3gpp.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+commit a8fadd0263d446ca947ffd0893657bbd5f25f8f8
+Author: Aleksander Morgado <aleksander@aleksander.es>
+Date:   Sat Jun 25 14:55:44 2022 +0200
+
+    build: post-release version bump to 1.18.11
+
+ configure.ac | 2 +-
+ meson.build  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
 commit 1338749739e0c01bdbc6ddf92388a781806ec3ac
 Author: Aleksander Morgado <aleksander@aleksander.es>
 Date:   Fri Jun 24 13:07:48 2022 +0200
@@ -51622,7 +52105,7 @@ Date:   Sat May 14 15:25:32 2016 +0800
  31 files changed, 69 insertions(+), 60 deletions(-)
 
 commit 55f3ab80835114342618083664c4fa585455b9e0
-Merge: 830b6ebca ba097f1a4
+Merge: 830b6ebc ba097f1a
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Fri May 27 12:39:56 2016 -0500
 
@@ -57710,7 +58193,7 @@ Date:   Mon Jun 16 16:22:51 2014 +0200
  1 file changed, 6 insertions(+), 4 deletions(-)
 
 commit 6e490944d07061ca15837963552d023807958feb
-Merge: ff4e45791 02f9b926c
+Merge: ff4e4579 02f9b926
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Fri Jun 13 14:57:08 2014 -0500
 
@@ -102415,7 +102898,7 @@ Date:   Thu Jun 30 15:51:53 2011 -0500
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 commit 7762d401e8201efc05d643b9da32f3e60a42c470
-Merge: 881f928c4 7e69d2cf3
+Merge: 881f928c 7e69d2cf
 Author: Aleksander Morgado <aleksander@lanedo.com>
 Date:   Thu Jun 30 19:48:23 2011 +0200
 
@@ -103758,7 +104241,7 @@ Date:   Mon Apr 18 17:38:39 2011 -0500
  1 file changed, 15 insertions(+), 4 deletions(-)
 
 commit 5dadfa4c214be79e704eb61c135893f93a705d3a
-Merge: 487972c1a 765da63ad
+Merge: 487972c1 765da63a
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Thu Apr 14 14:20:43 2011 -0500
 
@@ -104525,7 +105008,7 @@ Date:   Mon Jan 24 13:57:22 2011 -0600
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 commit 2b2ca316a1ef9c9b30e68b44446abfe76cb1bbce
-Merge: 12f1b351e f047ca66a
+Merge: 12f1b351 f047ca66
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Jan 24 13:56:40 2011 -0600
 
@@ -106559,7 +107042,7 @@ Date:   Tue Jun 29 22:24:00 2010 -0700
  3 files changed, 108 insertions(+)
 
 commit 6e79d153efc30fb2030536f7f795c19ad4a0661a
-Merge: 72a1a6caf 5fc9f259e
+Merge: 72a1a6ca 5fc9f259
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Thu Jun 24 11:09:33 2010 -0700
 
@@ -108713,7 +109196,7 @@ Date:   Fri Mar 12 15:31:29 2010 -0800
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 commit 936533cfcc34b1bba797688049316bb8994443bd
-Merge: 9d9150133 3e760488b
+Merge: 9d915013 3e760488
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Fri Mar 12 12:40:00 2010 -0800
 
@@ -108730,7 +109213,7 @@ Date:   Fri Mar 12 12:38:53 2010 -0800
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 commit 9d91501330514d8bbd83c8f729ec5231e862e226
-Merge: 4d1e00c49 7aa6d03d9
+Merge: 4d1e00c4 7aa6d03d
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Fri Mar 12 12:21:29 2010 -0800
 
@@ -108801,7 +109284,7 @@ Date:   Thu Mar 11 16:02:12 2010 -0800
  3 files changed, 6 insertions(+), 7 deletions(-)
 
 commit 3ec7e89f112cb65a584de84b76e207d7a804bd6f
-Merge: 479937cbb 749f9c0eb
+Merge: 479937cb 749f9c0e
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Thu Mar 11 13:43:06 2010 -0800
 
@@ -108930,7 +109413,7 @@ Date:   Wed Mar 10 15:45:50 2010 -0800
  1 file changed, 10 insertions(+), 9 deletions(-)
 
 commit 479937cbbba560c77ec37ebf6468fe0e568986bd
-Merge: 6a32d374c e3c87e4e1
+Merge: 6a32d374 e3c87e4e
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Wed Mar 10 15:04:49 2010 -0800
 
@@ -108948,7 +109431,7 @@ Date:   Wed Mar 10 14:57:23 2010 -0800
  1 file changed, 8 insertions(+), 7 deletions(-)
 
 commit 1979512d8dfb6428353e6bf358f908973a318095
-Merge: 8dde6bb8d b7858ba23
+Merge: 8dde6bb8 b7858ba2
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Wed Mar 10 14:50:41 2010 -0800
 
@@ -109221,7 +109704,7 @@ Date:   Mon Mar 8 20:01:42 2010 -0800
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 commit f3721a5674ef7899d9a6ef0f4c5b356720bb9833
-Merge: f6c514897 9e231c3d4
+Merge: f6c51489 9e231c3d
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Mar 8 20:01:22 2010 -0800
 
@@ -109768,7 +110251,7 @@ Date:   Mon Mar 1 09:15:01 2010 -0800
  5 files changed, 24 insertions(+), 14 deletions(-)
 
 commit f6c514897e40e768b180963f2782ed60527ffaa6
-Merge: 7a0373afe 9d7cb0ddc
+Merge: 7a0373af 9d7cb0dd
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Mar 1 09:07:05 2010 -0800
 
@@ -110151,7 +110634,7 @@ Date:   Sun Feb 21 11:22:16 2010 -0800
  2 files changed, 12 insertions(+), 4 deletions(-)
 
 commit 2cdefeb6dafa9d8405ddd1247967ca6e3267b1a7
-Merge: a8c7bba19 b9958e6ec
+Merge: a8c7bba1 b9958e6e
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Sat Feb 20 14:58:04 2010 -0800
 
@@ -110218,7 +110701,7 @@ Date:   Sat Feb 20 14:53:43 2010 -0800
  1 file changed, 9 insertions(+), 3 deletions(-)
 
 commit 9d8e892ffe602a123697a5f65393b5752129de09
-Merge: c916ea7b4 9185ce987
+Merge: c916ea7b 9185ce98
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Sat Feb 20 12:49:22 2010 -0800
 
@@ -110590,7 +111073,7 @@ Date:   Fri Jan 22 14:11:24 2010 -0800
  4 files changed, 16 deletions(-)
 
 commit ed885b7595294115b5cde8755c754515294f27cc
-Merge: a919c8358 e98401440
+Merge: a919c835 e9840144
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Tue Jan 19 15:07:03 2010 -0800
 
@@ -110726,7 +111209,7 @@ Date:   Tue Jan 19 11:53:45 2010 -0800
  1 file changed, 13 insertions(+), 9 deletions(-)
 
 commit 28eca600f7f1a0387a99c51d35179d81dc3fec59
-Merge: 50ad39b28 b1992f903
+Merge: 50ad39b2 b1992f90
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Tue Jan 19 00:21:10 2010 -0800
 
@@ -111193,7 +111676,7 @@ Date:   Mon Dec 7 22:07:58 2009 -0800
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 commit dd057d28e4ab3812eebd41a7df1c2f80d90d8600
-Merge: f715e0d49 a9e062442
+Merge: f715e0d4 a9e06244
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Dec 7 22:04:28 2009 -0800
 
@@ -111426,7 +111909,7 @@ Date:   Tue Dec 1 11:25:28 2009 -0800
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 commit 881a725ea47e059023a268404368346d232dd15a
-Merge: 909b8b7c8 b46ac89ff
+Merge: 909b8b7c b46ac89f
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Tue Dec 1 11:22:00 2009 -0800
 
@@ -111468,7 +111951,7 @@ Date:   Mon Nov 30 17:42:37 2009 -0800
  1 file changed, 24 insertions(+)
 
 commit 909b8b7c8dbe2de97d9550004641c70411d92c56
-Merge: c463b5a40 0f595adb7
+Merge: c463b5a4 0f595adb
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Nov 30 15:44:20 2009 -0800
 
@@ -111728,7 +112211,7 @@ Date:   Tue Nov 24 00:43:20 2009 -0800
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 commit c463b5a4005b9e55d0faeb887debe327118ef230
-Merge: 3be4a1518 9e92bceb0
+Merge: 3be4a151 9e92bceb
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Tue Nov 24 00:20:52 2009 -0800
 
@@ -111748,7 +112231,7 @@ Date:   Tue Nov 24 00:19:27 2009 -0800
  1 file changed, 20 insertions(+), 32 deletions(-)
 
 commit 3be4a15189aef361187b86df64f62ca70284dee3
-Merge: d8ff5f74e e5b5c8339
+Merge: d8ff5f74 e5b5c833
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Nov 23 23:48:26 2009 -0800
 
@@ -111811,7 +112294,7 @@ Date:   Tue Nov 17 14:16:24 2009 -0800
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 commit 3c6e4056e7cded28e612a76d9321f54fb1b51ce2
-Merge: 9bbc6ab53 74f679acd
+Merge: 9bbc6ab5 74f679ac
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Fri Nov 6 15:11:01 2009 -0800
 
@@ -112339,7 +112822,7 @@ Date:   Tue Oct 6 11:39:40 2009 -0700
  3 files changed, 77 insertions(+), 13 deletions(-)
 
 commit 912b98723b2965b9aaf1f0328781a2730d7cc178
-Merge: 3b19a8572 aa78b5f5e
+Merge: 3b19a857 aa78b5f5
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Oct 5 09:52:01 2009 -0700
 
@@ -112925,7 +113408,7 @@ Date:   Mon Jun 29 23:11:43 2009 -0400
  2 files changed, 6 insertions(+), 1 deletion(-)
 
 commit 5298be26ddf580681a4a506cf0379996d7eb9d4d
-Merge: 5a563d56d 8e3da6359
+Merge: 5a563d56 8e3da635
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Jun 29 22:54:32 2009 -0400
 
@@ -113045,7 +113528,7 @@ Date:   Mon Jun 29 14:24:43 2009 -0400
  2 files changed, 25 insertions(+), 32 deletions(-)
 
 commit c106368ce7c06e0ae5b64cc6146ad05c3b9fa819
-Merge: ff58936f1 c397247c0
+Merge: ff58936f c397247c
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Jun 29 13:14:11 2009 -0400
 
@@ -113134,7 +113617,7 @@ Date:   Mon Jun 29 09:00:25 2009 -0400
  1 file changed, 9 insertions(+), 11 deletions(-)
 
 commit 504b4991cd3aecd358d92a9c39233e6ca09036fa
-Merge: 6077763d9 ef0a604dc
+Merge: 6077763d ef0a604d
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon Jun 29 07:29:57 2009 -0400
 
@@ -113630,7 +114113,7 @@ Date:   Thu May 14 13:14:45 2009 +0300
  2 files changed, 8 insertions(+), 7 deletions(-)
 
 commit 92041d5f750ab440d278c95c1f65483aa8ebf192
-Merge: 2a3acc7a3 58a48405c
+Merge: 2a3acc7a 58a48405
 Author: Dan Williams <dcbw@redhat.com>
 Date:   Mon May 11 06:43:43 2009 -0400
 
@@ -114225,7 +114708,7 @@ Date:   Tue Dec 9 15:41:51 2008 +0200
  12 files changed, 199 insertions(+), 182 deletions(-)
 
 commit a504fb408aa2ba3bb495a08d948ae97bdcb1cdd6
-Merge: 793044b57 1673c6c99
+Merge: 793044b5 1673c6c9
 Author: Tambet Ingo <tambet@gmail.com>
 Date:   Fri Dec 5 15:57:55 2008 +0200
 

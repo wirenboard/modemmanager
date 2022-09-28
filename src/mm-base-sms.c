@@ -343,49 +343,53 @@ handle_store_ready (MMBaseSms *self,
     GError *error = NULL;
 
     if (!MM_BASE_SMS_GET_CLASS (self)->store_finish (self, res, &error)) {
-        /* On error, clear up the parts we generated */
-        g_list_free_full (self->priv->parts, (GDestroyNotify)mm_sms_part_free);
-        self->priv->parts = NULL;
         g_dbus_method_invocation_take_error (ctx->invocation, error);
-    } else {
-        mm_gdbus_sms_set_storage (MM_GDBUS_SMS (ctx->self), ctx->storage);
-
-        /* Transition from Unknown->Stored for SMS which were created by the user */
-        if (mm_gdbus_sms_get_state (MM_GDBUS_SMS (ctx->self)) == MM_SMS_STATE_UNKNOWN)
-            mm_gdbus_sms_set_state (MM_GDBUS_SMS (ctx->self), MM_SMS_STATE_STORED);
-
-        mm_gdbus_sms_complete_store (MM_GDBUS_SMS (ctx->self), ctx->invocation);
+        handle_store_context_free (ctx);
+        return;
     }
 
+    mm_gdbus_sms_set_storage (MM_GDBUS_SMS (ctx->self), ctx->storage);
+
+    /* Transition from Unknown->Stored for SMS which were created by the user */
+    if (mm_gdbus_sms_get_state (MM_GDBUS_SMS (ctx->self)) == MM_SMS_STATE_UNKNOWN)
+        mm_gdbus_sms_set_state (MM_GDBUS_SMS (ctx->self), MM_SMS_STATE_STORED);
+
+    mm_gdbus_sms_complete_store (MM_GDBUS_SMS (ctx->self), ctx->invocation);
     handle_store_context_free (ctx);
 }
 
 static gboolean
-prepare_sms_to_be_stored (MMBaseSms *self,
-                          GError **error)
+prepare_sms_to_be_stored (MMBaseSms  *self,
+                          GError    **error)
 {
-    GList *l;
-    guint8 reference;
-
-    g_assert (self->priv->parts == NULL);
-
-    /* Look for a valid multipart reference to use. When storing, we need to
-     * check whether we have already stored multipart SMS with the same
-     * reference and destination number */
-    reference = (mm_iface_modem_messaging_get_local_multipart_reference (
-                     MM_IFACE_MODEM_MESSAGING (self->priv->modem),
-                     mm_gdbus_sms_get_number (MM_GDBUS_SMS (self)),
-                     error));
-    if (!reference ||
-        !generate_submit_pdus (self, error)) {
-        g_prefix_error (error, "Cannot prepare SMS to be stored: ");
+    /* Create parts if we did not create them already before (e.g. when
+     * sending) */
+    if (!self->priv->parts && !generate_submit_pdus (self, error)) {
+        g_prefix_error (error, "Cannot create submit PDUs: ");
         return FALSE;
     }
 
     /* If the message is a multipart message, we need to set a proper
      * multipart reference. When sending a message which wasn't stored
-     * yet, we can just get a random multipart reference. */
+     * yet, we chose a random multipart reference, but that doesn't work
+     * when storing locally, as we could collide with the references used
+     * in other existing messages. */
     if (self->priv->is_multipart) {
+        GList  *l;
+        guint8  reference;
+
+        /* Look for a valid multipart reference to use. When storing, we need to
+         * check whether we have already stored multipart SMS with the same
+         * reference and destination number */
+        reference = mm_iface_modem_messaging_get_local_multipart_reference (
+                        MM_IFACE_MODEM_MESSAGING (self->priv->modem),
+                        mm_gdbus_sms_get_number (MM_GDBUS_SMS (self)),
+                        error);
+        if (!reference) {
+            g_prefix_error (error, "Cannot get local multipart reference: ");
+            return FALSE;
+        }
+
         self->priv->multipart_reference = reference;
         for (l = self->priv->parts; l; l = g_list_next (l)) {
             mm_sms_part_set_concat_reference ((MMSmsPart *)l->data,
@@ -438,6 +442,7 @@ handle_store_auth_ready (MMBaseModem *modem,
 
     /* Prepare the SMS to be stored, creating the PDU list if required */
     if (!prepare_sms_to_be_stored (ctx->self, &error)) {
+        g_prefix_error (&error, "Cannot prepare SMS to be stored: ");
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_store_context_free (ctx);
         return;
@@ -517,26 +522,25 @@ handle_send_ready (MMBaseSms *self,
     GError *error = NULL;
 
     if (!MM_BASE_SMS_GET_CLASS (self)->send_finish (self, res, &error)) {
-        /* On error, clear up the parts we generated */
-        g_list_free_full (self->priv->parts, (GDestroyNotify)mm_sms_part_free);
-        self->priv->parts = NULL;
         g_dbus_method_invocation_take_error (ctx->invocation, error);
-    } else {
-        /* Transition from Unknown->Sent or Stored->Sent */
-        if (mm_gdbus_sms_get_state (MM_GDBUS_SMS (ctx->self)) == MM_SMS_STATE_UNKNOWN ||
-            mm_gdbus_sms_get_state (MM_GDBUS_SMS (ctx->self)) == MM_SMS_STATE_STORED) {
-            GList *l;
-
-            /* Update state */
-            mm_gdbus_sms_set_state (MM_GDBUS_SMS (ctx->self), MM_SMS_STATE_SENT);
-            /* Grab last message reference */
-            l = g_list_last (mm_base_sms_get_parts (ctx->self));
-            mm_gdbus_sms_set_message_reference (MM_GDBUS_SMS (ctx->self),
-                                                mm_sms_part_get_message_reference ((MMSmsPart *)l->data));
-        }
-        mm_gdbus_sms_complete_send (MM_GDBUS_SMS (ctx->self), ctx->invocation);
+        handle_send_context_free (ctx);
+        return;
     }
 
+    /* Transition from Unknown->Sent or Stored->Sent */
+    if (mm_gdbus_sms_get_state (MM_GDBUS_SMS (ctx->self)) == MM_SMS_STATE_UNKNOWN ||
+        mm_gdbus_sms_get_state (MM_GDBUS_SMS (ctx->self)) == MM_SMS_STATE_STORED) {
+        GList *l;
+
+        /* Update state */
+        mm_gdbus_sms_set_state (MM_GDBUS_SMS (ctx->self), MM_SMS_STATE_SENT);
+        /* Grab last message reference */
+        l = g_list_last (mm_base_sms_get_parts (ctx->self));
+        mm_gdbus_sms_set_message_reference (MM_GDBUS_SMS (ctx->self),
+                                            mm_sms_part_get_message_reference ((MMSmsPart *)l->data));
+    }
+
+    mm_gdbus_sms_complete_send (MM_GDBUS_SMS (ctx->self), ctx->invocation);
     handle_send_context_free (ctx);
 }
 
@@ -546,11 +550,12 @@ prepare_sms_to_be_sent (MMBaseSms *self,
 {
     GList *l;
 
+    /* If we created the parts when storing, we're fine already */
     if (self->priv->parts)
         return TRUE;
 
     if (!generate_submit_pdus (self, error)) {
-        g_prefix_error (error, "Cannot prepare SMS to be sent: ");
+        g_prefix_error (error, "Cannot create submit PDUs: ");
         return FALSE;
     }
 
@@ -606,6 +611,7 @@ handle_send_auth_ready (MMBaseModem *modem,
 
     /* Prepare the SMS to be sent, creating the PDU list if required */
     if (!prepare_sms_to_be_sent (ctx->self, &error)) {
+        g_prefix_error (&error, "Cannot prepare SMS to be sent: ");
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_send_context_free (ctx);
         return;
