@@ -1,3 +1,19 @@
+modemmanager (1.18.12-1) unstable; urgency=medium
+
+  [ Evangelos Ribeiro Tzaras ]
+  * modemmanager: Recommend libqmi-utils and libmbim-utils.
+    The FCC unlock scripts shipped in modemmanager use `qmicli` to
+    perform unlocking which is part of the `libqmi-utils` package.
+    Additionally `mbimcli` is used by the `leac` script,
+    so recommend libmbim-utils as well. (Closes: #1017975)
+
+  [ Arnaud Ferraris ]
+  * d/upstream: add new upstream signing key
+  * New upstream version 1.18.12
+  * d/patches: drop upstreamed patches
+
+ -- Arnaud Ferraris <aferraris@debian.org>  Wed, 28 Sep 2022 15:06:56 +0200
+
 modemmanager (1.18.10-2) unstable; urgency=medium
 
   [ Matteo F. Vescovi <mfv@debian.org> 2022-09-07 ]
