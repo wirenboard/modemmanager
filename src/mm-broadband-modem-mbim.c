@@ -2150,6 +2150,7 @@ static const QmiService qmi_services[] = {
     QMI_SERVICE_PDS,
     QMI_SERVICE_LOC,
     QMI_SERVICE_PDC,
+    QMI_SERVICE_UIM,
 };
 
 static void allocate_next_qmi_client (GTask *task);
@@ -3360,8 +3361,7 @@ basic_connect_notification_connect (MMBroadbandModemMbim *self,
     if (!bearer_list)
         return;
 
-    if (mbim_uuid_to_context_type (context_type) == MBIM_CONTEXT_TYPE_INTERNET &&
-        activation_state == MBIM_ACTIVATION_STATE_DEACTIVATED) {
+    if (activation_state == MBIM_ACTIVATION_STATE_DEACTIVATED) {
         ReportDisconnectedStatusContext ctx;
         g_autoptr(GError)               connection_error = NULL;
 
@@ -6257,6 +6257,13 @@ load_sim_slots_context_free (LoadSimSlotsContext *ctx)
     g_slice_free (LoadSimSlotsContext, ctx);
 }
 
+static void
+sim_slot_free (MMBaseSim *sim)
+{
+    if (sim)
+        g_object_unref (sim);
+}
+
 static gboolean
 load_sim_slots_finish (MMIfaceModem *self,
                        GAsyncResult *res,
@@ -6501,7 +6508,7 @@ query_sys_caps_ready (MbimDevice   *device,
         return;
     }
     ctx->number_slots = number_slots;
-    ctx->sim_slots = g_ptr_array_new_full (number_slots, NULL);
+    ctx->sim_slots = g_ptr_array_new_full (number_slots, (GDestroyNotify) sim_slot_free);
 
     if (number_executors == 0) {
         g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
