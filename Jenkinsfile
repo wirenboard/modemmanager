@@ -1,1 +1,3 @@
-buildDebSbuild defaultTargets: 'bullseye-armhf'
+buildDebSbuild defaultTargets: 'bullseye-armhf',
+	       defaultWbdevInstallDeps: 'yes',
+               defaultWbdevBuildMethod: 'qemuchroot'
