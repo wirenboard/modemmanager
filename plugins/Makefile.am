@@ -728,13 +728,11 @@ dist_udevrules_DATA += foxconn/77-mm-foxconn-port-types.rules
 
 dist_pkgdata_DATA += \
 	foxconn/mm-foxconn-t77w968-carrier-mapping.conf \
-	foxconn/mm-foxconn-t99w175-carrier-mapping.conf \
 	$(NULL)
 
 AM_CFLAGS += \
 	-DTESTUDEVRULESDIR_FOXCONN=\"${srcdir}/foxconn\" \
 	-DTESTKEYFILE_FOXCONN_T77W968=\"${srcdir}/foxconn/mm-foxconn-t77w968-carrier-mapping.conf\" \
-	-DTESTKEYFILE_FOXCONN_T99W175=\"${srcdir}/foxconn/mm-foxconn-t99w175-carrier-mapping.conf\" \
 	$(NULL)
 
 endif
@@ -938,6 +936,10 @@ libmm_plugin_linktop_la_CPPFLAGS = \
 	$(NULL)
 libmm_plugin_linktop_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_linktop_la_LIBADD = $(builddir)/libhelpers-linktop.la
+
+dist_udevrules_DATA += linktop/77-mm-linktop-port-types.rules
+
+AM_CFLAGS += -DTESTUDEVRULESDIR_LINKTOP=\"${srcdir}/linktop\"
 
 endif
 

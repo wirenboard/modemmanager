@@ -1713,6 +1713,8 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_network_timezone_set_dst_offset@Base 0.7.991
  mm_network_timezone_set_leap_seconds@Base 0.7.991
  mm_network_timezone_set_offset@Base 0.7.991
+ mm_new_iso8601_time@Base 1.18.8
+ mm_new_iso8601_time_from_unix_time@Base 1.18.8
  mm_object_dup_path@Base 0.7.991
  mm_object_get_modem@Base 0.7.991
  mm_object_get_modem_3gpp@Base 0.7.991

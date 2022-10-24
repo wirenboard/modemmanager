@@ -162,22 +162,36 @@ struct _MMBroadbandModemMbimPrivate {
 /*****************************************************************************/
 
 static gboolean
-peek_device (gpointer self,
-             MbimDevice **o_device,
-             GAsyncReadyCallback callback,
-             gpointer user_data)
+peek_device (gpointer              self,
+             MbimDevice          **o_device,
+             GAsyncReadyCallback   callback,
+             gpointer              user_data)
 {
     MMPortMbim *port;
 
     port = mm_broadband_modem_mbim_peek_port_mbim (MM_BROADBAND_MODEM_MBIM (self));
     if (!port) {
-        g_task_report_new_error (self,
-                                 callback,
-                                 user_data,
-                                 peek_device,
-                                 MM_CORE_ERROR,
-                                 MM_CORE_ERROR_FAILED,
-                                 "Couldn't peek MBIM port");
+        g_task_report_new_error (self, callback, user_data, peek_device,
+                                 MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "Couldn't peek MBIM port");
+        return FALSE;
+    }
+
+    *o_device = mm_port_mbim_peek_device (port);
+    return TRUE;
+}
+
+static gboolean
+peek_device_in_task (gpointer     self,
+                     MbimDevice **o_device,
+                     GTask       *task)
+
+{
+    MMPortMbim *port;
+
+    port = mm_broadband_modem_mbim_peek_port_mbim (MM_BROADBAND_MODEM_MBIM (self));
+    if (!port) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "Couldn't peek MBIM port");
+        g_object_unref (task);
         return FALSE;
     }
 
@@ -2136,6 +2150,7 @@ static const QmiService qmi_services[] = {
     QMI_SERVICE_PDS,
     QMI_SERVICE_LOC,
     QMI_SERVICE_PDC,
+    QMI_SERVICE_UIM,
 };
 
 static void allocate_next_qmi_client (GTask *task);
@@ -3090,18 +3105,6 @@ before_set_lte_attach_configuration_query_ready (MbimDevice   *device,
             }
         }
 
-        auth = mm_bearer_properties_get_allowed_auth (config);
-        if (auth == MM_BEARER_ALLOWED_AUTH_UNKNOWN)
-            configurations[i]->auth_protocol = MBIM_AUTH_PROTOCOL_NONE;
-        else {
-            configurations[i]->auth_protocol = mm_bearer_allowed_auth_to_mbim_auth_protocol (auth, self, &error);
-            if (error) {
-                configurations[i]->auth_protocol = MBIM_AUTH_PROTOCOL_NONE;
-                mm_obj_warn (self, "unexpected auth settings requested: %s", error->message);
-                g_clear_error (&error);
-            }
-        }
-
         g_clear_pointer (&(configurations[i]->access_string), g_free);
         configurations[i]->access_string = g_strdup (mm_bearer_properties_get_apn (config));
 
@@ -3110,6 +3113,18 @@ before_set_lte_attach_configuration_query_ready (MbimDevice   *device,
 
         g_clear_pointer (&(configurations[i]->password), g_free);
         configurations[i]->password = g_strdup (mm_bearer_properties_get_password (config));
+
+        auth = mm_bearer_properties_get_allowed_auth (config);
+        if ((auth != MM_BEARER_ALLOWED_AUTH_UNKNOWN) || configurations[i]->user_name || configurations[i]->password) {
+            configurations[i]->auth_protocol = mm_bearer_allowed_auth_to_mbim_auth_protocol (auth, self, &error);
+            if (error) {
+                configurations[i]->auth_protocol = MBIM_AUTH_PROTOCOL_NONE;
+                mm_obj_warn (self, "unexpected auth settings requested: %s", error->message);
+                g_clear_error (&error);
+            }
+        } else {
+            configurations[i]->auth_protocol = MBIM_AUTH_PROTOCOL_NONE;
+        }
 
         configurations[i]->source = MBIM_CONTEXT_SOURCE_USER;
         configurations[i]->compression = MBIM_COMPRESSION_NONE;
@@ -3346,8 +3361,7 @@ basic_connect_notification_connect (MMBroadbandModemMbim *self,
     if (!bearer_list)
         return;
 
-    if (mbim_uuid_to_context_type (context_type) == MBIM_CONTEXT_TYPE_INTERNET &&
-        activation_state == MBIM_ACTIVATION_STATE_DEACTIVATED) {
+    if (activation_state == MBIM_ACTIVATION_STATE_DEACTIVATED) {
         ReportDisconnectedStatusContext ctx;
         g_autoptr(GError)               connection_error = NULL;
 
@@ -6243,6 +6257,13 @@ load_sim_slots_context_free (LoadSimSlotsContext *ctx)
     g_slice_free (LoadSimSlotsContext, ctx);
 }
 
+static void
+sim_slot_free (MMBaseSim *sim)
+{
+    if (sim)
+        g_object_unref (sim);
+}
+
 static gboolean
 load_sim_slots_finish (MMIfaceModem *self,
                        GAsyncResult *res,
@@ -6487,7 +6508,7 @@ query_sys_caps_ready (MbimDevice   *device,
         return;
     }
     ctx->number_slots = number_slots;
-    ctx->sim_slots = g_ptr_array_new_full (number_slots, NULL);
+    ctx->sim_slots = g_ptr_array_new_full (number_slots, (GDestroyNotify) sim_slot_free);
 
     if (number_executors == 0) {
         g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
@@ -6514,13 +6535,13 @@ query_sys_caps_ready (MbimDevice   *device,
 static void
 load_sim_slots_mbim (GTask *task)
 {
-    MMBroadbandModemMbim *self;
-    MbimDevice           *device;
-    MbimMessage          *message;
+    MMBroadbandModemMbim   *self;
+    MbimDevice             *device;
+    g_autoptr(MbimMessage)  message = NULL;
 
     self = g_task_get_source_object (task);
 
-    if (!peek_device (self, &device, NULL, NULL))
+    if (!peek_device_in_task (self, &device, task))
         return;
 
     message = mbim_message_ms_basic_connect_extensions_sys_caps_query_new (NULL);
@@ -6530,7 +6551,6 @@ load_sim_slots_mbim (GTask *task)
                          NULL,
                          (GAsyncReadyCallback)query_sys_caps_ready,
                          task);
-    mbim_message_unref (message);
 }
 
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
@@ -6596,7 +6616,7 @@ set_device_slot_mappings_ready (MbimDevice   *device,
 {
     MMBroadbandModemMbim    *self;
     g_autoptr(MbimMessage)   response = NULL;
-    g_autoptr(GError)        error = NULL;
+    GError                  *error = NULL;
     guint32                  map_count = 0;
     g_autoptr(MbimSlotArray) slot_mappings = NULL;
     guint                    i;
@@ -6637,7 +6657,6 @@ set_device_slot_mappings_ready (MbimDevice   *device,
     g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
                                  "Can't find executor index '%u'", self->priv->executor_index);
     g_object_unref (task);
-    return;
 }
 
 static void
@@ -6647,7 +6666,7 @@ before_set_query_device_slot_mappings_ready (MbimDevice   *device,
 {
     MMBroadbandModemMbim    *self;
     g_autoptr(MbimMessage)   response = NULL;
-    g_autoptr(GError)        error = NULL;
+    GError                  *error = NULL;
     g_autoptr(MbimMessage)   message = NULL;
     guint32                  map_count = 0;
     g_autoptr(MbimSlotArray) slot_mappings = NULL;
@@ -6705,13 +6724,13 @@ before_set_query_device_slot_mappings_ready (MbimDevice   *device,
 static void
 set_primary_sim_slot_mbim (GTask *task)
 {
-    MMBroadbandModemMbim *self;
-    MbimDevice           *device;
-    MbimMessage          *message;
+    MMBroadbandModemMbim   *self;
+    MbimDevice             *device;
+    g_autoptr(MbimMessage)  message = NULL;
 
     self = g_task_get_source_object (task);
 
-    if (!peek_device (self, &device, NULL, NULL))
+    if (!peek_device_in_task (self, &device, task))
         return;
 
     message = mbim_message_ms_basic_connect_extensions_device_slot_mappings_query_new (NULL);
@@ -6721,7 +6740,6 @@ set_primary_sim_slot_mbim (GTask *task)
                          NULL,
                          (GAsyncReadyCallback)before_set_query_device_slot_mappings_ready,
                          task);
-    mbim_message_unref (message);
 }
 
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED

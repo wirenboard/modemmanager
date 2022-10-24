@@ -6,7 +6,7 @@ dnl
 
 m4_define([mm_major_version], [1])
 m4_define([mm_minor_version], [18])
-m4_define([mm_micro_version], [6])
+m4_define([mm_micro_version], [12])
 m4_define([mm_version],
           [mm_major_version.mm_minor_version.mm_micro_version])
 
@@ -404,7 +404,7 @@ dnl-----------------------------------------------------------------------------
 dnl QMI support (enabled by default)
 dnl
 
-LIBQMI_VERSION=1.30.2
+LIBQMI_VERSION=1.30.8
 
 AC_ARG_WITH(qmi, AS_HELP_STRING([--without-qmi], [Build without QMI support]), [], [with_qmi=yes])
 AM_CONDITIONAL(WITH_QMI, test "x$with_qmi" = "xyes")
@@ -568,7 +568,8 @@ Makefile
 data/Makefile
 data/ModemManager.pc
 data/mm-glib.pc
-data/fcc-unlock/Makefile
+data/dispatcher-connection/Makefile
+data/dispatcher-fcc-unlock/Makefile
 data/tests/Makefile
 data/tests/org.freedesktop.ModemManager1.service
 include/Makefile

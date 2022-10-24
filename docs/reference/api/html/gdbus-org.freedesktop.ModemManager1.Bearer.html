@@ -58,8 +58,9 @@
 </div>
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Bearer"></a><h2>Description</h2>
-<p>      This interface provides access to specific actions that may be performed
-      on available bearers.
+<p>
+This interface provides access to specific actions that may be performed
+on available bearers.
 </p>
 </div>
 <div class="refsect1">
@@ -69,19 +70,21 @@
 <pre class="programlisting">
 Connect ();
 </pre>
-<p>        Requests activation of a packet data connection with the network using
-        this bearer's properties. Upon successful activation, the modem can
-        send and receive packet data and, depending on the addressing
-        capability of the modem, a connection manager may need to start PPP,
-        perform DHCP, or assign the IP address returned by the modem to the
-        data interface. Upon successful return, the
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip4Config" title='The "Ip4Config" property'>"Ip4Config"</a>
-        and/or
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip6Config" title='The "Ip6Config" property'>"Ip6Config"</a>
-        properties become valid and may contain IP configuration information for
-        the data interface associated with this bearer.
+<p>
+Requests activation of a packet data connection with the network using
+this bearer's properties. Upon successful activation, the modem can
+send and receive packet data and, depending on the addressing
+capability of the modem, a connection manager may need to start PPP,
+perform DHCP, or assign the IP address returned by the modem to the
+data interface. Upon successful return, the
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip4Config" title='The "Ip4Config" property'>"Ip4Config"</a>
+and/or
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip6Config" title='The "Ip6Config" property'>"Ip6Config"</a>
+properties become valid and may contain IP configuration information for
+the data interface associated with this bearer.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -90,12 +93,15 @@ Connect ();
 <pre class="programlisting">
 Disconnect ();
 </pre>
-<p>        Disconnect and deactivate this packet data connection.
+<p>
+Disconnect and deactivate this packet data connection.
 </p>
-<p>        Any ongoing data session will be terminated and IP addresses become
-        invalid when this method is called.
+<p>
+Any ongoing data session will be terminated and IP addresses become
+invalid when this method is called.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 </div>
@@ -106,27 +112,31 @@ Disconnect ();
 <pre class="programlisting">
 Interface  readable   s
 </pre>
-<p>        The operating system name for the network data interface that provides
-        packet data using this bearer.
+<p>
+The operating system name for the network data interface that provides
+packet data using this bearer.
 </p>
-<p>        Connection managers must configure this interface depending on the IP
-        <code class="literal">"method"</code> given by the
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip4Config" title='The "Ip4Config" property'>"Ip4Config"</a>
-        or
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip6Config" title='The "Ip6Config" property'>"Ip6Config"</a>
-        properties set by bearer activation.
+<p>
+Connection managers must configure this interface depending on the IP
+<code class="literal">"method"</code> given by the
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip4Config" title='The "Ip4Config" property'>"Ip4Config"</a>
+or
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Bearer.html#gdbus-property-org-freedesktop-ModemManager1-Bearer.Ip6Config" title='The "Ip6Config" property'>"Ip6Config"</a>
+properties set by bearer activation.
 </p>
-<p>        If <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-METHOD-STATIC:CAPS">MM_BEARER_IP_METHOD_STATIC</a>
-        or
-        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-METHOD-DHCP:CAPS">MM_BEARER_IP_METHOD_DHCP</a>
-        methods are given, the interface
-        will be an ethernet-style interface suitable for DHCP or setting static
-        IP configuration on, while if the
-        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-METHOD-PPP:CAPS">MM_BEARER_IP_METHOD_PPP</a>
-        method is given, the interface
-        will be a serial TTY which must then have PPP run over it.
+<p>
+If <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-METHOD-STATIC:CAPS">MM_BEARER_IP_METHOD_STATIC</a>
+or
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-METHOD-DHCP:CAPS">MM_BEARER_IP_METHOD_DHCP</a>
+methods are given, the interface
+will be an ethernet-style interface suitable for DHCP or setting static
+IP configuration on, while if the
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-METHOD-PPP:CAPS">MM_BEARER_IP_METHOD_PPP</a>
+method is given, the interface
+will be a serial TTY which must then have PPP run over it.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -135,10 +145,12 @@ Interface  readable   s
 <pre class="programlisting">
 Connected  readable   b
 </pre>
-<p>        Indicates whether or not the bearer is connected and thus whether
-        packet data communication using this bearer is possible.
+<p>
+Indicates whether or not the bearer is connected and thus whether
+packet data communication using this bearer is possible.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -147,14 +159,17 @@ Connected  readable   b
 <pre class="programlisting">
 ConnectionError  readable   (ss)
 </pre>
-<p>        Provides additional information specifying the reason why the modem is
-	not connected (either due to a failed connection attempt, or due to a
-	a network initiated disconnection).
+<p>
+Provides additional information specifying the reason why the modem is
+not connected (either due to a failed connection attempt, or due to a
+a network initiated disconnection).
 </p>
-<p>        The value is composed of two strings: the registered DBus error name,
-	and an optional error message.
+<p>
+The value is composed of two strings: the registered DBus error name,
+and an optional error message.
 </p>
-<p>        Since: 1.18
+<p>
+Since: 1.18
 </p>
 </div>
 <hr>
@@ -163,11 +178,13 @@ ConnectionError  readable   (ss)
 <pre class="programlisting">
 Suspended  readable   b
 </pre>
-<p>        In some devices, packet data service will be suspended while the device
-        is handling other communication, like a voice call. If packet data
-        service is suspended (but not deactivated) this property will be <code class="constant">TRUE</code>.
+<p>
+In some devices, packet data service will be suspended while the device
+is handling other communication, like a voice call. If packet data
+service is suspended (but not deactivated) this property will be <code class="constant">TRUE</code>.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -176,10 +193,12 @@ Suspended  readable   b
 <pre class="programlisting">
 Multiplexed  readable   b
 </pre>
-<p>        This property will be <code class="constant">TRUE</code> if the bearer is connected through a
-        multiplexed network link.
+<p>
+This property will be <code class="constant">TRUE</code> if the bearer is connected through a
+multiplexed network link.
 </p>
-<p>        Since: 1.18
+<p>
+Since: 1.18
 </p>
 </div>
 <hr>
@@ -188,12 +207,14 @@ Multiplexed  readable   b
 <pre class="programlisting">
 Ip4Config  readable   a{sv}
 </pre>
-<p>        If the bearer was configured for IPv4 addressing, upon activation this
-        property contains the addressing details for assignment to the data
-        interface.
+<p>
+If the bearer was configured for IPv4 addressing, upon activation this
+property contains the addressing details for assignment to the data
+interface.
 </p>
-<p>        Mandatory items include:
-        </p>
+<p>
+Mandatory items include:
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -202,20 +223,22 @@ Ip4Config  readable   a{sv}
 <tbody><tr>
 <td><p><span class="term"><code class="literal">"method"</code></span></p></td>
 <td>
-              A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerIpMethod" title="enum MMBearerIpMethod">MMBearerIpMethod</a>,
-              given as an unsigned integer value (signature <code class="literal">"u"</code>).
-            </td>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerIpMethod" title="enum MMBearerIpMethod">MMBearerIpMethod</a>,
+given as an unsigned integer value (signature <code class="literal">"u"</code>).
+</td>
 </tr></tbody>
 </table></div>
 <p>
 </p>
-<p>        If the bearer specifies configuration via PPP or DHCP, only the
-        <code class="literal">"method"</code> item is guaranteed to be present.
+<p>
+If the bearer specifies configuration via PPP or DHCP, only the
+<code class="literal">"method"</code> item is guaranteed to be present.
 </p>
-<p>        Additional items which are only applicable when using the
-        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-METHOD-STATIC:CAPS">MM_BEARER_IP_METHOD_STATIC</a>
-        method are:
-        </p>
+<p>
+Additional items which are only applicable when using the
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-METHOD-STATIC:CAPS">MM_BEARER_IP_METHOD_STATIC</a>
+method are:
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -225,45 +248,46 @@ Ip4Config  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"address"</code></span></p></td>
 <td>
-              IP address, given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+IP address, given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"prefix"</code></span></p></td>
 <td>
-              Numeric CIDR network prefix (ie, 24, 32, etc), given as an unsigned integer value (signature <code class="literal">"u"</code>).
-            </td>
+Numeric CIDR network prefix (ie, 24, 32, etc), given as an unsigned integer value (signature <code class="literal">"u"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"dns1"</code></span></p></td>
 <td>
-              IP address of the first DNS server, given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+IP address of the first DNS server, given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"dns2"</code></span></p></td>
 <td>
-              IP address of the second DNS server, given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+IP address of the second DNS server, given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"dns3"</code></span></p></td>
 <td>
-              IP address of the third DNS server, given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+IP address of the third DNS server, given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"gateway"</code></span></p></td>
 <td>
-              IP address of the default gateway, given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+IP address of the default gateway, given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        This property may also include the following items when such information is available:
-        </p>
+<p>
+This property may also include the following items when such information is available:
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -272,13 +296,14 @@ Ip4Config  readable   a{sv}
 <tbody><tr>
 <td><p><span class="term"><code class="literal">"mtu"</code></span></p></td>
 <td>
-              Maximum transmission unit (MTU), given as an unsigned integer value (signature <code class="literal">"u"</code>).
-            </td>
+Maximum transmission unit (MTU), given as an unsigned integer value (signature <code class="literal">"u"</code>).
+</td>
 </tr></tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -287,12 +312,14 @@ Ip4Config  readable   a{sv}
 <pre class="programlisting">
 Ip6Config  readable   a{sv}
 </pre>
-<p>        If the bearer was configured for IPv6 addressing, upon activation this
-        property contains the addressing details for assignment to the data
-        interface.
+<p>
+If the bearer was configured for IPv6 addressing, upon activation this
+property contains the addressing details for assignment to the data
+interface.
 </p>
-<p>        Mandatory items include:
-        </p>
+<p>
+Mandatory items include:
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -301,25 +328,27 @@ Ip6Config  readable   a{sv}
 <tbody><tr>
 <td><p><span class="term"><code class="literal">"method"</code></span></p></td>
 <td>
-              A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerIpMethod" title="enum MMBearerIpMethod">MMBearerIpMethod</a>,
-              given as an unsigned integer value (signature <code class="literal">"u"</code>).
-            </td>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerIpMethod" title="enum MMBearerIpMethod">MMBearerIpMethod</a>,
+given as an unsigned integer value (signature <code class="literal">"u"</code>).
+</td>
 </tr></tbody>
 </table></div>
 <p>
 </p>
-<p>        If the bearer specifies configuration via PPP or DHCP, often only the
-        <code class="literal">"method"</code> item will be present.  IPv6 SLAAC should
-        be used to retrieve correct addressing and DNS information via Router
-        Advertisements and DHCPv6.  In some cases an IPv6 Link-Local
-        <code class="literal">"address"</code> item will be present, which should be
-        assigned to the data port before performing SLAAC, as the mobile network
-        may expect SLAAC setup to use this address.
+<p>
+If the bearer specifies configuration via PPP or DHCP, often only the
+<code class="literal">"method"</code> item will be present.  IPv6 SLAAC should
+be used to retrieve correct addressing and DNS information via Router
+Advertisements and DHCPv6.  In some cases an IPv6 Link-Local
+<code class="literal">"address"</code> item will be present, which should be
+assigned to the data port before performing SLAAC, as the mobile network
+may expect SLAAC setup to use this address.
 </p>
-<p>        Additional items which are usually only applicable when using the
-        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-METHOD-STATIC:CAPS">MM_BEARER_IP_METHOD_STATIC</a>
-        method are:
-        </p>
+<p>
+Additional items which are usually only applicable when using the
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-BEARER-IP-METHOD-STATIC:CAPS">MM_BEARER_IP_METHOD_STATIC</a>
+method are:
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -329,45 +358,46 @@ Ip6Config  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"address"</code></span></p></td>
 <td>
-              IP address, given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+IP address, given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"prefix"</code></span></p></td>
 <td>
-              Numeric CIDR network prefix (ie, 24, 32, etc), given as an unsigned integer value (signature <code class="literal">"u"</code>).
-            </td>
+Numeric CIDR network prefix (ie, 24, 32, etc), given as an unsigned integer value (signature <code class="literal">"u"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"dns1"</code></span></p></td>
 <td>
-              IP address of the first DNS server, given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+IP address of the first DNS server, given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"dns2"</code></span></p></td>
 <td>
-              IP address of the second DNS server, given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+IP address of the second DNS server, given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"dns3"</code></span></p></td>
 <td>
-              IP address of the third DNS server, given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+IP address of the third DNS server, given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"gateway"</code></span></p></td>
 <td>
-              IP address of the default gateway, given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+IP address of the default gateway, given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        This property may also include the following items when such information is available:
-        </p>
+<p>
+This property may also include the following items when such information is available:
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -376,13 +406,14 @@ Ip6Config  readable   a{sv}
 <tbody><tr>
 <td><p><span class="term"><code class="literal">"mtu"</code></span></p></td>
 <td>
-              Maximum transmission unit (MTU), given as an unsigned integer value (signature <code class="literal">"u"</code>). Since 1.4.
-            </td>
+Maximum transmission unit (MTU), given as an unsigned integer value (signature <code class="literal">"u"</code>). Since 1.4.
+</td>
 </tr></tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -391,19 +422,23 @@ Ip6Config  readable   a{sv}
 <pre class="programlisting">
 Stats  readable   a{sv}
 </pre>
-<p>        If the modem supports it, this property will show statistics associated
-        to the bearer.
+<p>
+If the modem supports it, this property will show statistics associated
+to the bearer.
 </p>
-<p>        There are two main different statistic types reported: either applicable
-        to the ongoing connection, or otherwise compiled for all connections
-        that have been done on this bearer object.
+<p>
+There are two main different statistic types reported: either applicable
+to the ongoing connection, or otherwise compiled for all connections
+that have been done on this bearer object.
 </p>
-<p>        When the connection is disconnected automatically or explicitly by the
-        user, the values applicable to the ongoing connection will show the last
-        values cached.
+<p>
+When the connection is disconnected automatically or explicitly by the
+user, the values applicable to the ongoing connection will show the last
+values cached.
 </p>
-<p>        The following items may appear in the list of statistics:
-        </p>
+<p>
+The following items may appear in the list of statistics:
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -413,71 +448,72 @@ Stats  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"rx-bytes"</code></span></p></td>
 <td>
-              Number of bytes received without error in the ongoing connection,
-              given as an unsigned 64-bit integer value (signature
-              <code class="literal">"t"</code>).
-            </td>
+Number of bytes received without error in the ongoing connection,
+given as an unsigned 64-bit integer value (signature
+<code class="literal">"t"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"tx-bytes"</code></span></p></td>
 <td>
-              Number of bytes transmitted without error in the ongoing
-              connection, given as an unsigned 64-bit integer value (signature
-              <code class="literal">"t"</code>).
-            </td>
+Number of bytes transmitted without error in the ongoing
+connection, given as an unsigned 64-bit integer value (signature
+<code class="literal">"t"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"duration"</code></span></p></td>
 <td>
-              Duration of the ongoing connection, in seconds, given as an
-              unsigned integer value (signature <code class="literal">"u"</code>).
-            </td>
+Duration of the ongoing connection, in seconds, given as an
+unsigned integer value (signature <code class="literal">"u"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"attempts"</code></span></p></td>
 <td>
-              Total number of connection attempts done with this bearer, given
-              as an unsigned integer value (signature <code class="literal">"u"</code>).
-              Since 1.14.
-            </td>
+Total number of connection attempts done with this bearer, given
+as an unsigned integer value (signature <code class="literal">"u"</code>).
+Since 1.14.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"failed-attempts"</code></span></p></td>
 <td>
-              Number of failed connection attempts done with this bearer,
-              given as an unsigned integer value (signature
-              <code class="literal">"u"</code>). Since 1.14.
-            </td>
+Number of failed connection attempts done with this bearer,
+given as an unsigned integer value (signature
+<code class="literal">"u"</code>). Since 1.14.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"total-rx-bytes"</code></span></p></td>
 <td>
-              Total number of bytes received without error in all the successful
-              connection establishments, given as an unsigned 64-bit integer
-              value (signature <code class="literal">"t"</code>). Since 1.14.
-            </td>
+Total number of bytes received without error in all the successful
+connection establishments, given as an unsigned 64-bit integer
+value (signature <code class="literal">"t"</code>). Since 1.14.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"total-tx-bytes"</code></span></p></td>
 <td>
-              Total number of bytes transmitted without error in all the
-              successful connection establishments, given as an unsigned 64-bit
-              integer value (signature <code class="literal">"t"</code>). Since 1.14.
-            </td>
+Total number of bytes transmitted without error in all the
+successful connection establishments, given as an unsigned 64-bit
+integer value (signature <code class="literal">"t"</code>). Since 1.14.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"total-duration"</code></span></p></td>
 <td>
-              Total duration of all the successful connection establishments, in
-              seconds, given as an unsigned integer value (signature
-              <code class="literal">"u"</code>). Since 1.14.
-            </td>
+Total duration of all the successful connection establishments, in
+seconds, given as an unsigned integer value (signature
+<code class="literal">"u"</code>). Since 1.14.
+</td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 </div>
 <hr>
@@ -486,9 +522,11 @@ Stats  readable   a{sv}
 <pre class="programlisting">
 IpTimeout  readable   u
 </pre>
-<p>        Maximum time to wait for a successful IP establishment, when PPP is used.
+<p>
+Maximum time to wait for a successful IP establishment, when PPP is used.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -497,9 +535,11 @@ IpTimeout  readable   u
 <pre class="programlisting">
 BearerType  readable   u
 </pre>
-<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerType" title="enum MMBearerType">MMBearerType</a>
+<p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerType" title="enum MMBearerType">MMBearerType</a>
 </p>
-<p>        Since: 1.10
+<p>
+Since: 1.10
 </p>
 </div>
 <hr>
@@ -508,14 +548,17 @@ BearerType  readable   u
 <pre class="programlisting">
 ProfileId  readable   i
 </pre>
-<p>        The profile ID this bearer object is associated with, only applicable if
-        the modem supports profile management operations, and if the bearer is
-        connected.
+<p>
+The profile ID this bearer object is associated with, only applicable if
+the modem supports profile management operations, and if the bearer is
+connected.
 </p>
-<p>        If the bearer is disconnected, or if profile management operations are
-        not supported, -1 will be reported.
+<p>
+If the bearer is disconnected, or if profile management operations are
+not supported, -1 will be reported.
 </p>
-<p>        Since: 1.18
+<p>
+Since: 1.18
 </p>
 </div>
 <hr>
@@ -524,18 +567,22 @@ ProfileId  readable   i
 <pre class="programlisting">
 Properties  readable   a{sv}
 </pre>
-<p>        List of settings used to create the bearer.
+<p>
+List of settings used to create the bearer.
 </p>
-<p>        Bearers may be implicitly created (e.g. the default initial EPS bearer
-        created during the network registration process in 4G and 5G networks)
-        or explicitly created by the user (e.g. via the
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.CreateBearer" title="The CreateBearer() method">CreateBearer()</a>
-        or <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Simple.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Simple.Connect" title="The Connect() method">Connect()</a>
-        calls).
+<p>
+Bearers may be implicitly created (e.g. the default initial EPS bearer
+created during the network registration process in 4G and 5G networks)
+or explicitly created by the user (e.g. via the
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-method-org-freedesktop-ModemManager1-Modem.CreateBearer" title="The CreateBearer() method">CreateBearer()</a>
+or <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Simple.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Simple.Connect" title="The Connect() method">Connect()</a>
+calls).
 </p>
-<p>        The following settings apply to 3GPP (GSM/UMTS/LTE/5GNR) devices:
+<p>
+The following settings apply to 3GPP (GSM/UMTS/LTE/5GNR) devices:
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -545,68 +592,70 @@ Properties  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"apn"</code></span></p></td>
 <td><p>
-              The Access Point Name to use in the connection, given as a string
-              value (signature <code class="literal">"s"</code>).
-            </p></td>
+The Access Point Name to use in the connection, given as a string
+value (signature <code class="literal">"s"</code>).
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"ip-type"</code></span></p></td>
 <td>
-              The IP addressing type to use, given as a
-              <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerIpFamily" title="enum MMBearerIpFamily">MMBearerIpFamily</a>
-              value (signature <code class="literal">"u"</code>).
-            </td>
+The IP addressing type to use, given as a
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerIpFamily" title="enum MMBearerIpFamily">MMBearerIpFamily</a>
+value (signature <code class="literal">"u"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"apn-type"</code></span></p></td>
 <td>
-              The purposes of the specified APN, given as a
-              <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerApnType" title="enum MMBearerApnType">MMBearerApnType</a>
-              value (signature <code class="literal">"u"</code>).
-            </td>
+The purposes of the specified APN, given as a
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerApnType" title="enum MMBearerApnType">MMBearerApnType</a>
+value (signature <code class="literal">"u"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"allowed-auth"</code></span></p></td>
 <td>
-              The authentication method to use, given as a
-              <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerAllowedAuth" title="enum MMBearerAllowedAuth">MMBearerAllowedAuth</a>
-              value (signature <code class="literal">"u"</code>).
-            </td>
+The authentication method to use, given as a
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerAllowedAuth" title="enum MMBearerAllowedAuth">MMBearerAllowedAuth</a>
+value (signature <code class="literal">"u"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"user"</code></span></p></td>
 <td>
-              The user name (if any) required by the network, given as a string
-              value (signature <code class="literal">"s"</code>).
-            </td>
+The user name (if any) required by the network, given as a string
+value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"password"</code></span></p></td>
 <td>
-              The password (if any) required by the network, given as a string
-              value (signature <code class="literal">"s"</code>).
-            </td>
+The password (if any) required by the network, given as a string
+value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"profile-id"</code></span></p></td>
 <td>
-              The ID of the 3GPP profile to connect to (signature
-              <code class="literal">"i"</code>), as given in the
-              <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.List" title="The List() method">profile list</a>.
-              In this case, if additional profile settings are given in the properties
-              and they already exist in the profile (e.g. <code class="literal">"apn"</code>),
-              the new settings will be explicitly ignored; the settings stored in the
-              profile itself always take preference. The value -1 is used to
-	      indicate an invalid or uninitialized profile id. Since 1.18.
-            </td>
+The ID of the 3GPP profile to connect to (signature
+<code class="literal">"i"</code>), as given in the
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-ProfileManager.List" title="The List() method">profile list</a>.
+In this case, if additional profile settings are given in the properties
+and they already exist in the profile (e.g. <code class="literal">"apn"</code>),
+the new settings will be explicitly ignored; the settings stored in the
+profile itself always take preference. The value -1 is used to
+indicate an invalid or uninitialized profile id. Since 1.18.
+</td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        The following settings apply to 3GPP2 (CDMA/EVDO) devices:
+<p>
+The following settings apply to 3GPP2 (CDMA/EVDO) devices:
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -615,17 +664,19 @@ Properties  readable   a{sv}
 <tbody><tr>
 <td><p><span class="term"><code class="literal">"rm-protocol"</code></span></p></td>
 <td>
-              The protocol of the Rm interface, given as a
-              <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRmProtocol" title="enum MMModemCdmaRmProtocol">MMModemCdmaRmProtocol</a>
-              value (signature <code class="literal">"u"</code>).
-            </td>
+The protocol of the Rm interface, given as a
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRmProtocol" title="enum MMModemCdmaRmProtocol">MMModemCdmaRmProtocol</a>
+value (signature <code class="literal">"u"</code>).
+</td>
 </tr></tbody>
 </table></div>
 <p>
 </p>
-<p>        The following settings apply to all devices types:
+<p>
+The following settings apply to all devices types:
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -635,27 +686,29 @@ Properties  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"allow-roaming"</code></span></p></td>
 <td>
-              Specifies whether the connections are allowed even when the device
-              is registered in a roaming network, given as a boolean value (signature
-              <code class="literal">"b"</code>).
-            </td>
+Specifies whether the connections are allowed even when the device
+is registered in a roaming network, given as a boolean value (signature
+<code class="literal">"b"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"multiplex"</code></span></p></td>
 <td>
-              The multiplex support requested by the user, given as a
-              <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerMultiplexSupport" title="enum MMBearerMultiplexSupport">MMBearerMultiplexSupport</a>
-              value (signature <code class="literal">"u"</code>). Since 1.18.
-            </td>
+The multiplex support requested by the user, given as a
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MMBearerMultiplexSupport" title="enum MMBearerMultiplexSupport">MMBearerMultiplexSupport</a>
+value (signature <code class="literal">"u"</code>). Since 1.18.
+</td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        The following settings are no longer supported, but they are kept on the
-        interface for compatibility purposes:
+<p>
+The following settings are no longer supported, but they are kept on the
+interface for compatibility purposes:
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -664,15 +717,16 @@ Properties  readable   a{sv}
 <tbody><tr>
 <td><p><span class="term"><code class="literal">"number"</code></span></p></td>
 <td>
-              Number to dial for the data connection, given as a string value
-              (signature <code class="literal">"s"</code>).
-              Deprecated since version 1.10.0.
-            </td>
+Number to dial for the data connection, given as a string value
+(signature <code class="literal">"s"</code>).
+Deprecated since version 1.10.0.
+</td>
 </tr></tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 </div>

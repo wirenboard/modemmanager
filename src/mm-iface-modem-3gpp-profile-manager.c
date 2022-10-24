@@ -27,8 +27,8 @@
 #include "mm-base-modem.h"
 #include "mm-log-object.h"
 
-#define SUPPORT_CHECKED_TAG "3gpp-ussd-support-checked-tag"
-#define SUPPORTED_TAG       "3gpp-ussd-supported-tag"
+#define SUPPORT_CHECKED_TAG "3gpp-profile-manager-support-checked-tag"
+#define SUPPORTED_TAG       "3gpp-profile-manager-supported-tag"
 
 static GQuark support_checked_quark;
 static GQuark supported_quark;
@@ -278,8 +278,13 @@ profile_manager_check_activated_profile_ready (MMIfaceModem3gppProfileManager *s
     ctx = g_task_get_task_data (task);
 
     if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->check_activated_profile_finish (self, res, &activated, &error)) {
-        mm_obj_dbg (self, "couldn't check if profile '%d' is activated: %s", ctx->profile_id, error->message);
-        ctx->step = SET_PROFILE_STEP_DEACTIVATE_PROFILE;
+        if (g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND)) {
+            mm_obj_dbg (self, "profile '%d' is not activated: %s", ctx->profile_id, error->message);
+            ctx->step = SET_PROFILE_STEP_STORE_PROFILE;
+        } else {
+            mm_obj_dbg (self, "couldn't check if profile '%d' is activated: %s", ctx->profile_id, error->message);
+            ctx->step = SET_PROFILE_STEP_DEACTIVATE_PROFILE;
+        }
     }
     else if (activated) {
         mm_obj_dbg (self, "profile '%d' is activated", ctx->profile_id);
@@ -624,15 +629,29 @@ mm_iface_modem_3gpp_profile_manager_set_profile (MMIfaceModem3gppProfileManager 
                                                  GAsyncReadyCallback             callback,
                                                  gpointer                        user_data)
 {
-    GTask             *task;
-    SetProfileContext *ctx;
-    MMBearerIpFamily   ip_family;
+    GError                  *error;
+    GTask                   *task;
+    SetProfileContext       *ctx;
+    MMBearerIpFamily         ip_family;
+    g_autoptr(GVariant)      dict = NULL;
+    g_autoptr(MM3gppProfile) requested_copy = NULL;
 
     task = g_task_new (self, NULL, callback, user_data);
 
+    /* The MM3gppProfile passed to the SetProfileContext is going to
+     * be modified, so we make a copy to preserve the original one. */
+    dict = mm_3gpp_profile_get_dictionary (requested);
+    requested_copy = mm_3gpp_profile_new_from_dictionary (dict, &error);
+    if (!requested_copy) {
+        g_prefix_error (&error, "Couldn't copy 3GPP profile:");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
     ctx = g_slice_new0 (SetProfileContext);
     ctx->step = SET_PROFILE_STEP_FIRST;
-    ctx->requested = g_object_ref (requested);
+    ctx->requested = g_object_ref (requested_copy);
     ctx->strict = strict;
     ctx->profile_id = mm_3gpp_profile_get_profile_id (requested);
     g_task_set_task_data (task, ctx, (GDestroyNotify)set_profile_context_free);

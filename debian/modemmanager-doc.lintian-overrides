@@ -1,3 +1,0 @@
-# Documentation from glib-based software is installed to /usr/share/gtk-doc,
-# so let's silence lintian on that
-modemmanager-doc: package-contains-documentation-outside-usr-share-doc

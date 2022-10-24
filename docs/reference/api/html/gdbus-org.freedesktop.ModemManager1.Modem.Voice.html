@@ -64,12 +64,14 @@
 </div>
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Modem-Voice"></a><h2>Description</h2>
-<p>      The Voice interface handles Calls.
+<p>
+The Voice interface handles Calls.
 </p>
-<p>      This interface will only be available once the modem is ready to be
-      registered in the cellular network. 3GPP devices will require a valid
-      unlocked SIM card before any of the features in the interface can be
-      used.
+<p>
+This interface will only be available once the modem is ready to be
+registered in the cellular network. 3GPP devices will require a valid
+unlocked SIM card before any of the features in the interface can be
+used.
 </p>
 </div>
 <div class="refsect1">
@@ -79,14 +81,17 @@
 <pre class="programlisting">
 ListCalls (OUT ao result);
 </pre>
-<p>        Retrieve all Calls.
+<p>
+Retrieve all Calls.
 </p>
-<p>        This method should only be used once and subsequent information
-        retrieved either by listening for the
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-interface-org-freedesktop-ModemManager1-Modem-Voice.top_of_page">org.freedesktop.ModemManager1.Modem.Voice</a>::Added signal,
-        or by querying the specific Call object of interest.
+<p>
+This method should only be used once and subsequent information
+retrieved either by listening for the
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Voice.html#gdbus-interface-org-freedesktop-ModemManager1-Modem-Voice.top_of_page">org.freedesktop.ModemManager1.Modem.Voice</a>::Added signal,
+or by querying the specific Call object of interest.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -95,7 +100,9 @@ ListCalls (OUT ao result);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">OUT ao <em class="parameter"><code>result</code></em></code>:</span></p></td>
-<td><p>The list of call object paths.</p></td>
+<td><p>
+The list of call object paths.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -105,11 +112,14 @@ ListCalls (OUT ao result);
 <pre class="programlisting">
 DeleteCall (IN  o path);
 </pre>
-<p>        Delete a Call from the list of calls.
+<p>
+Delete a Call from the list of calls.
 </p>
-<p>        The call will be hangup if it is still active.
+<p>
+The call will be hangup if it is still active.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -118,7 +128,9 @@ DeleteCall (IN  o path);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN o <em class="parameter"><code>path</code></em></code>:</span></p></td>
-<td><p>The object path of the Call to delete.</p></td>
+<td><p>
+The object path of the Call to delete.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -129,12 +141,15 @@ DeleteCall (IN  o path);
 CreateCall (IN  a{sv} properties,
             OUT o     path);
 </pre>
-<p>        Creates a new call object for a new outgoing call.
+<p>
+Creates a new call object for a new outgoing call.
 </p>
-<p>        The '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Number" title='The "Number" property'>Number</a>' is the only
-        expected property to set by the user.
+<p>
+The '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Number" title='The "Number" property'>Number</a>' is the only
+expected property to set by the user.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -144,11 +159,15 @@ CreateCall (IN  a{sv} properties,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">IN a{sv} <em class="parameter"><code>properties</code></em></code>:</span></p></td>
-<td><p>Call properties from the <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html" title="org.freedesktop.ModemManager1.Call">Call D-Bus interface</a>.</p></td>
+<td><p>
+Call properties from the <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html" title="org.freedesktop.ModemManager1.Call">Call D-Bus interface</a>.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">OUT o <em class="parameter"><code>path</code></em></code>:</span></p></td>
-<td><p>The object path of the new call object.</p></td>
+<td><p>
+The object path of the new call object.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -159,19 +178,24 @@ CreateCall (IN  a{sv} properties,
 <pre class="programlisting">
 HoldAndAccept ();
 </pre>
-<p>        Place all active calls on hold, if any, and accept the next
-        call.
+<p>
+Place all active calls on hold, if any, and accept the next
+call.
 </p>
-<p>        Waiting calls have preference over held calls, so the next
-        call being active will be any waiting call, or otherwise,
-        any held call.
+<p>
+Waiting calls have preference over held calls, so the next
+call being active will be any waiting call, or otherwise,
+any held call.
 </p>
-<p>        The user should monitor the state of all available ongoing
-        calls to be reported of which one becomes active.
+<p>
+The user should monitor the state of all available ongoing
+calls to be reported of which one becomes active.
 </p>
-<p>        No error is returned if there are no waiting or held calls.
+<p>
+No error is returned if there are no waiting or held calls.
 </p>
-<p>        Since: 1.12
+<p>
+Since: 1.12
 </p>
 </div>
 <hr>
@@ -180,21 +204,26 @@ HoldAndAccept ();
 <pre class="programlisting">
 HangupAndAccept ();
 </pre>
-<p>        Hangup all active calls, if any, and accept the next call.
+<p>
+Hangup all active calls, if any, and accept the next call.
 </p>
-<p>        Waiting calls have preference over held calls, so the next
-        call being active will be any waiting call, or otherwise,
-        any held call.
+<p>
+Waiting calls have preference over held calls, so the next
+call being active will be any waiting call, or otherwise,
+any held call.
 </p>
-<p>        The user should monitor the state of all available ongoing
-        calls to be reported of which one becomes active.
+<p>
+The user should monitor the state of all available ongoing
+calls to be reported of which one becomes active.
 </p>
-<p>        No error is returned if there are no waiting or held calls.
-        In this case, this method would be equivalent to calling
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Hangup" title="The Hangup() method">Hangup()</a>
-        on the active call.
+<p>
+No error is returned if there are no waiting or held calls.
+In this case, this method would be equivalent to calling
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-method-org-freedesktop-ModemManager1-Call.Hangup" title="The Hangup() method">Hangup()</a>
+on the active call.
 </p>
-<p>        Since: 1.12
+<p>
+Since: 1.12
 </p>
 </div>
 <hr>
@@ -203,14 +232,18 @@ HangupAndAccept ();
 <pre class="programlisting">
 HangupAll ();
 </pre>
-<p>        Hangup all active calls.
+<p>
+Hangup all active calls.
 </p>
-<p>        Depending on how the device implements the action, calls on
-        hold or in waiting state may also be terminated.
+<p>
+Depending on how the device implements the action, calls on
+hold or in waiting state may also be terminated.
 </p>
-<p>        No error is returned if there are no ongoing calls.
+<p>
+No error is returned if there are no ongoing calls.
 </p>
-<p>        Since: 1.12
+<p>
+Since: 1.12
 </p>
 </div>
 <hr>
@@ -219,13 +252,16 @@ HangupAll ();
 <pre class="programlisting">
 Transfer ();
 </pre>
-<p>        Join the currently active and held calls together into a single
-        multiparty call, but disconnects from them.
+<p>
+Join the currently active and held calls together into a single
+multiparty call, but disconnects from them.
 </p>
-<p>        The affected calls will be considered terminated from the point of
-        view of the subscriber.
+<p>
+The affected calls will be considered terminated from the point of
+view of the subscriber.
 </p>
-<p>        Since: 1.12
+<p>
+Since: 1.12
 </p>
 </div>
 <hr>
@@ -234,13 +270,16 @@ Transfer ();
 <pre class="programlisting">
 CallWaitingSetup (IN  b enable);
 </pre>
-<p>        Activates or deactivates the call waiting network service, as per
-        3GPP TS 22.083.
+<p>
+Activates or deactivates the call waiting network service, as per
+3GPP TS 22.083.
 </p>
-<p>        This operation requires communication with the network in order to
-        complete, so the modem must be successfully registered.
+<p>
+This operation requires communication with the network in order to
+complete, so the modem must be successfully registered.
 </p>
-<p>        Since: 1.12
+<p>
+Since: 1.12
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -249,7 +288,12 @@ CallWaitingSetup (IN  b enable);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN b <em class="parameter"><code>enable</code></em></code>:</span></p></td>
-<td><p></p></td>
+<td>
+<p>
+</p>
+<p>
+</p>
+</td>
 </tr></tbody>
 </table></div>
 </div>
@@ -259,13 +303,16 @@ CallWaitingSetup (IN  b enable);
 <pre class="programlisting">
 CallWaitingQuery (OUT b status);
 </pre>
-<p>        Queries the status of the call waiting network service, as per
-        3GPP TS 22.083.
+<p>
+Queries the status of the call waiting network service, as per
+3GPP TS 22.083.
 </p>
-<p>        This operation requires communication with the network in order to
-        complete, so the modem must be successfully registered.
+<p>
+This operation requires communication with the network in order to
+complete, so the modem must be successfully registered.
 </p>
-<p>        Since: 1.12
+<p>
+Since: 1.12
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -274,7 +321,12 @@ CallWaitingQuery (OUT b status);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">OUT b <em class="parameter"><code>status</code></em></code>:</span></p></td>
-<td><p></p></td>
+<td>
+<p>
+</p>
+<p>
+</p>
+</td>
 </tr></tbody>
 </table></div>
 </div>
@@ -286,9 +338,11 @@ CallWaitingQuery (OUT b status);
 <pre class="programlisting">
 CallAdded (o path);
 </pre>
-<p>        Emitted when a call has been added.
+<p>
+Emitted when a call has been added.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -297,7 +351,9 @@ CallAdded (o path);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">o <em class="parameter"><code>path</code></em></code>:</span></p></td>
-<td><p>Object path of the new call.</p></td>
+<td><p>
+Object path of the new call.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -307,9 +363,11 @@ CallAdded (o path);
 <pre class="programlisting">
 CallDeleted (o path);
 </pre>
-<p>        Emitted when a call has been deleted.
+<p>
+Emitted when a call has been deleted.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -318,7 +376,9 @@ CallDeleted (o path);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">o <em class="parameter"><code>path</code></em></code>:</span></p></td>
-<td><p>Object path of the now deleted Call.</p></td>
+<td><p>
+Object path of the now deleted Call.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -330,9 +390,11 @@ CallDeleted (o path);
 <pre class="programlisting">
 Calls  readable   ao
 </pre>
-<p>        The list of calls object paths.
+<p>
+The list of calls object paths.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 </div>
 <hr>
@@ -341,12 +403,15 @@ Calls  readable   ao
 <pre class="programlisting">
 EmergencyOnly  readable   b
 </pre>
-<p>        A flag indicating whether emergency calls are the only allowed ones.
+<p>
+A flag indicating whether emergency calls are the only allowed ones.
 </p>
-<p>        If this flag is set, users should only attempt voice calls to
-        emergency numbers, as standard voice calls will likely fail.
+<p>
+If this flag is set, users should only attempt voice calls to
+emergency numbers, as standard voice calls will likely fail.
 </p>
-<p>        Since: 1.12
+<p>
+Since: 1.12
 </p>
 </div>
 </div>

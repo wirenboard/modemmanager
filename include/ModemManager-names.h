@@ -64,6 +64,7 @@
 #define MM_DBUS_INTERFACE_MODEM_FIRMWARE "org.freedesktop.ModemManager1.Modem.Firmware"
 #define MM_DBUS_INTERFACE_MODEM_SIGNAL "org.freedesktop.ModemManager1.Modem.Signal"
 #define MM_DBUS_INTERFACE_MODEM_OMA "org.freedesktop.ModemManager1.Modem.Oma"
+#define MM_DBUS_INTERFACE_MODEM_SIMPLE "org.freedesktop.ModemManager1.Modem.Simple"
 
 /******************************
  * Methods/Signals/Properties *
@@ -343,6 +344,13 @@
 #define MM_MODEM_OMA_PROPERTY_PENDINGNETWORKINITIATEDSESSIONS "PendingNetworkInitiatedSessions"
 #define MM_MODEM_OMA_PROPERTY_SESSIONTYPE "SessionType"
 #define MM_MODEM_OMA_PROPERTY_SESSIONSTATE "SessionState"
+/*
+ * Interface 'org.freedesktop.ModemManager1.Modem.Simple'
+ */
+ 
+#define MM_MODEM_SIMPLE_METHOD_CONNECT "Connect"
+#define MM_MODEM_SIMPLE_METHOD_DISCONNECT "Disconnect"
+#define MM_MODEM_SIMPLE_METHOD_GETSTATUS "GetStatus"
 
 #endif /*  _MODEM_MANAGER_NAMES_H_ */
 

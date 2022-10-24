@@ -355,6 +355,7 @@ output_item_free (OutputItem *item)
             g_free (((OutputItemListitem *)item)->prefix);
             g_free (((OutputItemListitem *)item)->value);
             g_free (((OutputItemListitem *)item)->extra);
+            g_slice_free (OutputItemListitem, (OutputItemListitem *)item);
             break;
         default:
             g_assert_not_reached ();
@@ -567,13 +568,17 @@ mmcli_output_listitem (MmcF         field,
 /* (Custom) Signal quality output */
 
 void
-mmcli_output_signal_quality (guint    value,
-                             gboolean recent)
+mmcli_output_signal_quality (MMModemState state,
+                             guint        value,
+                             gboolean     recent)
 {
     /* Merge value and recent flag in a single item in human output */
     if (selected_type == MMC_OUTPUT_TYPE_HUMAN) {
-        output_item_new_take_single (MMC_F_STATUS_SIGNAL_QUALITY_VALUE,
-                                     g_strdup_printf ("%u%% (%s)", value, recent ? "recent" : "cached"));
+        if (state >= MM_MODEM_STATE_ENABLED)
+            output_item_new_take_single (MMC_F_STATUS_SIGNAL_QUALITY_VALUE,
+                                         g_strdup_printf ("%u%% (%s)", value, recent ? "recent" : "cached"));
+        else
+            output_item_new_take_single (MMC_F_STATUS_SIGNAL_QUALITY_VALUE, NULL);
         return;
     }
 
@@ -1329,8 +1334,10 @@ dump_output_list_keyvalue (MmcF field)
     }
 
     if (n > 0) {
+        guint aux = n;
+
         key_length += ((strlen (KEY_ARRAY_VALUE_SUFFIX)) + 3);
-        if (n > 10)
+        while ((aux /= 10) > 0)
             key_length++;
     }
 

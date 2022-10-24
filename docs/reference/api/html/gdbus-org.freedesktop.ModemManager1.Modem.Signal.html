@@ -52,12 +52,14 @@
 </div>
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Modem-Signal"></a><h2>Description</h2>
-<p>      This interface provides access to extended signal quality information.
+<p>
+This interface provides access to extended signal quality information.
 </p>
-<p>      This interface will only be available once the modem is ready to be
-      registered in the cellular network. 3GPP devices will require a valid
-      unlocked SIM card before any of the features in the interface can be
-      used.
+<p>
+This interface will only be available once the modem is ready to be
+registered in the cellular network. 3GPP devices will require a valid
+unlocked SIM card before any of the features in the interface can be
+used.
 </p>
 </div>
 <div class="refsect1">
@@ -67,9 +69,11 @@
 <pre class="programlisting">
 Setup (IN  u rate);
 </pre>
-<p>        Setup extended signal quality information retrieval.
+<p>
+Setup extended signal quality information retrieval.
 </p>
-<p>        Since: 1.2
+<p>
+Since: 1.2
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -78,7 +82,9 @@ Setup (IN  u rate);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN u <em class="parameter"><code>rate</code></em></code>:</span></p></td>
-<td><p>refresh rate to set, in seconds. 0 to disable retrieval.</p></td>
+<td><p>
+refresh rate to set, in seconds. 0 to disable retrieval.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -90,10 +96,12 @@ Setup (IN  u rate);
 <pre class="programlisting">
 Rate  readable   u
 </pre>
-<p>        Refresh rate for the extended signal quality information updates,
-        in seconds. A value of 0 disables the retrieval of the values.
+<p>
+Refresh rate for the extended signal quality information updates,
+in seconds. A value of 0 disables the retrieval of the values.
 </p>
-<p>        Since: 1.2
+<p>
+Since: 1.2
 </p>
 </div>
 <hr>
@@ -102,13 +110,16 @@ Rate  readable   u
 <pre class="programlisting">
 Cdma  readable   a{sv}
 </pre>
-<p>        Dictionary of available signal information for the CDMA1x access
-        technology.
+<p>
+Dictionary of available signal information for the CDMA1x access
+technology.
 </p>
-<p>        This dictionary is composed of a string key, with an associated data
-        which contains type-specific information.
+<p>
+This dictionary is composed of a string key, with an associated data
+which contains type-specific information.
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -118,22 +129,23 @@ Cdma  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"rssi"</code></span></p></td>
 <td><p>
-              The CDMA1x RSSI (Received Signal Strength Indication), in dBm,
-              given as a floating point value (signature <code class="literal">"d"</code>).
-            </p></td>
+The CDMA1x RSSI (Received Signal Strength Indication), in dBm,
+given as a floating point value (signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"ecio"</code></span></p></td>
 <td><p>
-              The CDMA1x Ec/Io, in dBm, given as a floating point value
-              (signature <code class="literal">"d"</code>).
-            </p></td>
+The CDMA1x Ec/Io, in dBm, given as a floating point value
+(signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.2
+<p>
+Since: 1.2
 </p>
 </div>
 <hr>
@@ -142,13 +154,16 @@ Cdma  readable   a{sv}
 <pre class="programlisting">
 Evdo  readable   a{sv}
 </pre>
-<p>        Dictionary of available signal information for the CDMA EV-DO access
-        technology.
+<p>
+Dictionary of available signal information for the CDMA EV-DO access
+technology.
 </p>
-<p>        This dictionary is composed of a string key, with an associated data
-        which contains type-specific information.
+<p>
+This dictionary is composed of a string key, with an associated data
+which contains type-specific information.
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -158,36 +173,37 @@ Evdo  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"rssi"</code></span></p></td>
 <td><p>
-              The CDMA EV-DO RSSI (Received Signal Strength Indication), in dBm,
-              given as a floating point value (signature <code class="literal">"d"</code>).
-            </p></td>
+The CDMA EV-DO RSSI (Received Signal Strength Indication), in dBm,
+given as a floating point value (signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"ecio"</code></span></p></td>
 <td><p>
-              The CDMA EV-DO Ec/Io, in dBm, given as a floating point value
-              (signature <code class="literal">"d"</code>).
-            </p></td>
+The CDMA EV-DO Ec/Io, in dBm, given as a floating point value
+(signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"sinr"</code></span></p></td>
 <td><p>
-              CDMA EV-DO SINR level, in dB, given as a floating point value
-              (signature <code class="literal">"d"</code>).
-            </p></td>
+CDMA EV-DO SINR level, in dB, given as a floating point value
+(signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"io"</code></span></p></td>
 <td><p>
-              The CDMA EV-DO Io, in dBm, given as a floating point value
-              (signature <code class="literal">"d"</code>).
-            </p></td>
+The CDMA EV-DO Io, in dBm, given as a floating point value
+(signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.2
+<p>
+Since: 1.2
 </p>
 </div>
 <hr>
@@ -196,13 +212,16 @@ Evdo  readable   a{sv}
 <pre class="programlisting">
 Gsm  readable   a{sv}
 </pre>
-<p>        Dictionary of available signal information for the GSM/GPRS access
-        technology.
+<p>
+Dictionary of available signal information for the GSM/GPRS access
+technology.
 </p>
-<p>        This dictionary is composed of a string key, with an associated data
-        which contains type-specific information.
+<p>
+This dictionary is composed of a string key, with an associated data
+which contains type-specific information.
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -211,14 +230,15 @@ Gsm  readable   a{sv}
 <tbody><tr>
 <td><p><span class="term"><code class="literal">"rssi"</code></span></p></td>
 <td><p>
-              The GSM RSSI (Received Signal Strength Indication), in dBm,
-              given as a floating point value (signature <code class="literal">"d"</code>).
-            </p></td>
+The GSM RSSI (Received Signal Strength Indication), in dBm,
+given as a floating point value (signature <code class="literal">"d"</code>).
+</p></td>
 </tr></tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.2
+<p>
+Since: 1.2
 </p>
 </div>
 <hr>
@@ -227,13 +247,16 @@ Gsm  readable   a{sv}
 <pre class="programlisting">
 Umts  readable   a{sv}
 </pre>
-<p>        Dictionary of available signal information for the UMTS (WCDMA) access
-        technology.
+<p>
+Dictionary of available signal information for the UMTS (WCDMA) access
+technology.
 </p>
-<p>        This dictionary is composed of a string key, with an associated data
-        which contains type-specific information.
+<p>
+This dictionary is composed of a string key, with an associated data
+which contains type-specific information.
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -243,29 +266,30 @@ Umts  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"rssi"</code></span></p></td>
 <td><p>
-              The UMTS RSSI (Received Signal Strength Indication), in dBm,
-              given as a floating point value (signature <code class="literal">"d"</code>).
-            </p></td>
+The UMTS RSSI (Received Signal Strength Indication), in dBm,
+given as a floating point value (signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"rscp"</code></span></p></td>
 <td><p>
-              The UMTS RSCP (Received Signal Code Power), in dBm, given as a
-              floating point value (signature <code class="literal">"d"</code>).
-            </p></td>
+The UMTS RSCP (Received Signal Code Power), in dBm, given as a
+floating point value (signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"ecio"</code></span></p></td>
 <td><p>
-              The UMTS Ec/Io, in dB, given as a floating point value
-              (signature <code class="literal">"d"</code>).
-            </p></td>
+The UMTS Ec/Io, in dB, given as a floating point value
+(signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.2
+<p>
+Since: 1.2
 </p>
 </div>
 <hr>
@@ -274,13 +298,16 @@ Umts  readable   a{sv}
 <pre class="programlisting">
 Lte  readable   a{sv}
 </pre>
-<p>        Dictionary of available signal information for the LTE access
-        technology.
+<p>
+Dictionary of available signal information for the LTE access
+technology.
 </p>
-<p>        This dictionary is composed of a string key, with an associated data
-        which contains type-specific information.
+<p>
+This dictionary is composed of a string key, with an associated data
+which contains type-specific information.
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -290,36 +317,37 @@ Lte  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"rssi"</code></span></p></td>
 <td><p>
-              The LTE RSSI (Received Signal Strength Indication), in dBm,
-              given as a floating point value (signature <code class="literal">"d"</code>).
-            </p></td>
+The LTE RSSI (Received Signal Strength Indication), in dBm,
+given as a floating point value (signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"rsrq"</code></span></p></td>
 <td><p>
-              The LTE RSRQ (Reference Signal Received Quality), in dB, given as
-              a floating point value (signature <code class="literal">"d"</code>).
-            </p></td>
+The LTE RSRQ (Reference Signal Received Quality), in dB, given as
+a floating point value (signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"rsrp"</code></span></p></td>
 <td><p>
-              The LTE RSRP (Reference Signal Received Power), in dBm, given as
-              a floating point value (signature <code class="literal">"d"</code>).
-            </p></td>
+The LTE RSRP (Reference Signal Received Power), in dBm, given as
+a floating point value (signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"snr"</code></span></p></td>
 <td><p>
-              The LTE S/R ratio, in dB, given as
-              a floating point value (signature <code class="literal">"d"</code>).
-            </p></td>
+The LTE S/R ratio, in dB, given as
+a floating point value (signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.2
+<p>
+Since: 1.2
 </p>
 </div>
 <hr>
@@ -328,13 +356,16 @@ Lte  readable   a{sv}
 <pre class="programlisting">
 Nr5g  readable   a{sv}
 </pre>
-<p>        Dictionary of available signal information for the 5G access
-        technology.
+<p>
+Dictionary of available signal information for the 5G access
+technology.
 </p>
-<p>        This dictionary is composed of a string key, with an associated data
-        which contains type-specific information.
+<p>
+This dictionary is composed of a string key, with an associated data
+which contains type-specific information.
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -344,29 +375,30 @@ Nr5g  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"rsrq"</code></span></p></td>
 <td><p>
-              The 5G RSRQ (Reference Signal Received Quality), in dB, given as
-              a floating point value (signature <code class="literal">"d"</code>).
-            </p></td>
+The 5G RSRQ (Reference Signal Received Quality), in dB, given as
+a floating point value (signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"rsrp"</code></span></p></td>
 <td><p>
-              The 5G RSRP (Reference Signal Received Power), in dBm, given as
-              a floating point value (signature <code class="literal">"d"</code>).
-            </p></td>
+The 5G RSRP (Reference Signal Received Power), in dBm, given as
+a floating point value (signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"snr"</code></span></p></td>
 <td><p>
-              The 5G S/R ratio, in dB, given as
-              a floating point value (signature <code class="literal">"d"</code>).
-            </p></td>
+The 5G S/R ratio, in dB, given as
+a floating point value (signature <code class="literal">"d"</code>).
+</p></td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.16
+<p>
+Since: 1.16
 </p>
 </div>
 </div>

@@ -961,6 +961,7 @@ test_cops_query_data (const CopsQueryData *item)
                                                &format,
                                                &operator,
                                                &act,
+                                               NULL,
                                                &error);
     g_assert_no_error (error);
     g_assert (result);
@@ -3562,25 +3563,25 @@ typedef struct {
 
 static const CclkTest cclk_tests[] = {
     { "+CCLK: \"14/08/05,04:00:21\"", TRUE, TRUE, FALSE,
-        "2014-08-05T04:00:21+00:00", 0 },
+        "2014-08-05T04:00:21Z", 0 },
     { "+CCLK: \"14/08/05,04:00:21\"", TRUE, FALSE, TRUE,
         "2014-08-05T04:00:21+00:00", 0 },
     { "+CCLK: \"14/08/05,04:00:21\"", TRUE, TRUE, TRUE,
-        "2014-08-05T04:00:21+00:00", 0 },
+        "2014-08-05T04:00:21Z", 0 },
 
     { "+CCLK: \"14/08/05,04:00:21+40\"", TRUE, TRUE, FALSE,
-        "2014-08-05T04:00:21+10:00", 600 },
+        "2014-08-05T04:00:21+10", 600 },
     { "+CCLK: \"14/08/05,04:00:21+40\"", TRUE, FALSE, TRUE,
         "2014-08-05T04:00:21+10:00", 600 },
     { "+CCLK: \"14/08/05,04:00:21+40\"", TRUE, TRUE, TRUE,
-        "2014-08-05T04:00:21+10:00", 600 },
+        "2014-08-05T04:00:21+10", 600 },
 
     { "+CCLK: \"15/02/28,20:30:40-32\"", TRUE, TRUE, FALSE,
-        "2015-02-28T20:30:40-08:00", -480 },
+        "2015-02-28T20:30:40-08", -480 },
     { "+CCLK: \"15/02/28,20:30:40-32\"", TRUE, FALSE, TRUE,
-        "2015-02-28T20:30:40-08:00", -480 },
+        "2015-02-28T20:30:40-08", -480 },
     { "+CCLK: \"15/02/28,20:30:40-32\"", TRUE, TRUE, TRUE,
-        "2015-02-28T20:30:40-08:00", -480 },
+        "2015-02-28T20:30:40-08", -480 },
 
     { "+CCLK: 17/07/26,11:42:15+01", TRUE, TRUE, FALSE,
       "2017-07-26T11:42:15+00:15", 15 },
@@ -3590,11 +3591,11 @@ static const CclkTest cclk_tests[] = {
       "2017-07-26T11:42:15+00:15", 15 },
 
     { "+CCLK:   \"15/02/28,20:30:40-32\"", TRUE, TRUE, FALSE,
-        "2015-02-28T20:30:40-08:00", -480 },
+        "2015-02-28T20:30:40-08", -480 },
     { "+CCLK:   \"15/02/28,20:30:40-32\"", TRUE, FALSE, TRUE,
         "2015-02-28T20:30:40-08:00", -480 },
     { "+CCLK:   \"15/02/28,20:30:40-32\"", TRUE, TRUE, TRUE,
-        "2015-02-28T20:30:40-08:00", -480 },
+        "2015-02-28T20:30:40-08", -480 },
 
     { "+CCLK:   17/07/26,11:42:15+01", TRUE, TRUE, FALSE,
       "2017-07-26T11:42:15+00:15", 15 },
@@ -4227,8 +4228,8 @@ typedef struct {
 } TestCcwa;
 
 static TestCcwa test_ccwa[] = {
-    { "+CCWA: 0,255", FALSE, FALSE }, /* all disabled */
-    { "+CCWA: 1,255", TRUE,  FALSE }, /* all enabled */
+    { "+CCWA: 0,255\r\n", FALSE, FALSE }, /* all disabled */
+    { "+CCWA: 1,255\r\n", TRUE,  FALSE }, /* all enabled */
     { "+CCWA: 0,1\r\n"
       "+CCWA: 0,4\r\n", FALSE,  FALSE }, /* voice and fax disabled */
     { "+CCWA: 1,1\r\n"
@@ -4303,7 +4304,7 @@ common_test_clcc_response (const gchar      *str,
 static void
 test_clcc_response_empty (void)
 {
-    const gchar *response = "";
+    const gchar *response = "\r\n";
 
     common_test_clcc_response (response, NULL, 0);
 }
@@ -4316,7 +4317,7 @@ test_clcc_response_single (void)
     };
 
     const gchar *response =
-        "+CLCC: 1,1,0,0,0,\"123456789\",161";
+        "+CLCC: 1,1,0,0,0,\"123456789\",161\r\n";
 
     common_test_clcc_response (response, expected_call_info_list, G_N_ELEMENTS (expected_call_info_list));
 }
@@ -4330,7 +4331,7 @@ test_clcc_response_single_long (void)
 
     /* NOTE: priority field is EMPTY */
     const gchar *response =
-        "+CLCC: 1,1,4,0,0,\"123456789\",129,\"\",,0";
+        "+CLCC: 1,1,4,0,0,\"123456789\",129,\"\",,0\r\n";
 
     common_test_clcc_response (response, expected_call_info_list, G_N_ELEMENTS (expected_call_info_list));
 }

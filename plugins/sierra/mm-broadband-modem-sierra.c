@@ -28,6 +28,7 @@
 #include "mm-base-modem-at.h"
 #include "mm-log-object.h"
 #include "mm-modem-helpers.h"
+#include "mm-common-helpers.h"
 #include "mm-errors-types.h"
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-3gpp.h"
@@ -1655,7 +1656,7 @@ parse_time (const gchar *response,
             mm_get_uint_from_match_info (match_info, 4, &hour) &&
             mm_get_uint_from_match_info (match_info, 5, &minute) &&
             mm_get_uint_from_match_info (match_info, 6, &second)) {
-            result = mm_new_iso8601_time (year, month, day, hour, minute, second, FALSE, 0);
+            result = mm_new_iso8601_time (year, month, day, hour, minute, second, FALSE, 0, error);
         } else {
             g_set_error (error,
                          MM_CORE_ERROR,

@@ -62,13 +62,15 @@
 </div>
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Modem-ModemCdma"></a><h2>Description</h2>
-<p>      This interface provides access to specific actions that may be performed
-      in modems with CDMA capabilities.
+<p>
+This interface provides access to specific actions that may be performed
+in modems with CDMA capabilities.
 </p>
-<p>      This interface will only be available once the modem is ready to be
-      registered in the cellular network. Mixed 3GPP+3GPP2 devices will require
-      a valid unlocked SIM card before any of the features in the interface can
-      be used.
+<p>
+This interface will only be available once the modem is ready to be
+registered in the cellular network. Mixed 3GPP+3GPP2 devices will require
+a valid unlocked SIM card before any of the features in the interface can
+be used.
 </p>
 </div>
 <div class="refsect1">
@@ -78,13 +80,16 @@
 <pre class="programlisting">
 Activate (IN  s carrier_code);
 </pre>
-<p>        Provisions the modem for use with a given carrier using the modem's
-        <a class="ulink" href="http://en.wikipedia.org/wiki/Over-the-air_programming" target="_top">Over-The-Air (OTA)</a>
-        activation functionality, if any.
+<p>
+Provisions the modem for use with a given carrier using the modem's
+<a class="ulink" href="http://en.wikipedia.org/wiki/Over-the-air_programming" target="_top">Over-The-Air (OTA)</a>
+activation functionality, if any.
 </p>
-<p>        Some modems will reboot after this call is made.
+<p>
+Some modems will reboot after this call is made.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -93,7 +98,9 @@ Activate (IN  s carrier_code);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>carrier_code</code></em></code>:</span></p></td>
-<td><p>Name of carrier, or carrier-specific code.</p></td>
+<td><p>
+Name of carrier, or carrier-specific code.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -103,16 +110,20 @@ Activate (IN  s carrier_code);
 <pre class="programlisting">
 ActivateManual (IN  a{sv} properties);
 </pre>
-<p>        Sets the modem provisioning data directly, without contacting the
-        carrier over the air.
+<p>
+Sets the modem provisioning data directly, without contacting the
+carrier over the air.
 </p>
-<p>        Some modems will reboot after this call is made.
+<p>
+Some modems will reboot after this call is made.
 </p>
-<p>        This dictionary is composed of a string identifier key
-        with an associated data which contains type-specific location
-        information:
+<p>
+This dictionary is composed of a string identifier key
+with an associated data which contains type-specific location
+information:
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -122,44 +133,44 @@ ActivateManual (IN  a{sv} properties);
 <tr>
 <td><p><span class="term">"spc"</span></p></td>
 <td><p>
-              The Service Programming Code, given as a string of exactly 6 digit characters. Mandatory parameter.
-            </p></td>
+The Service Programming Code, given as a string of exactly 6 digit characters. Mandatory parameter.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term">"sid"</span></p></td>
 <td><p>
-              The System Identification Number, given as a 16-bit unsigned integer (signature <code class="literal">"q"</code>). Mandatory parameter.
-            </p></td>
+The System Identification Number, given as a 16-bit unsigned integer (signature <code class="literal">"q"</code>). Mandatory parameter.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term">"mdn"</span></p></td>
 <td><p>
-              The Mobile Directory Number, given as a string of maximum 15 characters. Mandatory parameter.
-            </p></td>
+The Mobile Directory Number, given as a string of maximum 15 characters. Mandatory parameter.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term">"min"</span></p></td>
 <td><p>
-              The Mobile Identification Number, given as a string of maximum 15 characters. Mandatory parameter.
-            </p></td>
+The Mobile Identification Number, given as a string of maximum 15 characters. Mandatory parameter.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term">"mn-ha-key"</span></p></td>
 <td><p>
-              The MN-HA key, given as a string of maximum 16 characters.
-            </p></td>
+The MN-HA key, given as a string of maximum 16 characters.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term">"mn-aaa-key"</span></p></td>
 <td><p>
-              The MN-AAA key, given as a string of maximum 16 characters.
-            </p></td>
+The MN-AAA key, given as a string of maximum 16 characters.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term">"prl"</span></p></td>
 <td><p>
-              The Preferred Roaming List, given as an array of maximum 16384 bytes.
-            </p></td>
+The Preferred Roaming List, given as an array of maximum 16384 bytes.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -172,7 +183,9 @@ ActivateManual (IN  a{sv} properties);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN a{sv} <em class="parameter"><code>properties</code></em></code>:</span></p></td>
-<td><p>A dictionary of properties to set on the modem.</p></td>
+<td><p>
+A dictionary of properties to set on the modem.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -186,9 +199,11 @@ ActivationStateChanged (u     activation_state,
                         u     activation_error,
                         a{sv} status_changes);
 </pre>
-<p>        The device activation state changed.
+<p>
+The device activation state changed.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -198,15 +213,21 @@ ActivationStateChanged (u     activation_state,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">u <em class="parameter"><code>activation_state</code></em></code>:</span></p></td>
-<td><p>Current activation state, given as a <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaActivationState" title="enum MMModemCdmaActivationState">MMModemCdmaActivationState</a>.</p></td>
+<td><p>
+Current activation state, given as a <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaActivationState" title="enum MMModemCdmaActivationState">MMModemCdmaActivationState</a>.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">u <em class="parameter"><code>activation_error</code></em></code>:</span></p></td>
-<td><p>Carrier-specific error code, given as a <a class="link" href="ModemManager-Errors.html#MMCdmaActivationError" title="enum MMCdmaActivationError">MMCdmaActivationError</a>.</p></td>
+<td><p>
+Carrier-specific error code, given as a <a class="link" href="ModemManager-Errors.html#MMCdmaActivationError" title="enum MMCdmaActivationError">MMCdmaActivationError</a>.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">a{sv} <em class="parameter"><code>status_changes</code></em></code>:</span></p></td>
-<td><p>Properties that have changed as a result of this activation state change, including <code class="literal">"mdn"</code> and <code class="literal">"min"</code>. The dictionary may be empty if the changed properties are unknown.</p></td>
+<td><p>
+Properties that have changed as a result of this activation state change, including <code class="literal">"mdn"</code> and <code class="literal">"min"</code>. The dictionary may be empty if the changed properties are unknown.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -219,10 +240,12 @@ ActivationStateChanged (u     activation_state,
 <pre class="programlisting">
 ActivationState  readable   u
 </pre>
-<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaActivationState" title="enum MMModemCdmaActivationState">MMModemCdmaActivationState</a>
-        value specifying the state of the activation in the 3GPP2 network.
+<p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaActivationState" title="enum MMModemCdmaActivationState">MMModemCdmaActivationState</a>
+value specifying the state of the activation in the 3GPP2 network.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -231,9 +254,11 @@ ActivationState  readable   u
 <pre class="programlisting">
 Meid  readable   s
 </pre>
-<p>        The modem's <a class="ulink" href="http://en.wikipedia.org/wiki/MEID" target="_top">Mobile Equipment Identifier</a>.
+<p>
+The modem's <a class="ulink" href="http://en.wikipedia.org/wiki/MEID" target="_top">Mobile Equipment Identifier</a>.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -242,11 +267,13 @@ Meid  readable   s
 <pre class="programlisting">
 Esn  readable   s
 </pre>
-<p>        The modem's
-        <a class="ulink" href="http://en.wikipedia.org/wiki/Electronic_serial_number" target="_top">Electronic Serial Number</a>
-        (superceded by MEID but still used by older devices).
+<p>
+The modem's
+<a class="ulink" href="http://en.wikipedia.org/wiki/Electronic_serial_number" target="_top">Electronic Serial Number</a>
+(superceded by MEID but still used by older devices).
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -255,15 +282,18 @@ Esn  readable   s
 <pre class="programlisting">
 Sid  readable   u
 </pre>
-<p>        The
-        <a class="ulink" href="http://en.wikipedia.org/wiki/System_Identification_Number" target="_top">System Identifier</a>
-        of the serving CDMA 1x network, if known, and
-        if the modem is registered with a CDMA 1x network.
+<p>
+The
+<a class="ulink" href="http://en.wikipedia.org/wiki/System_Identification_Number" target="_top">System Identifier</a>
+of the serving CDMA 1x network, if known, and
+if the modem is registered with a CDMA 1x network.
 </p>
-<p>        See <a class="ulink" href="http://ifast.org" target="_top">ifast.org</a> or the mobile
-        broadband provider database for mappings of SIDs to network providers.
+<p>
+See <a class="ulink" href="http://ifast.org" target="_top">ifast.org</a> or the mobile
+broadband provider database for mappings of SIDs to network providers.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -272,12 +302,14 @@ Sid  readable   u
 <pre class="programlisting">
 Nid  readable   u
 </pre>
-<p>        The
-        <a class="ulink" href="http://en.wikipedia.org/wiki/Network_Identification_Number" target="_top">Network Identifier</a>
-        of the serving CDMA 1x network, if known, and
-        if the modem is registered with a CDMA 1x network.
+<p>
+The
+<a class="ulink" href="http://en.wikipedia.org/wiki/Network_Identification_Number" target="_top">Network Identifier</a>
+of the serving CDMA 1x network, if known, and
+if the modem is registered with a CDMA 1x network.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -286,10 +318,12 @@ Nid  readable   u
 <pre class="programlisting">
 Cdma1xRegistrationState  readable   u
 </pre>
-<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRegistrationState" title="enum MMModemCdmaRegistrationState">MMModemCdmaRegistrationState</a>
-        value specifying the CDMA 1x registration state.
+<p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRegistrationState" title="enum MMModemCdmaRegistrationState">MMModemCdmaRegistrationState</a>
+value specifying the CDMA 1x registration state.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -298,10 +332,12 @@ Cdma1xRegistrationState  readable   u
 <pre class="programlisting">
 EvdoRegistrationState  readable   u
 </pre>
-<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRegistrationState" title="enum MMModemCdmaRegistrationState">MMModemCdmaRegistrationState</a>
-        value specifying the EVDO registration state.
+<p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemCdmaRegistrationState" title="enum MMModemCdmaRegistrationState">MMModemCdmaRegistrationState</a>
+value specifying the EVDO registration state.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 </div>

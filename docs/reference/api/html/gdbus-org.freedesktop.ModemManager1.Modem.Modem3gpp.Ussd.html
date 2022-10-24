@@ -52,12 +52,14 @@
 </div>
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd"></a><h2>Description</h2>
-<p>      This interface provides access to actions based on the USSD protocol.
+<p>
+This interface provides access to actions based on the USSD protocol.
 </p>
-<p>      This interface will only be available once the modem is ready to be
-      registered in the cellular network. 3GPP devices will require a valid
-      unlocked SIM card before any of the features in the interface can be
-      used.
+<p>
+This interface will only be available once the modem is ready to be
+registered in the cellular network. 3GPP devices will require a valid
+unlocked SIM card before any of the features in the interface can be
+used.
 </p>
 </div>
 <div class="refsect1">
@@ -68,14 +70,17 @@
 Initiate (IN  s command,
           OUT s reply);
 </pre>
-<p>        Sends a USSD command string to the network initiating a USSD session.
+<p>
+Sends a USSD command string to the network initiating a USSD session.
 </p>
-<p>        When the request is handled by the network, the method returns the
-        response or an appropriate error. The network may be awaiting further
-        response from the ME after returning from this method and no new command
-        can be initiated until this one is cancelled or ended.
+<p>
+When the request is handled by the network, the method returns the
+response or an appropriate error. The network may be awaiting further
+response from the ME after returning from this method and no new command
+can be initiated until this one is cancelled or ended.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -85,11 +90,15 @@ Initiate (IN  s command,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>command</code></em></code>:</span></p></td>
-<td><p>The command to start the USSD session with.</p></td>
+<td><p>
+The command to start the USSD session with.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">OUT s <em class="parameter"><code>reply</code></em></code>:</span></p></td>
-<td><p>The network response to the command which started the USSD session.</p></td>
+<td><p>
+The network response to the command which started the USSD session.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -101,12 +110,14 @@ Initiate (IN  s command,
 Respond (IN  s response,
          OUT s reply);
 </pre>
-<p>        Respond to a USSD request that is either initiated by the mobile network,
-        or that is awaiting further input after
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Initiate" title="The Initiate() method">Initiate()</a>
-        was called.
+<p>
+Respond to a USSD request that is either initiated by the mobile network,
+or that is awaiting further input after
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Initiate" title="The Initiate() method">Initiate()</a>
+was called.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -116,11 +127,15 @@ Respond (IN  s response,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>response</code></em></code>:</span></p></td>
-<td><p>The response to network-initiated USSD command, or a response to a request for further input.</p></td>
+<td><p>
+The response to network-initiated USSD command, or a response to a request for further input.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">OUT s <em class="parameter"><code>reply</code></em></code>:</span></p></td>
-<td><p>The network reply to this response to the network-initiated USSD command. The reply may require further responses.</p></td>
+<td><p>
+The network reply to this response to the network-initiated USSD command. The reply may require further responses.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -131,9 +146,11 @@ Respond (IN  s response,
 <pre class="programlisting">
 Cancel ();
 </pre>
-<p>        Cancel an ongoing USSD session, either mobile or network initiated.
+<p>
+Cancel an ongoing USSD session, either mobile or network initiated.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 </div>
@@ -144,10 +161,12 @@ Cancel ();
 <pre class="programlisting">
 State  readable   u
 </pre>
-<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppUssdSessionState" title="enum MMModem3gppUssdSessionState">MMModem3gppUssdSessionState</a> value,
-        indicating the state of any ongoing USSD session.
+<p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModem3gppUssdSessionState" title="enum MMModem3gppUssdSessionState">MMModem3gppUssdSessionState</a> value,
+indicating the state of any ongoing USSD session.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -156,13 +175,16 @@ State  readable   u
 <pre class="programlisting">
 NetworkNotification  readable   s
 </pre>
-<p>        Contains any network-initiated request to which no USSD response is
-        required.
+<p>
+Contains any network-initiated request to which no USSD response is
+required.
 </p>
-<p>        When no USSD session is active, or when there is no network-
-        initiated request, this property will be a zero-length string.
+<p>
+When no USSD session is active, or when there is no network-
+initiated request, this property will be a zero-length string.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 <hr>
@@ -171,15 +193,18 @@ NetworkNotification  readable   s
 <pre class="programlisting">
 NetworkRequest  readable   s
 </pre>
-<p>        Contains any pending network-initiated request for a response. Client
-        should call
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Respond" title="The Respond() method">Respond()</a>
-        with the appropriate response to this request.
+<p>
+Contains any pending network-initiated request for a response. Client
+should call
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Modem3gpp.Ussd.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp-Ussd.Respond" title="The Respond() method">Respond()</a>
+with the appropriate response to this request.
 </p>
-<p>        When no USSD session is active, or when there is no pending
-        network-initiated request, this property will be a zero-length string.
+<p>
+When no USSD session is active, or when there is no pending
+network-initiated request, this property will be a zero-length string.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 </div>
 </div>

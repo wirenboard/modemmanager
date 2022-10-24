@@ -1,4 +1,136 @@
 
+ModemManager 1.18.12
+-------------------------------------------
+
+ * This release fixes a few very critical issues that happpen when using a glib2
+   newer or equal than 2.73.2 (after the pcre1->pcre2 update):
+   ** Fix invalid EZX error parser regular expression, which makes the
+      daemon crash due to a double-free.
+   ** Fix unit tests failures in single-line tests using G_REGEX_NEWLINE_CRLF.
+
+ * Core:
+   ** Fix double GError free during quick sync in the base modem object.
+   ** Allow running the quick sync logic also with modem disabled, to allow
+      detecting SIM hot swaps that happened during suspension.
+
+ * MBIM:
+   ** Fix using the UIM service in the shared QMI logic.
+   ** Avoid making fatal the  'SIM not inserted' error while disconnecting.
+   ** Remove context type comparison on disconnection reports, which avoids
+      missing network-initiated disconnections on several different scenarios.
+   ** Fix dangling modem object references left when processing SIM slots.
+   ** Fix reporting the correct network availability when more than one included
+      in the modem provided bitmask.
+
+ * QMI:
+   ** Use the shared QMI interface in the SIM object instead of the QMI modem
+      class directly.
+
+ * 3GPP profile manager interface:
+   ** Do not override bearer profile properties during connection.
+   ** Do not try to deactivate unused profile.
+
+ * SMS:
+   ** Avoid decoding empty text messages.
+   ** Avoid clearing parts on send/store error.
+   ** Fix segfault when storing already sent messages.
+
+ * libmm-glib;
+   ** Fix memory leaks when listing connection profiles.
+
+ * mmcli:
+   ** Plug leak of OutputItemListItem items.
+
+ * Plugins:
+   ** sierra: disable +CPOL in the GL7600.
+   ** telit: add LE910Cx MBIM composition port hints.
+   ** telit: add port type hints for LN920 0x1060, 0x1061 compositions.
+   ** icera: fix double free on %%IPSYS=? response processing
+   ** mtk: fix task completion when loading supported modes.
+
+
+ModemManager 1.18.10
+-------------------------------------------
+
+ * Build:
+   ** Require libqmi 1.30.8.
+
+ * FCC unlock:
+   ** Updated SDX55 unlock script to handle the new method introduced in
+      the latest firmware releases.
+
+ * Modem interface:
+   ** Set signal quality to 0% on shutdown.
+   ** Set signal quality as recent on init.
+
+ * MBIM:
+   ** Fix task completion when peeking device fails.
+   ** Fix several GError double-frees.
+
+ * mmcli:
+   ** Don't print signal quality until modem is enabled.
+
+ * Plugins:
+   ** foxconn: remove carrier mapping table for T99W175.
+
+ * Several other minor improvements and fixes.
+
+
+ModemManager 1.18.8
+-------------------------------------------
+
+ * A new connection status dispatcher setup is provided, where users can
+   provide custom scripts that will be called on bearer connect/disconnect
+   events. This dispatcher will make the netifd integration in openwrt work
+   much better, as we'll be able to report network-initiated disconnections
+   cleanly to netifd.
+
+   There are no default connection status dispatcher scripts installed, but
+   it's suggested distributions make sure the following directories exist:
+     - ${sysconfdir}/ModemManager/connection.d/
+     - ${libdir}/ModemManager/connection.d/
+
+ * API:
+   ** Add missing Simple interface definitions in ModemManager-names.h.
+
+ * Build:
+   ** meson: fix daemon enums dependencies.
+   ** meson: fix port enums includes.
+   ** meson: fix 'export_packages' in GIR setup.
+   ** meson: fix simtech plugin module name.
+   ** systemd: don't run ModemManager in containers.
+
+ * Core:
+   ** serial: ensure the port object is valid after BUFFER_FULL handling.
+   ** netlink: use unaligned netlink attribute length.
+   ** netlink: only change IFF_UP flag.
+   ** bearer: match unknown auth to chap in loose comparisons.
+   ** charsets: return error if UTF-8 validation fails.
+   ** fcc-unlock: make scripts POSIX shell compatible.
+   ** modem-helpers: consider minimum ID when choosing best profile.
+   ** modem-helpers: fix reading <Act> given in COPS=? responses.
+   ** sms: prevent crash if date is out of range.
+   ** profile-manager: fix copy-paste error on tags for quarks.
+
+ * QMI:
+   ** Ignore slot status indications until initial status is known.
+   ** Return error when loading capabilities if none is found.
+
+ * MBIM:
+   ** Default initial EPS bearer's auth to chap when unknown.
+   ** Update default error when network error is out of range.
+
+ * mmcli:
+   ** Fix key length when printing list of items.
+
+ * Plugins:
+   ** linktop: new port type hints.
+   ** cinterion: add support for PLSx3w modems
+   ** huawei: disable +CPOL based features in Huawei E226
+
+ * Several other minor improvements and fixes.
+
+
 ModemManager 1.18.6
 -------------------------------------------
 

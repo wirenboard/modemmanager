@@ -32,6 +32,7 @@
 #include "mm-iface-modem-3gpp.h"
 #include "mm-iface-modem-3gpp-profile-manager.h"
 #include "mm-iface-modem-time.h"
+#include "mm-common-helpers.h"
 #include "mm-base-modem-at.h"
 #include "mm-bearer-list.h"
 #include "mm-broadband-bearer-icera.h"
@@ -161,7 +162,6 @@ load_supported_modes_finish (MMIfaceModem *self,
                      MM_CORE_ERROR,
                      MM_CORE_ERROR_FAILED,
                      "%%IPSYS=? response didn't match");
-        g_regex_unref (r);
         return NULL;
     }
 
@@ -1568,6 +1568,7 @@ parse_tlts_query_reply (const gchar *response,
                         MMNetworkTimezone **tz,
                         GError **error)
 {
+    gboolean ret = TRUE;
     gint year;
     gint month;
     gint day;
@@ -1648,11 +1649,13 @@ parse_tlts_query_reply (const gchar *response,
                                         g_date_time_get_minute (adjusted),
                                         g_date_time_get_second (adjusted),
                                         TRUE,
-                                        offset);
+                                        offset,
+                                        error);
+        ret = (*iso8601 != NULL);
     }
 
     g_date_time_unref (adjusted);
-    return TRUE;
+    return ret;
 }
 
 static MMNetworkTimezone *

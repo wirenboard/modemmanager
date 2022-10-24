@@ -267,6 +267,7 @@ EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+FILECMD = @FILECMD@
 GCOV = @GCOV@
 GDBUS_CODEGEN = @GDBUS_CODEGEN@
 GENHTML = @GENHTML@
@@ -443,7 +444,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = . fcc-unlock tests
+SUBDIRS = . dispatcher-connection dispatcher-fcc-unlock tests
 edit = @sed \
        -e 's|@sbindir[@]|$(sbindir)|g' \
        -e 's|@sysconfdir[@]|$(sysconfdir)|g' \

@@ -294,6 +294,8 @@ ModemManager_CPPFLAGS = \
 	-DPLUGINDIR=\"$(pkglibdir)\" \
 	-DFCCUNLOCKDIRPACKAGE=\"${pkglibdir}/fcc-unlock.d\" \
 	-DFCCUNLOCKDIRUSER=\"${pkgsysconfdir}/fcc-unlock.d\" \
+	-DCONNECTIONDIRPACKAGE=\"${pkglibdir}/connection.d\" \
+	-DCONNECTIONDIRUSER=\"${pkgsysconfdir}/connection.d\" \
 	-DMM_COMPILATION \
 	$(NULL)
 
@@ -313,8 +315,12 @@ ModemManager_SOURCES = \
 	mm-private-boxed-types.c \
 	mm-auth-provider.h \
 	mm-auth-provider.c \
-	mm-fcc-unlock-dispatcher.h \
-	mm-fcc-unlock-dispatcher.c \
+	mm-dispatcher.h \
+	mm-dispatcher.c \
+	mm-dispatcher-connection.h \
+	mm-dispatcher-connection.c \
+	mm-dispatcher-fcc-unlock.h \
+	mm-dispatcher-fcc-unlock.c \
 	mm-filter.h \
 	mm-filter.c \
 	mm-base-manager.c \

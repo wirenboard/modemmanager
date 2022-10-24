@@ -1,8 +1,74 @@
-modemmanager (1.18.6-1~bpo11+1) bullseye-backports; urgency=medium
+modemmanager (1.18.12-1~bpo11+1) bullseye-backports; urgency=medium
 
   * Create backport for Debian 11.
 
- -- Martin <debacle@debian.org>  Wed, 23 Mar 2022 18:08:51 +0000
+ -- Martin <debacle@debian.org>  Mon, 24 Oct 2022 16:24:41 +0000
+
+modemmanager (1.18.12-1) unstable; urgency=medium
+
+  [ Evangelos Ribeiro Tzaras ]
+  * modemmanager: Recommend libqmi-utils and libmbim-utils.
+    The FCC unlock scripts shipped in modemmanager use `qmicli` to
+    perform unlocking which is part of the `libqmi-utils` package.
+    Additionally `mbimcli` is used by the `leac` script,
+    so recommend libmbim-utils as well. (Closes: #1017975)
+
+  [ Arnaud Ferraris ]
+  * d/upstream: add new upstream signing key
+  * New upstream version 1.18.12
+  * d/patches: drop upstreamed patches
+
+ -- Arnaud Ferraris <aferraris@debian.org>  Wed, 28 Sep 2022 15:06:56 +0200
+
+modemmanager (1.18.10-2) unstable; urgency=medium
+
+  [ Matteo F. Vescovi <mfv@debian.org> 2022-09-07 ]
+  * debian/patches/: patchset updated (Closes: #1017794, #1018198)
+    - 0001-Fix_invalid_EXZ_error_parser.patch added
+    - 0002-Fix_issue_with_EOL_for_pcre2.patch added
+
+ -- Martin <debacle@debian.org>  Wed, 07 Sep 2022 21:55:00 +0000
+
+modemmanager (1.18.10-1) unstable; urgency=medium
+
+  * New upstream version 1.18.10
+  * d/control: update my email address and bump libqmi dependency.
+    Upstream bumped the required version of `libqmi`, so let's ensure this
+    is reflected in this package.
+    This commit also bumps the Standards-Version, as no additional change is
+    required.
+  * debian: update linitian-overrides.
+    Due to recent changes in `lintian`, our overrides for the -doc packages
+    are no longer needed. However, a new `source-is-missing` lintian error
+    message must be overridden as it relates to HTML files, which are source
+    files themselves.
+
+ -- Arnaud Ferraris <aferraris@debian.org>  Mon, 11 Jul 2022 17:30:09 +0200
+
+modemmanager (1.18.8-1) unstable; urgency=medium
+
+  * debian: lintian-driven fixes and small improvements.
+    This commit includes minor changes spotted by `lintian-brush`:
+    - remove obsolete/empty maintainer scripts
+    - `d/upstream/metadata`: append `.git` to repo URL
+    - `d/rules`: drop symbols migration (1.4.14 is long gone)
+  * d/control: drop build dependency on libqrtr-glib
+    `libqrtr-glib-dev` is now a dependency to `libqmi-glib-dev`, and as such
+    can be safely omitted from this package's build deps.
+    We must however increase the required `libqmi` version to ensure we
+    avoid build failures.
+  * New upstream version 1.18.8
+  * d/symbols: update for new release.
+
+ -- Arnaud Ferraris <arnaud.ferraris@gmail.com>  Fri, 20 May 2022 10:19:43 +0200
+
+modemmanager (1.18.6-2) unstable; urgency=medium
+
+  * d/control: build-depend on libqrtr-glib.
+    This enables support for the QRTR protocol so we can use the integrated
+    modem found on Qualcomm SoCs.
+
+ -- Arnaud Ferraris <arnaud.ferraris@gmail.com>  Wed, 23 Feb 2022 13:58:35 +0100
 
 modemmanager (1.18.6-1) unstable; urgency=medium
 

@@ -48,18 +48,21 @@
 </div>
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Modem-Firmware"></a><h2>Description</h2>
-<p>      This interface provides access to perform different firmware-related operations
-      in the modem, including listing the available firmware images in the module and
-      selecting which of them to use.
+<p>
+This interface provides access to perform different firmware-related operations
+in the modem, including listing the available firmware images in the module and
+selecting which of them to use.
 </p>
-<p>      This interface does not provide direct access to perform firmware updates in
-      the device. Instead, it exposes information about the expected firmware update
-      method as well as method-specific details required for the upgrade to happen.
-      The actual firmware upgrade may be performed via the Linux Vendor Firmware Service
-      and the <a class="ulink" href="https://fwupd.org" target="_top">fwupd</a> daemon.
+<p>
+This interface does not provide direct access to perform firmware updates in
+the device. Instead, it exposes information about the expected firmware update
+method as well as method-specific details required for the upgrade to happen.
+The actual firmware upgrade may be performed via the Linux Vendor Firmware Service
+and the <a class="ulink" href="https://fwupd.org" target="_top">fwupd</a> daemon.
 </p>
-<p>      This interface will always be available as long a the modem is considered
-      valid.
+<p>
+This interface will always be available as long a the modem is considered
+valid.
 </p>
 </div>
 <div class="refsect1">
@@ -70,15 +73,19 @@
 List (OUT s      selected,
       OUT aa{sv} installed);
 </pre>
-<p>        List installed firmware images.
+<p>
+List installed firmware images.
 </p>
-<p>        Firmware slots and firmware images are identified by arbitrary opaque
-        strings.
+<p>
+Firmware slots and firmware images are identified by arbitrary opaque
+strings.
 </p>
-<p>        Firmware images are represented as dictionaries of properties.
-        Certain properties are pre-defined, and some are required:
+<p>
+Firmware images are represented as dictionaries of properties.
+Certain properties are pre-defined, and some are required:
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -88,65 +95,66 @@ List (OUT s      selected,
 <tr>
 <td><p><span class="term"><code class="literal">"image-type"</code></span></p></td>
 <td>
-              (Required) Type of the firmware image, given as a
-              <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMFirmwareImageType" title="enum MMFirmwareImageType">MMFirmwareImageType</a> value
-              (signature <code class="literal">"u"</code>). Firmware images of type
-              <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GENERIC:CAPS">MM_FIRMWARE_IMAGE_TYPE_GENERIC</a>
-              will only expose only the mandatory properties.
-            </td>
+(Required) Type of the firmware image, given as a
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MMFirmwareImageType" title="enum MMFirmwareImageType">MMFirmwareImageType</a> value
+(signature <code class="literal">"u"</code>). Firmware images of type
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GENERIC:CAPS">MM_FIRMWARE_IMAGE_TYPE_GENERIC</a>
+will only expose only the mandatory properties.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"unique-id"</code></span></p></td>
 <td>
-              (Required) A user-readable unique ID for the firmware image, given as a
-              string value (signature <code class="literal">"s"</code>).
-            </td>
+(Required) A user-readable unique ID for the firmware image, given as a
+string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"gobi-pri-version"</code></span></p></td>
 <td>
-              (Optional) The version of the PRI firmware image, in images of type
-              <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</a>,
-              given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+(Optional) The version of the PRI firmware image, in images of type
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</a>,
+given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"gobi-pri-info"</code></span></p></td>
 <td>
-              (Optional) Additional information of the PRI image, in images of type
-              <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</a>,
-              given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+(Optional) Additional information of the PRI image, in images of type
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</a>,
+given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"gobi-boot-version"</code></span></p></td>
 <td>
-              (Optional) The boot version of the PRI firmware image, in images of type
-              <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</a>,
-              given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+(Optional) The boot version of the PRI firmware image, in images of type
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</a>,
+given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"gobi-pri-unique-id"</code></span></p></td>
 <td>
-              (Optional) The unique ID of the PRI firmware image, in images of type
-              <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</a>,
-              given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+(Optional) The unique ID of the PRI firmware image, in images of type
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</a>,
+given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"gobi-modem-unique-id"</code></span></p></td>
 <td>
-              (Optional) The unique ID of the Modem firmware image, in images of type
-              <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</a>,
-              given as a string value (signature <code class="literal">"s"</code>).
-            </td>
+(Optional) The unique ID of the Modem firmware image, in images of type
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-FIRMWARE-IMAGE-TYPE-GOBI:CAPS">MM_FIRMWARE_IMAGE_TYPE_GOBI</a>,
+given as a string value (signature <code class="literal">"s"</code>).
+</td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -156,11 +164,15 @@ List (OUT s      selected,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">OUT s <em class="parameter"><code>selected</code></em></code>:</span></p></td>
-<td><p>The unique name of the selected firmware image, or the empty string if no image is selected.</p></td>
+<td><p>
+The unique name of the selected firmware image, or the empty string if no image is selected.
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">OUT aa{sv} <em class="parameter"><code>installed</code></em></code>:</span></p></td>
-<td><p>An array of dictionaries containing the properties of the installed firmware images.</p></td>
+<td><p>
+An array of dictionaries containing the properties of the installed firmware images.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -171,17 +183,21 @@ List (OUT s      selected,
 <pre class="programlisting">
 Select (IN  s uniqueid);
 </pre>
-<p>        Selects a different firmware image to use, and immediately resets the
-        modem so that it begins using the new firmware image.
+<p>
+Selects a different firmware image to use, and immediately resets the
+modem so that it begins using the new firmware image.
 </p>
-<p>        The method will fail if the identifier does not match any of the names
-        returned by
-        <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Firmware.List" title="The List() method">List()</a>,
-        or if the image could not be selected for some reason.
+<p>
+The method will fail if the identifier does not match any of the names
+returned by
+<a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.Firmware.html#gdbus-method-org-freedesktop-ModemManager1-Modem-Firmware.List" title="The List() method">List()</a>,
+or if the image could not be selected for some reason.
 </p>
-<p>        Installed images can be selected non-destructively.
+<p>
+Installed images can be selected non-destructively.
 </p>
-<p>        Since: 1.0
+<p>
+Since: 1.0
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -190,7 +206,9 @@ Select (IN  s uniqueid);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>uniqueid</code></em></code>:</span></p></td>
-<td><p>The unique ID of the firmware image to select.</p></td>
+<td><p>
+The unique ID of the firmware image to select.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -202,14 +220,17 @@ Select (IN  s uniqueid);
 <pre class="programlisting">
 UpdateSettings  readable   (ua{sv})
 </pre>
-<p>        Detailed settings that provide information about how the module should be
-        updated.
+<p>
+Detailed settings that provide information about how the module should be
+updated.
 </p>
-<p>        The settings are given as a bitmask of <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemFirmwareUpdateMethod" title="enum MMModemFirmwareUpdateMethod">MMModemFirmwareUpdateMethod</a>
-        values specifying the type of firmware update procedures expected followed by a
-        dictionary that includes other parameters applicable to the specific methods reported.
+<p>
+The settings are given as a bitmask of <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMModemFirmwareUpdateMethod" title="enum MMModemFirmwareUpdateMethod">MMModemFirmwareUpdateMethod</a>
+values specifying the type of firmware update procedures expected followed by a
+dictionary that includes other parameters applicable to the specific methods reported.
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -219,9 +240,9 @@ UpdateSettings  readable   (ua{sv})
 <td><p></p></td>
 <td>
 <p>
-                The following settings are mandatory as long as the reported update method is not
-                <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-MODEM-FIRMWARE-UPDATE-METHOD-NONE:CAPS">MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE</a>.
-              </p>
+The following settings are mandatory as long as the reported update method is not
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-MODEM-FIRMWARE-UPDATE-METHOD-NONE:CAPS">MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE</a>.
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -231,21 +252,21 @@ UpdateSettings  readable   (ua{sv})
 <tr>
 <td><p><span class="term"><code class="literal">"device-ids"</code></span></p></td>
 <td>
-                    (Required) This property exposes the list of device IDs associated to a given
-                    device, from most specific to least specific. (signature <code class="literal">'as'</code>).
-                    E.g. a list containing: <code class="literal">"USB\VID_413C&amp;PID_81D7&amp;REV_0001"</code>,
-                    <code class="literal">"USB\VID_413C&amp;PID_81D7"</code> and <code class="literal">"USB\VID_413C"</code>.
-                  </td>
+(Required) This property exposes the list of device IDs associated to a given
+device, from most specific to least specific. (signature <code class="literal">'as'</code>).
+E.g. a list containing: <code class="literal">"USB\VID_413C&amp;PID_81D7&amp;REV_0001"</code>,
+<code class="literal">"USB\VID_413C&amp;PID_81D7"</code> and <code class="literal">"USB\VID_413C"</code>.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"version"</code></span></p></td>
 <td>
-                    (Required) This property exposes the current firmware version string of the module.
-                    If the module uses separate version numbers for firmware version and carrier configuration,
-                    this version string will be a combination of both, and so it may be different to the
-                    version string showed in the <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Revision" title='The "Revision" property'>"Revision"</a> property.
-                    (signature <code class="literal">'s'</code>)
-                  </td>
+(Required) This property exposes the current firmware version string of the module.
+If the module uses separate version numbers for firmware version and carrier configuration,
+this version string will be a combination of both, and so it may be different to the
+version string showed in the <a class="link" href="gdbus-org.freedesktop.ModemManager1.Modem.html#gdbus-property-org-freedesktop-ModemManager1-Modem.Revision" title='The "Revision" property'>"Revision"</a> property.
+(signature <code class="literal">'s'</code>)
+</td>
 </tr>
 </tbody>
 </table></div>
@@ -254,7 +275,8 @@ UpdateSettings  readable   (ua{sv})
 </table></div>
 <p>
 </p>
-<p>        </p>
+<p>
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -264,9 +286,9 @@ UpdateSettings  readable   (ua{sv})
 <td><p><span class="term"><a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-MODEM-FIRMWARE-UPDATE-METHOD-FASTBOOT:CAPS">MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT</a></span></p></td>
 <td>
 <p>
-                Devices supporting the fastboot firmware update method require exposing the
-                following additional settings:
-              </p>
+Devices supporting the fastboot firmware update method require exposing the
+following additional settings:
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -275,9 +297,9 @@ UpdateSettings  readable   (ua{sv})
 <tbody><tr>
 <td><p><span class="term"><code class="literal">"fastboot-at"</code></span></p></td>
 <td>
-                    (Required) This property exposes the AT command that should be sent to the
-                    module to trigger a reset into fastboot mode (signature <code class="literal">'s'</code>)
-                  </td>
+(Required) This property exposes the AT command that should be sent to the
+module to trigger a reset into fastboot mode (signature <code class="literal">'s'</code>)
+</td>
 </tr></tbody>
 </table></div>
 </td>
@@ -285,7 +307,8 @@ UpdateSettings  readable   (ua{sv})
 </table></div>
 <p>
 </p>
-<p>        Since: 1.10
+<p>
+Since: 1.10
 </p>
 </div>
 </div>

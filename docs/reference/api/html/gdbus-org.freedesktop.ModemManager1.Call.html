@@ -68,7 +68,8 @@
 </div>
 <div class="refsect1">
 <a name="gdbus-interface-org-freedesktop-ModemManager1-Call"></a><h2>Description</h2>
-<p>      The Call interface Defines operations and properties of a single Call.
+<p>
+The Call interface Defines operations and properties of a single Call.
 </p>
 </div>
 <div class="refsect1">
@@ -78,12 +79,15 @@
 <pre class="programlisting">
 Start ();
 </pre>
-<p>        If the outgoing call has not yet been started, start it.
+<p>
+If the outgoing call has not yet been started, start it.
 </p>
-<p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-UNKNOWN:CAPS"><code class="constant">MM_CALL_STATE_UNKNOWN</code></a> and direction is
-        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-DIRECTION-OUTGOING:CAPS"><code class="constant">MM_CALL_DIRECTION_OUTGOING</code></a>.
+<p>
+Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-UNKNOWN:CAPS"><code class="constant">MM_CALL_STATE_UNKNOWN</code></a> and direction is
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-DIRECTION-OUTGOING:CAPS"><code class="constant">MM_CALL_DIRECTION_OUTGOING</code></a>.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 </div>
 <hr>
@@ -92,12 +96,15 @@ Start ();
 <pre class="programlisting">
 Accept ();
 </pre>
-<p>        Accept incoming call (answer).
+<p>
+Accept incoming call (answer).
 </p>
-<p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-RINGING-IN:CAPS"><code class="constant">MM_CALL_STATE_RINGING_IN</code></a> and direction is
-        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-DIRECTION-INCOMING:CAPS"><code class="constant">MM_CALL_DIRECTION_INCOMING</code></a>.
+<p>
+Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-RINGING-IN:CAPS"><code class="constant">MM_CALL_STATE_RINGING_IN</code></a> and direction is
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-DIRECTION-INCOMING:CAPS"><code class="constant">MM_CALL_DIRECTION_INCOMING</code></a>.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 </div>
 <hr>
@@ -106,14 +113,17 @@ Accept ();
 <pre class="programlisting">
 Deflect (IN  s number);
 </pre>
-<p>        Deflect an incoming or waiting call to a new number. This call will be
-        considered terminated once the deflection is performed.
+<p>
+Deflect an incoming or waiting call to a new number. This call will be
+considered terminated once the deflection is performed.
 </p>
-<p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-RINGING-IN:CAPS"><code class="constant">MM_CALL_STATE_RINGING_IN</code></a> or
-        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-WAITING:CAPS"><code class="constant">MM_CALL_STATE_WAITING</code></a> and direction is
-        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-DIRECTION-INCOMING:CAPS"><code class="constant">MM_CALL_DIRECTION_INCOMING</code></a>.
+<p>
+Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-RINGING-IN:CAPS"><code class="constant">MM_CALL_STATE_RINGING_IN</code></a> or
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-WAITING:CAPS"><code class="constant">MM_CALL_STATE_WAITING</code></a> and direction is
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-DIRECTION-INCOMING:CAPS"><code class="constant">MM_CALL_DIRECTION_INCOMING</code></a>.
 </p>
-<p>        Since: 1.12
+<p>
+Since: 1.12
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -122,7 +132,9 @@ Deflect (IN  s number);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>number</code></em></code>:</span></p></td>
-<td><p>new number where the call will be deflected.</p></td>
+<td><p>
+new number where the call will be deflected.
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -132,16 +144,20 @@ Deflect (IN  s number);
 <pre class="programlisting">
 JoinMultiparty ();
 </pre>
-<p>        Join the currently held call into a single multiparty call with another
-        already active call.
+<p>
+Join the currently held call into a single multiparty call with another
+already active call.
 </p>
-<p>        The calls will be flagged with the
-        '<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Multiparty" title='The "Multiparty" property'>Multiparty</a>'
-        property while they are part of the multiparty call.
+<p>
+The calls will be flagged with the
+'<a class="link" href="gdbus-org.freedesktop.ModemManager1.Call.html#gdbus-property-org-freedesktop-ModemManager1-Call.Multiparty" title='The "Multiparty" property'>Multiparty</a>'
+property while they are part of the multiparty call.
 </p>
-<p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-HELD:CAPS"><code class="constant">MM_CALL_STATE_HELD</code></a>.
+<p>
+Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-HELD:CAPS"><code class="constant">MM_CALL_STATE_HELD</code></a>.
 </p>
-<p>        Since: 1.12
+<p>
+Since: 1.12
 </p>
 </div>
 <hr>
@@ -150,15 +166,18 @@ JoinMultiparty ();
 <pre class="programlisting">
 LeaveMultiparty ();
 </pre>
-<p>        If this call is part of an ongoing multiparty call, detach it from the multiparty call,
-        put the multiparty call on hold, and activate this one alone. This operation makes this
-        call private again between both ends of the call.
+<p>
+If this call is part of an ongoing multiparty call, detach it from the multiparty call,
+put the multiparty call on hold, and activate this one alone. This operation makes this
+call private again between both ends of the call.
 </p>
-<p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-ACTIVE:CAPS"><code class="constant">MM_CALL_STATE_ACTIVE</code></a> or
-        <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-HELD:CAPS"><code class="constant">MM_CALL_STATE_HELD</code></a> and
-        the call is a multiparty call.
+<p>
+Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-ACTIVE:CAPS"><code class="constant">MM_CALL_STATE_ACTIVE</code></a> or
+<a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-HELD:CAPS"><code class="constant">MM_CALL_STATE_HELD</code></a> and
+the call is a multiparty call.
 </p>
-<p>        Since: 1.12
+<p>
+Since: 1.12
 </p>
 </div>
 <hr>
@@ -167,11 +186,14 @@ LeaveMultiparty ();
 <pre class="programlisting">
 Hangup ();
 </pre>
-<p>        Hangup the active call.
+<p>
+Hangup the active call.
 </p>
-<p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-UNKNOWN:CAPS"><code class="constant">MM_CALL_STATE_UNKNOWN</code></a>.
+<p>
+Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-UNKNOWN:CAPS"><code class="constant">MM_CALL_STATE_UNKNOWN</code></a>.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 </div>
 <hr>
@@ -180,11 +202,14 @@ Hangup ();
 <pre class="programlisting">
 SendDtmf (IN  s dtmf);
 </pre>
-<p>        Send a DTMF tone (Dual Tone Multi-Frequency) (only on supported modem).
+<p>
+Send a DTMF tone (Dual Tone Multi-Frequency) (only on supported modem).
 </p>
-<p>        Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-ACTIVE:CAPS"><code class="constant">MM_CALL_STATE_ACTIVE</code></a>.
+<p>
+Applicable only if state is <a class="link" href="ModemManager-Flags-and-Enumerations.html#MM-CALL-STATE-ACTIVE:CAPS"><code class="constant">MM_CALL_STATE_ACTIVE</code></a>.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -193,7 +218,9 @@ SendDtmf (IN  s dtmf);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">IN s <em class="parameter"><code>dtmf</code></em></code>:</span></p></td>
-<td><p>DTMF tone identifier [0-9A-D*#].</p></td>
+<td><p>
+DTMF tone identifier [0-9A-D*#].
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -205,9 +232,11 @@ SendDtmf (IN  s dtmf);
 <pre class="programlisting">
 DtmfReceived (s dtmf);
 </pre>
-<p>        Emitted when a DTMF tone is received (only on supported modem)
+<p>
+Emitted when a DTMF tone is received (only on supported modem)
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -216,7 +245,9 @@ DtmfReceived (s dtmf);
 </colgroup>
 <tbody><tr>
 <td><p><span class="term"><code class="literal">s <em class="parameter"><code>dtmf</code></em></code>:</span></p></td>
-<td><p>DTMF tone identifier [0-9A-D*#].</p></td>
+<td><p>
+DTMF tone identifier [0-9A-D*#].
+</p></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -228,9 +259,11 @@ StateChanged (i old,
               i new,
               u reason);
 </pre>
-<p>        Emitted when call changes state
+<p>
+Emitted when call changes state
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -240,15 +273,21 @@ StateChanged (i old,
 <tbody>
 <tr>
 <td><p><span class="term"><code class="literal">i <em class="parameter"><code>old</code></em></code>:</span></p></td>
-<td><p>Old state MMCallState</p></td>
+<td><p>
+Old state MMCallState
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">i <em class="parameter"><code>new</code></em></code>:</span></p></td>
-<td><p>New state MMCallState</p></td>
+<td><p>
+New state MMCallState
+</p></td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">u <em class="parameter"><code>reason</code></em></code>:</span></p></td>
-<td><p>A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMCallStateReason" title="enum MMCallStateReason">MMCallStateReason</a> value, specifying the reason for this state change.</p></td>
+<td><p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMCallStateReason" title="enum MMCallStateReason">MMCallStateReason</a> value, specifying the reason for this state change.
+</p></td>
 </tr>
 </tbody>
 </table></div>
@@ -261,10 +300,12 @@ StateChanged (i old,
 <pre class="programlisting">
 State  readable   i
 </pre>
-<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMCallState" title="enum MMCallState">MMCallState</a> value,
-        describing the state of the call.
+<p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMCallState" title="enum MMCallState">MMCallState</a> value,
+describing the state of the call.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 </div>
 <hr>
@@ -273,9 +314,11 @@ State  readable   i
 <pre class="programlisting">
 StateReason  readable   i
 </pre>
-<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMCallStateReason" title="enum MMCallStateReason">MMCallStateReason</a> value, describing why the state is changed.
+<p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMCallStateReason" title="enum MMCallStateReason">MMCallStateReason</a> value, describing why the state is changed.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 </div>
 <hr>
@@ -284,10 +327,12 @@ StateReason  readable   i
 <pre class="programlisting">
 Direction  readable   i
 </pre>
-<p>        A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMCallDirection" title="enum MMCallDirection">MMCallDirection</a> value,
-        describing the direction of the call.
+<p>
+A <a class="link" href="ModemManager-Flags-and-Enumerations.html#MMCallDirection" title="enum MMCallDirection">MMCallDirection</a> value,
+describing the direction of the call.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 </div>
 <hr>
@@ -296,9 +341,11 @@ Direction  readable   i
 <pre class="programlisting">
 Number  readable   s
 </pre>
-<p>        The remote phone number.
+<p>
+The remote phone number.
 </p>
-<p>        Since: 1.6
+<p>
+Since: 1.6
 </p>
 </div>
 <hr>
@@ -307,9 +354,11 @@ Number  readable   s
 <pre class="programlisting">
 Multiparty  readable   b
 </pre>
-<p>        Whether the call is currently part of a multiparty conference call.
+<p>
+Whether the call is currently part of a multiparty conference call.
 </p>
-<p>        Since: 1.12
+<p>
+Since: 1.12
 </p>
 </div>
 <hr>
@@ -318,12 +367,14 @@ Multiparty  readable   b
 <pre class="programlisting">
 AudioPort  readable   s
 </pre>
-<p>        If call audio is routed via the host, the name of the kernel device that
-        provides the audio.  For example, with certain Huawei USB modems, this
-        property might be "ttyUSB2" indicating audio is available via ttyUSB2 in
-        the format described by the AudioFormat property.
+<p>
+If call audio is routed via the host, the name of the kernel device that
+provides the audio.  For example, with certain Huawei USB modems, this
+property might be "ttyUSB2" indicating audio is available via ttyUSB2 in
+the format described by the AudioFormat property.
 </p>
-<p>        Since: 1.10
+<p>
+Since: 1.10
 </p>
 </div>
 <hr>
@@ -332,11 +383,13 @@ AudioPort  readable   s
 <pre class="programlisting">
 AudioFormat  readable   a{sv}
 </pre>
-<p>        If call audio is routed via the host, a description of the audio format
-        supported by the audio port.
+<p>
+If call audio is routed via the host, a description of the audio format
+supported by the audio port.
 </p>
-<p>        This property may include the following items:
-        </p>
+<p>
+This property may include the following items:
+</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -346,28 +399,29 @@ AudioFormat  readable   a{sv}
 <tr>
 <td><p><span class="term"><code class="literal">"encoding"</code></span></p></td>
 <td>
-              The audio encoding format.  For example, "pcm" for PCM audio.
-            </td>
+The audio encoding format.  For example, "pcm" for PCM audio.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"resolution"</code></span></p></td>
 <td>
-              The sampling precision and its encoding format. For example,
-              "s16le" for signed 16-bit little-endian samples.
-            </td>
+The sampling precision and its encoding format. For example,
+"s16le" for signed 16-bit little-endian samples.
+</td>
 </tr>
 <tr>
 <td><p><span class="term"><code class="literal">"rate"</code></span></p></td>
 <td>
-              The sampling rate as an unsigned integer.  For example, 8000 for
-              8000hz.
-            </td>
+The sampling rate as an unsigned integer.  For example, 8000 for
+8000hz.
+</td>
 </tr>
 </tbody>
 </table></div>
 <p>
 </p>
-<p>        Since: 1.10
+<p>
+Since: 1.10
 </p>
 </div>
 </div>
