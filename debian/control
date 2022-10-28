@@ -74,6 +74,7 @@ Section: doc
 Architecture: all
 Multi-Arch: foreign
 Depends: ${misc:Depends}
+Build-Profiles: <!nodoc>
 Suggests: devhelp
 Description: D-Bus service for managing modems - documentation files
  ModemManager is a DBus-activated daemon which controls mobile broadband
@@ -128,6 +129,7 @@ Architecture: all
 Multi-Arch: foreign
 Section: doc
 Depends: ${misc:Depends}
+Build-Profiles: <!nodoc>
 Suggests: devhelp
 Description: D-Bus service for managing modems - library documentation
  ModemManager is a DBus-activated daemon which controls mobile broadband
