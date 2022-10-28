@@ -1,3 +1,32 @@
+modemmanager (1.20.0-1) unstable; urgency=medium
+
+  * New upstream version 1.20.0
+  * d/control: depend on polkitd instead of policykit-1
+    `policykit-1` has recently been split in 2 packages and replaced by a
+    transitional package. The one we actually need is `polkitd`, so let's
+    have this one as the "main" dependency.
+    However, as this package is often backported to bullseye as well, let's
+    use an alternative as `polkitd` only exists in current testing/sid.
+    (Closes: #1022072)
+  * d/watch: look for git tags instead of source tarballs.
+    Upstream stopped publishing source tarballs and now requests that we
+    use (signed) git tags for new versions.
+  * d/control: update build dependencies for new version.
+    Upstream changed build system from `autotools` to `meson`, let's
+    acknowledge this change. Due to the way `meson` looks for build
+    dependencies, this also requires adding a few more one to ensure the
+    package gets properly built.
+  * d/rules: update for build system change.
+    With the change to `meson` as the build system, configure options are
+    handled differently, requiring minor changes to our package.
+  * debian: honor nodoc build profile.
+    Documentation was previously always built.
+  * debian: update lintian-overrides for new version
+  * libmm-glib0: update symbols file for new release
+  * d/patches: make build reproducible
+
+ -- Arnaud Ferraris <aferraris@debian.org>  Fri, 28 Oct 2022 17:54:26 +0200
+
 modemmanager (1.18.12-1) unstable; urgency=medium
 
   [ Evangelos Ribeiro Tzaras ]
