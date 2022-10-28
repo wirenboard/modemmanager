@@ -69,7 +69,6 @@ struct _MMBroadbandModemTelitPrivate {
     MMModemLocationSource enabled_sources;
 };
 
-
 typedef struct {
     MMModemLocationSource source;
     guint gps_enable_step;
@@ -404,39 +403,6 @@ location_load_capabilities (MMIfaceModemLocation *self,
 }
 
 /*****************************************************************************/
-/* After Sim Unlock (Modem interface) */
-
-static gboolean
-modem_after_sim_unlock_finish (MMIfaceModem *self,
-                               GAsyncResult *res,
-                               GError **error)
-{
-    return g_task_propagate_boolean (G_TASK (res), error);
-}
-
-static gboolean
-after_sim_unlock_ready (GTask *task)
-{
-    g_task_return_boolean (task, TRUE);
-    g_object_unref (task);
-    return G_SOURCE_REMOVE;
-}
-
-static void
-modem_after_sim_unlock (MMIfaceModem *self,
-                        GAsyncReadyCallback callback,
-                        gpointer user_data)
-{
-    GTask *task;
-
-    task = g_task_new (self, NULL, callback, user_data);
-
-    /* A short delay is necessary with some SIMs when
-    they have just been unlocked. Using 1 second as secure margin. */
-    g_timeout_add_seconds (1, (GSourceFunc) after_sim_unlock_ready, task);
-}
-
-/*****************************************************************************/
 /* Setup SIM hot swap (Modem interface) */
 
 typedef enum {
@@ -507,7 +473,7 @@ telit_qss_unsolicited_handler (MMPortSerialAt *port,
     if ((prev_qss_status == QSS_STATUS_SIM_REMOVED && cur_qss_status != QSS_STATUS_SIM_REMOVED) ||
         (prev_qss_status > QSS_STATUS_SIM_REMOVED && cur_qss_status == QSS_STATUS_SIM_REMOVED)) {
         mm_obj_info (self, "QSS handler: SIM swap detected");
-        mm_broadband_modem_sim_hot_swap_detected (MM_BROADBAND_MODEM (self));
+        mm_iface_modem_process_sim_event (MM_IFACE_MODEM (self));
     }
 }
 
@@ -534,10 +500,10 @@ telit_qss_enable_ready (MMBaseModem *self,
                         GAsyncResult *res,
                         GTask *task)
 {
-    QssSetupContext *ctx;
-    MMPortSerialAt *port;
-    GError **error;
-    GRegex *pattern;
+    QssSetupContext    *ctx;
+    MMPortSerialAt     *port;
+    GError            **error;
+    g_autoptr(GRegex)   pattern = NULL;
 
     ctx = g_task_get_task_data (task);
 
@@ -563,7 +529,6 @@ telit_qss_enable_ready (MMBaseModem *self,
         (MMPortSerialAtUnsolicitedMsgFn)telit_qss_unsolicited_handler,
         self,
         NULL);
-    g_regex_unref (pattern);
 
 next_step:
     ctx->step++;
@@ -682,14 +647,19 @@ qss_setup_step (GTask *task)
         case QSS_SETUP_STEP_LAST:
             /* If all enabling actions failed (either both, or only primary if
              * there is no secondary), then we return an error */
-            if (ctx->primary_error &&
-                (ctx->secondary_error || !ctx->secondary))
+            if (ctx->primary_error && (ctx->secondary_error || !ctx->secondary)) {
                 g_task_return_new_error (task,
                                          MM_CORE_ERROR,
                                          MM_CORE_ERROR_FAILED,
                                          "QSS: couldn't enable unsolicited");
-            else
+            } else {
+                g_autoptr(GError) error = NULL;
+
+                if (!mm_broadband_modem_sim_hot_swap_ports_context_init (MM_BROADBAND_MODEM (self), &error))
+                    mm_obj_warn (self, "failed to initialize SIM hot swap ports context: %s", error->message);
+
                 g_task_return_boolean (task, TRUE);
+            }
             g_object_unref (task);
             break;
 
@@ -715,6 +685,15 @@ modem_setup_sim_hot_swap (MMIfaceModem *self,
 
     g_task_set_task_data (task, ctx, (GDestroyNotify) qss_setup_context_free);
     qss_setup_step (task);
+}
+
+/*****************************************************************************/
+/* SIM hot swap cleanup (Modem interface) */
+
+static void
+modem_cleanup_sim_hot_swap (MMIfaceModem *self)
+{
+    mm_broadband_modem_sim_hot_swap_ports_context_reset (MM_BROADBAND_MODEM (self));
 }
 
 /*****************************************************************************/
@@ -1090,11 +1069,11 @@ modem_reset (MMIfaceModem *self,
 /* Load access technologies (Modem interface) */
 
 static gboolean
-load_access_technologies_finish (MMIfaceModem *self,
-                                 GAsyncResult *res,
+load_access_technologies_finish (MMIfaceModem            *self,
+                                 GAsyncResult            *res,
                                  MMModemAccessTechnology *access_technologies,
-                                 guint *mask,
-                                 GError **error)
+                                 guint                   *mask,
+                                 GError                 **error)
 {
     GVariant *result;
 
@@ -1108,6 +1087,106 @@ load_access_technologies_finish (MMIfaceModem *self,
     *access_technologies = (MMModemAccessTechnology) g_variant_get_uint32 (result);
     *mask = MM_MODEM_ACCESS_TECHNOLOGY_ANY;
     return TRUE;
+}
+
+static MMBaseModemAtResponseProcessorResult
+response_processor_cops_ignore_at_errors (MMBaseModem   *self,
+                                          gpointer       none,
+                                          const gchar   *command,
+                                          const gchar   *response,
+                                          gboolean       last_command,
+                                          const GError  *error,
+                                          GVariant     **result,
+                                          GError       **result_error)
+{
+    g_autoptr(GMatchInfo) match_info = NULL;
+    g_autoptr(GRegex) r = NULL;
+    guint actval = 0;
+    guint mode = 0;
+    guint vid;
+    guint pid;
+
+    *result = NULL;
+    *result_error = NULL;
+
+    if (error) {
+        /* Ignore AT errors (ie, ERROR or CMx ERROR) */
+        if (error->domain != MM_MOBILE_EQUIPMENT_ERROR || last_command) {
+            *result_error = g_error_copy (error);
+            return MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_FAILURE;
+        }
+        return MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_CONTINUE;
+    }
+
+    vid = mm_base_modem_get_vendor_id (self);
+    pid = mm_base_modem_get_product_id (self);
+
+    if (!(vid == 0x1bc7 && (pid == 0x110a || pid == 0x110b))) {
+        /* AcT for non-LPWA modems would be checked by other command */
+        return MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_CONTINUE;
+    }
+
+    r = g_regex_new ("\\+COPS:\\s*(\\d+),(\\d+),([^,]*)(?:,(\\d+))?(?:\\r\\n)?",
+                     0,
+                     0,
+                     NULL);
+    g_assert (r != NULL);
+
+    if (!g_regex_match (r, response, 0, &match_info)) {
+        g_set_error (result_error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "Can't match +COPS? response: '%s'",
+                     response);
+        return MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_FAILURE;
+    }
+
+    if (!mm_get_uint_from_match_info (match_info, 1, &mode)) {
+        g_set_error (result_error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "Failed to parse mode in +COPS? response: '%s'",
+                     response);
+        return MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_FAILURE;
+    }
+
+    if (mode == 2) {
+        g_set_error (result_error,
+                    MM_CORE_ERROR,
+                    MM_CORE_ERROR_FAILED,
+                    "Modem deregistered from the network: aborting AcT query");
+        return MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_FAILURE;
+    }
+
+    if (!mm_get_uint_from_match_info (match_info, 4, &actval)) {
+        g_set_error (result_error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "Failed to parse act in +COPS? response: '%s'",
+                     response);
+        return MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_FAILURE;
+    }
+
+    switch (actval) {
+    case 0:
+        *result = g_variant_new_uint32 (MM_MODEM_ACCESS_TECHNOLOGY_GSM);
+        return MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_SUCCESS;
+    case 8:
+        *result = g_variant_new_uint32 (MM_MODEM_ACCESS_TECHNOLOGY_LTE_CAT_M);
+        return MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_SUCCESS;
+    case 9:
+        *result = g_variant_new_uint32 (MM_MODEM_ACCESS_TECHNOLOGY_LTE_NB_IOT);
+        return MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_SUCCESS;
+    default:
+        break;
+    }
+
+    g_set_error (result_error,
+                 MM_CORE_ERROR,
+                 MM_CORE_ERROR_FAILED,
+                 "Failed to map act in +COPS? response: '%s'",
+                 response);
+    return MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_FAILURE;
 }
 
 static MMBaseModemAtResponseProcessorResult
@@ -1228,6 +1307,7 @@ response_processor_service_ignore_at_errors (MMBaseModem   *self,
 }
 
 static const MMBaseModemAtCommand access_tech_commands[] = {
+    { "+COPS?",    3, FALSE, response_processor_cops_ignore_at_errors },
     { "#PSNT?",    3, FALSE, response_processor_psnt_ignore_at_errors },
     { "+SERVICE?", 3, FALSE, response_processor_service_ignore_at_errors },
     { NULL }
@@ -1263,10 +1343,11 @@ parent_load_supported_modes_ready (MMIfaceModem *self,
                                    GAsyncResult *res,
                                    GTask *task)
 {
-    GError *error = NULL;
-    GArray *all;
-    GArray *combinations;
-    GArray *filtered;
+    GError        *error = NULL;
+    GArray        *all;
+    GArray        *combinations;
+    GArray        *filtered;
+    MMSharedTelit *shared = MM_SHARED_TELIT (self);
 
     all = iface_modem_parent->load_supported_modes_finish (self, res, &error);
     if (!all) {
@@ -1288,6 +1369,7 @@ parent_load_supported_modes_ready (MMIfaceModem *self,
     g_array_unref (all);
     g_array_unref (combinations);
 
+    mm_shared_telit_store_supported_modes (shared, filtered);
     g_task_return_pointer (task, filtered, (GDestroyNotify) g_array_unref);
     g_object_unref (task);
 }
@@ -1392,7 +1474,6 @@ mm_broadband_modem_telit_new (const gchar *device,
                          MM_BASE_MODEM_DATA_NET_SUPPORTED, FALSE,
                          MM_BASE_MODEM_DATA_TTY_SUPPORTED, TRUE,
                          MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED, TRUE,
-                         MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED, FALSE,
                          NULL);
 }
 
@@ -1418,6 +1499,8 @@ iface_modem_init (MMIfaceModem *iface)
     iface->set_current_bands_finish = mm_shared_telit_modem_set_current_bands_finish;
     iface->load_current_bands = mm_shared_telit_modem_load_current_bands;
     iface->load_current_bands_finish = mm_shared_telit_modem_load_current_bands_finish;
+    iface->load_revision = mm_shared_telit_modem_load_revision;
+    iface->load_revision_finish = mm_shared_telit_modem_load_revision_finish;
     iface->load_supported_bands = mm_shared_telit_modem_load_supported_bands;
     iface->load_supported_bands_finish = mm_shared_telit_modem_load_supported_bands_finish;
     iface->load_unlock_retries_finish = modem_load_unlock_retries_finish;
@@ -1436,10 +1519,9 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_current_modes_finish = mm_shared_telit_load_current_modes_finish;
     iface->set_current_modes = mm_shared_telit_set_current_modes;
     iface->set_current_modes_finish = mm_shared_telit_set_current_modes_finish;
-    iface->modem_after_sim_unlock = modem_after_sim_unlock;
-    iface->modem_after_sim_unlock_finish = modem_after_sim_unlock_finish;
     iface->setup_sim_hot_swap = modem_setup_sim_hot_swap;
     iface->setup_sim_hot_swap_finish = modem_setup_sim_hot_swap_finish;
+    iface->cleanup_sim_hot_swap = modem_cleanup_sim_hot_swap;
 }
 
 static void

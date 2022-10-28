@@ -45,6 +45,7 @@ create_modem (MMPlugin     *self,
               const gchar **drivers,
               guint16       vendor,
               guint16       product,
+              guint16       subsystem_vendor,
               GList        *probes,
               GError      **error)
 {
@@ -61,21 +62,12 @@ create_modem (MMPlugin     *self,
 
 #if defined WITH_MBIM
     if (mm_port_probe_list_has_mbim_port (probes)) {
-        if (vendor == 0x1eac) {
-            mm_obj_dbg (self, "MBIM-powered PCI Quectel modem found...");
-            return MM_BASE_MODEM (mm_broadband_modem_mbim_quectel_new (uid,
-                                                                       drivers,
-                                                                       mm_plugin_get_name (self),
-                                                                       vendor,
-                                                                       product));
-        } else {
-            mm_obj_dbg (self, "MBIM-powered Quectel modem found...");
-            return MM_BASE_MODEM (mm_broadband_modem_mbim_new (uid,
-                                                               drivers,
-                                                               mm_plugin_get_name (self),
-                                                               vendor,
-                                                               product));
-        }
+        mm_obj_dbg (self, "MBIM-powered Quectel modem found...");
+        return MM_BASE_MODEM (mm_broadband_modem_mbim_quectel_new (uid,
+                                                                   drivers,
+                                                                   mm_plugin_get_name (self),
+                                                                   vendor,
+                                                                   product));
     }
 #endif
 
@@ -105,7 +97,7 @@ mm_plugin_create (void)
                       MM_PLUGIN_ALLOWED_VENDOR_IDS,     vendor_ids,
                       MM_PLUGIN_ALLOWED_VENDOR_STRINGS, vendor_strings,
                       MM_PLUGIN_ALLOWED_AT,             TRUE,
-                      MM_PLUGIN_ALLOWED_QCDM,           TRUE,
+                      MM_PLUGIN_REQUIRED_QCDM,          TRUE,
                       MM_PLUGIN_ALLOWED_QMI,            TRUE,
                       MM_PLUGIN_ALLOWED_MBIM,           TRUE,
                       NULL));

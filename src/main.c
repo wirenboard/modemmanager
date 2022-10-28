@@ -31,7 +31,7 @@
 #include "mm-base-manager.h"
 #include "mm-context.h"
 
-#if defined WITH_SYSTEMD_SUSPEND_RESUME
+#if defined WITH_SUSPEND_RESUME
 # include "mm-sleep-monitor.h"
 #endif
 
@@ -56,7 +56,7 @@ quit_cb (gpointer user_data)
     return FALSE;
 }
 
-#if defined WITH_SYSTEMD_SUSPEND_RESUME
+#if defined WITH_SUSPEND_RESUME
 
 static void
 sleeping_cb (MMSleepMonitor *sleep_monitor)
@@ -165,6 +165,7 @@ main (int argc, char *argv[])
                        mm_context_get_log_journal (),
                        mm_context_get_log_timestamps (),
                        mm_context_get_log_relative_timestamps (),
+                       mm_context_get_log_personal_info (),
                        &error)) {
         g_printerr ("error: failed to set up logging: %s\n", error->message);
         g_error_free (error);
@@ -192,7 +193,7 @@ main (int argc, char *argv[])
                               name_lost_cb,
                               NULL,
                               NULL);
-#if defined WITH_SYSTEMD_SUSPEND_RESUME
+#if defined WITH_SUSPEND_RESUME
     {
         MMSleepMonitor *sleep_monitor;
 

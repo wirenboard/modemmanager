@@ -55,8 +55,7 @@ mm_broadband_modem_quectel_new (const gchar  *device,
                          /* Generic bearer supports TTY only */
                          MM_BASE_MODEM_DATA_NET_SUPPORTED, FALSE,
                          MM_BASE_MODEM_DATA_TTY_SUPPORTED, TRUE,
-                         MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED,  TRUE,
-                         MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED, FALSE,
+                         MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED, TRUE,
                          NULL);
 }
 
@@ -72,6 +71,7 @@ iface_modem_init (MMIfaceModem *iface)
 
     iface->setup_sim_hot_swap = mm_shared_quectel_setup_sim_hot_swap;
     iface->setup_sim_hot_swap_finish = mm_shared_quectel_setup_sim_hot_swap_finish;
+    iface->cleanup_sim_hot_swap = mm_shared_quectel_cleanup_sim_hot_swap;
 }
 
 static MMIfaceModem *

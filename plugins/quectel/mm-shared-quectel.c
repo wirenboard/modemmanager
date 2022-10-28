@@ -11,6 +11,7 @@
  * GNU General Public License for more details:
  *
  * Copyright (C) 2018-2020 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc.
  */
 
 #include <config.h>
@@ -29,6 +30,10 @@
 #include "mm-base-modem-at.h"
 #include "mm-shared-quectel.h"
 #include "mm-modem-helpers-quectel.h"
+
+#if defined WITH_MBIM
+#include "mm-broadband-modem-mbim.h"
+#endif
 
 /*****************************************************************************/
 /* Private context */
@@ -51,6 +56,7 @@ typedef struct {
     FeatureSupport         qgps_supported;
     GRegex                *qgpsurc_regex;
     GRegex                *qlwurc_regex;
+    GRegex                *rdy_regex;
 } Private;
 
 static void
@@ -58,6 +64,7 @@ private_free (Private *priv)
 {
     g_regex_unref (priv->qgpsurc_regex);
     g_regex_unref (priv->qlwurc_regex);
+    g_regex_unref (priv->rdy_regex);
     g_slice_free (Private, priv);
 }
 
@@ -78,6 +85,11 @@ get_private (MMSharedQuectel *self)
         priv->qgps_supported    = FEATURE_SUPPORT_UNKNOWN;
         priv->qgpsurc_regex     = g_regex_new ("\\r\\n\\+QGPSURC:.*", G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
         priv->qlwurc_regex      = g_regex_new ("\\r\\n\\+QLWURC:.*", G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+        priv->rdy_regex         = g_regex_new ("\\r\\nRDY", G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+        g_assert (priv->qgpsurc_regex);
+        g_assert (priv->qlwurc_regex);
+        g_assert (priv->rdy_regex);
 
         g_assert (MM_SHARED_QUECTEL_GET_INTERFACE (self)->peek_parent_broadband_modem_class);
         priv->broadband_modem_class_parent = MM_SHARED_QUECTEL_GET_INTERFACE (self)->peek_parent_broadband_modem_class (self);
@@ -91,6 +103,23 @@ get_private (MMSharedQuectel *self)
         g_object_set_qdata_full (G_OBJECT (self), private_quark, priv, (GDestroyNotify)private_free);
     }
     return priv;
+}
+
+/*****************************************************************************/
+/* RDY unsolicited event handler */
+
+static void
+rdy_handler (MMPortSerialAt *port,
+             GMatchInfo *match_info,
+             MMBroadbandModem *self)
+{
+    /* The RDY URC indicates a modem reset that may or may not go hand-in-hand
+     * with USB re-enumeration. For the latter case, we must make sure to
+     * re-synchronize modem and ModemManager states by re-probing.
+     */
+    mm_obj_warn (self, "modem reset detected, triggering reprobe");
+    mm_base_modem_set_reprobe (MM_BASE_MODEM (self), TRUE);
+    mm_base_modem_set_valid (MM_BASE_MODEM (self), FALSE);
 }
 
 /*****************************************************************************/
@@ -129,6 +158,14 @@ mm_shared_quectel_setup_ports (MMBroadbandModem *self)
             ports[i],
             priv->qlwurc_regex,
             NULL, NULL, NULL);
+
+        /* Handle RDY */
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            priv->rdy_regex,
+            (MMPortSerialAtUnsolicitedMsgFn)rdy_handler,
+            self,
+            NULL);
     }
 }
 
@@ -143,17 +180,46 @@ mm_shared_quectel_firmware_load_update_settings_finish (MMIfaceModemFirmware  *s
     return g_task_propagate_pointer (G_TASK (res), error);
 }
 
+static gboolean
+quectel_is_sahara_supported (MMBaseModem *modem,
+                             MMPort      *port)
+{
+    return mm_kernel_device_get_global_property_as_boolean (mm_port_peek_kernel_device (port), "ID_MM_QUECTEL_SAHARA");
+}
+
+static gboolean
+quectel_is_firehose_supported (MMBaseModem *modem,
+                               MMPort      *port)
+{
+    return mm_kernel_device_get_global_property_as_boolean (mm_port_peek_kernel_device (port), "ID_MM_QUECTEL_FIREHOSE");
+}
+
+static MMModemFirmwareUpdateMethod
+quectel_get_firmware_update_methods (MMBaseModem *modem,
+                                     MMPort      *port)
+{
+    MMModemFirmwareUpdateMethod update_methods;
+
+    update_methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE;
+
+    if (quectel_is_firehose_supported (modem, port))
+        update_methods |= MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE;
+    if (quectel_is_sahara_supported (modem, port))
+        update_methods |= MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA;
+
+    return update_methods;
+}
+
 static void
-quectel_get_firmware_version_ready (MMBaseModem  *modem,
-                                    GAsyncResult *res,
-                                    GTask        *task)
+quectel_at_port_get_firmware_version_ready (MMBaseModem  *modem,
+                                            GAsyncResult *res,
+                                            GTask        *task)
 {
     MMFirmwareUpdateSettings *update_settings;
     const gchar              *version;
 
     update_settings = g_task_get_task_data (task);
 
-    /* Set full firmware version */
     version = mm_base_modem_at_command_finish (modem, res, NULL);
     if (version)
         mm_firmware_update_settings_set_version (update_settings, version);
@@ -161,6 +227,30 @@ quectel_get_firmware_version_ready (MMBaseModem  *modem,
     g_task_return_pointer (task, g_object_ref (update_settings), g_object_unref);
     g_object_unref (task);
 }
+
+#if defined WITH_MBIM
+static void
+quectel_mbim_port_get_firmware_version_ready (MbimDevice   *device,
+                                              GAsyncResult *res,
+                                              GTask        *task)
+{
+    g_autoptr(MbimMessage)    response = NULL;
+    guint32                   version_id;
+    g_autofree gchar         *version_str = NULL;
+    MMFirmwareUpdateSettings *update_settings;
+
+    update_settings = g_task_get_task_data (task);
+
+    response = mbim_device_command_finish (device, res, NULL);
+    if (response && mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, NULL) &&
+        mbim_message_qdu_quectel_read_version_response_parse (response, &version_id, &version_str, NULL)) {
+        mm_firmware_update_settings_set_version (update_settings, version_str);
+    }
+
+    g_task_return_pointer (task, g_object_ref (update_settings), g_object_unref);
+    g_object_unref (task);
+}
+#endif
 
 static void
 qfastboot_test_ready (MMBaseModem  *self,
@@ -183,7 +273,7 @@ qfastboot_test_ready (MMBaseModem  *self,
                               "+QGMR?",
                               3,
                               FALSE,
-                              (GAsyncReadyCallback) quectel_get_firmware_version_ready,
+                              (GAsyncReadyCallback) quectel_at_port_get_firmware_version_ready,
                               task);
 }
 
@@ -193,6 +283,7 @@ quectel_at_port_get_firmware_revision_ready (MMBaseModem  *self,
                                              GTask        *task)
 {
     MMFirmwareUpdateSettings    *update_settings;
+    MMModemFirmwareUpdateMethod  update_methods;
     const gchar                 *revision;
     const gchar                 *name;
     const gchar                 *id;
@@ -200,6 +291,7 @@ quectel_at_port_get_firmware_revision_ready (MMBaseModem  *self,
     GError                      *error = NULL;
 
     update_settings = g_task_get_task_data (task);
+    update_methods = mm_firmware_update_settings_get_method (update_settings);
 
     /* Set device ids */
     ids = mm_iface_firmware_build_generic_device_ids (MM_IFACE_MODEM_FIRMWARE (self), &error);
@@ -221,13 +313,24 @@ quectel_at_port_get_firmware_revision_ready (MMBaseModem  *self,
 
     mm_firmware_update_settings_set_device_ids (update_settings, (const gchar **)ids->pdata);
 
-    /* Check fastboot support */
-    mm_base_modem_at_command (self,
-                              "AT+QFASTBOOT=?",
-                              3,
-                              TRUE,
-                              (GAsyncReadyCallback) qfastboot_test_ready,
-                              task);
+    /* Set update methods */
+    if (update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE) {
+        /* Fetch full firmware info */
+        mm_base_modem_at_command (self,
+                                  "+QGMR?",
+                                  3,
+                                  TRUE,
+                                  (GAsyncReadyCallback) quectel_at_port_get_firmware_version_ready,
+                                  task);
+    } else {
+        /* Check fastboot support */
+        mm_base_modem_at_command (self,
+                                  "AT+QFASTBOOT=?",
+                                  3,
+                                  TRUE,
+                                  (GAsyncReadyCallback) qfastboot_test_ready,
+                                  task);
+    }
 }
 
 void
@@ -237,13 +340,18 @@ mm_shared_quectel_firmware_load_update_settings (MMIfaceModemFirmware *self,
 {
     GTask *task;
     MMPortSerialAt *at_port;
+    MMModemFirmwareUpdateMethod update_methods;
     MMFirmwareUpdateSettings *update_settings;
+#if defined WITH_MBIM
+    MMPortMbim *mbim;
+#endif
 
     task = g_task_new (self, NULL, callback, user_data);
 
     at_port = mm_base_modem_peek_best_at_port (MM_BASE_MODEM (self), NULL);
     if (at_port) {
-        update_settings = mm_firmware_update_settings_new (MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE);
+    	update_methods = quectel_get_firmware_update_methods (MM_BASE_MODEM (self), MM_PORT (at_port));
+        update_settings = mm_firmware_update_settings_new (update_methods);
         g_task_set_task_data (task, update_settings, g_object_unref);
 
         /* Fetch modem name */
@@ -256,6 +364,27 @@ mm_shared_quectel_firmware_load_update_settings (MMIfaceModemFirmware *self,
 
         return;
     }
+
+#if defined WITH_MBIM
+    mbim = mm_broadband_modem_mbim_peek_port_mbim (MM_BROADBAND_MODEM_MBIM (self));
+    if (mbim) {
+        g_autoptr(MbimMessage) message = NULL;
+
+        update_methods = quectel_get_firmware_update_methods (MM_BASE_MODEM (self), MM_PORT (mbim));
+        update_settings = mm_firmware_update_settings_new (update_methods);
+
+        /* Fetch firmware info */
+        g_task_set_task_data (task, update_settings, g_object_unref);
+        message = mbim_message_qdu_quectel_read_version_set_new (MBIM_QDU_QUECTEL_VERSION_TYPE_FW_BUILD_ID, NULL);
+        mbim_device_command (mm_port_mbim_peek_device (mbim),
+                             message,
+                             5,
+                             NULL,
+                             (GAsyncReadyCallback) quectel_mbim_port_get_firmware_version_ready,
+                             task);
+        return;
+    }
+#endif
 
     g_task_return_new_error (task,
                              MM_CORE_ERROR,
@@ -301,6 +430,7 @@ quectel_qusim_unsolicited_handler (MMPortSerialAt *port,
     MM_IFACE_MODEM_GET_INTERFACE (self)->check_for_sim_swap (
         self,
         NULL,
+        NULL,
         (GAsyncReadyCallback)quectel_qusim_check_for_sim_swap_ready,
         NULL);
 }
@@ -339,11 +469,12 @@ mm_shared_quectel_setup_sim_hot_swap (MMIfaceModem        *self,
                                       GAsyncReadyCallback  callback,
                                       gpointer             user_data)
 {
-    Private        *priv;
-    MMPortSerialAt *ports[2];
-    GTask          *task;
-    GRegex         *pattern;
-    guint           i;
+    Private           *priv;
+    MMPortSerialAt    *ports[2];
+    GTask             *task;
+    guint              i;
+    g_autoptr(GRegex)  pattern = NULL;
+    g_autoptr(GError)  error = NULL;
 
     priv = get_private (MM_SHARED_QUECTEL (self));
 
@@ -365,8 +496,10 @@ mm_shared_quectel_setup_sim_hot_swap (MMIfaceModem        *self,
                 NULL);
     }
 
-    g_regex_unref (pattern);
     mm_obj_dbg (self, "+QUSIM detection set up");
+
+    if (!mm_broadband_modem_sim_hot_swap_ports_context_init (MM_BROADBAND_MODEM (self), &error))
+        mm_obj_warn (self, "failed to initialize SIM hot swap ports context: %s", error->message);
 
     /* Now, if available, setup parent logic */
     if (priv->iface_modem_parent->setup_sim_hot_swap &&
@@ -380,6 +513,15 @@ mm_shared_quectel_setup_sim_hot_swap (MMIfaceModem        *self,
     /* Otherwise, we're done */
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
+}
+
+/*****************************************************************************/
+/* SIM hot swap cleanup (Modem interface) */
+
+void
+mm_shared_quectel_cleanup_sim_hot_swap (MMIfaceModem *self)
+{
+    mm_broadband_modem_sim_hot_swap_ports_context_reset (MM_BROADBAND_MODEM (self));
 }
 
 /*****************************************************************************/

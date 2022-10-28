@@ -676,6 +676,56 @@ mm_common_get_3gpp_facility_from_string (const gchar  *str,
                                error);
 }
 
+MMModem3gppPacketServiceState
+mm_common_get_3gpp_packet_service_state_from_string (const gchar  *str,
+                                                     GError      **error)
+{
+    return _enum_from_string (MM_TYPE_MODEM_3GPP_PACKET_SERVICE_STATE,
+                              str,
+                              MM_MODEM_3GPP_PACKET_SERVICE_STATE_UNKNOWN,
+                              error);
+}
+
+MMModem3gppMicoMode
+mm_common_get_3gpp_mico_mode_from_string (const gchar  *str,
+                                          GError      **error)
+{
+    return _enum_from_string (MM_TYPE_MODEM_3GPP_MICO_MODE,
+                              str,
+                              MM_MODEM_3GPP_MICO_MODE_UNKNOWN,
+                              error);
+}
+
+MMModem3gppDrxCycle
+mm_common_get_3gpp_drx_cycle_from_string (const gchar  *str,
+                                          GError      **error)
+{
+    return _enum_from_string (MM_TYPE_MODEM_3GPP_DRX_CYCLE,
+                              str,
+                              MM_MODEM_3GPP_DRX_CYCLE_UNKNOWN,
+                              error);
+}
+
+MMBearerAccessTypePreference
+mm_common_get_access_type_preference_from_string (const gchar  *str,
+                                                  GError      **error)
+{
+    return _enum_from_string (MM_TYPE_BEARER_ACCESS_TYPE_PREFERENCE,
+                              str,
+                              MM_BEARER_ACCESS_TYPE_PREFERENCE_NONE,
+                              error);
+}
+
+MMBearerProfileSource
+mm_common_get_profile_source_from_string (const gchar  *str,
+                                          GError      **error)
+{
+    return _enum_from_string (MM_TYPE_BEARER_PROFILE_SOURCE,
+                              str,
+                              MM_BEARER_PROFILE_SOURCE_UNKNOWN,
+                              error);
+}
+
 /******************************************************************************/
 /* MMModemPortInfo array management */
 
@@ -1702,11 +1752,18 @@ date_time_format_iso8601 (GDateTime *dt)
 }
 
 gchar *
-mm_new_iso8601_time_from_unix_time (guint64 timestamp)
+mm_new_iso8601_time_from_unix_time (guint64   timestamp,
+                                    GError  **error)
 {
     g_autoptr(GDateTime) dt = NULL;
 
     dt = g_date_time_new_from_unix_utc ((gint64)timestamp);
+    if (!dt) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                     "Invalid unix time: %" G_GUINT64_FORMAT,
+                     timestamp);
+        return NULL;
+    }
 
     return date_time_format_iso8601 (dt);
 }
@@ -1732,11 +1789,9 @@ mm_new_iso8601_time (guint    year,
     } else
         dt = g_date_time_new_utc (year, month, day, hour, minute, second);
 
-    if (dt == NULL) {
-        g_set_error (error,
-                     MM_CORE_ERROR,
-                     MM_CORE_ERROR_INVALID_ARGS,
-                     "Invalid input for date: got year:%u, month:%u, day:%u, hour:%u, minute:%u, second:%u",
+    if (!dt) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                     "Invalid date: year: %u, month: %u, day: %u, hour: %u, minute: %u, second: %u",
                      year, month, day, hour, minute, second);
         return NULL;
     }

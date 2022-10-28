@@ -105,11 +105,11 @@
         ConnectionError:
 
         Provides additional information specifying the reason why the modem is
-	not connected (either due to a failed connection attempt, or due to a
-	a network initiated disconnection).
+        not connected (either due to a failed connection attempt, or due to a
+        a network initiated disconnection).
 
         The value is composed of two strings: the registered DBus error name,
-	and an optional error message.
+        and an optional error message.
 
         Since: 1.18
     -->
@@ -309,6 +309,14 @@
               <literal>"t"</literal>).
             </listitem>
             </varlistentry>
+          <varlistentry><term><literal>"start-date"</literal></term>
+            <listitem>
+              Timestamp indicating when the ongoing connection started, given
+              as an unsigned 64-bit integer value representing seconds
+              since the epoch (signature <literal>"t"</literal>).
+              Since 1.20.
+            </listitem>
+          </varlistentry>
           <varlistentry><term><literal>"duration"</literal></term>
             <listitem>
               Duration of the ongoing connection, in seconds, given as an
@@ -350,11 +358,42 @@
               <literal>"u"</literal>). Since 1.14.
             </listitem>
           </varlistentry>
+          <varlistentry><term><literal>"uplink-speed"</literal></term>
+            <listitem>
+              Uplink bit rate negotiated with network, in bits per second, given
+              as an unsigned 64-bit integer value (signature <literal>"t"</literal>).
+              Since 1.20.
+            </listitem>
+          </varlistentry>
+          <varlistentry><term><literal>"downlink-speed"</literal></term>
+            <listitem>
+              Downlink bit rate negotiated with network, in bits per second, given
+              as an unsigned 64-bit integer value (signature <literal>"t"</literal>).
+              Since 1.20.
+            </listitem>
+          </varlistentry>
         </variablelist>
 
         Since: 1.6
     -->
     <property name="Stats" type="a{sv}" access="read" />
+
+    <!--
+        ReloadStatsSupported:
+
+        Indicates whether reloading ongoing statistics is supported or not.
+
+        This property applies exclusively to the statistics that are queried from
+        the modem periodically; i.e. "rx-bytes", "tx-bytes", "uplink-speed" and
+        "downlink-speed".
+
+        The property is initialized to a fixed value as soon as the first
+        connection attempt has successfully finished. Reading this value before
+        the first successful connection attempt will always report %FALSE.
+
+        Since: 1.20
+    -->
+    <property name="ReloadStatsSupported" type="b" access="read" />
 
     <!--
         IpTimeout:
@@ -406,7 +445,8 @@
           <varlistentry><term><literal>"apn"</literal></term>
             <listitem><para>
               The Access Point Name to use in the connection, given as a string
-              value (signature <literal>"s"</literal>).
+              value (signature <literal>"s"</literal>). For 5G NGC, this field
+              contains the Data Network Name (DNN).
             </para></listitem>
           </varlistentry>
           <varlistentry><term><literal>"ip-type"</literal></term>
@@ -442,6 +482,21 @@
               value (signature <literal>"s"</literal>).
             </listitem>
           </varlistentry>
+          <varlistentry><term><literal>"access-type-preference"</literal></term>
+            <listitem><para>
+              Access type preference for 5G devices, given as a
+              <link linkend="MMBearerAccessTypePreference">MMBearerAccessTypePreference</link>
+              value (signature <literal>"u"</literal>. Since 1.20.
+            </para></listitem>
+          </varlistentry>
+          <varlistentry><term><literal>"roaming-allowance"</literal></term>
+            <listitem><para>
+              Roaming allowance, given as a
+              <link linkend="MMBearerRoamingAllowance">MMBearerRoamingAllowance</link>
+              value (signature <literal>"u"</literal>. If supported, this setting should
+              be used instead of 'allow-roaming'. Since 1.20.
+            </para></listitem>
+          </varlistentry>
           <varlistentry><term><literal>"profile-id"</literal></term>
             <listitem>
               The ID of the 3GPP profile to connect to (signature
@@ -451,8 +506,38 @@
               and they already exist in the profile (e.g. <literal>"apn"</literal>),
               the new settings will be explicitly ignored; the settings stored in the
               profile itself always take preference. The value -1 is used to
-	      indicate an invalid or uninitialized profile id. Since 1.18.
+              indicate an invalid or uninitialized profile id. Since 1.18.
             </listitem>
+          </varlistentry>
+          <varlistentry><term><literal>"profile-name"</literal></term>
+            <listitem><para>
+              The name of the profile, given as a string
+              value (signature <literal>"s"</literal>).
+              This value has no effect on the connection, but can be used by the host
+              to identify the profiles. This setting only applies on profile management
+              operations, it should not be used as part of the settings of an explicit
+              connection attempt. Since 1.20.
+            </para></listitem>
+          </varlistentry>
+          <varlistentry><term><literal>"profile-enabled"</literal></term>
+            <listitem><para>
+              Boolean flag specifying whether the profile is enabled or disabled,
+              given as a boolean value (signature <literal>"b"</literal>).
+              Profiles that are disabled will not be automatically connected by the
+              modem in any way, and attempting to connect them explicitly will fail.
+              This setting only applies on profile management operations, it should
+              not be used as part of the settings of an explicit connection attempt.
+              Since 1.20.
+            </para></listitem>
+          </varlistentry>
+          <varlistentry><term><literal>"profile-source"</literal></term>
+            <listitem><para>
+              A <link linkend="MMBearerProfileSource">MMBearerProfileSource</link>
+              value (signature <literal>"u"</literal>, specifying how the profile
+              was created. This setting only applies on profile management operations,
+              it should not be used as part of the settings of an explicit connection
+              attempt. Since 1.20.
+            </para></listitem>
           </varlistentry>
         </variablelist>
 
@@ -474,8 +559,12 @@
           <varlistentry><term><literal>"allow-roaming"</literal></term>
             <listitem>
               Specifies whether the connections are allowed even when the device
-              is registered in a roaming network, given as a boolean value (signature
-              <literal>"b"</literal>).
+              is registered in a roaming (partner or non-partner) network, given as
+              a boolean value (signature <literal>"b"</literal>). This setting
+              applies only to the connection attempts started via
+              <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Simple.Connect">Simple.Connect()</link>
+              or <link linkend="gdbus-method-org-freedesktop-ModemManager1-Bearer.Connect">Bearer.Connect()</link>.
+              This is a volatile setting, never stored in the device.
             </listitem>
           </varlistentry>
           <varlistentry><term><literal>"multiplex"</literal></term>

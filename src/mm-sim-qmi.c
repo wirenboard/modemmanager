@@ -45,6 +45,9 @@ struct _MMSimQmiPrivate {
     gboolean dms_uim_deprecated;
 };
 
+static const guint16 mf_file_path[]  = { 0x3F00 };
+static const guint16 adf_file_path[] = { 0x3F00, 0x7FFF };
+
 /*****************************************************************************/
 
 static gboolean
@@ -137,7 +140,7 @@ uim_get_card_status_ready (QmiClientUim *client,
     output = qmi_client_uim_get_card_status_finish (client, res, &error);
     if (!output ||
         !qmi_message_uim_get_card_status_output_get_result (output, &error) ||
-        (!mm_qmi_uim_get_card_status_output_parse (self, output, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &error) &&
+        (!mm_qmi_uim_get_card_status_output_parse (self, output, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &error) &&
          (g_error_matches (error, MM_MOBILE_EQUIPMENT_ERROR, MM_MOBILE_EQUIPMENT_ERROR_SIM_NOT_INSERTED) ||
           g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_RETRY)))) {
         mm_obj_dbg (self, "sim not yet considered ready... retrying");
@@ -326,10 +329,10 @@ uim_get_iccid_ready (QmiClientUim *client,
                      GAsyncResult *res,
                      GTask        *task)
 {
-    GError *error = NULL;
-    GArray *read_result;
-    g_autofree gchar *raw_iccid = NULL;
-    gchar *iccid;
+    GError            *error = NULL;
+    g_autoptr(GArray)  read_result = NULL;
+    g_autofree gchar  *raw_iccid = NULL;
+    gchar             *iccid;
 
     read_result = uim_read_finish (client, res, &error);
     if (!read_result) {
@@ -341,26 +344,21 @@ uim_get_iccid_ready (QmiClientUim *client,
     raw_iccid = mm_utils_bin2hexstr ((const guint8 *) read_result->data, read_result->len);
     g_assert (raw_iccid);
     iccid = mm_3gpp_parse_iccid (raw_iccid, &error);
-    if (!iccid) {
+    if (!iccid)
         g_task_return_error (task, error);
-    } else {
+    else
         g_task_return_pointer (task, iccid, g_free);
-    }
     g_object_unref (task);
-
-    g_array_unref (read_result);
 }
 
 static void
 uim_get_iccid (MMSimQmi *self,
                GTask    *task)
 {
-    static const guint16 file_path[] = { 0x3F00 };
-
     uim_read (self,
               0x2FE2,
-              file_path,
-              G_N_ELEMENTS (file_path),
+              mf_file_path,
+              G_N_ELEMENTS (mf_file_path),
               (GAsyncReadyCallback)uim_get_iccid_ready,
               task);
 }
@@ -446,9 +444,9 @@ uim_get_imsi_ready (QmiClientUim *client,
                     GAsyncResult *res,
                     GTask        *task)
 {
-    GError *error = NULL;
-    GArray *read_result;
-    gchar *imsi;
+    GError            *error = NULL;
+    g_autoptr(GArray)  read_result = NULL;
+    g_autofree gchar  *imsi = NULL;
 
     read_result = uim_read_finish (client, res, &error);
     if (!read_result) {
@@ -472,21 +470,16 @@ uim_get_imsi_ready (QmiClientUim *client,
          * decimal digits to obtain the IMSI. */
         g_task_return_pointer (task, g_strdup (imsi + 3), g_free);
     g_object_unref (task);
-
-    g_free (imsi);
-    g_array_unref (read_result);
 }
 
 static void
 uim_get_imsi (MMSimQmi *self,
               GTask    *task)
 {
-    static const guint16 file_path[] = { 0x3F00, 0x7FFF };
-
     uim_read (self,
               0x6F07,
-              file_path,
-              G_N_ELEMENTS (file_path),
+              adf_file_path,
+              G_N_ELEMENTS (adf_file_path),
               (GAsyncReadyCallback)uim_get_imsi_ready,
               task);
 }
@@ -554,6 +547,87 @@ load_imsi (MMBaseSim           *_self,
         dms_uim_get_imsi (self, task);
     else
         uim_get_imsi (self, task);
+}
+
+/*****************************************************************************/
+/* Load GID1 and GID2 */
+
+static GByteArray *
+common_load_gid_finish (MMBaseSim     *self,
+                        GAsyncResult  *res,
+                        GError       **error)
+{
+    return g_task_propagate_pointer (G_TASK (res), error);
+}
+
+static void
+uim_get_gid_ready (QmiClientUim *client,
+                   GAsyncResult *res,
+                   GTask        *task)
+{
+    GError            *error = NULL;
+    g_autoptr(GArray)  read_result = NULL;
+
+    read_result = uim_read_finish (client, res, &error);
+    if (!read_result)
+        g_task_return_error (task, error);
+    else
+        g_task_return_pointer (task,
+                               g_byte_array_append (g_byte_array_sized_new (read_result->len),
+                                                    (const guint8 *)(read_result->data),
+                                                    read_result->len),
+                               (GDestroyNotify)g_byte_array_unref);
+    g_object_unref (task);
+}
+
+static void
+common_load_gid (MMBaseSim           *self,
+                 guint16              file_id,
+                 GAsyncReadyCallback  callback,
+                 gpointer             user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    uim_read (MM_SIM_QMI (self),
+              file_id,
+              adf_file_path,
+              G_N_ELEMENTS (adf_file_path),
+              (GAsyncReadyCallback)uim_get_gid_ready,
+              task);
+}
+
+static GByteArray *
+load_gid1_finish (MMBaseSim     *self,
+                  GAsyncResult  *res,
+                  GError       **error)
+{
+    return common_load_gid_finish (self, res, error);
+}
+
+static void
+load_gid1 (MMBaseSim           *self,
+           GAsyncReadyCallback  callback,
+           gpointer             user_data)
+{
+    common_load_gid (self, 0x6F3E, callback, user_data);
+}
+
+static GByteArray *
+load_gid2_finish (MMBaseSim     *self,
+                  GAsyncResult  *res,
+                  GError       **error)
+{
+    return common_load_gid_finish (self, res, error);
+}
+
+static void
+load_gid2 (MMBaseSim           *self,
+           GAsyncReadyCallback  callback,
+           gpointer             user_data)
+{
+    common_load_gid (self, 0x6F3F, callback, user_data);
 }
 
 /*****************************************************************************/
@@ -1869,6 +1943,10 @@ mm_sim_qmi_class_init (MMSimQmiClass *klass)
     base_sim_class->load_operator_identifier_finish = load_operator_identifier_finish;
     base_sim_class->load_operator_name = load_operator_name;
     base_sim_class->load_operator_name_finish = load_operator_name_finish;
+    base_sim_class->load_gid1 = load_gid1;
+    base_sim_class->load_gid1_finish = load_gid1_finish;
+    base_sim_class->load_gid2 = load_gid2;
+    base_sim_class->load_gid2_finish = load_gid2_finish;
     base_sim_class->load_preferred_networks = load_preferred_networks;
     base_sim_class->load_preferred_networks_finish = load_preferred_networks_finish;
     base_sim_class->set_preferred_networks = set_preferred_networks;

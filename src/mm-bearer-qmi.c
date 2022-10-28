@@ -12,6 +12,7 @@
  *
  * Copyright (C) 2012 Google, Inc.
  * Copyright (C) 2015 Azimut Electronics
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc.
  */
 
 #include <config.h>
@@ -27,6 +28,7 @@
 #define _LIBMM_INSIDE_MM
 #include <libmm-glib.h>
 
+#include "mm-iface-modem-3gpp.h"
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-3gpp-profile-manager.h"
 #include "mm-bearer-qmi.h"
@@ -52,16 +54,20 @@ struct _MMBearerQmiPrivate {
     QmiClientWds *client_ipv4;
     guint packet_service_status_ipv4_indication_id;
     guint event_report_ipv4_indication_id;
+    guint extended_ipv4_config_change_id;
 
     QmiClientWds *client_ipv6;
     guint packet_service_status_ipv6_indication_id;
     guint event_report_ipv6_indication_id;
+    guint extended_ipv6_config_change_id;
 
     MMPort *data;
     MMPort *link;
     guint   mux_id;
     guint32 packet_data_handle_ipv4;
     guint32 packet_data_handle_ipv6;
+
+    GList *pco_list;
 };
 
 /*****************************************************************************/
@@ -425,7 +431,7 @@ load_connection_status (MMBaseBearer        *_self,
     /* Connection status polling is an optional feature that must be
      * enabled explicitly via udev tags. If not set, out as unsupported.
      * Note that when connected via a muxed link, the udev tag should be
-     * checked on the master interface (lower device) */
+     * checked on the main interface (lower device) */
     if ((self->priv->data &&
          !mm_kernel_device_get_global_property_as_boolean (mm_port_peek_kernel_device (self->priv->data),
                                                            "ID_MM_QMI_CONNECTION_STATUS_POLLING_ENABLE")) ||
@@ -467,7 +473,7 @@ typedef enum {
     CONNECT_STEP_OPEN_QMI_PORT,
     CONNECT_STEP_SETUP_DATA_FORMAT,
     CONNECT_STEP_SETUP_LINK,
-    CONNECT_STEP_SETUP_LINK_MASTER_UP,
+    CONNECT_STEP_SETUP_LINK_MAIN_UP,
     CONNECT_STEP_IP_METHOD,
     CONNECT_STEP_IPV4,
     CONNECT_STEP_WDS_CLIENT_IPV4,
@@ -475,6 +481,7 @@ typedef enum {
     CONNECT_STEP_IP_FAMILY_IPV4,
     CONNECT_STEP_ENABLE_INDICATIONS_IPV4,
     CONNECT_STEP_START_NETWORK_IPV4,
+    CONNECT_STEP_ENABLE_WDS_INDICATIONS_IPV4,
     CONNECT_STEP_GET_CURRENT_SETTINGS_IPV4,
     CONNECT_STEP_IPV6,
     CONNECT_STEP_WDS_CLIENT_IPV6,
@@ -482,6 +489,7 @@ typedef enum {
     CONNECT_STEP_IP_FAMILY_IPV6,
     CONNECT_STEP_ENABLE_INDICATIONS_IPV6,
     CONNECT_STEP_START_NETWORK_IPV6,
+    CONNECT_STEP_ENABLE_WDS_INDICATIONS_IPV6,
     CONNECT_STEP_GET_CURRENT_SETTINGS_IPV6,
     CONNECT_STEP_LAST
 } ConnectStep;
@@ -492,7 +500,9 @@ typedef struct {
     ConnectStep  step;
     MMPort      *data;
     MMPortQmi   *qmi;
-    QmiSioPort   sio_port;
+
+    MMQmiDataEndpoint  endpoint;
+    gboolean           sio_port_failed;
 
     gint                  profile_id;
     MMBearerIpMethod      ip_method;
@@ -527,7 +537,160 @@ typedef struct {
     guint32           packet_data_handle_ipv6;
     MMBearerIpConfig *ipv6_config;
     GError           *error_ipv6;
+    guint             extended_ipv4_config_change_id;
+    guint             extended_ipv6_config_change_id;
 } ConnectContext;
+
+/* When using the WDS service, we may not only want to have explicit different
+ * clients for IPv4 or IPv6, but also for different mux ids/endpoints as well,
+ * so that different bearer objects never attempt to use the same WDS clients. */
+#define MM_BEARER_QMI_PORT_FLAG(flag, ctx) \
+    (((ctx->endpoint.interface_number & 0xFF) << 24) | \
+     ((ctx->endpoint.type & 0xFF) << 16) | \
+     ((ctx->mux_id & 0xFF) << 8) | (flag & 0xFF))
+
+/*****************************************************************************/
+static void
+process_operator_reserved_pco (MMBearerQmi                           *self,
+                               QmiMessageWdsGetCurrentSettingsOutput *output)
+{
+    MMBaseModem           *modem = NULL;
+    MMPco                 *pco;
+    g_autofree gchar      *app_specific_info_str = NULL;
+    g_autoptr(GArray)      array = NULL;
+    g_autoptr(GByteArray)  pco_raw = NULL;
+    guint16                container_id;
+    guint16                tmp_mcc;
+    guint16                tmp_mnc;
+    gboolean               mnc_includes_pcs_digit;
+    guint8                 pco_prefix[9];
+    gsize                  pco_raw_len;
+
+    if (!qmi_message_wds_get_current_settings_output_get_operator_reserved_pco (output, &tmp_mcc, &tmp_mnc, &mnc_includes_pcs_digit, &array, &container_id, NULL))
+        return ;
+
+    app_specific_info_str = mm_utils_bin2hexstr ((guint8*) (array->data), array->len);
+
+    mm_obj_dbg (self, "container ID: %d", container_id);
+    mm_obj_dbg (self, "app specific info: %s", app_specific_info_str);
+
+    pco_raw_len = sizeof (pco_prefix) + array->len;
+    pco_prefix[0] = 0x27;
+    pco_prefix[1] = pco_raw_len - 2;
+    pco_prefix[2] = 0x80;
+    pco_prefix[3] = (container_id >> 8) & 0xFF;
+    pco_prefix[4] = container_id & 0xFF;
+    pco_prefix[5] = 3 * sizeof (guint8) + array->len;
+
+    /* if MNC consist of 3 digits
+     *     pco_prefix[7] = 0x<MNC digit 3><MCC digit 3>
+     * if MNC consist of 2 digits
+     *     pco_prefix[7] = 0xF<MCC digit 3>
+     * pco_prefix[6] = 0x<MCC digit 2><MCC digit 1>
+     * pco_prefix[8] = 0x<MNC digit 2><MNC digit 1>
+     *
+     * e.g. from MCCMNC 311480 (MCC=311, MNC=480 with PCS digit), logic would do
+     *     pco_prefix[7] = 0x01 | (0x00 << 4) = 0x01
+     *     pco_prefix[6] = 0x03 | (0x01 << 4) = 0x13
+     *     pco_prefix[6] = 0x04 | (0x08 << 4) = 0x84
+     * And so the `pco_prefix` includes bytes `13:01:84` when the operator is 311480 (Verizon)
+     *
+     * See 3GPP TS 24.008, subclause 10.5.6.3.1 (Protocol Configuration Options) and
+     * 10.5.1.3 for more details on the coding of MCC and MNC.
+     */
+    if (mnc_includes_pcs_digit) {
+        pco_prefix[7] = (guint8)(tmp_mcc%10) | ((guint8)(tmp_mnc%10) << 4);
+        tmp_mnc /= 10;
+    }
+    else
+        pco_prefix[7] = (guint8)(tmp_mcc%10) | 0xF0;
+    tmp_mcc /= 10;
+    pco_prefix[6] = (guint8)(tmp_mcc/10) | ((guint8)(tmp_mcc%10) << 4);
+    pco_prefix[8] = (guint8)(tmp_mnc/10) | ((guint8)(tmp_mnc%10) << 4);
+
+    pco_raw = g_byte_array_sized_new (pco_raw_len);
+    g_byte_array_append (pco_raw, pco_prefix, sizeof (pco_prefix));
+    g_byte_array_append (pco_raw, (const guint8 *)array->data, array->len);
+
+    pco = mm_pco_new ();
+    /* set session ID to 0 (default) */
+    mm_pco_set_session_id (pco, 0);
+    mm_pco_set_complete (pco, TRUE);
+    mm_pco_set_data (pco, pco_raw->data, pco_raw->len);
+
+    /* mm_pco_list_add API takes care of duplicate entry */
+    self->priv->pco_list = mm_pco_list_add (self->priv->pco_list, pco);
+    g_object_get (self,
+                  MM_BASE_BEARER_MODEM, &modem,
+                  NULL);
+    mm_iface_modem_3gpp_update_pco_list (MM_IFACE_MODEM_3GPP (modem), self->priv->pco_list);
+    mm_obj_dbg (self, "pco info sent successfully");
+
+    g_object_unref (modem);
+}
+
+static void
+get_pco_settings_ready (QmiClientWds *client,
+                        GAsyncResult *res,
+                        MMBearerQmi  *self)
+{
+    g_autoptr(QmiMessageWdsGetCurrentSettingsOutput)  output = NULL;
+    GError                                           *error = NULL;
+
+    output = qmi_client_wds_get_current_settings_finish (client, res, &error);
+    if (!output) {
+        mm_obj_warn (self, "error: operation failed: %s", error->message);
+        g_error_free (error);
+        g_object_unref (self);
+        return;
+    }
+    if (!qmi_message_wds_get_current_settings_output_get_result (output, &error)) {
+        mm_obj_warn (self, "error: couldn't get current settings: %s", error->message);
+        g_error_free (error);
+        g_object_unref (self);
+        return;
+    }
+
+    process_operator_reserved_pco (self, output);
+    g_object_unref (self);
+}
+
+static void
+fetch_pco_data_from_modem (QmiClientWds *client,
+                           MMBearerQmi  *self)
+{
+    QmiMessageWdsGetCurrentSettingsInput *input;
+
+    input = qmi_message_wds_get_current_settings_input_new ();
+    qmi_message_wds_get_current_settings_input_set_requested_settings (
+        input, QMI_WDS_REQUESTED_SETTINGS_OPERATOR_RESERVED_PCO, NULL);
+    mm_obj_dbg (self, "Getting PCO Information from Modem");
+    qmi_client_wds_get_current_settings (client,
+                                         input,
+                                         10,
+                                         NULL,
+                                         (GAsyncReadyCallback) get_pco_settings_ready,
+                                         g_object_ref (self));
+    qmi_message_wds_get_current_settings_input_unref (input);
+}
+
+static void
+extended_ip_config_indication_received (QmiClientWds                           *client,
+                                        QmiIndicationWdsExtendedIpConfigOutput *output,
+                                        MMBearerQmi                            *self)
+{
+    QmiWdsRequestedSettings mask;
+    g_autofree gchar *mask_str = NULL;
+
+    if (!qmi_indication_wds_extended_ip_config_output_get_changed_ip_configuration (output, &mask, NULL))
+        return;
+
+    mask_str = qmi_wds_requested_settings_build_string_from_mask (mask);
+    mm_obj_dbg (self, "received extended ip type mask %s",  mask_str);
+    if (mask & QMI_WDS_REQUESTED_SETTINGS_OPERATOR_RESERVED_PCO)
+        fetch_pco_data_from_modem (client, self);
+}
+/*****************************************************************************/
 
 static void
 connect_context_free (ConnectContext *ctx)
@@ -547,6 +710,10 @@ connect_context_free (ConnectContext *ctx)
             cleanup_event_report_unsolicited_events (ctx->self,
                                                      ctx->client_ipv4,
                                                      &ctx->event_report_ipv4_indication_id);
+        }
+        if (ctx->extended_ipv4_config_change_id) {
+            g_signal_handler_disconnect (ctx->client_ipv4, ctx->extended_ipv4_config_change_id);
+            ctx->extended_ipv4_config_change_id = 0;
         }
         if (ctx->packet_data_handle_ipv4) {
             g_autoptr(QmiMessageWdsStopNetworkInput) input = NULL;
@@ -569,6 +736,10 @@ connect_context_free (ConnectContext *ctx)
             cleanup_event_report_unsolicited_events (ctx->self,
                                                      ctx->client_ipv6,
                                                      &ctx->event_report_ipv6_indication_id);
+        }
+        if (ctx->extended_ipv6_config_change_id) {
+            g_signal_handler_disconnect (ctx->client_ipv6, ctx->extended_ipv6_config_change_id);
+            ctx->extended_ipv6_config_change_id = 0;
         }
         if (ctx->packet_data_handle_ipv6) {
             g_autoptr(QmiMessageWdsStopNetworkInput) input = NULL;
@@ -903,6 +1074,8 @@ get_current_settings_ready (QmiClientWds *client,
             mm_obj_dbg (self, "   domains: failed (%s)", error ? error->message : "unknown");
             g_clear_error (&error);
         }
+
+        process_operator_reserved_pco (self, output);
     }
 
     if (output)
@@ -918,18 +1091,19 @@ get_current_settings (GTask *task, QmiClientWds *client)
 {
     ConnectContext *ctx;
     QmiMessageWdsGetCurrentSettingsInput *input;
-    QmiWdsGetCurrentSettingsRequestedSettings requested;
+    QmiWdsRequestedSettings requested;
 
     ctx = g_task_get_task_data (task);
     g_assert (ctx->running_ipv4 || ctx->running_ipv6);
 
-    requested = QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DNS_ADDRESS |
-                QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GRANTED_QOS |
-                QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_ADDRESS |
-                QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GATEWAY_INFO |
-                QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_MTU |
-                QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DOMAIN_NAME_LIST |
-                QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_FAMILY;
+    requested = QMI_WDS_REQUESTED_SETTINGS_DNS_ADDRESS |
+                QMI_WDS_REQUESTED_SETTINGS_GRANTED_QOS |
+                QMI_WDS_REQUESTED_SETTINGS_IP_ADDRESS |
+                QMI_WDS_REQUESTED_SETTINGS_GATEWAY_INFO |
+                QMI_WDS_REQUESTED_SETTINGS_MTU |
+                QMI_WDS_REQUESTED_SETTINGS_DOMAIN_NAME_LIST |
+                QMI_WDS_REQUESTED_SETTINGS_IP_FAMILY |
+                QMI_WDS_REQUESTED_SETTINGS_OPERATOR_RESERVED_PCO;
 
     input = qmi_message_wds_get_current_settings_input_new ();
     qmi_message_wds_get_current_settings_input_set_requested_settings (input, requested, NULL);
@@ -940,6 +1114,87 @@ get_current_settings (GTask *task, QmiClientWds *client)
                                          (GAsyncReadyCallback)get_current_settings_ready,
                                          task);
     qmi_message_wds_get_current_settings_input_unref (input);
+}
+
+static void
+wds_indication_register_response_ready (QmiClientWds *client,
+                                        GAsyncResult *res,
+                                        GTask        *task)
+{
+    MMBearerQmi                           *self;
+    ConnectContext                        *ctx;
+    QmiMessageWdsIndicationRegisterOutput *output;
+    GError                                *error = NULL;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+    output = qmi_client_wds_indication_register_finish (client, res, &error);
+
+    if (!output) {
+        mm_obj_warn (self, "error: operation failed: %s", error->message);
+        g_error_free (error);
+        ctx->step++;
+        connect_context_step (task);
+        return;
+    }
+
+    if (!qmi_message_wds_indication_register_output_get_result (output, &error)) {
+        mm_obj_warn (self, "error: could not register for indication: %s", error->message);
+        qmi_message_wds_indication_register_output_unref (output);
+        g_error_free (error);
+        ctx->step++;
+        connect_context_step (task);
+        return;
+    }
+    qmi_message_wds_indication_register_output_unref (output);
+    if (ctx->running_ipv4) {
+        mm_obj_dbg (self, "v4 extended ip config indication registered successfully");
+        g_assert (ctx->extended_ipv4_config_change_id == 0);
+        ctx->extended_ipv4_config_change_id =
+            g_signal_connect (client,
+                              "extended-ip-config",
+                              G_CALLBACK (extended_ip_config_indication_received),
+                              self);
+    } else {
+        mm_obj_dbg (self, "v6 extended ip Config indication registered successfully");
+        g_assert (ctx->extended_ipv6_config_change_id == 0);
+        ctx->extended_ipv6_config_change_id =
+            g_signal_connect (client,
+                              "extended-ip-config",
+                              G_CALLBACK (extended_ip_config_indication_received),
+                              self);
+    }
+    ctx->step++;
+    connect_context_step (task);
+}
+
+static void
+register_for_wds_indication (ConnectContext *ctx,
+                             GTask          *task)
+{
+    QmiMessageWdsIndicationRegisterInput *input;
+    QmiClientWds *client;
+    MMBearerQmi *self;
+
+    input = qmi_message_wds_indication_register_input_new ();
+    self = g_task_get_source_object (task);
+
+    if (ctx->running_ipv4) {
+        client = ctx->client_ipv4;
+        mm_obj_dbg (self, "registering for wds extended ip V4 info indication");
+    } else {
+        client = ctx->client_ipv6;
+        mm_obj_dbg (self, "registering for wds extended ip V6 info indication");
+    }		
+    qmi_message_wds_indication_register_input_set_report_extended_ip_configuration_change (input, TRUE, NULL);
+    qmi_client_wds_indication_register (
+        client,
+        input,
+        10,
+        g_task_get_cancellable (task),
+        (GAsyncReadyCallback) wds_indication_register_response_ready,
+        task);
+    qmi_message_wds_indication_register_input_unref (input);
 }
 
 static GError *
@@ -1363,6 +1618,15 @@ bind_data_port_ready (QmiClientWds *client,
 
     output = qmi_client_wds_bind_data_port_finish (client, res, &error);
     if (!output || !qmi_message_wds_bind_data_port_output_get_result (output, &error)) {
+        if (g_error_matches (error, QMI_PROTOCOL_ERROR, QMI_PROTOCOL_ERROR_DEVICE_UNSUPPORTED)) {
+            /* Some firmwares only support this through "Bind Mux Data Port",
+             * even if multiplexing is disabled. Try again with that. */
+            g_error_free (error);
+            ctx->sio_port_failed = TRUE;
+            connect_context_step (task);
+            return;
+        }
+
         g_prefix_error (&error, "Couldn't bind data port: ");
         complete_connect (task, NULL, error);
         return;
@@ -1423,12 +1687,12 @@ qmi_port_allocate_client_ready (MMPortQmi *qmi,
         ctx->client_ipv4 = QMI_CLIENT_WDS (mm_port_qmi_get_client (
                                                qmi,
                                                QMI_SERVICE_WDS,
-                                               MM_PORT_QMI_FLAG_WITH_MUX_ID (MM_PORT_QMI_FLAG_WDS_IPV4, ctx->mux_id)));
+                                               MM_BEARER_QMI_PORT_FLAG (MM_PORT_QMI_FLAG_WDS_IPV4, ctx)));
     else
         ctx->client_ipv6 = QMI_CLIENT_WDS (mm_port_qmi_get_client (
                                                qmi,
                                                QMI_SERVICE_WDS,
-                                               MM_PORT_QMI_FLAG_WITH_MUX_ID (MM_PORT_QMI_FLAG_WDS_IPV6, ctx->mux_id)));
+                                               MM_BEARER_QMI_PORT_FLAG (MM_PORT_QMI_FLAG_WDS_IPV6, ctx)));
 
     /* Keep on */
     ctx->step++;
@@ -1436,9 +1700,9 @@ qmi_port_allocate_client_ready (MMPortQmi *qmi,
 }
 
 static void
-master_interface_up_ready (MMPortNet    *link,
-                           GAsyncResult *res,
-                           GTask        *task)
+main_interface_up_ready (MMPortNet    *link,
+                         GAsyncResult *res,
+                         GTask        *task)
 {
     ConnectContext *ctx;
     GError         *error = NULL;
@@ -1446,7 +1710,7 @@ master_interface_up_ready (MMPortNet    *link,
     ctx = g_task_get_task_data (task);
 
     if (!mm_port_net_link_setup_finish (link, res, &error)) {
-        g_prefix_error (&error, "Couldn't bring master interface up: ");
+        g_prefix_error (&error, "Couldn't bring main interface up: ");
         complete_connect (task, NULL, error);
         return;
     }
@@ -1743,15 +2007,15 @@ connect_context_step (GTask *task)
         ctx->step++;
         /* fall through */
 
-    case CONNECT_STEP_SETUP_LINK_MASTER_UP:
-        /* if the connection is done through a new link, we need to ifup the master interface */
+    case CONNECT_STEP_SETUP_LINK_MAIN_UP:
+        /* if the connection is done through a new link, we need to ifup the main interface */
         if (ctx->link) {
-            mm_obj_dbg (self, "bringing master interface %s up...", mm_port_get_device (ctx->data));
+            mm_obj_dbg (self, "bringing main interface %s up...", mm_port_get_device (ctx->data));
             mm_port_net_link_setup (MM_PORT_NET (ctx->data),
                                     TRUE,
                                     0, /* ignore */
                                     g_task_get_cancellable (task),
-                                    (GAsyncReadyCallback) master_interface_up_ready,
+                                    (GAsyncReadyCallback) main_interface_up_ready,
                                     task);
             return;
         }
@@ -1792,12 +2056,12 @@ connect_context_step (GTask *task)
 
         client = mm_port_qmi_get_client (ctx->qmi,
                                          QMI_SERVICE_WDS,
-                                         MM_PORT_QMI_FLAG_WITH_MUX_ID (MM_PORT_QMI_FLAG_WDS_IPV4, ctx->mux_id));
+                                         MM_BEARER_QMI_PORT_FLAG (MM_PORT_QMI_FLAG_WDS_IPV4, ctx));
         if (!client) {
             mm_obj_dbg (self, "allocating IPv4-specific WDS client (mux id %u)", ctx->mux_id);
             mm_port_qmi_allocate_client (ctx->qmi,
                                          QMI_SERVICE_WDS,
-                                         MM_PORT_QMI_FLAG_WITH_MUX_ID (MM_PORT_QMI_FLAG_WDS_IPV4, ctx->mux_id),
+                                         MM_BEARER_QMI_PORT_FLAG (MM_PORT_QMI_FLAG_WDS_IPV4, ctx),
                                          g_task_get_cancellable (task),
                                          (GAsyncReadyCallback)qmi_port_allocate_client_ready,
                                          task);
@@ -1810,12 +2074,12 @@ connect_context_step (GTask *task)
 
     case CONNECT_STEP_BIND_DATA_PORT_IPV4:
         /* If SIO port given, bind client to it */
-        if (ctx->sio_port != QMI_SIO_PORT_NONE) {
+        if (!ctx->sio_port_failed && ctx->endpoint.sio_port != QMI_SIO_PORT_NONE) {
             g_autoptr(QmiMessageWdsBindDataPortInput) input = NULL;
 
-            mm_obj_dbg (self, "binding to data port: %s", qmi_sio_port_get_string (ctx->sio_port));
+            mm_obj_dbg (self, "binding to data port: %s", qmi_sio_port_get_string (ctx->endpoint.sio_port));
             input = qmi_message_wds_bind_data_port_input_new ();
-            qmi_message_wds_bind_data_port_input_set_data_port (input, ctx->sio_port, NULL);
+            qmi_message_wds_bind_data_port_input_set_data_port (input, ctx->endpoint.sio_port, NULL);
             qmi_client_wds_bind_data_port (ctx->client_ipv4,
                                            input,
                                            10,
@@ -1826,15 +2090,15 @@ connect_context_step (GTask *task)
         }
 
         /* If mux id given, bind mux data port */
-        if (ctx->mux_id != QMI_DEVICE_MUX_ID_UNBOUND) {
+        if (ctx->sio_port_failed || ctx->mux_id != QMI_DEVICE_MUX_ID_UNBOUND) {
             g_autoptr(QmiMessageWdsBindMuxDataPortInput) input = NULL;
 
             mm_obj_dbg (self, "binding to mux id %d", ctx->mux_id);
             input = qmi_message_wds_bind_mux_data_port_input_new ();
             qmi_message_wds_bind_mux_data_port_input_set_endpoint_info (
                 input,
-                mm_port_qmi_get_endpoint_type (ctx->qmi),
-                mm_port_qmi_get_endpoint_interface_number (ctx->qmi),
+                ctx->endpoint.type,
+                ctx->endpoint.interface_number,
                 NULL);
             qmi_message_wds_bind_mux_data_port_input_set_mux_id (input, ctx->mux_id, NULL);
 
@@ -1898,6 +2162,15 @@ connect_context_step (GTask *task)
         return;
     }
 
+    case CONNECT_STEP_ENABLE_WDS_INDICATIONS_IPV4:
+        /* If call is connected enable wds indications */
+        if (ctx->packet_data_handle_ipv4) {
+            register_for_wds_indication (ctx, task);
+            return;
+        }
+        ctx->step++;
+        /* fall through */
+
     case CONNECT_STEP_GET_CURRENT_SETTINGS_IPV4:
         /* Retrieve and print IP configuration */
         if (ctx->packet_data_handle_ipv4) {
@@ -1928,12 +2201,12 @@ connect_context_step (GTask *task)
 
         client = mm_port_qmi_get_client (ctx->qmi,
                                          QMI_SERVICE_WDS,
-                                         MM_PORT_QMI_FLAG_WITH_MUX_ID (MM_PORT_QMI_FLAG_WDS_IPV6, ctx->mux_id));
+                                         MM_BEARER_QMI_PORT_FLAG (MM_PORT_QMI_FLAG_WDS_IPV6, ctx));
         if (!client) {
             mm_obj_dbg (self, "allocating IPv6-specific WDS client (mux id %u)", ctx->mux_id);
             mm_port_qmi_allocate_client (ctx->qmi,
                                          QMI_SERVICE_WDS,
-                                         MM_PORT_QMI_FLAG_WITH_MUX_ID (MM_PORT_QMI_FLAG_WDS_IPV6, ctx->mux_id),
+                                         MM_BEARER_QMI_PORT_FLAG (MM_PORT_QMI_FLAG_WDS_IPV6, ctx),
                                          g_task_get_cancellable (task),
                                          (GAsyncReadyCallback)qmi_port_allocate_client_ready,
                                          task);
@@ -1946,12 +2219,12 @@ connect_context_step (GTask *task)
 
     case CONNECT_STEP_BIND_DATA_PORT_IPV6:
         /* If SIO port given, bind client to it */
-        if (ctx->sio_port != QMI_SIO_PORT_NONE) {
+        if (!ctx->sio_port_failed && ctx->endpoint.sio_port != QMI_SIO_PORT_NONE) {
             g_autoptr(QmiMessageWdsBindDataPortInput) input = NULL;
 
-            mm_obj_dbg (self, "binding to data port: %s", qmi_sio_port_get_string (ctx->sio_port));
+            mm_obj_dbg (self, "binding to data port: %s", qmi_sio_port_get_string (ctx->endpoint.sio_port));
             input = qmi_message_wds_bind_data_port_input_new ();
-            qmi_message_wds_bind_data_port_input_set_data_port (input, ctx->sio_port, NULL);
+            qmi_message_wds_bind_data_port_input_set_data_port (input, ctx->endpoint.sio_port, NULL);
             qmi_client_wds_bind_data_port (ctx->client_ipv6,
                                            input,
                                            10,
@@ -1962,15 +2235,15 @@ connect_context_step (GTask *task)
         }
 
         /* If mux id given, bind mux data port */
-        if (ctx->mux_id != QMI_DEVICE_MUX_ID_UNBOUND) {
+        if (ctx->sio_port_failed || ctx->mux_id != QMI_DEVICE_MUX_ID_UNBOUND) {
             g_autoptr(QmiMessageWdsBindMuxDataPortInput) input = NULL;
 
             mm_obj_dbg (self, "binding to mux id %d", ctx->mux_id);
             input = qmi_message_wds_bind_mux_data_port_input_new ();
             qmi_message_wds_bind_mux_data_port_input_set_endpoint_info (
                 input,
-                mm_port_qmi_get_endpoint_type (ctx->qmi),
-                mm_port_qmi_get_endpoint_interface_number (ctx->qmi),
+                ctx->endpoint.type,
+                ctx->endpoint.interface_number,
                 NULL);
             qmi_message_wds_bind_mux_data_port_input_set_mux_id (input, ctx->mux_id, NULL);
 
@@ -2030,6 +2303,15 @@ connect_context_step (GTask *task)
         qmi_message_wds_start_network_input_unref (input);
         return;
     }
+
+    case CONNECT_STEP_ENABLE_WDS_INDICATIONS_IPV6:
+        /* If call is connected enable wds indications */
+        if (ctx->packet_data_handle_ipv6) {
+            register_for_wds_indication (ctx, task);
+            return;
+        }
+        ctx->step++;
+        /* fall through */
 
     case CONNECT_STEP_GET_CURRENT_SETTINGS_IPV6:
         /* Retrieve and print IP configuration */
@@ -2092,6 +2374,8 @@ connect_context_step (GTask *task)
             ctx->packet_service_status_ipv4_indication_id = 0;
             ctx->self->priv->event_report_ipv4_indication_id = ctx->event_report_ipv4_indication_id;
             ctx->event_report_ipv4_indication_id = 0;
+            ctx->self->priv->extended_ipv4_config_change_id = ctx->extended_ipv4_config_change_id;
+            ctx->extended_ipv4_config_change_id = 0;
             ctx->self->priv->client_ipv4 = g_object_ref (ctx->client_ipv4);
         }
 
@@ -2104,6 +2388,8 @@ connect_context_step (GTask *task)
             ctx->packet_service_status_ipv6_indication_id = 0;
             ctx->self->priv->event_report_ipv6_indication_id = ctx->event_report_ipv6_indication_id;
             ctx->event_report_ipv6_indication_id = 0;
+            ctx->self->priv->extended_ipv6_config_change_id = ctx->extended_ipv6_config_change_id;
+            ctx->extended_ipv6_config_change_id = 0;
             ctx->self->priv->client_ipv6 = g_object_ref (ctx->client_ipv6);
         }
 
@@ -2247,7 +2533,6 @@ _connect (MMBaseBearer        *_self,
     ctx->self = g_object_ref (self);
     ctx->modem = g_object_ref (modem);
     ctx->mux_id = QMI_DEVICE_MUX_ID_UNBOUND;
-    ctx->sio_port = QMI_SIO_PORT_NONE;
     ctx->step = CONNECT_STEP_FIRST;
     ctx->ip_method = MM_BEARER_IP_METHOD_UNKNOWN;
     g_task_set_task_data (task, ctx, (GDestroyNotify)connect_context_free);
@@ -2262,7 +2547,7 @@ _connect (MMBaseBearer        *_self,
     }
 
     /* Each data port has a single QMI port associated */
-    ctx->qmi = mm_broadband_modem_qmi_get_port_qmi_for_data (MM_BROADBAND_MODEM_QMI (modem), ctx->data, &ctx->sio_port, &error);
+    ctx->qmi = mm_broadband_modem_qmi_get_port_qmi_for_data (MM_BROADBAND_MODEM_QMI (modem), ctx->data, &ctx->endpoint, &error);
     if (!ctx->qmi) {
         g_task_return_error (task, error);
         g_object_unref (task);
@@ -2489,6 +2774,10 @@ disconnect_context_step (GTask *task)
                                                          ctx->client_ipv4,
                                                          &self->priv->event_report_ipv4_indication_id);
 
+            if (self->priv->extended_ipv4_config_change_id) {
+                g_signal_handler_disconnect (ctx->client_ipv4, self->priv->extended_ipv4_config_change_id);
+                self->priv->extended_ipv4_config_change_id = 0;
+            }
             input = qmi_message_wds_stop_network_input_new ();
             qmi_message_wds_stop_network_input_set_packet_data_handle (input, ctx->packet_data_handle_ipv4, NULL);
 
@@ -2520,6 +2809,10 @@ disconnect_context_step (GTask *task)
                                                          ctx->client_ipv6,
                                                          &self->priv->event_report_ipv6_indication_id);
 
+            if (self->priv->extended_ipv6_config_change_id) {
+                g_signal_handler_disconnect (ctx->client_ipv6, self->priv->extended_ipv6_config_change_id);
+                self->priv->extended_ipv6_config_change_id = 0;
+            }
             input = qmi_message_wds_stop_network_input_new ();
             qmi_message_wds_stop_network_input_set_packet_data_handle (input, ctx->packet_data_handle_ipv6, NULL);
 
@@ -2656,7 +2949,8 @@ dispose (GObject *object)
     g_assert (!self->priv->ongoing_connect_user_cancellable);
     g_assert (!self->priv->ongoing_connect_network_cancellable);
     reset_bearer_connection (self, TRUE, TRUE);
-
+    g_list_free_full (self->priv->pco_list, g_object_unref);
+    self->priv->pco_list = NULL;
     G_OBJECT_CLASS (mm_bearer_qmi_parent_class)->dispose (object);
 }
 
@@ -2680,7 +2974,7 @@ mm_bearer_qmi_class_init (MMBearerQmiClass *klass)
     base_bearer_class->reload_stats_finish = reload_stats_finish;
     base_bearer_class->load_connection_status = load_connection_status;
     base_bearer_class->load_connection_status_finish = load_connection_status_finish;
-#if defined WITH_SYSTEMD_SUSPEND_RESUME
+#if defined WITH_SUSPEND_RESUME
     base_bearer_class->reload_connection_status = reload_connection_status;
     base_bearer_class->reload_connection_status_finish = reload_connection_status_finish;
 #endif

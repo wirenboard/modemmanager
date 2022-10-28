@@ -13,6 +13,7 @@
  * Copyright (C) 2009 Novell, Inc.
  * Copyright (C) 2009 - 2011 Red Hat, Inc.
  * Copyright (C) 2011 Google, Inc.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc.
  */
 
 #include <ModemManager.h>
@@ -215,7 +216,9 @@ typedef enum {
     CONNECTION_STEP_WAIT_FOR_INITIALIZED,
     CONNECTION_STEP_ENABLE,
     CONNECTION_STEP_WAIT_FOR_ENABLED,
+    CONNECTION_STEP_WAIT_AFTER_ENABLED,
     CONNECTION_STEP_REGISTER,
+    CONNECTION_STEP_PACKET_SERVICE_ATTACH,
     CONNECTION_STEP_BEARER,
     CONNECTION_STEP_CONNECT,
     CONNECTION_STEP_LAST
@@ -314,6 +317,24 @@ create_bearer_ready (MMIfaceModem *self,
 }
 
 static void
+wait_for_packet_service_state_ready (MMIfaceModem3gpp  *self,
+                                     GAsyncResult      *res,
+                                     ConnectionContext *ctx)
+{
+    GError *error = NULL;
+
+    if (!mm_iface_modem_3gpp_wait_for_packet_service_state_finish (self, res, &error)) {
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        connection_context_free (ctx);
+        return;
+    }
+
+    /* Packet service attached now! */
+    ctx->step++;
+    connection_step (ctx);
+}
+
+static void
 register_in_3gpp_or_cdma_network_ready (MMIfaceModemSimple *self,
                                         GAsyncResult *res,
                                         ConnectionContext *ctx)
@@ -329,6 +350,15 @@ register_in_3gpp_or_cdma_network_ready (MMIfaceModemSimple *self,
     /* Registered now! */
     ctx->step++;
     connection_step (ctx);
+}
+
+static gboolean
+wait_after_enabled_ready (ConnectionContext *ctx)
+{
+    /* Just go on now */
+    ctx->step++;
+    connection_step (ctx);
+    return G_SOURCE_REMOVE;
 }
 
 static void
@@ -561,6 +591,17 @@ connection_step (ConnectionContext *ctx)
                                              ctx);
         return;
 
+    case CONNECTION_STEP_WAIT_AFTER_ENABLED:
+        mm_obj_info (ctx->self, "simple connect state (%d/%d): wait after enabled",
+                     ctx->step, CONNECTION_STEP_LAST);
+        /* When we have just enabled, we want to give it some time before starting
+         * the registration process, so that any pending registration update that may
+         * have been scheduled during the enabling phase is applied. We don't want to
+         * trigger a new automatic registration if e.g. we're already registered.  */
+        g_timeout_add (100, (GSourceFunc)wait_after_enabled_ready, ctx);
+        return;
+
+
     case CONNECTION_STEP_REGISTER:
         mm_obj_info (ctx->self, "simple connect state (%d/%d): register",
                      ctx->step, CONNECTION_STEP_LAST);
@@ -577,6 +618,20 @@ connection_step (ConnectionContext *ctx)
 
         /* If not 3GPP and not CDMA, this will possibly be a POTS modem,
          * which won't require any specific registration anywhere. */
+        ctx->step++;
+        /* fall through */
+
+    case CONNECTION_STEP_PACKET_SERVICE_ATTACH:
+        mm_obj_info (ctx->self, "simple connect state (%d/%d): wait to get packet service state attached",
+                     ctx->step, CONNECTION_STEP_LAST);
+        if (mm_iface_modem_is_3gpp (MM_IFACE_MODEM (ctx->self))) {
+            mm_iface_modem_3gpp_wait_for_packet_service_state (MM_IFACE_MODEM_3GPP (ctx->self),
+                                                               MM_MODEM_3GPP_PACKET_SERVICE_STATE_ATTACHED,
+                                                               (GAsyncReadyCallback)wait_for_packet_service_state_ready,
+                                                               ctx);
+            return;
+        }
+        /* If not 3GPP, just go on */
         ctx->step++;
         /* fall through */
 
@@ -765,17 +820,18 @@ connect_auth_ready (MMBaseModem *self,
 
     case MM_MODEM_STATE_ENABLING:
     case MM_MODEM_STATE_DISCONNECTING:
-        /* If we are transitioning to the ENABLED/REGISTERED state,
-         * wait to get there before going on */
+    case MM_MODEM_STATE_SEARCHING:
+    case MM_MODEM_STATE_CONNECTING:
+        /* Wait to get to a final state before going on */
         ctx->step = CONNECTION_STEP_WAIT_FOR_ENABLED;
         break;
 
     case MM_MODEM_STATE_ENABLED:
-    case MM_MODEM_STATE_SEARCHING:
     case MM_MODEM_STATE_REGISTERED:
-    case MM_MODEM_STATE_CONNECTING:
     case MM_MODEM_STATE_CONNECTED:
-        ctx->step = CONNECTION_STEP_ENABLE + 1;
+        /* If we are at least already enabled, start at the registration check
+         * right away */
+        ctx->step = CONNECTION_STEP_REGISTER;
         break;
 
     default:

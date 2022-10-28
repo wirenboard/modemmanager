@@ -48,8 +48,12 @@ filter_policy_option_arg (const gchar  *option_name,
                           gpointer      data,
                           GError      **error)
 {
-    if (!g_ascii_strcasecmp (value, "whitelist-only")) {
-        filter_policy = MM_FILTER_POLICY_WHITELIST_ONLY;
+    if (!g_ascii_strcasecmp (value, "allowlist-only")
+#ifndef MM_DISABLE_DEPRECATED
+        || !g_ascii_strcasecmp (value, "whitelist-only")
+#endif
+        ) {
+        filter_policy = MM_FILTER_POLICY_ALLOWLIST_ONLY;
         return TRUE;
     }
 
@@ -67,7 +71,7 @@ filter_policy_option_arg (const gchar  *option_name,
 static const GOptionEntry entries[] = {
     {
         "filter-policy", 0, 0, G_OPTION_ARG_CALLBACK, filter_policy_option_arg,
-        "Filter policy: one of WHITELIST-ONLY, STRICT",
+        "Filter policy: one of ALLOWLIST-ONLY, STRICT",
         "[POLICY]"
     },
     {
@@ -130,6 +134,7 @@ static const gchar *log_file;
 static gboolean     log_journal;
 static gboolean     log_show_ts;
 static gboolean     log_rel_ts;
+static gboolean     log_personal_info;
 
 static const GOptionEntry log_entries[] = {
     {
@@ -157,6 +162,11 @@ static const GOptionEntry log_entries[] = {
     {
         "log-relative-timestamps", 0, 0, G_OPTION_ARG_NONE, &log_rel_ts,
         "Use relative timestamps (from MM start)",
+        NULL
+    },
+    {
+        "log-personal-info", 0, 0, G_OPTION_ARG_NONE, &log_personal_info,
+        "Show personal info in logs",
         NULL
     },
     { NULL }
@@ -206,6 +216,12 @@ mm_context_get_log_relative_timestamps (void)
     return log_rel_ts;
 }
 
+gboolean
+mm_context_get_log_personal_info (void)
+{
+    return log_personal_info;
+}
+
 /*****************************************************************************/
 /* Test context */
 
@@ -215,7 +231,7 @@ static gchar    *test_plugin_dir;
 #if defined WITH_UDEV
 static gboolean  test_no_udev;
 #endif
-#if defined WITH_SYSTEMD_SUSPEND_RESUME
+#if defined WITH_SUSPEND_RESUME
 static gboolean  test_no_suspend_resume;
 static gboolean  test_quick_suspend_resume;
 #endif
@@ -223,6 +239,9 @@ static gboolean  test_quick_suspend_resume;
 static gboolean  test_no_qrtr;
 #endif
 static gboolean  test_multiplex_requested;
+#if defined WITH_MBIM
+static gboolean  test_mbimex_profile_management;
+#endif
 
 static const GOptionEntry test_entries[] = {
     {
@@ -247,7 +266,7 @@ static const GOptionEntry test_entries[] = {
         NULL
     },
 #endif
-#if defined WITH_SYSTEMD_SUSPEND_RESUME
+#if defined WITH_SUSPEND_RESUME
     {
         "test-no-suspend-resume", 0, 0, G_OPTION_ARG_NONE, &test_no_suspend_resume,
         "Disable suspend/resume support at runtime even if available",
@@ -271,6 +290,13 @@ static const GOptionEntry test_entries[] = {
         "Default to request multiplex support if no explicitly given",
         NULL
     },
+#if defined WITH_MBIM
+    {
+        "test-mbimex-profile-management", 0, 0, G_OPTION_ARG_NONE, &test_mbimex_profile_management,
+        "Default to use profile management MBIM extensions",
+        NULL
+    },
+#endif
     { NULL }
 };
 
@@ -314,7 +340,7 @@ mm_context_get_test_no_udev (void)
 }
 #endif
 
-#if defined WITH_SYSTEMD_SUSPEND_RESUME
+#if defined WITH_SUSPEND_RESUME
 gboolean
 mm_context_get_test_no_suspend_resume (void)
 {
@@ -341,13 +367,21 @@ mm_context_get_test_multiplex_requested (void)
     return test_multiplex_requested;
 }
 
+#if defined WITH_MBIM
+gboolean
+mm_context_get_test_mbimex_profile_management (void)
+{
+    return test_mbimex_profile_management;
+}
+#endif
+
 /*****************************************************************************/
 
 static void
 print_version (void)
 {
     g_print ("ModemManager " MM_DIST_VERSION "\n"
-             "Copyright (C) 2008-2021 The ModemManager authors\n"
+             "Copyright (C) 2008-2022 The ModemManager authors\n"
              "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl-2.0.html>\n"
              "This is free software: you are free to change and redistribute it.\n"
              "There is NO WARRANTY, to the extent permitted by law.\n"

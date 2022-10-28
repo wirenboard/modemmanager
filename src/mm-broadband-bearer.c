@@ -660,6 +660,7 @@ select_profile_3gpp (MMBroadbandBearer   *self,
         mm_iface_modem_3gpp_profile_manager_set_profile (
             MM_IFACE_MODEM_3GPP_PROFILE_MANAGER (modem),
             mm_bearer_properties_peek_3gpp_profile (bearer_properties),
+            "profile-id",
             FALSE, /* not strict! */
             (GAsyncReadyCallback)select_profile_3gpp_set_profile_ready,
             task);
@@ -874,6 +875,11 @@ connect_succeeded (GTask *task,
     /* Keep connected port and type of connection */
     self->priv->port = g_object_ref (mm_bearer_connect_result_peek_data (result));
     self->priv->connection_type = connection_type;
+
+    /* Save profile ID for 3GPP connections. This is required for cases where
+     * the standard profile selection of this class is not executed during
+     * connection, e.g. if a derived class implements their own connect_3gpp. */
+    self->priv->profile_id = mm_bearer_connect_result_get_profile_id (result);
 
     /* Port is connected; update the state. For ATD based connections, the port
      * may already be set as connected, but no big deal. */
@@ -1646,8 +1652,7 @@ cgact_periodic_query_ready (MMBaseModem  *modem,
     for (l = pdp_active_list; l; l = g_list_next (l)) {
         MM3gppPdpContextActive *pdp_active;
 
-        /* We look for he just assume the first active PDP context found is the one we're
-         * looking for. */
+        /* Just assume the first active PDP context found is the one we're looking for. */
         pdp_active = (MM3gppPdpContextActive *)(l->data);
         if (pdp_active->cid == (guint)self->priv->profile_id) {
             status = (pdp_active->active ? MM_BEARER_CONNECTION_STATUS_CONNECTED : MM_BEARER_CONNECTION_STATUS_DISCONNECTED);
@@ -2043,7 +2048,7 @@ mm_broadband_bearer_class_init (MMBroadbandBearerClass *klass)
     base_bearer_class->report_connection_status = report_connection_status;
     base_bearer_class->load_connection_status = load_connection_status;
     base_bearer_class->load_connection_status_finish = load_connection_status_finish;
-#if defined WITH_SYSTEMD_SUSPEND_RESUME
+#if defined WITH_SUSPEND_RESUME
     base_bearer_class->reload_connection_status = load_connection_status;
     base_bearer_class->reload_connection_status_finish = load_connection_status_finish;
 #endif

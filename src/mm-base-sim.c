@@ -12,7 +12,8 @@
  *
  * Copyright (C) 2008 - 2009 Novell, Inc.
  * Copyright (C) 2009 - 2011 Red Hat, Inc.
- * Copyright (C) 2011 Google, Inc.
+ * Copyright (C) 2011 - 2022 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2011 - 2022 Google, Inc.
  */
 
 #include <config.h>
@@ -74,6 +75,24 @@ struct _MMBaseSimPrivate {
 static guint signals[SIGNAL_LAST] = { 0 };
 
 /*****************************************************************************/
+/* SIM type helpers */
+
+#define IS_PSIM(self)                                                   \
+    (mm_gdbus_sim_get_sim_type (MM_GDBUS_SIM (self)) == MM_SIM_TYPE_PHYSICAL)
+
+#define IS_ESIM(self)                                                   \
+    (mm_gdbus_sim_get_sim_type (MM_GDBUS_SIM (self)) == MM_SIM_TYPE_ESIM)
+
+#define IS_ESIM_WITHOUT_PROFILES(self)                                  \
+    (IS_ESIM (self) && (mm_gdbus_sim_get_esim_status (MM_GDBUS_SIM (self)) == MM_SIM_ESIM_STATUS_NO_PROFILES))
+
+gboolean
+mm_base_sim_is_esim_without_profiles (MMBaseSim *self)
+{
+    return IS_ESIM_WITHOUT_PROFILES (self);
+}
+
+/*****************************************************************************/
 
 void
 mm_base_sim_export (MMBaseSim *self)
@@ -98,7 +117,7 @@ reprobe_if_puk_discovered (MMBaseSim *self,
                          MM_MOBILE_EQUIPMENT_ERROR,
                          MM_MOBILE_EQUIPMENT_ERROR_SIM_PUK)) {
         mm_obj_dbg (self, "Discovered PUK lock, discarding old modem...");
-        mm_base_modem_process_sim_event (self->priv->modem);
+        mm_iface_modem_process_sim_event (MM_IFACE_MODEM (self->priv->modem));
     }
 }
 
@@ -248,6 +267,16 @@ handle_change_pin_auth_ready (MMBaseModem *modem,
                                                MM_CORE_ERROR_UNSUPPORTED,
                                                "Cannot change PIN: "
                                                "SIM not currently active");
+        handle_change_pin_context_free (ctx);
+        return;
+    }
+
+    if (IS_ESIM_WITHOUT_PROFILES (ctx->self)) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot change PIN: "
+                                               "eSIM without profiles");
         handle_change_pin_context_free (ctx);
         return;
     }
@@ -429,6 +458,16 @@ handle_enable_pin_auth_ready (MMBaseModem *modem,
                                                MM_CORE_ERROR_UNSUPPORTED,
                                                "Cannot enable/disable PIN: "
                                                "SIM not currently active");
+        handle_enable_pin_context_free (ctx);
+        return;
+    }
+
+    if (IS_ESIM_WITHOUT_PROFILES (ctx->self)) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot enable/disable PIN: "
+                                               "eSIM without profiles");
         handle_enable_pin_context_free (ctx);
         return;
     }
@@ -771,6 +810,13 @@ mm_base_sim_load_sim_identifier (MMBaseSim *self,
         return;
     }
 
+    if (IS_ESIM_WITHOUT_PROFILES (self)) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                 "no SIM identifier in eSIM without profiles");
+        g_object_unref (task);
+        return;
+    }
+
     MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier (
             self,
             (GAsyncReadyCallback)load_sim_identifier_ready,
@@ -831,6 +877,16 @@ handle_send_pin_auth_ready (MMBaseModem *modem,
                                                MM_CORE_ERROR_UNSUPPORTED,
                                                "Cannot send PIN: "
                                                "SIM not currently active");
+        handle_send_pin_context_free (ctx);
+        return;
+    }
+
+    if (IS_ESIM_WITHOUT_PROFILES (ctx->self)) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot send PIN: "
+                                               "eSIM without profiles");
         handle_send_pin_context_free (ctx);
         return;
     }
@@ -905,7 +961,7 @@ handle_send_puk_ready (MMBaseSim *self,
 
     if (sim_error) {
         mm_obj_info (self, "Received critical sim error. SIM might be permanently blocked. Reprobing...");
-        mm_base_modem_process_sim_event (self->priv->modem);
+        mm_iface_modem_process_sim_event (MM_IFACE_MODEM (self->priv->modem));
     }
 
     handle_send_puk_context_free (ctx);
@@ -930,6 +986,16 @@ handle_send_puk_auth_ready (MMBaseModem *modem,
                                                MM_CORE_ERROR_UNSUPPORTED,
                                                "Cannot send PUK: "
                                                "SIM not currently active");
+        handle_send_puk_context_free (ctx);
+        return;
+    }
+
+    if (IS_ESIM_WITHOUT_PROFILES (ctx->self)) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot send PUK: "
+                                               "eSIM without profiles");
         handle_send_puk_context_free (ctx);
         return;
     }
@@ -1483,6 +1549,16 @@ handle_set_preferred_networks_auth_ready (MMBaseModem *modem,
                                                MM_CORE_ERROR_UNSUPPORTED,
                                                "Cannot set preferred networks: "
                                                "SIM not currently active");
+        handle_set_preferred_networks_context_free (ctx);
+        return;
+    }
+
+    if (IS_ESIM_WITHOUT_PROFILES (ctx->self)) {
+        g_dbus_method_invocation_return_error (ctx->invocation,
+                                               MM_CORE_ERROR,
+                                               MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot set preferred networks: "
+                                               "eSIM without profiles");
         handle_set_preferred_networks_context_free (ctx);
         return;
     }
@@ -2212,6 +2288,90 @@ load_operator_name (MMBaseSim *self,
 }
 
 /*****************************************************************************/
+/* GID1 and GID2 */
+
+static GByteArray *
+parse_gid (const gchar  *response,
+           GError      **error)
+{
+    guint             sw1 = 0;
+    guint             sw2 = 0;
+    g_autofree gchar *hex = NULL;
+
+    if (!mm_3gpp_parse_crsm_response (response, &sw1, &sw2, &hex, error))
+        return NULL;
+
+    if ((sw1 == 0x90 && sw2 == 0x00) ||
+        (sw1 == 0x91) ||
+        (sw1 == 0x92) ||
+        (sw1 == 0x9f)) {
+        guint8 *bin = NULL;
+        gsize   binlen = 0;
+
+        /* Convert hex string to binary */
+        bin = mm_utils_hexstr2bin (hex, -1, &binlen, error);
+        if (!bin) {
+            g_prefix_error (error, "SIM returned malformed response '%s': ", hex);
+            return NULL;
+        }
+
+        /* return as bytearray */
+        return g_byte_array_new_take (bin, binlen);
+    }
+
+    g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                 "SIM failed to handle CRSM request (sw1 %d sw2 %d)", sw1, sw2);
+    return NULL;
+}
+
+static GByteArray *
+common_load_gid_finish (MMBaseSim     *self,
+                        GAsyncResult  *res,
+                        GError       **error)
+{
+    g_autofree gchar *result = NULL;
+
+    result = g_task_propagate_pointer (G_TASK (res), error);
+    if (!result)
+        return NULL;
+
+    return parse_gid (result, error);
+}
+
+STR_REPLY_READY_FN (load_gid1)
+STR_REPLY_READY_FN (load_gid2)
+
+static void
+load_gid1 (MMBaseSim           *self,
+           GAsyncReadyCallback  callback,
+           gpointer             user_data)
+{
+    /* READ BINARY of EFgid1 */
+    mm_base_modem_at_command (
+        self->priv->modem,
+        "+CRSM=176,28478,0,0,15",
+        10,
+        FALSE,
+        (GAsyncReadyCallback)load_gid1_command_ready,
+        g_task_new (self, NULL, callback, user_data));
+}
+
+static void
+load_gid2 (MMBaseSim           *self,
+           GAsyncReadyCallback  callback,
+           gpointer             user_data)
+{
+    /* READ BINARY of EFgid2 */
+    mm_base_modem_at_command (
+        self->priv->modem,
+        "+CRSM=176,28479,0,0,15",
+        10,
+        FALSE,
+        (GAsyncReadyCallback)load_gid2_command_ready,
+        g_task_new (self, NULL, callback, user_data));
+}
+
+/*****************************************************************************/
 
 MMBaseSim *
 mm_base_sim_new_initialized (MMBaseModem *modem,
@@ -2250,13 +2410,18 @@ static void interface_initialization_step (GTask *task);
 typedef enum {
     INITIALIZATION_STEP_FIRST,
     INITIALIZATION_STEP_WAIT_READY,
+    INITIALIZATION_STEP_SIM_TYPE,
+    INITIALIZATION_STEP_ESIM_STATUS,
     INITIALIZATION_STEP_SIM_IDENTIFIER,
     INITIALIZATION_STEP_IMSI,
-    INITIALIZATION_STEP_EID,
     INITIALIZATION_STEP_OPERATOR_ID,
     INITIALIZATION_STEP_OPERATOR_NAME,
     INITIALIZATION_STEP_EMERGENCY_NUMBERS,
     INITIALIZATION_STEP_PREFERRED_NETWORKS,
+    INITIALIZATION_STEP_GID1,
+    INITIALIZATION_STEP_GID2,
+    INITIALIZATION_STEP_EID,
+    INITIALIZATION_STEP_REMOVABILITY,
     INITIALIZATION_STEP_LAST
 } InitializationStep;
 
@@ -2292,6 +2457,143 @@ initable_init_finish (GAsyncInitable  *initable,
 {
     return g_task_propagate_boolean (G_TASK (result), error);
 }
+
+#undef STR_REPLY_READY_FN
+#define STR_REPLY_READY_FN(NAME,DISPLAY)                                \
+    static void                                                         \
+    init_load_##NAME##_ready (MMBaseSim *self,                          \
+                              GAsyncResult *res,                        \
+                              GTask *task)                              \
+    {                                                                   \
+        InitAsyncContext *ctx;                                          \
+        GError *error = NULL;                                           \
+        gchar *val;                                                     \
+                                                                        \
+        val = MM_BASE_SIM_GET_CLASS (self)->load_##NAME##_finish (self, res, &error); \
+        mm_gdbus_sim_set_##NAME (MM_GDBUS_SIM (self), val);             \
+        g_free (val);                                                   \
+                                                                        \
+        if (error) {                                                    \
+            mm_obj_warn (self, "couldn't load %s: %s", DISPLAY, error->message); \
+            g_error_free (error);                                       \
+        }                                                               \
+                                                                        \
+        /* Go on to next step */                                        \
+        ctx = g_task_get_task_data (task);                              \
+        ctx->step++;                                                    \
+        interface_initialization_step (task);                           \
+    }
+
+#undef UINT_REPLY_READY_FN
+#define UINT_REPLY_READY_FN(NAME,DISPLAY)                               \
+    static void                                                         \
+    init_load_##NAME##_ready (MMBaseSim    *self,                       \
+                              GAsyncResult *res,                        \
+                              GTask        *task)                       \
+    {                                                                   \
+        InitAsyncContext  *ctx;                                         \
+        g_autoptr(GError)  error = NULL;                                \
+        guint              val;                                         \
+                                                                        \
+        val = (guint) MM_BASE_SIM_GET_CLASS (self)->load_##NAME##_finish (self, res, &error); \
+        mm_gdbus_sim_set_##NAME (MM_GDBUS_SIM (self), val);             \
+                                                                        \
+        if (error)                                                      \
+            mm_obj_warn (self, "couldn't load %s: %s", DISPLAY, error->message); \
+                                                                        \
+        /* Go on to next step */                                        \
+        ctx = g_task_get_task_data (task);                              \
+        ctx->step++;                                                    \
+        interface_initialization_step (task);                           \
+    }
+
+#define BYTEARRAY_REPLY_READY_FN(NAME,DISPLAY)                                    \
+    static void                                                                   \
+    init_load_##NAME##_ready (MMBaseSim    *self,                                 \
+                              GAsyncResult *res,                                  \
+                              GTask        *task)                                 \
+    {                                                                             \
+        InitAsyncContext      *ctx;                                               \
+        g_autoptr(GError)      error = NULL;                                      \
+        g_autoptr(GByteArray)  bytearray = NULL;                                  \
+                                                                                  \
+        bytearray = MM_BASE_SIM_GET_CLASS (self)->load_##NAME##_finish (self, res, &error); \
+        mm_gdbus_sim_set_##NAME (MM_GDBUS_SIM (self),                             \
+                                 (bytearray ?                                     \
+                                  g_variant_new_fixed_array (G_VARIANT_TYPE_BYTE, \
+                                                             bytearray->data,     \
+                                                             bytearray->len,      \
+                                                             sizeof (guint8)) :   \
+                                  NULL));                                         \
+                                                                                  \
+        if (error)                                                                \
+            mm_obj_warn (self, "couldn't load %s: %s", DISPLAY, error->message);  \
+                                                                                  \
+        /* Go on to next step */                                                  \
+        ctx = g_task_get_task_data (task);                                        \
+        ctx->step++;                                                              \
+        interface_initialization_step (task);                                     \
+    }
+
+UINT_REPLY_READY_FN (removability, "removability")
+STR_REPLY_READY_FN  (eid, "EID")
+BYTEARRAY_REPLY_READY_FN (gid2, "GID2")
+BYTEARRAY_REPLY_READY_FN (gid1, "GID1")
+
+static void
+init_load_preferred_networks_ready (MMBaseSim    *self,
+                                    GAsyncResult *res,
+                                    GTask        *task)
+{
+    InitAsyncContext *ctx;
+    GError           *error = NULL;
+    GList            *preferred_nets_list;
+
+    preferred_nets_list = MM_BASE_SIM_GET_CLASS (self)->load_preferred_networks_finish (self, res, &error);
+    if (error) {
+        mm_obj_warn (self, "couldn't load list of preferred networks: %s", error->message);
+        g_error_free (error);
+    }
+
+    mm_gdbus_sim_set_preferred_networks (MM_GDBUS_SIM (self),
+                                         mm_sim_preferred_network_list_get_variant (preferred_nets_list));
+    g_list_free_full (preferred_nets_list, (GDestroyNotify) mm_sim_preferred_network_free);
+
+    /* Go on to next step */
+    ctx = g_task_get_task_data (task);
+    ctx->step++;
+    interface_initialization_step (task);
+}
+
+static void
+init_load_emergency_numbers_ready (MMBaseSim    *self,
+                                   GAsyncResult *res,
+                                   GTask        *task)
+{
+    InitAsyncContext *ctx;
+    GError           *error = NULL;
+    GStrv             str_list;
+
+    str_list = MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers_finish (self, res, &error);
+    if (error) {
+        mm_obj_warn (self, "couldn't load list of emergency numbers: %s", error->message);
+        g_error_free (error);
+    }
+
+    if (str_list) {
+        mm_gdbus_sim_set_emergency_numbers (MM_GDBUS_SIM (self), (const gchar *const *) str_list);
+        g_strfreev (str_list);
+    }
+
+    /* Go on to next step */
+    ctx = g_task_get_task_data (task);
+    ctx->step++;
+    interface_initialization_step (task);
+}
+
+STR_REPLY_READY_FN (operator_name, "operator name")
+STR_REPLY_READY_FN (operator_identifier, "operator identifier")
+STR_REPLY_READY_FN (imsi, "IMSI")
 
 static void
 init_load_sim_identifier_ready (MMBaseSim *self,
@@ -2329,87 +2631,8 @@ init_load_sim_identifier_ready (MMBaseSim *self,
     interface_initialization_step (task);
 }
 
-static void
-init_load_emergency_numbers_ready (MMBaseSim    *self,
-                                   GAsyncResult *res,
-                                   GTask        *task)
-{
-    InitAsyncContext *ctx;
-    GError           *error = NULL;
-    GStrv             str_list;
-
-    str_list = MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers_finish (self, res, &error);
-    if (error) {
-        mm_obj_warn (self, "couldn't load list of emergency numbers: %s", error->message);
-        g_error_free (error);
-    }
-
-    if (str_list) {
-        mm_gdbus_sim_set_emergency_numbers (MM_GDBUS_SIM (self), (const gchar *const *) str_list);
-        g_strfreev (str_list);
-    }
-
-    /* Go on to next step */
-    ctx = g_task_get_task_data (task);
-    ctx->step++;
-    interface_initialization_step (task);
-}
-
-static void
-init_load_preferred_networks_ready (MMBaseSim    *self,
-                                    GAsyncResult *res,
-                                    GTask        *task)
-{
-    InitAsyncContext *ctx;
-    GError           *error = NULL;
-    GList            *preferred_nets_list;
-
-    preferred_nets_list = MM_BASE_SIM_GET_CLASS (self)->load_preferred_networks_finish (self, res, &error);
-    if (error) {
-        mm_obj_warn (self, "couldn't load list of preferred networks: %s", error->message);
-        g_error_free (error);
-    }
-
-    mm_gdbus_sim_set_preferred_networks (MM_GDBUS_SIM (self),
-                                         mm_sim_preferred_network_list_get_variant (preferred_nets_list));
-    g_list_free_full (preferred_nets_list, (GDestroyNotify) mm_sim_preferred_network_free);
-
-    /* Go on to next step */
-    ctx = g_task_get_task_data (task);
-    ctx->step++;
-    interface_initialization_step (task);
-}
-
-#undef STR_REPLY_READY_FN
-#define STR_REPLY_READY_FN(NAME,DISPLAY)                                \
-    static void                                                         \
-    init_load_##NAME##_ready (MMBaseSim *self,                          \
-                              GAsyncResult *res,                        \
-                              GTask *task)                              \
-    {                                                                   \
-        InitAsyncContext *ctx;                                          \
-        GError *error = NULL;                                           \
-        gchar *val;                                                     \
-                                                                        \
-        val = MM_BASE_SIM_GET_CLASS (self)->load_##NAME##_finish (self, res, &error); \
-        mm_gdbus_sim_set_##NAME (MM_GDBUS_SIM (self), val);             \
-        g_free (val);                                                   \
-                                                                        \
-        if (error) {                                                    \
-            mm_obj_warn (self, "couldn't load %s: %s", DISPLAY, error->message); \
-            g_error_free (error);                                       \
-        }                                                               \
-                                                                        \
-        /* Go on to next step */                                        \
-        ctx = g_task_get_task_data (task);                              \
-        ctx->step++;                                                    \
-        interface_initialization_step (task);                           \
-    }
-
-STR_REPLY_READY_FN (imsi, "IMSI")
-STR_REPLY_READY_FN (eid, "EID")
-STR_REPLY_READY_FN (operator_identifier, "operator identifier")
-STR_REPLY_READY_FN (operator_name, "operator name")
+UINT_REPLY_READY_FN (esim_status,  "esim status")
+UINT_REPLY_READY_FN (sim_type,     "sim type")
 
 static void
 init_wait_sim_ready (MMBaseSim    *self,
@@ -2459,13 +2682,44 @@ interface_initialization_step (GTask *task)
         ctx->step++;
         /* Fall through */
 
+    case INITIALIZATION_STEP_SIM_TYPE:
+        if (mm_gdbus_sim_get_sim_type (MM_GDBUS_SIM (self)) == MM_SIM_TYPE_UNKNOWN &&
+            MM_BASE_SIM_GET_CLASS (self)->load_sim_type &&
+            MM_BASE_SIM_GET_CLASS (self)->load_sim_type_finish) {
+            MM_BASE_SIM_GET_CLASS (self)->load_sim_type (
+                self,
+                (GAsyncReadyCallback)init_load_sim_type_ready,
+                task);
+            return;
+        }
+        ctx->step++;
+        /* Fall through */
+
+    case INITIALIZATION_STEP_ESIM_STATUS:
+        /* Don't load eSIM status if the SIM is known to be a physical SIM */
+        if (IS_PSIM (self))
+            mm_obj_dbg (self, "not loading eSIM status in physical SIM");
+        else if (mm_gdbus_sim_get_esim_status (MM_GDBUS_SIM (self)) == MM_SIM_ESIM_STATUS_UNKNOWN &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_esim_status &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_esim_status_finish) {
+            MM_BASE_SIM_GET_CLASS (self)->load_esim_status (
+                self,
+                (GAsyncReadyCallback)init_load_esim_status_ready,
+                task);
+            return;
+        }
+        ctx->step++;
+        /* Fall through */
+
     case INITIALIZATION_STEP_SIM_IDENTIFIER:
-        /* SIM ID is meant to be loaded only once during the whole
-         * lifetime of the modem. Therefore, if we already have them loaded,
-         * don't try to load them again. */
-        if (mm_gdbus_sim_get_sim_identifier (MM_GDBUS_SIM (self)) == NULL &&
-            MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier &&
-            MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier_finish) {
+        /* Don't load SIM ICCID if the SIM is known to be an eSIM without
+         * profiles; otherwise (if physical SIM, or if eSIM with profile, or if
+         * SIM type unknown) try to load it. */
+        if (IS_ESIM_WITHOUT_PROFILES (self))
+            mm_obj_dbg (self, "not loading SIM identifier in eSIM without profiles");
+        else if (mm_gdbus_sim_get_sim_identifier (MM_GDBUS_SIM (self)) == NULL &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier_finish) {
             MM_BASE_SIM_GET_CLASS (self)->load_sim_identifier (
                 self,
                 (GAsyncReadyCallback)init_load_sim_identifier_ready,
@@ -2476,12 +2730,14 @@ interface_initialization_step (GTask *task)
         /* Fall through */
 
     case INITIALIZATION_STEP_IMSI:
-        /* IMSI is meant to be loaded only once during the whole
-         * lifetime of the modem. Therefore, if we already have them loaded,
-         * don't try to load them again. */
-        if (mm_gdbus_sim_get_imsi (MM_GDBUS_SIM (self)) == NULL &&
-            MM_BASE_SIM_GET_CLASS (self)->load_imsi &&
-            MM_BASE_SIM_GET_CLASS (self)->load_imsi_finish) {
+        /* Don't load SIM IMSI if the SIM is known to be an eSIM without
+         * profiles; otherwise (if physical SIM, or if eSIM with profile, or if
+         * SIM type unknown) try to load it. */
+        if (IS_ESIM_WITHOUT_PROFILES (self))
+            mm_obj_dbg (self, "not loading IMSI in eSIM without profiles");
+        else if (mm_gdbus_sim_get_imsi (MM_GDBUS_SIM (self)) == NULL &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_imsi &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_imsi_finish) {
             MM_BASE_SIM_GET_CLASS (self)->load_imsi (
                 self,
                 (GAsyncReadyCallback)init_load_imsi_ready,
@@ -2491,29 +2747,15 @@ interface_initialization_step (GTask *task)
         ctx->step++;
         /* Fall through */
 
-    case INITIALIZATION_STEP_EID:
-        /* EID is meant to be loaded only once during the whole
-         * lifetime of the modem. Therefore, if we already have them loaded,
-         * don't try to load them again. */
-        if (mm_gdbus_sim_get_eid (MM_GDBUS_SIM (self)) == NULL &&
-            MM_BASE_SIM_GET_CLASS (self)->load_eid &&
-            MM_BASE_SIM_GET_CLASS (self)->load_eid_finish) {
-            MM_BASE_SIM_GET_CLASS (self)->load_eid (
-                self,
-                (GAsyncReadyCallback)init_load_eid_ready,
-                task);
-            return;
-        }
-        ctx->step++;
-        /* Fall through */
-
     case INITIALIZATION_STEP_OPERATOR_ID:
-        /* Operator ID is meant to be loaded only once during the whole
-         * lifetime of the modem. Therefore, if we already have them loaded,
-         * don't try to load them again. */
-        if (mm_gdbus_sim_get_operator_identifier (MM_GDBUS_SIM (self)) == NULL &&
-            MM_BASE_SIM_GET_CLASS (self)->load_operator_identifier &&
-            MM_BASE_SIM_GET_CLASS (self)->load_operator_identifier_finish) {
+        /* Don't load operator ID if the SIM is known to be an eSIM without
+         * profiles; otherwise (if physical SIM, or if eSIM with profile, or if
+         * SIM type unknown) try to load it. */
+        if (IS_ESIM_WITHOUT_PROFILES (self))
+            mm_obj_dbg (self, "not loading operator ID in eSIM without profiles");
+        else if (mm_gdbus_sim_get_operator_identifier (MM_GDBUS_SIM (self)) == NULL &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_operator_identifier &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_operator_identifier_finish) {
             MM_BASE_SIM_GET_CLASS (self)->load_operator_identifier (
                 self,
                 (GAsyncReadyCallback)init_load_operator_identifier_ready,
@@ -2524,12 +2766,14 @@ interface_initialization_step (GTask *task)
         /* Fall through */
 
     case INITIALIZATION_STEP_OPERATOR_NAME:
-        /* Operator Name is meant to be loaded only once during the whole
-         * lifetime of the modem. Therefore, if we already have them loaded,
-         * don't try to load them again. */
-        if (mm_gdbus_sim_get_operator_name (MM_GDBUS_SIM (self)) == NULL &&
-            MM_BASE_SIM_GET_CLASS (self)->load_operator_name &&
-            MM_BASE_SIM_GET_CLASS (self)->load_operator_name_finish) {
+        /* Don't load operator name if the SIM is known to be an eSIM without
+         * profiles; otherwise (if physical SIM, or if eSIM with profile, or if
+         * SIM type unknown) try to load it. */
+        if (IS_ESIM_WITHOUT_PROFILES (self))
+            mm_obj_dbg (self, "not loading operator name in eSIM without profiles");
+        else if (mm_gdbus_sim_get_operator_name (MM_GDBUS_SIM (self)) == NULL &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_operator_name &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_operator_name_finish) {
             MM_BASE_SIM_GET_CLASS (self)->load_operator_name (
                 self,
                 (GAsyncReadyCallback)init_load_operator_name_ready,
@@ -2540,12 +2784,14 @@ interface_initialization_step (GTask *task)
         /* Fall through */
 
     case INITIALIZATION_STEP_EMERGENCY_NUMBERS:
-        /* Emergency Numbers are meant to be loaded only once during the whole
-         * lifetime of the modem. Therefore, if we already have them loaded,
-         * don't try to load them again. */
-        if (mm_gdbus_sim_get_emergency_numbers (MM_GDBUS_SIM (self)) == NULL &&
-            MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers &&
-            MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers_finish) {
+        /* Don't load emergency numbers if the SIM is known to be an eSIM without
+         * profiles; otherwise (if physical SIM, or if eSIM with profile, or if
+         * SIM type unknown) try to load it. */
+        if (IS_ESIM_WITHOUT_PROFILES (self))
+            mm_obj_dbg (self, "not loading emergency numbers in eSIM without profiles");
+        else if (mm_gdbus_sim_get_emergency_numbers (MM_GDBUS_SIM (self)) == NULL &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers_finish) {
             MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers (
                 self,
                 (GAsyncReadyCallback)init_load_emergency_numbers_ready,
@@ -2556,11 +2802,85 @@ interface_initialization_step (GTask *task)
         /* Fall through */
 
     case INITIALIZATION_STEP_PREFERRED_NETWORKS:
-        if (MM_BASE_SIM_GET_CLASS (self)->load_preferred_networks &&
-            MM_BASE_SIM_GET_CLASS (self)->load_preferred_networks_finish) {
+        /* Don't load preferred networks if the SIM is known to be an eSIM without
+         * profiles; otherwise (if physical SIM, or if eSIM with profile, or if
+         * SIM type unknown) try to load it. */
+        if (IS_ESIM_WITHOUT_PROFILES (self))
+            mm_obj_dbg (self, "not loading preferred networks in eSIM without profiles");
+        else if (mm_gdbus_sim_get_preferred_networks (MM_GDBUS_SIM (self)) == NULL &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_preferred_networks &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_preferred_networks_finish) {
             MM_BASE_SIM_GET_CLASS (self)->load_preferred_networks (
                 self,
                 (GAsyncReadyCallback)init_load_preferred_networks_ready,
+                task);
+            return;
+        }
+        ctx->step++;
+        /* Fall through */
+
+    case INITIALIZATION_STEP_GID1:
+        /* Don't load GID1 if the SIM is known to be an eSIM without profiles;
+         * otherwise (if physical SIM, or if eSIM with profile, or if
+         * SIM type unknown) try to load it. */
+        if (IS_ESIM_WITHOUT_PROFILES (self))
+            mm_obj_dbg (self, "not loading GID1 in eSIM without profiles");
+        else if (mm_gdbus_sim_get_gid1 (MM_GDBUS_SIM (self)) == NULL &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_gid1 &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_gid1_finish) {
+            MM_BASE_SIM_GET_CLASS (self)->load_gid1 (
+                self,
+                (GAsyncReadyCallback)init_load_gid1_ready,
+                task);
+            return;
+        }
+        ctx->step++;
+        /* Fall through */
+
+    case INITIALIZATION_STEP_GID2:
+        /* Don't load GID2 if the SIM is known to be an eSIM without profiles;
+         * otherwise (if physical SIM, or if eSIM with profile, or if
+         * SIM type unknown) try to load it. */
+        if (IS_ESIM_WITHOUT_PROFILES (self))
+            mm_obj_dbg (self, "not loading GID2 in eSIM without profiles");
+        else if (mm_gdbus_sim_get_gid2 (MM_GDBUS_SIM (self)) == NULL &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_gid2 &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_gid2_finish) {
+            MM_BASE_SIM_GET_CLASS (self)->load_gid2 (
+                self,
+                (GAsyncReadyCallback)init_load_gid2_ready,
+                task);
+            return;
+        }
+        ctx->step++;
+        /* Fall through */
+
+    case INITIALIZATION_STEP_EID:
+        /* Don't load EID if the SIM is known to be a physical SIM; otherwise
+         * (if eSIM with or without profiles) try to load it. */
+        if (IS_PSIM (self))
+            mm_obj_dbg (self, "not loading EID in physical SIM");
+        else if (mm_gdbus_sim_get_eid (MM_GDBUS_SIM (self)) == NULL &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_eid &&
+                 MM_BASE_SIM_GET_CLASS (self)->load_eid_finish) {
+            MM_BASE_SIM_GET_CLASS (self)->load_eid (
+                self,
+                (GAsyncReadyCallback)init_load_eid_ready,
+                task);
+            return;
+        }
+        ctx->step++;
+        /* Fall through */
+
+    case INITIALIZATION_STEP_REMOVABILITY:
+        /* Although not very common, there are removable eSIMs, so always try to
+         * load it, regardless of SIM type. */
+        if (mm_gdbus_sim_get_removability (MM_GDBUS_SIM (self)) == MM_SIM_REMOVABILITY_UNKNOWN &&
+            MM_BASE_SIM_GET_CLASS (self)->load_removability &&
+            MM_BASE_SIM_GET_CLASS (self)->load_removability_finish) {
+            MM_BASE_SIM_GET_CLASS (self)->load_removability (
+                self,
+                (GAsyncReadyCallback)init_load_removability_ready,
                 task);
             return;
         }
@@ -2615,6 +2935,8 @@ initable_init_async (GAsyncInitable *initable,
     mm_gdbus_sim_set_eid (MM_GDBUS_SIM (initable), NULL);
     mm_gdbus_sim_set_operator_identifier (MM_GDBUS_SIM (initable), NULL);
     mm_gdbus_sim_set_operator_name (MM_GDBUS_SIM (initable), NULL);
+    mm_gdbus_sim_set_gid1 (MM_GDBUS_SIM (initable), NULL);
+    mm_gdbus_sim_set_gid2 (MM_GDBUS_SIM (initable), NULL);
 
     common_init_async (initable, cancellable, callback, user_data);
 }
@@ -2822,6 +3144,10 @@ mm_base_sim_class_init (MMBaseSimClass *klass)
     klass->load_emergency_numbers_finish = load_emergency_numbers_finish;
     klass->load_preferred_networks = load_preferred_networks;
     klass->load_preferred_networks_finish = load_preferred_networks_finish;
+    klass->load_gid1 = load_gid1;
+    klass->load_gid1_finish = common_load_gid_finish;
+    klass->load_gid2 = load_gid2;
+    klass->load_gid2_finish = common_load_gid_finish;
     klass->set_preferred_networks = set_preferred_networks;
     klass->set_preferred_networks_finish = set_preferred_networks_finish;
     klass->send_pin = send_pin;
