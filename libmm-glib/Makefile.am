@@ -32,6 +32,8 @@ libmm_glib_la_SOURCES = \
 	mm-modem-time.c \
 	mm-modem-firmware.h \
 	mm-modem-firmware.c \
+	mm-modem-sar.h \
+	mm-modem-sar.c \
 	mm-modem-signal.h \
 	mm-modem-signal.c \
 	mm-modem-oma.h \
@@ -95,6 +97,24 @@ libmm_glib_la_SOURCES = \
 	mm-sim-preferred-network.c \
 	mm-3gpp-profile.h \
 	mm-3gpp-profile.c \
+	mm-signal-threshold-properties.h \
+	mm-signal-threshold-properties.c \
+	mm-nr5g-registration-settings.h \
+	mm-nr5g-registration-settings.c \
+	mm-cell-info.h \
+	mm-cell-info.c \
+	mm-cell-info-cdma.h \
+	mm-cell-info-cdma.c \
+	mm-cell-info-gsm.h \
+	mm-cell-info-gsm.c \
+	mm-cell-info-umts.h \
+	mm-cell-info-umts.c \
+	mm-cell-info-tdscdma.h \
+	mm-cell-info-tdscdma.c \
+	mm-cell-info-lte.h \
+	mm-cell-info-lte.c \
+	mm-cell-info-nr5g.h \
+	mm-cell-info-nr5g.c \
 	mm-compat.h \
 	mm-compat.c \
 	$(NULL)
@@ -140,6 +160,7 @@ include_HEADERS = \
 	mm-modem-location.h \
 	mm-modem-time.h \
 	mm-modem-firmware.h \
+	mm-modem-sar.h \
 	mm-modem-signal.h \
 	mm-modem-oma.h \
 	mm-modem-simple.h \
@@ -171,6 +192,15 @@ include_HEADERS = \
 	mm-call-audio-format.h \
 	mm-sim-preferred-network.h \
 	mm-3gpp-profile.h \
+	mm-signal-threshold-properties.h \
+	mm-nr5g-registration-settings.h \
+	mm-cell-info.h \
+	mm-cell-info-cdma.h \
+	mm-cell-info-gsm.h \
+	mm-cell-info-umts.h \
+	mm-cell-info-tdscdma.h \
+	mm-cell-info-lte.h \
+	mm-cell-info-nr5g.h \
 	mm-compat.h \
 	$(NULL)
 

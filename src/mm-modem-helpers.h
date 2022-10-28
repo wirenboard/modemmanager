@@ -409,6 +409,9 @@ gboolean mm_3gpp_parse_ccwa_service_query_response (const gchar  *response,
                                                     gboolean     *status,
                                                     GError      **error);
 
+/* CGATT helpers */
+gchar *mm_3gpp_build_cgatt_set_request (MMModem3gppPacketServiceState state);
+
 
 /* Additional 3GPP-specific helpers */
 
@@ -476,6 +479,10 @@ gint   mm_3gpp_profile_list_find_best  (GList                  *profile_list,
 MM3gppProfile *mm_3gpp_profile_list_find_by_profile_id (GList   *profile_list,
                                                         gint     profile_id,
                                                         GError **error);
+
+MM3gppProfile *mm_3gpp_profile_list_find_by_apn_type (GList            *profile_list,
+                                                      MMBearerApnType   apn_type,
+                                                      GError          **error);
 
 /*****************************************************************************/
 /* CDMA specific helpers and utilities */
@@ -560,5 +567,21 @@ gboolean mm_sim_parse_cpol_test_response (const gchar  *response,
 /* Useful when clamp-ing an unsigned integer with implicit low limit set to 0,
  * and in order to avoid -Wtype-limits warnings. */
 #define MM_CLAMP_HIGH(x, high) (((x) > (high)) ? (high) : (x))
+
+/*****************************************************************************/
+/* Signal quality percentage from different sources */
+
+/* Limit the value betweeen [-113,-51] and scale it to a percentage */
+#define MM_RSSI_TO_QUALITY(rssi)                                   \
+    (guint8)(100 - ((CLAMP (rssi, -113, -51) + 51) * 100 / (-113 + 51)))
+
+/* Limit the value betweeen [-110,-60] and scale it to a percentage */
+#define MM_RSRP_TO_QUALITY(rsrp)                                   \
+    (guint8)(100 - ((CLAMP (rsrp, -110, -60) + 60) * 100 / (-110 + 60)))
+
+/*****************************************************************************/
+
+/* Helper function to decode eid read from esim */
+gchar *mm_decode_eid (const gchar *eid, gsize eid_len);
 
 #endif  /* MM_MODEM_HELPERS_H */

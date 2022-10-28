@@ -33,6 +33,8 @@
 static void iface_modem_init  (MMIfaceModem  *iface);
 static void shared_telit_init (MMSharedTelit *iface);
 
+static MMIfaceModem *iface_modem_parent;
+
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemMbimTelit, mm_broadband_modem_mbim_telit, MM_TYPE_BROADBAND_MODEM_MBIM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_TELIT, shared_telit_init))
@@ -55,17 +57,18 @@ load_supported_modes_ready (MMIfaceModem *self,
 {
     MMModemModeCombination modes_combination;
     MMModemMode modes_mask = MM_MODEM_MODE_NONE;
-    const gchar *response;
-    GArray      *modes;
-    GArray      *all;
-    GArray      *combinations;
-    GArray      *filtered;
-    GError      *error = NULL;
-    guint        i;
+    const gchar   *response;
+    GArray        *modes;
+    GArray        *all;
+    GArray        *combinations;
+    GArray        *filtered;
+    GError        *error = NULL;
+    MMSharedTelit *shared = MM_SHARED_TELIT (self);
+    guint          i;
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (error) {
-        g_prefix_error (&error, "ceneric query of supported 3GPP networks with WS46=? failed: ");
+        g_prefix_error (&error, "generic query of supported 3GPP networks with WS46=? failed: ");
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -105,6 +108,7 @@ load_supported_modes_ready (MMIfaceModem *self,
     g_array_unref (all);
     g_array_unref (combinations);
 
+    mm_shared_telit_store_supported_modes (shared, filtered);
     g_task_return_pointer (task, filtered, (GDestroyNotify) g_array_unref);
     g_object_unref (task);
 }
@@ -126,25 +130,71 @@ load_supported_modes (MMIfaceModem *self,
 }
 
 /*****************************************************************************/
+/* Load revision (Modem interface) */
+
+static gchar *
+load_revision_finish (MMIfaceModem *self,
+                      GAsyncResult *res,
+                      GError      **error)
+{
+    return g_task_propagate_pointer (G_TASK (res), error);
+}
+
+static void
+parent_load_revision_ready (MMIfaceModem *self,
+                            GAsyncResult *res,
+                            GTask        *task)
+{
+    GError *error = NULL;
+    gchar  *revision = NULL;
+
+    revision = iface_modem_parent->load_revision_finish (self, res, &error);
+    if (!revision) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+    mm_shared_telit_store_revision (MM_SHARED_TELIT (self), revision);
+    g_task_return_pointer (task, revision, g_free);
+    g_object_unref (task);
+}
+
+static void
+load_revision (MMIfaceModem        *self,
+               GAsyncReadyCallback  callback,
+               gpointer             user_data)
+{
+    /* Run parent's loading */
+    /* Telit's custom revision loading (in telit/mm-shared) is AT-only and the
+     * MBIM modem might not have an AT port available, so we call the parent's
+     * load_revision and store the revision taken from the firmware info capabilities. */
+    iface_modem_parent->load_revision (
+        MM_IFACE_MODEM (self),
+        (GAsyncReadyCallback)parent_load_revision_ready,
+        g_task_new (self, NULL, callback, user_data));
+}
+
+/*****************************************************************************/
 
 MMBroadbandModemMbimTelit *
 mm_broadband_modem_mbim_telit_new (const gchar  *device,
                                    const gchar **drivers,
                                    const gchar  *plugin,
                                    guint16       vendor_id,
-                                   guint16       product_id)
+                                   guint16       product_id,
+                                   guint16       subsystem_vendor_id)
 {
     return g_object_new (MM_TYPE_BROADBAND_MODEM_MBIM_TELIT,
-                         MM_BASE_MODEM_DEVICE,     device,
-                         MM_BASE_MODEM_DRIVERS,    drivers,
-                         MM_BASE_MODEM_PLUGIN,     plugin,
-                         MM_BASE_MODEM_VENDOR_ID,  vendor_id,
-                         MM_BASE_MODEM_PRODUCT_ID, product_id,
+                         MM_BASE_MODEM_DEVICE,              device,
+                         MM_BASE_MODEM_DRIVERS,             drivers,
+                         MM_BASE_MODEM_PLUGIN,              plugin,
+                         MM_BASE_MODEM_VENDOR_ID,           vendor_id,
+                         MM_BASE_MODEM_PRODUCT_ID,          product_id,
+                         MM_BASE_MODEM_SUBSYSTEM_VENDOR_ID, subsystem_vendor_id,
                          /* MBIM bearer supports NET only */
                          MM_BASE_MODEM_DATA_NET_SUPPORTED, TRUE,
                          MM_BASE_MODEM_DATA_TTY_SUPPORTED, FALSE,
                          MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED, TRUE,
-                         MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED, FALSE,
                          NULL);
 }
 
@@ -156,6 +206,8 @@ mm_broadband_modem_mbim_telit_init (MMBroadbandModemMbimTelit *self)
 static void
 iface_modem_init (MMIfaceModem *iface)
 {
+    iface_modem_parent = g_type_interface_peek_parent (iface);
+
     iface->set_current_bands = mm_shared_telit_modem_set_current_bands;
     iface->set_current_bands_finish = mm_shared_telit_modem_set_current_bands_finish;
     iface->load_current_bands = mm_shared_telit_modem_load_current_bands;
@@ -168,11 +220,20 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_current_modes_finish = mm_shared_telit_load_current_modes_finish;
     iface->set_current_modes = mm_shared_telit_set_current_modes;
     iface->set_current_modes_finish = mm_shared_telit_set_current_modes_finish;
+    iface->load_revision_finish = load_revision_finish;
+    iface->load_revision = load_revision;
+}
+
+static MMIfaceModem *
+peek_parent_modem_interface (MMSharedTelit *self)
+{
+    return iface_modem_parent;
 }
 
 static void
 shared_telit_init (MMSharedTelit *iface)
 {
+    iface->peek_parent_modem_interface = peek_parent_modem_interface;
 }
 
 static void

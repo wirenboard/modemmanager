@@ -49,6 +49,7 @@ create_modem (MMPlugin *self,
               const gchar **drivers,
               guint16 vendor,
               guint16 product,
+              guint16 subsystem_vendor,
               GList *probes,
               GError **error)
 {
@@ -115,7 +116,7 @@ mm_plugin_create (void)
                       MM_PLUGIN_ALLOWED_VENDOR_IDS, vendor_ids,
                       MM_PLUGIN_ALLOWED_DRIVERS,    drivers,
                       MM_PLUGIN_ALLOWED_AT,         TRUE,
-                      MM_PLUGIN_ALLOWED_QCDM,       TRUE,
+                      MM_PLUGIN_REQUIRED_QCDM,      TRUE,
                       MM_PLUGIN_ALLOWED_QMI,        TRUE,
                       MM_PLUGIN_ALLOWED_MBIM,       TRUE,
                       MM_PLUGIN_XMM_PROBE,          TRUE,

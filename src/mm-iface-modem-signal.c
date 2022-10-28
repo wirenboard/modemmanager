@@ -10,7 +10,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details:
  *
- * Copyright (C) 2013 Aleksander Morgado <aleksander@gnu.org>
+ * Copyright (C) 2013-2021 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2021 Intel Corporation
  */
 
 #include <ModemManager.h>
@@ -23,11 +24,51 @@
 
 #define SUPPORT_CHECKED_TAG "signal-support-checked-tag"
 #define SUPPORTED_TAG       "signal-supported-tag"
-#define REFRESH_CONTEXT_TAG "signal-refresh-context-tag"
 
 static GQuark support_checked_quark;
 static GQuark supported_quark;
-static GQuark refresh_context_quark;
+
+/*****************************************************************************/
+/* Private data context */
+
+#define PRIVATE_TAG "signal-private-tag"
+static GQuark private_quark;
+
+typedef struct {
+    /* interface enabled */
+    gboolean enabled;
+    /* polling-based reporting  */
+    guint    rate;
+    guint    timeout_source;
+    /* threshold-based reporting */
+    guint    rssi_threshold;
+    gboolean error_rate_threshold;
+} Private;
+
+static void
+private_free (Private *priv)
+{
+    if (priv->timeout_source)
+        g_source_remove (priv->timeout_source);
+    g_slice_free (Private, priv);
+}
+
+static Private *
+get_private (MMIfaceModemSignal *self)
+{
+    Private *priv;
+
+    if (G_UNLIKELY (!private_quark))
+        private_quark = g_quark_from_static_string (PRIVATE_TAG);
+
+    priv = g_object_get_qdata (G_OBJECT (self), private_quark);
+    if (!priv) {
+        priv = g_slice_new0 (Private);
+        g_object_set_qdata_full (G_OBJECT (self), private_quark, priv, (GDestroyNotify)private_free);
+    }
+
+    return priv;
+}
 
 /*****************************************************************************/
 
@@ -39,37 +80,108 @@ mm_iface_modem_signal_bind_simple_status (MMIfaceModemSignal *self,
 
 /*****************************************************************************/
 
-typedef struct {
-    guint rate;
-    guint timeout_source;
-} RefreshContext;
-
 static void
-refresh_context_free (RefreshContext *ctx)
+internal_signal_update (MMIfaceModemSignal *self,
+                        MMSignal           *cdma,
+                        MMSignal           *evdo,
+                        MMSignal           *gsm,
+                        MMSignal           *umts,
+                        MMSignal           *lte,
+                        MMSignal           *nr5g)
 {
-    if (ctx->timeout_source)
-        g_source_remove (ctx->timeout_source);
-    g_slice_free (RefreshContext, ctx);
-}
-
-static void
-clear_values (MMIfaceModemSignal *self)
-{
+    g_autoptr(GVariant)                   dict_cdma = NULL;
+    g_autoptr(GVariant)                   dict_evdo = NULL;
+    g_autoptr(GVariant)                   dict_gsm = NULL;
+    g_autoptr(GVariant)                   dict_umts = NULL;
+    g_autoptr(GVariant)                   dict_lte = NULL;
+    g_autoptr(GVariant)                   dict_nr5g = NULL;
     g_autoptr(MmGdbusModemSignalSkeleton) skeleton = NULL;
 
     g_object_get (self,
                   MM_IFACE_MODEM_SIGNAL_DBUS_SKELETON, &skeleton,
                   NULL);
-    if (!skeleton)
+    if (!skeleton) {
+        mm_obj_warn (self, "cannot update extended signal information: couldn't get interface skeleton");
         return;
+    }
 
-    mm_gdbus_modem_signal_set_cdma (MM_GDBUS_MODEM_SIGNAL (skeleton), NULL);
-    mm_gdbus_modem_signal_set_evdo (MM_GDBUS_MODEM_SIGNAL (skeleton), NULL);
-    mm_gdbus_modem_signal_set_gsm  (MM_GDBUS_MODEM_SIGNAL (skeleton), NULL);
-    mm_gdbus_modem_signal_set_umts (MM_GDBUS_MODEM_SIGNAL (skeleton), NULL);
-    mm_gdbus_modem_signal_set_lte  (MM_GDBUS_MODEM_SIGNAL (skeleton), NULL);
-    mm_gdbus_modem_signal_set_nr5g (MM_GDBUS_MODEM_SIGNAL (skeleton), NULL);
+    if (cdma) {
+        mm_obj_dbg (self, "cdma extended signal information updated");
+        dict_cdma = mm_signal_get_dictionary (cdma);
+    }
+    mm_gdbus_modem_signal_set_cdma (MM_GDBUS_MODEM_SIGNAL (skeleton), dict_cdma);
+
+    if (evdo) {
+        mm_obj_dbg (self, "evdo extended signal information updated");
+        dict_evdo = mm_signal_get_dictionary (evdo);
+    }
+    mm_gdbus_modem_signal_set_evdo (MM_GDBUS_MODEM_SIGNAL (skeleton), dict_evdo);
+
+    if (gsm) {
+        mm_obj_dbg (self, "gsm extended signal information updated");
+        dict_gsm = mm_signal_get_dictionary (gsm);
+    }
+    mm_gdbus_modem_signal_set_gsm (MM_GDBUS_MODEM_SIGNAL (skeleton), dict_gsm);
+
+    if (umts) {
+        mm_obj_dbg (self, "umts extended signal information updated");
+        dict_umts = mm_signal_get_dictionary (umts);
+    }
+    mm_gdbus_modem_signal_set_umts (MM_GDBUS_MODEM_SIGNAL (skeleton), dict_umts);
+
+    if (lte) {
+        mm_obj_dbg (self, "lte extended signal information updated");
+        dict_lte = mm_signal_get_dictionary (lte);
+    }
+    mm_gdbus_modem_signal_set_lte (MM_GDBUS_MODEM_SIGNAL (skeleton), dict_lte);
+
+    if (nr5g) {
+        mm_obj_dbg (self, "5gnr extended signal information updated");
+        dict_nr5g = mm_signal_get_dictionary (nr5g);
+    }
+    mm_gdbus_modem_signal_set_nr5g (MM_GDBUS_MODEM_SIGNAL (skeleton), dict_nr5g);
+
+    /* Flush right away */
+    g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (skeleton));
 }
+
+void
+mm_iface_modem_signal_update (MMIfaceModemSignal *self,
+                              MMSignal           *cdma,
+                              MMSignal           *evdo,
+                              MMSignal           *gsm,
+                              MMSignal           *umts,
+                              MMSignal           *lte,
+                              MMSignal           *nr5g)
+{
+    Private *priv;
+
+    priv = get_private (self);
+    if (!priv->enabled || (!priv->rate && !priv->rssi_threshold && !priv->error_rate_threshold)) {
+        mm_obj_dbg (self, "skipping extended signal information update...");
+        return;
+    }
+
+    internal_signal_update (self, cdma, evdo, gsm, umts, lte, nr5g);
+}
+
+/*****************************************************************************/
+
+static void
+check_interface_reset (MMIfaceModemSignal *self)
+{
+    Private *priv;
+
+    priv = get_private (self);
+
+    if (!priv->enabled || (!priv->rate && !priv->rssi_threshold && !priv->error_rate_threshold)) {
+        mm_obj_dbg (self, "reseting extended signal information...");
+        internal_signal_update (self, NULL, NULL, NULL, NULL, NULL, NULL);
+    }
+}
+
+/*****************************************************************************/
+/* Polling setup management */
 
 static void
 load_values_ready (MMIfaceModemSignal *self,
@@ -77,18 +189,11 @@ load_values_ready (MMIfaceModemSignal *self,
 {
     g_autoptr(GError)   error = NULL;
     g_autoptr(MMSignal) cdma = NULL;
-    g_autoptr(GVariant) dict_cdma = NULL;
     g_autoptr(MMSignal) evdo = NULL;
-    g_autoptr(GVariant) dict_evdo = NULL;
     g_autoptr(MMSignal) gsm = NULL;
-    g_autoptr(GVariant) dict_gsm = NULL;
     g_autoptr(MMSignal) umts = NULL;
-    g_autoptr(GVariant) dict_umts = NULL;
     g_autoptr(MMSignal) lte = NULL;
-    g_autoptr(GVariant) dict_lte = NULL;
     g_autoptr(MMSignal) nr5g = NULL;
-    g_autoptr(GVariant) dict_nr5g = NULL;
-    g_autoptr(MmGdbusModemSignalSkeleton) skeleton = NULL;
 
     if (!MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (self)->load_values_finish (
             self,
@@ -100,49 +205,15 @@ load_values_ready (MMIfaceModemSignal *self,
             &lte,
             &nr5g,
             &error)) {
-        mm_obj_warn (self, "couldn't load extended signal information: %s", error->message);
-        clear_values (self);
+        mm_obj_warn (self, "couldn't reload extended signal information: %s", error->message);
         return;
     }
 
-    g_object_get (self,
-                  MM_IFACE_MODEM_SIGNAL_DBUS_SKELETON, &skeleton,
-                  NULL);
-    if (!skeleton) {
-        mm_obj_warn (self, "cannot update extended signal information: couldn't get interface skeleton");
-        return;
-    }
-
-    if (cdma)
-        dict_cdma = mm_signal_get_dictionary (cdma);
-    mm_gdbus_modem_signal_set_cdma (MM_GDBUS_MODEM_SIGNAL (skeleton), dict_cdma);
-
-    if (evdo)
-        dict_evdo = mm_signal_get_dictionary (evdo);
-    mm_gdbus_modem_signal_set_evdo (MM_GDBUS_MODEM_SIGNAL (skeleton), dict_evdo);
-
-    if (gsm)
-        dict_gsm = mm_signal_get_dictionary (gsm);
-    mm_gdbus_modem_signal_set_gsm (MM_GDBUS_MODEM_SIGNAL (skeleton), dict_gsm);
-
-    if (umts)
-        dict_umts = mm_signal_get_dictionary (umts);
-    mm_gdbus_modem_signal_set_umts (MM_GDBUS_MODEM_SIGNAL (skeleton), dict_umts);
-
-    if (lte)
-        dict_lte = mm_signal_get_dictionary (lte);
-    mm_gdbus_modem_signal_set_lte (MM_GDBUS_MODEM_SIGNAL (skeleton), dict_lte);
-
-    if (nr5g)
-        dict_nr5g = mm_signal_get_dictionary (nr5g);
-    mm_gdbus_modem_signal_set_nr5g (MM_GDBUS_MODEM_SIGNAL (skeleton), dict_nr5g);
-
-    /* Flush right away */
-    g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (skeleton));
+    mm_iface_modem_signal_update (self, cdma, evdo, gsm, umts, lte, nr5g);
 }
 
 static gboolean
-refresh_context_cb (MMIfaceModemSignal *self)
+polling_context_cb (MMIfaceModemSignal *self)
 {
     MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (self)->load_values (
         self,
@@ -153,97 +224,103 @@ refresh_context_cb (MMIfaceModemSignal *self)
 }
 
 static void
-teardown_refresh_context (MMIfaceModemSignal *self)
+polling_restart (MMIfaceModemSignal *self)
 {
-    clear_values (self);
-    if (G_UNLIKELY (!refresh_context_quark))
-        refresh_context_quark  = g_quark_from_static_string (REFRESH_CONTEXT_TAG);
-    if (g_object_get_qdata (G_OBJECT (self), refresh_context_quark)) {
-        mm_obj_dbg (self, "extended signal information reporting disabled");
-        g_object_set_qdata (G_OBJECT (self), refresh_context_quark, NULL);
-    }
-}
+    Private  *priv;
+    gboolean  polling_setup;
 
-static gboolean
-setup_refresh_context (MMIfaceModemSignal *self,
-                       gboolean update_rate,
-                       guint new_rate,
-                       GError **error)
-{
-    MmGdbusModemSignal *skeleton;
-    RefreshContext *ctx;
-    MMModemState modem_state;
+    priv = get_private (self);
+    polling_setup = (priv->enabled && priv->rate);
 
-    if (G_UNLIKELY (!refresh_context_quark))
-        refresh_context_quark  = g_quark_from_static_string (REFRESH_CONTEXT_TAG);
+    mm_obj_dbg (self, "%s extended signal information polling: interface %s, rate %u seconds",
+                polling_setup ? "setting up" : "cleaning up",
+                priv->enabled ? "enabled" : "disabled",
+                priv->rate);
 
-    g_object_get (self,
-                  MM_IFACE_MODEM_SIGNAL_DBUS_SKELETON, &skeleton,
-                  MM_IFACE_MODEM_STATE, &modem_state,
-                  NULL);
-    if (!skeleton) {
-        g_set_error (error,
-                     MM_CORE_ERROR,
-                     MM_CORE_ERROR_FAILED,
-                     "Couldn't get interface skeleton");
-        return FALSE;
+    /* Stop polling */
+    if (!polling_setup) {
+        if (priv->timeout_source) {
+            g_source_remove (priv->timeout_source);
+            priv->timeout_source = 0;
+        }
+        return;
     }
 
-    if (update_rate)
-        mm_gdbus_modem_signal_set_rate (skeleton, new_rate);
-    else
-        new_rate = mm_gdbus_modem_signal_get_rate (skeleton);
-    g_object_unref (skeleton);
-
-    /* User disabling? */
-    if (new_rate == 0) {
-        mm_obj_dbg (self, "extended signal information reporting disabled (rate: 0 seconds)");
-        clear_values (self);
-        g_object_set_qdata (G_OBJECT (self), refresh_context_quark, NULL);
-        return TRUE;
-    }
-
-    if (modem_state < MM_MODEM_STATE_ENABLING) {
-        mm_obj_dbg (self, "extended signal information reporting disabled (modem not yet enabled)");
-        return TRUE;
-    }
-
-    /* Setup refresh context */
-    ctx = g_object_get_qdata (G_OBJECT (self), refresh_context_quark);
-    if (!ctx) {
-        ctx = g_slice_new0 (RefreshContext);
-        g_object_set_qdata_full (G_OBJECT (self),
-                                 refresh_context_quark,
-                                 ctx,
-                                 (GDestroyNotify)refresh_context_free);
-    }
-
-    /* We're enabling, compare to old rate */
-    if (ctx->rate == new_rate) {
-        /* Already there */
-        return TRUE;
-    }
-
-    /* Update refresh context */
-    mm_obj_dbg (self, "extended signal information reporting enabled (rate: %u seconds)", new_rate);
-    ctx->rate = new_rate;
-    if (ctx->timeout_source)
-        g_source_remove (ctx->timeout_source);
-    ctx->timeout_source = g_timeout_add_seconds (ctx->rate, (GSourceFunc) refresh_context_cb, self);
+    /* Start/restart polling */
+    if (priv->timeout_source)
+        g_source_remove (priv->timeout_source);
+    priv->timeout_source = g_timeout_add_seconds (priv->rate, (GSourceFunc) polling_context_cb, self);
 
     /* Also launch right away */
-    refresh_context_cb (self);
+    polling_context_cb (self);
+}
 
-    return TRUE;
+/*****************************************************************************/
+/* Thresholds setup management */
+
+static gboolean
+thresholds_restart_finish (MMIfaceModemSignal  *self,
+                           GAsyncResult        *res,
+                           GError             **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+setup_thresholds_ready (MMIfaceModemSignal *self,
+                        GAsyncResult       *res,
+                        GTask              *task)
+{
+    GError *error = NULL;
+
+    if (!MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (self)->setup_thresholds_finish (self, res, &error))
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+thresholds_restart (MMIfaceModemSignal  *self,
+                    GAsyncReadyCallback  callback,
+                    gpointer             user_data)
+{
+    GTask    *task;
+    Private  *priv;
+    gboolean  threshold_setup;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    if (!MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (self)->setup_thresholds ||
+        !MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (self)->setup_thresholds_finish) {
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    priv = get_private (self);
+    threshold_setup = (priv->enabled && (priv->rssi_threshold || priv->error_rate_threshold));
+
+    mm_obj_dbg (self, "%s extended signal information thresholds: interface %s, rssi threshold %u dBm, error rate threshold %s",
+                threshold_setup ? "setting up" : "cleaning up",
+                priv->enabled ? "enabled" : "disabled",
+                priv->rssi_threshold,
+                priv->error_rate_threshold ? "enabled" : "disabled");
+
+    MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (self)->setup_thresholds (
+        self,
+        priv->rssi_threshold,
+        priv->error_rate_threshold,
+        (GAsyncReadyCallback)setup_thresholds_ready,
+        task);
 }
 
 /*****************************************************************************/
 
 typedef struct {
     GDBusMethodInvocation *invocation;
-    MmGdbusModemSignal *skeleton;
-    MMIfaceModemSignal *self;
-    guint rate;
+    MmGdbusModemSignal    *skeleton;
+    guint                  rate;
 } HandleSetupContext;
 
 static void
@@ -251,38 +328,51 @@ handle_setup_context_free (HandleSetupContext *ctx)
 {
     g_object_unref (ctx->invocation);
     g_object_unref (ctx->skeleton);
-    g_object_unref (ctx->self);
     g_slice_free (HandleSetupContext, ctx);
 }
 
 static void
-handle_setup_auth_ready (MMBaseModem *self,
-                         GAsyncResult *res,
+handle_setup_auth_ready (MMBaseModem        *_self,
+                         GAsyncResult       *res,
                          HandleSetupContext *ctx)
 {
-    GError *error = NULL;
+    MMIfaceModemSignal *self = MM_IFACE_MODEM_SIGNAL (_self);
+    GError             *error = NULL;
+    Private            *priv;
 
-    if (!mm_base_modem_authorize_finish (self, res, &error))
+    if (!mm_base_modem_authorize_finish (_self, res, &error)) {
         g_dbus_method_invocation_take_error (ctx->invocation, error);
-    else if (!setup_refresh_context (ctx->self, TRUE, ctx->rate, &error))
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
-    else
-        mm_gdbus_modem_signal_complete_setup (ctx->skeleton, ctx->invocation);
+        handle_setup_context_free (ctx);
+        return;
+    }
+
+    if (mm_iface_modem_abort_invocation_if_state_not_reached (MM_IFACE_MODEM (self),
+                                                              ctx->invocation,
+                                                              MM_MODEM_STATE_DISABLED)) {
+        handle_setup_context_free (ctx);
+        return;
+    }
+
+    priv = get_private (self);
+    priv->rate = ctx->rate;
+    polling_restart (self);
+    check_interface_reset (self);
+    mm_gdbus_modem_signal_set_rate (ctx->skeleton, ctx->rate);
+    mm_gdbus_modem_signal_complete_setup (ctx->skeleton, ctx->invocation);
     handle_setup_context_free (ctx);
 }
 
 static gboolean
-handle_setup (MmGdbusModemSignal *skeleton,
+handle_setup (MmGdbusModemSignal    *skeleton,
               GDBusMethodInvocation *invocation,
-              guint rate,
-              MMIfaceModemSignal *self)
+              guint                  rate,
+              MMIfaceModemSignal    *self)
 {
     HandleSetupContext *ctx;
 
-    ctx = g_slice_new (HandleSetupContext);
+    ctx = g_slice_new0 (HandleSetupContext);
     ctx->invocation = g_object_ref (invocation);
     ctx->skeleton = g_object_ref (skeleton);
-    ctx->self = g_object_ref (self);
     ctx->rate = rate;
 
     mm_base_modem_authorize (MM_BASE_MODEM (self),
@@ -295,55 +385,214 @@ handle_setup (MmGdbusModemSignal *skeleton,
 
 /*****************************************************************************/
 
-gboolean
-mm_iface_modem_signal_disable_finish (MMIfaceModemSignal *self,
-                                      GAsyncResult *res,
-                                      GError **error)
+typedef struct {
+    GDBusMethodInvocation *invocation;
+    MmGdbusModemSignal    *skeleton;
+    GVariant              *settings;
+    guint                  previous_rssi_threshold;
+    gboolean               previous_error_rate_threshold;
+} HandleSetupThresholdsContext;
+
+static void
+handle_setup_thresholds_context_free (HandleSetupThresholdsContext *ctx)
+{
+    g_object_unref (ctx->invocation);
+    g_object_unref (ctx->skeleton);
+    if (ctx->settings)
+        g_variant_unref (ctx->settings);
+    g_slice_free (HandleSetupThresholdsContext, ctx);
+}
+
+static void
+setup_thresholds_restart_ready (MMIfaceModemSignal           *self,
+                                GAsyncResult                 *res,
+                                HandleSetupThresholdsContext *ctx)
+{
+    GError  *error = NULL;
+    Private *priv;
+
+    priv = get_private (self);
+
+    if (!thresholds_restart_finish (self, res, &error)) {
+        priv->rssi_threshold = ctx->previous_rssi_threshold;
+        priv->error_rate_threshold = ctx->previous_error_rate_threshold;
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+    } else {
+        check_interface_reset (self);
+        mm_gdbus_modem_signal_set_rssi_threshold (ctx->skeleton, priv->rssi_threshold);
+        mm_gdbus_modem_signal_set_error_rate_threshold (ctx->skeleton, priv->error_rate_threshold);
+        mm_gdbus_modem_signal_complete_setup_thresholds (ctx->skeleton, ctx->invocation);
+    }
+
+    handle_setup_thresholds_context_free (ctx);
+}
+
+static void
+handle_setup_thresholds_auth_ready (MMBaseModem                  *_self,
+                                    GAsyncResult                 *res,
+                                    HandleSetupThresholdsContext *ctx)
+{
+    g_autoptr(MMSignalThresholdProperties)  properties = NULL;
+    MMIfaceModemSignal                     *self = MM_IFACE_MODEM_SIGNAL (_self);
+    GError                                 *error = NULL;
+    Private                                *priv;
+    guint                                   new_rssi_threshold;
+    gboolean                                new_error_rate_threshold;
+
+    priv = get_private (self);
+
+    if (!mm_base_modem_authorize_finish (_self, res, &error)) {
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        handle_setup_thresholds_context_free (ctx);
+        return;
+    }
+
+    if (!MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (self)->setup_thresholds ||
+        !MM_IFACE_MODEM_SIGNAL_GET_INTERFACE (self)->setup_thresholds_finish) {
+        g_dbus_method_invocation_return_error (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                               "Cannot setup thresholds: operation not supported");
+        handle_setup_thresholds_context_free (ctx);
+        return;
+    }
+
+    if (mm_iface_modem_abort_invocation_if_state_not_reached (MM_IFACE_MODEM (self),
+                                                              ctx->invocation,
+                                                              MM_MODEM_STATE_DISABLED)) {
+        handle_setup_thresholds_context_free (ctx);
+        return;
+    }
+
+    properties = mm_signal_threshold_properties_new_from_dictionary (ctx->settings, &error);
+    if (!properties) {
+        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        handle_setup_thresholds_context_free (ctx);
+        return;
+    }
+    new_rssi_threshold       = mm_signal_threshold_properties_get_rssi       (properties);
+    new_error_rate_threshold = mm_signal_threshold_properties_get_error_rate (properties);
+
+    if ((new_rssi_threshold == priv->rssi_threshold) &&
+        (new_error_rate_threshold == priv->error_rate_threshold)) {
+        mm_gdbus_modem_signal_complete_setup_thresholds (ctx->skeleton, ctx->invocation);
+        handle_setup_thresholds_context_free (ctx);
+        return;
+    }
+
+    ctx->previous_rssi_threshold = priv->rssi_threshold;
+    ctx->previous_error_rate_threshold = priv->error_rate_threshold;
+    priv->rssi_threshold = new_rssi_threshold;
+    priv->error_rate_threshold = new_error_rate_threshold;
+
+    thresholds_restart (self,
+                        (GAsyncReadyCallback)setup_thresholds_restart_ready,
+                        ctx);
+}
+
+static gboolean
+handle_setup_thresholds (MmGdbusModemSignal    *skeleton,
+                         GDBusMethodInvocation *invocation,
+                         GVariant              *settings,
+                         MMIfaceModemSignal    *self)
+{
+    HandleSetupThresholdsContext *ctx;
+
+    ctx = g_slice_new0 (HandleSetupThresholdsContext);
+    ctx->invocation = g_object_ref (invocation);
+    ctx->skeleton = g_object_ref (skeleton);
+    ctx->settings = g_variant_ref (settings);
+
+    mm_base_modem_authorize (MM_BASE_MODEM (self),
+                             invocation,
+                             MM_AUTHORIZATION_DEVICE_CONTROL,
+                             (GAsyncReadyCallback)handle_setup_thresholds_auth_ready,
+                             ctx);
+    return TRUE;
+}
+
+/*****************************************************************************/
+/* Common enable/disable */
+
+static gboolean
+common_enable_disable_finish (MMIfaceModemSignal  *self,
+                              GAsyncResult        *res,
+                              GError             **error)
 {
     return g_task_propagate_boolean (G_TASK (res), error);
 }
 
-void
-mm_iface_modem_signal_disable (MMIfaceModemSignal *self,
-                               GAsyncReadyCallback callback,
-                               gpointer user_data)
+static void
+enable_disable_thresholds_restart_ready (MMIfaceModemSignal *self,
+                                         GAsyncResult       *res,
+                                         GTask              *task)
 {
-    GTask *task;
+    GError *error = NULL;
 
-    teardown_refresh_context (self);
-
-    task = g_task_new (self, NULL, callback, user_data);
-    g_task_return_boolean (task, TRUE);
+    if (!thresholds_restart_finish (self, res, &error))
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
     g_object_unref (task);
+}
+
+static void
+common_enable_disable (MMIfaceModemSignal  *self,
+                       gboolean             enabled,
+                       GCancellable        *cancellable,
+                       GAsyncReadyCallback  callback,
+                       gpointer             user_data)
+{
+    GTask   *task;
+    Private *priv;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    priv = get_private (MM_IFACE_MODEM_SIGNAL (self));
+    priv->enabled = enabled;
+
+    check_interface_reset (self);
+
+    polling_restart (self);
+
+    thresholds_restart (self,
+                        (GAsyncReadyCallback)enable_disable_thresholds_restart_ready,
+                        task);
 }
 
 /*****************************************************************************/
 
 gboolean
-mm_iface_modem_signal_enable_finish (MMIfaceModemSignal *self,
-                                     GAsyncResult *res,
-                                     GError **error)
+mm_iface_modem_signal_disable_finish (MMIfaceModemSignal  *self,
+                                      GAsyncResult        *res,
+                                      GError             **error)
 {
-    return g_task_propagate_boolean (G_TASK (res), error);
+    return common_enable_disable_finish (self, res, error);
 }
 
 void
-mm_iface_modem_signal_enable (MMIfaceModemSignal *self,
-                              GCancellable *cancellable,
-                              GAsyncReadyCallback callback,
-                              gpointer user_data)
+mm_iface_modem_signal_disable (MMIfaceModemSignal  *self,
+                               GAsyncReadyCallback  callback,
+                               gpointer             user_data)
 {
-    GTask *task;
-    GError *error = NULL;
+    common_enable_disable (self, FALSE, NULL, callback, user_data);
+}
 
-    task = g_task_new (self, cancellable, callback, user_data);
+/*****************************************************************************/
 
-    if (!setup_refresh_context (self, FALSE, 0, &error))
-        g_task_return_error (task, error);
-    else
-        g_task_return_boolean (task, TRUE);
+gboolean
+mm_iface_modem_signal_enable_finish (MMIfaceModemSignal  *self,
+                                     GAsyncResult        *res,
+                                     GError             **error)
+{
+    return common_enable_disable_finish (self, res, error);
+}
 
-    g_object_unref (task);
+void
+mm_iface_modem_signal_enable (MMIfaceModemSignal  *self,
+                              GCancellable        *cancellable,
+                              GAsyncReadyCallback  callback,
+                              gpointer             user_data)
+{
+    common_enable_disable (self, TRUE, cancellable, callback, user_data);
 }
 
 /*****************************************************************************/
@@ -481,6 +730,10 @@ interface_initialization_step (GTask *task)
                           "handle-setup",
                           G_CALLBACK (handle_setup),
                           self);
+        g_signal_connect (ctx->skeleton,
+                          "handle-setup-thresholds",
+                          G_CALLBACK (handle_setup_thresholds),
+                          self);
         /* Finally, export the new interface */
         mm_gdbus_object_skeleton_set_modem_signal (MM_GDBUS_OBJECT_SKELETON (self),
                                                    MM_GDBUS_MODEM_SIGNAL (ctx->skeleton));
@@ -532,9 +785,6 @@ mm_iface_modem_signal_initialize (MMIfaceModemSignal *self,
 void
 mm_iface_modem_signal_shutdown (MMIfaceModemSignal *self)
 {
-    /* Teardown refresh context */
-    teardown_refresh_context (self);
-
     /* Unexport DBus interface and remove the skeleton */
     mm_gdbus_object_skeleton_set_modem_signal (MM_GDBUS_OBJECT_SKELETON (self), NULL);
     g_object_set (self,

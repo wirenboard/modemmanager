@@ -5,8 +5,8 @@ dnl Package and library versioning support
 dnl
 
 m4_define([mm_major_version], [1])
-m4_define([mm_minor_version], [18])
-m4_define([mm_micro_version], [12])
+m4_define([mm_minor_version], [20])
+m4_define([mm_micro_version], [0])
 m4_define([mm_version],
           [mm_major_version.mm_minor_version.mm_micro_version])
 
@@ -18,9 +18,9 @@ dnl        If the interface has grown (that is, the new library is compatible
 dnl            with old code), increment a.
 dnl        If the interface has changed in an incompatible way (that is,
 dnl            functions have changed or been removed), then zero a.
-m4_define([mm_glib_lt_current],  [8])
+m4_define([mm_glib_lt_current],  [9])
 m4_define([mm_glib_lt_revision], [0])
-m4_define([mm_glib_lt_age],      [8])
+m4_define([mm_glib_lt_age],      [9])
 
 dnl-----------------------------------------------------------------------------
 dnl autoconf, automake, libtool initialization
@@ -221,6 +221,12 @@ if test "x$with_systemdsystemunitdir" != xno; then
 fi
 AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$SYSTEMD_UNIT_DIR" -a "$SYSTEMD_UNIT_DIR" != xno ])
 
+
+dnl subdir where plugins are built w.r.t abs_top_builddir, just because it's
+dnl different to what meson does
+PLUGIN_BUILD_SUBDIR="plugins/.libs"
+AC_SUBST(PLUGIN_BUILD_SUBDIR)
+
 dnl-----------------------------------------------------------------------------
 dnl udev support (enabled by default)
 dnl
@@ -246,6 +252,21 @@ case $with_udev in
 esac
 
 dnl-----------------------------------------------------------------------------
+dnl build with tests (enabled by default)
+dnl
+
+AC_ARG_WITH(tests, AS_HELP_STRING([--without-tests], [Build without testcases]), [], [with_tests=yes])
+AM_CONDITIONAL(WITH_TESTS, test "x$with_tests" = "xyes")
+case $with_tests in
+    yes)
+        AC_DEFINE(WITH_TESTS, 1, [Define if you want to build all testcases])
+        ;;
+    *)
+        with_tests=no
+        ;;
+esac
+
+dnl-----------------------------------------------------------------------------
 dnl Suspend/resume support
 dnl
 
@@ -256,6 +277,10 @@ AC_ARG_WITH(systemd-suspend-resume,
             AS_HELP_STRING([--with-systemd-suspend-resume=no|yes],
                            [Enable systemd suspend/resume support [[default=auto]]]),,
             [with_systemd_suspend_resume=auto])
+AC_ARG_WITH(powerd-suspend-resume,
+            AS_HELP_STRING([--with-powerd-suspend-resume=no|yes],
+                           [Enable powerd suspend/resume support [[default=no]]]),,
+            [with_powerd_suspend_resume=no])
 
 if test "x$with_systemd_suspend_resume" = "xauto"; then
     if test "x$have_libsystemd" = "xyes" || test "x$have_libsystemd_login" = "xyes" || test "x$have_elogind" = "xyes"; then
@@ -269,15 +294,23 @@ case $with_systemd_suspend_resume in
     yes)
         if test "x$have_libsystemd" = "xno" && test "x$have_libsystemd_login" = "xno" && test "x$have_elogind" = "xno"; then
 		    AC_MSG_WARN(libsystemd, libsystemd-login or elogind must be available at runtime for suspend/resume support)
-	    fi
-        AC_DEFINE(WITH_SYSTEMD_SUSPEND_RESUME, 1, [Define if you have systemd suspend-resume support])
+        fi
         ;;
     *)
         with_systemd_suspend_resume=no
         ;;
 esac
 
+if test "x$with_systemd_suspend_resume" = "xyes" && test "x$with_powerd_suspend_resume" = "xyes"; then
+    AC_MSG_ERROR(--with_systemd_suspend_resume and --with_powerd_suspend_resume should not be selected at the same time)
+fi
+
+if test "x$with_systemd_suspend_resume" = "xyes" || test "x$with_powerd_suspend_resume" = "xyes"; then
+    AC_DEFINE(WITH_SUSPEND_RESUME, 1, [Define if you have systemd or powerd suspend-resume support])
+fi
+
 AM_CONDITIONAL(WITH_SYSTEMD_SUSPEND_RESUME, test "x$with_systemd_suspend_resume" = "xyes")
+AM_CONDITIONAL(WITH_POWERD_SUSPEND_RESUME, test "x$with_powerd_suspend_resume" = "xyes")
 
 dnl-----------------------------------------------------------------------------
 dnl systemd journal support
@@ -380,7 +413,7 @@ dnl-----------------------------------------------------------------------------
 dnl MBIM support (enabled by default)
 dnl
 
-LIBMBIM_VERSION=1.26.0
+LIBMBIM_VERSION=1.28.0
 
 AC_ARG_WITH(mbim, AS_HELP_STRING([--without-mbim], [Build without MBIM support]), [], [with_mbim=yes])
 AM_CONDITIONAL(WITH_MBIM, test "x$with_mbim" = "xyes")
@@ -404,7 +437,7 @@ dnl-----------------------------------------------------------------------------
 dnl QMI support (enabled by default)
 dnl
 
-LIBQMI_VERSION=1.30.8
+LIBQMI_VERSION=1.32.0
 
 AC_ARG_WITH(qmi, AS_HELP_STRING([--without-qmi], [Build without QMI support]), [], [with_qmi=yes])
 AM_CONDITIONAL(WITH_QMI, test "x$with_qmi" = "xyes")
@@ -507,12 +540,14 @@ MM_ENABLE_PLUGIN([dell],
                   with_shared_foxconn])
 MM_ENABLE_PLUGIN([dlink])
 MM_ENABLE_PLUGIN([fibocom],
-                 [with_shared_xmm])
+                 [with_shared_fibocom,
+                  with_shared_xmm])
 MM_ENABLE_PLUGIN([foxconn],
                  [with_shared_foxconn])
 MM_ENABLE_PLUGIN([gosuncn])
 MM_ENABLE_PLUGIN([haier])
 MM_ENABLE_PLUGIN([huawei])
+MM_ENABLE_PLUGIN([intel])
 MM_ENABLE_PLUGIN([iridium])
 MM_ENABLE_PLUGIN([linktop])
 MM_ENABLE_PLUGIN([longcheer])
@@ -558,6 +593,7 @@ MM_BUILD_SHARED([novatel])
 MM_BUILD_SHARED([xmm])
 MM_BUILD_SHARED([telit])
 MM_BUILD_SHARED([foxconn])
+MM_BUILD_SHARED([fibocom])
 
 dnl-----------------------------------------------------------------------------
 dnl Output
@@ -608,6 +644,7 @@ examples/sms-python/Makefile
 examples/network-scan-python/Makefile
 examples/sms-c/Makefile
 ])
+
 AC_OUTPUT
 
 echo "
@@ -622,6 +659,7 @@ echo "
       warn ldflags:            ${WARN_LDFLAGS}
       maintainer mode:         ${USE_MAINTAINER_MODE}
       release:                 ${ax_is_release}
+      tests:                   ${with_tests}
 
     System paths:
       prefix:                  ${prefix}
@@ -637,6 +675,7 @@ echo "
       qmi:                     ${with_qmi}
       qrtr:                    ${with_qrtr}
       systemd suspend/resume:  ${with_systemd_suspend_resume}
+      powerd suspend/resume:   ${with_powerd_suspend_resume}
       systemd journal:         ${with_systemd_journal}
       at command via dbus:     ${with_at_command_via_dbus}
 

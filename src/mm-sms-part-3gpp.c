@@ -422,22 +422,21 @@ mm_sms_part_3gpp_new_from_binary_pdu (guint         index,
         PDU_SIZE_CHECK (1, "cannot read SMSC address length");
         smsc_addr_size_bytes = pdu[offset++];
         if (smsc_addr_size_bytes > 0) {
-             PDU_SIZE_CHECK (offset + smsc_addr_size_bytes, "cannot read SMSC address");
-             /* SMSC may not be given in DELIVER PDUs */
-             address = sms_decode_address (&pdu[1], 2 * (smsc_addr_size_bytes - 1), error);
-             if (!address) {
-                     g_prefix_error (error, "Couldn't read SMSC address: ");
-                     mm_sms_part_free (sms_part);
-                     return NULL;
-             }
-             mm_sms_part_take_smsc (sms_part, g_steal_pointer (&address));
-             mm_obj_dbg (log_object, "  SMSC address parsed: '%s'", mm_sms_part_get_smsc (sms_part));
-             offset += smsc_addr_size_bytes;
+            PDU_SIZE_CHECK (offset + smsc_addr_size_bytes, "cannot read SMSC address");
+            /* SMSC may not be given in DELIVER PDUs */
+            address = sms_decode_address (&pdu[1], 2 * (smsc_addr_size_bytes - 1), error);
+            if (!address) {
+                g_prefix_error (error, "Couldn't read SMSC address: ");
+                mm_sms_part_free (sms_part);
+                return NULL;
+            }
+            mm_sms_part_take_smsc (sms_part, g_steal_pointer (&address));
+            mm_obj_dbg (log_object, "  SMSC address parsed: '%s'", mm_sms_part_get_smsc (sms_part));
+            offset += smsc_addr_size_bytes;
         } else
-              mm_obj_dbg (log_object, "  no SMSC address given");
+            mm_obj_dbg (log_object, "  no SMSC address given");
     } else
         mm_obj_dbg (log_object, "  This is a transfer-route message");
-
 
     /* ---------------------------------------------------------------------- */
     /* TP-MTI (1 byte) */
@@ -492,7 +491,6 @@ mm_sms_part_3gpp_new_from_binary_pdu (guint         index,
         offset++;
     }
 
-
     /* ---------------------------------------------------------------------- */
     /* TP-DA or TP-OA or TP-RA
      * First byte represents the number of DIGITS in the number.
@@ -519,6 +517,7 @@ mm_sms_part_3gpp_new_from_binary_pdu (guint         index,
 
     if (pdu_type == SMS_TP_MTI_SMS_DELIVER) {
         gchar *str = NULL;
+
         PDU_SIZE_CHECK (offset + 9,
                         "cannot read PID/DCS/Timestamp"); /* 1+1+7=9 */
 
@@ -534,8 +533,7 @@ mm_sms_part_3gpp_new_from_binary_pdu (guint         index,
             mm_sms_part_free (sms_part);
             return NULL;
         }
-        mm_sms_part_take_timestamp (sms_part,
-                                    str);
+        mm_sms_part_take_timestamp (sms_part, str);
         offset += 7;
 
         tp_user_data_len_offset = offset;
@@ -577,9 +575,9 @@ mm_sms_part_3gpp_new_from_binary_pdu (guint         index,
         }
 
         tp_user_data_len_offset = offset;
-    }
-    else if (pdu_type == SMS_TP_MTI_SMS_STATUS_REPORT) {
+    } else if (pdu_type == SMS_TP_MTI_SMS_STATUS_REPORT) {
         gchar *str = NULL;
+
         /* We have 2 timestamps in status report PDUs:
          *  first, the timestamp for when the PDU was received in the SMSC
          *  second, the timestamp for when the PDU was forwarded by the SMSC
@@ -1099,144 +1097,6 @@ mm_sms_part_3gpp_get_submit_pdu (MMSmsPart *part,
 error:
     g_free (pdu);
     return NULL;
-}
-
-static gchar **
-util_split_text_gsm7 (const gchar *text,
-                      gsize        text_len,
-                      gpointer     log_object)
-{
-    gchar **out;
-    guint   n_chunks;
-    guint   i;
-    guint   j;
-
-    /* No splitting needed? */
-    if (text_len <= 160) {
-        out = g_new0 (gchar *, 2);
-        out[0] = g_strdup (text);
-        return out;
-    }
-
-    /* Compute number of chunks needed */
-    n_chunks = text_len / 153;
-    if (text_len % 153 != 0)
-        n_chunks++;
-
-    /* Fill in all chunks */
-    out = g_new0 (gchar *, n_chunks + 1);
-    for (i = 0, j = 0; i < n_chunks; i++, j += 153)
-        out[i] = g_strndup (&text[j], 153);
-
-    return out;
-}
-
-static gchar **
-util_split_text_utf16_or_ucs2 (const gchar *text,
-                               gsize        text_len,
-                               gpointer     log_object)
-{
-    g_autoptr(GPtrArray)  chunks = NULL;
-    const gchar          *walker;
-    const gchar          *chunk_start;
-    glong                 encoded_chunk_length;
-    glong                 total_encoded_chunk_length;
-
-    chunks = g_ptr_array_new_with_free_func ((GDestroyNotify)g_free);
-
-    walker = text;
-    chunk_start = text;
-    encoded_chunk_length = 0;
-    total_encoded_chunk_length = 0;
-    while (walker && *walker) {
-        g_autofree gunichar2 *unichar2 = NULL;
-        glong                 unichar2_written = 0;
-        glong                 unichar2_written_bytes = 0;
-        gunichar              single;
-
-        single = g_utf8_get_char (walker);
-        unichar2 = g_ucs4_to_utf16 (&single, 1, NULL, &unichar2_written, NULL);
-        g_assert (unichar2_written > 0);
-
-        /* When splitting for UCS-2 encoding, only one single unichar2 will be
-         * written, because all codepoints represented in UCS2 fit in the BMP.
-         * When splitting for UTF-16, though, we may end up writing one or two
-         * unichar2 (without or with surrogate pairs), because UTF-16 covers the
-         * whole Unicode spectrum. */
-        unichar2_written_bytes = (unichar2_written * sizeof (gunichar2));
-        if ((encoded_chunk_length + unichar2_written_bytes) > 134) {
-            g_ptr_array_add (chunks, g_strndup (chunk_start, walker - chunk_start));
-            chunk_start = walker;
-            encoded_chunk_length = unichar2_written_bytes;
-        } else
-            encoded_chunk_length += unichar2_written_bytes;
-
-        total_encoded_chunk_length += unichar2_written_bytes;
-        walker = g_utf8_next_char (walker);
-    }
-
-    /* We have split the original string in chunks, where each chunk
-     * does not require more than 134 bytes when encoded in UTF-16.
-     * As a special case now, we consider the case that no splitting
-     * is necessary, i.e. if the total amount of bytes after encoding
-     * in UTF-16 is less or equal than 140. */
-    if (total_encoded_chunk_length <= 140) {
-        gchar **out;
-
-        out = g_new0 (gchar *, 2);
-        out[0] = g_strdup (text);
-        return out;
-    }
-
-    /* Otherwise, we do need the splitted chunks. Add the last one
-     * with contents plus the last trailing NULL */
-    g_ptr_array_add (chunks, g_strndup (chunk_start, walker - chunk_start));
-    g_ptr_array_add (chunks, NULL);
-
-    return (gchar **) g_ptr_array_free (g_steal_pointer (&chunks), FALSE);
-}
-
-gchar **
-mm_sms_part_3gpp_util_split_text (const gchar   *text,
-                                  MMSmsEncoding *encoding,
-                                  gpointer       log_object)
-{
-    if (!text)
-        return NULL;
-
-    /* Some info about the rules for splitting.
-     *
-     * The User Data can be up to 140 bytes in the SMS part:
-     *  0) If we only need one chunk, it can be of up to 140 bytes.
-     *     If we need more than one chunk, these have to be of 140 - 6 = 134
-     *     bytes each, as we need place for the UDH header.
-     *  1) If we're using GSM7 encoding, this gives us up to 160 characters,
-     *     as we can pack 160 characters of 7bits each into 140 bytes.
-     *      160 * 7 = 140 * 8 = 1120.
-     *     If we only have 134 bytes allowed, that would mean that we can pack
-     *     up to 153 input characters:
-     *      134 * 8 = 1072; 1072/7=153.14
-     *  2) If we're using UCS2 encoding, we can pack up to 70 characters in
-     *     140 bytes (each with 2 bytes), or up to 67 characters in 134 bytes.
-     *  3) If we're using UTF-16 encoding (instead of UCS2), the amount of
-     *     characters we can pack is variable, depends on how the characters
-     *     are encoded in UTF-16 (e.g. if there are characters out of the BMP
-     *     we'll need surrogate pairs and a single character will need 4 bytes
-     *     instead of 2).
-     *
-     * This method does the split of the input string into N strings, so that
-     * each of the strings can be placed in a SMS part.
-     */
-
-    /* Check if we can do GSM encoding */
-    if (mm_charset_can_convert_to (text, MM_MODEM_CHARSET_GSM)) {
-        *encoding = MM_SMS_ENCODING_GSM7;
-        return util_split_text_gsm7 (text, strlen (text), log_object);
-    }
-
-    /* Otherwise fallback to report UCS-2 and split supporting UTF-16 */
-    *encoding = MM_SMS_ENCODING_UCS2;
-    return util_split_text_utf16_or_ucs2 (text, strlen (text), log_object);
 }
 
 GByteArray **

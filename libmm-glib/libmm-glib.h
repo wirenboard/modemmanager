@@ -51,6 +51,7 @@
 # include <mm-modem-firmware.h>
 # include <mm-modem-signal.h>
 # include <mm-modem-oma.h>
+# include <mm-modem-sar.h>
 #endif
 
 #if defined (_LIBMM_INSIDE_MM) ||    \
@@ -83,6 +84,15 @@
 #include <mm-pco.h>
 #include <mm-sim-preferred-network.h>
 #include <mm-3gpp-profile.h>
+#include <mm-signal-threshold-properties.h>
+#include <mm-nr5g-registration-settings.h>
+#include <mm-cell-info.h>
+#include <mm-cell-info-cdma.h>
+#include <mm-cell-info-gsm.h>
+#include <mm-cell-info-umts.h>
+#include <mm-cell-info-tdscdma.h>
+#include <mm-cell-info-lte.h>
+#include <mm-cell-info-nr5g.h>
 #include <mm-compat.h>
 
 /* generated */

@@ -36,6 +36,7 @@
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
 # include "mm-iface-modem-firmware.h"
 # include "mm-shared-qmi.h"
+# include "mm-log.h"
 #endif
 
 static void iface_modem_location_init (MMIfaceModemLocation *iface);
@@ -81,52 +82,177 @@ firmware_load_update_settings_finish (MMIfaceModemFirmware  *self,
     return g_task_propagate_pointer (G_TASK (res), error);
 }
 
-static void
-foxconn_get_firmware_version_ready (QmiClientDms *client,
-                                    GAsyncResult *res,
-                                    GTask        *task)
+static gboolean
+needs_qdu_and_mcfg_apps_version (MMIfaceModemFirmware *self)
 {
-    QmiMessageDmsFoxconnGetFirmwareVersionOutput *output;
-    GError                                       *error = NULL;
-    MMFirmwareUpdateSettings                     *update_settings = NULL;
-    const gchar                                  *str;
-    MMIfaceModemFirmware                         *self;
-    guint                                         vendor_id;
-    guint                                         product_id;
+    guint vendor_id;
+    guint product_id;
 
-    output = qmi_client_dms_foxconn_get_firmware_version_finish (client, res, &error);
-    if (!output || !qmi_message_dms_foxconn_get_firmware_version_output_get_result (output, &error))
-        goto out;
-
-    /* Create update settings now:
-     * 0x105b is the T99W175 module, T99W175 supports QDU,
-     * T99W265(0x0489:0xe0da ; 0x0489:0xe0db): supports QDU
-     * else support FASTBOOT and QMI PDC.
+    /* 0x105b is the T99W175 module, T99W175 supports QDU and requires MCFG+APPS version.
+     * T99W265(0x0489:0xe0da ; 0x0489:0xe0db): supports QDU and requires MCFG+APPS version.
+     * else support FASTBOOT and QMI PDC, and require only MCFG version.
      */
-    self = g_task_get_source_object (task);
     vendor_id = mm_base_modem_get_vendor_id (MM_BASE_MODEM (self));
     product_id = mm_base_modem_get_product_id (MM_BASE_MODEM (self));
-    if (vendor_id == 0x105b || (vendor_id == 0x0489 && (product_id  == 0xe0da || product_id == 0xe0db)))
-        update_settings = mm_firmware_update_settings_new (MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU);
-    else {
-        update_settings = mm_firmware_update_settings_new (MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT |
-                                                           MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC);
+    return (vendor_id == 0x105b || (vendor_id == 0x0489 && (product_id  == 0xe0da || product_id == 0xe0db)));
+}
+
+/*****************************************************************************/
+/* Need APPS version for the development of different functions when T77W968 support FASTBOOT and QMI PDC.
+ * Such as: T77W968.F1.0.0.5.2.GC.013.037 and T77W968.F1.0.0.5.2.GC.013.049, the MCFG version(T77W968.F1.0.0.5.2.GC.013) is same,
+ * but the APPS version(037 and 049) is different.
+ *
+ * For T77W968.F1.0.0.5.2.GC.013.049, before the change, "fwupdmgr get-devices" can obtain Current version is T77W968.F1.0.0.5.2.GC.013,
+ * it only include the MCFG version.
+ * After add need APPS version, it shows Current version is T77W968.F1.0.0.5.2.GC.013.049, including the MCFG+APPS version.
+ */
+
+static gboolean
+needs_fastboot_and_qmi_pdc_mcfg_apps_version (MMIfaceModemFirmware *self)
+{
+    guint vendor_id;
+    guint product_id;
+
+    /* T77W968(0x413c:0x81d7 ; 0x413c:0x81e0 ; 0x413c:0x81e4 ; 0x413c:0x81e6): supports FASTBOOT and QMI PDC,
+     * and requires MCFG+APPS version.
+     * else support FASTBOOT and QMI PDC, and require only MCFG version.
+     */
+    vendor_id = mm_base_modem_get_vendor_id (MM_BASE_MODEM (self));
+    product_id = mm_base_modem_get_product_id (MM_BASE_MODEM (self));
+    return (vendor_id == 0x413c && (product_id == 0x81d7 || product_id == 0x81e0 || product_id == 0x81e4 || product_id == 0x81e6));
+}
+
+static MMFirmwareUpdateSettings *
+create_update_settings (MMIfaceModemFirmware *self,
+                        const gchar          *version_str)
+{
+    MMModemFirmwareUpdateMethod  methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE;
+    MMFirmwareUpdateSettings    *update_settings = NULL;
+
+    if (needs_qdu_and_mcfg_apps_version (self))
+        methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU;
+    else
+        methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT | MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC;
+
+    update_settings = mm_firmware_update_settings_new (methods);
+    if (methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT)
         mm_firmware_update_settings_set_fastboot_at (update_settings, "AT^FASTBOOT");
+    mm_firmware_update_settings_set_version (update_settings, version_str);
+    return update_settings;
+}
+
+static void
+dms_foxconn_get_firmware_version_ready (QmiClientDms *client,
+                                        GAsyncResult *res,
+                                        GTask        *task)
+{
+    g_autoptr(QmiMessageDmsFoxconnGetFirmwareVersionOutput)  output = NULL;
+    GError                                                  *error = NULL;
+    const gchar                                             *str;
+
+    output = qmi_client_dms_foxconn_get_firmware_version_finish (client, res, &error);
+    if (!output || !qmi_message_dms_foxconn_get_firmware_version_output_get_result (output, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
     }
 
     qmi_message_dms_foxconn_get_firmware_version_output_get_version (output, &str, NULL);
-    mm_firmware_update_settings_set_version (update_settings, str);
 
- out:
-    if (error)
-        g_task_return_error (task, error);
-    else {
-        g_assert (update_settings);
-        g_task_return_pointer (task, update_settings, g_object_unref);
-    }
+    g_task_return_pointer (task,
+                           create_update_settings (g_task_get_source_object (task), str),
+                           g_object_unref);
     g_object_unref (task);
-    if (output)
-        qmi_message_dms_foxconn_get_firmware_version_output_unref (output);
+}
+
+static void
+fox_get_firmware_version_ready (QmiClientFox *client,
+                                GAsyncResult *res,
+                                GTask        *task)
+{
+    g_autoptr(QmiMessageFoxGetFirmwareVersionOutput)  output = NULL;
+    GError                                           *error = NULL;
+    const gchar                                      *str;
+
+    output = qmi_client_fox_get_firmware_version_finish (client, res, &error);
+    if (!output || !qmi_message_fox_get_firmware_version_output_get_result (output, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    qmi_message_fox_get_firmware_version_output_get_version (output, &str, NULL);
+
+    g_task_return_pointer (task,
+                           create_update_settings (g_task_get_source_object (task), str),
+                           g_object_unref);
+    g_object_unref (task);
+}
+
+static void
+mbim_port_allocate_qmi_client_ready (MMPortMbim     *mbim,
+                                     GAsyncResult   *res,
+                                     GTask          *task)
+{
+    MMIfaceModemFirmware *self;
+    QmiClient            *fox_client = NULL;
+    QmiClient            *dms_client = NULL;
+    g_autoptr(GError)     error = NULL;
+
+    self = g_task_get_source_object (task);
+
+    if (!mm_port_mbim_allocate_qmi_client_finish (mbim, res, &error))
+        mm_obj_dbg (self, "Allocate FOX client failed: %s", error->message);
+
+    /* Try to get firmware version over fox service, if it failed to peek client, try dms service. */
+    fox_client = mm_shared_qmi_peek_client (MM_SHARED_QMI (self), QMI_SERVICE_FOX, MM_PORT_QMI_FLAG_DEFAULT, NULL);
+    if (!fox_client) {
+        dms_client = mm_shared_qmi_peek_client (MM_SHARED_QMI (self), QMI_SERVICE_DMS, MM_PORT_QMI_FLAG_DEFAULT, NULL);
+        if (!dms_client) {
+            g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                     "Unable to load version info: no FOX or DMS client available");
+            g_object_unref (task);
+            return;
+        }
+    }
+
+    if (fox_client) {
+        g_autoptr(QmiMessageFoxGetFirmwareVersionInput) input = NULL;
+
+        input = qmi_message_fox_get_firmware_version_input_new ();
+        qmi_message_fox_get_firmware_version_input_set_version_type (input,
+                                                                     (needs_qdu_and_mcfg_apps_version (self) ?
+                                                                      QMI_FOX_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS :
+                                                                      QMI_FOX_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG),
+                                                                     NULL);
+        qmi_client_fox_get_firmware_version (QMI_CLIENT_FOX (fox_client),
+                                             input,
+                                             10,
+                                             NULL,
+                                             (GAsyncReadyCallback)fox_get_firmware_version_ready,
+                                             task);
+        return;
+    }
+
+    if (dms_client) {
+        g_autoptr(QmiMessageDmsFoxconnGetFirmwareVersionInput) input = NULL;
+
+        input = qmi_message_dms_foxconn_get_firmware_version_input_new ();
+        qmi_message_dms_foxconn_get_firmware_version_input_set_version_type (input,
+                                                                             ((needs_qdu_and_mcfg_apps_version (self) || needs_fastboot_and_qmi_pdc_mcfg_apps_version (self)) ?
+                                                                              QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS:
+                                                                              QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG),
+                                                                             NULL);
+        qmi_client_dms_foxconn_get_firmware_version (QMI_CLIENT_DMS (dms_client),
+                                                     input,
+                                                     10,
+                                                     NULL,
+                                                     (GAsyncReadyCallback)dms_foxconn_get_firmware_version_ready,
+                                                     task);
+        return;
+    }
+
+    g_assert_not_reached ();
 }
 
 static void
@@ -134,47 +260,17 @@ firmware_load_update_settings (MMIfaceModemFirmware *self,
                                GAsyncReadyCallback   callback,
                                gpointer              user_data)
 {
-    GTask                                       *task;
-    QmiMessageDmsFoxconnGetFirmwareVersionInput *input = NULL;
-    QmiClient                                   *client = NULL;
-    guint                                        vendor_id;
-    guint                                        product_id;
+    GTask      *task;
+    MMPortMbim *mbim;
 
     task = g_task_new (self, NULL, callback, user_data);
 
-    client = mm_shared_qmi_peek_client (MM_SHARED_QMI (self),
-                                        QMI_SERVICE_DMS,
-                                        MM_PORT_QMI_FLAG_DEFAULT,
-                                        NULL);
-    if (!client) {
-        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                                 "Unable to load version info: no QMI DMS client available");
-        g_object_unref (task);
-        return;
-    }
-
-    vendor_id = mm_base_modem_get_vendor_id (MM_BASE_MODEM (self));
-    product_id = mm_base_modem_get_product_id (MM_BASE_MODEM (self));
-    input = qmi_message_dms_foxconn_get_firmware_version_input_new ();
-    /* 0x105b is the T99W175 module, T99W175/T99W265 need to compare the apps version. */
-    if (vendor_id == 0x105b || (vendor_id == 0x0489 && (product_id  == 0xe0da || product_id == 0xe0db)))
-        qmi_message_dms_foxconn_get_firmware_version_input_set_version_type (
-            input,
-            QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS,
-            NULL);
-    else
-        qmi_message_dms_foxconn_get_firmware_version_input_set_version_type (
-            input,
-            QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG,
-            NULL);
-    qmi_client_dms_foxconn_get_firmware_version (
-        QMI_CLIENT_DMS (client),
-        input,
-        10,
-        NULL,
-        (GAsyncReadyCallback)foxconn_get_firmware_version_ready,
-        task);
-    qmi_message_dms_foxconn_get_firmware_version_input_unref (input);
+    mbim = mm_broadband_modem_mbim_peek_port_mbim (MM_BROADBAND_MODEM_MBIM (self));
+    mm_port_mbim_allocate_qmi_client (mbim,
+                                      QMI_SERVICE_FOX,
+                                      NULL,
+                                      (GAsyncReadyCallback)mbim_port_allocate_qmi_client_ready,
+                                      task);
 }
 
 #endif
@@ -454,9 +550,9 @@ mm_broadband_modem_mbim_foxconn_new (const gchar  *device,
 {
     const gchar *carrier_config_mapping = NULL;
 
-    /* T77W968 (DW5821e is also T77W968) modules use t77w968 carrier mapping table. */
+    /* T77W968 (DW5821e/DW5829e is also T77W968) modules use t77w968 carrier mapping table. */
     if ((vendor_id == 0x0489 && (product_id == 0xe0b4 || product_id == 0xe0b5)) ||
-        (vendor_id == 0x413c && (product_id == 0x81d7 || product_id == 0x81e0)))
+        (vendor_id == 0x413c && (product_id == 0x81d7 || product_id == 0x81e0 || product_id == 0x81e4 || product_id == 0x81e6)))
         carrier_config_mapping = PKGDATADIR "/mm-foxconn-t77w968-carrier-mapping.conf";
 
     return g_object_new (MM_TYPE_BROADBAND_MODEM_MBIM_FOXCONN,
@@ -469,7 +565,6 @@ mm_broadband_modem_mbim_foxconn_new (const gchar  *device,
                          MM_BASE_MODEM_DATA_NET_SUPPORTED, TRUE,
                          MM_BASE_MODEM_DATA_TTY_SUPPORTED, FALSE,
                          MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED,              TRUE,
-                         MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED,             FALSE,
                          MM_IFACE_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED,      TRUE,
                          MM_IFACE_MODEM_LOCATION_ALLOW_GPS_UNMANAGED_ALWAYS, TRUE,
                          MM_IFACE_MODEM_CARRIER_CONFIG_MAPPING,              carrier_config_mapping,

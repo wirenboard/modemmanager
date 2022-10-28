@@ -1192,18 +1192,17 @@ test_smong_response_no_match (void)
 /* Test ^SLCC URCs */
 
 static void
-common_test_slcc_urc (const gchar               *urc,
+common_test_slcc_urc (const gchar      *urc,
                       const MMCallInfo *expected_call_info_list,
-                      guint                      expected_call_info_list_size)
+                      guint             expected_call_info_list_size)
 {
-    GError     *error = NULL;
-    GRegex     *slcc_regex = NULL;
-    gboolean    result;
-    GMatchInfo *match_info = NULL;
-    gchar      *str;
-    GList      *call_info_list = NULL;
-    GList      *l;
-
+    g_autoptr(GRegex)      slcc_regex = NULL;
+    g_autoptr(GMatchInfo)  match_info = NULL;
+    g_autofree gchar      *str = NULL;
+    GError                *error = NULL;
+    GList                 *call_info_list = NULL;
+    GList                 *l;
+    gboolean               result;
 
     slcc_regex = mm_cinterion_get_slcc_regex ();
 
@@ -1230,8 +1229,8 @@ common_test_slcc_urc (const gchar               *urc,
 
     for (l = call_info_list; l; l = g_list_next (l)) {
         const MMCallInfo *call_info = (const MMCallInfo *)(l->data);
-        gboolean                   found = FALSE;
-        guint                      i;
+        gboolean          found = FALSE;
+        guint             i;
 
         g_debug ("call at index %u: direction %s, state %s, number %s",
                  call_info->index,
@@ -1247,10 +1246,6 @@ common_test_slcc_urc (const gchar               *urc,
 
         g_assert (found);
     }
-
-    g_match_info_free (match_info);
-    g_regex_unref (slcc_regex);
-    g_free (str);
 
     mm_cinterion_call_info_list_free (call_info_list);
 }
@@ -1322,12 +1317,12 @@ common_test_ctzu_urc (const gchar *urc,
                       gint         expected_offset,
                       gint         expected_dst_offset)
 {
-    GError            *error = NULL;
-    GRegex            *ctzu_regex = NULL;
-    gboolean           result;
-    GMatchInfo        *match_info = NULL;
-    gchar             *iso8601;
-    MMNetworkTimezone *tz = NULL;
+    g_autoptr(GRegex)      ctzu_regex = NULL;
+    g_autoptr(GMatchInfo)  match_info = NULL;
+    g_autofree gchar      *iso8601 = NULL;
+    GError                *error = NULL;
+    gboolean               result;
+    MMNetworkTimezone     *tz = NULL;
 
     ctzu_regex = mm_cinterion_get_ctzu_regex ();
 
@@ -1342,7 +1337,6 @@ common_test_ctzu_urc (const gchar *urc,
 
     g_assert (iso8601);
     g_assert_cmpstr (expected_iso8601, ==, iso8601);
-    g_free (iso8601);
 
     g_assert (tz);
     g_assert_cmpint (expected_offset, ==, mm_network_timezone_get_offset (tz));
@@ -1351,8 +1345,6 @@ common_test_ctzu_urc (const gchar *urc,
         g_assert_cmpuint ((guint)expected_dst_offset, ==, mm_network_timezone_get_dst_offset (tz));
 
     g_object_unref (tz);
-    g_match_info_free (match_info);
-    g_regex_unref (ctzu_regex);
 }
 
 static void
@@ -1752,6 +1744,187 @@ test_sgauth_response (void)
 }
 
 /*****************************************************************************/
+/* Test ^SXRAT responses */
+
+static void
+common_test_sxrat (const gchar *response,
+                   const GArray *expected_rat,
+                   const GArray *expected_pref1,
+                   const GArray *expected_pref2)
+{
+    GArray *supported_rat = NULL;
+    GArray *supported_pref1 = NULL;
+    GArray *supported_pref2 = NULL;
+    GError *error = NULL;
+    gboolean res;
+
+    g_assert (expected_rat != NULL);
+    g_assert (expected_pref1 != NULL);
+
+    res = mm_cinterion_parse_sxrat_test (response,
+                                         &supported_rat,
+                                         &supported_pref1,
+                                         &supported_pref2,
+                                         &error);
+    g_assert_no_error (error);
+    g_assert (res == TRUE);
+    g_assert (supported_rat != NULL);
+    g_assert (supported_pref1 != NULL);
+    if (expected_pref2)
+        g_assert (supported_pref2 != NULL);
+    else
+        g_assert (supported_pref2 == NULL);
+
+    compare_arrays (supported_rat, expected_rat);
+    compare_arrays (supported_pref1, expected_pref1);
+    if (expected_pref2)
+        compare_arrays (supported_pref2, expected_pref2);
+
+    g_array_unref (supported_rat);
+    g_array_unref (supported_pref1);
+    if (supported_pref2)
+        g_array_unref (supported_pref2);
+}
+
+static void
+test_sxrat_response_els61 (void)
+{
+    GArray *expected_rat;
+    GArray *expected_pref1;
+    GArray *expected_pref2;
+    guint val;
+    const gchar *response =
+        "^SXRAT: (0-6),(0,2,3),(0,2,3)\r\n"
+        "\r\n";
+
+    expected_rat = g_array_sized_new (FALSE, FALSE, sizeof (guint), 7);
+    val = 0, g_array_append_val (expected_rat, val);
+    val = 1, g_array_append_val (expected_rat, val);
+    val = 2, g_array_append_val (expected_rat, val);
+    val = 3, g_array_append_val (expected_rat, val);
+    val = 4, g_array_append_val (expected_rat, val);
+    val = 5, g_array_append_val (expected_rat, val);
+    val = 6, g_array_append_val (expected_rat, val);
+
+    expected_pref1 = g_array_sized_new (FALSE, FALSE, sizeof (guint), 3);
+    val = 0, g_array_append_val (expected_pref1, val);
+    val = 2, g_array_append_val (expected_pref1, val);
+    val = 3, g_array_append_val (expected_pref1, val);
+
+    expected_pref2 = g_array_sized_new (FALSE, FALSE, sizeof (guint), 3);
+    val = 0, g_array_append_val (expected_pref2, val);
+    val = 2, g_array_append_val (expected_pref2, val);
+    val = 3, g_array_append_val (expected_pref2, val);
+
+    common_test_sxrat (response,
+                       expected_rat,
+                       expected_pref1,
+                       expected_pref2);
+
+    g_array_unref (expected_rat);
+    g_array_unref (expected_pref1);
+    g_array_unref (expected_pref2);
+}
+
+static void
+test_sxrat_response_other (void)
+{
+    GArray *expected_rat;
+    GArray *expected_pref1;
+    GArray *expected_pref2 = NULL;
+    guint val;
+    const gchar *response =
+        "^SXRAT: (0-2),(0,2)\r\n"
+        "\r\n";
+
+    expected_rat = g_array_sized_new (FALSE, FALSE, sizeof (guint), 3);
+    val = 0, g_array_append_val (expected_rat, val);
+    val = 1, g_array_append_val (expected_rat, val);
+    val = 2, g_array_append_val (expected_rat, val);
+
+    expected_pref1 = g_array_sized_new (FALSE, FALSE, sizeof (guint), 3);
+    val = 0, g_array_append_val (expected_pref1, val);
+    val = 2, g_array_append_val (expected_pref1, val);
+
+    common_test_sxrat (response,
+                       expected_rat,
+                       expected_pref1,
+                       expected_pref2);
+
+    g_array_unref (expected_rat);
+    g_array_unref (expected_pref1);
+}
+
+typedef struct {
+    const gchar *str;
+    MMModemMode  allowed;
+    MMModemMode  preferred;
+    gboolean     success;
+} SxratBuildTest;
+
+static const SxratBuildTest sxrat_build_tests[] = {
+    {
+     .str = "^SXRAT=0",
+     .allowed = MM_MODEM_MODE_2G,
+     .preferred = MM_MODEM_MODE_NONE,
+     .success = TRUE,
+    },
+    {
+     .str = "^SXRAT=3",
+     .allowed = MM_MODEM_MODE_4G,
+     .preferred = MM_MODEM_MODE_NONE,
+     .success = TRUE,
+    },
+    {
+     .str = "^SXRAT=1,2",
+     .allowed = MM_MODEM_MODE_2G | MM_MODEM_MODE_3G,
+     .preferred = MM_MODEM_MODE_3G,
+     .success = TRUE,
+    },
+    {
+     .str = "^SXRAT=6,3",
+     .allowed = MM_MODEM_MODE_2G | MM_MODEM_MODE_3G | MM_MODEM_MODE_4G,
+     .preferred = MM_MODEM_MODE_4G,
+     .success = TRUE,
+    },
+    {
+     .str = NULL,
+     .allowed = MM_MODEM_MODE_2G | MM_MODEM_MODE_3G | MM_MODEM_MODE_4G,
+     .preferred = MM_MODEM_MODE_3G | MM_MODEM_MODE_4G,
+     .success = FALSE,
+    },
+    {
+     .str = NULL,
+     .allowed = MM_MODEM_MODE_5G,
+     .preferred = MM_MODEM_MODE_NONE,
+     .success = FALSE,
+    },
+
+};
+
+static void
+test_sxrat (void)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (sxrat_build_tests); i++) {
+        GError   *error = NULL;
+        gchar* result;
+
+        result = mm_cinterion_build_sxrat_set_command (sxrat_build_tests[i].allowed,
+                                                       sxrat_build_tests[i].preferred,
+                                                       &error);
+        if (sxrat_build_tests[i].success) {
+            g_assert_no_error (error);
+            g_assert (result);
+            g_assert_cmpstr (result, ==, sxrat_build_tests[i].str);
+        } else {
+            g_assert (error);
+            g_assert (!result);
+        }
+    }
+}
+/*****************************************************************************/
 
 int main (int argc, char **argv)
 {
@@ -1786,6 +1959,9 @@ int main (int argc, char **argv)
     g_test_add_func ("/MM/cinterion/smoni/query_response_to_signal", test_smoni_response_to_signal);
     g_test_add_func ("/MM/cinterion/scfg/provcfg",            test_provcfg_response);
     g_test_add_func ("/MM/cinterion/sgauth",                  test_sgauth_response);
+    g_test_add_func ("/MM/cinterion/sxrat",                   test_sxrat);
+    g_test_add_func ("/MM/cinterion/sxrat/response/els61",    test_sxrat_response_els61);
+    g_test_add_func ("/MM/cinterion/sxrat/response/other",    test_sxrat_response_other);
 
     return g_test_run ();
 }

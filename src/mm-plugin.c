@@ -74,6 +74,7 @@ struct _MMPluginPrivate {
     gchar **forbidden_drivers;
     guint16 *vendor_ids;
     mm_uint16_pair *product_ids;
+    mm_uint16_pair *subsystem_vendor_ids;
     mm_uint16_pair *forbidden_product_ids;
     gchar **udev_tags;
 
@@ -90,6 +91,7 @@ struct _MMPluginPrivate {
     gboolean at;
     gboolean single_at;
     gboolean qcdm;
+    gboolean qcdm_required;
     gboolean qmi;
     gboolean mbim;
     gboolean icera_probe;
@@ -114,6 +116,7 @@ enum {
     PROP_FORBIDDEN_DRIVERS,
     PROP_ALLOWED_VENDOR_IDS,
     PROP_ALLOWED_PRODUCT_IDS,
+    PROP_ALLOWED_SUBSYSTEM_VENDOR_IDS,
     PROP_FORBIDDEN_PRODUCT_IDS,
     PROP_ALLOWED_VENDOR_STRINGS,
     PROP_ALLOWED_PRODUCT_STRINGS,
@@ -122,6 +125,7 @@ enum {
     PROP_ALLOWED_AT,
     PROP_ALLOWED_SINGLE_AT,
     PROP_ALLOWED_QCDM,
+    PROP_REQUIRED_QCDM,
     PROP_ALLOWED_QMI,
     PROP_ALLOWED_MBIM,
     PROP_ICERA_PROBE,
@@ -168,6 +172,12 @@ const mm_uint16_pair *
 mm_plugin_get_allowed_product_ids (MMPlugin *self)
 {
     return self->priv->product_ids;
+}
+
+const mm_uint16_pair *
+mm_plugin_get_allowed_subsystem_vendor_ids (MMPlugin *self)
+{
+    return self->priv->subsystem_vendor_ids;
 }
 
 gboolean
@@ -243,8 +253,10 @@ apply_pre_probing_filters (MMPlugin       *self,
 {
     guint16 vendor;
     guint16 product;
+    guint16 subsystem_vendor;
     gboolean product_filtered = FALSE;
     gboolean vendor_filtered = FALSE;
+    gboolean subsystem_vendor_filtered = FALSE;
     guint i;
 
     *need_vendor_probing = FALSE;
@@ -350,6 +362,7 @@ apply_pre_probing_filters (MMPlugin       *self,
 
     vendor = mm_device_get_vendor (device);
     product = mm_device_get_product (device);
+    subsystem_vendor = mm_device_get_subsystem_vendor (device);
 
     /* The plugin may specify that only some vendor IDs are supported. If that
      * is the case, filter by vendor ID. */
@@ -394,12 +407,30 @@ apply_pre_probing_filters (MMPlugin       *self,
             product_filtered = FALSE;
     }
 
-    /* If we got filtered by vendor or product IDs; mark it as unsupported only if:
+    /* The plugin may specify that a set of vendor IDs is valid only when going
+     * with a specific subsystem vendor IDs (PCI modems).
+     * If that is the case, filter by vendor+subsystem vendor ID pair */
+    if (subsystem_vendor && self->priv->subsystem_vendor_ids) {
+        for (i = 0; self->priv->subsystem_vendor_ids[i].l; i++)
+            if (vendor == self->priv->subsystem_vendor_ids[i].l &&
+                subsystem_vendor == self->priv->subsystem_vendor_ids[i].r) {
+                /* If device was filtered by vendor, we override that value, since
+                 * we want to give priority to vendor/subsystem vendor match */
+                vendor_filtered = FALSE;
+                break;
+            }
+
+        /* If we didn't match any vendor/subsystem vendor: filtered */
+        if (!self->priv->subsystem_vendor_ids[i].l)
+            subsystem_vendor_filtered = TRUE;
+    }
+
+    /* If we got filtered by vendor/product/subsystem IDs; mark it as unsupported only if:
      *   a) we do not have vendor or product strings to compare with (i.e. plugin
      *      doesn't have explicit vendor/product strings
      *   b) the port is NOT an AT port which we can use for AT probing
      */
-    if ((vendor_filtered || product_filtered) &&
+    if ((vendor_filtered || product_filtered || subsystem_vendor_filtered) &&
         ((!self->priv->vendor_strings &&
           !self->priv->product_strings &&
           !self->priv->forbidden_product_strings) ||
@@ -430,7 +461,8 @@ apply_pre_probing_filters (MMPlugin       *self,
      * already had vendor/product ID filters and we actually passed those. */
     if ((!self->priv->vendor_ids && !self->priv->product_ids) ||
         vendor_filtered ||
-        product_filtered) {
+        product_filtered ||
+        subsystem_vendor_filtered) {
         /* If product strings related filters around, we need to probe for both
          * vendor and product strings */
         if (self->priv->product_strings ||
@@ -772,7 +804,7 @@ mm_plugin_supports_port (MMPlugin            *self,
             probe_run_flags |= MM_PORT_PROBE_AT;
         else if (self->priv->single_at)
             probe_run_flags |= MM_PORT_PROBE_AT;
-        if (self->priv->qcdm)
+        if (self->priv->qcdm || self->priv->qcdm_required)
             probe_run_flags |= MM_PORT_PROBE_QCDM;
     } else if (g_str_equal (mm_kernel_device_get_subsystem (port), "usbmisc")) {
         if (self->priv->qmi && !g_strcmp0 (mm_kernel_device_get_driver (port), "qmi_wwan"))
@@ -791,7 +823,7 @@ mm_plugin_supports_port (MMPlugin            *self,
             probe_run_flags |= MM_PORT_PROBE_MBIM;
         if (self->priv->qmi)
             probe_run_flags |= MM_PORT_PROBE_QMI;
-        if (self->priv->qcdm)
+        if (self->priv->qcdm || self->priv->qcdm_required)
             probe_run_flags |= MM_PORT_PROBE_QCDM;
         if (self->priv->at)
             probe_run_flags |= MM_PORT_PROBE_AT;
@@ -863,6 +895,7 @@ mm_plugin_supports_port (MMPlugin            *self,
                        self->priv->send_lf,
                        self->priv->custom_at_probe,
                        self->priv->custom_init,
+                       self->priv->qcdm_required,
                        cancellable,
                        (GAsyncReadyCallback) port_probe_run_ready,
                        task);
@@ -924,6 +957,7 @@ mm_plugin_create_modem (MMPlugin  *self,
                                                       drivers,
                                                       mm_device_get_vendor (device),
                                                       mm_device_get_product (device),
+                                                      mm_device_get_subsystem_vendor (device),
                                                       port_probes,
                                                       error);
     if (!modem)
@@ -1171,6 +1205,10 @@ set_property (GObject *object,
         /* Construct only */
         self->priv->product_ids = g_value_dup_boxed (value);
         break;
+    case PROP_ALLOWED_SUBSYSTEM_VENDOR_IDS:
+        /* Construct only */
+        self->priv->subsystem_vendor_ids = g_value_dup_boxed (value);
+        break;
     case PROP_FORBIDDEN_PRODUCT_IDS:
         /* Construct only */
         self->priv->forbidden_product_ids = g_value_dup_boxed (value);
@@ -1202,6 +1240,10 @@ set_property (GObject *object,
     case PROP_ALLOWED_QCDM:
         /* Construct only */
         self->priv->qcdm = g_value_get_boolean (value);
+        break;
+    case PROP_REQUIRED_QCDM:
+        /* Construct only */
+        self->priv->qcdm_required = g_value_get_boolean (value);
         break;
     case PROP_ALLOWED_QMI:
         /* Construct only */
@@ -1291,6 +1333,9 @@ get_property (GObject *object,
     case PROP_ALLOWED_PRODUCT_IDS:
         g_value_set_boxed (value, self->priv->product_ids);
         break;
+    case PROP_ALLOWED_SUBSYSTEM_VENDOR_IDS:
+        g_value_set_boxed (value, self->priv->subsystem_vendor_ids);
+        break;
     case PROP_FORBIDDEN_PRODUCT_IDS:
         g_value_set_boxed (value, self->priv->forbidden_product_ids);
         break;
@@ -1311,6 +1356,9 @@ get_property (GObject *object,
         break;
     case PROP_ALLOWED_QCDM:
         g_value_set_boolean (value, self->priv->qcdm);
+        break;
+    case PROP_REQUIRED_QCDM:
+        g_value_set_boolean (value, self->priv->qcdm_required);
         break;
     case PROP_ALLOWED_QMI:
         g_value_set_boolean (value, self->priv->qmi);
@@ -1374,6 +1422,7 @@ finalize (GObject *object)
     _g_boxed_free0 (G_TYPE_STRV, self->priv->forbidden_drivers);
     _g_boxed_free0 (MM_TYPE_UINT16_ARRAY, self->priv->vendor_ids);
     _g_boxed_free0 (MM_TYPE_UINT16_PAIR_ARRAY, self->priv->product_ids);
+    _g_boxed_free0 (MM_TYPE_UINT16_PAIR_ARRAY, self->priv->subsystem_vendor_ids);
     _g_boxed_free0 (MM_TYPE_UINT16_PAIR_ARRAY, self->priv->forbidden_product_ids);
     _g_boxed_free0 (G_TYPE_STRV, self->priv->udev_tags);
     _g_boxed_free0 (G_TYPE_STRV, self->priv->vendor_strings);
@@ -1467,6 +1516,15 @@ mm_plugin_class_init (MMPluginClass *klass)
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
     g_object_class_install_property
+        (object_class, PROP_ALLOWED_SUBSYSTEM_VENDOR_IDS,
+         g_param_spec_boxed (MM_PLUGIN_ALLOWED_SUBSYSTEM_VENDOR_IDS,
+                             "Allowed subsystem vendor IDs",
+                             "List of vendor+subsystem vendor ID pairs this plugin can support, "
+                             "should be an array of mm_uint16_pair finished with '0,0'",
+                             MM_TYPE_UINT16_PAIR_ARRAY,
+                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+    g_object_class_install_property
         (object_class, PROP_FORBIDDEN_PRODUCT_IDS,
          g_param_spec_boxed (MM_PLUGIN_FORBIDDEN_PRODUCT_IDS,
                              "Forbidden product IDs",
@@ -1532,6 +1590,14 @@ mm_plugin_class_init (MMPluginClass *klass)
          g_param_spec_boolean (MM_PLUGIN_ALLOWED_QCDM,
                                "Allowed QCDM",
                                "Whether QCDM ports are allowed in this plugin",
+                               FALSE,
+                               G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+    g_object_class_install_property
+        (object_class, PROP_REQUIRED_QCDM,
+         g_param_spec_boolean (MM_PLUGIN_REQUIRED_QCDM,
+                               "Required QCDM",
+                               "Whether QCDM ports are required in this plugin",
                                FALSE,
                                G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 

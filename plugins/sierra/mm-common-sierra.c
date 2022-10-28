@@ -144,13 +144,13 @@ gcap_ready (MMPortSerialAt *port,
     /* Sierra APPx ports have limited AT command parsers that just reply with
      * "OK" to most commands.  These can sometimes be used for PPP while the
      * main port is used for status and control, but older modems tend to crash
-     * or fail PPP.  So we whitelist modems that are known to allow PPP on the
+     * or fail PPP.  So we allowlist modems that are known to allow PPP on the
      * secondary APP ports.
      */
     if (strstr (response, "APP1")) {
         g_object_set_data (G_OBJECT (probe), TAG_SIERRA_APP_PORT, GUINT_TO_POINTER (TRUE));
 
-        /* PPP-on-APP1-port whitelist */
+        /* PPP-on-APP1-port allowlist */
         if (strstr (response, "C885") ||
             strstr (response, "USB 306") ||
             strstr (response, "MC8790"))
@@ -480,7 +480,7 @@ mm_common_sierra_setup_ports (MMBroadbandModem *self)
 {
     MMPortSerialAt *ports[2];
     guint i;
-    GRegex *pacsp_regex;
+    g_autoptr(GRegex) pacsp_regex = NULL;
 
     pacsp_regex = g_regex_new ("\\r\\n\\+PACSP.*\\r\\n", G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
 
@@ -505,8 +505,6 @@ mm_common_sierra_setup_ports (MMBroadbandModem *self)
             pacsp_regex,
             NULL, NULL, NULL);
     }
-
-    g_regex_unref (pacsp_regex);
 }
 
 /*****************************************************************************/

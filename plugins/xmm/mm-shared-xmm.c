@@ -61,11 +61,15 @@ typedef struct {
     MMPortSerialAt        *gps_port;
     GRegex                *xlsrstop_regex;
     GRegex                *nmea_regex;
+
+    /* Asynchronous GPS engine stop task completion */
+    GTask *pending_gps_engine_stop_task;
 } Private;
 
 static void
 private_free (Private *priv)
 {
+    g_assert (!priv->pending_gps_engine_stop_task);
     g_clear_object (&priv->gps_port);
     if (priv->supported_modes)
         g_array_unref (priv->supported_modes);
@@ -795,6 +799,31 @@ mm_shared_xmm_signal_load_values (MMIfaceModemSignal  *self,
 }
 
 /*****************************************************************************/
+/* Get GPS control port (Location interface)
+ *
+ * This port is an AT port that will also be used for NMEA data.
+ */
+
+static MMPortSerialAt *
+shared_xmm_get_gps_control_port (MMSharedXmm  *self,
+                                 GError      **error)
+{
+    MMPortSerialAt *gps_port = NULL;
+
+    gps_port = mm_base_modem_get_port_gps_control (MM_BASE_MODEM (self));
+    if (!gps_port) {
+        gps_port = mm_base_modem_get_port_secondary (MM_BASE_MODEM (self));
+        if (!gps_port)
+            gps_port = mm_base_modem_get_port_primary (MM_BASE_MODEM (self));
+    }
+
+    if (!gps_port)
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "No valid port found to control GPS");
+    return gps_port;
+}
+
+/*****************************************************************************/
 /* Load capabilities (Location interface) */
 
 MMModemLocationSource
@@ -945,7 +974,7 @@ mm_shared_xmm_location_load_capabilities (MMIfaceModemLocation *self,
 }
 
 /*****************************************************************************/
-/* GPS engine state selection */
+/* NMEA trace processing */
 
 static void
 nmea_received (MMPortSerialAt *port,
@@ -957,6 +986,23 @@ nmea_received (MMPortSerialAt *port,
     trace = g_match_info_fetch (info, 1);
     mm_iface_modem_location_gps_update (MM_IFACE_MODEM_LOCATION (self), trace);
     g_free (trace);
+}
+
+/*****************************************************************************/
+/* GPS engine state selection */
+
+#define GPS_ENGINE_STOP_TIMEOUT_SECS 10
+
+typedef struct {
+    GpsEngineState state;
+    guint          engine_stop_timeout_id;
+} GpsEngineSelectContext;
+
+static void
+gps_engine_select_context_free (GpsEngineSelectContext *ctx)
+{
+    g_assert (!ctx->engine_stop_timeout_id);
+    g_slice_free (GpsEngineSelectContext, ctx);
 }
 
 static gboolean
@@ -972,12 +1018,13 @@ xlcslsr_ready (MMBaseModem  *self,
                GAsyncResult *res,
                GTask        *task)
 {
-    GpsEngineState  state;
-    const gchar    *response;
-    GError         *error = NULL;
-    Private        *priv;
+    GpsEngineSelectContext *ctx;
+    const gchar            *response;
+    GError                 *error = NULL;
+    Private                *priv;
 
     priv = get_private (MM_SHARED_XMM (self));
+    ctx = g_task_get_task_data (task);
 
     response = mm_base_modem_at_command_full_finish (self, res, &error);
     if (!response) {
@@ -987,7 +1034,7 @@ xlcslsr_ready (MMBaseModem  *self,
         return;
     }
 
-    state = GPOINTER_TO_UINT (g_task_get_task_data (task));
+    mm_obj_dbg (self, "GPS engine started");
 
     g_assert (priv->gps_port);
     mm_port_serial_at_add_unsolicited_msg_handler (priv->gps_port,
@@ -995,7 +1042,7 @@ xlcslsr_ready (MMBaseModem  *self,
                                                    (MMPortSerialAtUnsolicitedMsgFn)nmea_received,
                                                    self,
                                                    NULL);
-    priv->gps_engine_state = state;
+    priv->gps_engine_state = ctx->state;
 
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
@@ -1004,32 +1051,27 @@ xlcslsr_ready (MMBaseModem  *self,
 static void
 gps_engine_start (GTask *task)
 {
-    GpsEngineState  state;
-    MMSharedXmm    *self;
-    Private        *priv;
-    guint           transport_protocol = 0;
-    guint           pos_mode = 0;
-    gchar          *cmd;
+    GpsEngineSelectContext *ctx;
+    MMSharedXmm            *self;
+    Private                *priv;
+    GError                 *error = NULL;
+    guint                   transport_protocol = 0;
+    guint                   pos_mode = 0;
+    gchar                  *cmd;
 
-    self  = g_task_get_source_object (task);
-    priv  = get_private (self);
-    state = GPOINTER_TO_UINT (g_task_get_task_data (task));
+    self = g_task_get_source_object (task);
+    priv = get_private (self);
+    ctx  = g_task_get_task_data (task);
 
-    /* Look for an AT port to use for GPS. Prefer secondary port if there is one,
-     * otherwise use primary */
     g_assert (!priv->gps_port);
-    priv->gps_port = mm_base_modem_get_port_secondary (MM_BASE_MODEM (self));
+    priv->gps_port = shared_xmm_get_gps_control_port (self, &error);
     if (!priv->gps_port) {
-        priv->gps_port = mm_base_modem_get_port_primary (MM_BASE_MODEM (self));
-        if (!priv->gps_port) {
-            g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                                     "No valid port found to control GPS");
-            g_object_unref (task);
-            return;
-        }
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
     }
 
-    switch (state) {
+    switch (ctx->state) {
         case GPS_ENGINE_STATE_STANDALONE:
             transport_protocol = 2;
             pos_mode = 3;
@@ -1047,6 +1089,8 @@ gps_engine_start (GTask *task)
             g_assert_not_reached ();
             break;
     }
+
+    mm_obj_dbg (self, "starting GPS engine...");
 
     /*
      * AT+XLCSLSR
@@ -1077,53 +1121,171 @@ gps_engine_start (GTask *task)
     g_free (cmd);
 }
 
-static void
-xlsrstop_ready (MMBaseModem  *self,
-                GAsyncResult *res,
-                GTask        *task)
+static GTask *
+recover_pending_gps_engine_stop_task (Private *priv)
 {
-    GpsEngineState  state;
-    GError         *error = NULL;
-    Private        *priv;
+    GTask                  *task;
+    GpsEngineSelectContext *ctx;
 
-    mm_base_modem_at_command_full_finish (self, res, &error);
+    /* We're taking over full ownership of the GTask at this point. */
+    if (!priv->pending_gps_engine_stop_task)
+        return NULL;
+    task = g_steal_pointer (&priv->pending_gps_engine_stop_task);
+    ctx = g_task_get_task_data (task);
 
-    priv = get_private (MM_SHARED_XMM (self));
-    state = GPOINTER_TO_UINT (g_task_get_task_data (task));
+    /* remove timeout */
+    if (ctx->engine_stop_timeout_id) {
+        g_source_remove (ctx->engine_stop_timeout_id);
+        ctx->engine_stop_timeout_id = 0;
+    }
+
+    /* disable urc handling */
+    mm_port_serial_at_add_unsolicited_msg_handler (
+        priv->gps_port,
+        priv->xlsrstop_regex,
+        NULL, NULL, NULL);
+
+    return task;
+}
+
+static void
+gps_engine_stopped (GTask *task)
+{
+    MMSharedXmm            *self;
+    GpsEngineSelectContext *ctx;
+    Private                *priv;
+
+    self = g_task_get_source_object (task);
+    priv = get_private (self);
+    ctx  = g_task_get_task_data (task);
 
     g_assert (priv->gps_port);
-    mm_port_serial_at_add_unsolicited_msg_handler (priv->gps_port, priv->nmea_regex, NULL, NULL, NULL);
+    mm_port_serial_at_add_unsolicited_msg_handler (
+        priv->gps_port,
+        priv->nmea_regex,
+        NULL, NULL, NULL);
     g_clear_object (&priv->gps_port);
     priv->gps_engine_state = GPS_ENGINE_STATE_OFF;
 
     /* If already reached requested state, we're done */
-    if (state == priv->gps_engine_state) {
+    if (ctx->state == priv->gps_engine_state) {
         /* If we had an error when requesting this specific state, report it */
-        if (error)
-            g_task_return_error (task, error);
-        else
-            g_task_return_boolean (task, TRUE);
+        g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
     }
-
-    /* Ignore errors if the stop operation was an intermediate one */
-    g_clear_error (&error);
 
     /* Otherwise, start with new state */
     gps_engine_start (task);
 }
 
+static gboolean
+xlsrstop_urc_timeout (MMSharedXmm *self)
+{
+    GTask   *task;
+    Private *priv;
+
+    priv = get_private (self);
+
+    task = recover_pending_gps_engine_stop_task (priv);
+    g_assert (task);
+
+    mm_obj_dbg (self, "timed out waiting for full GPS engine stop report, assuming stopped...");
+    gps_engine_stopped (task);
+
+    return G_SOURCE_REMOVE;
+}
+
+static void
+xlsrstop_urc_received (MMPortSerialAt *port,
+                       GMatchInfo     *info,
+                       MMSharedXmm    *self)
+{
+    GTask   *task;
+    Private *priv;
+
+    priv = get_private (self);
+
+    task = recover_pending_gps_engine_stop_task (priv);
+    g_assert (task);
+
+    mm_obj_dbg (self, "GPS engine fully stopped");
+    gps_engine_stopped (task);
+}
+
+static void
+xlsrstop_ready (MMBaseModem  *self,
+                GAsyncResult *res)
+{
+    g_autoptr(GError)  error = NULL;
+
+    if (!mm_base_modem_at_command_full_finish (self, res, &error)) {
+        Private *priv;
+        GTask   *task;
+
+        mm_obj_dbg (self, "GPS engine stop request failed: %s", error->message);
+
+        priv = get_private (MM_SHARED_XMM (self));
+        task = recover_pending_gps_engine_stop_task (priv);
+        if (task) {
+            g_task_return_error (task, g_steal_pointer (&error));
+            g_object_unref (task);
+        }
+        return;
+    }
+
+    mm_obj_dbg (self, "GPS engine stop request accepted");
+}
+
 static void
 gps_engine_stop (GTask *task)
 {
-    MMSharedXmm *self;
-    Private     *priv;
+    MMSharedXmm            *self;
+    Private                *priv;
+    GpsEngineSelectContext *ctx;
 
     self = g_task_get_source_object (task);
     priv = get_private (self);
+    ctx  = g_task_get_task_data (task);
 
     g_assert (priv->gps_port);
+
+    /* After a +XLSRSTOP command the modem will reply OK to report that the stop
+     * request has been received, but at this point the engine may still be on.
+     * We must wait for the additional +XLSRSTOP URC to tell us that the engine
+     * is really off before going on.
+     *
+     * We do this by setting up a temporary regex match for the URC during this
+     * operation, and also by configuring a timeout so that we don't wait forever
+     * for the URC.
+     *
+     * The initial +XLSRSTOP response will be ignored unless an error is being
+     * reported.
+     *
+     * The operation task is kept in private info because it will be shared by all
+     * the possible paths that may complete it (response, URC, timeout).
+     */
+    if (priv->pending_gps_engine_stop_task) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_WRONG_STATE,
+                                 "An engine stop task is already ongoing");
+        g_object_unref (task);
+        return;
+    }
+    priv->pending_gps_engine_stop_task = task;
+
+    mm_obj_dbg (self, "launching GPS engine stop operation...");
+
+    ctx->engine_stop_timeout_id = g_timeout_add_seconds (GPS_ENGINE_STOP_TIMEOUT_SECS,
+                                                         (GSourceFunc) xlsrstop_urc_timeout,
+                                                         self);
+
+    mm_port_serial_at_add_unsolicited_msg_handler (
+        priv->gps_port,
+        priv->xlsrstop_regex,
+        (MMPortSerialAtUnsolicitedMsgFn)xlsrstop_urc_received,
+        self,
+        NULL);
+
     mm_base_modem_at_command_full (MM_BASE_MODEM (self),
                                    priv->gps_port,
                                    "+XLSRSTOP",
@@ -1132,7 +1294,7 @@ gps_engine_stop (GTask *task)
                                    FALSE, /* raw */
                                    NULL, /* cancellable */
                                    (GAsyncReadyCallback)xlsrstop_ready,
-                                   task);
+                                   NULL);
 }
 
 static void
@@ -1141,13 +1303,16 @@ gps_engine_state_select (MMSharedXmm         *self,
                          GAsyncReadyCallback  callback,
                          gpointer             user_data)
 {
-    GTask   *task;
-    Private *priv;
-
-    task = g_task_new (self, NULL, callback, user_data);
-    g_task_set_task_data (task, GUINT_TO_POINTER (state), NULL);
+    GpsEngineSelectContext *ctx;
+    GTask                  *task;
+    Private                *priv;
 
     priv = get_private (self);
+
+    task = g_task_new (self, NULL, callback, user_data);
+    ctx = g_slice_new0 (GpsEngineSelectContext);
+    ctx->state = state;
+    g_task_set_task_data (task, ctx, (GDestroyNotify)gps_engine_select_context_free);
 
     /* If already in the requested state, we're done */
     if (state == priv->gps_engine_state) {
@@ -1489,9 +1654,8 @@ mm_shared_xmm_location_set_supl_server (MMIfaceModemLocation   *self,
 void
 mm_shared_xmm_setup_ports (MMBroadbandModem *self)
 {
-    Private        *priv;
-    MMPortSerialAt *ports[2];
-    guint           i;
+    Private                   *priv;
+    g_autoptr(MMPortSerialAt)  gps_port = NULL;
 
     priv = get_private (MM_SHARED_XMM (self));
     g_assert (priv->broadband_modem_class_parent);
@@ -1500,26 +1664,19 @@ mm_shared_xmm_setup_ports (MMBroadbandModem *self)
     /* Parent setup first always */
     priv->broadband_modem_class_parent->setup_ports (self);
 
-    ports[0] = mm_base_modem_peek_port_primary   (MM_BASE_MODEM (self));
-    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
-
-    /* Setup primary and secondary ports */
-    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
-        if (!ports[i])
-            continue;
-
+    /* Then, setup the GPS port */
+    gps_port = shared_xmm_get_gps_control_port (MM_SHARED_XMM (self), NULL);
+    if (gps_port) {
         /* After running AT+XLSRSTOP we may get an unsolicited response
          * reporting its status, we just ignore it. */
         mm_port_serial_at_add_unsolicited_msg_handler (
-            ports[i],
+            gps_port,
             priv->xlsrstop_regex,
             NULL, NULL, NULL);
 
-
-
         /* make sure GPS is stopped in case it was left enabled */
         mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                       ports[i],
+                                       gps_port,
                                        "+XLSRSTOP",
                                        3, FALSE, FALSE, NULL, NULL, NULL);
     }

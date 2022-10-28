@@ -25,6 +25,7 @@
 #include "mm-broadband-modem.h"
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-location.h"
+#include "mm-modem-helpers-telit.h"
 
 #define MM_TYPE_SHARED_TELIT                   (mm_shared_telit_get_type ())
 #define MM_SHARED_TELIT(obj)                   (G_TYPE_CHECK_INSTANCE_CAST ((obj), MM_TYPE_SHARED_TELIT, MMSharedTelit))
@@ -41,6 +42,9 @@ struct _MMSharedTelit {
 };
 
 GType mm_shared_telit_get_type (void);
+
+void        mm_shared_telit_store_supported_modes       (MMSharedTelit *self,
+                                                         GArray *modes);
 
 gboolean    mm_shared_telit_load_current_modes_finish   (MMIfaceModem *self,
                                                          GAsyncResult *res,
@@ -87,4 +91,17 @@ void        mm_shared_telit_modem_set_current_bands     (MMIfaceModem *self,
                                                          GAsyncReadyCallback callback,
                                                          gpointer user_data);
 
+void       mm_shared_telit_modem_load_revision          (MMIfaceModem *self,
+                                                         GAsyncReadyCallback callback,
+                                                         gpointer user_data);
+
+gchar *   mm_shared_telit_modem_load_revision_finish    (MMIfaceModem *self,
+                                                         GAsyncResult *res,
+                                                         GError **error);
+
+void      mm_shared_telit_store_revision                (MMSharedTelit *self,
+                                                         const gchar   *revision);
+
+void      mm_shared_telit_get_bnd_parse_config          (MMIfaceModem          *self,
+                                                         MMTelitBNDParseConfig *config);
 #endif  /* MM_SHARED_TELIT_H */

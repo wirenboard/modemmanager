@@ -64,8 +64,9 @@ struct _MMPortQmiPrivate {
     QrtrNode  *node;
 #endif
 
+    /* timeout monitoring */
+    gulong timeout_monitoring_id;
     /* endpoint info */
-    gulong              endpoint_info_signal_id;
     QmiDataEndpointType endpoint_type;
     gint                endpoint_interface_number;
     /* kernel data mode */
@@ -76,7 +77,7 @@ struct _MMPortQmiPrivate {
     QmiWdaDataAggregationProtocol dap;
     guint                         max_multiplexed_links;
     /* preallocated links */
-    MMPort   *preallocated_links_master;
+    MMPort   *preallocated_links_main;
     GArray   *preallocated_links;
     GList    *preallocated_links_setup_pending;
 };
@@ -147,10 +148,7 @@ initialize_endpoint_info (MMPortQmi *self)
 
     kernel_device = mm_port_peek_kernel_device (MM_PORT (self));
 
-    if (!kernel_device)
-        self->priv->endpoint_type = QMI_DATA_ENDPOINT_TYPE_UNDEFINED;
-    else
-        self->priv->endpoint_type = mm_port_subsys_to_qmi_endpoint_type (mm_port_get_subsys (MM_PORT (self)));
+    self->priv->endpoint_type = mm_port_net_driver_to_qmi_endpoint_type (self->priv->net_driver);
 
     switch (self->priv->endpoint_type) {
         case QMI_DATA_ENDPOINT_TYPE_HSUSB:
@@ -185,6 +183,49 @@ guint
 mm_port_qmi_get_endpoint_interface_number (MMPortQmi *self)
 {
     return self->priv->endpoint_interface_number;
+}
+
+void
+mm_port_qmi_get_endpoint_info (MMPortQmi *self, MMQmiDataEndpoint *out_endpoint)
+{
+    out_endpoint->type = self->priv->endpoint_type;
+    out_endpoint->interface_number = self->priv->endpoint_interface_number;
+    out_endpoint->sio_port = QMI_SIO_PORT_NONE;
+}
+
+/*****************************************************************************/
+
+static void
+reset_timeout_monitoring (MMPortQmi *self,
+                          QmiDevice *qmi_device)
+{
+    if (self->priv->timeout_monitoring_id && qmi_device) {
+        g_signal_handler_disconnect (qmi_device, self->priv->timeout_monitoring_id);
+        self->priv->timeout_monitoring_id = 0;
+    }
+}
+
+static void
+consecutive_timeouts_updated_cb (MMPortQmi  *self,
+                                 GParamSpec *pspec,
+                                 QmiDevice  *qmi_device)
+{
+    g_signal_emit_by_name (self, MM_PORT_SIGNAL_TIMED_OUT, qmi_device_get_consecutive_timeouts (qmi_device));
+}
+
+static void
+setup_timeout_monitoring (MMPortQmi *self,
+                          QmiDevice *qmi_device)
+{
+    g_assert (qmi_device);
+
+    reset_timeout_monitoring (self, qmi_device);
+
+    g_assert (!self->priv->timeout_monitoring_id);
+    self->priv->timeout_monitoring_id = g_signal_connect_swapped (qmi_device,
+                                                                  "notify::" QMI_DEVICE_CONSECUTIVE_TIMEOUTS,
+                                                                  G_CALLBACK (consecutive_timeouts_updated_cb),
+                                                                  self);
 }
 
 /*****************************************************************************/
@@ -325,7 +366,7 @@ delete_preallocated_links (QmiDevice *qmi_device,
 {
     guint i;
 
-    /* This link deletion cleanup may fail if the master interface is up
+    /* This link deletion cleanup may fail if the main interface is up
      * (a limitation of qmi_wwan in some kernel versions). It's just a minor
      * inconvenience really, if MM restarts they'll be all removed during
      * initialization anyway */
@@ -382,7 +423,7 @@ release_preallocated_link (MMPortQmi    *self,
 
 static gboolean
 acquire_preallocated_link (MMPortQmi  *self,
-                           MMPort     *master,
+                           MMPort     *main,
                            gchar     **link_name,
                            guint      *mux_id,
                            GError    **error)
@@ -395,18 +436,18 @@ acquire_preallocated_link (MMPortQmi  *self,
         return FALSE;
     }
 
-    if (!self->priv->preallocated_links || !self->priv->preallocated_links_master) {
+    if (!self->priv->preallocated_links || !self->priv->preallocated_links_main) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
                      "No preallocated links available");
         return FALSE;
     }
 
-    if ((master != self->priv->preallocated_links_master) &&
-        (g_strcmp0 (mm_port_get_device (master), mm_port_get_device (self->priv->preallocated_links_master)) != 0)) {
+    if ((main != self->priv->preallocated_links_main) &&
+        (g_strcmp0 (mm_port_get_device (main), mm_port_get_device (self->priv->preallocated_links_main)) != 0)) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
                      "Preallocated links available in 'net/%s', not in 'net/%s'",
-                     mm_port_get_device (self->priv->preallocated_links_master),
-                     mm_port_get_device (master));
+                     mm_port_get_device (self->priv->preallocated_links_main),
+                     mm_port_get_device (main));
         return FALSE;
     }
 
@@ -524,7 +565,7 @@ initialize_preallocated_links (MMPortQmi           *self,
 
     ctx = g_slice_new0 (InitializePreallocatedLinksContext);
     ctx->qmi_device = g_object_ref (self->priv->qmi_device);
-    ctx->data = g_object_ref (self->priv->preallocated_links_master);
+    ctx->data = g_object_ref (self->priv->preallocated_links_main);
     ctx->preallocated_links = g_array_sized_new (FALSE, FALSE, sizeof (PreallocatedLinkInfo), DEFAULT_LINK_PREALLOCATED_AMOUNT);
     g_array_set_clear_func (ctx->preallocated_links, (GDestroyNotify)preallocated_link_info_clear);
     g_task_set_task_data (task, ctx, (GDestroyNotify)initialize_preallocated_links_context_free);
@@ -535,7 +576,7 @@ initialize_preallocated_links (MMPortQmi           *self,
 /*****************************************************************************/
 
 typedef struct {
-    MMPort *master;
+    MMPort *main;
     gchar  *link_name;
     guint   mux_id;
 } SetupLinkContext;
@@ -544,7 +585,7 @@ static void
 setup_link_context_free (SetupLinkContext *ctx)
 {
     g_free (ctx->link_name);
-    g_clear_object (&ctx->master);
+    g_clear_object (&ctx->main);
     g_slice_free (SetupLinkContext, ctx);
 }
 
@@ -594,7 +635,7 @@ setup_preallocated_link (GTask *task)
     self = g_task_get_source_object (task);
     ctx  = g_task_get_task_data (task);
 
-    if (!acquire_preallocated_link (self, ctx->master, &ctx->link_name, &ctx->mux_id, &error))
+    if (!acquire_preallocated_link (self, ctx->main, &ctx->link_name, &ctx->mux_id, &error))
         g_task_return_error (task, error);
     else
         g_task_return_boolean (task, TRUE);
@@ -620,8 +661,8 @@ initialize_preallocated_links_ready (MMPortQmi    *self,
             self->priv->preallocated_links_setup_pending = g_list_delete_link (self->priv->preallocated_links_setup_pending,
                                                                                self->priv->preallocated_links_setup_pending);
         }
-        /* and reset back the master, because we're not really initialized */
-        g_clear_object (&self->priv->preallocated_links_master);
+        /* and reset back the main, because we're not really initialized */
+        g_clear_object (&self->priv->preallocated_links_main);
         return;
     }
 
@@ -665,7 +706,7 @@ mm_port_qmi_setup_link (MMPortQmi           *self,
     }
 
     ctx = g_slice_new0 (SetupLinkContext);
-    ctx->master = g_object_ref (data);
+    ctx->main = g_object_ref (data);
     ctx->mux_id = QMI_DEVICE_MUX_ID_UNBOUND;
     g_task_set_task_data (task, ctx, (GDestroyNotify) setup_link_context_free);
 
@@ -703,15 +744,15 @@ mm_port_qmi_setup_link (MMPortQmi           *self,
 
         /* We must make sure we don't run this procedure in parallel (e.g. if multiple
          * connection attempts reach at the same time), so if we're told the preallocated
-         * links are already being initialized (master is set) but the array didn't exist,
+         * links are already being initialized (main is set) but the array didn't exist,
          * queue our task for completion once we're fully initialized */
-        if (self->priv->preallocated_links_master) {
+        if (self->priv->preallocated_links_main) {
             self->priv->preallocated_links_setup_pending = g_list_append (self->priv->preallocated_links_setup_pending, task);
             return;
         }
 
-        /* Store master to flag that we're initializing preallocated links */
-        self->priv->preallocated_links_master = g_object_ref (data);
+        /* Store main to flag that we're initializing preallocated links */
+        self->priv->preallocated_links_main = g_object_ref (data);
         initialize_preallocated_links (self,
                                        (GAsyncReadyCallback) initialize_preallocated_links_ready,
                                        task);
@@ -900,7 +941,7 @@ internal_reset (MMPortQmi           *self,
     ctx->device = g_object_ref (device);
     g_task_set_task_data (task, ctx, (GDestroyNotify) internal_reset_context_free);
 
-    /* first, bring down master interface */
+    /* first, bring down main interface */
     mm_obj_dbg (self, "bringing down data interface '%s'",
                 mm_port_get_device (ctx->data));
     mm_port_net_link_setup (MM_PORT_NET (ctx->data),
@@ -1140,7 +1181,7 @@ typedef enum {
     INTERNAL_SETUP_DATA_FORMAT_STEP_QUERY_DONE,
     INTERNAL_SETUP_DATA_FORMAT_STEP_CHECK_DATA_FORMAT_COMBINATION,
     INTERNAL_SETUP_DATA_FORMAT_STEP_SYNC_WDA_DATA_FORMAT,
-    INTERNAL_SETUP_DATA_FORMAT_STEP_SETUP_MASTER_MTU,
+    INTERNAL_SETUP_DATA_FORMAT_STEP_SETUP_MAIN_MTU,
     INTERNAL_SETUP_DATA_FORMAT_STEP_SYNC_KERNEL_DATA_MODE,
     INTERNAL_SETUP_DATA_FORMAT_STEP_LAST,
 } InternalSetupDataFormatStep;
@@ -1288,9 +1329,9 @@ sync_kernel_data_mode (GTask *task)
 }
 
 static void
-master_mtu_ready (MMPortNet    *data,
-                  GAsyncResult *res,
-                  GTask        *task)
+main_mtu_ready (MMPortNet    *data,
+                GAsyncResult *res,
+                GTask        *task)
 {
     MMPortQmi                      *self;
     InternalSetupDataFormatContext *ctx;
@@ -1300,7 +1341,7 @@ master_mtu_ready (MMPortNet    *data,
     ctx  = g_task_get_task_data (task);
 
     if (!mm_port_net_link_setup_finish (data, res, &error)) {
-        mm_obj_dbg (self, "failed to setup master MTU: %s", error->message);
+        mm_obj_dbg (self, "failed to setup main MTU: %s", error->message);
         g_clear_error (&error);
     }
 
@@ -1310,7 +1351,7 @@ master_mtu_ready (MMPortNet    *data,
 }
 
 static void
-setup_master_mtu (GTask *task)
+setup_main_mtu (GTask *task)
 {
     MMPortQmi                      *self;
     InternalSetupDataFormatContext *ctx;
@@ -1320,7 +1361,7 @@ setup_master_mtu (GTask *task)
     self = g_task_get_source_object (task);
     ctx  = g_task_get_task_data     (task);
 
-    /* qmi_wwan multiplexing logic requires master mtu set to the maximum data
+    /* qmi_wwan multiplexing logic requires main mtu set to the maximum data
      * aggregation size */
     if (ctx->kernel_data_modes_requested & (MM_PORT_QMI_KERNEL_DATA_MODE_MUX_RMNET | MM_PORT_QMI_KERNEL_DATA_MODE_MUX_QMIWWAN)) {
         /* Load current max datagram size supported */
@@ -1335,18 +1376,18 @@ setup_master_mtu (GTask *task)
         /* If no max aggregation size was specified by the modem (e.g. if we requested QMAP
          * aggregation protocol but the modem doesn't support it), skip */
         if (!mtu) {
-            mm_obj_dbg (self, "ignoring master mtu setup");
+            mm_obj_dbg (self, "ignoring main mtu setup");
             ctx->step++;
             internal_setup_data_format_context_step (task);
             return;
         }
     }
 
-    /* Master MTU change can only be changed while in 802-3 */
+    /* Main MTU change can only be changed while in 802-3 */
     if (!(ctx->kernel_data_modes_current & MM_PORT_QMI_KERNEL_DATA_MODE_802_3)) {
-        mm_obj_dbg (self, "Updating kernel expected data format to 802-3 temporarily for master mtu setup");
+        mm_obj_dbg (self, "Updating kernel expected data format to 802-3 temporarily for main mtu setup");
         if (!qmi_device_set_expected_data_format (ctx->device, QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3, &error)) {
-            g_prefix_error (&error, "Failed setting up 802.3 kernel data format before master mtu change: ");
+            g_prefix_error (&error, "Failed setting up 802.3 kernel data format before main mtu change: ");
             g_task_return_error (task, error);
             g_object_unref (task);
             return;
@@ -1355,12 +1396,12 @@ setup_master_mtu (GTask *task)
         ctx->kernel_data_modes_current = MM_PORT_QMI_KERNEL_DATA_MODE_802_3;
     }
 
-    mm_obj_dbg (self, "setting up master mtu: %u bytes", mtu);
+    mm_obj_dbg (self, "setting up main mtu: %u bytes", mtu);
     mm_port_net_link_setup (MM_PORT_NET (ctx->data),
                             FALSE,
                             mtu,
                             NULL,
-                            (GAsyncReadyCallback) master_mtu_ready,
+                            (GAsyncReadyCallback) main_mtu_ready,
                             task);
 }
 
@@ -1382,7 +1423,7 @@ set_data_format_ready (QmiClientWda *client,
         return;
     }
 
-    /* store max aggregation size so that the master MTU logic works */
+    /* store max aggregation size so that the main MTU logic works */
     qmi_message_wda_set_data_format_output_get_downlink_data_aggregation_max_size (output, &ctx->wda_dl_dap_max_size_current, NULL);
 
     /* request reload */
@@ -1849,11 +1890,11 @@ internal_setup_data_format_context_step (GTask *task)
             ctx->step++;
             /* Fall through */
 
-        case INTERNAL_SETUP_DATA_FORMAT_STEP_SETUP_MASTER_MTU:
-            /* qmi_wwan add_mux/del_mux based logic requires master MTU set to the maximum
+        case INTERNAL_SETUP_DATA_FORMAT_STEP_SETUP_MAIN_MTU:
+            /* qmi_wwan add_mux/del_mux based logic requires main MTU set to the maximum
              * data aggregation size reported by the modem.  */
             if (g_strcmp0 (self->priv->net_driver, "qmi_wwan") == 0) {
-                setup_master_mtu (task);
+                setup_main_mtu (task);
                 return;
             }
             ctx->step++;
@@ -2491,6 +2532,7 @@ port_open_step (GTask *task)
         g_assert (ctx->device);
         g_assert (!self->priv->qmi_device);
         self->priv->qmi_device = g_object_ref (ctx->device);
+        setup_timeout_monitoring (self, ctx->device);
         self->priv->in_progress = FALSE;
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
@@ -2540,6 +2582,7 @@ mm_port_qmi_set_net_driver (MMPortQmi   *self,
     g_assert (MM_IS_PORT_QMI (self));
     g_assert (!self->priv->net_driver);
     self->priv->net_driver = g_strdup (net_driver);
+    initialize_endpoint_info (self);
 }
 
 /*****************************************************************************/
@@ -2629,6 +2672,9 @@ mm_port_qmi_close (MMPortQmi           *self,
     ctx->qmi_device = g_steal_pointer (&self->priv->qmi_device);
     g_task_set_task_data (task, ctx, (GDestroyNotify)port_qmi_close_context_free);
 
+    /* Reset timeout monitoring logic */
+    reset_timeout_monitoring (self, ctx->qmi_device);
+
     /* Release all allocated clients */
     for (l = self->priv->services; l; l = g_list_next (l)) {
         ServiceInfo *info = l->data;
@@ -2648,7 +2694,7 @@ mm_port_qmi_close (MMPortQmi           *self,
         delete_preallocated_links (ctx->qmi_device, self->priv->preallocated_links);
         g_clear_pointer (&self->priv->preallocated_links, g_array_unref);
     }
-    g_clear_object (&self->priv->preallocated_links_master);
+    g_clear_object (&self->priv->preallocated_links_main);
 
     qmi_device_close_async (ctx->qmi_device,
                             5,
@@ -2688,12 +2734,6 @@ static void
 mm_port_qmi_init (MMPortQmi *self)
 {
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, MM_TYPE_PORT_QMI, MMPortQmiPrivate);
-
-    /* load endpoint info as soon as kernel device is set */
-    self->priv->endpoint_info_signal_id = g_signal_connect (self,
-                                                            "notify::" MM_PORT_KERNEL_DEVICE,
-                                                            G_CALLBACK (initialize_endpoint_info),
-                                                            NULL);
 }
 
 #if defined WITH_QRTR
@@ -2743,11 +2783,6 @@ dispose (GObject *object)
     MMPortQmi *self = MM_PORT_QMI (object);
     GList *l;
 
-    if (self->priv->endpoint_info_signal_id) {
-        g_signal_handler_disconnect (self, self->priv->endpoint_info_signal_id);
-        self->priv->endpoint_info_signal_id = 0;
-    }
-
     /* Deallocate all clients */
     for (l = self->priv->services; l; l = g_list_next (l)) {
         ServiceInfo *info = l->data;
@@ -2762,13 +2797,14 @@ dispose (GObject *object)
     if (self->priv->preallocated_links && self->priv->qmi_device)
         delete_preallocated_links (self->priv->qmi_device, self->priv->preallocated_links);
     g_clear_pointer (&self->priv->preallocated_links, g_array_unref);
-    g_clear_object (&self->priv->preallocated_links_master);
+    g_clear_object (&self->priv->preallocated_links_main);
 
     /* Clear node object */
 #if defined WITH_QRTR
     g_clear_object (&self->priv->node);
 #endif
     /* Clear device object */
+    reset_timeout_monitoring (self, self->priv->qmi_device);
     g_clear_object (&self->priv->qmi_device);
 
     g_clear_pointer (&self->priv->net_driver, g_free);
