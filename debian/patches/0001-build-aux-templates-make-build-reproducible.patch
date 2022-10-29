@@ -1,0 +1,49 @@
+From 9decd993cca719316d5a6800bec34322fb1aaf52 Mon Sep 17 00:00:00 2001
+From: Arnaud Ferraris <aferraris@debian.org>
+Date: Sat, 29 Oct 2022 11:12:08 +0200
+Subject: [PATCH] build-aux: templates: make build reproducible
+
+By including `@filename@` in the enums/errors types header template, we
+generate files containing the full path to source files, which reflects
+the particular filesystem layout used for a given build. As such, this
+alters build reproducibility as it causes a (admittedly small) diff
+between builds executed in different environments.
+
+Using `@basename@` instead ensures only the file name (without its full
+path) is mentioned in the generated files, making the builds
+reproducible again.
+
+Forwarded: https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/merge_requests/912
+---
+ build-aux/mm-enums-types.h.template  | 2 +-
+ build-aux/mm-errors-types.h.template | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/build-aux/mm-enums-types.h.template b/build-aux/mm-enums-types.h.template
+index 652c53dc..24d18a9d 100644
+--- a/build-aux/mm-enums-types.h.template
++++ b/build-aux/mm-enums-types.h.template
+@@ -7,7 +7,7 @@ G_BEGIN_DECLS
+ 
+ /*** BEGIN file-production ***/
+ 
+-/* enumerations from "@filename@" */
++/* enumerations from "@basename@" */
+ /*** END file-production ***/
+ 
+ /*** BEGIN value-header ***/
+diff --git a/build-aux/mm-errors-types.h.template b/build-aux/mm-errors-types.h.template
+index 72c90cf5..5c80bee6 100644
+--- a/build-aux/mm-errors-types.h.template
++++ b/build-aux/mm-errors-types.h.template
+@@ -7,7 +7,7 @@ G_BEGIN_DECLS
+ 
+ /*** BEGIN file-production ***/
+ 
+-/* enumerations from "@filename@" */
++/* enumerations from "@basename@" */
+ /*** END file-production ***/
+ 
+ /*** BEGIN value-header ***/
+-- 
+2.35.1
