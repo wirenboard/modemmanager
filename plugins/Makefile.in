@@ -3082,7 +3082,7 @@ TEST_COMMON_LIBADD_FLAGS = \
 @ENABLE_PLUGIN_SIMTECH_TRUE@	$(NULL)
 
 @ENABLE_PLUGIN_SIMTECH_TRUE@libmm_plugin_simtech_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-@ENABLE_PLUGIN_SIMTECH_TRUE@libmm_plugin_simtech_la_LIBADD = $(builddir)/libhelpers-simtech.la
+@ENABLE_PLUGIN_SIMTECH_TRUE@libmm_plugin_simtech_la_LIBADD = $(builddir)/libhelpers-simtech.la -lgpiod
 @ENABLE_PLUGIN_TELIT_TRUE@libmm_plugin_telit_la_SOURCES = \
 @ENABLE_PLUGIN_TELIT_TRUE@	telit/mm-plugin-telit.c \
 @ENABLE_PLUGIN_TELIT_TRUE@	telit/mm-plugin-telit.h \

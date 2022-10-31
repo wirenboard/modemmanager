@@ -1802,7 +1802,7 @@ mm_3gpp_parse_cgdcont_read_response (const gchar *reply,
         return NULL;
 
     list = NULL;
-    r = g_regex_new ("\\+CGDCONT:\\s*(\\d+)\\s*,([^, \\)]*)\\s*,([^, \\)]*)\\s*,([^, \\)]*)",
+    r = g_regex_new ("\\+CGDCONT:\\s*(\\d+)\\s*,([^, \\)]*)\\s*,([^,\\s\\)]*)",
                      G_REGEX_DOLLAR_ENDONLY | G_REGEX_RAW,
                      0, &inner_error);
     if (r) {

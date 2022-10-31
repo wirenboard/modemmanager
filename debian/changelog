@@ -1,3 +1,20 @@
+modemmanager (1.18.12-1~bpo11+1-wb100) bullseye-backports; urgency=medium
+
+  * Add SIM A7600E-H support
+    - CGDCONT read response with only 3 parameters in list (+CGDCONT: 1,"IP","nate.sktelecom.com") parsing.
+    - add UDEV rules for SIM A7600E-H
+    - add SIM card switching using libgpiod.
+      Add ID_MM_SIM_SWITCH_GPIO_LABEL UDEV parameter for GPIO controlling external SIM switching 
+    - fix CGDCONT read response with only 3 parameters in list (+CGDCONT: 1,"IP","nate.sktelecom.com") parsing.
+    - set all +CRSM response timeouts to 20s
+    - ignore PB DONE, SMS DONE, +NITZ: URCs
+    - ignore NO CARRIER after AT+CFUN=0 command
+    - ignore +CPIN: READY URC on startup
+    - implement reset
+    - fix supported ip families request
+
+ -- Petr Krasnoshchekov <petr.krasnoshchekov@wirenboard.ru>  Fri, 28 Oct 2022 17:21:25 +0500
+
 modemmanager (1.18.12-1~bpo11+1) bullseye-backports; urgency=medium
 
   * Create backport for Debian 11.
