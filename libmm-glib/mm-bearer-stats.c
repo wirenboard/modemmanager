@@ -17,8 +17,9 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2015 Azimut Electronics
- * Copyright (C) 2015-2020 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2015-2021 Azimut Electronics
+ * Copyright (C) 2015-2021 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2021 Intel Corporation
  */
 
 #include <string.h>
@@ -43,21 +44,27 @@ G_DEFINE_TYPE (MMBearerStats, mm_bearer_stats, G_TYPE_OBJECT)
 #define PROPERTY_DURATION        "duration"
 #define PROPERTY_RX_BYTES        "rx-bytes"
 #define PROPERTY_TX_BYTES        "tx-bytes"
+#define PROPERTY_START_DATE      "start-date"
 #define PROPERTY_ATTEMPTS        "attempts"
 #define PROPERTY_FAILED_ATTEMPTS "failed-attempts"
 #define PROPERTY_TOTAL_DURATION  "total-duration"
 #define PROPERTY_TOTAL_RX_BYTES  "total-rx-bytes"
 #define PROPERTY_TOTAL_TX_BYTES  "total-tx-bytes"
+#define PROPERTY_UPLINK_SPEED    "uplink-speed"
+#define PROPERTY_DOWNLINK_SPEED  "downlink-speed"
 
 struct _MMBearerStatsPrivate {
     guint   duration;
     guint64 rx_bytes;
     guint64 tx_bytes;
+    guint64 start_date;
     guint   attempts;
     guint   failed_attempts;
     guint   total_duration;
     guint64 total_rx_bytes;
     guint64 total_tx_bytes;
+    guint64 uplink_speed;
+    guint64 downlink_speed;
 };
 
 /*****************************************************************************/
@@ -154,6 +161,39 @@ mm_bearer_stats_set_tx_bytes (MMBearerStats *self,
     g_return_if_fail (MM_IS_BEARER_STATS (self));
 
     self->priv->tx_bytes = bytes;
+}
+
+/*****************************************************************************/
+
+/**
+ * mm_bearer_stats_get_start_date:
+ * @self: a #MMBearerStats.
+ *
+ * Gets the start date of the current connection as a timestamp in seconds
+ * since the epoch.
+ *
+ * Returns: a #guint64.
+ *
+ * Since: 1.20
+ */
+guint64
+mm_bearer_stats_get_start_date (MMBearerStats *self)
+{
+    g_return_val_if_fail (MM_IS_BEARER_STATS (self), 0);
+
+    return self->priv->start_date;
+}
+
+/**
+ * mm_bearer_stats_set_start_date: (skip)
+ */
+void
+mm_bearer_stats_set_start_date (MMBearerStats *self,
+                                guint64        start_date)
+{
+    g_return_if_fail (MM_IS_BEARER_STATS (self));
+
+    self->priv->start_date = start_date;
 }
 
 /*****************************************************************************/
@@ -321,6 +361,70 @@ mm_bearer_stats_set_total_tx_bytes (MMBearerStats *self,
 /*****************************************************************************/
 
 /**
+ * mm_bearer_stats_get_uplink_speed:
+ * @self: a #MMBearerStats.
+ *
+ * Gets the speed of the uplink, in bits per second.
+ *
+ * Returns: a #guint64.
+ *
+ * Since: 1.20
+ */
+guint64
+mm_bearer_stats_get_uplink_speed (MMBearerStats *self)
+{
+    g_return_val_if_fail (MM_IS_BEARER_STATS (self), 0);
+
+    return self->priv->uplink_speed;
+}
+
+/**
+ * mm_bearer_stats_set_uplink_speed: (skip)
+ */
+void
+mm_bearer_stats_set_uplink_speed (MMBearerStats *self,
+                                  guint64        speed)
+{
+    g_return_if_fail (MM_IS_BEARER_STATS (self));
+
+    self->priv->uplink_speed = speed;
+}
+
+/*****************************************************************************/
+
+/**
+ * mm_bearer_stats_get_downlink_speed:
+ * @self: a #MMBearerStats.
+ *
+ * Gets the speed of the downlink, in bits per second.
+ *
+ * Returns: a #guint64.
+ *
+ * Since: 1.20
+ */
+guint64
+mm_bearer_stats_get_downlink_speed (MMBearerStats *self)
+{
+    g_return_val_if_fail (MM_IS_BEARER_STATS (self), 0);
+
+    return self->priv->downlink_speed;
+}
+
+/**
+ * mm_bearer_stats_set_downlink_speed: (skip)
+ */
+void
+mm_bearer_stats_set_downlink_speed (MMBearerStats *self,
+                                    guint64        speed)
+{
+    g_return_if_fail (MM_IS_BEARER_STATS (self));
+
+    self->priv->downlink_speed = speed;
+}
+
+/*****************************************************************************/
+
+/**
  * mm_bearer_stats_get_dictionary: (skip)
  */
 GVariant *
@@ -347,6 +451,10 @@ mm_bearer_stats_get_dictionary (MMBearerStats *self)
                             g_variant_new_uint64 (self->priv->tx_bytes));
     g_variant_builder_add  (&builder,
                             "{sv}",
+                            PROPERTY_START_DATE,
+                            g_variant_new_uint64 (self->priv->start_date));
+    g_variant_builder_add  (&builder,
+                            "{sv}",
                             PROPERTY_ATTEMPTS,
                             g_variant_new_uint32 (self->priv->attempts));
     g_variant_builder_add  (&builder,
@@ -365,6 +473,14 @@ mm_bearer_stats_get_dictionary (MMBearerStats *self)
                             "{sv}",
                             PROPERTY_TOTAL_TX_BYTES,
                             g_variant_new_uint64 (self->priv->total_tx_bytes));
+    g_variant_builder_add  (&builder,
+                            "{sv}",
+                            PROPERTY_UPLINK_SPEED,
+                            g_variant_new_uint64 (self->priv->uplink_speed));
+    g_variant_builder_add  (&builder,
+                            "{sv}",
+                            PROPERTY_DOWNLINK_SPEED,
+                            g_variant_new_uint64 (self->priv->downlink_speed));
     return g_variant_builder_end (&builder);
 }
 
@@ -410,6 +526,10 @@ mm_bearer_stats_new_from_dictionary (GVariant *dictionary,
             mm_bearer_stats_set_tx_bytes (
                 self,
                 g_variant_get_uint64 (value));
+        } else if (g_str_equal (key, PROPERTY_START_DATE)) {
+            mm_bearer_stats_set_start_date (
+                self,
+                g_variant_get_uint64 (value));
         } else if (g_str_equal (key, PROPERTY_ATTEMPTS)) {
             mm_bearer_stats_set_attempts (
                 self,
@@ -428,6 +548,14 @@ mm_bearer_stats_new_from_dictionary (GVariant *dictionary,
                 g_variant_get_uint64 (value));
         } else if (g_str_equal (key, PROPERTY_TOTAL_TX_BYTES)) {
             mm_bearer_stats_set_total_tx_bytes (
+                self,
+                g_variant_get_uint64 (value));
+        } else if (g_str_equal (key, PROPERTY_UPLINK_SPEED)) {
+            mm_bearer_stats_set_uplink_speed (
+                self,
+                g_variant_get_uint64 (value));
+        } else if (g_str_equal (key, PROPERTY_DOWNLINK_SPEED)) {
+            mm_bearer_stats_set_downlink_speed (
                 self,
                 g_variant_get_uint64 (value));
         }

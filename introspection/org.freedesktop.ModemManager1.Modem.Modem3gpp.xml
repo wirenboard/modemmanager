@@ -125,6 +125,22 @@
     </method>
 
     <!--
+        SetNr5gRegistrationSettings:
+        @properties: List of 5G specific registration settings.
+
+        Updates the 5G specific registration settings configured in the device.
+
+        The allowed properties in this method are all the ones specified in the
+        <link linkend="gdbus-property-org-freedesktop-ModemManager1-Modem-Modem3gpp.Nr5gRegistrationSettings">Nr5gRegistrationSettings</link>;
+        i.e.: <literal>"mico-mode"</literal> and <literal>"drx-cycle"</literal>.
+
+        Since: 1.20
+    -->
+    <method name="SetNr5gRegistrationSettings">
+      <arg name="properties" type="a{sv}" direction="in" />
+    </method>
+
+    <!--
         Imei:
 
         The <ulink url="http://en.wikipedia.org/wiki/Imei">IMEI</ulink> of the device.
@@ -214,6 +230,18 @@
     </method>
 
     <!--
+        SetPacketServiceState:
+        @state: a <link linkend="MMModem3gppPacketServiceState">MMModem3gppPacketServiceState</link>.
+
+        Explicitly attach or detach packet service on the current registered network.
+
+        Since: 1.20
+    -->
+    <method name="SetPacketServiceState">
+      <arg name="state" type="u" direction="in" />
+    </method>
+
+    <!--
         SubscriptionState:
 
         A <link linkend="MMModem3gppSubscriptionState">MMModem3gppSubscriptionState</link>
@@ -294,6 +322,50 @@
         Since: 1.10
     -->
     <property name="InitialEpsBearerSettings" type="a{sv}" access="read" />
+
+    <!--
+        PacketServiceState:
+
+        A <link linkend="MMModem3gppPacketServiceState">MMModem3gppPacketServiceState</link>
+        value specifying the packet domain service state.
+
+        Since: 1.20
+    -->
+    <property name="PacketServiceState" type="u" access="read" />
+
+    <!--
+        Nr5gRegistrationSettings:
+
+        5G specific registration settings.
+
+        This is a read-only property, updating these settings should be done using the
+        <link linkend="gdbus-method-org-freedesktop-ModemManager1-Modem-Modem3gpp.SetNr5gRegistrationSettings">Set5gNrRegistrationSettings()</link>
+        method.
+
+        <variablelist>
+        <varlistentry><term>"mico-mode"</term>
+          <listitem>
+            <para>
+              A <link linkend="MMModem3gppMicoMode">MMModem3gppMicoMode</link> value
+              representing the Mobile Initiated Connection (MICO) mode requested by the host,
+              given as an unsigned integer (signature <literal>"u"</literal>).
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry><term>"drx-cycle"</term>
+          <listitem>
+            <para>
+              A <link linkend="MMModem3gppDrxCycle">MMModem3gppDrxCycle</link> value,
+              representing the DRX settings requested by the host, given as an
+              unsigned integer (signature <literal>"u"</literal>).
+            </para>
+          </listitem>
+        </varlistentry>
+        </variablelist>
+
+        Since: 1.20
+    -->
+    <property name="Nr5gRegistrationSettings" type="a{sv}" access="read" />
 
   </interface>
 </node>

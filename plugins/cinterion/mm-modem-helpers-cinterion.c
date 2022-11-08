@@ -554,14 +554,14 @@ mm_cinterion_parse_cnmi_test (const gchar *response,
                               GArray **supported_bfr,
                               GError **error)
 {
-    GRegex *r;
-    GMatchInfo *match_info;
-    GError *inner_error = NULL;
-    GArray *tmp_supported_mode = NULL;
-    GArray *tmp_supported_mt = NULL;
-    GArray *tmp_supported_bm = NULL;
-    GArray *tmp_supported_ds = NULL;
-    GArray *tmp_supported_bfr = NULL;
+    g_autoptr(GRegex)      r = NULL;
+    g_autoptr(GMatchInfo)  match_info = NULL;
+    g_autoptr(GArray)      tmp_supported_mode = NULL;
+    g_autoptr(GArray)      tmp_supported_mt = NULL;
+    g_autoptr(GArray)      tmp_supported_bm = NULL;
+    g_autoptr(GArray)      tmp_supported_ds = NULL;
+    g_autoptr(GArray)      tmp_supported_bfr = NULL;
+    GError                *inner_error = NULL;
 
     if (!response) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "Missing response");
@@ -576,77 +576,151 @@ mm_cinterion_parse_cnmi_test (const gchar *response,
     g_regex_match_full (r, response, strlen (response), 0, 0, &match_info, &inner_error);
     if (!inner_error && g_match_info_matches (match_info)) {
         if (supported_mode) {
-            gchar *str;
+            g_autofree gchar *str = NULL;
 
             str = mm_get_string_unquoted_from_match_info (match_info, 1);
             tmp_supported_mode = mm_parse_uint_list (str, &inner_error);
-            g_free (str);
             if (inner_error)
                 goto out;
         }
         if (supported_mt) {
-            gchar *str;
+            g_autofree gchar *str = NULL;
 
             str = mm_get_string_unquoted_from_match_info (match_info, 2);
             tmp_supported_mt = mm_parse_uint_list (str, &inner_error);
-            g_free (str);
             if (inner_error)
                 goto out;
         }
         if (supported_bm) {
-            gchar *str;
+            g_autofree gchar *str = NULL;
 
             str = mm_get_string_unquoted_from_match_info (match_info, 3);
             tmp_supported_bm = mm_parse_uint_list (str, &inner_error);
-            g_free (str);
             if (inner_error)
                 goto out;
         }
         if (supported_ds) {
-            gchar *str;
+            g_autofree gchar *str = NULL;
 
             str = mm_get_string_unquoted_from_match_info (match_info, 4);
             tmp_supported_ds = mm_parse_uint_list (str, &inner_error);
-            g_free (str);
             if (inner_error)
                 goto out;
         }
         if (supported_bfr) {
-            gchar *str;
+            g_autofree gchar *str = NULL;
 
             str = mm_get_string_unquoted_from_match_info (match_info, 5);
             tmp_supported_bfr = mm_parse_uint_list (str, &inner_error);
-            g_free (str);
             if (inner_error)
                 goto out;
         }
     }
 
 out:
-
-    g_match_info_free (match_info);
-    g_regex_unref (r);
-
     if (inner_error) {
-        g_clear_pointer (&tmp_supported_mode, g_array_unref);
-        g_clear_pointer (&tmp_supported_mt,   g_array_unref);
-        g_clear_pointer (&tmp_supported_bm,   g_array_unref);
-        g_clear_pointer (&tmp_supported_ds,   g_array_unref);
-        g_clear_pointer (&tmp_supported_bfr,  g_array_unref);
         g_propagate_error (error, inner_error);
         return FALSE;
     }
 
     if (supported_mode)
-        *supported_mode = tmp_supported_mode;
+        *supported_mode = g_steal_pointer (&tmp_supported_mode);
     if (supported_mt)
-        *supported_mt = tmp_supported_mt;
+        *supported_mt = g_steal_pointer (&tmp_supported_mt);
     if (supported_bm)
-        *supported_bm = tmp_supported_bm;
+        *supported_bm = g_steal_pointer (&tmp_supported_bm);
     if (supported_ds)
-        *supported_ds = tmp_supported_ds;
+        *supported_ds = g_steal_pointer (&tmp_supported_ds);
     if (supported_bfr)
-        *supported_bfr = tmp_supported_bfr;
+        *supported_bfr = g_steal_pointer (&tmp_supported_bfr);
+
+    return TRUE;
+}
+
+/*****************************************************************************/
+/* ^SXRAT test parser
+ *
+ * Example (ELS61-E2):
+ *   AT^SXRAT=?
+ *   ^SXRAT: (0-6),(0,2,3),(0,2,3)
+ */
+
+gboolean
+mm_cinterion_parse_sxrat_test (const gchar *response,
+                               GArray **supported_rat,
+                               GArray **supported_pref1,
+                               GArray **supported_pref2,
+                               GError **error)
+{
+    g_autoptr(GRegex)      r = NULL;
+    g_autoptr(GMatchInfo)  match_info = NULL;
+    GError                *inner_error = NULL;
+    GArray                *tmp_supported_rat = NULL;
+    GArray                *tmp_supported_pref1 = NULL;
+    GArray                *tmp_supported_pref2 = NULL;
+
+    if (!response) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "Missing response");
+        return FALSE;
+    }
+
+    r = g_regex_new ("\\^SXRAT:\\s*\\(([^\\)]*)\\),\\(([^\\)]*)\\)(,\\(([^\\)]*)\\))?(?:\\r\\n)?",
+                     G_REGEX_DOLLAR_ENDONLY | G_REGEX_RAW,
+                     0, NULL);
+
+    g_assert (r != NULL);
+
+    g_regex_match_full (r, response, strlen (response), 0, 0, &match_info, &inner_error);
+
+    if (!inner_error && g_match_info_matches (match_info)) {
+        if (supported_rat) {
+            g_autofree gchar *str = NULL;
+
+            str = mm_get_string_unquoted_from_match_info (match_info, 1);
+            tmp_supported_rat = mm_parse_uint_list (str, &inner_error);
+
+            if (inner_error)
+                goto out;
+        }
+        if (supported_pref1) {
+            g_autofree gchar *str = NULL;
+
+            str = mm_get_string_unquoted_from_match_info (match_info, 2);
+            tmp_supported_pref1 = mm_parse_uint_list (str, &inner_error);
+
+            if (inner_error)
+                goto out;
+        }
+        if (supported_pref2) {
+            g_autofree gchar *str = NULL;
+
+            /* this match is optional */
+            str = mm_get_string_unquoted_from_match_info (match_info, 4);
+            if (str) {
+                tmp_supported_pref2 = mm_parse_uint_list (str, &inner_error);
+
+                if (inner_error)
+                    goto out;
+            }
+        }
+    }
+
+out:
+
+    if (inner_error) {
+        g_clear_pointer (&tmp_supported_rat,   g_array_unref);
+        g_clear_pointer (&tmp_supported_pref1, g_array_unref);
+        g_clear_pointer (&tmp_supported_pref2, g_array_unref);
+        g_propagate_error (error, inner_error);
+        return FALSE;
+    }
+
+    if (supported_rat)
+        *supported_rat = tmp_supported_rat;
+    if (supported_pref1)
+        *supported_pref1 = tmp_supported_pref1;
+    if (supported_pref2)
+        *supported_pref2 = tmp_supported_pref2;
 
     return TRUE;
 }
@@ -763,9 +837,9 @@ mm_cinterion_parse_sind_response (const gchar *response,
                                   guint *value,
                                   GError **error)
 {
-    GRegex *r;
-    GMatchInfo *match_info;
-    guint errors = 0;
+    g_autoptr(GRegex)     r = NULL;
+    g_autoptr(GMatchInfo) match_info = NULL;
+    guint                 errors = 0;
 
     if (!response) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "Missing response");
@@ -787,9 +861,6 @@ mm_cinterion_parse_sind_response (const gchar *response,
             errors++;
     } else
         errors++;
-
-    g_match_info_free (match_info);
-    g_regex_unref (r);
 
     if (errors > 0) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "Failed parsing ^SIND response");
@@ -836,8 +907,8 @@ mm_cinterion_parse_swwan_response (const gchar  *response,
                                    gpointer      log_object,
                                    GError      **error)
 {
-    GRegex                   *r;
-    GMatchInfo               *match_info;
+    g_autoptr(GRegex)         r = NULL;
+    g_autoptr(GMatchInfo)     match_info = NULL;
     GError                   *inner_error = NULL;
     MMBearerConnectionStatus  status;
 
@@ -882,9 +953,6 @@ mm_cinterion_parse_swwan_response (const gchar  *response,
         }
         g_match_info_next (match_info, &inner_error);
     }
-
-    g_match_info_free (match_info);
-    g_regex_unref (r);
 
     if (status == MM_BEARER_CONNECTION_STATUS_UNKNOWN)
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
@@ -1078,10 +1146,10 @@ mm_cinterion_parse_slcc_list (const gchar *str,
                               GList      **out_list,
                               GError     **error)
 {
-    GRegex     *r;
-    GList      *list = NULL;
-    GError     *inner_error = NULL;
-    GMatchInfo *match_info  = NULL;
+    g_autoptr(GRegex)      r = NULL;
+    g_autoptr(GMatchInfo)  match_info = NULL;
+    GList                 *list = NULL;
+    GError                *inner_error = NULL;
 
     static const MMCallDirection cinterion_call_direction[] = {
         [0] = MM_CALL_DIRECTION_OUTGOING,
@@ -1158,9 +1226,6 @@ mm_cinterion_parse_slcc_list (const gchar *str,
     }
 
 out:
-    g_clear_pointer (&match_info, g_match_info_free);
-    g_regex_unref (r);
-
     if (inner_error) {
         mm_cinterion_call_info_list_free (list);
         g_propagate_error (error, inner_error);
@@ -1673,4 +1738,67 @@ mm_cinterion_build_auth_string (gpointer                log_object,
                             encoded_auth,
                             quoted_passwd,
                             quoted_user);
+}
+
+/*****************************************************************************/
+/* ^SXRAT set command builder */
+
+/* Index of the array is the centerion-specific sxrat value */
+static const MMModemMode sxrat_combinations[] = {
+    [0] = ( MM_MODEM_MODE_2G ),
+    [1] = ( MM_MODEM_MODE_2G | MM_MODEM_MODE_3G ),
+    [2] = (                    MM_MODEM_MODE_3G ),
+    [3] = (                                       MM_MODEM_MODE_4G ),
+    [4] = (                    MM_MODEM_MODE_3G | MM_MODEM_MODE_4G ),
+    [5] = ( MM_MODEM_MODE_2G |                    MM_MODEM_MODE_4G ),
+    [6] = ( MM_MODEM_MODE_2G | MM_MODEM_MODE_3G | MM_MODEM_MODE_4G ),
+};
+
+static gboolean
+append_sxrat_rat_value (GString      *str,
+                        MMModemMode   mode,
+                        GError      **error)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (sxrat_combinations); i++) {
+        if (sxrat_combinations[i] == mode) {
+            g_string_append_printf (str, "%u", i);
+            return TRUE;
+        }
+    }
+
+    g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                 "No AcT value matches requested mode");
+    return FALSE;
+}
+
+gchar *
+mm_cinterion_build_sxrat_set_command (MMModemMode allowed,
+                                      MMModemMode preferred,
+                                      GError **error)
+{
+    GString *command;
+
+    command = g_string_new ("^SXRAT=");
+    if (!append_sxrat_rat_value (command, allowed, error)) {
+        g_string_free (command, TRUE);
+        return NULL;
+    }
+
+    if (preferred != MM_MODEM_MODE_NONE) {
+        if (mm_count_bits_set (preferred) != 1) {
+            *error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                  "AcT preferred value should be a single AcT");
+            g_string_free (command, TRUE);
+            return NULL;
+        }
+        g_string_append (command, ",");
+        if (!append_sxrat_rat_value (command, preferred, error)) {
+            g_string_free (command, TRUE);
+            return NULL;
+        }
+    }
+
+    return g_string_free (command, FALSE);
 }

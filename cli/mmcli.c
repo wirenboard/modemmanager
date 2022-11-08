@@ -43,7 +43,7 @@
 static GMainLoop *loop;
 static GCancellable *cancellable;
 
-/* Context */
+/* Main context */
 static gboolean output_keyvalue_flag;
 static gboolean output_json_flag;
 static gboolean verbose_flag;
@@ -78,6 +78,31 @@ static GOptionEntry main_entries[] = {
     },
     { NULL }
 };
+
+/* Test context */
+static gboolean test_session_flag;
+
+static GOptionEntry test_entries[] = {
+    { "test-session", 0, 0, G_OPTION_ARG_NONE, &test_session_flag,
+      "Run in session DBus",
+      NULL
+    },
+    { NULL }
+};
+
+static GOptionGroup *
+test_get_option_group (void)
+{
+    GOptionGroup *group;
+
+    group = g_option_group_new ("test",
+                                "Test options:",
+                                "Show test options",
+                                NULL,
+                                NULL);
+    g_option_group_add_entries (group, test_entries);
+    return group;
+}
 
 static void
 signals_handler (int signum)
@@ -148,7 +173,7 @@ static void
 print_version_and_exit (void)
 {
     g_print (PROGRAM_NAME " " PROGRAM_VERSION "\n"
-             "Copyright (2011 - 2021) Aleksander Morgado\n"
+             "Copyright (2011 - 2022) Aleksander Morgado\n"
              "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl-2.0.html>\n"
              "This is free software: you are free to change and redistribute it.\n"
              "There is NO WARRANTY, to the extent permitted by law.\n"
@@ -230,6 +255,8 @@ main (gint argc, gchar **argv)
     g_option_context_add_group (context,
                                 mmcli_modem_firmware_get_option_group ());
     g_option_context_add_group (context,
+                                mmcli_modem_sar_get_option_group ());
+    g_option_context_add_group (context,
                                 mmcli_modem_signal_get_option_group ());
     g_option_context_add_group (context,
                                 mmcli_modem_oma_get_option_group ());
@@ -241,6 +268,8 @@ main (gint argc, gchar **argv)
                                 mmcli_sms_get_option_group ());
     g_option_context_add_group (context,
                                 mmcli_call_get_option_group ());
+    g_option_context_add_group (context,
+                                test_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     g_option_context_parse (context, &argc, &argv, NULL);
     g_option_context_free (context);
@@ -279,7 +308,7 @@ main (gint argc, gchar **argv)
     signal (SIGTERM, signals_handler);
 
     /* Setup dbus connection to use */
-    connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
+    connection = g_bus_get_sync (test_session_flag ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM, NULL, &error);
     if (!connection) {
         g_printerr ("error: couldn't get bus: %s\n",
                     error ? error->message : "unknown error");
@@ -402,6 +431,13 @@ main (gint argc, gchar **argv)
         else
             mmcli_modem_firmware_run_synchronous (connection);
     }
+    /* Modem SAR options? */
+    else if (mmcli_modem_sar_options_enabled ()) {
+        if (async_flag)
+            mmcli_modem_sar_run_asynchronous (connection, cancellable);
+        else
+            mmcli_modem_sar_run_synchronous (connection);
+    }
     /* Modem Signal options? */
     else if (mmcli_modem_signal_options_enabled ()) {
         if (async_flag)
@@ -458,6 +494,8 @@ main (gint argc, gchar **argv)
         mmcli_modem_time_shutdown ();
     } else if (mmcli_modem_firmware_options_enabled ()) {
         mmcli_modem_firmware_shutdown ();
+    } else if (mmcli_modem_sar_options_enabled ()) {
+        mmcli_modem_sar_shutdown ();
     } else if (mmcli_modem_signal_options_enabled ()) {
         mmcli_modem_signal_shutdown ();
     } else if (mmcli_modem_oma_options_enabled ()) {

@@ -12,6 +12,7 @@
  *
  * Copyright (C) 2011 Red Hat, Inc.
  * Copyright (C) 2011 Google, Inc.
+ * Copyright (c) 2021 Qualcomm Innovation Center, Inc.
  */
 
 #ifndef _MODEMMANAGER_ENUMS_H_
@@ -38,6 +39,7 @@
  * @MM_MODEM_CAPABILITY_LTE: Modem has LTE data capability.
  * @MM_MODEM_CAPABILITY_IRIDIUM: Modem has Iridium capabilities.
  * @MM_MODEM_CAPABILITY_5GNR: Modem has 5GNR capabilities. Since 1.14.
+ * @MM_MODEM_CAPABILITY_TDS: Modem has TDS capabilties. Since 1.20.
  * @MM_MODEM_CAPABILITY_ANY: Mask specifying all capabilities.
  *
  * Flags describing one or more of the general access technology families that a
@@ -54,6 +56,7 @@ typedef enum { /*< underscore_name=mm_modem_capability >*/
     /* MM_MODEM_CAPABILITY_LTE_ADVANCED deprecated */
     MM_MODEM_CAPABILITY_IRIDIUM      = 1 << 5,
     MM_MODEM_CAPABILITY_5GNR         = 1 << 6,
+    MM_MODEM_CAPABILITY_TDS          = 1 << 7,
     MM_MODEM_CAPABILITY_ANY          = 0xFFFFFFFF
 } MMModemCapability;
 
@@ -143,16 +146,20 @@ typedef enum { /*< underscore_name=mm_modem_state >*/
  * @MM_MODEM_STATE_FAILED_REASON_UNKNOWN: Unknown error.
  * @MM_MODEM_STATE_FAILED_REASON_SIM_MISSING: SIM is required but missing.
  * @MM_MODEM_STATE_FAILED_REASON_SIM_ERROR: SIM is available, but unusable (e.g. permanently locked).
+ * @MM_MODEM_STATE_FAILED_REASON_UNKNOWN_CAPABILITIES: Unknown modem capabilities. Since 1.20.
+ * @MM_MODEM_STATE_FAILED_REASON_ESIM_WITHOUT_PROFILES: eSIM is not initialized. Since 1.20.
  *
  * Enumeration of possible errors when the modem is in @MM_MODEM_STATE_FAILED.
  *
  * Since: 1.0
  */
 typedef enum { /*< underscore_name=mm_modem_state_failed_reason >*/
-    MM_MODEM_STATE_FAILED_REASON_NONE        = 0,
-    MM_MODEM_STATE_FAILED_REASON_UNKNOWN     = 1,
-    MM_MODEM_STATE_FAILED_REASON_SIM_MISSING = 2,
-    MM_MODEM_STATE_FAILED_REASON_SIM_ERROR   = 3,
+    MM_MODEM_STATE_FAILED_REASON_NONE                  = 0,
+    MM_MODEM_STATE_FAILED_REASON_UNKNOWN               = 1,
+    MM_MODEM_STATE_FAILED_REASON_SIM_MISSING           = 2,
+    MM_MODEM_STATE_FAILED_REASON_SIM_ERROR             = 3,
+    MM_MODEM_STATE_FAILED_REASON_UNKNOWN_CAPABILITIES  = 4,
+    MM_MODEM_STATE_FAILED_REASON_ESIM_WITHOUT_PROFILES = 5,
 } MMModemStateFailedReason;
 
 /**
@@ -210,6 +217,8 @@ typedef enum { /*< underscore_name=mm_modem_state_change_reason >*/
  * @MM_MODEM_ACCESS_TECHNOLOGY_EVDOB: CDMA2000 EVDO revision B.
  * @MM_MODEM_ACCESS_TECHNOLOGY_LTE: LTE (ETSI 27.007: "E-UTRAN")
  * @MM_MODEM_ACCESS_TECHNOLOGY_5GNR: 5GNR (ETSI 27.007: "NG-RAN"). Since 1.14.
+ * @MM_MODEM_ACCESS_TECHNOLOGY_LTE_CAT_M: Cat-M (ETSI 23.401: LTE Category M1/M2). Since 1.20.
+ * @MM_MODEM_ACCESS_TECHNOLOGY_LTE_NB_IOT: NB IoT (ETSI 23.401: LTE Category NB1/NB2). Since 1.20.
  * @MM_MODEM_ACCESS_TECHNOLOGY_ANY: Mask specifying all access technologies.
  *
  * Describes various access technologies that a device uses when registered with
@@ -235,6 +244,8 @@ typedef enum { /*< underscore_name=mm_modem_access_technology >*/
     MM_MODEM_ACCESS_TECHNOLOGY_EVDOB       = 1 << 13,
     MM_MODEM_ACCESS_TECHNOLOGY_LTE         = 1 << 14,
     MM_MODEM_ACCESS_TECHNOLOGY_5GNR        = 1 << 15,
+    MM_MODEM_ACCESS_TECHNOLOGY_LTE_CAT_M   = 1 << 16,
+    MM_MODEM_ACCESS_TECHNOLOGY_LTE_NB_IOT  = 1 << 17,
     MM_MODEM_ACCESS_TECHNOLOGY_ANY         = 0xFFFFFFFF,
 } MMModemAccessTechnology;
 
@@ -367,6 +378,7 @@ typedef enum { /*< underscore_name=mm_modem_mode >*/
  * @MM_MODEM_BAND_EUTRAN_69: E-UTRAN band 69. Since 1.8.
  * @MM_MODEM_BAND_EUTRAN_70: E-UTRAN band 70. Since 1.8.
  * @MM_MODEM_BAND_EUTRAN_71: E-UTRAN band 71. Since 1.8.
+ * @MM_MODEM_BAND_EUTRAN_85: E-UTRAN band 85. Since 1.20.
  * @MM_MODEM_BAND_CDMA_BC0: CDMA Band Class 0 (US Cellular 850MHz). Since 1.8.
  * @MM_MODEM_BAND_CDMA_BC1: CDMA Band Class 1 (US PCS 1900MHz). Since 1.8.
  * @MM_MODEM_BAND_CDMA_BC2: CDMA Band Class 2 (UK TACS 900MHz). Since 1.8.
@@ -388,6 +400,58 @@ typedef enum { /*< underscore_name=mm_modem_mode >*/
  * @MM_MODEM_BAND_CDMA_BC18: CDMA Band Class 18 (US 700MHz Public Safety). Since 1.8.
  * @MM_MODEM_BAND_CDMA_BC19: CDMA Band Class 19 (US Lower 700MHz). Since 1.8.
  * @MM_MODEM_BAND_ANY: For certain operations, allow the modem to select a band automatically.
+ * @MM_MODEM_BAND_NGRAN_1: NGRAN band 1. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_2: NGRAN band 2. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_3: NGRAN band 3. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_5: NGRAN band 5. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_7: NGRAN band 7. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_8: NGRAN band 8. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_12: NGRAN band 12. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_13: NGRAN band 13. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_14: NGRAN band 14. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_18: NGRAN band 18. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_20: NGRAN band 20. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_25: NGRAN band 25. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_26: NGRAN band 26. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_28: NGRAN band 28. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_29: NGRAN band 29. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_30: NGRAN band 30. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_34: NGRAN band 34. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_38: NGRAN band 38. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_39: NGRAN band 39. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_40: NGRAN band 40. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_41: NGRAN band 41. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_48: NGRAN band 48. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_50: NGRAN band 50. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_51: NGRAN band 51. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_53: NGRAN band 53. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_65: NGRAN band 65. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_66: NGRAN band 66. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_70: NGRAN band 70. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_71: NGRAN band 71. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_74: NGRAN band 74. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_75: NGRAN band 75. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_76: NGRAN band 76. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_77: NGRAN band 77. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_78: NGRAN band 78. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_79: NGRAN band 79. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_80: NGRAN band 80. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_81: NGRAN band 81. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_82: NGRAN band 82. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_83: NGRAN band 83. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_84: NGRAN band 84. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_86: NGRAN band 86. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_89: NGRAN band 89. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_90: NGRAN band 90. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_91: NGRAN band 91. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_92: NGRAN band 92. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_93: NGRAN band 93. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_94: NGRAN band 94. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_95: NGRAN band 95. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_257: NGRAN band 257. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_258: NGRAN band 258. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_260: NGRAN band 260. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_261: NGRAN band 261. Since 1.20.
  *
  * Radio bands supported by the device when connecting to a mobile network.
  *
@@ -486,6 +550,7 @@ typedef enum { /*< underscore_name=mm_modem_band >*/
     MM_MODEM_BAND_EUTRAN_69 = 99,
     MM_MODEM_BAND_EUTRAN_70 = 100,
     MM_MODEM_BAND_EUTRAN_71 = 101,
+    MM_MODEM_BAND_EUTRAN_85 = 115,
     /* CDMA Band Classes (see 3GPP2 C.S0057-C) */
     MM_MODEM_BAND_CDMA_BC0  = 128,
     MM_MODEM_BAND_CDMA_BC1  = 129,
@@ -525,7 +590,60 @@ typedef enum { /*< underscore_name=mm_modem_band >*/
     MM_MODEM_BAND_UTRAN_26 = 226,
     MM_MODEM_BAND_UTRAN_32 = 232,
     /* All/Any */
-    MM_MODEM_BAND_ANY = 256
+    MM_MODEM_BAND_ANY = 256,
+    /* NR5G bands */
+    MM_MODEM_BAND_NGRAN_1 = 301,
+    MM_MODEM_BAND_NGRAN_2 = 302,
+    MM_MODEM_BAND_NGRAN_3 = 303,
+    MM_MODEM_BAND_NGRAN_5 = 305,
+    MM_MODEM_BAND_NGRAN_7 = 307,
+    MM_MODEM_BAND_NGRAN_8 = 308,
+    MM_MODEM_BAND_NGRAN_12 = 312,
+    MM_MODEM_BAND_NGRAN_13 = 313,
+    MM_MODEM_BAND_NGRAN_14 = 314,
+    MM_MODEM_BAND_NGRAN_18 = 318,
+    MM_MODEM_BAND_NGRAN_20 = 320,
+    MM_MODEM_BAND_NGRAN_25 = 325,
+    MM_MODEM_BAND_NGRAN_26 = 326,
+    MM_MODEM_BAND_NGRAN_28 = 328,
+    MM_MODEM_BAND_NGRAN_29 = 329,
+    MM_MODEM_BAND_NGRAN_30 = 330,
+    MM_MODEM_BAND_NGRAN_34 = 334,
+    MM_MODEM_BAND_NGRAN_38 = 338,
+    MM_MODEM_BAND_NGRAN_39 = 339,
+    MM_MODEM_BAND_NGRAN_40 = 340,
+    MM_MODEM_BAND_NGRAN_41 = 341,
+    MM_MODEM_BAND_NGRAN_48 = 348,
+    MM_MODEM_BAND_NGRAN_50 = 350,
+    MM_MODEM_BAND_NGRAN_51 = 351,
+    MM_MODEM_BAND_NGRAN_53 = 353,
+    MM_MODEM_BAND_NGRAN_65 = 365,
+    MM_MODEM_BAND_NGRAN_66 = 366,
+    MM_MODEM_BAND_NGRAN_70 = 370,
+    MM_MODEM_BAND_NGRAN_71 = 371,
+    MM_MODEM_BAND_NGRAN_74 = 374,
+    MM_MODEM_BAND_NGRAN_75 = 375,
+    MM_MODEM_BAND_NGRAN_76 = 376,
+    MM_MODEM_BAND_NGRAN_77 = 377,
+    MM_MODEM_BAND_NGRAN_78 = 378,
+    MM_MODEM_BAND_NGRAN_79 = 379,
+    MM_MODEM_BAND_NGRAN_80 = 380,
+    MM_MODEM_BAND_NGRAN_81 = 381,
+    MM_MODEM_BAND_NGRAN_82 = 382,
+    MM_MODEM_BAND_NGRAN_83 = 383,
+    MM_MODEM_BAND_NGRAN_84 = 384,
+    MM_MODEM_BAND_NGRAN_86 = 386,
+    MM_MODEM_BAND_NGRAN_89 = 389,
+    MM_MODEM_BAND_NGRAN_90 = 390,
+    MM_MODEM_BAND_NGRAN_91 = 391,
+    MM_MODEM_BAND_NGRAN_92 = 392,
+    MM_MODEM_BAND_NGRAN_93 = 393,
+    MM_MODEM_BAND_NGRAN_94 = 394,
+    MM_MODEM_BAND_NGRAN_95 = 395,
+    MM_MODEM_BAND_NGRAN_257 = 557,
+    MM_MODEM_BAND_NGRAN_258 = 558,
+    MM_MODEM_BAND_NGRAN_260 = 560,
+    MM_MODEM_BAND_NGRAN_261 = 561
 } MMModemBand;
 
 /**
@@ -555,6 +673,30 @@ typedef enum { /*< underscore_name=mm_modem_port_type >*/
     MM_MODEM_PORT_TYPE_AUDIO   = 8,
     MM_MODEM_PORT_TYPE_IGNORED = 9,
 } MMModemPortType;
+
+/**
+ * MMCellType:
+ * @MM_CELL_TYPE_UNKNOWN: Unknown.
+ * @MM_CELL_TYPE_CDMA: CDMA cell.
+ * @MM_CELL_TYPE_GSM: GSM cell.
+ * @MM_CELL_TYPE_UMTS: UMTS cell.
+ * @MM_CELL_TYPE_TDSCDMA: TD-SCDMA cell.
+ * @MM_CELL_TYPE_LTE: LTE cell.
+ * @MM_CELL_TYPE_5GNR: 5GNR cell.
+ *
+ * Type of cell information reported.
+ *
+ * Since: 1.20
+ */
+typedef enum { /*< underscore_name=mm_cell_type >*/
+    MM_CELL_TYPE_UNKNOWN = 0,
+    MM_CELL_TYPE_CDMA    = 1,
+    MM_CELL_TYPE_GSM     = 2,
+    MM_CELL_TYPE_UMTS    = 3,
+    MM_CELL_TYPE_TDSCDMA = 4,
+    MM_CELL_TYPE_LTE     = 5,
+    MM_CELL_TYPE_5GNR    = 6,
+} MMCellType;
 
 /**
  * MMSmsPduType:
@@ -1083,7 +1225,8 @@ typedef enum { /*< underscore_name=mm_bearer_ip_method >*/
  * @MM_BEARER_IP_FAMILY_IPV4: IPv4.
  * @MM_BEARER_IP_FAMILY_IPV6: IPv6.
  * @MM_BEARER_IP_FAMILY_IPV4V6: IPv4 and IPv6.
- * @MM_BEARER_IP_FAMILY_ANY: Mask specifying all IP families.
+ * @MM_BEARER_IP_FAMILY_NON_IP: Non-IP Bearer. Since 1.20.
+ * @MM_BEARER_IP_FAMILY_ANY: Mask specifying all IP based families.
  *
  * Type of IP family to be used in a given Bearer.
  *
@@ -1094,7 +1237,8 @@ typedef enum { /*< underscore_name=mm_bearer_ip_family >*/
     MM_BEARER_IP_FAMILY_IPV4    = 1 << 0,
     MM_BEARER_IP_FAMILY_IPV6    = 1 << 1,
     MM_BEARER_IP_FAMILY_IPV4V6  = 1 << 2,
-    MM_BEARER_IP_FAMILY_ANY     = 0xFFFFFFFF
+    MM_BEARER_IP_FAMILY_NON_IP  = 1 << 3,
+    MM_BEARER_IP_FAMILY_ANY     = 0xFFFFFFF7
 } MMBearerIpFamily;
 
 /**
@@ -1517,6 +1661,7 @@ typedef enum { /*< underscore_name=mm_call_direction >*/
  * @MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC: Device supports QMI PDC based update.
  * @MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU: Device supports MBIM QDU based update. Since 1.18.
  * @MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE: Device supports Firehose based update. Since 1.18.
+ * @MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA: Device supports Sahara protocol. Usually used in combination with Firehose. Since 1.20.
  *
  * Type of firmware update method supported by the module.
  *
@@ -1528,6 +1673,7 @@ typedef enum { /*< underscore_name=mm_modem_firmware_update_method >*/
     MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC  = 1 << 1,
     MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU = 1 << 2,
     MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE = 1 << 3,
+    MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA   = 1 << 4,
 } MMModemFirmwareUpdateMethod;
 
 /**
@@ -1559,6 +1705,12 @@ typedef enum { /*< underscore_name=mm_bearer_multiplex_support >*/
  * @MM_BEARER_APN_TYPE_VOICE: APN providing access to voice-over-IP services.
  * @MM_BEARER_APN_TYPE_EMERGENCY: APN providing access to emergency services.
  * @MM_BEARER_APN_TYPE_PRIVATE: APN providing access to private networks.
+ * @MM_BEARER_APN_TYPE_PURCHASE: APN providing access to over-the-air activation sites. Since 1.20.
+ * @MM_BEARER_APN_TYPE_VIDEO_SHARE: APN providing access to video sharing service. Since 1.20.
+ * @MM_BEARER_APN_TYPE_LOCAL: APN providing access to a local connection with the device. Since 1.20.
+ * @MM_BEARER_APN_TYPE_APP: APN providing access to certain applications allowed  by mobile operators. Since 1.20.
+ * @MM_BEARER_APN_TYPE_XCAP: APN providing access to XCAP provisioning on IMS services. Since 1.20.
+ * @MM_BEARER_APN_TYPE_TETHERING: APN providing access to mobile hotspot tethering. Since 1.20.
  *
  * Purpose of the APN used in a given Bearer.
  *
@@ -1588,15 +1740,188 @@ typedef enum { /*< underscore_name=mm_bearer_multiplex_support >*/
  * Since: 1.18
  */
 typedef enum { /*< underscore_name=mm_bearer_apn_type >*/
-    MM_BEARER_APN_TYPE_NONE       = 0,
-    MM_BEARER_APN_TYPE_INITIAL    = 1 << 0,
-    MM_BEARER_APN_TYPE_DEFAULT    = 1 << 1,
-    MM_BEARER_APN_TYPE_IMS        = 1 << 2,
-    MM_BEARER_APN_TYPE_MMS        = 1 << 3,
-    MM_BEARER_APN_TYPE_MANAGEMENT = 1 << 4,
-    MM_BEARER_APN_TYPE_VOICE      = 1 << 5,
-    MM_BEARER_APN_TYPE_EMERGENCY  = 1 << 6,
-    MM_BEARER_APN_TYPE_PRIVATE    = 1 << 7,
+    MM_BEARER_APN_TYPE_NONE        = 0,
+    MM_BEARER_APN_TYPE_INITIAL     = 1 << 0,
+    MM_BEARER_APN_TYPE_DEFAULT     = 1 << 1,
+    MM_BEARER_APN_TYPE_IMS         = 1 << 2,
+    MM_BEARER_APN_TYPE_MMS         = 1 << 3,
+    MM_BEARER_APN_TYPE_MANAGEMENT  = 1 << 4,
+    MM_BEARER_APN_TYPE_VOICE       = 1 << 5,
+    MM_BEARER_APN_TYPE_EMERGENCY   = 1 << 6,
+    MM_BEARER_APN_TYPE_PRIVATE     = 1 << 7,
+    MM_BEARER_APN_TYPE_PURCHASE    = 1 << 8,
+    MM_BEARER_APN_TYPE_VIDEO_SHARE = 1 << 9,
+    MM_BEARER_APN_TYPE_LOCAL       = 1 << 10,
+    MM_BEARER_APN_TYPE_APP         = 1 << 11,
+    MM_BEARER_APN_TYPE_XCAP        = 1 << 12,
+    MM_BEARER_APN_TYPE_TETHERING   = 1 << 13,
 } MMBearerApnType;
+
+/**
+ * MMModem3gppPacketServiceState:
+ * @MM_MODEM_3GPP_PACKET_SERVICE_STATE_UNKNOWN: Unknown.
+ * @MM_MODEM_3GPP_PACKET_SERVICE_STATE_DETACHED: Detached.
+ * @MM_MODEM_3GPP_PACKET_SERVICE_STATE_ATTACHED: Attached.
+ *
+ * The packet domain service state.
+ *
+ * Since: 1.20
+ */
+typedef enum { /*< underscore_name=mm_modem_3gpp_packet_service_state >*/
+    MM_MODEM_3GPP_PACKET_SERVICE_STATE_UNKNOWN  = 0,
+    MM_MODEM_3GPP_PACKET_SERVICE_STATE_DETACHED = 1,
+    MM_MODEM_3GPP_PACKET_SERVICE_STATE_ATTACHED = 2,
+} MMModem3gppPacketServiceState;
+
+/**
+ * MMSimType:
+ * @MM_SIM_TYPE_UNKNOWN: SIM type is not known.
+ * @MM_SIM_TYPE_PHYSICAL: SIM is a pysical SIM.
+ * @MM_SIM_TYPE_ESIM: SIM is a ESIM.
+ *
+ * SIM type indicating whether ESIM or not
+ *
+ * Since: 1.20
+ */
+typedef enum { /*< underscore_name=mm_sim_type >*/
+    MM_SIM_TYPE_UNKNOWN  = 0,
+    MM_SIM_TYPE_PHYSICAL = 1,
+    MM_SIM_TYPE_ESIM     = 2,
+} MMSimType;
+
+/**
+ * MMSimEsimStatus:
+ * @MM_SIM_ESIM_STATUS_UNKNOWN: ESIM status unknown.
+ * @MM_SIM_ESIM_STATUS_NO_PROFILES: ESIM with no profiles.
+ * @MM_SIM_ESIM_STATUS_WITH_PROFILES: ESIM with profiles.
+ *
+ * Status of the profiles for ESIM
+ *
+ * Since: 1.20
+ */
+typedef enum { /*< underscore_name=mm_sim_esim_status >*/
+    MM_SIM_ESIM_STATUS_UNKNOWN       = 0,
+    MM_SIM_ESIM_STATUS_NO_PROFILES   = 1,
+    MM_SIM_ESIM_STATUS_WITH_PROFILES = 2,
+} MMSimEsimStatus;
+
+/**
+ * MMSimRemovability:
+ * @MM_SIM_REMOVABILITY_UNKNOWN: SIM removability not known.
+ * @MM_SIM_REMOVABILITY_REMOVABLE: SIM is a removable SIM.
+ * @MM_SIM_REMOVABILITY_NOT_REMOVABLE: SIM is not a removable SIM.
+ *
+ * Respresents SIM removability of the current SIM.
+ *
+ * Since: 1.20
+ */
+typedef enum { /*< underscore_name=mm_sim_removability >*/
+    MM_SIM_REMOVABILITY_UNKNOWN       = 0,
+    MM_SIM_REMOVABILITY_REMOVABLE     = 1,
+    MM_SIM_REMOVABILITY_NOT_REMOVABLE = 2,
+} MMSimRemovability;
+
+/**
+ * MMModem3gppMicoMode:
+ * @MM_MODEM_3GPP_MICO_MODE_UNKNOWN: Unknown or not specified.
+ * @MM_MODEM_3GPP_MICO_MODE_UNSUPPORTED: Unsupported.
+ * @MM_MODEM_3GPP_MICO_MODE_DISABLED: Disabled.
+ * @MM_MODEM_3GPP_MICO_MODE_ENABLED: Enabled.
+ *
+ * Mobile Initiated Connection Only (MICO) mode.
+ *
+ * This is a 5G-specific registration setting.
+ *
+ * Since: 1.20
+ */
+typedef enum { /*< underscore_name=mm_modem_3gpp_mico_mode >*/
+    MM_MODEM_3GPP_MICO_MODE_UNKNOWN     = 0,
+    MM_MODEM_3GPP_MICO_MODE_UNSUPPORTED = 1,
+    MM_MODEM_3GPP_MICO_MODE_DISABLED    = 2,
+    MM_MODEM_3GPP_MICO_MODE_ENABLED     = 3,
+} MMModem3gppMicoMode;
+
+/**
+ * MMModem3gppDrxCycle:
+ * @MM_MODEM_3GPP_DRX_CYCLE_UNKNOWN: Unknown or not specified.
+ * @MM_MODEM_3GPP_DRX_CYCLE_UNSUPPORTED: Unsupported.
+ * @MM_MODEM_3GPP_DRX_CYCLE_32: DRX cycle T=32.
+ * @MM_MODEM_3GPP_DRX_CYCLE_64: DRX cycle T=64.
+ * @MM_MODEM_3GPP_DRX_CYCLE_128: DRX cycle T=128.
+ * @MM_MODEM_3GPP_DRX_CYCLE_256: DRX cycle T=256.
+ *
+ * DRX cycle.
+ *
+ * This is a 5G-specific registration setting.
+ *
+ * Since: 1.20
+ */
+typedef enum { /*< underscore_name=mm_modem_3gpp_drx_cycle >*/
+    MM_MODEM_3GPP_DRX_CYCLE_UNKNOWN     = 0,
+    MM_MODEM_3GPP_DRX_CYCLE_UNSUPPORTED = 1,
+    MM_MODEM_3GPP_DRX_CYCLE_32          = 2,
+    MM_MODEM_3GPP_DRX_CYCLE_64          = 3,
+    MM_MODEM_3GPP_DRX_CYCLE_128         = 4,
+    MM_MODEM_3GPP_DRX_CYCLE_256         = 5,
+} MMModem3gppDrxCycle;
+
+/**
+ * MMBearerAccessTypePreference:
+ * @MM_BEARER_ACCESS_TYPE_PREFERENCE_NONE: No access type preference, or unknown.
+ * @MM_BEARER_ACCESS_TYPE_PREFERENCE_3GPP_ONLY: 3GPP access type only.
+ * @MM_BEARER_ACCESS_TYPE_PREFERENCE_3GPP_PREFERRED: All access types allowed but 3GPP preferred.
+ * @MM_BEARER_ACCESS_TYPE_PREFERENCE_NON_3GPP_ONLY: Non-3GPP access type only.
+ *
+ * 5G network access type preference, such as 3GPP (NR, E-UTRA) or
+ * non-3GPP (untrusted WiFi, trusted WiFi, wireline).
+ *
+ * Since: 1.20
+ */
+typedef enum { /*< underscore_name=mm_bearer_access_type_preference >*/
+    MM_BEARER_ACCESS_TYPE_PREFERENCE_NONE           = 0,
+    MM_BEARER_ACCESS_TYPE_PREFERENCE_3GPP_ONLY      = 1,
+    MM_BEARER_ACCESS_TYPE_PREFERENCE_3GPP_PREFERRED = 2,
+    MM_BEARER_ACCESS_TYPE_PREFERENCE_NON_3GPP_ONLY  = 3,
+} MMBearerAccessTypePreference;
+
+/**
+ * MMBearerRoamingAllowance:
+ * @MM_BEARER_ROAMING_ALLOWANCE_NONE: No explicit roaming allowance rules.
+ * @MM_BEARER_ROAMING_ALLOWANCE_HOME: Home network allowed.
+ * @MM_BEARER_ROAMING_ALLOWANCE_PARTNER: Partner network allowed.
+ * @MM_BEARER_ROAMING_ALLOWANCE_NON_PARTNER: Non-parter network allowed.
+ *
+ * Bitmask specifying roaming allowance rules for different network types.
+ *
+ * Since: 1.20
+ */
+typedef enum { /*< underscore_name=mm_bearer_roaming_allowance >*/
+    MM_BEARER_ROAMING_ALLOWANCE_NONE        = 0,
+    MM_BEARER_ROAMING_ALLOWANCE_HOME        = 1 << 0,
+    MM_BEARER_ROAMING_ALLOWANCE_PARTNER     = 1 << 1,
+    MM_BEARER_ROAMING_ALLOWANCE_NON_PARTNER = 1 << 2,
+} MMBearerRoamingAllowance;
+
+/**
+ * MMBearerProfileSource:
+ * @MM_BEARER_PROFILE_SOURCE_UNKNOWN: Unknown.
+ * @MM_BEARER_PROFILE_SOURCE_ADMIN: Profile created by an enterprise IT admin from the OS.
+ * @MM_BEARER_PROFILE_SOURCE_USER: Profile created by the user.
+ * @MM_BEARER_PROFILE_SOURCE_OPERATOR: Profile created by the operator through OMA-DM or similar.
+ * @MM_BEARER_PROFILE_SOURCE_MODEM: Profile created by the OEM that was included with the modem firmware.
+ * @MM_BEARER_PROFILE_SOURCE_DEVICE: Profile created by the OS APN database.
+ *
+ * Value specifying how a given context was created, mostly for informative purposes.
+ *
+ * Since: 1.20
+ */
+typedef enum { /*< underscore_name=mm_bearer_profile_source >*/
+    MM_BEARER_PROFILE_SOURCE_UNKNOWN  = 0,
+    MM_BEARER_PROFILE_SOURCE_ADMIN    = 1,
+    MM_BEARER_PROFILE_SOURCE_USER     = 2,
+    MM_BEARER_PROFILE_SOURCE_OPERATOR = 3,
+    MM_BEARER_PROFILE_SOURCE_MODEM    = 4,
+    MM_BEARER_PROFILE_SOURCE_DEVICE   = 5,
+} MMBearerProfileSource;
 
 #endif /*  _MODEMMANAGER_ENUMS_H_ */

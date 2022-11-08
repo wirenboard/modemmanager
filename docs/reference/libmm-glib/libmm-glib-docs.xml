@@ -43,6 +43,7 @@
       <year>2019</year>
       <year>2020</year>
       <year>2021</year>
+      <year>2022</year>
       <holder>The ModemManager Authors</holder>
     </copyright>
 
@@ -92,6 +93,15 @@
         <xi:include href="xml/mm-modem-cdma.xml"/>
         <xi:include href="xml/mm-cdma-manual-activation-properties.xml"/>
         <xi:include href="xml/mm-unlock-retries.xml"/>
+        <xi:include href="xml/mm-cell-info.xml"/>
+        <xi:include href="xml/mm-cell-info-cdma.xml"/>
+        <xi:include href="xml/mm-cell-info-gsm.xml"/>
+        <xi:include href="xml/mm-cell-info-umts.xml"/>
+        <xi:include href="xml/mm-cell-info-tdscdma.xml"/>
+        <xi:include href="xml/mm-cell-info-lte.xml"/>
+        <xi:include href="xml/mm-cell-info-nr5g.xml"/>
+        <xi:include href="xml/mm-pco.xml"/>
+        <xi:include href="xml/mm-nr5g-registration-settings.xml"/>
       </section>
       <section>
         <title>Simple interface support</title>
@@ -135,6 +145,7 @@
         <title>Extended signal information</title>
         <xi:include href="xml/mm-modem-signal.xml"/>
         <xi:include href="xml/mm-signal.xml"/>
+        <xi:include href="xml/mm-signal-threshold-properties.xml"/>
       </section>
       <section>
         <title>OMA support</title>
@@ -145,8 +156,8 @@
         <xi:include href="xml/mm-modem-voice.xml"/>
       </section>
       <section>
-        <title>PCO support</title>
-        <xi:include href="xml/mm-pco.xml"/>
+        <title>SAR support</title>
+        <xi:include href="xml/mm-modem-sar.xml"/>
       </section>
     </chapter>
 
@@ -238,6 +249,10 @@
     <xi:include href="xml/MmGdbusModemVoiceProxy.xml"/>
     <xi:include href="xml/MmGdbusModemVoiceSkeleton.xml"/>
 
+    <xi:include href="xml/MmGdbusModemSar.xml"/>
+    <xi:include href="xml/MmGdbusModemSarProxy.xml"/>
+    <xi:include href="xml/MmGdbusModemSarSkeleton.xml"/>
+
     <!--xi:include href="xml/MmGdbusModemContacts.xml"/>
     <xi:include href="xml/MmGdbusModemContactsProxy.xml"/>
     <xi:include href="xml/MmGdbusModemContactsSkeleton.xml"/-->
@@ -319,6 +334,10 @@
   <chapter id="api-index-1-18" role="1.18">
     <title>Index of new symbols in 1.18</title>
     <xi:include href="xml/api-index-1.18.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-20" role="1.20">
+    <title>Index of new symbols in 1.20</title>
+    <xi:include href="xml/api-index-1.20.xml"></xi:include>
   </chapter>
 
   <xi:include href="xml/annotation-glossary.xml"></xi:include>

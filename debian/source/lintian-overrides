@@ -1,3 +1,0 @@
-# This lintian error points to HTML files, which are (by definition)
-# their own source files
-modemmanager source: source-is-missing [docs/reference/*]

@@ -47,14 +47,19 @@ static Context *ctx;
 /* Options */
 static gboolean get_flag;
 static gchar *setup_str;
+static gchar *setup_thresholds_str;
 
 static GOptionEntry entries[] = {
     { "signal-setup", 0, 0, G_OPTION_ARG_STRING, &setup_str,
-      "Setup extended signal information retrieval",
+      "Setup signal quality information polling, in seconds",
       "[Rate]"
     },
+    { "signal-setup-thresholds", 0, 0, G_OPTION_ARG_STRING, &setup_thresholds_str,
+      "Setup signal quality information thresholds (allowed keys: rssi-threshold, error-rate-threshold)",
+      "[\"key=value,...\"]"
+    },
     { "signal-get", 0, 0, G_OPTION_ARG_NONE, &get_flag,
-      "Get all extended signal quality information",
+      "Get all signal quality information",
       NULL
     },
     { NULL }
@@ -85,6 +90,7 @@ mmcli_modem_signal_options_enabled (void)
         return !!n_actions;
 
     n_actions = (!!setup_str +
+                 !!setup_thresholds_str +
                  get_flag);
 
     if (n_actions > 1) {
@@ -139,25 +145,35 @@ print_signal_info (void)
     MMSignal *signal;
     gdouble   value;
     gchar    *refresh_rate;
+    gchar    *rssi_threshold;
+    gchar    *error_rate_threshold;
     gchar    *cdma1x_rssi = NULL;
     gchar    *cdma1x_ecio = NULL;
+    gchar    *cdma1x_error_rate = NULL;
     gchar    *evdo_rssi = NULL;
     gchar    *evdo_ecio = NULL;
     gchar    *evdo_sinr = NULL;
     gchar    *evdo_io = NULL;
+    gchar    *evdo_error_rate = NULL;
     gchar    *gsm_rssi = NULL;
+    gchar    *gsm_error_rate = NULL;
     gchar    *umts_rssi = NULL;
     gchar    *umts_rscp = NULL;
     gchar    *umts_ecio = NULL;
+    gchar    *umts_error_rate = NULL;
     gchar    *lte_rssi = NULL;
     gchar    *lte_rsrp = NULL;
     gchar    *lte_rsrq = NULL;
     gchar    *lte_snr = NULL;
+    gchar    *lte_error_rate = NULL;
     gchar    *nr5g_rsrp = NULL;
     gchar    *nr5g_rsrq = NULL;
     gchar    *nr5g_snr = NULL;
+    gchar    *nr5g_error_rate = NULL;
 
-    refresh_rate = g_strdup_printf ("%u", mm_modem_signal_get_rate (ctx->modem_signal));
+    refresh_rate         = g_strdup_printf ("%u", mm_modem_signal_get_rate                 (ctx->modem_signal));
+    rssi_threshold       = g_strdup_printf ("%u", mm_modem_signal_get_rssi_threshold       (ctx->modem_signal));
+    error_rate_threshold = g_strdup_printf ("%s", mm_modem_signal_get_error_rate_threshold (ctx->modem_signal) ? "yes" : "no");
 
     signal = mm_modem_signal_peek_cdma (ctx->modem_signal);
     if (signal) {
@@ -165,6 +181,8 @@ print_signal_info (void)
             cdma1x_rssi = g_strdup_printf ("%.2lf", value);
         if ((value = mm_signal_get_ecio (signal)) != MM_SIGNAL_UNKNOWN)
             cdma1x_ecio = g_strdup_printf ("%.2lf", value);
+        if ((value = mm_signal_get_error_rate (signal)) != MM_SIGNAL_UNKNOWN)
+            cdma1x_error_rate = g_strdup_printf ("%.2lf", value);
     }
 
     signal = mm_modem_signal_peek_evdo (ctx->modem_signal);
@@ -177,12 +195,16 @@ print_signal_info (void)
             evdo_sinr = g_strdup_printf ("%.2lf", value);
         if ((value = mm_signal_get_io (signal)) != MM_SIGNAL_UNKNOWN)
             evdo_io = g_strdup_printf ("%.2lf", value);
+        if ((value = mm_signal_get_error_rate (signal)) != MM_SIGNAL_UNKNOWN)
+            evdo_error_rate = g_strdup_printf ("%.2lf", value);
     }
 
     signal = mm_modem_signal_peek_gsm (ctx->modem_signal);
     if (signal) {
         if ((value = mm_signal_get_rssi (signal)) != MM_SIGNAL_UNKNOWN)
             gsm_rssi = g_strdup_printf ("%.2lf", value);
+        if ((value = mm_signal_get_error_rate (signal)) != MM_SIGNAL_UNKNOWN)
+            gsm_error_rate = g_strdup_printf ("%.2lf", value);
     }
 
     signal = mm_modem_signal_peek_umts (ctx->modem_signal);
@@ -193,6 +215,8 @@ print_signal_info (void)
             umts_rscp = g_strdup_printf ("%.2lf", value);
         if ((value = mm_signal_get_ecio (signal)) != MM_SIGNAL_UNKNOWN)
             umts_ecio = g_strdup_printf ("%.2lf", value);
+        if ((value = mm_signal_get_error_rate (signal)) != MM_SIGNAL_UNKNOWN)
+            umts_error_rate = g_strdup_printf ("%.2lf", value);
     }
 
     signal = mm_modem_signal_peek_lte (ctx->modem_signal);
@@ -205,6 +229,8 @@ print_signal_info (void)
             lte_rsrp = g_strdup_printf ("%.2lf", value);
         if ((value = mm_signal_get_snr (signal)) != MM_SIGNAL_UNKNOWN)
             lte_snr = g_strdup_printf ("%.2lf", value);
+        if ((value = mm_signal_get_error_rate (signal)) != MM_SIGNAL_UNKNOWN)
+            lte_error_rate = g_strdup_printf ("%.2lf", value);
     }
 
     signal = mm_modem_signal_peek_nr5g (ctx->modem_signal);
@@ -215,27 +241,63 @@ print_signal_info (void)
             nr5g_rsrp = g_strdup_printf ("%.2lf", value);
         if ((value = mm_signal_get_snr (signal)) != MM_SIGNAL_UNKNOWN)
             nr5g_snr = g_strdup_printf ("%.2lf", value);
+        if ((value = mm_signal_get_error_rate (signal)) != MM_SIGNAL_UNKNOWN)
+            nr5g_error_rate = g_strdup_printf ("%.2lf", value);
     }
 
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_REFRESH_RATE, refresh_rate, "seconds");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_CDMA1X_RSSI,  cdma1x_rssi,  "dBm");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_CDMA1X_ECIO,  cdma1x_ecio,  "dBm");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_EVDO_RSSI,    evdo_rssi,    "dBm");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_EVDO_ECIO,    evdo_ecio,    "dB");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_EVDO_SINR,    evdo_sinr,    "dB");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_EVDO_IO,      evdo_io,      "dBm");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_GSM_RSSI,     gsm_rssi,     "dBm");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_UMTS_RSSI,    umts_rssi,    "dBm");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_UMTS_RSCP,    umts_rscp,    "dBm");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_UMTS_ECIO,    umts_ecio,    "dB");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_LTE_RSSI,     lte_rssi,     "dBm");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_LTE_RSRQ,     lte_rsrq,     "dB");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_LTE_RSRP,     lte_rsrp,     "dBm");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_LTE_SNR,      lte_snr,      "dB");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_5G_RSRQ,      nr5g_rsrq,    "dB");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_5G_RSRP,      nr5g_rsrp,    "dBm");
-    mmcli_output_string_take_typed (MMC_F_SIGNAL_5G_SNR,       nr5g_snr,     "dB");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_REFRESH_RATE,         refresh_rate,         "seconds");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_RSSI_THRESHOLD,       rssi_threshold,       "dBm");
+    mmcli_output_string_take       (MMC_F_SIGNAL_ERROR_RATE_THRESHOLD, error_rate_threshold);
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_CDMA1X_RSSI,          cdma1x_rssi,          "dBm");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_CDMA1X_ECIO,          cdma1x_ecio,          "dBm");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_CDMA1X_ERROR_RATE,    cdma1x_error_rate,    "%%");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_EVDO_RSSI,            evdo_rssi,            "dBm");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_EVDO_ECIO,            evdo_ecio,            "dB");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_EVDO_SINR,            evdo_sinr,            "dB");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_EVDO_IO,              evdo_io,              "dBm");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_EVDO_ERROR_RATE,      evdo_error_rate,      "%%");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_GSM_RSSI,             gsm_rssi,             "dBm");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_GSM_ERROR_RATE,       gsm_error_rate,       "%%");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_UMTS_RSSI,            umts_rssi,            "dBm");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_UMTS_RSCP,            umts_rscp,            "dBm");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_UMTS_ECIO,            umts_ecio,            "dB");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_UMTS_ERROR_RATE,      umts_error_rate,      "%%");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_LTE_RSSI,             lte_rssi,             "dBm");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_LTE_RSRQ,             lte_rsrq,             "dB");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_LTE_RSRP,             lte_rsrp,             "dBm");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_LTE_SNR,              lte_snr,              "dB");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_LTE_ERROR_RATE,       lte_error_rate,       "%%");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_5G_RSRQ,              nr5g_rsrq,            "dB");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_5G_RSRP,              nr5g_rsrp,            "dBm");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_5G_SNR,               nr5g_snr,             "dB");
+    mmcli_output_string_take_typed (MMC_F_SIGNAL_5G_ERROR_RATE,        nr5g_error_rate,      "%%");
     mmcli_output_dump ();
+}
+
+static void
+setup_thresholds_process_reply (gboolean      result,
+                                const GError *error)
+{
+    if (!result) {
+        g_printerr ("error: couldn't setup signal quality information thresholds: '%s'\n",
+                    error ? error->message : "unknown error");
+        exit (EXIT_FAILURE);
+    }
+
+    g_print ("Successfully setup signal quality information thresholds\n");
+}
+
+static void
+setup_thresholds_ready (MMModemSignal *modem,
+                        GAsyncResult  *result)
+{
+    gboolean res;
+    GError *error = NULL;
+
+    res = mm_modem_signal_setup_thresholds_finish (modem, result, &error);
+    setup_thresholds_process_reply (res, error);
+
+    mmcli_async_operation_done ();
 }
 
 static void
@@ -243,12 +305,12 @@ setup_process_reply (gboolean      result,
                      const GError *error)
 {
     if (!result) {
-        g_printerr ("error: couldn't setup extended signal information retrieval: '%s'\n",
+        g_printerr ("error: couldn't setup signal quality information polling: '%s'\n",
                     error ? error->message : "unknown error");
         exit (EXIT_FAILURE);
     }
 
-    g_print ("Successfully setup extended signal information retrieval\n");
+    g_print ("Successfully setup signal quality information polling\n");
 }
 
 static void
@@ -298,6 +360,26 @@ get_modem_ready (GObject      *source,
         return;
     }
 
+    /* Request to setup threshold? */
+    if (setup_thresholds_str) {
+        g_autoptr(MMSignalThresholdProperties) properties = NULL;
+        g_autoptr(GError)                      error = NULL;
+
+        properties = mm_signal_threshold_properties_new_from_string (setup_thresholds_str, &error);
+        if (!properties) {
+            g_printerr ("error: failed to parse properties string: '%s'\n", error->message);
+            exit (EXIT_FAILURE);
+        }
+
+        g_debug ("Asynchronously setting up threshold values...");
+        mm_modem_signal_setup_thresholds (ctx->modem_signal,
+                                          properties,
+                                          ctx->cancellable,
+                                          (GAsyncReadyCallback)setup_thresholds_ready,
+                                          NULL);
+        return;
+    }
+
     g_warn_if_reached ();
 }
 
@@ -344,7 +426,7 @@ mmcli_modem_signal_run_synchronous (GDBusConnection *connection)
 
     /* Request to set rate? */
     if (setup_str) {
-        guint rate;
+        guint    rate;
         gboolean result;
 
         if (!mm_get_uint_from_str (setup_str, &rate)) {
@@ -361,6 +443,25 @@ mmcli_modem_signal_run_synchronous (GDBusConnection *connection)
         return;
     }
 
+    /* Request to setup threshold? */
+    if (setup_thresholds_str) {
+        g_autoptr(MMSignalThresholdProperties) properties = NULL;
+        gboolean                               result;
+
+        properties = mm_signal_threshold_properties_new_from_string (setup_thresholds_str, &error);
+        if (!properties) {
+            g_printerr ("error: failed to parse properties string: '%s'\n", error->message);
+            exit (EXIT_FAILURE);
+        }
+
+        g_debug ("Asynchronously setting up threshold values...");
+        result = mm_modem_signal_setup_thresholds_sync (ctx->modem_signal,
+                                                        properties,
+                                                        NULL,
+                                                        &error);
+        setup_thresholds_process_reply (result, error);
+        return;
+    }
 
     g_warn_if_reached ();
 }

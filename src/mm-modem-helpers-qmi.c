@@ -12,6 +12,7 @@
  *
  * Copyright (C) 2012-2018 Google, Inc.
  * Copyright (C) 2018 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (c) 2021 Qualcomm Innovation Center, Inc.
  */
 
 #include <string.h>
@@ -42,6 +43,8 @@ mm_modem_capability_from_qmi_radio_interface (QmiDmsRadioInterface network,
         return MM_MODEM_CAPABILITY_GSM_UMTS;
     case QMI_DMS_RADIO_INTERFACE_LTE:
         return MM_MODEM_CAPABILITY_LTE;
+    case QMI_DMS_RADIO_INTERFACE_TDS:
+        return MM_MODEM_CAPABILITY_TDS;
     case QMI_DMS_RADIO_INTERFACE_5GNR:
         return MM_MODEM_CAPABILITY_5GNR;
     default:
@@ -69,6 +72,7 @@ mm_modem_mode_from_qmi_radio_interface (QmiDmsRadioInterface network,
         return MM_MODEM_MODE_4G;
     case QMI_DMS_RADIO_INTERFACE_5GNR:
         return MM_MODEM_MODE_5G;
+    case QMI_DMS_RADIO_INTERFACE_TDS:
     default:
         mm_obj_warn (log_object, "unhandled QMI radio interface '%u'", (guint)network);
         return MM_MODEM_MODE_NONE;
@@ -348,10 +352,43 @@ dms_add_extended_qmi_lte_bands (GArray   *mm_bands,
     }
 }
 
+static void
+dms_add_qmi_nr5g_bands (GArray   *mm_bands,
+                        GArray   *qmi_bands,
+                        gpointer  log_object)
+{
+    guint i;
+
+    g_assert (mm_bands != NULL);
+
+    if (!qmi_bands)
+        return;
+
+    for (i = 0; i < qmi_bands->len; i++) {
+        guint16 val;
+
+        val = g_array_index (qmi_bands, guint16, i);
+
+        /* MM_MODEM_BAND_NGRAN_1 = 301,
+         * ...
+         * MM_MODEM_BAND_NGRAN_261 = 561
+         */
+        if (val < 1 || val > 261)
+            mm_obj_dbg (log_object, "unexpected NR5G band supported by module: NGRAN %u", val);
+        else {
+            MMModemBand band;
+
+            band = (MMModemBand)(val + MM_MODEM_BAND_NGRAN_1 - 1);
+            g_array_append_val (mm_bands, band);
+        }
+    }
+}
+
 GArray *
 mm_modem_bands_from_qmi_band_capabilities (QmiDmsBandCapability     qmi_bands,
                                            QmiDmsLteBandCapability  qmi_lte_bands,
                                            GArray                  *extended_qmi_lte_bands,
+                                           GArray                  *qmi_nr5g_bands,
                                            gpointer                 log_object)
 {
     GArray *mm_bands;
@@ -363,6 +400,9 @@ mm_modem_bands_from_qmi_band_capabilities (QmiDmsBandCapability     qmi_bands,
         dms_add_extended_qmi_lte_bands (mm_bands, extended_qmi_lte_bands, log_object);
     else
         dms_add_qmi_lte_bands (mm_bands, qmi_lte_bands);
+
+    if (qmi_nr5g_bands)
+        dms_add_qmi_nr5g_bands (mm_bands, qmi_nr5g_bands, log_object);
 
     return mm_bands;
 }
@@ -559,11 +599,50 @@ nas_add_extended_qmi_lte_bands (GArray        *mm_bands,
     }
 }
 
+static void
+nas_add_qmi_nr5g_bands (GArray        *mm_bands,
+                        const guint64 *qmi_nr5g_bands,
+                        guint          qmi_nr5g_bands_size,
+                        gpointer       log_object)
+{
+    guint i;
+
+    g_assert (mm_bands != NULL);
+
+    for (i = 0; i < qmi_nr5g_bands_size; i++) {
+        guint j;
+
+        for (j = 0; j < 64; j++) {
+            guint val;
+
+            if (!(qmi_nr5g_bands[i] & (((guint64) 1) << j)))
+                continue;
+
+            val = 1 + j + (i * 64);
+
+            /* MM_MODEM_BAND_NGRAN_1 = 301,
+             * ...
+             * MM_MODEM_BAND_NGRAN_261 = 561
+             */
+            if (val < 1 || val > 261)
+                mm_obj_dbg (log_object, "unexpected NR5G band supported by module: NGRAN %u", val);
+            else {
+                MMModemBand band;
+
+                band = (val + MM_MODEM_BAND_NGRAN_1 - 1);
+                g_array_append_val (mm_bands, band);
+            }
+        }
+    }
+}
+
 GArray *
 mm_modem_bands_from_qmi_band_preference (QmiNasBandPreference     qmi_bands,
                                          QmiNasLteBandPreference  qmi_lte_bands,
                                          const guint64           *extended_qmi_lte_bands,
                                          guint                    extended_qmi_lte_bands_size,
+                                         const guint64           *qmi_nr5g_bands,
+                                         guint                    qmi_nr5g_bands_size,
                                          gpointer                 log_object)
 {
     GArray *mm_bands;
@@ -576,6 +655,9 @@ mm_modem_bands_from_qmi_band_preference (QmiNasBandPreference     qmi_bands,
     else
         nas_add_qmi_lte_bands (mm_bands, qmi_lte_bands);
 
+    if (qmi_nr5g_bands && qmi_nr5g_bands_size)
+        nas_add_qmi_nr5g_bands (mm_bands, qmi_nr5g_bands, qmi_nr5g_bands_size, log_object);
+
     return mm_bands;
 }
 
@@ -585,6 +667,8 @@ mm_modem_bands_to_qmi_band_preference (GArray                  *mm_bands,
                                        QmiNasLteBandPreference *qmi_lte_bands,
                                        guint64                 *extended_qmi_lte_bands,
                                        guint                    extended_qmi_lte_bands_size,
+                                       guint64                 *qmi_nr5g_bands,
+                                       guint                    qmi_nr5g_bands_size,
                                        gpointer                 log_object)
 {
     guint i;
@@ -593,6 +677,8 @@ mm_modem_bands_to_qmi_band_preference (GArray                  *mm_bands,
     *qmi_lte_bands = 0;
     if (extended_qmi_lte_bands)
         memset (extended_qmi_lte_bands, 0, extended_qmi_lte_bands_size * sizeof (guint64));
+    if (qmi_nr5g_bands)
+        memset (qmi_nr5g_bands, 0, qmi_nr5g_bands_size * sizeof (guint64));
 
     for (i = 0; i < mm_bands->len; i++) {
         MMModemBand band;
@@ -628,6 +714,22 @@ mm_modem_bands_to_qmi_band_preference (GArray                  *mm_bands,
                 if (j == G_N_ELEMENTS (nas_lte_bands_map))
                     mm_obj_dbg (log_object, "cannot add the following LTE band: '%s'",
                                 mm_modem_band_get_string (band));
+            }
+        } else if (band >= MM_MODEM_BAND_NGRAN_1 && band <= MM_MODEM_BAND_NGRAN_261) {
+            if (qmi_nr5g_bands && qmi_nr5g_bands_size) {
+                /* Add NR5G band preference */
+                guint val;
+                guint j;
+                guint k;
+
+                /* it's really (band - MM_MODEM_BAND_NGRAN_1 +1 -1), because
+                 * we want NGRAN1 in index 0 */
+                val = band - MM_MODEM_BAND_NGRAN_1;
+                j = val / 64;
+                g_assert (j < qmi_nr5g_bands_size);
+                k = val % 64;
+
+                qmi_nr5g_bands[j] |= ((guint64)1 << k);
             }
         } else {
             /* Add non-LTE band preference */
@@ -1563,6 +1665,7 @@ mm_bearer_ip_family_to_qmi_pdp_type (MMBearerIpFamily  ip_family,
     case MM_BEARER_IP_FAMILY_IPV4V6:
         *out_pdp_type =  QMI_WDS_PDP_TYPE_IPV4_OR_IPV6;
         return TRUE;
+    case MM_BEARER_IP_FAMILY_NON_IP:
     case MM_BEARER_IP_FAMILY_NONE:
     case MM_BEARER_IP_FAMILY_ANY:
     default:
@@ -1693,29 +1796,18 @@ qmi_mobile_equipment_error_from_verbose_call_end_reason_3gpp (QmiWdsVerboseCallE
 /* QMI/WDA to MM translations */
 
 QmiDataEndpointType
-mm_port_subsys_to_qmi_endpoint_type (MMPortSubsys subsys)
+mm_port_net_driver_to_qmi_endpoint_type (const gchar *net_driver)
 {
-    switch (subsys) {
-        case MM_PORT_SUBSYS_USBMISC:
-            return QMI_DATA_ENDPOINT_TYPE_HSUSB;
-        case MM_PORT_SUBSYS_RPMSG:
-        case MM_PORT_SUBSYS_QRTR:
-            return QMI_DATA_ENDPOINT_TYPE_EMBEDDED;
-        /* The WWAN subsystem abstracts the underlying transport bus, and so
-         * endpoint type can not be deducted from that. This function should
-         * then be revisited, but in practice, only MHI/PCI modem ports are
-         * exposed through the WWAN subsystem for now.
-         */
-        case MM_PORT_SUBSYS_WWAN:
-            return QMI_DATA_ENDPOINT_TYPE_PCIE;
-        case MM_PORT_SUBSYS_UNKNOWN:
-        case MM_PORT_SUBSYS_TTY:
-        case MM_PORT_SUBSYS_NET:
-        case MM_PORT_SUBSYS_UNIX:
-        default:
-            g_assert_not_reached ();
-            break;
-    }
+    if (!g_strcmp0 (net_driver, "qmi_wwan"))
+        return QMI_DATA_ENDPOINT_TYPE_HSUSB;
+    if (!g_strcmp0 (net_driver, "mhi_net"))
+        return QMI_DATA_ENDPOINT_TYPE_PCIE;
+    if (!g_strcmp0 (net_driver, "ipa"))
+        return QMI_DATA_ENDPOINT_TYPE_EMBEDDED;
+    if (!g_strcmp0 (net_driver, "bam-dmux"))
+        return QMI_DATA_ENDPOINT_TYPE_BAM_DMUX;
+
+    return QMI_DATA_ENDPOINT_TYPE_UNKNOWN;
 }
 
 /*****************************************************************************/
@@ -1740,9 +1832,17 @@ mm_current_capability_from_qmi_current_capabilities_context (MMQmiCurrentCapabil
     g_autofree gchar *tmp_str = NULL;
 
     /* If not a multimode device, we're done */
-    if (!ctx->multimode)
-        tmp = ctx->dms_capabilities;
-    else {
+    if (!ctx->multimode) {
+        if (ctx->dms_capabilities != MM_MODEM_CAPABILITY_NONE)
+            tmp = ctx->dms_capabilities;
+        /* SSP logic to gather capabilities uses the Mode Preference TLV if available */
+        else if (ctx->nas_ssp_mode_preference_mask)
+            tmp = mm_modem_capability_from_qmi_rat_mode_preference (ctx->nas_ssp_mode_preference_mask);
+        /* If no value retrieved from SSP, check TP. We only process TP
+         * values if not 'auto' (0). */
+        else if (ctx->nas_tp_mask != QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_AUTO)
+            tmp = mm_modem_capability_from_qmi_radio_technology_preference (ctx->nas_tp_mask);
+    } else {
         /* We have a multimode CDMA/EVDO+GSM/UMTS device, check SSP and TP */
 
         /* SSP logic to gather capabilities uses the Mode Preference TLV if available */
@@ -2184,6 +2284,7 @@ mm_qmi_uim_get_card_status_output_parse (gpointer                           log_
                                          QmiUimPinState                    *o_pin2_state,
                                          guint                             *o_pin2_retries,
                                          guint                             *o_puk2_retries,
+                                         guint                             *o_pers_retries,
                                          GError                           **error)
 {
     QmiMessageUimGetCardStatusOutputCardStatusCardsElement                    *card;
@@ -2431,6 +2532,9 @@ mm_qmi_uim_get_card_status_output_parse (gpointer                           log_
                              "Unsupported personalization feature");
                 return FALSE;
             }
+
+            if (o_pers_retries)
+                *o_pers_retries = app->personalization_retries;
         }
     }
 
@@ -2464,20 +2568,6 @@ mm_qmi_uim_get_card_status_output_parse (gpointer                           log_
 
     *o_lock = lock;
     return TRUE;
-}
-
-/*************************************************************************/
-/* EID parsing */
-
-#define EID_BYTE_LENGTH 16
-
-gchar *
-mm_qmi_uim_decode_eid (const gchar *eid, gsize eid_len)
-{
-    if (eid_len != EID_BYTE_LENGTH)
-        return NULL;
-
-    return mm_bcd_to_string ((const guint8 *) eid, eid_len, FALSE /* low_nybble_first */);
 }
 
 /*****************************************************************************/

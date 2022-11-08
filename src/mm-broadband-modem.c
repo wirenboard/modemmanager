@@ -14,7 +14,8 @@
  * Copyright (C) 2009 - 2012 Red Hat, Inc.
  * Copyright (C) 2015 Marco Bascetta <marco.bascetta@sadel.it>
  * Copyright (C) 2019 Purism SPC
- * Copyright (C) 2011 - 2021 Google, Inc.
+ * Copyright (C) 2011 - 2022 Google, Inc.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc.
  */
 
 #include <config.h>
@@ -41,6 +42,7 @@
 #include "mm-iface-modem-voice.h"
 #include "mm-iface-modem-time.h"
 #include "mm-iface-modem-firmware.h"
+#include "mm-iface-modem-sar.h"
 #include "mm-iface-modem-signal.h"
 #include "mm-iface-modem-oma.h"
 #include "mm-broadband-bearer.h"
@@ -72,6 +74,7 @@ static void iface_modem_time_init (MMIfaceModemTime *iface);
 static void iface_modem_signal_init (MMIfaceModemSignal *iface);
 static void iface_modem_oma_init (MMIfaceModemOma *iface);
 static void iface_modem_firmware_init (MMIfaceModemFirmware *iface);
+static void iface_modem_sar_init (MMIfaceModemSar *iface);
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModem, mm_broadband_modem, MM_TYPE_BASE_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -86,6 +89,7 @@ G_DEFINE_TYPE_EXTENDED (MMBroadbandModem, mm_broadband_modem, MM_TYPE_BASE_MODEM
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_TIME, iface_modem_time_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_SIGNAL, iface_modem_signal_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_OMA, iface_modem_oma_init)
+                        G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_SAR, iface_modem_sar_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_FIRMWARE, iface_modem_firmware_init))
 
 enum {
@@ -103,6 +107,7 @@ enum {
     PROP_MODEM_SIGNAL_DBUS_SKELETON,
     PROP_MODEM_OMA_DBUS_SKELETON,
     PROP_MODEM_FIRMWARE_DBUS_SKELETON,
+    PROP_MODEM_SAR_DBUS_SKELETON,
     PROP_MODEM_SIM,
     PROP_MODEM_SIM_SLOTS,
     PROP_MODEM_BEARER_LIST,
@@ -114,6 +119,7 @@ enum {
     PROP_MODEM_3GPP_5GS_NETWORK_SUPPORTED,
     PROP_MODEM_3GPP_IGNORED_FACILITY_LOCKS,
     PROP_MODEM_3GPP_INITIAL_EPS_BEARER,
+    PROP_MODEM_3GPP_PACKET_SERVICE_STATE,
     PROP_MODEM_CDMA_CDMA1X_REGISTRATION_STATE,
     PROP_MODEM_CDMA_EVDO_REGISTRATION_STATE,
     PROP_MODEM_CDMA_CDMA1X_NETWORK_SUPPORTED,
@@ -125,7 +131,6 @@ enum {
     PROP_MODEM_VOICE_CALL_LIST,
     PROP_MODEM_SIMPLE_STATUS,
     PROP_MODEM_SIM_HOT_SWAP_SUPPORTED,
-    PROP_MODEM_SIM_HOT_SWAP_CONFIGURED,
     PROP_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED,
     PROP_MODEM_PERIODIC_ACCESS_TECH_CHECK_DISABLED,
     PROP_MODEM_PERIODIC_CALL_LIST_CHECK_DISABLED,
@@ -138,6 +143,17 @@ enum {
 };
 
 static GParamSpec *properties[PROP_LAST];
+
+#if defined WITH_SUSPEND_RESUME
+
+enum {
+    SIGNAL_SYNC_NEEDED,
+    SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST];
+
+#endif
 
 /* When CIND is supported, invalid indicators are marked with this value */
 #define CIND_INDICATOR_INVALID 255
@@ -152,7 +168,6 @@ struct _MMBroadbandModemPrivate {
     PortsContext *in_call_ports_ctx;
     gboolean modem_init_run;
     gboolean sim_hot_swap_supported;
-    gboolean sim_hot_swap_configured;
     gboolean periodic_signal_check_disabled;
     gboolean periodic_access_tech_check_disabled;
 
@@ -193,6 +208,7 @@ struct _MMBroadbandModemPrivate {
     GPtrArray *modem_3gpp_registration_regex;
     MMModem3gppFacility modem_3gpp_ignored_facility_locks;
     MMBaseBearer *modem_3gpp_initial_eps_bearer;
+    MMModem3gppPacketServiceState modem_3gpp_packet_service_state;
 
     /*<--- Modem 3GPP Profile Manager interface --->*/
     /* Properties */
@@ -265,6 +281,11 @@ struct _MMBroadbandModemPrivate {
     /*<--- Modem Firmware interface --->*/
     /* Properties */
     GObject  *modem_firmware_dbus_skeleton;
+
+    /*<--- Modem Sar interface --->*/
+    /* Properties */
+    GObject  *modem_sar_dbus_skeleton;
+
     gboolean  modem_firmware_ignore_carrier;
 };
 
@@ -465,6 +486,37 @@ modem_create_sim (MMIfaceModem *self,
                      NULL, /* cancellable */
                      callback,
                      user_data);
+}
+
+/*****************************************************************************/
+/* Helper to manage AT-based SIM hot swap ports context */
+
+gboolean
+mm_broadband_modem_sim_hot_swap_ports_context_init (MMBroadbandModem  *self,
+                                                    GError           **error)
+{
+    PortsContext *ports;
+
+    mm_obj_dbg (self, "creating serial ports context for SIM hot swap...");
+    ports = ports_context_new ();
+    if (!ports_context_open (self, ports, FALSE, FALSE, FALSE, error)) {
+        ports_context_unref (ports);
+        return FALSE;
+    }
+
+    g_assert (!self->priv->sim_hot_swap_ports_ctx);
+    self->priv->sim_hot_swap_ports_ctx = ports;
+    return TRUE;
+}
+
+void
+mm_broadband_modem_sim_hot_swap_ports_context_reset (MMBroadbandModem *self)
+{
+    if (self->priv->sim_hot_swap_ports_ctx) {
+        mm_obj_dbg (self, "releasing serial ports context for SIM hot swap");
+        ports_context_unref (self->priv->sim_hot_swap_ports_ctx);
+        self->priv->sim_hot_swap_ports_ctx = NULL;
+    }
 }
 
 /*****************************************************************************/
@@ -2059,16 +2111,13 @@ modem_load_signal_quality_finish (MMIfaceModem *self,
 static guint
 signal_quality_evdo_pilot_sets (MMBroadbandModem *self)
 {
-    gint dbm;
-
     if (self->priv->modem_cdma_evdo_registration_state == MM_MODEM_CDMA_REGISTRATION_STATE_UNKNOWN)
         return 0;
 
     if (self->priv->evdo_pilot_rssi >= 0)
         return 0;
 
-    dbm = CLAMP (self->priv->evdo_pilot_rssi, -113, -51);
-    return 100 - ((dbm + 51) * 100 / (-113 + 51));
+    return MM_RSSI_TO_QUALITY (self->priv->evdo_pilot_rssi);
 }
 
 static void
@@ -3120,9 +3169,9 @@ static void
 set_cgev_unsolicited_events_handlers (MMBroadbandModem *self,
                                       gboolean          enable)
 {
-    MMPortSerialAt *ports[2];
-    GRegex *cgev_regex;
-    guint i;
+    MMPortSerialAt    *ports[2];
+    g_autoptr(GRegex)  cgev_regex = NULL;
+    guint              i;
 
     cgev_regex = mm_3gpp_cgev_regex_get ();
     ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
@@ -3144,8 +3193,6 @@ set_cgev_unsolicited_events_handlers (MMBroadbandModem *self,
             enable ? self : NULL,
             NULL);
     }
-
-    g_regex_unref (cgev_regex);
 }
 
 static void
@@ -3196,9 +3243,9 @@ static void
 set_ciev_unsolicited_events_handlers (MMBroadbandModem *self,
                                       gboolean          enable)
 {
-    MMPortSerialAt *ports[2];
-    GRegex *ciev_regex;
-    guint i;
+    MMPortSerialAt    *ports[2];
+    g_autoptr(GRegex)  ciev_regex = NULL;
+    guint              i;
 
     ciev_regex = mm_3gpp_ciev_regex_get ();
     ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
@@ -3220,8 +3267,6 @@ set_ciev_unsolicited_events_handlers (MMBroadbandModem *self,
             enable ? self : NULL,
             NULL);
     }
-
-    g_regex_unref (ciev_regex);
 }
 
 static void
@@ -4091,104 +4136,231 @@ modem_power_up (MMIfaceModem *self,
 /*****************************************************************************/
 /* Reprobing the modem if the SIM changed across a power-off or power-down */
 
-typedef struct {
-    MMBaseSim *sim;
-    guint retries;
-} SimSwapContext;
+#define SIM_SWAP_CHECK_LOAD_RETRIES_MAX 3
 
-static gboolean load_sim_identifier (GTask *task);
+typedef enum {
+    SIM_SWAP_CHECK_STEP_FIRST,
+    SIM_SWAP_CHECK_STEP_ICCID_CHANGED,
+    SIM_SWAP_CHECK_STEP_IMSI_CHANGED,
+    SIM_SWAP_CHECK_STEP_LAST,
+} SimSwapCheckStep;
+
+typedef struct {
+    MMBaseSim        *sim;
+    guint             retries;
+    gchar            *iccid;
+    gboolean          iccid_check_done;
+    gchar            *imsi;
+    gboolean          imsi_check_done;
+    SimSwapCheckStep  step;
+} SimSwapContext;
 
 static void
 sim_swap_context_free (SimSwapContext *ctx)
 {
+    g_free (ctx->iccid);
+    g_free (ctx->imsi);
     g_clear_object (&ctx->sim);
     g_slice_free (SimSwapContext, ctx);
 }
 
 static gboolean
-modem_check_for_sim_swap_finish (MMIfaceModem *self,
-                                 GAsyncResult *res,
-                                 GError **error)
+modem_check_for_sim_swap_finish (MMIfaceModem  *self,
+                                 GAsyncResult  *res,
+                                 GError       **error)
 {
     return g_task_propagate_boolean (G_TASK (res), error);
 }
 
+static gboolean load_sim_identifier (GTask *task);
+static gboolean load_sim_imsi       (GTask *task);
+static void     sim_swap_check_step (GTask *task);
+
 static void
-load_sim_identifier_ready (MMBaseSim *sim,
-                           GAsyncResult *res,
-                           GTask *task)
+complete_sim_swap_check (GTask       *task,
+                         const gchar *current)
 {
     MMBroadbandModem *self;
-    SimSwapContext *ctx;
-    const gchar *cached_simid;
-    gchar *current_simid;
-    GError *error = NULL;
+    SimSwapContext   *ctx;
+    const gchar      *cached;
+    const gchar      *str;
 
     self = MM_BROADBAND_MODEM (g_task_get_source_object (task));
     ctx = g_task_get_task_data (task);
-    cached_simid = mm_gdbus_sim_get_sim_identifier (MM_GDBUS_SIM (sim));
-    current_simid = MM_BASE_SIM_GET_CLASS (sim)->load_sim_identifier_finish (sim, res, &error);
+
+    if (ctx->step == SIM_SWAP_CHECK_STEP_ICCID_CHANGED) {
+        ctx->iccid_check_done = TRUE;
+        cached = mm_gdbus_sim_get_sim_identifier (MM_GDBUS_SIM (ctx->sim));
+        str = "identifier";
+    } else if (ctx->step == SIM_SWAP_CHECK_STEP_IMSI_CHANGED) {
+        ctx->imsi_check_done = TRUE;
+        cached = mm_gdbus_sim_get_imsi (MM_GDBUS_SIM (ctx->sim));
+        str = "imsi";
+    } else
+        g_assert_not_reached();
+
+    if (g_strcmp0 (current, cached) != 0) {
+        mm_obj_info (self, "SIM %s has changed: %s -> %s",
+                     str, cached ? cached : "<none>", current ? current : "<none>");
+        mm_iface_modem_process_sim_event (MM_IFACE_MODEM (self));
+        ctx->step = SIM_SWAP_CHECK_STEP_LAST;
+    } else {
+        mm_obj_dbg (self, "SIM %s has not changed", str);
+        ctx->step++;
+    }
+
+    sim_swap_check_step (task);
+ }
+
+static void
+load_sim_step_ready (MMBaseSim    *sim,
+                     GAsyncResult *res,
+                     GTask        *task)
+{
+    MMBroadbandModem *self;
+    SimSwapContext   *ctx;
+
+    g_autofree gchar *current = NULL;
+    GError           *error = NULL;
+    const gchar      *str;
+
+    self = MM_BROADBAND_MODEM (g_task_get_source_object (task));
+    ctx = g_task_get_task_data (task);
+
+    if (ctx->step == SIM_SWAP_CHECK_STEP_ICCID_CHANGED) {
+        current = mm_base_sim_load_sim_identifier_finish (sim, res, &error);
+        str = "identifier";
+    } else if (ctx->step == SIM_SWAP_CHECK_STEP_IMSI_CHANGED) {
+        current = MM_BASE_SIM_GET_CLASS (sim)->load_imsi_finish (sim, res, &error);
+        str = "imsi";
+    } else
+        g_assert_not_reached();
 
     if (error) {
         if (g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED)) {
-            g_task_return_error (task, error);
-            goto out;
-        }
-
-        if (ctx->retries > 0) {
-            mm_obj_warn (self, "could not load SIM identifier: %s (%d retries left)",
-                         error->message, ctx->retries);
-            --ctx->retries;
-            g_clear_error (&error);
-            g_timeout_add_seconds (1, (GSourceFunc) load_sim_identifier, task);
+            /* Skip checking this field right away */
+            ctx->step++;
+            sim_swap_check_step (task);
             return;
         }
 
-        mm_obj_warn (self, "could not load SIM identifier: %s", error->message);
-        g_task_return_error (task, error);
-        goto out;
+        if (ctx->retries > 0) {
+            mm_obj_warn (self, "could not load SIM %s: %s (%d retries left)",
+                         str, error->message, ctx->retries);
+            --ctx->retries;
+            g_clear_error (&error);
+            if (ctx->step == SIM_SWAP_CHECK_STEP_ICCID_CHANGED)
+                g_timeout_add_seconds (1, (GSourceFunc) load_sim_identifier, task);
+            else if (ctx->step == SIM_SWAP_CHECK_STEP_IMSI_CHANGED)
+                g_timeout_add_seconds (1, (GSourceFunc) load_sim_imsi, task);
+            else
+                g_assert_not_reached();
+            return;
+        }
+
+        mm_obj_warn (self, "could not load SIM %s: %s", str, error->message);
+        complete_sim_swap_check (task, NULL);
+        return;
     }
 
-    if (g_strcmp0 (current_simid, cached_simid) != 0) {
-        mm_obj_info (self, "sim identifier has changed: %s -> %s - possible SIM swap",
-                     cached_simid, current_simid);
-        mm_broadband_modem_sim_hot_swap_detected (self);
-    }
-
-    g_task_return_boolean (task, TRUE);
-
-out:
-    g_free (current_simid);
-    g_object_unref (task);
-}
+    complete_sim_swap_check (task, current);
+ }
 
 static gboolean
 load_sim_identifier (GTask *task)
 {
-    SimSwapContext *ctx = g_task_get_task_data (task);
+    SimSwapContext *ctx;
 
-    MM_BASE_SIM_GET_CLASS (ctx->sim)->load_sim_identifier (
-        ctx->sim,
-        (GAsyncReadyCallback)load_sim_identifier_ready,
-        task);
+    ctx = g_task_get_task_data (task);
+
+    mm_base_sim_load_sim_identifier (ctx->sim,
+                                     (GAsyncReadyCallback)load_sim_step_ready,
+                                     task);
+
+    return G_SOURCE_REMOVE;
+}
+
+static gboolean
+load_sim_imsi (GTask *task)
+{
+    SimSwapContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    if (MM_BASE_SIM_GET_CLASS (ctx->sim)->load_imsi &&
+        MM_BASE_SIM_GET_CLASS (ctx->sim)->load_imsi_finish) {
+        MM_BASE_SIM_GET_CLASS (ctx->sim)->load_imsi (ctx->sim,
+                                                     (GAsyncReadyCallback)load_sim_step_ready,
+                                                     task);
+    } else {
+        ctx->step++;
+        sim_swap_check_step (task);
+    }
 
     return G_SOURCE_REMOVE;
 }
 
 static void
-modem_check_for_sim_swap (MMIfaceModem *self,
-                          const gchar *iccid,
-                          GAsyncReadyCallback callback,
-                          gpointer user_data)
+sim_swap_check_step (GTask *task)
 {
-    GTask *task;
+    SimSwapContext *ctx;
+
+    ctx  = g_task_get_task_data (task);
+
+    switch (ctx->step) {
+    case SIM_SWAP_CHECK_STEP_FIRST:
+        ctx->step++;
+        /* fall-through */
+
+    case SIM_SWAP_CHECK_STEP_ICCID_CHANGED:
+        ctx->retries = SIM_SWAP_CHECK_LOAD_RETRIES_MAX;
+        /* We may or may not get the new SIM identifier (iccid). In case
+         * we've got it, the load_sim_identifier phase can be skipped. */
+        if (ctx->iccid)
+            complete_sim_swap_check (task, ctx->iccid);
+        else
+            load_sim_identifier (task);
+        return;
+
+    case SIM_SWAP_CHECK_STEP_IMSI_CHANGED:
+        ctx->retries = SIM_SWAP_CHECK_LOAD_RETRIES_MAX;
+        if (ctx->imsi)
+            complete_sim_swap_check (task, ctx->imsi);
+        else
+            load_sim_imsi (task);
+        return;
+
+    case SIM_SWAP_CHECK_STEP_LAST:
+        if (!ctx->iccid_check_done && !ctx->imsi_check_done)
+            g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                     "Couldn't do either ICCID or IMSI check");
+        else
+            g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+
+    default:
+        g_assert_not_reached ();
+    }
+}
+
+static void
+modem_check_for_sim_swap (MMIfaceModem        *self,
+                          const gchar         *iccid,
+                          const gchar         *imsi,
+                          GAsyncReadyCallback  callback,
+                          gpointer             user_data)
+{
+    GTask          *task;
     SimSwapContext *ctx;
 
     mm_obj_dbg (self, "checking if SIM was swapped...");
 
     task = g_task_new (self, NULL, callback, user_data);
     ctx = g_slice_new0 (SimSwapContext);
-    ctx->retries = 3;
+    ctx->step = SIM_SWAP_CHECK_STEP_FIRST;
+    ctx->iccid = g_strdup (iccid);
+    ctx->imsi = g_strdup (imsi);
     g_task_set_task_data (task, ctx, (GDestroyNotify)sim_swap_context_free);
 
     g_object_get (self,
@@ -4204,48 +4376,17 @@ modem_check_for_sim_swap (MMIfaceModem *self,
 
         if (modem_state == MM_MODEM_STATE_FAILED) {
             mm_obj_info (self, "new SIM detected, handle as SIM hot-swap");
-            mm_broadband_modem_sim_hot_swap_detected (MM_BROADBAND_MODEM (self));
+            mm_iface_modem_process_sim_event (MM_IFACE_MODEM (self));
             g_task_return_boolean (task, TRUE);
         } else {
-            g_task_return_new_error (task,
-                                     MM_CORE_ERROR,
-                                     MM_CORE_ERROR_FAILED,
-                                     "could not acquire sim object");
+            g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                     "could not acquire SIM object");
         }
         g_object_unref (task);
         return;
     }
 
-    /* We may or may not get the new SIM identifier (iccid). In case
-     * we've got it, the load_sim_identifier phase can be skipped. */
-    if (iccid) {
-        const gchar *cached_simid;
-
-        cached_simid = mm_gdbus_sim_get_sim_identifier (MM_GDBUS_SIM (ctx->sim));
-        if (!cached_simid || g_strcmp0 (iccid, cached_simid) != 0) {
-            mm_obj_info (self, "detected ICCID change (%s -> %s), handle as SIM hot-swap",
-                         cached_simid ? cached_simid : "<none>",
-                         iccid);
-            mm_broadband_modem_sim_hot_swap_detected (MM_BROADBAND_MODEM (self));
-        } else
-            mm_obj_dbg (self, "ICCID not changed");
-
-        g_task_return_boolean (task, TRUE);
-        g_object_unref (task);
-        return;
-    }
-
-    if (!MM_BASE_SIM_GET_CLASS (ctx->sim)->load_sim_identifier ||
-        !MM_BASE_SIM_GET_CLASS (ctx->sim)->load_sim_identifier_finish) {
-        g_task_return_new_error (task,
-                                 MM_CORE_ERROR,
-                                 MM_CORE_ERROR_FAILED,
-                                 "sim identifier could not be loaded");
-        g_object_unref (task);
-        return;
-    }
-
-    load_sim_identifier (task);
+    sim_swap_check_step (task);
 }
 
 /*****************************************************************************/
@@ -4613,6 +4754,34 @@ modem_3gpp_set_eps_ue_mode_operation (MMIfaceModem3gpp              *self,
 }
 
 /*****************************************************************************/
+/* Set packet service state (3GPP interface) */
+
+static gboolean
+modem_3gpp_set_packet_service_state_finish (MMIfaceModem3gpp  *self,
+                                            GAsyncResult      *res,
+                                            GError          **error)
+{
+    return !!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, error);
+}
+
+static void
+modem_3gpp_set_packet_service_state (MMIfaceModem3gpp              *self,
+                                     MMModem3gppPacketServiceState  state,
+                                     GAsyncReadyCallback            callback,
+                                     gpointer                       user_data)
+{
+    g_autofree gchar *cmd = NULL;
+
+    cmd = mm_3gpp_build_cgatt_set_request (state);
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              cmd,
+                              10,
+                              FALSE,
+                              callback,
+                              user_data);
+}
+
+/*****************************************************************************/
 /* Unsolicited registration messages handling (3GPP interface) */
 
 static gboolean
@@ -4658,21 +4827,21 @@ registration_state_changed (MMPortSerialAt *port,
      *  - CEREG/C5GREG always reports TAC
      */
     if (cgreg)
-        mm_iface_modem_3gpp_update_ps_registration_state (MM_IFACE_MODEM_3GPP (self), state);
+        mm_iface_modem_3gpp_update_ps_registration_state (MM_IFACE_MODEM_3GPP (self), state, FALSE);
     else if (cereg) {
         tac = lac;
         lac = 0;
-        mm_iface_modem_3gpp_update_eps_registration_state (MM_IFACE_MODEM_3GPP (self), state);
+        mm_iface_modem_3gpp_update_eps_registration_state (MM_IFACE_MODEM_3GPP (self), state, FALSE);
     } else if (c5greg) {
         tac = lac;
         lac = 0;
-        mm_iface_modem_3gpp_update_5gs_registration_state (MM_IFACE_MODEM_3GPP (self), state);
+        mm_iface_modem_3gpp_update_5gs_registration_state (MM_IFACE_MODEM_3GPP (self), state, FALSE);
     } else {
         if (act == MM_MODEM_ACCESS_TECHNOLOGY_LTE) {
             tac = lac;
             lac = 0;
         }
-        mm_iface_modem_3gpp_update_cs_registration_state (MM_IFACE_MODEM_3GPP (self), state);
+        mm_iface_modem_3gpp_update_cs_registration_state (MM_IFACE_MODEM_3GPP (self), state, FALSE);
     }
 
     /* Only update access technologies from CREG/CGREG response if the modem
@@ -4987,20 +5156,20 @@ registration_status_check_ready (MMBroadbandModem *self,
                                  GAsyncResult     *res,
                                  GTask            *task)
 {
+    g_autoptr(GMatchInfo)         match_info = NULL;
     RunRegistrationChecksContext *ctx;
-    const gchar *response;
-    GError *error = NULL;
-    GMatchInfo *match_info = NULL;
-    guint i;
-    gboolean parsed;
-    gboolean cgreg = FALSE;
-    gboolean cereg = FALSE;
-    gboolean c5greg = FALSE;
-    MMModem3gppRegistrationState state = MM_MODEM_3GPP_REGISTRATION_STATE_UNKNOWN;
-    MMModemAccessTechnology act = MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN;
-    gulong lac = 0;
-    gulong tac = 0;
-    gulong cid = 0;
+    const gchar                  *response;
+    GError                       *error = NULL;
+    guint                         i;
+    gboolean                      parsed;
+    gboolean                      cgreg = FALSE;
+    gboolean                      cereg = FALSE;
+    gboolean                      c5greg = FALSE;
+    MMModem3gppRegistrationState  state = MM_MODEM_3GPP_REGISTRATION_STATE_UNKNOWN;
+    MMModemAccessTechnology       act = MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN;
+    gulong                        lac = 0;
+    gulong                        tac = 0;
+    gulong                        cid = 0;
 
     ctx = g_task_get_task_data (task);
 
@@ -5032,8 +5201,7 @@ registration_status_check_ready (MMBroadbandModem *self,
                            0,
                            &match_info))
             break;
-        g_match_info_free (match_info);
-        match_info = NULL;
+        g_clear_pointer (&match_info, g_match_info_free);
     }
 
     if (!match_info) {
@@ -5056,7 +5224,6 @@ registration_status_check_ready (MMBroadbandModem *self,
                                           &cereg,
                                           &c5greg,
                                           &error);
-    g_match_info_free (match_info);
 
     if (!parsed) {
         if (!error)
@@ -5081,7 +5248,7 @@ registration_status_check_ready (MMBroadbandModem *self,
             mm_obj_dbg (self, "got PS registration state when checking EPS registration state");
         else if (ctx->running_5gs)
             mm_obj_dbg (self, "got PS registration state when checking 5GS registration state");
-        mm_iface_modem_3gpp_update_ps_registration_state (MM_IFACE_MODEM_3GPP (self), state);
+        mm_iface_modem_3gpp_update_ps_registration_state (MM_IFACE_MODEM_3GPP (self), state, FALSE);
     } else if (cereg) {
         tac = lac;
         lac = 0;
@@ -5091,7 +5258,7 @@ registration_status_check_ready (MMBroadbandModem *self,
             mm_obj_dbg (self, "got EPS registration state when checking PS registration state");
         else if (ctx->running_5gs)
             mm_obj_dbg (self, "got EPS registration state when checking 5GS registration state");
-        mm_iface_modem_3gpp_update_eps_registration_state (MM_IFACE_MODEM_3GPP (self), state);
+        mm_iface_modem_3gpp_update_eps_registration_state (MM_IFACE_MODEM_3GPP (self), state, FALSE);
     } else if (c5greg) {
         tac = lac;
         lac = 0;
@@ -5101,7 +5268,7 @@ registration_status_check_ready (MMBroadbandModem *self,
             mm_obj_dbg (self, "got 5GS registration state when checking PS registration state");
         else if (ctx->running_eps)
             mm_obj_dbg (self, "got 5GS registration state when checking EPS registration state");
-        mm_iface_modem_3gpp_update_5gs_registration_state (MM_IFACE_MODEM_3GPP (self), state);
+        mm_iface_modem_3gpp_update_5gs_registration_state (MM_IFACE_MODEM_3GPP (self), state, FALSE);
     } else {
         if (act == MM_MODEM_ACCESS_TECHNOLOGY_LTE) {
             tac = lac;
@@ -5113,7 +5280,7 @@ registration_status_check_ready (MMBroadbandModem *self,
             mm_obj_dbg (self, "got CS registration state when checking EPS registration state");
         else if (ctx->running_5gs)
             mm_obj_dbg (self, "got CS registration state when checking 5GS registration state");
-        mm_iface_modem_3gpp_update_cs_registration_state (MM_IFACE_MODEM_3GPP (self), state);
+        mm_iface_modem_3gpp_update_cs_registration_state (MM_IFACE_MODEM_3GPP (self), state, FALSE);
     }
 
     mm_iface_modem_3gpp_update_access_technologies (MM_IFACE_MODEM_3GPP (self), act);
@@ -6133,10 +6300,10 @@ set_unsolicited_result_code_handlers (MMIfaceModem3gppUssd *self,
                                       GAsyncReadyCallback callback,
                                       gpointer user_data)
 {
-    MMPortSerialAt *ports[2];
-    GRegex *cusd_regex;
-    guint i;
-    GTask *task;
+    MMPortSerialAt    *ports[2];
+    g_autoptr(GRegex)  cusd_regex = NULL;
+    guint              i;
+    GTask             *task;
 
     cusd_regex = mm_3gpp_cusd_regex_get ();
     ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
@@ -6157,8 +6324,6 @@ set_unsolicited_result_code_handlers (MMIfaceModem3gppUssd *self,
             enable ? self : NULL,
             NULL);
     }
-
-    g_regex_unref (cusd_regex);
 
     task = g_task_new (self, NULL, callback, user_data);
     g_task_return_boolean (task, TRUE);
@@ -7060,11 +7225,11 @@ set_messaging_unsolicited_events_handlers (MMIfaceModemMessaging *self,
                                            GAsyncReadyCallback callback,
                                            gpointer user_data)
 {
-    MMPortSerialAt *ports[2];
-    GRegex *cmti_regex;
-    GRegex *cds_regex;
-    guint i;
-    GTask *task;
+    MMPortSerialAt    *ports[2];
+    g_autoptr(GRegex)  cmti_regex = NULL;
+    g_autoptr(GRegex)  cds_regex = NULL;
+    guint              i;
+    GTask             *task;
 
     cmti_regex = mm_3gpp_cmti_regex_get ();
     cds_regex = mm_3gpp_cds_regex_get ();
@@ -7093,9 +7258,6 @@ set_messaging_unsolicited_events_handlers (MMIfaceModemMessaging *self,
             enable ? self : NULL,
             NULL);
     }
-
-    g_regex_unref (cmti_regex);
-    g_regex_unref (cds_regex);
 
     task = g_task_new (self, NULL, callback, user_data);
     g_task_return_boolean (task, TRUE);
@@ -7313,11 +7475,11 @@ sms_text_part_list_ready (MMBroadbandModem *self,
                           GAsyncResult *res,
                           GTask *task)
 {
-    ListPartsContext *ctx;
-    GRegex *r;
-    GMatchInfo *match_info = NULL;
-    const gchar *response;
-    GError *error = NULL;
+    ListPartsContext      *ctx;
+    g_autoptr(GRegex)      r = NULL;
+    g_autoptr(GMatchInfo)  match_info = NULL;
+    const gchar           *response;
+    GError                *error = NULL;
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (error) {
@@ -7337,8 +7499,6 @@ sms_text_part_list_ready (MMBroadbandModem *self,
                                  MM_CORE_ERROR_INVALID_ARGS,
                                  "Couldn't parse SMS list response");
         g_object_unref (task);
-        g_match_info_free (match_info);
-        g_regex_unref (r);
         return;
     }
 
@@ -7424,8 +7584,6 @@ sms_text_part_list_ready (MMBroadbandModem *self,
 next:
         g_match_info_next (match_info, NULL);
     }
-    g_match_info_free (match_info);
-    g_regex_unref (r);
 
     /* We consider all done */
     g_task_return_boolean (task, TRUE);
@@ -7756,9 +7914,9 @@ set_voice_in_call_unsolicited_events_handlers (MMBroadbandModem *self,
                                                PortsContext     *ports_ctx,
                                                gboolean          enable)
 {
-    MMPortSerialAt *ports[2];
-    GRegex         *in_call_event_regex;
-    guint           i;
+    MMPortSerialAt    *ports[2];
+    g_autoptr(GRegex) in_call_event_regex = NULL;
+    guint             i;
 
     in_call_event_regex = g_regex_new ("\\r\\n(NO CARRIER|BUSY|NO ANSWER|NO DIALTONE)(\\r)?\\r\\n$",
                                        G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
@@ -7781,8 +7939,6 @@ set_voice_in_call_unsolicited_events_handlers (MMBroadbandModem *self,
             enable ? self : NULL,
             NULL);
     }
-
-    g_regex_unref (in_call_event_regex);
 }
 
 static void
@@ -7973,13 +8129,13 @@ set_voice_unsolicited_events_handlers (MMIfaceModemVoice *self,
                                        GAsyncReadyCallback callback,
                                        gpointer user_data)
 {
-    MMPortSerialAt *ports[2];
-    GRegex *cring_regex;
-    GRegex *ring_regex;
-    GRegex *clip_regex;
-    GRegex *ccwa_regex;
-    guint i;
-    GTask *task;
+    MMPortSerialAt    *ports[2];
+    g_autoptr(GRegex)  cring_regex = NULL;
+    g_autoptr(GRegex)  ring_regex = NULL;
+    g_autoptr(GRegex)  clip_regex = NULL;
+    g_autoptr(GRegex)  ccwa_regex = NULL;
+    guint              i;
+    GTask             *task;
 
     cring_regex = mm_voice_cring_regex_get ();
     ring_regex  = mm_voice_ring_regex_get ();
@@ -8022,11 +8178,6 @@ set_voice_unsolicited_events_handlers (MMIfaceModemVoice *self,
             enable ? self : NULL,
             NULL);
     }
-
-    g_regex_unref (ccwa_regex);
-    g_regex_unref (clip_regex);
-    g_regex_unref (cring_regex);
-    g_regex_unref (ring_regex);
 
     task = g_task_new (self, NULL, callback, user_data);
     g_task_return_boolean (task, TRUE);
@@ -9091,8 +9242,8 @@ css_query_ready (MMIfaceModemCdma *self,
         band = 'Z';
         success = TRUE;
     } else {
-        GRegex *r;
-        GMatchInfo *match_info;
+        g_autoptr(GRegex)     r = NULL;
+        g_autoptr(GMatchInfo) match_info = NULL;
 
         /* Format is "<band_class>,<band>,<sid>" */
         r = g_regex_new ("\\s*([^,]*?)\\s*,\\s*([^,]*?)\\s*,\\s*(\\d+)", G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
@@ -9123,9 +9274,6 @@ css_query_ready (MMIfaceModemCdma *self,
 
             success = TRUE;
         }
-
-        g_match_info_free (match_info);
-        g_regex_unref (r);
     }
 
     if (!success) {
@@ -10152,9 +10300,15 @@ modem_signal_load_values (MMIfaceModemSignal  *self,
 static gboolean
 modem_3gpp_profile_manager_check_support_finish (MMIfaceModem3gppProfileManager  *self,
                                                  GAsyncResult                    *res,
+                                                 gchar                          **index_field,
                                                  GError                         **error)
 {
-    return g_task_propagate_boolean (G_TASK (res), error);
+    if (g_task_propagate_boolean (G_TASK (res), error)) {
+        *index_field = g_strdup ("profile-id");;
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 static void
@@ -10320,7 +10474,11 @@ modem_3gpp_profile_manager_check_format_finish (MMIfaceModem3gppProfileManager  
     if (apn_cmp)
         *apn_cmp = (GEqualFunc) mm_3gpp_cmp_apn_name;
     if (profile_cmp_flags)
-        *profile_cmp_flags = (MM_3GPP_PROFILE_CMP_FLAGS_NO_AUTH | MM_3GPP_PROFILE_CMP_FLAGS_NO_APN_TYPE);
+        *profile_cmp_flags = (MM_3GPP_PROFILE_CMP_FLAGS_NO_AUTH |
+                              MM_3GPP_PROFILE_CMP_FLAGS_NO_APN_TYPE |
+                              MM_3GPP_PROFILE_CMP_FLAGS_NO_ACCESS_TYPE_PREFERENCE |
+                              MM_3GPP_PROFILE_CMP_FLAGS_NO_ROAMING_ALLOWANCE |
+                              MM_3GPP_PROFILE_CMP_FLAGS_NO_PROFILE_SOURCE);
     return TRUE;
 }
 
@@ -10455,14 +10613,17 @@ profile_manager_cgdel_set_ready (MMBaseModem  *self,
 }
 
 static void
-modem_3gpp_profile_manager_delete_profile (MMIfaceModem3gppProfileManager  *self,
-                                           MM3gppProfile                   *profile,
-                                           GAsyncReadyCallback              callback,
-                                           gpointer                         user_data)
+modem_3gpp_profile_manager_delete_profile (MMIfaceModem3gppProfileManager *self,
+                                           MM3gppProfile                  *profile,
+                                           const gchar                    *index_field,
+                                           GAsyncReadyCallback             callback,
+                                           gpointer                        user_data)
 {
     g_autofree gchar *cmd = NULL;
     GTask            *task;
     gint              profile_id;
+
+    g_assert (g_strcmp0 (index_field, "profile-id") == 0);
 
     task = g_task_new (self, NULL, callback, user_data);
 
@@ -10509,14 +10670,13 @@ check_activated_profile_cgact_query_ready (MMBaseModem  *self,
                                            GAsyncResult *res,
                                            GTask        *task)
 {
-    MM3gppProfile    *profile;
-    const gchar      *response;
-    GError           *error = NULL;
-    GList            *pdp_context_active_list = NULL;
-    GList            *l;
-    gint              profile_id;
-    gboolean          activated = FALSE;
-    g_autofree gchar *cmd = NULL;
+    MM3gppProfile *profile;
+    const gchar   *response;
+    GError        *error = NULL;
+    GList         *pdp_context_active_list = NULL;
+    GList         *l;
+    gint           profile_id;
+    gboolean       activated = FALSE;
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (response)
@@ -10627,15 +10787,21 @@ modem_3gpp_profile_manager_deactivate_profile (MMIfaceModem3gppProfileManager *s
 /*****************************************************************************/
 /* Store profile (3GPP profile management interface) */
 
-static gint
+static gboolean
 modem_3gpp_profile_manager_store_profile_finish (MMIfaceModem3gppProfileManager  *self,
                                                  GAsyncResult                    *res,
+                                                 gint                            *out_profile_id,
+                                                 MMBearerApnType                 *out_apn_type,
                                                  GError                         **error)
 {
     if (!g_task_propagate_boolean (G_TASK (res), error))
-        return MM_3GPP_PROFILE_ID_UNKNOWN;
+        return FALSE;
 
-    return GPOINTER_TO_INT (g_task_get_task_data (G_TASK (res)));
+    if (out_profile_id)
+        *out_profile_id = GPOINTER_TO_INT (g_task_get_task_data (G_TASK (res)));
+    if (out_apn_type)
+        *out_apn_type = MM_BEARER_APN_TYPE_NONE;
+    return TRUE;
 }
 
 static void
@@ -10655,6 +10821,7 @@ store_profile_cgdcont_set_ready (MMBaseModem  *self,
 static void
 modem_3gpp_profile_manager_store_profile (MMIfaceModem3gppProfileManager *self,
                                           MM3gppProfile                  *profile,
+                                          const gchar                    *index_field,
                                           GAsyncReadyCallback             callback,
                                           gpointer                        user_data)
 {
@@ -10666,6 +10833,8 @@ modem_3gpp_profile_manager_store_profile (MMIfaceModem3gppProfileManager *self,
     g_autofree gchar  *ip_type_str = NULL;
     g_autofree gchar  *quoted_apn = NULL;
     g_autofree gchar  *cmd = NULL;
+
+    g_assert (g_strcmp0 (index_field, "profile-id") == 0);
 
     task = g_task_new (self, NULL, callback, user_data);
 
@@ -10720,10 +10889,13 @@ static const gchar *secondary_init_sequence[] = {
 static void
 setup_ports (MMBroadbandModem *self)
 {
-    MMPortSerialAt *ports[2];
-    GRegex *regex;
-    GPtrArray *array;
-    guint i, j;
+    MMPortSerialAt    *ports[2];
+    g_autoptr(GRegex)  ciev_regex = NULL;
+    g_autoptr(GRegex)  cmti_regex = NULL;
+    g_autoptr(GRegex)  cusd_regex = NULL;
+    GPtrArray         *array;
+    guint              i;
+    guint              j;
 
     ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
     ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
@@ -10739,64 +10911,23 @@ setup_ports (MMBroadbandModem *self)
                       NULL);
 
     /* Cleanup all unsolicited message handlers in all AT ports */
-
-    /* Set up CREG unsolicited message handlers, with NULL callbacks */
     array = mm_3gpp_creg_regex_get (FALSE);
+    ciev_regex = mm_3gpp_ciev_regex_get ();
+    cmti_regex = mm_3gpp_cmti_regex_get ();
+    cusd_regex = mm_3gpp_cusd_regex_get ();
+
     for (i = 0; i < 2; i++) {
         if (!ports[i])
             continue;
 
-        for (j = 0; j < array->len; j++) {
-            mm_port_serial_at_add_unsolicited_msg_handler (MM_PORT_SERIAL_AT (ports[i]),
-                                                           (GRegex *)g_ptr_array_index (array, j),
-                                                           NULL,
-                                                           NULL,
-                                                           NULL);
-        }
+        for (j = 0; j < array->len; j++)
+            mm_port_serial_at_add_unsolicited_msg_handler (MM_PORT_SERIAL_AT (ports[i]), (GRegex *)g_ptr_array_index (array, j), NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (MM_PORT_SERIAL_AT (ports[i]), ciev_regex, NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (MM_PORT_SERIAL_AT (ports[i]), cmti_regex, NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (MM_PORT_SERIAL_AT (ports[i]), cusd_regex, NULL, NULL, NULL);
     }
+
     mm_3gpp_creg_regex_destroy (array);
-
-    /* Set up CIEV unsolicited message handler, with NULL callback */
-    regex = mm_3gpp_ciev_regex_get ();
-    for (i = 0; i < 2; i++) {
-        if (!ports[i])
-            continue;
-
-        mm_port_serial_at_add_unsolicited_msg_handler (MM_PORT_SERIAL_AT (ports[i]),
-                                                       regex,
-                                                       NULL,
-                                                       NULL,
-                                                       NULL);
-    }
-    g_regex_unref (regex);
-
-    /* Set up CMTI unsolicited message handler, with NULL callback */
-    regex = mm_3gpp_cmti_regex_get ();
-    for (i = 0; i < 2; i++) {
-        if (!ports[i])
-            continue;
-
-        mm_port_serial_at_add_unsolicited_msg_handler (MM_PORT_SERIAL_AT (ports[i]),
-                                                       regex,
-                                                       NULL,
-                                                       NULL,
-                                                       NULL);
-    }
-    g_regex_unref (regex);
-
-    /* Set up CUSD unsolicited message handler, with NULL callback */
-    regex = mm_3gpp_cusd_regex_get ();
-    for (i = 0; i < 2; i++) {
-        if (!ports[i])
-            continue;
-
-        mm_port_serial_at_add_unsolicited_msg_handler (MM_PORT_SERIAL_AT (ports[i]),
-                                                       regex,
-                                                       NULL,
-                                                       NULL,
-                                                       NULL);
-    }
-    g_regex_unref (regex);
 }
 
 /*****************************************************************************/
@@ -11988,10 +12119,11 @@ enable (MMBaseModem *self,
 }
 /*****************************************************************************/
 
-#if defined WITH_SYSTEMD_SUSPEND_RESUME
+#if defined WITH_SUSPEND_RESUME
 
 typedef enum {
     SYNCING_STEP_FIRST,
+    SYNCING_STEP_NOTIFY,
     SYNCING_STEP_IFACE_MODEM,
     SYNCING_STEP_IFACE_3GPP,
     SYNCING_STEP_IFACE_TIME,
@@ -12097,6 +12229,11 @@ syncing_step (GTask *task)
         ctx->step++;
         /* fall through */
 
+    case SYNCING_STEP_NOTIFY:
+        g_signal_emit (self, signals[SIGNAL_SYNC_NEEDED], 0);
+        ctx->step++;
+        /* fall through */
+
     case SYNCING_STEP_IFACE_MODEM:
         /*
          * Start interface Modem synchronization.
@@ -12198,10 +12335,10 @@ typedef enum {
     INITIALIZE_STEP_IFACE_TIME,
     INITIALIZE_STEP_IFACE_SIGNAL,
     INITIALIZE_STEP_IFACE_OMA,
+    INITIALIZE_STEP_IFACE_SAR,
     INITIALIZE_STEP_FALLBACK_LIMITED,
     INITIALIZE_STEP_IFACE_VOICE,
     INITIALIZE_STEP_IFACE_FIRMWARE,
-    INITIALIZE_STEP_SIM_HOT_SWAP,
     INITIALIZE_STEP_IFACE_SIMPLE,
     INITIALIZE_STEP_LAST,
 } InitializeStep;
@@ -12301,6 +12438,14 @@ iface_modem_initialize_ready (MMBroadbandModem *self,
                                   MM_MOBILE_EQUIPMENT_ERROR,
                                   MM_MOBILE_EQUIPMENT_ERROR_SIM_WRONG))
             failed_reason = MM_MODEM_STATE_FAILED_REASON_SIM_MISSING;
+        else if (g_error_matches (error,
+                                  MM_CORE_ERROR,
+                                  MM_CORE_ERROR_WRONG_SIM_STATE))
+            failed_reason = MM_MODEM_STATE_FAILED_REASON_ESIM_WITHOUT_PROFILES;
+        else if (g_error_matches (error,
+                                  MM_CORE_ERROR,
+                                  MM_CORE_ERROR_UNSUPPORTED))
+            failed_reason = MM_MODEM_STATE_FAILED_REASON_UNKNOWN_CAPABILITIES;
 
         g_error_free (error);
 
@@ -12376,6 +12521,7 @@ INTERFACE_INIT_READY_FN (iface_modem_time,                 MM_IFACE_MODEM_TIME, 
 INTERFACE_INIT_READY_FN (iface_modem_signal,               MM_IFACE_MODEM_SIGNAL,               FALSE)
 INTERFACE_INIT_READY_FN (iface_modem_oma,                  MM_IFACE_MODEM_OMA,                  FALSE)
 INTERFACE_INIT_READY_FN (iface_modem_firmware,             MM_IFACE_MODEM_FIRMWARE,             FALSE)
+INTERFACE_INIT_READY_FN (iface_modem_sar,                  MM_IFACE_MODEM_SAR,                  FALSE)
 
 static void
 initialize_step (GTask *task)
@@ -12527,6 +12673,14 @@ initialize_step (GTask *task)
                                        task);
         return;
 
+    case INITIALIZE_STEP_IFACE_SAR:
+        /* Initialize the SAR interface */
+        mm_iface_modem_sar_initialize (MM_IFACE_MODEM_SAR (ctx->self),
+                                       g_task_get_cancellable (task),
+                                       (GAsyncReadyCallback)iface_modem_sar_initialize_ready,
+                                       task);
+        return;
+
     case INITIALIZE_STEP_FALLBACK_LIMITED:
         /* All the initialization steps after this one will be run both on
          * successful and locked/failed initializations. */
@@ -12549,45 +12703,6 @@ initialize_step (GTask *task)
                                             task);
         return;
 
-    case INITIALIZE_STEP_SIM_HOT_SWAP:
-        /* Create the SIM hot swap ports context only if not already done before
-         * (we may be re-running the initialization step after SIM-PIN unlock) */
-        if (!ctx->self->priv->sim_hot_swap_ports_ctx) {
-            gboolean is_sim_hot_swap_supported = FALSE;
-            gboolean is_sim_hot_swap_configured = FALSE;
-
-            g_object_get (ctx->self,
-                          MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED,  &is_sim_hot_swap_supported,
-                          MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED, &is_sim_hot_swap_configured,
-                          NULL);
-
-            if (is_sim_hot_swap_supported) {
-
-                if (!is_sim_hot_swap_configured) {
-                    mm_obj_warn (ctx->self, "SIM hot swap supported but not configured. Skipping opening ports");
-                } else {
-                    PortsContext *ports;
-                    GError *error = NULL;
-
-                    mm_obj_dbg (ctx->self, "creating ports context for SIM hot swap");
-                    ports = ports_context_new ();
-                    if (!ports_context_open (ctx->self, ports, FALSE, FALSE, FALSE, &error)) {
-                        mm_obj_warn (ctx->self, "couldn't open ports during Modem SIM hot swap enabling: %s",
-                                     error ? error->message : "unknown reason");
-                        g_error_free (error);
-                    } else {
-                        ctx->self->priv->sim_hot_swap_ports_ctx = ports_context_ref (ports);
-                    }
-
-                    ports_context_unref (ports);
-                }
-            }
-        } else
-            mm_obj_dbg (ctx->self, "ports context for SIM hot swap already available");
-
-        ctx->step++;
-       /* fall through */
-
     case INITIALIZE_STEP_IFACE_SIMPLE:
         if (ctx->self->priv->modem_state != MM_MODEM_STATE_FAILED)
             mm_iface_modem_simple_initialize (MM_IFACE_MODEM_SIMPLE (ctx->self));
@@ -12596,52 +12711,24 @@ initialize_step (GTask *task)
 
     case INITIALIZE_STEP_LAST:
         if (ctx->self->priv->modem_state == MM_MODEM_STATE_FAILED) {
-            GError *error;
+            GError *error = NULL;
 
             if (!ctx->self->priv->modem_dbus_skeleton) {
-                /* Error setting up ports. Abort without even exporting the
-                 * Modem interface */
-                error = g_error_new (MM_CORE_ERROR,
-                                     MM_CORE_ERROR_ABORTED,
-                                     "Modem is unusable, "
-                                     "cannot fully initialize");
+                /* ABORTED here specifies an extremely fatal error that will make the modem
+                 * not even exported in DBus */
+                error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_ABORTED,
+                                     "Fatal error: modem is unusable");
             } else {
                 /* Fatal SIM, firmware, or modem failure :-( */
-                gboolean is_sim_hot_swap_supported = FALSE;
-                gboolean is_sim_hot_swap_configured = FALSE;
                 MMModemStateFailedReason reason;
 
                 reason = mm_gdbus_modem_get_state_failed_reason (MM_GDBUS_MODEM (ctx->self->priv->modem_dbus_skeleton));
+                error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_WRONG_STATE,
+                                     "Modem in failed state: %s",
+                                     mm_modem_state_failed_reason_get_string (reason));
 
-                g_object_get (ctx->self,
-                              MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED, &is_sim_hot_swap_supported,
-                              MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED, &is_sim_hot_swap_configured,
-                              NULL);
-
-                if (reason == MM_MODEM_STATE_FAILED_REASON_SIM_MISSING) {
-                    if (!is_sim_hot_swap_supported) {
-                        mm_obj_dbg (ctx->self, "SIM is missing, but this modem does not support SIM hot swap.");
-                    } else if (!is_sim_hot_swap_configured) {
-                        mm_obj_warn (ctx->self, "SIM is missing, but SIM hot swap could not be configured.");
-                    } else if (!ctx->self->priv->sim_hot_swap_ports_ctx) {
-                        mm_obj_err (ctx->self, "SIM is missing and SIM hot swap is configured, but ports are not opened.");
-                    } else {
-                        mm_obj_dbg (ctx->self, "SIM is missing, but SIM hot swap is enabled; waiting for SIM...");
-                        error = g_error_new (MM_CORE_ERROR,
-                                             MM_CORE_ERROR_WRONG_STATE,
-                                             "Modem is unusable due to SIM missing, "
-                                             "cannot fully initialize, waiting for SIM insertion.");
-                        goto sim_hot_swap_enabled;
-                    }
-                }
-
-                error = g_error_new (MM_CORE_ERROR,
-                                     MM_CORE_ERROR_WRONG_STATE,
-                                     "Modem is unusable, "
-                                     "cannot fully initialize");
-sim_hot_swap_enabled:
-                /* Ensure we only leave the Modem and Firmware interfaces
-                 * around.  A failure could be caused by firmware issues, which
+                /* Ensure we only leave the Modem, Voice and Firmware interfaces
+                 * around. A failure could be caused by firmware issues, which
                  * a firmware update, switch, or provisioning could fix. We also
                  * leave the Voice interface around so that we can attempt
                  * emergency voice calls.
@@ -12809,20 +12896,6 @@ mm_broadband_modem_create_device_identifier (MMBroadbandModem  *self,
 
 /*****************************************************************************/
 
-void
-mm_broadband_modem_sim_hot_swap_detected (MMBroadbandModem *self)
-{
-    if (self->priv->sim_hot_swap_ports_ctx) {
-        mm_obj_dbg (self, "releasing SIM hot swap ports context");
-        ports_context_unref (self->priv->sim_hot_swap_ports_ctx);
-        self->priv->sim_hot_swap_ports_ctx = NULL;
-    }
-
-    mm_base_modem_process_sim_event (MM_BASE_MODEM (self));
-}
-
-/*****************************************************************************/
-
 MMBroadbandModem *
 mm_broadband_modem_new (const gchar *device,
                         const gchar **drivers,
@@ -12903,6 +12976,10 @@ set_property (GObject *object,
         g_clear_object (&self->priv->modem_firmware_dbus_skeleton);
         self->priv->modem_firmware_dbus_skeleton = g_value_dup_object (value);
         break;
+    case PROP_MODEM_SAR_DBUS_SKELETON:
+        g_clear_object (&self->priv->modem_sar_dbus_skeleton);
+        self->priv->modem_sar_dbus_skeleton = g_value_dup_object (value);
+        break;
     case PROP_MODEM_SIM:
         g_clear_object (&self->priv->modem_sim);
         self->priv->modem_sim = g_value_dup_object (value);
@@ -12940,6 +13017,9 @@ set_property (GObject *object,
         g_clear_object (&self->priv->modem_3gpp_initial_eps_bearer);
         self->priv->modem_3gpp_initial_eps_bearer = g_value_dup_object (value);
         break;
+    case PROP_MODEM_3GPP_PACKET_SERVICE_STATE:
+        self->priv->modem_3gpp_packet_service_state = g_value_get_enum (value);
+        break;
     case PROP_MODEM_CDMA_CDMA1X_REGISTRATION_STATE:
         self->priv->modem_cdma_cdma1x_registration_state = g_value_get_enum (value);
         break;
@@ -12975,9 +13055,6 @@ set_property (GObject *object,
         break;
     case PROP_MODEM_SIM_HOT_SWAP_SUPPORTED:
         self->priv->sim_hot_swap_supported = g_value_get_boolean (value);
-        break;
-    case PROP_MODEM_SIM_HOT_SWAP_CONFIGURED:
-        self->priv->sim_hot_swap_configured = g_value_get_boolean (value);
         break;
     case PROP_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED:
         self->priv->periodic_signal_check_disabled = g_value_get_boolean (value);
@@ -13057,6 +13134,9 @@ get_property (GObject *object,
     case PROP_MODEM_FIRMWARE_DBUS_SKELETON:
         g_value_set_object (value, self->priv->modem_firmware_dbus_skeleton);
         break;
+    case PROP_MODEM_SAR_DBUS_SKELETON:
+        g_value_set_object (value, self->priv->modem_sar_dbus_skeleton);
+        break;
     case PROP_MODEM_SIM:
         g_value_set_object (value, self->priv->modem_sim);
         break;
@@ -13090,6 +13170,9 @@ get_property (GObject *object,
     case PROP_MODEM_3GPP_INITIAL_EPS_BEARER:
         g_value_set_object (value, self->priv->modem_3gpp_initial_eps_bearer);
         break;
+    case PROP_MODEM_3GPP_PACKET_SERVICE_STATE:
+        g_value_set_enum (value, self->priv->modem_3gpp_packet_service_state);
+        break;
     case PROP_MODEM_CDMA_CDMA1X_REGISTRATION_STATE:
         g_value_set_enum (value, self->priv->modem_cdma_cdma1x_registration_state);
         break;
@@ -13122,9 +13205,6 @@ get_property (GObject *object,
         break;
     case PROP_MODEM_SIM_HOT_SWAP_SUPPORTED:
         g_value_set_boolean (value, self->priv->sim_hot_swap_supported);
-        break;
-    case PROP_MODEM_SIM_HOT_SWAP_CONFIGURED:
-        g_value_set_boolean (value, self->priv->sim_hot_swap_configured);
         break;
     case PROP_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED:
         g_value_set_boolean (value, self->priv->periodic_signal_check_disabled);
@@ -13172,6 +13252,7 @@ mm_broadband_modem_init (MMBroadbandModem *self)
     self->priv->modem_3gpp_eps_network_supported = FALSE;
     self->priv->modem_3gpp_5gs_network_supported = FALSE;
     self->priv->modem_3gpp_ignored_facility_locks = MM_MODEM_3GPP_FACILITY_NONE;
+    self->priv->modem_3gpp_packet_service_state = MM_MODEM_3GPP_PACKET_SERVICE_STATE_UNKNOWN;
     self->priv->modem_cdma_cdma1x_registration_state = MM_MODEM_CDMA_REGISTRATION_STATE_UNKNOWN;
     self->priv->modem_cdma_evdo_registration_state = MM_MODEM_CDMA_REGISTRATION_STATE_UNKNOWN;
     self->priv->modem_cdma_cdma1x_network_supported = TRUE;
@@ -13275,6 +13356,11 @@ dispose (GObject *object)
     if (self->priv->modem_firmware_dbus_skeleton) {
         mm_iface_modem_firmware_shutdown (MM_IFACE_MODEM_FIRMWARE (object));
         g_clear_object (&self->priv->modem_firmware_dbus_skeleton);
+    }
+
+    if (self->priv->modem_sar_dbus_skeleton) {
+        mm_iface_modem_sar_shutdown (MM_IFACE_MODEM_SAR (object));
+        g_clear_object (&self->priv->modem_sar_dbus_skeleton);
     }
 
     g_clear_object (&self->priv->modem_3gpp_initial_eps_bearer);
@@ -13389,6 +13475,8 @@ iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
     iface->set_eps_ue_mode_operation = modem_3gpp_set_eps_ue_mode_operation;
     iface->set_eps_ue_mode_operation_finish = modem_3gpp_set_eps_ue_mode_operation_finish;
     iface->create_initial_eps_bearer = modem_3gpp_create_initial_eps_bearer;
+    iface->set_packet_service_state = modem_3gpp_set_packet_service_state;
+    iface->set_packet_service_state_finish = modem_3gpp_set_packet_service_state_finish;
 }
 
 static void
@@ -13582,6 +13670,12 @@ iface_modem_firmware_init (MMIfaceModemFirmware *iface)
 }
 
 static void
+iface_modem_sar_init (MMIfaceModemSar *iface)
+{
+
+}
+
+static void
 mm_broadband_modem_class_init (MMBroadbandModemClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -13602,7 +13696,7 @@ mm_broadband_modem_class_init (MMBroadbandModemClass *klass)
     base_modem_class->disable = disable;
     base_modem_class->disable_finish = disable_finish;
 
-#if defined WITH_SYSTEMD_SUSPEND_RESUME
+#if defined WITH_SUSPEND_RESUME
     base_modem_class->sync = synchronize;
     base_modem_class->sync_finish = synchronize_finish;
 #endif
@@ -13666,6 +13760,10 @@ mm_broadband_modem_class_init (MMBroadbandModemClass *klass)
                                       MM_IFACE_MODEM_OMA_DBUS_SKELETON);
 
     g_object_class_override_property (object_class,
+                                      PROP_MODEM_SAR_DBUS_SKELETON,
+                                      MM_IFACE_MODEM_SAR_DBUS_SKELETON);
+
+    g_object_class_override_property (object_class,
                                       PROP_MODEM_FIRMWARE_DBUS_SKELETON,
                                       MM_IFACE_MODEM_FIRMWARE_DBUS_SKELETON);
 
@@ -13714,6 +13812,10 @@ mm_broadband_modem_class_init (MMBroadbandModemClass *klass)
                                       MM_IFACE_MODEM_3GPP_INITIAL_EPS_BEARER);
 
     g_object_class_override_property (object_class,
+                                      PROP_MODEM_3GPP_PACKET_SERVICE_STATE,
+                                      MM_IFACE_MODEM_3GPP_PACKET_SERVICE_STATE);
+
+    g_object_class_override_property (object_class,
                                       PROP_MODEM_CDMA_CDMA1X_REGISTRATION_STATE,
                                       MM_IFACE_MODEM_CDMA_CDMA1X_REGISTRATION_STATE);
 
@@ -13758,10 +13860,6 @@ mm_broadband_modem_class_init (MMBroadbandModemClass *klass)
                                       MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED);
 
     g_object_class_override_property (object_class,
-                                      PROP_MODEM_SIM_HOT_SWAP_CONFIGURED,
-                                      MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED);
-
-    g_object_class_override_property (object_class,
                                       PROP_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED,
                                       MM_IFACE_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED);
 
@@ -13801,4 +13899,15 @@ mm_broadband_modem_class_init (MMBroadbandModemClass *klass)
                               FALSE,
                               G_PARAM_READWRITE);
     g_object_class_install_property (object_class, PROP_INDICATORS_DISABLED, properties[PROP_INDICATORS_DISABLED]);
+
+#if defined WITH_SUSPEND_RESUME
+    signals[SIGNAL_SYNC_NEEDED] =
+        g_signal_new (MM_BROADBAND_MODEM_SIGNAL_SYNC_NEEDED,
+                      G_OBJECT_CLASS_TYPE (object_class),
+                      G_SIGNAL_RUN_FIRST,
+                      G_STRUCT_OFFSET (MMBroadbandModemClass, sync_needed),
+                      NULL, NULL,
+                      g_cclosure_marshal_generic,
+                      G_TYPE_NONE, 0);
+#endif
 }

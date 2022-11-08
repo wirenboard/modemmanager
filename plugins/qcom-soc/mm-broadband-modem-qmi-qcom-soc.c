@@ -44,10 +44,9 @@ static const QmiSioPort sio_port_per_port_number[] = {
 static MMPortQmi *
 peek_port_qmi_for_data_bam_dmux (MMBroadbandModemQmi  *self,
                                  MMPort               *data,
-                                 QmiSioPort           *out_sio_port,
+                                 MMQmiDataEndpoint    *out_endpoint,
                                  GError              **error)
 {
-    GList          *rpmsg_qmi_ports;
     MMPortQmi      *found = NULL;
     MMKernelDevice *net_port;
     gint            net_port_number;
@@ -66,24 +65,21 @@ peek_port_qmi_for_data_bam_dmux (MMBroadbandModemQmi  *self,
     }
 
     /* Find one QMI port, we don't care which one */
-    rpmsg_qmi_ports = mm_base_modem_find_ports (MM_BASE_MODEM (self),
-                                                MM_PORT_SUBSYS_UNKNOWN,
-                                                MM_PORT_TYPE_QMI);
-    if (!rpmsg_qmi_ports) {
+    found = mm_broadband_modem_qmi_peek_port_qmi (self);
+
+    if (!found)
         g_set_error (error,
                      MM_CORE_ERROR,
                      MM_CORE_ERROR_NOT_FOUND,
                      "Couldn't find any QMI port for 'net/%s'",
                      mm_port_get_device (data));
-        return NULL;
+    else if (out_endpoint) {
+        /* WDS Bind (Mux) Data Port must be called with the correct endpoint
+         * interface number/SIO port to make multiplexing work with BAM-DMUX */
+        out_endpoint->type = QMI_DATA_ENDPOINT_TYPE_BAM_DMUX;
+        out_endpoint->interface_number = net_port_number;
+        out_endpoint->sio_port = sio_port_per_port_number[net_port_number];
     }
-
-    /* Set outputs */
-    if (out_sio_port)
-        *out_sio_port = sio_port_per_port_number[net_port_number];
-    found = MM_PORT_QMI (rpmsg_qmi_ports->data);
-
-    g_list_free_full (rpmsg_qmi_ports, g_object_unref);
 
     return found;
 }
@@ -91,12 +87,12 @@ peek_port_qmi_for_data_bam_dmux (MMBroadbandModemQmi  *self,
 static MMPortQmi *
 peek_port_qmi_for_data_ipa (MMBroadbandModemQmi  *self,
                             MMPort               *data,
-                            QmiSioPort           *out_sio_port,
+                            MMQmiDataEndpoint    *out_endpoint,
                             GError              **error)
 {
     MMPortQmi *found = NULL;
 
-    /* when using IPA, we have a master network interface that will be multiplexed
+    /* when using IPA, we have a main network interface that will be multiplexed
      * to create link interfaces. We can assume any of the available QMI ports is
      * able to manage that. */
 
@@ -108,8 +104,8 @@ peek_port_qmi_for_data_ipa (MMBroadbandModemQmi  *self,
                      MM_CORE_ERROR_NOT_FOUND,
                      "Couldn't find any QMI port for 'net/%s'",
                      mm_port_get_device (data));
-    else if (out_sio_port)
-        *out_sio_port = QMI_SIO_PORT_NONE;
+    else if (out_endpoint)
+        mm_port_qmi_get_endpoint_info (found, out_endpoint);
 
     return found;
 }
@@ -117,7 +113,7 @@ peek_port_qmi_for_data_ipa (MMBroadbandModemQmi  *self,
 static MMPortQmi *
 peek_port_qmi_for_data (MMBroadbandModemQmi  *self,
                         MMPort               *data,
-                        QmiSioPort           *out_sio_port,
+                        MMQmiDataEndpoint    *out_endpoint,
                         GError              **error)
 {
     MMKernelDevice *net_port;
@@ -130,10 +126,10 @@ peek_port_qmi_for_data (MMBroadbandModemQmi  *self,
     net_port_driver = mm_kernel_device_get_driver (net_port);
 
     if (g_strcmp0 (net_port_driver, "ipa") == 0)
-        return peek_port_qmi_for_data_ipa (self, data, out_sio_port, error);
+        return peek_port_qmi_for_data_ipa (self, data, out_endpoint, error);
 
     if (g_strcmp0 (net_port_driver, "bam-dmux") == 0)
-        return peek_port_qmi_for_data_bam_dmux (self, data, out_sio_port, error);
+        return peek_port_qmi_for_data_bam_dmux (self, data, out_endpoint, error);
 
     g_set_error (error,
                  MM_CORE_ERROR,
@@ -162,8 +158,7 @@ mm_broadband_modem_qmi_qcom_soc_new (const gchar  *device,
                          /* QMI bearer supports NET only */
                          MM_BASE_MODEM_DATA_NET_SUPPORTED, TRUE,
                          MM_BASE_MODEM_DATA_TTY_SUPPORTED, FALSE,
-                         MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED,  TRUE,
-                         MM_IFACE_MODEM_SIM_HOT_SWAP_CONFIGURED, FALSE,
+                         MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED, TRUE,
                          NULL);
 }
 

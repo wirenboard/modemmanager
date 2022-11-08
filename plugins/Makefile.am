@@ -447,6 +447,31 @@ endif
 endif
 
 ################################################################################
+# common fibocom support
+################################################################################
+
+# Common Fibocom modem support library (MBIM only)
+if WITH_SHARED_FIBOCOM
+if WITH_MBIM
+pkglib_LTLIBRARIES += libmm-shared-fibocom.la
+libmm_shared_fibocom_la_SOURCES = \
+	fibocom/mm-shared.c \
+	fibocom/mm-shared-fibocom.h \
+	fibocom/mm-shared-fibocom.c \
+	$(NULL)
+
+libmm_shared_fibocom_la_CPPFLAGS = \
+	$(SHARED_COMMON_COMPILER_FLAGS) \
+	-DMM_MODULE_NAME=\"shared-fibocom\" \
+	$(NULL)
+libmm_shared_fibocom_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
+libmm_shared_fibocom_la_LIBADD = $(NULL)
+
+FIBOCOM_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/fibocom
+endif
+endif
+
+################################################################################
 # plugin: generic
 ################################################################################
 
@@ -690,12 +715,25 @@ if ENABLE_PLUGIN_FIBOCOM
 
 pkglib_LTLIBRARIES += libmm-plugin-fibocom.la
 libmm_plugin_fibocom_la_SOURCES = \
+	fibocom/mm-broadband-bearer-fibocom-ecm.c \
+	fibocom/mm-broadband-bearer-fibocom-ecm.h \
+	fibocom/mm-broadband-modem-fibocom.c \
+	fibocom/mm-broadband-modem-fibocom.h \
 	fibocom/mm-plugin-fibocom.c \
 	fibocom/mm-plugin-fibocom.h \
 	$(NULL)
+if WITH_MBIM
+libmm_plugin_fibocom_la_SOURCES += \
+	fibocom/mm-broadband-modem-mbim-xmm-fibocom.c \
+	fibocom/mm-broadband-modem-mbim-xmm-fibocom.h \
+	fibocom/mm-broadband-modem-mbim-fibocom.c \
+	fibocom/mm-broadband-modem-mbim-fibocom.h \
+	$(NULL)
+endif
 libmm_plugin_fibocom_la_CPPFLAGS = \
 	$(PLUGIN_COMMON_COMPILER_FLAGS) \
 	$(XMM_COMMON_COMPILER_FLAGS) \
+	$(FIBOCOM_COMMON_COMPILER_FLAGS) \
 	-DMM_MODULE_NAME=\"fibocom\" \
 	$(NULL)
 libmm_plugin_fibocom_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
@@ -867,6 +905,33 @@ libmm_plugin_huawei_la_LIBADD = $(builddir)/libhelpers-huawei.la
 dist_udevrules_DATA += huawei/77-mm-huawei-net-port-types.rules
 
 AM_CFLAGS += -DTESTUDEVRULESDIR_HUAWEI=\"${srcdir}/huawei\"
+
+endif
+
+################################################################################
+# plugin: intel
+################################################################################
+
+if ENABLE_PLUGIN_INTEL
+
+pkglib_LTLIBRARIES += libmm-plugin-intel.la
+libmm_plugin_intel_la_SOURCES = \
+    intel/mm-plugin-intel.c \
+    intel/mm-plugin-intel.h \
+    $(NULL)
+if WITH_MBIM
+libmm_plugin_intel_la_SOURCES += \
+    intel/mm-broadband-modem-mbim-intel.h \
+    intel/mm-broadband-modem-mbim-intel.c \
+    $(NULL)
+endif
+
+libmm_plugin_intel_la_CPPFLAGS = \
+	$(PLUGIN_COMMON_COMPILER_FLAGS) \
+	$(XMM_COMMON_COMPILER_FLAGS) \
+	-DMM_MODULE_NAME=\"intel\" \
+	$(NULL)
+libmm_plugin_intel_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 
 endif
 

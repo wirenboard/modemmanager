@@ -68,8 +68,8 @@
  *
  * This is a device-specific tag that allows explicitly requesting the
  * processing of all ports exposed by the device. This tag is usually
- * used by users when the daemon runs with WHITELIST-ONLY filter policy
- * type, and is associated to the MM_FILTER_RULE_EXPLICIT_WHITELIST rule.
+ * used by users when the daemon runs with ALLOWLIST-ONLY filter policy
+ * type, and is associated to the MM_FILTER_RULE_EXPLICIT_ALLOWLIST rule.
  *
  * This tag may also be specified in specific ports, e.g. when the modem
  * exposes a single platform port without any parent device.
@@ -87,7 +87,7 @@
  * This tag was originally applicable to TTY ports and only when running
  * in certain filter policy types. Since 1.12, this tag applies to all
  * filter types and to all port types (not only TTYs), and is associated
- * to the MM_FILTER_RULE_EXPLICIT_BLACKLIST rule.
+ * to the MM_FILTER_RULE_EXPLICIT_BLOCKLIST rule.
  *
  * Since: 1.10
  */
@@ -128,6 +128,19 @@
  * Since: 1.10
  */
 #define ID_MM_PORT_TYPE_AT_SECONDARY "ID_MM_PORT_TYPE_AT_SECONDARY"
+
+/**
+ * ID_MM_PORT_TYPE_AT_GPS_CONTROL:
+ *
+ * This is a port-specific tag applied to TTYs that we know in advance
+ * are AT ports to be used for GPS control. Depending on the device,
+ * this may or may not mean the same port is also used fo GPS data.
+ *
+ * This tag will also prevent QCDM probing on the port.
+ *
+ * Since: 1.20
+ */
+#define ID_MM_PORT_TYPE_AT_GPS_CONTROL "ID_MM_PORT_TYPE_AT_GPS_CONTROL"
 
 /**
  * ID_MM_PORT_TYPE_AT_PPP:
@@ -263,7 +276,7 @@
 /**
  * ID_MM_TTY_MANUAL_SCAN_ONLY:
  *
- * This was a device-specific tag that allowed explicitly greylisting
+ * This was a device-specific tag that allowed explicitly allowlisting
  * devices that exposed TTY devices so that they were never probed
  * automatically. Instead, an explicit manual scan request could
  * be sent to the daemon so that the TTY ports exposed by the device

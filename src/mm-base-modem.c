@@ -57,6 +57,7 @@ enum {
     PROP_PLUGIN,
     PROP_VENDOR_ID,
     PROP_PRODUCT_ID,
+    PROP_SUBSYSTEM_VENDOR_ID,
     PROP_CONNECTION,
     PROP_REPROBE,
     PROP_DATA_NET_SUPPORTED,
@@ -89,6 +90,7 @@ struct _MMBaseModemPrivate {
 
     guint vendor_id;
     guint product_id;
+    guint subsystem_vendor_id;
 
     gboolean hotplugged;
     gboolean valid;
@@ -145,9 +147,9 @@ mm_base_modem_get_dbus_id (MMBaseModem *self)
 /******************************************************************************/
 
 static void
-serial_port_timed_out_cb (MMPortSerial *port,
-                          guint         n_consecutive_timeouts,
-                          MMBaseModem  *self)
+port_timed_out_cb (MMPort       *port,
+                   guint         n_consecutive_timeouts,
+                   MMBaseModem  *self)
 {
     /* If reached the maximum number of timeouts, invalidate modem */
     if (n_consecutive_timeouts >= self->priv->max_timeouts) {
@@ -201,13 +203,6 @@ base_modem_create_tty_port (MMBaseModem        *self,
 
     if (!port)
         return NULL;
-
-    /* Enable port timeout checks if requested to do so */
-    if (self->priv->max_timeouts > 0)
-        g_signal_connect (port,
-                          "timed-out",
-                          G_CALLBACK (serial_port_timed_out_cb),
-                          self);
 
     /* Optional user-provided baudrate */
     if (mm_kernel_device_has_property (kernel_device, ID_MM_TTY_BAUDRATE))
@@ -367,6 +362,37 @@ base_modem_internal_grab_port (MMBaseModem         *self,
         return NULL;
     }
 
+    /* Setup consecutive timeout watcher in all control ports */
+    if (self->priv->max_timeouts > 0) {
+        gboolean timeout_monitoring = FALSE;
+
+        if (MM_IS_PORT_SERIAL_AT (port)) {
+            mm_obj_dbg (port, "timeout monitoring enabled in AT port");
+            timeout_monitoring = TRUE;
+        } else if (MM_IS_PORT_SERIAL_QCDM (port)) {
+            mm_obj_dbg (port, "timeout monitoring enabled in QCDM port");
+            timeout_monitoring = TRUE;
+        }
+#if defined WITH_QMI
+        else if (MM_IS_PORT_QMI (port)) {
+            mm_obj_dbg (port, "timeout monitoring enabled in QMI port");
+            timeout_monitoring = TRUE;
+        }
+#endif
+#if defined WITH_MBIM
+        else if (MM_IS_PORT_MBIM (port)) {
+            mm_obj_dbg (port, "timeout monitoring enabled in MBIM port");
+            timeout_monitoring = TRUE;
+        }
+#endif
+
+        if (timeout_monitoring)
+            g_signal_connect (port,
+                              MM_PORT_SIGNAL_TIMED_OUT,
+                              G_CALLBACK (port_timed_out_cb),
+                              self);
+    }
+
     /* Store kernel device */
     g_object_set (port, MM_PORT_KERNEL_DEVICE, kernel_device, NULL);
 
@@ -390,6 +416,13 @@ base_modem_internal_grab_port (MMBaseModem         *self,
             } else if (mm_kernel_device_get_property_as_boolean (kernel_device, ID_MM_PORT_TYPE_AT_PPP)) {
                 mm_obj_dbg (port, "AT port flagged as PPP");
                 at_pflags = MM_PORT_SERIAL_AT_FLAG_PPP;
+            }
+
+            /* Additionally, the ports may also be flagged as GPS control explicitly, if there is
+             * one specific port to be used for that purpose */
+            if (mm_kernel_device_get_property_as_boolean (kernel_device, ID_MM_PORT_TYPE_AT_GPS_CONTROL)) {
+                mm_obj_dbg (port, "AT port flagged as GPS control");
+                at_pflags = MM_PORT_SERIAL_AT_FLAG_GPS_CONTROL;
             }
         }
         /* The plugin may specify NONE_NO_GENERIC to avoid the generic
@@ -620,7 +653,7 @@ mm_base_modem_wait_link_port (MMBaseModem         *self,
 
 /******************************************************************************/
 
-#if defined WITH_SYSTEMD_SUSPEND_RESUME
+#if defined WITH_SUSPEND_RESUME
 
 gboolean
 mm_base_modem_sync_finish (MMBaseModem   *self,
@@ -666,7 +699,7 @@ mm_base_modem_sync (MMBaseModem         *self,
                                           task);
 }
 
-#endif /* WITH_SYSTEMD_SUSPEND_RESUME */
+#endif /* WITH_SUSPEND_RESUME */
 
 /******************************************************************************/
 
@@ -1226,29 +1259,21 @@ static void
 initialize_ready (MMBaseModem *self,
                   GAsyncResult *res)
 {
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
 
-    if (mm_base_modem_initialize_finish (self, res, &error)) {
+    if (!mm_base_modem_initialize_finish (self, res, &error)) {
+        if (g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_ABORTED)) {
+            /* FATAL error, won't even be exported in DBus */
+            mm_obj_err (self, "fatal error initializing: %s", error->message);
+        } else {
+            /* non-fatal error */
+            mm_obj_warn (self, "error initializing: %s", error->message);
+            mm_base_modem_set_valid (self, TRUE);
+        }
+    } else {
         mm_obj_dbg (self, "modem initialized");
         mm_base_modem_set_valid (self, TRUE);
-        return;
     }
-
-    /* Wrong state is returned when modem is found locked */
-    if (g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_WRONG_STATE)) {
-        /* Even with initialization errors, we do set the state to valid, so
-         * that the modem gets exported and the failure notified to the user.
-         */
-        mm_obj_dbg (self, "couldn't finish initialization in the current state: '%s'", error->message);
-        g_error_free (error);
-        mm_base_modem_set_valid (self, TRUE);
-        return;
-    }
-
-    /* Really fatal, we cannot even export the failed modem (e.g. error before
-     * even trying to enable the Modem interface */
-    mm_obj_warn (self, "couldn't initialize: '%s'", error->message);
-    g_error_free (error);
 }
 
 static inline void
@@ -1672,26 +1697,12 @@ mm_base_modem_get_product_id (MMBaseModem *self)
     return self->priv->product_id;
 }
 
-/*****************************************************************************/
-
-static void
-after_sim_switch_disable_ready (MMBaseModem  *self,
-                                GAsyncResult *res)
+guint
+mm_base_modem_get_subsystem_vendor_id (MMBaseModem *self)
 {
-    g_autoptr(GError) error = NULL;
+    g_return_val_if_fail (MM_IS_BASE_MODEM (self), 0);
 
-    mm_base_modem_disable_finish (self, res, &error);
-    if (error)
-        mm_obj_err (self, "failed to disable after SIM switch event: %s", error->message);
-    else
-        mm_base_modem_set_valid (self, FALSE);
-}
-
-void
-mm_base_modem_process_sim_event (MMBaseModem *self)
-{
-    mm_base_modem_set_reprobe (self, TRUE);
-    mm_base_modem_disable (self, (GAsyncReadyCallback) after_sim_switch_disable_ready, NULL);
+    return self->priv->subsystem_vendor_id;
 }
 
 /*****************************************************************************/
@@ -1732,11 +1743,8 @@ cleanup_modem_port (MMBaseModem *self,
                 mm_port_subsys_get_string (mm_port_get_subsys (MM_PORT (port))),
                 mm_port_get_device (MM_PORT (port)));
 
-    /* Cleanup for serial ports */
-    if (MM_IS_PORT_SERIAL (port)) {
-        g_signal_handlers_disconnect_by_func (port, serial_port_timed_out_cb, self);
-        return;
-    }
+    /* Cleanup on all control ports */
+    g_signal_handlers_disconnect_by_func (port, port_timed_out_cb, self);
 
 #if defined WITH_MBIM
     /* We need to close the MBIM port cleanly when disposing the modem object */
@@ -1855,6 +1863,9 @@ set_property (GObject *object,
     case PROP_PRODUCT_ID:
         self->priv->product_id = g_value_get_uint (value);
         break;
+    case PROP_SUBSYSTEM_VENDOR_ID:
+        self->priv->subsystem_vendor_id = g_value_get_uint (value);
+        break;
     case PROP_CONNECTION:
         g_clear_object (&self->priv->connection);
         self->priv->connection = g_value_dup_object (value);
@@ -1903,6 +1914,9 @@ get_property (GObject *object,
         break;
     case PROP_PRODUCT_ID:
         g_value_set_uint (value, self->priv->product_id);
+        break;
+    case PROP_SUBSYSTEM_VENDOR_ID:
+        g_value_set_uint (value, self->priv->subsystem_vendor_id);
         break;
     case PROP_CONNECTION:
         g_value_set_object (value, self->priv->connection);
@@ -2020,7 +2034,7 @@ mm_base_modem_class_init (MMBaseModemClass *klass)
     properties[PROP_DEVICE] =
         g_param_spec_string (MM_BASE_MODEM_DEVICE,
                              "Device",
-                             "Master modem parent device of all the modem's ports",
+                             "Main modem parent device of all the modem's ports",
                              NULL,
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_DEVICE, properties[PROP_DEVICE]);
@@ -2056,6 +2070,14 @@ mm_base_modem_class_init (MMBaseModemClass *klass)
                            0, G_MAXUINT, 0,
                            G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_PRODUCT_ID, properties[PROP_PRODUCT_ID]);
+
+    properties[PROP_SUBSYSTEM_VENDOR_ID] =
+        g_param_spec_uint (MM_BASE_MODEM_SUBSYSTEM_VENDOR_ID,
+                           "Hardware subsystem vendor ID",
+                           "Hardware subsystem vendor ID. Available for pci devices.",
+                           0, G_MAXUINT, 0,
+                           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+    g_object_class_install_property (object_class, PROP_SUBSYSTEM_VENDOR_ID, properties[PROP_SUBSYSTEM_VENDOR_ID]);
 
     properties[PROP_CONNECTION] =
         g_param_spec_object (MM_BASE_MODEM_CONNECTION,

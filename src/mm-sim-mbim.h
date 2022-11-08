@@ -30,9 +30,11 @@
 
 typedef struct _MMSimMbim MMSimMbim;
 typedef struct _MMSimMbimClass MMSimMbimClass;
+typedef struct _MMSimMbimPrivate MMSimMbimPrivate;
 
 struct _MMSimMbim {
-    MMBaseSim parent;
+    MMBaseSim         parent;
+    MMSimMbimPrivate *priv;
 };
 
 struct _MMSimMbimClass {
@@ -49,12 +51,14 @@ void       mm_sim_mbim_new        (MMBaseModem *modem,
 MMBaseSim *mm_sim_mbim_new_finish (GAsyncResult  *res,
                                    GError       **error);
 MMBaseSim *mm_sim_mbim_new_initialized (MMBaseModem *modem,
-                                        guint        slot_number,
-                                        gboolean     active,
-                                        const gchar *sim_identifier,
-                                        const gchar *imsi,
-                                        const gchar *eid,
-                                        const gchar *operator_identifier,
-                                        const gchar *operator_name,
-                                        const GStrv  emergency_numbers);
+                                        guint            slot_number,
+                                        gboolean         active,
+                                        MMSimType        sim_type,
+                                        MMSimEsimStatus  esim_status,
+                                        const gchar     *sim_identifier,
+                                        const gchar     *imsi,
+                                        const gchar     *eid,
+                                        const gchar     *operator_identifier,
+                                        const gchar     *operator_name,
+                                        const GStrv      emergency_numbers);
 #endif /* MM_SIM_MBIM_H */

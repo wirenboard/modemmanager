@@ -16,6 +16,9 @@ MMBearerIpMethod
 MMBearerAllowedAuth
 MMBearerMultiplexSupport
 MMBearerApnType
+MMBearerAccessTypePreference
+MMBearerRoamingAllowance
+MMBearerProfileSource
 MMCallDirection
 MMCallState
 MMCallStateReason
@@ -26,6 +29,9 @@ MMModem3gppSubscriptionState
 MMModem3gppRegistrationState
 MMModem3gppUssdSessionState
 MMModem3gppEpsUeModeOperation
+MMModem3gppPacketServiceState
+MMModem3gppMicoMode
+MMModem3gppDrxCycle
 MMModemAccessTechnology
 MMModemBand
 MMModemCapability
@@ -54,6 +60,10 @@ MMSmsStorage
 MMSmsValidityType
 MMSmsCdmaTeleserviceId
 MMSmsCdmaServiceCategory
+MMSimType
+MMSimEsimStatus
+MMSimRemovability
+MMCellType
 </SECTION>
 
 <SECTION>
@@ -203,6 +213,7 @@ ID_MM_PORT_IGNORE
 ID_MM_PORT_TYPE_AT_PPP
 ID_MM_PORT_TYPE_AT_PRIMARY
 ID_MM_PORT_TYPE_AT_SECONDARY
+ID_MM_PORT_TYPE_AT_GPS_CONTROL
 ID_MM_PORT_TYPE_GPS
 ID_MM_PORT_TYPE_QCDM
 ID_MM_PORT_TYPE_AUDIO
