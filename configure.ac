@@ -6,7 +6,7 @@ dnl
 
 m4_define([mm_major_version], [1])
 m4_define([mm_minor_version], [20])
-m4_define([mm_micro_version], [0])
+m4_define([mm_micro_version], [2])
 m4_define([mm_version],
           [mm_major_version.mm_minor_version.mm_micro_version])
 
@@ -547,7 +547,8 @@ MM_ENABLE_PLUGIN([foxconn],
 MM_ENABLE_PLUGIN([gosuncn])
 MM_ENABLE_PLUGIN([haier])
 MM_ENABLE_PLUGIN([huawei])
-MM_ENABLE_PLUGIN([intel])
+MM_ENABLE_PLUGIN([intel],
+                 [with_shared_xmm])
 MM_ENABLE_PLUGIN([iridium])
 MM_ENABLE_PLUGIN([linktop])
 MM_ENABLE_PLUGIN([longcheer])
