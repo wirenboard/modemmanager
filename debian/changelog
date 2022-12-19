@@ -1,3 +1,15 @@
+modemmanager (1.20.2-1) unstable; urgency=medium
+
+  * d/watch: only watch for stable releases.
+    ModemManager has a x.y.z version numbering scheme where y is even for
+    stable releases and odd for development ones. Stable release candidates
+    have x.y-rcz version numbers with y being an even number. This change
+    ensures we only watch for stable releases, including RCs.
+  * New upstream version 1.20.2
+  * d/patches: drop upstreamed patch
+
+ -- Arnaud Ferraris <aferraris@debian.org>  Mon, 19 Dec 2022 13:59:08 +0100
+
 modemmanager (1.20.0-1) unstable; urgency=medium
 
   * New upstream version 1.20.0
