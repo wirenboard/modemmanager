@@ -3,7 +3,7 @@
 
 project(
   'ModemManager', 'c',
-  version: '1.20.0',
+  version: '1.20.2',
   license: 'GPL2',
   default_options: [
     'buildtype=debugoptimized',
@@ -90,6 +90,7 @@ cc_args = cc.get_supported_arguments([
 
 # tests are enabled by default
 enable_tests = get_option('tests')
+config_h.set('WITH_TESTS', enable_tests)
 
 # strict flags to use in debug builds
 if get_option('buildtype').contains('debug')
@@ -109,6 +110,7 @@ if get_option('buildtype').contains('debug')
     '-Wjump-misses-init',
     '-Wlogical-op',
     '-Wnested-externs',
+    '-Wmaybe-uninitialized',
     '-Wmissing-declarations',
     '-Wmissing-format-attribute',
     '-Wmissing-include-dirs',
@@ -298,20 +300,28 @@ plugins_shared_reqs = {
   'xmm': true,
 }
 
+
+fibocom_shared_reqs = ['xmm']
+dell_shared_reqs = ['novatel', 'sierra', 'telit', 'xmm']
+if enable_mbim
+  fibocom_shared_reqs += ['fibocom']
+  dell_shared_reqs += ['foxconn']
+endif
+
 plugins_options_reqs = {
   'altair-lte': {'available': true, 'shared': []},
   'anydata': {'available': true, 'shared': []},
   'broadmobi': {'available': true, 'shared': []},
   'cinterion': {'available': true, 'shared': []},
-  'dell': {'available': true, 'shared': ['foxconn', 'novatel', 'sierra', 'telit', 'xmm']},
+  'dell': {'available': true, 'shared': dell_shared_reqs},
   'dlink': {'available': true, 'shared': []},
-  'fibocom': {'available': true, 'shared': ['fibocom', 'xmm']},
-  'foxconn': {'available': true, 'shared': ['foxconn']},
+  'fibocom': {'available': true, 'shared': fibocom_shared_reqs},
+  'foxconn': {'available': enable_mbim, 'shared': ['foxconn']},
   'generic': {'available': true, 'shared': []},
   'gosuncn': {'available': true, 'shared': []},
   'haier': {'available': true, 'shared': []},
   'huawei': {'available': true, 'shared': []},
-  'intel': {'available': true, 'shared': []},
+  'intel': {'available': true, 'shared': ['xmm']},
   'iridium': {'available': true, 'shared': []},
   'linktop': {'available': true, 'shared': []},
   'longcheer': {'available': true, 'shared': []},

@@ -472,12 +472,12 @@ complete_current_capabilities (GTask *task)
 }
 
 static void
-device_caps_query_ready (MbimDevice *device,
+device_caps_query_ready (MbimDevice   *device,
                          GAsyncResult *res,
-                         GTask *task)
+                         GTask        *task)
 {
+    g_autoptr(MbimMessage)          response = NULL;
     MMBroadbandModemMbim           *self;
-    MbimMessage                    *response;
     GError                         *error = NULL;
     LoadCurrentCapabilitiesContext *ctx;
 
@@ -485,57 +485,114 @@ device_caps_query_ready (MbimDevice *device,
     ctx  = g_task_get_task_data (task);
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response ||
-        !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error) ||
-        !mbim_message_device_caps_response_parse (
-            response,
-            NULL, /* device_type */
-            &self->priv->caps_cellular_class,
-            NULL, /* voice_class */
-            NULL, /* sim_class */
-            &self->priv->caps_data_class,
-            &self->priv->caps_sms,
-            NULL, /* ctrl_caps */
-            &self->priv->caps_max_sessions,
-            &self->priv->caps_custom_data_class,
-            &self->priv->caps_device_id,
-            &self->priv->caps_firmware_info,
-            &self->priv->caps_hardware_info,
-            &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
-        goto out;
+        return;
+    }
+
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        MbimDataClassV3  data_class_v3;
+        MbimDataSubclass data_subclass;
+
+        if (!mbim_message_ms_basic_connect_extensions_v3_device_caps_response_parse (
+                response,
+                NULL, /* device_type */
+                &self->priv->caps_cellular_class,
+                NULL, /* voice_class */
+                NULL, /* sim_class */
+                &data_class_v3,
+                &self->priv->caps_sms,
+                NULL, /* ctrl_caps */
+                &data_subclass,
+                &self->priv->caps_max_sessions,
+                NULL, /* executor_index */
+                NULL, /* wcdma_band_class */
+                NULL, /* lte_band_class_array_size */
+                NULL, /* lte_band_class_array */
+                NULL, /* nr_band_class_array_size */
+                NULL, /* nr_band_class_array */
+                &self->priv->caps_custom_data_class,
+                &self->priv->caps_device_id,
+                &self->priv->caps_firmware_info,
+                &self->priv->caps_hardware_info,
+                &error)) {
+            g_task_return_error (task, error);
+            g_object_unref (task);
+            return;
+        }
+        /* Translate data class v3 to standard data class to simplify further usage of the field */
+        self->priv->caps_data_class = mm_mbim_data_class_from_mbim_data_class_v3_and_subclass (data_class_v3, data_subclass);
+    } else if (mbim_device_check_ms_mbimex_version (device, 2, 0)) {
+        if (!mbim_message_ms_basic_connect_extensions_device_caps_response_parse (
+                response,
+                NULL, /* device_type */
+                &self->priv->caps_cellular_class,
+                NULL, /* voice_class */
+                NULL, /* sim_class */
+                &self->priv->caps_data_class,
+                &self->priv->caps_sms,
+                NULL, /* ctrl_caps */
+                &self->priv->caps_max_sessions,
+                &self->priv->caps_custom_data_class,
+                &self->priv->caps_device_id,
+                &self->priv->caps_firmware_info,
+                &self->priv->caps_hardware_info,
+                NULL, /* executor_index */
+                &error)) {
+            g_task_return_error (task, error);
+            g_object_unref (task);
+            return;
+        }
+    } else {
+        if (!mbim_message_device_caps_response_parse (
+                response,
+                NULL, /* device_type */
+                &self->priv->caps_cellular_class,
+                NULL, /* voice_class */
+                NULL, /* sim_class */
+                &self->priv->caps_data_class,
+                &self->priv->caps_sms,
+                NULL, /* ctrl_caps */
+                &self->priv->caps_max_sessions,
+                &self->priv->caps_custom_data_class,
+                &self->priv->caps_device_id,
+                &self->priv->caps_firmware_info,
+                &self->priv->caps_hardware_info,
+                &error)) {
+            g_task_return_error (task, error);
+            g_object_unref (task);
+            return;
+        }
     }
 
     ctx->current_mbim = mm_modem_capability_from_mbim_device_caps (self->priv->caps_cellular_class,
                                                                    self->priv->caps_data_class,
                                                                    self->priv->caps_custom_data_class);
     complete_current_capabilities (task);
-
-out:
-    if (response)
-        mbim_message_unref (response);
 }
 
 static void
 load_current_capabilities_mbim (GTask *task)
 {
+    g_autoptr(MbimMessage)          message = NULL;
     MMBroadbandModemMbim           *self;
-    MbimMessage                    *message;
     LoadCurrentCapabilitiesContext *ctx;
 
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
 
     mm_obj_dbg (self, "loading current capabilities...");
-    message = mbim_message_device_caps_query_new (NULL);
+    if (mbim_device_check_ms_mbimex_version (ctx->device, 2, 0))
+        message = mbim_message_ms_basic_connect_extensions_device_caps_query_new (NULL);
+    else
+        message = mbim_message_device_caps_query_new (NULL);
     mbim_device_command (ctx->device,
                          message,
                          10,
                          NULL,
                          (GAsyncReadyCallback)device_caps_query_ready,
                          task);
-    mbim_message_unref (message);
 }
 
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
@@ -952,7 +1009,7 @@ load_supported_modes_mbim (GTask      *task,
     }
 
     /* Build all */
-    mask_all = mm_modem_mode_from_mbim_data_class (self->priv->caps_data_class);
+    mask_all = mm_modem_mode_from_mbim_data_class (self->priv->caps_data_class, self->priv->caps_custom_data_class);
     mode.allowed = mask_all;
     mode.preferred = MM_MODEM_MODE_NONE;
     all = g_array_sized_new (FALSE, FALSE, sizeof (MMModemModeCombination), 1);
@@ -1100,7 +1157,7 @@ register_state_current_modes_query_ready (MbimDevice   *device,
     }
 
     mode = g_new0 (MMModemModeCombination, 1);
-    mode->allowed = mm_modem_mode_from_mbim_data_class (preferred_data_classes);
+    mode->allowed = mm_modem_mode_from_mbim_data_class (preferred_data_classes, NULL);
     mode->preferred = MM_MODEM_MODE_NONE;
     g_task_return_pointer (task, mode, (GDestroyNotify)g_free);
     g_object_unref (task);
@@ -1187,8 +1244,8 @@ complete_pending_allowed_modes_action (MMBroadbandModemMbim *self,
         return;
 
     requested_data_classes = (MbimDataClass) GPOINTER_TO_UINT (g_task_get_task_data (self->priv->pending_allowed_modes_action));
-    requested_modes = mm_modem_mode_from_mbim_data_class (requested_data_classes);
-    preferred_modes = mm_modem_mode_from_mbim_data_class (preferred_data_classes);
+    requested_modes = mm_modem_mode_from_mbim_data_class (requested_data_classes, NULL);
+    preferred_modes = mm_modem_mode_from_mbim_data_class (preferred_data_classes, NULL);
 
     /* only early complete on success, as we don't know if they're going to be
      * intermediate indications emitted before the preference change is valid */
@@ -1252,8 +1309,8 @@ register_state_current_modes_set_ready (MbimDevice   *device,
         return;
     }
 
-    requested_modes = mm_modem_mode_from_mbim_data_class (requested_data_classes);
-    preferred_modes = mm_modem_mode_from_mbim_data_class (preferred_data_classes);
+    requested_modes = mm_modem_mode_from_mbim_data_class (requested_data_classes, NULL);
+    preferred_modes = mm_modem_mode_from_mbim_data_class (preferred_data_classes, NULL);
 
     if (requested_modes != preferred_modes) {
         g_autofree gchar *requested_modes_str = NULL;
@@ -1330,7 +1387,7 @@ modem_set_current_modes (MMIfaceModem        *_self,
 
         /* Limit ANY to the currently supported modes */
         if (allowed == MM_MODEM_MODE_ANY)
-            allowed = mm_modem_mode_from_mbim_data_class (self->priv->caps_data_class);
+            allowed = mm_modem_mode_from_mbim_data_class (self->priv->caps_data_class, self->priv->caps_custom_data_class);
 
         self->priv->requested_data_class = mm_mbim_data_class_from_modem_mode (allowed,
                                                                                mm_iface_modem_is_3gpp (_self),
@@ -4678,6 +4735,11 @@ basic_connect_notification_subscriber_ready_status (MMBroadbandModemMbim *self,
     g_autoptr(GError)        error = NULL;
     gboolean                 active_sim_event = FALSE;
 
+    if (self->priv->pending_sim_slot_switch_action) {
+        mm_obj_dbg (self, "ignoring slot status change");
+        return;
+    }
+
     if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
         if (!mbim_message_ms_basic_connect_v3_subscriber_ready_status_notification_parse (
                 notification,
@@ -4733,10 +4795,7 @@ basic_connect_notification_subscriber_ready_status (MMBroadbandModemMbim *self,
     self->priv->last_ready_state = ready_state;
 
     if (active_sim_event) {
-        if (self->priv->pending_sim_slot_switch_action)
-            mm_obj_dbg (self, "ignoring slot status change");
-        else
-            mm_iface_modem_process_sim_event (MM_IFACE_MODEM (self));
+        mm_iface_modem_process_sim_event (MM_IFACE_MODEM (self));
     }
 }
 
@@ -8771,7 +8830,6 @@ set_device_slot_mappings_ready (MbimDevice   *device,
     self = g_task_get_source_object (task);
 
     g_assert (self->priv->pending_sim_slot_switch_action);
-    self->priv->pending_sim_slot_switch_action = FALSE;
 
     /* the slot index in MM starts at 1 */
     slot_number = GPOINTER_TO_UINT (g_task_get_task_data (task)) - 1;
@@ -8783,6 +8841,7 @@ set_device_slot_mappings_ready (MbimDevice   *device,
             &map_count,
             &slot_mappings,
             &error)) {
+        self->priv->pending_sim_slot_switch_action = FALSE;
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -8791,9 +8850,13 @@ set_device_slot_mappings_ready (MbimDevice   *device,
     for (i = 0; i < map_count; i++) {
         if (i == self->priv->executor_index) {
             if (slot_number != slot_mappings[i]->slot) {
+                self->priv->pending_sim_slot_switch_action = FALSE;
                 g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
                                          "SIM slot switch to '%u' failed", slot_number);
             } else {
+                /* Keep pending_sim_slot_switch_action flag TRUE to cleanly ignore SIM related indications
+                 * during slot swithing, We don't want SIM related indications received trigger the update
+                 * of SimSlots property, which may not be what we want as the modem object is being shutdown */
                 self->priv->active_slot_index = slot_number + 1;
                 g_task_return_boolean (task, TRUE);
             }
@@ -8803,6 +8866,7 @@ set_device_slot_mappings_ready (MbimDevice   *device,
         }
     }
 
+    self->priv->pending_sim_slot_switch_action = FALSE;
     g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
                              "Can't find executor index '%u'", self->priv->executor_index);
     g_object_unref (task);
