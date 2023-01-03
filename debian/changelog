@@ -1,3 +1,10 @@
+modemmanager (1.20.4-1) unstable; urgency=medium
+
+  * New upstream version 1.20.4
+  * d/control: bump Standards-Version, no change required
+
+ -- Arnaud Ferraris <aferraris@debian.org>  Tue, 03 Jan 2023 13:34:49 +0100
+
 modemmanager (1.20.2-1) unstable; urgency=medium
 
   * d/watch: only watch for stable releases.
