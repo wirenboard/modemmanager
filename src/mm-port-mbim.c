@@ -31,12 +31,21 @@
 
 G_DEFINE_TYPE (MMPortMbim, mm_port_mbim, MM_TYPE_PORT)
 
+enum {
+    SIGNAL_NOTIFICATION,
+    SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST] = { 0 };
+
 struct _MMPortMbimPrivate {
     gboolean    in_progress;
     MbimDevice *mbim_device;
 
-    /* timeout monitoring */
+    /* monitoring */
+    gulong notification_monitoring_id;
     gulong timeout_monitoring_id;
+    gulong removed_monitoring_id;
 
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
     gboolean    qmi_supported;
@@ -392,12 +401,20 @@ mm_port_mbim_reset (MMPortMbim          *self,
 /*****************************************************************************/
 
 static void
-reset_timeout_monitoring (MMPortMbim *self,
-                          MbimDevice *mbim_device)
+reset_monitoring (MMPortMbim *self,
+                  MbimDevice *mbim_device)
 {
+    if (self->priv->notification_monitoring_id && mbim_device) {
+        g_signal_handler_disconnect (mbim_device, self->priv->notification_monitoring_id);
+        self->priv->notification_monitoring_id = 0;
+    }
     if (self->priv->timeout_monitoring_id && mbim_device) {
         g_signal_handler_disconnect (mbim_device, self->priv->timeout_monitoring_id);
         self->priv->timeout_monitoring_id = 0;
+    }
+    if (self->priv->removed_monitoring_id && mbim_device) {
+        g_signal_handler_disconnect (mbim_device, self->priv->removed_monitoring_id);
+        self->priv->removed_monitoring_id = 0;
     }
 }
 
@@ -410,17 +427,42 @@ consecutive_timeouts_updated_cb (MMPortMbim *self,
 }
 
 static void
-setup_timeout_monitoring (MMPortMbim *self,
-                          MbimDevice *mbim_device)
+device_removed_cb (MMPortMbim  *self)
+{
+    g_signal_emit_by_name (self, MM_PORT_SIGNAL_REMOVED);
+}
+
+static void
+notification_cb (MMPortMbim  *self,
+                 MbimMessage *notification)
+{
+    g_signal_emit (self, signals[SIGNAL_NOTIFICATION], 0, notification);
+}
+
+static void
+setup_monitoring (MMPortMbim *self,
+                  MbimDevice *mbim_device)
 {
     g_assert (mbim_device);
 
-    reset_timeout_monitoring (self, mbim_device);
+    reset_monitoring (self, mbim_device);
+
+    g_assert (!self->priv->notification_monitoring_id);
+    self->priv->notification_monitoring_id = g_signal_connect_swapped (mbim_device,
+                                                                       MBIM_DEVICE_SIGNAL_INDICATE_STATUS,
+                                                                       G_CALLBACK (notification_cb),
+                                                                       self);
 
     g_assert (!self->priv->timeout_monitoring_id);
     self->priv->timeout_monitoring_id = g_signal_connect_swapped (mbim_device,
                                                                   "notify::" MBIM_DEVICE_CONSECUTIVE_TIMEOUTS,
                                                                   G_CALLBACK (consecutive_timeouts_updated_cb),
+                                                                  self);
+
+    g_assert (!self->priv->removed_monitoring_id);
+    self->priv->removed_monitoring_id = g_signal_connect_swapped (mbim_device,
+                                                                  MBIM_DEVICE_SIGNAL_REMOVED,
+                                                                  G_CALLBACK (device_removed_cb),
                                                                   self);
 }
 
@@ -600,7 +642,7 @@ mbim_device_open_ready (MbimDevice   *mbim_device,
     }
 
     mm_obj_dbg (self, "MBIM device is now open");
-    setup_timeout_monitoring (self, mbim_device);
+    setup_monitoring (self, mbim_device);
 
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
     if (self->priv->qmi_supported) {
@@ -739,7 +781,7 @@ mbim_device_close_ready (MbimDevice   *mbim_device,
 
     g_assert (!self->priv->mbim_device);
     self->priv->in_progress = FALSE;
-    reset_timeout_monitoring (self, mbim_device);
+    reset_monitoring (self, mbim_device);
 
     if (!mbim_device_close_finish (mbim_device, res, &error))
         g_task_return_error (task, error);
@@ -896,7 +938,7 @@ dispose (GObject *object)
 #endif
 
     /* Clear device object */
-    reset_timeout_monitoring (self, self->priv->mbim_device);
+    reset_monitoring (self, self->priv->mbim_device);
     g_clear_object (&self->priv->mbim_device);
 
     G_OBJECT_CLASS (mm_port_mbim_parent_class)->dispose (object);
@@ -911,4 +953,13 @@ mm_port_mbim_class_init (MMPortMbimClass *klass)
 
     /* Virtual methods */
     object_class->dispose = dispose;
+
+    signals[SIGNAL_NOTIFICATION] =
+        g_signal_new (MM_PORT_MBIM_SIGNAL_NOTIFICATION,
+                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
+                      G_SIGNAL_RUN_LAST,
+                      G_STRUCT_OFFSET (MMPortMbimClass, notification),
+                      NULL, NULL,
+                      g_cclosure_marshal_generic,
+                      G_TYPE_NONE, 1, MBIM_TYPE_MESSAGE);
 }
