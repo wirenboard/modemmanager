@@ -31,7 +31,7 @@ Build-Depends: debhelper-compat (= 13),
                libglib2.0-doc <!nodoc>,
 # Needed for automated tests
                dbus <!nocheck>,
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Rules-Requires-Root: no
 Vcs-Git: https://salsa.debian.org/DebianOnMobile-team/modemmanager.git
 Vcs-Browser: https://salsa.debian.org/DebianOnMobile-team/modemmanager
