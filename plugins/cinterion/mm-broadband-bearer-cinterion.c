@@ -101,6 +101,21 @@ load_connection_status_finish (MMBaseBearer  *bearer,
     return (MMBearerConnectionStatus) aux;
 }
 
+typedef struct {
+    guint     cid;
+    guint     retries;
+    gboolean  delay;
+    gboolean  retry;
+} LoadConnectionContext;
+
+static void
+load_connection_context_free (LoadConnectionContext *ctx)
+{
+    g_slice_free (LoadConnectionContext, ctx);
+}
+
+static gboolean swwan_check_status (GTask *task);
+
 static void
 swwan_check_status_ready (MMBaseModem  *modem,
                           GAsyncResult *res,
@@ -110,10 +125,10 @@ swwan_check_status_ready (MMBaseModem  *modem,
     const gchar                *response;
     GError                     *error = NULL;
     MMBearerConnectionStatus    status;
-    guint                       cid;
+    LoadConnectionContext       *ctx;
 
     self = g_task_get_source_object (task);
-    cid = GPOINTER_TO_UINT (g_task_get_task_data (task));
+    ctx  = g_task_get_task_data (task);
 
     response = mm_base_modem_at_command_finish (modem, res, &error);
     if (!response) {
@@ -121,10 +136,25 @@ swwan_check_status_ready (MMBaseModem  *modem,
         goto out;
     }
 
-    status = mm_cinterion_parse_swwan_response (response, cid, self, &error);
+    status = mm_cinterion_parse_swwan_response (response, ctx->cid, self, &error);
     if (status == MM_BEARER_CONNECTION_STATUS_UNKNOWN) {
         g_task_return_error (task, error);
         goto out;
+    } else if (ctx->retry && status == MM_BEARER_CONNECTION_STATUS_DISCONNECTED) {
+        mm_obj_dbg (self, "check status retry");
+        if (ctx->retries == 0) {
+            g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "CID %u status check retry exceeded", ctx->cid);
+            goto out;
+        } else {
+            if (ctx->delay) {
+                g_timeout_add_seconds (1, (GSourceFunc)swwan_check_status, task);
+            } else {
+                g_idle_add ((GSourceFunc)swwan_check_status, task);
+            }
+            ctx->retries--;
+            return;
+        }
     }
 
     g_assert (status == MM_BEARER_CONNECTION_STATUS_DISCONNECTED ||
@@ -135,14 +165,36 @@ out:
     g_object_unref (task);
 }
 
+static gboolean
+swwan_check_status (GTask *task)
+{
+    MMBroadbandBearerCinterion *bearer;
+    g_autoptr(MMBaseModem)  modem = NULL;
+
+    bearer = g_task_get_source_object (task);
+    g_object_get (bearer,
+                  MM_BASE_BEARER_MODEM, &modem,
+                  NULL);
+    mm_base_modem_at_command (modem,
+                              "^SWWAN?",
+                              5,
+                              FALSE,
+                              (GAsyncReadyCallback) swwan_check_status_ready,
+                              task);
+
+    return G_SOURCE_REMOVE;
+}
+
 static void
 load_connection_status_by_cid (MMBroadbandBearerCinterion *bearer,
                                gint                        cid,
+                               gboolean                    delay,
+                               gboolean                    retry,
                                GAsyncReadyCallback         callback,
                                gpointer                    user_data)
 {
-    GTask                  *task;
-    g_autoptr(MMBaseModem)  modem = NULL;
+    GTask                 *task;
+    LoadConnectionContext *ctx;
 
     task = g_task_new (bearer, NULL, callback, user_data);
     if (cid == MM_3GPP_PROFILE_ID_UNKNOWN) {
@@ -152,18 +204,23 @@ load_connection_status_by_cid (MMBroadbandBearerCinterion *bearer,
         return;
     }
 
-    g_task_set_task_data (task, GUINT_TO_POINTER (cid), NULL);
+    ctx = g_slice_new0 (LoadConnectionContext);
+    g_task_set_task_data (task, ctx, (GDestroyNotify) load_connection_context_free);
 
-    g_object_get (bearer,
-                  MM_BASE_BEARER_MODEM, &modem,
-                  NULL);
+    /* Setup context */
+    ctx->cid     = cid;
+    ctx->retries = 5;
+    ctx->delay = delay;
+    ctx->retry = retry;
 
-    mm_base_modem_at_command (modem,
-                              "^SWWAN?",
-                              5,
-                              FALSE,
-                              (GAsyncReadyCallback) swwan_check_status_ready,
-                              task);
+    /* Some modems require a delay before querying the SWWAN status
+     * This is only needed for step DIAL_3GPP_CONTEXT_STEP_VALIDATE_CONNECTION
+     * and DISCONNECT_3GPP_CONTEXT_STEP_CONNECTION_STATUS. */
+    if (delay) {
+        g_timeout_add_seconds (1, (GSourceFunc)swwan_check_status, task);
+    } else {
+        g_idle_add ((GSourceFunc)swwan_check_status, task);
+    }
 }
 
 static void
@@ -173,6 +230,8 @@ load_connection_status (MMBaseBearer        *bearer,
 {
     load_connection_status_by_cid (MM_BROADBAND_BEARER_CINTERION (bearer),
                                    mm_base_bearer_get_profile_id (bearer),
+                                   FALSE,
+                                   FALSE,
                                    callback,
                                    user_data);
 }
@@ -411,6 +470,8 @@ dial_3gpp_context_step (GTask *task)
                     ctx->step, DIAL_3GPP_CONTEXT_STEP_LAST, usb_interface_configs[ctx->usb_interface_config_index].swwan_index);
         load_connection_status_by_cid (ctx->self,
                                        (gint) ctx->cid,
+                                       TRUE,
+                                       TRUE,
                                        (GAsyncReadyCallback) dial_connection_status_ready,
                                        task);
         return;
@@ -609,6 +670,8 @@ disconnect_3gpp_context_step (GTask *task)
                     usb_interface_configs[ctx->usb_interface_config_index].swwan_index);
         load_connection_status_by_cid (MM_BROADBAND_BEARER_CINTERION (ctx->self),
                                        (gint) ctx->cid,
+                                       TRUE,
+                                       FALSE,
                                        (GAsyncReadyCallback) disconnect_connection_status_ready,
                                        task);
          return;
