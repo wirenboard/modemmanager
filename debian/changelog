@@ -1,4 +1,4 @@
-modemmanager (1.20.0-1~bpo11+1-wb100) bullseye-backports; urgency=medium
+modemmanager (1.20.0-1~bpo11+1-wb101) bullseye-backports; urgency=medium
 
   * Add SIM A7600E-H support
     - CGDCONT read response with only 3 parameters in list (+CGDCONT: 1,"IP","nate.sktelecom.com") parsing.
