@@ -26,6 +26,7 @@ Build-Depends: debhelper-compat (= 13),
                python3-gi,
                udev,
                valac (>= 0.22),
+               libgpiod-dev,
 # Needed for building documentation
                gtk-doc-tools <!nodoc>,
                libglib2.0-doc <!nodoc>,

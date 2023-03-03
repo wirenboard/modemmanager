@@ -2187,11 +2187,13 @@ load_operator_identifier (MMBaseSim *self,
 {
     mm_obj_dbg (self, "loading operator ID...");
 
-    /* READ BINARY of EFad (Administrative Data) ETSI 51.011 section 10.3.18 */
+    /* READ BINARY of EFad (Administrative Data) ETSI 51.011 section 10.3.18
+     * SIMCOM modems can answer in 10s or more, so use rather big timeout
+     */
     mm_base_modem_at_command (
         self->priv->modem,
         "+CRSM=176,28589,0,0,4",
-        10,
+        20,
         FALSE,
         (GAsyncReadyCallback)load_operator_identifier_command_ready,
         g_task_new (self, NULL, callback, user_data));
@@ -2277,11 +2279,13 @@ load_operator_name (MMBaseSim *self,
 {
     mm_obj_dbg (self, "loading operator name...");
 
-    /* READ BINARY of EFspn (Service Provider Name) ETSI 51.011 section 10.3.11 */
+    /* READ BINARY of EFspn (Service Provider Name) ETSI 51.011 section 10.3.11
+     * SIMCOM modems can answer in 10s or more, so use rather big timeout
+     */
     mm_base_modem_at_command (
         self->priv->modem,
         "+CRSM=176,28486,0,0,17",
-        10,
+        20,
         FALSE,
         (GAsyncReadyCallback)load_operator_name_command_ready,
         g_task_new (self, NULL, callback, user_data));
