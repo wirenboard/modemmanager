@@ -45,9 +45,9 @@ plugins_incs = [
   kerneldevice_inc,
 ]
 
-libgpiod2_dep = dependency('libgpiod2')
+libgpiod_dep = dependency('libgpiod')
 
-plugins_deps = [libmm_glib_dep, libgpiod2_dep]
+plugins_deps = [libmm_glib_dep, libgpiod_dep]
 
 if enable_mbim
   plugins_deps += mbim_glib_dep
