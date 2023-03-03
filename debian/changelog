@@ -1,3 +1,9 @@
+modemmanager (1.20.0-1~bpo11+1-wb100) bullseye-backports; urgency=medium
+
+  * Add SIM A7600E-H support
+
+ -- Petr Krasnoshchekov <petr.krasnoshchekov@wirenboard.ru>  Fri, 03 Mar 2023 11:33:02 +0500
+
 modemmanager (1.20.0-1~bpo11+1) bullseye-backports; urgency=medium
 
   * Create backport for Debian 11.
