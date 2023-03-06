@@ -1,3 +1,10 @@
+modemmanager (1.20.0-1~bpo11+1-wb102) stable; urgency=medium
+
+  * Fix SMS sending on SIM A7600E-H.
+    Some firmwares require setting character set of mobile equipment to GSM (AT+CSCS="GSM") before sending SMS.
+
+ -- Petr Krasnoshchekov <petr.krasnoshchekov@wirenboard.com>  Mon, 06 Mar 2023 12:06:16 +0500
+
 modemmanager (1.20.0-1~bpo11+1-wb101) bullseye-backports; urgency=medium
 
   * Add SIM A7600E-H support

@@ -781,6 +781,7 @@ if plugins_options['simtech']
     'simtech/mm-broadband-modem-simtech.c',
     'simtech/mm-plugin-simtech.c',
     'simtech/mm-shared-simtech.c',
+    'simtech/mm-sms-simtech-a7600.c',
   )
 
   if enable_qmi

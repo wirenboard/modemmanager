@@ -36,26 +36,31 @@
 #include "mm-iface-modem-3gpp.h"
 #include "mm-iface-modem-location.h"
 #include "mm-iface-modem-voice.h"
+#include "mm-iface-modem-messaging.h"
 #include "mm-shared-simtech.h"
 #include "mm-broadband-modem-simtech.h"
+#include "mm-sms-simtech-a7600.h"
 
-static void iface_modem_init          (MMIfaceModem         *iface);
-static void iface_modem_3gpp_init     (MMIfaceModem3gpp     *iface);
-static void iface_modem_location_init (MMIfaceModemLocation *iface);
-static void iface_modem_voice_init    (MMIfaceModemVoice    *iface);
-static void shared_simtech_init       (MMSharedSimtech      *iface);
+static void iface_modem_init           (MMIfaceModem          *iface);
+static void iface_modem_3gpp_init      (MMIfaceModem3gpp      *iface);
+static void iface_modem_location_init  (MMIfaceModemLocation  *iface);
+static void iface_modem_voice_init     (MMIfaceModemVoice     *iface);
+static void iface_modem_messaging_init (MMIfaceModemMessaging *iface);
+static void shared_simtech_init        (MMSharedSimtech       *iface);
 
-static MMIfaceModem         *iface_modem_parent;
-static MMIfaceModem3gpp     *iface_modem_3gpp_parent;
-static MMIfaceModemLocation *iface_modem_location_parent;
-static MMIfaceModemVoice    *iface_modem_voice_parent;
+static MMIfaceModem          *iface_modem_parent;
+static MMIfaceModem3gpp      *iface_modem_3gpp_parent;
+static MMIfaceModemLocation  *iface_modem_location_parent;
+static MMIfaceModemVoice     *iface_modem_voice_parent;
+static MMIfaceModemMessaging *iface_modem_messaging_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemSimtech, mm_broadband_modem_simtech, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_3GPP, iface_modem_3gpp_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_LOCATION, iface_modem_location_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_VOICE, iface_modem_voice_init)
-                        G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_SIMTECH, shared_simtech_init))
+                        G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_SIMTECH, shared_simtech_init)
+                        G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_MESSAGING, iface_modem_messaging_init))
 
 typedef enum {
     FEATURE_SUPPORT_UNKNOWN,
@@ -1790,6 +1795,18 @@ setup_ports (MMBroadbandModem *self)
 }
 
 /*****************************************************************************/
+/* Create SMS (Messaging interface) */
+
+static MMBaseSms *
+mm_broadband_modem_simtech_create_sms (MMIfaceModemMessaging *self)
+{
+    if (g_str_has_prefix (mm_iface_modem_get_model (MM_IFACE_MODEM (self)), "A7600E-H")) {
+        return mm_sms_simtech_a7600_new (MM_BASE_MODEM (self)); 
+    }
+    return iface_modem_messaging_parent->create_sms(self);
+}
+
+/*****************************************************************************/
 
 MMBroadbandModemSimtech *
 mm_broadband_modem_simtech_new (const gchar *device,
@@ -1907,6 +1924,15 @@ iface_modem_location_init (MMIfaceModemLocation *iface)
     iface->enable_location_gathering_finish  = mm_shared_simtech_enable_location_gathering_finish;
     iface->disable_location_gathering        = mm_shared_simtech_disable_location_gathering;
     iface->disable_location_gathering_finish = mm_shared_simtech_disable_location_gathering_finish;
+}
+
+
+static void
+iface_modem_messaging_init (MMIfaceModemMessaging *iface)
+{
+    iface_modem_messaging_parent = g_type_interface_peek_parent (iface);
+
+    iface->create_sms = mm_broadband_modem_simtech_create_sms;
 }
 
 static MMIfaceModemLocation *
