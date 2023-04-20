@@ -1218,12 +1218,21 @@ get_modem_ready (GObject      *source,
 
     /* Request to switch SIM? */
     if (set_primary_sim_slot_int > 0) {
-        fprintf(stderr, "Simslot %d requested (async)", set_primary_sim_slot_int);
-        mm_modem_set_primary_sim_slot (ctx->modem,
-                                       set_primary_sim_slot_int,
-                                       ctx->cancellable,
-                                       (GAsyncReadyCallback)set_primary_sim_slot_ready,
-                                       NULL);
+        guint current_primary_slot;
+
+        current_primary_slot = mm_modem_get_primary_sim_slot (ctx->modem);
+        g_debug ("Switch primary slot %d -> %d is requested (async)",
+                 current_primary_slot, set_primary_sim_slot_int);
+        if (set_primary_sim_slot_int == current_primary_slot) {
+            set_primary_sim_slot_ready (ctx->modem, NULL);
+            g_debug ("Primary slot is already %d; doing nothing", current_primary_slot);
+        } else {
+            mm_modem_set_primary_sim_slot (ctx->modem,
+                                        set_primary_sim_slot_int,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)set_primary_sim_slot_ready,
+                                        NULL);
+        }
         return;
     }
 
@@ -1498,9 +1507,18 @@ mmcli_modem_run_synchronous (GDBusConnection *connection)
     /* Request to switch current SIM? */
     if (set_primary_sim_slot_int > 0) {
         gboolean result;
+        guint current_primary_slot;
 
-        fprintf(stderr, "Simslot %d requested (sync)", set_primary_sim_slot_int);
-        result = mm_modem_set_primary_sim_slot_sync (ctx->modem, set_primary_sim_slot_int, NULL, &error);
+        current_primary_slot = mm_modem_get_primary_sim_slot (ctx->modem);
+        g_debug ("Switch primary slot %d -> %d is requested (sync)",
+                 current_primary_slot, set_primary_sim_slot_int);
+        if (set_primary_sim_slot_int == current_primary_slot) {
+            g_debug ("Primary slot is already %d; doing nothing", current_primary_slot);
+            result = TRUE;
+        } else {
+            result = mm_modem_set_primary_sim_slot_sync (ctx->modem, set_primary_sim_slot_int, NULL, &error);
+        }
+
         set_primary_sim_slot_process_reply (result, error);
         return;
     }
