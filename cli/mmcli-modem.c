@@ -1218,6 +1218,7 @@ get_modem_ready (GObject      *source,
 
     /* Request to switch SIM? */
     if (set_primary_sim_slot_int > 0) {
+        fprintf(stderr, "Simslot %d requested (async)", set_primary_sim_slot_int);
         mm_modem_set_primary_sim_slot (ctx->modem,
                                        set_primary_sim_slot_int,
                                        ctx->cancellable,
@@ -1498,6 +1499,7 @@ mmcli_modem_run_synchronous (GDBusConnection *connection)
     if (set_primary_sim_slot_int > 0) {
         gboolean result;
 
+        fprintf(stderr, "Simslot %d requested (sync)", set_primary_sim_slot_int);
         result = mm_modem_set_primary_sim_slot_sync (ctx->modem, set_primary_sim_slot_int, NULL, &error);
         set_primary_sim_slot_process_reply (result, error);
         return;
