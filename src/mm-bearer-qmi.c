@@ -557,7 +557,7 @@ process_operator_reserved_pco (MMBearerQmi                           *self,
     MMBaseModem           *modem = NULL;
     MMPco                 *pco;
     g_autofree gchar      *app_specific_info_str = NULL;
-    g_autoptr(GArray)      array = NULL;
+    GArray                *array = NULL;
     g_autoptr(GByteArray)  pco_raw = NULL;
     guint16                container_id;
     guint16                tmp_mcc;
@@ -566,13 +566,26 @@ process_operator_reserved_pco (MMBearerQmi                           *self,
     guint8                 pco_prefix[9];
     gsize                  pco_raw_len;
 
-    if (!qmi_message_wds_get_current_settings_output_get_operator_reserved_pco (output, &tmp_mcc, &tmp_mnc, &mnc_includes_pcs_digit, &array, &container_id, NULL))
-        return ;
+    if (!qmi_message_wds_get_current_settings_output_get_operator_reserved_pco (
+            output,
+            &tmp_mcc,
+            &tmp_mnc,
+            &mnc_includes_pcs_digit,
+            &array,
+            &container_id,
+            NULL))
+        return;
 
-    app_specific_info_str = mm_utils_bin2hexstr ((guint8*) (array->data), array->len);
+    /* Ignore PCOs with undefined contents */
+    if (!tmp_mcc && !tmp_mnc && !container_id && !array->len)
+        return;
+
+    app_specific_info_str = ((array->len > 0) ?
+                             mm_utils_bin2hexstr ((guint8*) (array->data), array->len) :
+                             NULL);
 
     mm_obj_dbg (self, "container ID: %d", container_id);
-    mm_obj_dbg (self, "app specific info: %s", app_specific_info_str);
+    mm_obj_dbg (self, "app specific info: %s", app_specific_info_str ? app_specific_info_str : "n/a");
 
     pco_raw_len = sizeof (pco_prefix) + array->len;
     pco_prefix[0] = 0x27;
@@ -610,7 +623,8 @@ process_operator_reserved_pco (MMBearerQmi                           *self,
 
     pco_raw = g_byte_array_sized_new (pco_raw_len);
     g_byte_array_append (pco_raw, pco_prefix, sizeof (pco_prefix));
-    g_byte_array_append (pco_raw, (const guint8 *)array->data, array->len);
+    if (array->len > 0)
+        g_byte_array_append (pco_raw, (const guint8 *)array->data, array->len);
 
     pco = mm_pco_new ();
     /* set session ID to 0 (default) */
