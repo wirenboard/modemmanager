@@ -1,3 +1,9 @@
+modemmanager (1.20.6-1) experimental; urgency=medium
+
+  * New upstream version 1.20.6
+
+ -- Arnaud Ferraris <aferraris@debian.org>  Sun, 23 Apr 2023 15:49:32 +0200
+
 modemmanager (1.20.4-1) unstable; urgency=medium
 
   * New upstream version 1.20.4
