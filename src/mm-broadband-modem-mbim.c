@@ -5442,7 +5442,7 @@ cleanup_unsolicited_events_3gpp (MMIfaceModem3gpp *_self,
     if (self->priv->is_pco_supported)
         self->priv->setup_flags &= ~PROCESS_NOTIFICATION_FLAG_PCO;
     if (self->priv->is_lte_attach_info_supported)
-        self->priv->setup_flags &= PROCESS_NOTIFICATION_FLAG_LTE_ATTACH_INFO;
+        self->priv->setup_flags &= ~PROCESS_NOTIFICATION_FLAG_LTE_ATTACH_INFO;
     if (self->priv->is_slot_info_status_supported)
         self->priv->setup_flags &= ~PROCESS_NOTIFICATION_FLAG_SLOT_INFO_STATUS;
     common_setup_cleanup_unsolicited_events (self, FALSE, callback, user_data);
@@ -5702,11 +5702,14 @@ setup_sim_hot_swap_context_free (SetupSimHotSwapContext *ctx)
 }
 
 static gboolean
-modem_setup_sim_hot_swap_finish (MMIfaceModem  *self,
+modem_setup_sim_hot_swap_finish (MMIfaceModem  *_self,
                                  GAsyncResult  *res,
                                  GError       **error)
 {
-    return g_task_propagate_boolean (G_TASK (res), error);
+    MMBroadbandModemMbim *self = MM_BROADBAND_MODEM_MBIM (_self);
+
+    self->priv->sim_hot_swap_configured = g_task_propagate_boolean (G_TASK (res), error);
+    return self->priv->sim_hot_swap_configured;
 }
 
 static void
@@ -8934,8 +8937,16 @@ shared_qmi_set_primary_sim_slot_ready (MMIfaceModem *self,
                                        GAsyncResult *res,
                                        GTask        *task)
 {
-    if (!mm_shared_qmi_set_primary_sim_slot_finish (self, res, NULL)) {
-        set_primary_sim_slot_mbim (task);
+    g_autoptr(GError) error = NULL;
+
+    if (!mm_shared_qmi_set_primary_sim_slot_finish (self, res, &error)) {
+        /* Fallback to MBIM */
+        if (g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED)) {
+            set_primary_sim_slot_mbim (task);
+            return;
+        }
+        g_task_return_error (task, g_steal_pointer (&error));
+        g_object_unref (task);
         return;
     }
 

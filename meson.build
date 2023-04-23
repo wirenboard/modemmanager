@@ -3,7 +3,7 @@
 
 project(
   'ModemManager', 'c',
-  version: '1.20.4',
+  version: '1.20.6',
   license: 'GPL2',
   default_options: [
     'buildtype=debugoptimized',
@@ -385,8 +385,10 @@ version_conf = {
 
 subdir('po')
 subdir('data')
-subdir('data/dispatcher-connection')
-subdir('data/dispatcher-fcc-unlock')
+if get_option('examples')
+  subdir('data/dispatcher-connection')
+  subdir('data/dispatcher-fcc-unlock')
+endif
 subdir('introspection')
 subdir('include')
 
