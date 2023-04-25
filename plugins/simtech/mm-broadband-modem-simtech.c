@@ -1556,6 +1556,7 @@ mm_broadband_modem_simtech_set_primary_sim_slot (MMIfaceModem        *self,
             g_object_unref (task);
         } else {
             current_primary_slot = get_gpio_line_value (gpio_label, self) + 1;
+            gpiod_line_close_chip (line);
             if (current_primary_slot == sim_slot) {
                 g_task_return_new_error (task,
                                         MM_CORE_ERROR,
@@ -1563,7 +1564,6 @@ mm_broadband_modem_simtech_set_primary_sim_slot (MMIfaceModem        *self,
                                         "already on sim slot %d", current_primary_slot);
                 g_object_unref (task);
             } else {
-                gpiod_line_close_chip (line);
                 simtech_ignore_no_carrier(self, TRUE);
                 g_task_set_task_data (task, GUINT_TO_POINTER (sim_slot), NULL);
                 mm_base_modem_at_command (MM_BASE_MODEM (self),
