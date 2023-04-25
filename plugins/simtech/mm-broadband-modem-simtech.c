@@ -1541,6 +1541,7 @@ mm_broadband_modem_simtech_set_primary_sim_slot (MMIfaceModem        *self,
     GTask *task;
     const gchar *gpio_label = NULL;
     struct gpiod_line *line;
+    guint current_primary_slot;
 
     task = g_task_new (self, NULL, callback, user_data);
 
@@ -1554,23 +1555,7 @@ mm_broadband_modem_simtech_set_primary_sim_slot (MMIfaceModem        *self,
                                      "can't find gpio line '%s'", gpio_label);
             g_object_unref (task);
         } else {
-            guint current_primary_slot;
-            MmGdbusModem *skeleton;
-
-            g_object_get (self,
-                         MM_IFACE_MODEM_DBUS_SKELETON, &skeleton,
-                         NULL);
-            if (!skeleton) {
-                g_task_return_new_error (task,
-                                        MM_CORE_ERROR,
-                                        MM_CORE_ERROR_FAILED,
-                                        "Couldn't get interface skeleton");
-                g_object_unref (task);
-                return;
-            }
-            current_primary_slot = mm_gdbus_modem_get_primary_sim_slot (MM_GDBUS_MODEM (skeleton));
-            g_object_unref (skeleton);
-
+            current_primary_slot = get_gpio_line_value (gpio_label, self) + 1;
             if (current_primary_slot == sim_slot) {
                 g_task_return_new_error (task,
                                         MM_CORE_ERROR,

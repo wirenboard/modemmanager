@@ -1218,7 +1218,6 @@ get_modem_ready (GObject      *source,
 
     /* Request to switch SIM? */
     if (set_primary_sim_slot_int > 0) {
-
         mm_modem_set_primary_sim_slot (ctx->modem,
                                        set_primary_sim_slot_int,
                                        ctx->cancellable,
