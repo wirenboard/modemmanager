@@ -1555,8 +1555,8 @@ mm_broadband_modem_simtech_set_primary_sim_slot (MMIfaceModem        *self,
                                      "can't find gpio line '%s'", gpio_label);
             g_object_unref (task);
         } else {
-            current_primary_slot = get_gpio_line_value (gpio_label, self) + 1;
             gpiod_line_close_chip (line);
+            current_primary_slot = get_gpio_line_value (gpio_label, self) + 1;
             if (current_primary_slot == sim_slot) {
                 g_task_return_new_error (task,
                                         MM_CORE_ERROR,
