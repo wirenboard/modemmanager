@@ -105,7 +105,7 @@ static CPinResult unlock_results[] = {
     { NULL }
 };
 
-static void 
+static void
 simtech_ignore_no_carrier(MMIfaceModem *self,
                           gboolean enable)
 {
@@ -1541,6 +1541,7 @@ mm_broadband_modem_simtech_set_primary_sim_slot (MMIfaceModem        *self,
     GTask *task;
     const gchar *gpio_label = NULL;
     struct gpiod_line *line;
+    guint current_primary_slot;
 
     task = g_task_new (self, NULL, callback, user_data);
 
@@ -1555,14 +1556,23 @@ mm_broadband_modem_simtech_set_primary_sim_slot (MMIfaceModem        *self,
             g_object_unref (task);
         } else {
             gpiod_line_close_chip (line);
-            simtech_ignore_no_carrier(self, TRUE);
-            g_task_set_task_data (task, GUINT_TO_POINTER (sim_slot), NULL);
-            mm_base_modem_at_command (MM_BASE_MODEM (self),
-                                    "+CFUN=0",
-                                    9,
-                                    FALSE,
-                                    (GAsyncReadyCallback) mm_broadband_modem_simtech_disable_me_ready,
-                                    task);
+            current_primary_slot = get_gpio_line_value (gpio_label, self) + 1;
+            if (current_primary_slot == sim_slot) {
+                g_task_return_new_error (task,
+                                        MM_CORE_ERROR,
+                                        MM_CORE_ERROR_EXISTS,
+                                        "already on sim slot %d", current_primary_slot);
+                g_object_unref (task);
+            } else {
+                simtech_ignore_no_carrier(self, TRUE);
+                g_task_set_task_data (task, GUINT_TO_POINTER (sim_slot), NULL);
+                mm_base_modem_at_command (MM_BASE_MODEM (self),
+                                        "+CFUN=0",
+                                        9,
+                                        FALSE,
+                                        (GAsyncReadyCallback) mm_broadband_modem_simtech_disable_me_ready,
+                                        task);
+            }
         }
     } else {
         g_task_return_new_error (task,
@@ -1801,7 +1811,7 @@ static MMBaseSms *
 mm_broadband_modem_simtech_create_sms (MMIfaceModemMessaging *self)
 {
     if (g_str_has_prefix (mm_iface_modem_get_model (MM_IFACE_MODEM (self)), "A7600E-H")) {
-        return mm_sms_simtech_a7600_new (MM_BASE_MODEM (self)); 
+        return mm_sms_simtech_a7600_new (MM_BASE_MODEM (self));
     }
     return iface_modem_messaging_parent->create_sms(self);
 }
