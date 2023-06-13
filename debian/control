@@ -41,7 +41,7 @@ Package: modemmanager
 Architecture: linux-any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         polkitd | policykit-1,
+         polkitd,
 Recommends: libmbim-utils,
             libqmi-utils,
             usb-modeswitch,
