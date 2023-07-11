@@ -1,3 +1,9 @@
+modemmanager (1.20.0-1~bpo11+1-wb106) stable; urgency=medium
+
+  * Fix SMS receiving on SIM A7600E-H and A7602E-H
+
+ -- Petr Krasnoshchekov <petr.krasnoshchekov@wirenboard.com>  Tue, 11 Jul 2023 14:28:15 +0500
+
 modemmanager (1.20.0-1~bpo11+1-wb105) stable; urgency=medium
 
   * Increase SMS reading timeout to 120 seconds

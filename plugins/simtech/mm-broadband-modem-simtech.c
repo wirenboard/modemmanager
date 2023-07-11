@@ -1817,6 +1817,44 @@ mm_broadband_modem_simtech_create_sms (MMIfaceModemMessaging *self)
 }
 
 /*****************************************************************************/
+/* Enable unsolicited events (SMS indications) (Messaging interface) */
+
+static gboolean
+modem_messaging_enable_unsolicited_events_finish (MMIfaceModemMessaging *self,
+                                                  GAsyncResult *res,
+                                                  GError **error)
+{
+    return !!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, error);
+}
+
+static void
+modem_messaging_enable_unsolicited_events (MMIfaceModemMessaging *self,
+                                           GAsyncReadyCallback callback,
+                                           gpointer user_data)
+{
+    /* AT+CNMI=<mode>,[<mt>[,<bm>[,<ds>[,<bfr>]]]]
+    * Note from A7600E-H/A7602E-H AT commands manual: 
+    * If set <mt>＝3 or <ds>＝1, make sure <mode>＝1.
+    * If set <mt>=2, make sure <mode>=1 or 2, otherwise it will return error. 
+    *
+    * So disable SMS-STATUS-REPORTs by setting <ds> to 0.
+    * Actually AT+CNMI=2,1,0,0,0 is the default modem state.
+    */
+    if (g_str_has_prefix (mm_iface_modem_get_model (MM_IFACE_MODEM (self)), "A7600E-H") ||
+        g_str_has_prefix (mm_iface_modem_get_model (MM_IFACE_MODEM (self)), "A7602E-H") ||
+        g_str_has_prefix (mm_iface_modem_get_model (MM_IFACE_MODEM (self)), "A7608E-H")) {
+        mm_base_modem_at_command (MM_BASE_MODEM (self),
+                                "+CNMI=2,1,0,0,0",
+                                9,
+                                FALSE,
+                                callback,
+                                user_data);
+        } else {
+            iface_modem_messaging_parent->enable_unsolicited_events (self, callback, user_data);
+        }
+}
+
+/*****************************************************************************/
 
 MMBroadbandModemSimtech *
 mm_broadband_modem_simtech_new (const gchar *device,
@@ -1943,6 +1981,8 @@ iface_modem_messaging_init (MMIfaceModemMessaging *iface)
     iface_modem_messaging_parent = g_type_interface_peek_parent (iface);
 
     iface->create_sms = mm_broadband_modem_simtech_create_sms;
+    iface->enable_unsolicited_events = modem_messaging_enable_unsolicited_events;
+    iface->enable_unsolicited_events_finish = modem_messaging_enable_unsolicited_events_finish;
 }
 
 static MMIfaceModemLocation *
