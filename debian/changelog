@@ -1,3 +1,16 @@
+modemmanager (1.22.0-1) unstable; urgency=medium
+
+  * New upstream version 1.22.0
+  * prerm: drop invalid  option (Closes: #1038858)
+  * d/control: update build dependencies
+    Upstream bumped the required version for `libmbim` and `libqmi`.
+  * d/patches: drop backported patch.
+    This is part of the new released version, so no need for us to carry it
+    anymore.
+  * libmm-glib0: update symbols file for new upstream release
+
+ -- Arnaud Ferraris <aferraris@debian.org>  Sat, 21 Oct 2023 10:37:44 +0200
+
 modemmanager (1.20.6-2) unstable; urgency=medium
 
   * d/patches: backport patch fixing SMS reception after suspend on Librem 5
