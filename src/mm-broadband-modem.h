@@ -103,6 +103,7 @@ GType mm_broadband_modem_get_type (void);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (MMBroadbandModem, g_object_unref)
 
 MMBroadbandModem *mm_broadband_modem_new (const gchar *device,
+                                          const gchar *physdev,
                                           const gchar **drivers,
                                           const gchar *plugin,
                                           guint16 vendor_id,
@@ -133,5 +134,11 @@ void     mm_broadband_modem_unlock_sms_storages      (MMBroadbandModem *self,
 gboolean mm_broadband_modem_sim_hot_swap_ports_context_init  (MMBroadbandModem  *self,
                                                               GError           **error);
 void     mm_broadband_modem_sim_hot_swap_ports_context_reset (MMBroadbandModem  *self);
+
+/* Helper to manage multiplexed bearers */
+gboolean mm_broadband_modem_get_active_multiplexed_bearers (MMBroadbandModem  *self,
+                                                            guint             *out_current,
+                                                            guint             *out_max,
+                                                            GError           **error);
 
 #endif /* MM_BROADBAND_MODEM_H */

@@ -110,8 +110,8 @@ static void
 at_command_ready (MMPortSerialAt *serial_at,
                   GAsyncResult   *res)
 {
-    const gchar *response;
-    GError      *error = NULL;
+    g_autofree gchar *response = NULL;
+    GError           *error = NULL;
 
     response = mm_port_serial_at_command_finish (serial_at, res, &error);
     if (response)
@@ -269,7 +269,7 @@ _mm_log (gpointer     obj,
          const gchar *module,
          const gchar *loc,
          const gchar *func,
-         guint32      level,
+         MMLogLevel   level,
          const gchar *fmt,
          ...)
 {
@@ -281,6 +281,9 @@ _mm_log (gpointer     obj,
         return;
 
     switch (level) {
+    case MM_LOG_LEVEL_MSG:
+        level_str = "message";
+        break;
     case MM_LOG_LEVEL_DEBUG:
         level_str = "debug";
         break;

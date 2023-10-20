@@ -234,7 +234,6 @@ build_disconnect_message (MMBearerMbim *self,
 typedef enum {
     CONNECT_STEP_FIRST,
     CONNECT_STEP_LOAD_PROFILE_SETTINGS,
-    CONNECT_STEP_PACKET_SERVICE,
     CONNECT_STEP_SETUP_LINK,
     CONNECT_STEP_SETUP_LINK_MAIN_UP,
     CONNECT_STEP_CHECK_DISCONNECTED,
@@ -251,8 +250,6 @@ typedef struct {
     MMPort                *data;
     MMBearerConnectResult *connect_result;
     MbimMessage           *abort_on_failure;
-    guint64                uplink_speed;
-    guint64                downlink_speed;
     /* settings to use */
     gint                   profile_id;
     gchar                 *apn;
@@ -362,6 +359,8 @@ ip_configuration_query_ready (MbimDevice   *device,
         g_autofree gchar            *ipv6configurationavailable_str = NULL;
         g_autoptr(MMBearerIpConfig)  ipv4_config = NULL;
         g_autoptr(MMBearerIpConfig)  ipv6_config = NULL;
+        guint64                      uplink_speed = 0;
+        guint64                      downlink_speed = 0;
 
         /* IPv4 info */
 
@@ -538,8 +537,6 @@ ip_configuration_query_ready (MbimDevice   *device,
             ctx->requested_ip_type == MBIM_CONTEXT_IP_TYPE_IPV4V6 ||
             ctx->requested_ip_type == MBIM_CONTEXT_IP_TYPE_IPV4_AND_IPV6) {
             gboolean address_set = FALSE;
-            gboolean gateway_set = FALSE;
-            gboolean dns_set = FALSE;
 
             ipv6_config = mm_bearer_ip_config_new ();
 
@@ -555,10 +552,13 @@ ip_configuration_query_ready (MbimDevice   *device,
 
                 /* If the address is a link-local one, then SLAAC or DHCP must be used
                  * to get the real prefix and address.
-                 * FIXME: maybe the modem reported non-LL address in ipv6address[1] ?
+                 * If the address is a global one, then the modem did SLAAC already and
+                 * there is no need to run host SLAAC.
                  */
                 if (g_inet_address_get_is_link_local (addr))
-                    address_set = FALSE;
+                    mm_bearer_ip_config_set_method (ipv6_config, MM_BEARER_IP_METHOD_DHCP);
+                else
+                    mm_bearer_ip_config_set_method (ipv6_config, MM_BEARER_IP_METHOD_STATIC);
 
                 /* Netmask */
                 mm_bearer_ip_config_set_prefix (ipv6_config, ipv6address[0]->on_link_prefix_length);
@@ -571,8 +571,13 @@ ip_configuration_query_ready (MbimDevice   *device,
                     gw_addr = g_inet_address_new_from_bytes ((guint8 *)ipv6gateway, G_SOCKET_FAMILY_IPV6);
                     gw_str = g_inet_address_to_string (gw_addr);
                     mm_bearer_ip_config_set_gateway (ipv6_config, gw_str);
-                    gateway_set = TRUE;
                 }
+            } else {
+                /* If no address is given, this is likely a bug in the modem firmware, because even in the
+                 * case of needing to run host SLAAC, a link-local IPv6 address must be given. Either way,
+                 * go on requesting the need of host SLAAC, and let the network decide whether our SLAAC
+                 * Router Solicitation messages with an unexpected link-local address are accepted or not. */
+                mm_bearer_ip_config_set_method (ipv6_config, MM_BEARER_IP_METHOD_DHCP);
             }
 
             if ((ipv6configurationavailable & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS) && (ipv6dnsservercount > 0)) {
@@ -590,21 +595,11 @@ ip_configuration_query_ready (MbimDevice   *device,
                         strarr[n++] = g_inet_address_to_string (addr);
                 }
                 mm_bearer_ip_config_set_dns (ipv6_config, (const gchar **)strarr);
-                dns_set = TRUE;
             }
 
             /* MTU */
             if (ipv6configurationavailable & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_MTU)
                 mm_bearer_ip_config_set_mtu (ipv6_config, ipv6mtu);
-
-            /* Only use the static method if all basic properties are available,
-             * otherwise use DHCP to indicate the missing ones should be
-             * retrieved from SLAAC or DHCPv6.
-             */
-            if (address_set && gateway_set && dns_set)
-                mm_bearer_ip_config_set_method (ipv6_config, MM_BEARER_IP_METHOD_STATIC);
-            else
-                mm_bearer_ip_config_set_method (ipv6_config, MM_BEARER_IP_METHOD_DHCP);
 
             /* We requested IPv6, but it wasn't reported as activated. If there is no IPv6 address
              * provided by the modem, we assume the IPv6 bearer wasn't truly activated */
@@ -626,8 +621,10 @@ ip_configuration_query_ready (MbimDevice   *device,
         if (ctx->profile_id != MM_3GPP_PROFILE_ID_UNKNOWN)
             mm_bearer_connect_result_set_profile_id (ctx->connect_result, ctx->profile_id);
 
-        mm_bearer_connect_result_set_uplink_speed (ctx->connect_result, ctx->uplink_speed);
-        mm_bearer_connect_result_set_downlink_speed (ctx->connect_result, ctx->downlink_speed);
+        /* Propagate speeds from modem object */
+        mm_broadband_modem_mbim_get_speeds (ctx->modem, &uplink_speed, &downlink_speed);
+        mm_bearer_connect_result_set_uplink_speed (ctx->connect_result, uplink_speed);
+        mm_bearer_connect_result_set_downlink_speed (ctx->connect_result, downlink_speed);
     }
 
     if (error) {
@@ -713,8 +710,12 @@ connect_set_ready (MbimDevice   *device,
                     mbim_nw_error_get_string (nw_error));
         /* If the response reports an ACTIVATED state, we're good even if
          * there is a nw_error set (e.g. asking for IPv4v6 may return a
-         * 'pdp-type-ipv4-only-allowed' nw_error). */
-        if (activation_state != MBIM_ACTIVATION_STATE_ACTIVATED &&
+         * 'pdp-type-ipv4-only-allowed' nw_error).
+         * If the nw_error is not set (MBIM_NW_ERROR_NONE), we prefer to
+         * return any operation error (e.g. 'OperationNotAllowed') instead
+         * of MM_MOBILE_EQUIPMENT_ERROR_UNKNOWN ('Unknown error'). */
+        if (nw_error != MBIM_NW_ERROR_NONE &&
+            activation_state != MBIM_ACTIVATION_STATE_ACTIVATED &&
             activation_state != MBIM_ACTIVATION_STATE_ACTIVATING) {
             g_clear_error (&error);
             error = mm_mobile_equipment_error_from_mbim_nw_error (nw_error, self);
@@ -882,7 +883,7 @@ setup_link_ready (MMPortMbim    *mbim,
 
     /* From now on link_name will be set, and we'll use that to know
      * whether we should cleanup the link upon a connection failure */
-    mm_obj_info (self, "net link %s created (session id %u)", ctx->link_name, ctx->session_id);
+    mm_obj_msg (self, "net link %s created (session id %u)", ctx->link_name, ctx->session_id);
 
     /* Wait for the data port with the given interface name, which will be
      * added asynchronously */
@@ -899,121 +900,6 @@ setup_link_ready (MMPortMbim    *mbim,
                                   task);
 }
 
-static void
-packet_service_set_ready (MbimDevice *device,
-                          GAsyncResult *res,
-                          GTask *task)
-{
-    MMBearerMbim           *self;
-    ConnectContext         *ctx;
-    GError                 *error = NULL;
-    g_autoptr(MbimMessage)  response = NULL;
-    guint32                 nw_error;
-    MbimPacketServiceState  packet_service_state;
-    MbimDataClass           data_class = 0;
-    MbimDataClassV3         data_class_v3 = 0;
-    MbimDataSubclass        data_subclass = 0;
-    guint64                 uplink_speed = 0;
-    guint64                 downlink_speed = 0;
-    MbimFrequencyRange      frequency_range = MBIM_FREQUENCY_RANGE_UNKNOWN;
-
-    self = g_task_get_source_object (task);
-    ctx  = g_task_get_task_data (task);
-
-    response = mbim_device_command_finish (device, res, &error);
-    if (response &&
-        (mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error) ||
-         error->code == MBIM_STATUS_ERROR_FAILURE)) {
-        g_autoptr(GError) inner_error = NULL;
-
-        if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
-            mbim_message_ms_basic_connect_v3_packet_service_response_parse (
-                response,
-                &nw_error,
-                &packet_service_state,
-                &data_class_v3,
-                &uplink_speed,
-                &downlink_speed,
-                &frequency_range,
-                &data_subclass,
-                NULL, /* tai */
-                &inner_error);
-        } else if (mbim_device_check_ms_mbimex_version (device, 2, 0)) {
-            mbim_message_ms_basic_connect_v2_packet_service_response_parse (
-                response,
-                &nw_error,
-                &packet_service_state,
-                &data_class,
-                &uplink_speed,
-                &downlink_speed,
-                &frequency_range,
-                &inner_error);
-        } else {
-            mbim_message_packet_service_response_parse (
-                response,
-                &nw_error,
-                &packet_service_state,
-                &data_class,
-                &uplink_speed,
-                &downlink_speed,
-                &inner_error);
-        }
-
-        if (!inner_error) {
-            if (nw_error) {
-                g_clear_error (&error);
-                error = mm_mobile_equipment_error_from_mbim_nw_error (nw_error, self);
-            } else {
-                g_autofree gchar *data_class_str = NULL;
-                g_autofree gchar *data_subclass_str = NULL;
-                g_autofree gchar *frequency_range_str = NULL;
-
-                if (data_class_v3) {
-                    data_class_str = mbim_data_class_v3_build_string_from_mask (data_class_v3);
-                    data_subclass_str = mbim_data_subclass_build_string_from_mask (data_subclass);
-                } else
-                    data_class_str = mbim_data_class_build_string_from_mask (data_class);
-
-                frequency_range_str = mbim_frequency_range_build_string_from_mask (frequency_range);
-                mm_obj_dbg (self, "packet service update:");
-                mm_obj_dbg (self, "           state: '%s'", mbim_packet_service_state_get_string (packet_service_state));
-                mm_obj_dbg (self, "      data class: '%s'", data_class_str);
-                if (data_subclass_str)
-                    mm_obj_dbg (self, "   data subclass: '%s'", data_subclass_str);
-                mm_obj_dbg (self, "          uplink: '%" G_GUINT64_FORMAT "' bps", uplink_speed);
-                mm_obj_dbg (self, "        downlink: '%" G_GUINT64_FORMAT "' bps", downlink_speed);
-                mm_obj_dbg (self, " frequency range: '%s'", frequency_range_str);
-            }
-        } else {
-            /* Prefer the error from the result to the parsing error */
-            if (!error)
-                error = g_steal_pointer (&inner_error);
-        }
-    }
-
-    if (error) {
-        /* Don't make NoDeviceSupport errors fatal; just try to keep on the
-         * connection sequence even with this error. */
-        if (g_error_matches (error, MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_NO_DEVICE_SUPPORT)) {
-            mm_obj_dbg (self, "device doesn't support packet service attach");
-            g_error_free (error);
-        } else {
-            /* All other errors are fatal */
-            g_task_return_error (task, error);
-            g_object_unref (task);
-            return;
-        }
-    }
-
-    /* store speeds to include in the connection result later on */
-    ctx->uplink_speed = uplink_speed;
-    ctx->downlink_speed = downlink_speed;
-
-    /* Keep on */
-    ctx->step++;
-    connect_context_step (task);
-}
-
 static gboolean
 load_settings_from_profile (MMBearerMbim    *self,
                             ConnectContext  *ctx,
@@ -1021,9 +907,13 @@ load_settings_from_profile (MMBearerMbim    *self,
                             MMBearerApnType  default_apn_type,
                             GError         **error)
 {
-    MMBearerAllowedAuth  bearer_auth;
-    MMBearerApnType      apn_type;
-    GError              *inner_error = NULL;
+    MMBearerAllowedAuth     bearer_auth;
+    MMBearerApnType         apn_type;
+    GError                 *inner_error = NULL;
+    g_autoptr(MMBaseModem)  modem  = NULL;
+
+    g_object_get (self, MM_BASE_BEARER_MODEM,  &modem, NULL);
+    g_assert (modem);
 
     /* APN settings */
     ctx->apn = g_strdup (mm_3gpp_profile_get_apn (profile));
@@ -1036,7 +926,11 @@ load_settings_from_profile (MMBearerMbim    *self,
         }
         apn_type = default_apn_type;
     }
-    ctx->context_type = mm_bearer_apn_type_to_mbim_context_type (apn_type, self, &inner_error);
+    ctx->context_type = mm_bearer_apn_type_to_mbim_context_type (
+                            apn_type,
+                            mm_broadband_modem_mbim_is_context_type_ext_supported (MM_BROADBAND_MODEM_MBIM (modem)),
+                            self,
+                            &inner_error);
     if (inner_error) {
         g_propagate_error (error, inner_error);
         return FALSE;
@@ -1140,17 +1034,6 @@ connect_context_step (GTask *task)
         }
         ctx->step++;
         /* Fall through */
-
-    case CONNECT_STEP_PACKET_SERVICE:
-        mm_obj_dbg (self, "activating packet service...");
-        message = mbim_message_packet_service_set_new (MBIM_PACKET_SERVICE_ACTION_ATTACH, NULL);
-        mbim_device_command (mm_port_mbim_peek_device (ctx->mbim),
-                             message,
-                             30,
-                             g_task_get_cancellable (task),
-                             (GAsyncReadyCallback)packet_service_set_ready,
-                             task);
-        return;
 
     case CONNECT_STEP_SETUP_LINK:
         /* if a link prefix hint is available, it's because we should be doing
@@ -1334,10 +1217,19 @@ load_settings_from_bearer (MMBearerMbim        *self,
 {
     MMBearerMultiplexSupport  multiplex;
     gboolean                  multiplex_supported = TRUE;
+    guint                     current_multiplexed_bearers;
+    guint                     max_multiplexed_bearers;
     const gchar              *data_port_driver;
 
+    if (!mm_broadband_modem_get_active_multiplexed_bearers (MM_BROADBAND_MODEM (ctx->modem),
+                                                            &current_multiplexed_bearers,
+                                                            &max_multiplexed_bearers,
+                                                            error))
+        return FALSE;
+
+    /* Check multiplex support in the kernel and the device */
     data_port_driver = mm_kernel_device_get_driver (mm_port_peek_kernel_device (ctx->data));
-    if (!g_strcmp0 (data_port_driver, "mhi_net"))
+    if (!g_strcmp0 (data_port_driver, "mhi_net") || !max_multiplexed_bearers)
         multiplex_supported = FALSE;
 
     /* If no multiplex setting given by the user, assume none */
@@ -1349,17 +1241,32 @@ load_settings_from_bearer (MMBearerMbim        *self,
             multiplex = MM_BEARER_MULTIPLEX_SUPPORT_NONE;
     }
 
-    if (multiplex_supported &&
-        (multiplex == MM_BEARER_MULTIPLEX_SUPPORT_REQUESTED ||
-         multiplex == MM_BEARER_MULTIPLEX_SUPPORT_REQUIRED)) {
-        /* the link prefix hint given must be modem-specific */
-        ctx->link_prefix_hint = g_strdup_printf ("mbimmux%u.", mm_base_modem_get_dbus_id (MM_BASE_MODEM (ctx->modem)));
+    /* If multiplex unsupported, either abort or default to none */
+    if (!multiplex_supported) {
+        if (multiplex == MM_BEARER_MULTIPLEX_SUPPORT_REQUIRED) {
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                         "Multiplexing required but not supported");
+            return FALSE;
+        }
+        if (multiplex == MM_BEARER_MULTIPLEX_SUPPORT_REQUESTED) {
+            mm_obj_dbg (self, "Multiplexing unsupported");
+            multiplex = MM_BEARER_MULTIPLEX_SUPPORT_NONE;
+        }
     }
 
-    if (!multiplex_supported && multiplex == MM_BEARER_MULTIPLEX_SUPPORT_REQUIRED) {
-        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
-                     "Multiplexing required but not supported by %s", data_port_driver);
-        return FALSE;
+    /* Go on with multiplexing enabled */
+    if (multiplex == MM_BEARER_MULTIPLEX_SUPPORT_REQUESTED ||
+        multiplex == MM_BEARER_MULTIPLEX_SUPPORT_REQUIRED) {
+        g_assert (multiplex_supported);
+
+        if (current_multiplexed_bearers == max_multiplexed_bearers) {
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                         "Maximum number of multiplexed bearers reached");
+            return FALSE;
+        }
+
+        /* the link prefix hint given must be modem-specific */
+        ctx->link_prefix_hint = g_strdup_printf ("mbimmux%u.", mm_base_modem_get_dbus_id (MM_BASE_MODEM (ctx->modem)));
     }
 
     /* If profile id is given, we'll load all settings from the stored profile,

@@ -29,6 +29,7 @@
 #include <ModemManager.h>
 
 #include "mm-enums-types.h"
+#include "mm-flags-types.h"
 #include "mm-errors-types.h"
 #include "mm-common-helpers.h"
 
@@ -2021,6 +2022,45 @@ mm_sms_delivery_state_get_string_extended (guint delivery_state)
     /* Otherwise, use the MMSmsDeliveryState enum as we can match the known
      * value */
     return mm_sms_delivery_state_get_string ((MMSmsDeliveryState)delivery_state);
+}
+
+/*****************************************************************************/
+
+const gchar *
+mm_common_str_boolean (gboolean value)
+{
+    return value ? "yes" : "no";
+}
+
+const gchar *
+mm_common_str_personal_info (const gchar *str,
+                             gboolean     show_personal_info)
+{
+    static const gchar *hidden_personal_info = "###";
+
+    return show_personal_info ? str : hidden_personal_info;
+}
+
+void
+mm_common_str_array_human_keys (GPtrArray *array)
+{
+    guint i;
+
+    /* Transforms from:
+     *   strings-as-keys: value...
+     * Into:
+     *   strings as keys: value...
+     */
+    for (i = 0; i < array->len; i++) {
+        gchar *str;
+        guint j;
+
+        str = g_ptr_array_index (array, i);
+        for (j = 0; str[j] && str[j] != ':'; j++) {
+            if (str[j] == '-')
+                str[j] = ' ';
+        }
+    }
 }
 
 /*****************************************************************************/

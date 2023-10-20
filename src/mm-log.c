@@ -28,6 +28,8 @@
 
 #include <ModemManager.h>
 #include <mm-errors-types.h>
+#define _LIBMM_INSIDE_MM
+#include <libmm-glib.h>
 
 #if defined WITH_QMI
 #include <libqmi-glib.h>
@@ -52,10 +54,11 @@ enum {
 };
 
 static gboolean ts_flags = TS_FLAG_NONE;
-static guint32  log_level = MM_LOG_LEVEL_INFO | MM_LOG_LEVEL_WARN | MM_LOG_LEVEL_ERR;
+static guint32  log_level = MM_LOG_LEVEL_MSG | MM_LOG_LEVEL_WARN | MM_LOG_LEVEL_ERR;
 static GTimeVal rel_start = { 0, 0 };
 static int      logfd = -1;
 static gboolean append_log_level_text = TRUE;
+static gboolean personal_info = FALSE;
 
 static void (*log_backend) (const char *loc,
                             const char *func,
@@ -71,8 +74,10 @@ typedef struct {
 static const LogDesc level_descs[] = {
     { MM_LOG_LEVEL_ERR, "ERR" },
     { MM_LOG_LEVEL_WARN  | MM_LOG_LEVEL_ERR, "WARN" },
-    { MM_LOG_LEVEL_INFO  | MM_LOG_LEVEL_WARN | MM_LOG_LEVEL_ERR, "INFO" },
-    { MM_LOG_LEVEL_DEBUG | MM_LOG_LEVEL_INFO | MM_LOG_LEVEL_WARN | MM_LOG_LEVEL_ERR, "DEBUG" },
+    { MM_LOG_LEVEL_MSG   | MM_LOG_LEVEL_WARN | MM_LOG_LEVEL_ERR, "MSG" },
+    { MM_LOG_LEVEL_INFO  | MM_LOG_LEVEL_MSG  | MM_LOG_LEVEL_WARN | MM_LOG_LEVEL_ERR, "INFO" },
+    { MM_LOG_LEVEL_DEBUG | MM_LOG_LEVEL_INFO | MM_LOG_LEVEL_MSG  | MM_LOG_LEVEL_WARN | MM_LOG_LEVEL_ERR, "DEBUG" },
+    { 0, NULL }
 };
 
 static GString *msgbuf = NULL;
@@ -86,6 +91,8 @@ mm_to_syslog_priority (MMLogLevel level)
         return LOG_ERR;
     case MM_LOG_LEVEL_WARN:
         return LOG_WARNING;
+    case MM_LOG_LEVEL_MSG:
+        return LOG_NOTICE;
     case MM_LOG_LEVEL_INFO:
         return LOG_INFO;
     case MM_LOG_LEVEL_DEBUG:
@@ -112,6 +119,7 @@ glib_level_to_mm_level (GLogLevelFlags level)
     case G_LOG_LEVEL_WARNING:
         return MM_LOG_LEVEL_WARN;
     case G_LOG_LEVEL_MESSAGE:
+        return MM_LOG_LEVEL_MSG;
     case G_LOG_LEVEL_INFO:
         return MM_LOG_LEVEL_INFO;
     case G_LOG_LEVEL_DEBUG:
@@ -129,13 +137,15 @@ log_level_description (MMLogLevel level)
 {
     switch (level) {
     case MM_LOG_LEVEL_ERR:
-        return "<error>";
+        return "<err>";
     case MM_LOG_LEVEL_WARN:
-        return "<warn> ";
+        return "<wrn>";
+    case MM_LOG_LEVEL_MSG:
+        return "<msg>";
     case MM_LOG_LEVEL_INFO:
-        return "<info> ";
+        return "<inf>";
     case MM_LOG_LEVEL_DEBUG:
-        return "<debug>";
+        return "<dbg>";
     default:
         break;
     }
@@ -205,6 +215,18 @@ log_backend_systemd_journal (const char *loc,
 }
 #endif
 
+gboolean
+mm_log_get_show_personal_info (void)
+{
+    return personal_info;
+}
+
+gboolean
+mm_log_check_level_enabled (MMLogLevel level)
+{
+    return (log_level & level);
+}
+
 void
 _mm_log (gpointer     obj,
          const gchar *module,
@@ -217,7 +239,7 @@ _mm_log (gpointer     obj,
     va_list  args;
     GTimeVal tv;
 
-    if (!(log_level & level))
+    if (!mm_log_check_level_enabled (level))
         return;
 
     if (g_once_init_enter (&msgbuf_once)) {
@@ -324,6 +346,8 @@ mm_log_setup (const gchar  *level,
     if (level && strlen (level) && !mm_log_set_level (level, error))
         return FALSE;
 
+    personal_info = show_personal_info;
+
     if (show_timestamps)
         ts_flags = TS_FLAG_WALL;
     else if (rel_timestamps)
@@ -392,4 +416,12 @@ mm_log_shutdown (void)
         closelog ();
     else
         close (logfd);
+}
+
+/******************************************************************************/
+
+const gchar *
+mm_log_str_personal_info (const gchar *str)
+{
+    return mm_common_str_personal_info (str, personal_info);
 }

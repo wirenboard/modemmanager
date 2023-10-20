@@ -28,6 +28,7 @@
 #include "mm-iface-modem-cdma.h"
 #include "mm-iface-modem-simple.h"
 #include "mm-log-object.h"
+#include "mm-log-helpers.h"
 
 /*****************************************************************************/
 /* Private data context */
@@ -64,6 +65,21 @@ get_private (MMIfaceModemSimple *self)
 }
 
 /*****************************************************************************/
+/* Abort ongoing requests, if any */
+
+void
+mm_iface_modem_simple_abort_ongoing (MMIfaceModemSimple *self)
+{
+    Private *priv;
+
+    priv = get_private (self);
+    if (priv->ongoing_connect) {
+        g_cancellable_cancel (priv->ongoing_connect);
+        g_clear_object (&priv->ongoing_connect);
+    }
+}
+
+/*****************************************************************************/
 /* Register in either a CDMA or a 3GPP network (or both) */
 
 typedef struct {
@@ -77,7 +93,7 @@ static void
 register_in_network_context_free (RegisterInNetworkContext *ctx)
 {
     g_free (ctx->operator_id);
-    g_free (ctx);
+    g_slice_free (RegisterInNetworkContext, ctx);
 }
 
 static gboolean
@@ -107,6 +123,7 @@ register_in_cdma_network_ready (MMIfaceModemCdma *self,
     }
 
     /* Registered we are! */
+    mm_obj_dbg (self, "registration in network: successful (cdma)");
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
@@ -128,6 +145,7 @@ register_in_3gpp_network_ready (MMIfaceModem3gpp *self,
     }
 
     /* Registered we are! */
+    mm_obj_dbg (self, "registration in network: successful (3gpp)");
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
@@ -136,10 +154,16 @@ static void
 check_next_registration (GTask *task)
 {
     RegisterInNetworkContext *ctx;
-    MMIfaceModemSimple *self;
+    MMIfaceModemSimple       *self;
 
     self = MM_IFACE_MODEM_SIMPLE (g_task_get_source_object (task));
     ctx = g_task_get_task_data (task);
+
+    if (g_task_return_error_if_cancelled (task)) {
+        mm_obj_dbg (self, "registration in network: cancelled");
+        g_object_unref (task);
+        return;
+    }
 
     if (ctx->remaining_tries_cdma > ctx->remaining_tries_3gpp &&
         ctx->remaining_tries_cdma > 0) {
@@ -163,6 +187,7 @@ check_next_registration (GTask *task)
     }
 
     /* No more tries of anything */
+    mm_obj_dbg (self, "registration in network: timed out");
     g_task_return_error (
         task,
         mm_mobile_equipment_error_for_code (MM_MOBILE_EQUIPMENT_ERROR_NETWORK_TIMEOUT, self));
@@ -170,15 +195,16 @@ check_next_registration (GTask *task)
 }
 
 static void
-register_in_3gpp_or_cdma_network (MMIfaceModemSimple *self,
-                                  const gchar *operator_id,
-                                  GAsyncReadyCallback callback,
-                                  gpointer user_data)
+register_in_3gpp_or_cdma_network (MMIfaceModemSimple  *self,
+                                  const gchar         *operator_id,
+                                  GCancellable        *cancellable,
+                                  GAsyncReadyCallback  callback,
+                                  gpointer             user_data)
 {
     RegisterInNetworkContext *ctx;
-    GTask *task;
+    GTask                    *task;
 
-    ctx = g_new0 (RegisterInNetworkContext, 1);
+    ctx = g_slice_new0 (RegisterInNetworkContext);
     ctx->operator_id = g_strdup (operator_id);
 
     /* 3GPP-only modems... */
@@ -200,12 +226,169 @@ register_in_3gpp_or_cdma_network (MMIfaceModemSimple *self,
         ctx->remaining_tries_3gpp = 6;
     }
 
-    task = g_task_new (self, NULL, callback, user_data);
-    g_task_set_task_data (task,
-                          ctx,
-                          (GDestroyNotify)register_in_network_context_free);
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)register_in_network_context_free);
 
     check_next_registration (task);
+}
+
+/*****************************************************************************/
+/* Packet service attach in 3GPP network */
+
+typedef enum {
+    PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_FIRST,
+    PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_WAIT_BEFORE,
+    PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_SET,
+    PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_WAIT_AFTER,
+    PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_LAST,
+} PacketServiceAttachIn3gppNetworkStep;
+
+typedef struct {
+    PacketServiceAttachIn3gppNetworkStep  step;
+    GError                               *error;
+} PacketServiceAttachIn3gppNetworkContext;
+
+static void
+packet_service_attach_in_3gpp_network_context_free (PacketServiceAttachIn3gppNetworkContext *ctx)
+{
+    g_clear_error (&ctx->error);
+    g_slice_free (PacketServiceAttachIn3gppNetworkContext, ctx);
+}
+
+static gboolean
+packet_service_attach_in_3gpp_network_finish (MMIfaceModemSimple  *self,
+                                              GAsyncResult        *res,
+                                              GError             **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void packet_service_attach_in_3gpp_network_step (GTask *task);
+
+static void
+set_packet_service_state_ready (MMIfaceModem3gpp *self,
+                                GAsyncResult     *res,
+                                GTask            *task)
+{
+    PacketServiceAttachIn3gppNetworkContext *ctx;
+    g_autoptr(GError)                        error = NULL;
+
+    ctx = g_task_get_task_data (task);
+    g_assert (ctx->error);
+
+    if (!mm_iface_modem_3gpp_set_packet_service_state_finish (self, res, &error)) {
+        /* On an unsupported error, return the original wait failure; otherwise
+         * return the set error. */
+        if (!g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED)) {
+            g_error_free (ctx->error);
+            ctx->error = g_steal_pointer (&error);
+        }
+        /* Failures in the set are always fatal right away */
+        ctx->step = PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_LAST;
+    } else {
+        /* Retry if possible */
+        g_clear_error (&ctx->error);
+        ctx->step++;
+    }
+    packet_service_attach_in_3gpp_network_step (task);
+}
+
+static void
+wait_for_packet_service_state_ready (MMIfaceModem3gpp *self,
+                                     GAsyncResult     *res,
+                                     GTask            *task)
+{
+    PacketServiceAttachIn3gppNetworkContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+    g_assert (!ctx->error);
+
+    mm_iface_modem_3gpp_wait_for_packet_service_state_finish (self, res, &ctx->error);
+    if (ctx->error)
+        ctx->step++;
+    else
+        ctx->step = PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_LAST;
+    packet_service_attach_in_3gpp_network_step (task);
+}
+
+static void
+packet_service_attach_in_3gpp_network_step (GTask *task)
+{
+    PacketServiceAttachIn3gppNetworkContext *ctx;
+    MMIfaceModemSimple                      *self;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
+    if (g_task_return_error_if_cancelled (task)) {
+        mm_obj_dbg (self, "packet service attach in 3gpp network: cancelled");
+        g_object_unref (task);
+        return;
+    }
+
+    switch (ctx->step) {
+        case PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_FIRST:
+            ctx->step++;
+            /* fall through */
+
+        case PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_WAIT_BEFORE:
+            g_assert (!ctx->error);
+            mm_iface_modem_3gpp_wait_for_packet_service_state (MM_IFACE_MODEM_3GPP (self),
+                                                               MM_MODEM_3GPP_PACKET_SERVICE_STATE_ATTACHED,
+                                                               g_task_get_cancellable (task),
+                                                               (GAsyncReadyCallback)wait_for_packet_service_state_ready,
+                                                               task);
+            return;
+
+        case PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_SET:
+            /* An explicit set will only be attempted if the packet service state wait failed */
+            g_assert (ctx->error);
+            mm_iface_modem_3gpp_set_packet_service_state (MM_IFACE_MODEM_3GPP (self),
+                                                          MM_MODEM_3GPP_PACKET_SERVICE_STATE_ATTACHED,
+                                                          (GAsyncReadyCallback)set_packet_service_state_ready,
+                                                          task);
+            return;
+
+        case PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_WAIT_AFTER:
+            g_assert (!ctx->error);
+            mm_iface_modem_3gpp_wait_for_packet_service_state (MM_IFACE_MODEM_3GPP (self),
+                                                               MM_MODEM_3GPP_PACKET_SERVICE_STATE_ATTACHED,
+                                                               g_task_get_cancellable (task),
+                                                               (GAsyncReadyCallback)wait_for_packet_service_state_ready,
+                                                               task);
+            return;
+
+        case PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_LAST:
+            if (ctx->error) {
+                mm_obj_dbg (self, "packet service attach in 3gpp network: failed: %s", ctx->error->message);
+                g_task_return_error (task, g_steal_pointer (&ctx->error));
+            } else {
+                mm_obj_dbg (self, "packet service attach in 3gpp network: finished");
+                g_task_return_boolean (task, TRUE);
+            }
+            g_object_unref (task);
+            return;
+
+        default:
+            g_assert_not_reached ();
+    }
+}
+
+static void
+packet_service_attach_in_3gpp_network (MMIfaceModemSimple  *self,
+                                       GCancellable        *cancellable,
+                                       GAsyncReadyCallback  callback,
+                                       gpointer             user_data)
+{
+    PacketServiceAttachIn3gppNetworkContext *ctx;
+    GTask                                   *task;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+    ctx = g_slice_new0 (PacketServiceAttachIn3gppNetworkContext);
+    ctx->step = PACKET_SERVICE_ATTACH_IN_3GPP_NETWORK_STEP_FIRST;
+    g_task_set_task_data (task, ctx, (GDestroyNotify)packet_service_attach_in_3gpp_network_context_free);
+
+    packet_service_attach_in_3gpp_network_step (task);
 }
 
 /*****************************************************************************/
@@ -225,14 +408,14 @@ typedef enum {
 } ConnectionStep;
 
 typedef struct {
-    MmGdbusModemSimple *skeleton;
+    MmGdbusModemSimple    *skeleton;
     GDBusMethodInvocation *invocation;
-    MMIfaceModemSimple *self;
-    ConnectionStep step;
-    MMBearerList *bearer_list;
+    MMIfaceModemSimple    *self;
+    ConnectionStep         step;
+    MMBearerList          *bearer_list;
 
     /* Expected input properties */
-    GVariant *dictionary;
+    GVariant                  *dictionary;
     MMSimpleConnectProperties *properties;
 
     /* Results to set */
@@ -272,33 +455,32 @@ connection_context_free (ConnectionContext *ctx)
     g_object_unref (ctx->skeleton);
     g_object_unref (ctx->invocation);
     g_object_unref (ctx->self);
-    g_free (ctx);
+    g_slice_free (ConnectionContext, ctx);
 }
 
 static void connection_step (ConnectionContext *ctx);
 
 static void
-connect_bearer_ready (MMBaseBearer *bearer,
-                      GAsyncResult *res,
+connect_bearer_ready (MMBaseBearer      *bearer,
+                      GAsyncResult      *res,
                       ConnectionContext *ctx)
 {
     GError *error = NULL;
 
     if (!mm_base_bearer_connect_finish (bearer, res, &error)) {
-        mm_obj_dbg (ctx->self, "couldn't connect bearer: %s", error->message);
+        mm_obj_warn (ctx->self, "couldn't connect bearer: %s", error->message);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         connection_context_free (ctx);
         return;
     }
 
-    /* Bearer connected.... all done!!!!! */
     ctx->step++;
     connection_step (ctx);
 }
 
 static void
-create_bearer_ready (MMIfaceModem *self,
-                     GAsyncResult *res,
+create_bearer_ready (MMIfaceModem      *self,
+                     GAsyncResult      *res,
                      ConnectionContext *ctx)
 {
     GError *error = NULL;
@@ -306,48 +488,48 @@ create_bearer_ready (MMIfaceModem *self,
     /* ownership for the caller */
     ctx->bearer = mm_iface_modem_create_bearer_finish (self, res, &error);
     if (!ctx->bearer) {
+        mm_obj_warn (ctx->self, "couldn't create bearer: %s", error->message);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         connection_context_free (ctx);
         return;
     }
 
-    /* Bearer available! */
     ctx->step++;
     connection_step (ctx);
 }
 
 static void
-wait_for_packet_service_state_ready (MMIfaceModem3gpp  *self,
-                                     GAsyncResult      *res,
-                                     ConnectionContext *ctx)
+packet_service_attach_in_3gpp_network_ready (MMIfaceModemSimple *self,
+                                             GAsyncResult       *res,
+                                             ConnectionContext  *ctx)
 {
     GError *error = NULL;
 
-    if (!mm_iface_modem_3gpp_wait_for_packet_service_state_finish (self, res, &error)) {
+    if (!packet_service_attach_in_3gpp_network_finish (self, res, &error)) {
+        mm_obj_warn (ctx->self, "packet service attach in 3GPP network failed: %s", error->message);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         connection_context_free (ctx);
         return;
     }
 
-    /* Packet service attached now! */
     ctx->step++;
     connection_step (ctx);
 }
 
 static void
 register_in_3gpp_or_cdma_network_ready (MMIfaceModemSimple *self,
-                                        GAsyncResult *res,
-                                        ConnectionContext *ctx)
+                                        GAsyncResult       *res,
+                                        ConnectionContext  *ctx)
 {
     GError *error = NULL;
 
     if (!register_in_3gpp_or_cdma_network_finish (self, res, &error)) {
+        mm_obj_warn (ctx->self, "registration in network failed: %s", error->message);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         connection_context_free (ctx);
         return;
     }
 
-    /* Registered now! */
     ctx->step++;
     connection_step (ctx);
 }
@@ -362,21 +544,23 @@ wait_after_enabled_ready (ConnectionContext *ctx)
 }
 
 static void
-wait_for_enabled_ready (MMIfaceModem *self,
-                        GAsyncResult *res,
+wait_for_enabled_ready (MMIfaceModem      *self,
+                        GAsyncResult      *res,
                         ConnectionContext *ctx)
 {
-    GError *error = NULL;
-    MMModemState state;
+    GError       *error = NULL;
+    MMModemState  state;
 
     state = mm_iface_modem_wait_for_final_state_finish (self, res, &error);
     if (error) {
+        mm_obj_warn (ctx->self, "failed waiting for final state: %s", error->message);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         connection_context_free (ctx);
         return;
     }
 
     if (state < MM_MODEM_STATE_ENABLED) {
+        mm_obj_warn (ctx->self, "failed waiting for enabled state: %s", mm_modem_state_get_string (state));
         g_dbus_method_invocation_return_error (
             ctx->invocation,
             MM_CORE_ERROR,
@@ -387,25 +571,24 @@ wait_for_enabled_ready (MMIfaceModem *self,
         return;
     }
 
-    /* Enabled now, cool. */
     ctx->step++;
     connection_step (ctx);
 }
 
 static void
-enable_ready (MMBaseModem *self,
-              GAsyncResult *res,
+enable_ready (MMBaseModem       *self,
+              GAsyncResult      *res,
               ConnectionContext *ctx)
 {
     GError *error = NULL;
 
     if (!mm_base_modem_enable_finish (MM_BASE_MODEM (self), res, &error)) {
+        mm_obj_warn (ctx->self, "failed enabling modem: %s", error->message);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         connection_context_free (ctx);
         return;
     }
 
-    /* Enabling done!, keep on!!! */
     ctx->step++;
     connection_step (ctx);
 }
@@ -419,45 +602,46 @@ wait_for_initialized_ready (MMIfaceModem *self,
 
     mm_iface_modem_wait_for_final_state_finish (self, res, &error);
     if (error) {
+        mm_obj_warn (ctx->self, "failed waiting for final state: %s", error->message);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         connection_context_free (ctx);
         return;
     }
 
-    /* Initialized now, cool. */
     ctx->step++;
     connection_step (ctx);
 }
 
 static void
-send_pin_ready (MMBaseSim *sim,
-                GAsyncResult *res,
+send_pin_ready (MMBaseSim         *sim,
+                GAsyncResult      *res,
                 ConnectionContext *ctx)
 {
     GError *error = NULL;
 
     if (!mm_base_sim_send_pin_finish (sim, res, &error)) {
+        mm_obj_warn (ctx->self, "failed sending SIM PIN: %s", error->message);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         connection_context_free (ctx);
         return;
     }
 
-    /* Sent pin, cool. */
     ctx->step++;
     connection_step (ctx);
 }
 
 static void
-update_lock_info_ready (MMIfaceModem *self,
-                        GAsyncResult *res,
+update_lock_info_ready (MMIfaceModem      *self,
+                        GAsyncResult      *res,
                         ConnectionContext *ctx)
 {
-    GError *error = NULL;
-    MMModemLock lock;
-    MMBaseSim *sim;
+    GError               *error = NULL;
+    MMModemLock           lock;
+    g_autoptr(MMBaseSim)  sim = NULL;
 
     lock = mm_iface_modem_update_lock_info_finish (self, res, &error);
     if (error) {
+        mm_obj_warn (ctx->self, "failed updating lock info: %s", error->message);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         connection_context_free (ctx);
         return;
@@ -477,6 +661,8 @@ update_lock_info_ready (MMIfaceModem *self,
     /* During simple connect we are only allowed to use SIM PIN */
     if (lock != MM_MODEM_LOCK_SIM_PIN ||
         !mm_simple_connect_properties_get_pin (ctx->properties)) {
+        mm_obj_warn (ctx->self, "modem is locked with '%s'",
+                     mm_modem_lock_get_string (lock));
         g_dbus_method_invocation_return_error (
             ctx->invocation,
             MM_CORE_ERROR,
@@ -488,11 +674,11 @@ update_lock_info_ready (MMIfaceModem *self,
     }
 
     /* Try to unlock the modem providing the PIN */
-    sim = NULL;
     g_object_get (ctx->self,
                   MM_IFACE_MODEM_SIM, &sim,
                   NULL);
     if (!sim) {
+        mm_obj_warn (ctx->self, "SIM is not accessible");
         g_dbus_method_invocation_return_error (
             ctx->invocation,
             MM_CORE_ERROR,
@@ -506,7 +692,6 @@ update_lock_info_ready (MMIfaceModem *self,
                           mm_simple_connect_properties_get_pin (ctx->properties),
                           (GAsyncReadyCallback)send_pin_ready,
                           ctx);
-    g_object_unref (sim);
 }
 
 static gboolean
@@ -517,6 +702,7 @@ completed_if_cancelled (ConnectionContext *ctx)
         return FALSE;
 
     /* Otherwise cancellable is valid and it's cancelled */
+    mm_obj_warn (ctx->self, "connection attempt cancelled");
     g_dbus_method_invocation_return_error (
         ctx->invocation, G_IO_ERROR, G_IO_ERROR_CANCELLED,
         "Connection attempt cancelled");
@@ -557,8 +743,8 @@ connection_step (ConnectionContext *ctx)
         /* fall through */
 
     case CONNECTION_STEP_UNLOCK_CHECK:
-        mm_obj_info (ctx->self, "simple connect state (%d/%d): unlock check",
-                     ctx->step, CONNECTION_STEP_LAST);
+        mm_obj_msg (ctx->self, "simple connect state (%d/%d): unlock check",
+                    ctx->step, CONNECTION_STEP_LAST);
         mm_iface_modem_update_lock_info (MM_IFACE_MODEM (ctx->self),
                                          MM_MODEM_LOCK_UNKNOWN, /* ask */
                                          (GAsyncReadyCallback)update_lock_info_ready,
@@ -566,8 +752,8 @@ connection_step (ConnectionContext *ctx)
         return;
 
     case CONNECTION_STEP_WAIT_FOR_INITIALIZED:
-        mm_obj_info (ctx->self, "simple connect state (%d/%d): wait to get fully initialized",
-                     ctx->step, CONNECTION_STEP_LAST);
+        mm_obj_msg (ctx->self, "simple connect state (%d/%d): wait to get fully initialized",
+                    ctx->step, CONNECTION_STEP_LAST);
         mm_iface_modem_wait_for_final_state (MM_IFACE_MODEM (ctx->self),
                                              MM_MODEM_STATE_DISABLED, /* disabled == initialized */
                                              (GAsyncReadyCallback)wait_for_initialized_ready,
@@ -575,16 +761,16 @@ connection_step (ConnectionContext *ctx)
         return;
 
     case CONNECTION_STEP_ENABLE:
-        mm_obj_info (ctx->self, "simple connect state (%d/%d): enable",
-                     ctx->step, CONNECTION_STEP_LAST);
+        mm_obj_msg (ctx->self, "simple connect state (%d/%d): enable",
+                    ctx->step, CONNECTION_STEP_LAST);
         mm_base_modem_enable (MM_BASE_MODEM (ctx->self),
                               (GAsyncReadyCallback)enable_ready,
                               ctx);
         return;
 
     case CONNECTION_STEP_WAIT_FOR_ENABLED:
-        mm_obj_info (ctx->self, "simple connect state (%d/%d): wait to get fully enabled",
-                     ctx->step, CONNECTION_STEP_LAST);
+        mm_obj_msg (ctx->self, "simple connect state (%d/%d): wait to get fully enabled",
+                    ctx->step, CONNECTION_STEP_LAST);
         mm_iface_modem_wait_for_final_state (MM_IFACE_MODEM (ctx->self),
                                              MM_MODEM_STATE_UNKNOWN, /* just a final state */
                                              (GAsyncReadyCallback)wait_for_enabled_ready,
@@ -592,8 +778,8 @@ connection_step (ConnectionContext *ctx)
         return;
 
     case CONNECTION_STEP_WAIT_AFTER_ENABLED:
-        mm_obj_info (ctx->self, "simple connect state (%d/%d): wait after enabled",
-                     ctx->step, CONNECTION_STEP_LAST);
+        mm_obj_msg (ctx->self, "simple connect state (%d/%d): wait after enabled",
+                    ctx->step, CONNECTION_STEP_LAST);
         /* When we have just enabled, we want to give it some time before starting
          * the registration process, so that any pending registration update that may
          * have been scheduled during the enabling phase is applied. We don't want to
@@ -603,14 +789,15 @@ connection_step (ConnectionContext *ctx)
 
 
     case CONNECTION_STEP_REGISTER:
-        mm_obj_info (ctx->self, "simple connect state (%d/%d): register",
-                     ctx->step, CONNECTION_STEP_LAST);
+        mm_obj_msg (ctx->self, "simple connect state (%d/%d): register",
+                    ctx->step, CONNECTION_STEP_LAST);
         if (mm_iface_modem_is_3gpp (MM_IFACE_MODEM (ctx->self)) ||
             mm_iface_modem_is_cdma (MM_IFACE_MODEM (ctx->self))) {
             /* 3GPP or CDMA registration */
             register_in_3gpp_or_cdma_network (
                 ctx->self,
                 mm_simple_connect_properties_get_operator_id (ctx->properties),
+                ctx->cancellable,
                 (GAsyncReadyCallback)register_in_3gpp_or_cdma_network_ready,
                 ctx);
             return;
@@ -622,13 +809,14 @@ connection_step (ConnectionContext *ctx)
         /* fall through */
 
     case CONNECTION_STEP_PACKET_SERVICE_ATTACH:
-        mm_obj_info (ctx->self, "simple connect state (%d/%d): wait to get packet service state attached",
-                     ctx->step, CONNECTION_STEP_LAST);
+        mm_obj_msg (ctx->self, "simple connect state (%d/%d): wait to get packet service state attached",
+                    ctx->step, CONNECTION_STEP_LAST);
         if (mm_iface_modem_is_3gpp (MM_IFACE_MODEM (ctx->self))) {
-            mm_iface_modem_3gpp_wait_for_packet_service_state (MM_IFACE_MODEM_3GPP (ctx->self),
-                                                               MM_MODEM_3GPP_PACKET_SERVICE_STATE_ATTACHED,
-                                                               (GAsyncReadyCallback)wait_for_packet_service_state_ready,
-                                                               ctx);
+            packet_service_attach_in_3gpp_network (
+                ctx->self,
+                ctx->cancellable,
+                (GAsyncReadyCallback)packet_service_attach_in_3gpp_network_ready,
+                ctx);
             return;
         }
         /* If not 3GPP, just go on */
@@ -638,8 +826,8 @@ connection_step (ConnectionContext *ctx)
     case CONNECTION_STEP_BEARER: {
         g_autoptr(MMBearerProperties) bearer_properties = NULL;
 
-        mm_obj_info (ctx->self, "simple connect state (%d/%d): bearer",
-                     ctx->step, CONNECTION_STEP_LAST);
+        mm_obj_msg (ctx->self, "simple connect state (%d/%d): bearer",
+                    ctx->step, CONNECTION_STEP_LAST);
 
         bearer_properties = mm_simple_connect_properties_get_bearer_properties (ctx->properties);
 
@@ -660,8 +848,8 @@ connection_step (ConnectionContext *ctx)
     } /* fall through */
 
     case CONNECTION_STEP_CONNECT:
-        mm_obj_info (ctx->self, "simple connect state (%d/%d): connect",
-                     ctx->step, CONNECTION_STEP_LAST);
+        mm_obj_msg (ctx->self, "simple connect state (%d/%d): connect",
+                    ctx->step, CONNECTION_STEP_LAST);
 
         /* At this point, we can cleanup the cancellation point in the Simple interface,
          * because the bearer connection has its own cancellation setup. */
@@ -676,15 +864,14 @@ connection_step (ConnectionContext *ctx)
             return;
         }
 
-        mm_obj_dbg (ctx->self, "bearer at '%s' is already connected...",
-                    mm_base_bearer_get_path (ctx->bearer));
+        mm_obj_info (ctx->self, "bearer at '%s' is already connected...", mm_base_bearer_get_path (ctx->bearer));
 
         ctx->step++;
         /* fall through */
 
     case CONNECTION_STEP_LAST:
-        mm_obj_info (ctx->self, "simple connect state (%d/%d): all done",
-                     ctx->step, CONNECTION_STEP_LAST);
+        mm_obj_msg (ctx->self, "simple connect state (%d/%d): all done",
+                    ctx->step, CONNECTION_STEP_LAST);
         /* All done, yey! */
         mm_gdbus_modem_simple_complete_connect (
             ctx->skeleton,
@@ -721,6 +908,9 @@ connect_auth_ready (MMBaseModem *self,
         return;
     }
 
+    mm_obj_info (self, "processing user request to connect modem...");
+    mm_log_simple_connect_properties (self, MM_LOG_LEVEL_INFO, "  ", ctx->properties);
+
     if (!setup_cancellation (ctx, &error)) {
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         connection_context_free (ctx);
@@ -740,64 +930,7 @@ connect_auth_ready (MMBaseModem *self,
         return;
     }
 
-    mm_obj_info (self, "simple connect started...");
-
-    /* Log about all the parameters being used for the simple connect */
-    {
-        MMBearerMultiplexSupport  multiplex;
-        MMBearerAllowedAuth       allowed_auth;
-        MMBearerApnType           apn_type;
-        gchar                    *str;
-        MMBearerIpFamily          ip_family;
-        gint                      profile_id;
-
-#define VALIDATE_UNSPECIFIED(str) (str ? str : "unspecified")
-
-        profile_id = mm_simple_connect_properties_get_profile_id (ctx->properties);
-        if (profile_id != MM_3GPP_PROFILE_ID_UNKNOWN)
-            mm_obj_dbg (self, "   profile ID: %d", profile_id);
-        else
-            mm_obj_dbg (self, "   profile ID: %s", VALIDATE_UNSPECIFIED (NULL));
-
-        mm_obj_dbg (self, "   PIN: %s", VALIDATE_UNSPECIFIED (mm_simple_connect_properties_get_pin (ctx->properties)));
-        mm_obj_dbg (self, "   operator ID: %s", VALIDATE_UNSPECIFIED (mm_simple_connect_properties_get_operator_id (ctx->properties)));
-        mm_obj_dbg (self, "   allowed roaming: %s", mm_simple_connect_properties_get_allow_roaming (ctx->properties) ? "yes" : "no");
-        mm_obj_dbg (self, "   APN: %s", VALIDATE_UNSPECIFIED (mm_simple_connect_properties_get_apn (ctx->properties)));
-
-        apn_type = mm_simple_connect_properties_get_apn_type (ctx->properties);
-        if (apn_type != MM_BEARER_APN_TYPE_NONE) {
-            str = mm_bearer_apn_type_build_string_from_mask (apn_type);
-            mm_obj_dbg (self, "   APN type: %s", str);
-            g_free (str);
-        } else
-            mm_obj_dbg (self, "   APN type: %s", VALIDATE_UNSPECIFIED (NULL));
-
-        ip_family = mm_simple_connect_properties_get_ip_type (ctx->properties);
-        if (ip_family != MM_BEARER_IP_FAMILY_NONE) {
-            str = mm_bearer_ip_family_build_string_from_mask (ip_family);
-            mm_obj_dbg (self, "   IP family: %s", str);
-            g_free (str);
-        } else
-            mm_obj_dbg (self, "   IP family: %s", VALIDATE_UNSPECIFIED (NULL));
-
-        allowed_auth = mm_simple_connect_properties_get_allowed_auth (ctx->properties);
-        if (allowed_auth != MM_BEARER_ALLOWED_AUTH_UNKNOWN) {
-            str = mm_bearer_allowed_auth_build_string_from_mask (allowed_auth);
-            mm_obj_dbg (self, "   allowed authentication: %s", str);
-            g_free (str);
-        } else
-            mm_obj_dbg (self, "   allowed authentication: %s", VALIDATE_UNSPECIFIED (NULL));
-
-        mm_obj_dbg (self, "   user: %s", VALIDATE_UNSPECIFIED (mm_simple_connect_properties_get_user (ctx->properties)));
-        mm_obj_dbg (self, "   password: %s", VALIDATE_UNSPECIFIED (mm_simple_connect_properties_get_password (ctx->properties)));
-
-        multiplex = mm_simple_connect_properties_get_multiplex (ctx->properties);
-        mm_obj_dbg (self, "   multiplex: %s", VALIDATE_UNSPECIFIED (multiplex != MM_BEARER_MULTIPLEX_SUPPORT_UNKNOWN ?
-                                                                    mm_bearer_multiplex_support_get_string (multiplex) :
-                                                                    NULL));
-
-#undef VALIDATE_UNSPECIFIED
-    }
+    mm_obj_msg (self, "simple connect started...");
 
     switch (current) {
     case MM_MODEM_STATE_FAILED:
@@ -842,20 +975,18 @@ connect_auth_ready (MMBaseModem *self,
 }
 
 static gboolean
-handle_connect (MmGdbusModemSimple *skeleton,
+handle_connect (MmGdbusModemSimple    *skeleton,
                 GDBusMethodInvocation *invocation,
-                GVariant *dictionary,
-                MMIfaceModemSimple *self)
+                GVariant              *dictionary,
+                MMIfaceModemSimple    *self)
 {
     ConnectionContext *ctx;
 
-    ctx = g_new0 (ConnectionContext, 1);
+    ctx = g_slice_new0 (ConnectionContext);
     ctx->skeleton = g_object_ref (skeleton);
     ctx->invocation = g_object_ref (invocation);
     ctx->self = g_object_ref (self);
     ctx->dictionary = g_variant_ref (dictionary);
-
-    mm_obj_dbg (self, "user request to connect modem");
 
     mm_base_modem_authorize (MM_BASE_MODEM (self),
                              invocation,
@@ -868,12 +999,10 @@ handle_connect (MmGdbusModemSimple *skeleton,
 /*****************************************************************************/
 
 typedef struct {
-    MMIfaceModemSimple *self;
-    MmGdbusModemSimple *skeleton;
+    MMIfaceModemSimple    *self;
+    MmGdbusModemSimple    *skeleton;
     GDBusMethodInvocation *invocation;
-    gchar *bearer_path;
-    GList *bearers;
-    MMBaseBearer *current;
+    gchar                 *bearer_path;
 } DisconnectionContext;
 
 static void
@@ -883,69 +1012,33 @@ disconnection_context_free (DisconnectionContext *ctx)
     g_object_unref (ctx->invocation);
     g_object_unref (ctx->self);
     g_free (ctx->bearer_path);
-    if (ctx->current)
-        g_object_unref (ctx->current);
-    g_list_free_full (ctx->bearers, g_object_unref);
-    g_free (ctx);
+    g_slice_free (DisconnectionContext, ctx);
 }
 
-static void disconnect_next_bearer (DisconnectionContext *ctx);
-
 static void
-disconnect_ready (MMBaseBearer *bearer,
-                  GAsyncResult *res,
-                  DisconnectionContext *ctx)
+bearer_list_disconnect_bearers_ready (MMBearerList         *bearer_list,
+                                      GAsyncResult         *res,
+                                      DisconnectionContext *ctx)
 {
     GError *error = NULL;
 
-    if (!mm_base_bearer_disconnect_finish (bearer, res, &error)) {
+    if (!mm_bearer_list_disconnect_bearers_finish (bearer_list, res, &error)) {
+        mm_obj_warn (ctx->self, "failed to disconnect bearers: %s", error->message);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
-        disconnection_context_free (ctx);
-        return;
+    } else {
+        mm_obj_info (ctx->self, "all requested bearers disconnected");
+        mm_gdbus_modem_simple_complete_disconnect (ctx->skeleton, ctx->invocation);
     }
-
-    disconnect_next_bearer (ctx);
+    disconnection_context_free (ctx);
 }
 
 static void
-disconnect_next_bearer (DisconnectionContext *ctx)
-{
-    if (ctx->current)
-        g_clear_object (&ctx->current);
-
-    /* No more bearers? all done! */
-    if (!ctx->bearers) {
-        mm_gdbus_modem_simple_complete_disconnect (ctx->skeleton,
-                                                   ctx->invocation);
-        disconnection_context_free (ctx);
-        return;
-    }
-
-    ctx->current = MM_BASE_BEARER (ctx->bearers->data);
-    ctx->bearers = g_list_delete_link (ctx->bearers, ctx->bearers);
-
-    mm_base_bearer_disconnect (ctx->current,
-                               (GAsyncReadyCallback)disconnect_ready,
-                               ctx);
-}
-
-static void
-build_connected_bearer_list (MMBaseBearer *bearer,
-                             DisconnectionContext *ctx)
-{
-    if (!ctx->bearer_path ||
-        g_str_equal (ctx->bearer_path, mm_base_bearer_get_path (bearer)))
-        ctx->bearers = g_list_prepend (ctx->bearers, g_object_ref (bearer));
-}
-
-static void
-disconnect_auth_ready (MMBaseModem *self,
-                       GAsyncResult *res,
+disconnect_auth_ready (MMBaseModem          *self,
+                       GAsyncResult         *res,
                        DisconnectionContext *ctx)
 {
-    GError *error = NULL;
-    MMBearerList *list = NULL;
-    Private *priv;
+    g_autoptr(MMBearerList)  list = NULL;
+    GError                  *error = NULL;
 
     if (!mm_base_modem_authorize_finish (self, res, &error)) {
         g_dbus_method_invocation_take_error (ctx->invocation, error);
@@ -955,11 +1048,8 @@ disconnect_auth_ready (MMBaseModem *self,
 
     /* If not disconnecting a specific bearer, also cancel any ongoing
      * connection attempt. */
-    priv = get_private (MM_IFACE_MODEM_SIMPLE (self));
-    if (!ctx->bearer_path && priv->ongoing_connect) {
-        g_cancellable_cancel (priv->ongoing_connect);
-        g_clear_object (&priv->ongoing_connect);
-    }
+    if (!ctx->bearer_path)
+        mm_iface_modem_simple_abort_ongoing (MM_IFACE_MODEM_SIMPLE (self));
 
     g_object_get (self,
                   MM_IFACE_MODEM_BEARER_LIST, &list,
@@ -974,36 +1064,26 @@ disconnect_auth_ready (MMBaseModem *self,
         return;
     }
 
-    mm_bearer_list_foreach (list,
-                            (MMBearerListForeachFunc)build_connected_bearer_list,
-                            ctx);
-    g_object_unref (list);
+    if (ctx->bearer_path)
+        mm_obj_info (self, "processing user request to disconnect modem: bearer '%s'", ctx->bearer_path);
+    else
+        mm_obj_info (self, "processing user request to disconnect modem: all bearers");
 
-    if (ctx->bearer_path &&
-        !ctx->bearers) {
-        g_dbus_method_invocation_return_error (
-            ctx->invocation,
-            MM_CORE_ERROR,
-            MM_CORE_ERROR_INVALID_ARGS,
-            "Couldn't disconnect bearer '%s': not found",
-            ctx->bearer_path);
-        disconnection_context_free (ctx);
-        return;
-    }
-
-    /* Go on disconnecting bearers */
-    disconnect_next_bearer (ctx);
+    mm_bearer_list_disconnect_bearers (list,
+                                       ctx->bearer_path,
+                                       (GAsyncReadyCallback)bearer_list_disconnect_bearers_ready,
+                                       ctx);
 }
 
 static gboolean
-handle_disconnect (MmGdbusModemSimple *skeleton,
+handle_disconnect (MmGdbusModemSimple    *skeleton,
                    GDBusMethodInvocation *invocation,
-                   const gchar *bearer_path,
-                   MMIfaceModemSimple *self)
+                   const gchar           *bearer_path,
+                   MMIfaceModemSimple    *self)
 {
     DisconnectionContext *ctx;
 
-    ctx = g_new0 (DisconnectionContext, 1);
+    ctx = g_slice_new0 (DisconnectionContext);
     ctx->skeleton = g_object_ref (skeleton);
     ctx->self = g_object_ref (self);
     ctx->invocation = g_object_ref (invocation);
@@ -1015,11 +1095,8 @@ handle_disconnect (MmGdbusModemSimple *skeleton,
      *
      * We will detect the '/' string and set the bearer path as NULL in the
      * context if so, and otherwise use the given input string as path */
-    if (g_strcmp0 (bearer_path, "/") != 0) {
-        mm_obj_dbg (self, "user request to disconnect modem (bearer '%s')", bearer_path);
+    if (g_strcmp0 (bearer_path, "/") != 0)
         ctx->bearer_path = g_strdup (bearer_path);
-    } else
-        mm_obj_dbg (self, "user request to disconnect modem (all bearers)");
 
     mm_base_modem_authorize (MM_BASE_MODEM (self),
                              invocation,

@@ -53,6 +53,7 @@ enum {
     PROP_VALID,
     PROP_MAX_TIMEOUTS,
     PROP_DEVICE,
+    PROP_PHYSDEV,
     PROP_DRIVERS,
     PROP_PLUGIN,
     PROP_VENDOR_ID,
@@ -85,6 +86,7 @@ struct _MMBaseModemPrivate {
     gulong invalid_if_cancelled;
 
     gchar *device;
+    gchar *physdev;
     gchar **drivers;
     gchar *plugin;
 
@@ -152,8 +154,8 @@ port_removed_cb (MMPort      *port,
 {
     /* We have to do a full re-probe here because simply reopening the device
      * and restarting proxy would leave us without proper notifications. */
-    mm_obj_info (self, "port '%s' no longer controllable, reprobing",
-                 mm_port_get_device (MM_PORT (port)));
+    mm_obj_msg (self, "port '%s' no longer controllable, reprobing",
+                mm_port_get_device (MM_PORT (port)));
     self->priv->reprobe = TRUE;
     g_cancellable_cancel (self->priv->cancellable);
 }
@@ -470,8 +472,21 @@ mm_base_modem_grab_port (MMBaseModem         *self,
                          MMPortSerialAtFlag   at_pflags,
                          GError             **error)
 {
-    if (!base_modem_internal_grab_port (self, kernel_device, FALSE, ptype, at_pflags, error))
+    g_autoptr(GError) inner_error = NULL;
+
+    if (!base_modem_internal_grab_port (self, kernel_device, FALSE, ptype, at_pflags, &inner_error)) {
+        /* If the port was REQUIRED via udev tags and we failed to grab it, we will report
+         * a fatal error. */
+        if (mm_kernel_device_get_property_as_boolean (kernel_device, ID_MM_REQUIRED)) {
+            mm_obj_err (self, "required port '%s/%s' failed to be grabbed",
+                        mm_kernel_device_get_subsystem (kernel_device),
+                        mm_kernel_device_get_name      (kernel_device));
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_ABORTED,
+                         "Required port failed to be grabbed");
+        } else
+            g_propagate_error (error, g_steal_pointer (&inner_error));
         return FALSE;
+    }
 
     mm_obj_dbg (self, "port '%s/%s' grabbed",
                 mm_kernel_device_get_subsystem (kernel_device),
@@ -945,14 +960,6 @@ mm_base_modem_peek_cancellable (MMBaseModem *self)
     return self->priv->cancellable;
 }
 
-GCancellable *
-mm_base_modem_get_cancellable  (MMBaseModem *self)
-{
-    g_return_val_if_fail (MM_IS_BASE_MODEM (self), NULL);
-
-    return g_object_ref (self->priv->cancellable);
-}
-
 MMPortSerialAt *
 mm_base_modem_get_port_primary (MMBaseModem *self)
 {
@@ -1319,14 +1326,17 @@ initialize_ready (MMBaseModem *self,
 }
 
 static inline void
-log_port (MMBaseModem *self, MMPort *port, const char *desc)
+log_port (MMBaseModem *self,
+          MMPort      *port,
+          const gchar *desc)
 {
-    if (port) {
-        mm_obj_dbg (self, "%s/%s %s",
-                    mm_port_subsys_get_string (mm_port_get_subsys (port)),
-                    mm_port_get_device (port),
-                    desc);
-    }
+    if (!port)
+        return;
+
+    mm_obj_info (self, "%s/%s: %s",
+                 mm_port_subsys_get_string (mm_port_get_subsys (port)),
+                 mm_port_get_device (port),
+                 desc);
 }
 
 gboolean
@@ -1715,6 +1725,14 @@ mm_base_modem_get_device (MMBaseModem *self)
     return self->priv->device;
 }
 
+const gchar *
+mm_base_modem_get_physdev (MMBaseModem *self)
+{
+    g_return_val_if_fail (MM_IS_BASE_MODEM (self), NULL);
+
+    return self->priv->physdev;
+}
+
 const gchar **
 mm_base_modem_get_drivers (MMBaseModem *self)
 {
@@ -1900,6 +1918,10 @@ set_property (GObject *object,
         g_free (self->priv->device);
         self->priv->device = g_value_dup_string (value);
         break;
+    case PROP_PHYSDEV:
+        g_free (self->priv->physdev);
+        self->priv->physdev = g_value_dup_string (value);
+        break;
     case PROP_DRIVERS:
         g_strfreev (self->priv->drivers);
         self->priv->drivers = g_value_dup_boxed (value);
@@ -1954,6 +1976,9 @@ get_property (GObject *object,
     case PROP_DEVICE:
         g_value_set_string (value, self->priv->device);
         break;
+    case PROP_PHYSDEV:
+        g_value_set_string (value, self->priv->physdev);
+        break;
     case PROP_DRIVERS:
         g_value_set_boxed (value, self->priv->drivers);
         break;
@@ -1999,6 +2024,7 @@ finalize (GObject *object)
     mm_obj_dbg (self, "completely disposed");
 
     g_free (self->priv->device);
+    g_free (self->priv->physdev);
     g_strfreev (self->priv->drivers);
     g_free (self->priv->plugin);
 
@@ -2089,6 +2115,14 @@ mm_base_modem_class_init (MMBaseModemClass *klass)
                              NULL,
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_DEVICE, properties[PROP_DEVICE]);
+
+    properties[PROP_PHYSDEV] =
+        g_param_spec_string (MM_BASE_MODEM_PHYSDEV,
+                             "Physdev path",
+                             "Main modem parent physical device path",
+                             NULL,
+                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+    g_object_class_install_property (object_class, PROP_PHYSDEV, properties[PROP_PHYSDEV]);
 
     properties[PROP_DRIVERS] =
         g_param_spec_boxed (MM_BASE_MODEM_DRIVERS,
