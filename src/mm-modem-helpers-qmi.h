@@ -112,6 +112,22 @@ MMModemCdmaRegistrationState mm_modem_cdma_registration_state_from_qmi_registrat
 MMModemCdmaActivationState mm_modem_cdma_activation_state_from_qmi_activation_state (QmiDmsActivationState state);
 
 /*****************************************************************************/
+/* QMI NAS System Info processor */
+
+void mm_modem_registration_state_from_qmi_system_info (QmiMessageNasGetSystemInfoOutput *response_output,
+                                                       QmiIndicationNasSystemInfoOutput *indication_output,
+                                                       MMModem3gppRegistrationState     *out_cs_registration_state,
+                                                       MMModem3gppRegistrationState     *out_ps_registration_state,
+                                                       MMModem3gppRegistrationState     *out_eps_registration_state,
+                                                       MMModem3gppRegistrationState     *out_5gs_registration_state,
+                                                       guint16                          *out_lac,
+                                                       guint16                          *out_tac,
+                                                       guint32                          *out_cid,
+                                                       gchar                           **out_operator_id,
+                                                       MMModemAccessTechnology          *out_act,
+                                                       gpointer                          log_object);
+
+/*****************************************************************************/
 /* QMI/WMS to MM translations */
 
 QmiWmsStorageType mm_sms_storage_to_qmi_storage_type (MMSmsStorage storage);
@@ -242,6 +258,7 @@ gboolean mm_qmi_uim_get_configuration_output_parse (gpointer                    
                                                     MMModem3gppFacility                  *o_lock,
                                                     GError                              **error);
 
-QmiUimCardApplicationPersonalizationFeature qmi_personalization_feature_from_mm_modem_3gpp_facility (MMModem3gppFacility facility);
+gboolean qmi_personalization_feature_from_mm_modem_3gpp_facility (MMModem3gppFacility                          facility,
+                                                                  QmiUimCardApplicationPersonalizationFeature *o_feature);
 
 #endif  /* MM_MODEM_HELPERS_QMI_H */

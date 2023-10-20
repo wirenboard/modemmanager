@@ -862,7 +862,7 @@ get_ipv4_config (MMBearerQmi *self,
         return NULL;
     }
 
-    mm_obj_info (self, "QMI IPv4 Settings:");
+    mm_obj_msg (self, "QMI IPv4 Settings:");
 
     config = mm_bearer_ip_config_new ();
     mm_bearer_ip_config_set_method (config, ip_method);
@@ -871,15 +871,15 @@ get_ipv4_config (MMBearerQmi *self,
     qmi_inet4_ntop (addr, buf, sizeof (buf));
     mm_bearer_ip_config_set_address (config, buf);
     mm_bearer_ip_config_set_prefix (config, prefix);
-    mm_obj_info (self, "    address: %s/%d", buf, prefix);
+    mm_obj_msg (self, "    address: %s/%d", buf, prefix);
 
     /* IPv4 gateway address */
     if (qmi_message_wds_get_current_settings_output_get_ipv4_gateway_address (output, &addr, &error)) {
         qmi_inet4_ntop (addr, buf, sizeof (buf));
         mm_bearer_ip_config_set_gateway (config, buf);
-        mm_obj_info (self, "    gateway: %s", buf);
+        mm_obj_msg (self, "    gateway: %s", buf);
     } else {
-        mm_obj_info (self, "    gateway: failed (%s)", error->message);
+        mm_obj_msg (self, "    gateway: failed (%s)", error->message);
         g_clear_error (&error);
     }
 
@@ -887,9 +887,9 @@ get_ipv4_config (MMBearerQmi *self,
     if (qmi_message_wds_get_current_settings_output_get_primary_ipv4_dns_address (output, &addr, &error)) {
         qmi_inet4_ntop (addr, buf, sizeof (buf));
         dns[dns_idx++] = buf;
-        mm_obj_info (self, "    DNS #1: %s", buf);
+        mm_obj_msg (self, "    DNS #1: %s", buf);
     } else {
-        mm_obj_info (self, "    DNS #1: failed (%s)", error->message);
+        mm_obj_msg (self, "    DNS #1: failed (%s)", error->message);
         g_clear_error (&error);
     }
 
@@ -897,9 +897,9 @@ get_ipv4_config (MMBearerQmi *self,
     if (qmi_message_wds_get_current_settings_output_get_secondary_ipv4_dns_address (output, &addr, &error)) {
         qmi_inet4_ntop (addr, buf2, sizeof (buf2));
         dns[dns_idx++] = buf2;
-        mm_obj_info (self, "    DNS #2: %s", buf2);
+        mm_obj_msg (self, "    DNS #2: %s", buf2);
     } else {
-        mm_obj_info (self, "    DNS #2: failed (%s)", error->message);
+        mm_obj_msg (self, "    DNS #2: failed (%s)", error->message);
         g_clear_error (&error);
     }
 
@@ -908,7 +908,7 @@ get_ipv4_config (MMBearerQmi *self,
 
     if (mtu) {
         mm_bearer_ip_config_set_mtu (config, mtu);
-        mm_obj_info (self, "       MTU: %d", mtu);
+        mm_obj_msg (self, "       MTU: %d", mtu);
     }
 
     return config;
@@ -955,7 +955,7 @@ get_ipv6_config (MMBearerQmi *self,
         return NULL;
     }
 
-    mm_obj_info (self, "QMI IPv6 Settings:");
+    mm_obj_msg (self, "QMI IPv6 Settings:");
 
     config = mm_bearer_ip_config_new ();
     mm_bearer_ip_config_set_method (config, ip_method);
@@ -965,15 +965,15 @@ get_ipv6_config (MMBearerQmi *self,
 
     mm_bearer_ip_config_set_address (config, buf);
     mm_bearer_ip_config_set_prefix (config, prefix);
-    mm_obj_info (self, "    address: %s/%d", buf, prefix);
+    mm_obj_msg (self, "    address: %s/%d", buf, prefix);
 
     /* IPv6 gateway address */
     if (qmi_message_wds_get_current_settings_output_get_ipv6_gateway_address (output, &array, &prefix, &error)) {
         qmi_inet6_ntop (array, buf, sizeof (buf));
         mm_bearer_ip_config_set_gateway (config, buf);
-        mm_obj_info (self, "    gateway: %s/%d", buf, prefix);
+        mm_obj_msg (self, "    gateway: %s/%d", buf, prefix);
     } else {
-        mm_obj_info (self, "    gateway: failed (%s)", error->message);
+        mm_obj_msg (self, "    gateway: failed (%s)", error->message);
         g_clear_error (&error);
     }
 
@@ -981,9 +981,9 @@ get_ipv6_config (MMBearerQmi *self,
     if (qmi_message_wds_get_current_settings_output_get_ipv6_primary_dns_address (output, &array, &error)) {
         qmi_inet6_ntop (array, buf, sizeof (buf));
         dns[dns_idx++] = buf;
-        mm_obj_info (self, "    DNS #1: %s", buf);
+        mm_obj_msg (self, "    DNS #1: %s", buf);
     } else {
-        mm_obj_info (self, "    DNS #1: failed (%s)", error->message);
+        mm_obj_msg (self, "    DNS #1: failed (%s)", error->message);
         g_clear_error (&error);
     }
 
@@ -991,9 +991,9 @@ get_ipv6_config (MMBearerQmi *self,
     if (qmi_message_wds_get_current_settings_output_get_ipv6_secondary_dns_address (output, &array, &error)) {
         qmi_inet6_ntop (array, buf2, sizeof (buf2));
         dns[dns_idx++] = buf2;
-        mm_obj_info (self, "    DNS #2: %s", buf2);
+        mm_obj_msg (self, "    DNS #2: %s", buf2);
     } else {
-        mm_obj_info (self, "    DNS #2: failed (%s)", error->message);
+        mm_obj_msg (self, "    DNS #2: failed (%s)", error->message);
         g_clear_error (&error);
     }
 
@@ -1002,7 +1002,7 @@ get_ipv6_config (MMBearerQmi *self,
 
     if (mtu) {
         mm_bearer_ip_config_set_mtu (config, mtu);
-        mm_obj_info (self, "       MTU: %d", mtu);
+        mm_obj_msg (self, "       MTU: %d", mtu);
     }
 
     return config;
@@ -1199,7 +1199,7 @@ register_for_wds_indication (ConnectContext *ctx,
     } else {
         client = ctx->client_ipv6;
         mm_obj_dbg (self, "registering for wds extended ip V6 info indication");
-    }		
+    }
     qmi_message_wds_indication_register_input_set_report_extended_ip_configuration_change (input, TRUE, NULL);
     qmi_client_wds_indication_register (
         client,
@@ -1229,11 +1229,11 @@ mobile_equipment_error_from_start_network_output (MMBearerQmi                   
 
         verbose_cer_type_str = qmi_wds_verbose_call_end_reason_type_get_string (verbose_cer_type);
         verbose_cer_reason_str = qmi_wds_verbose_call_end_reason_get_string (verbose_cer_type, verbose_cer_reason);
-        mm_obj_info (self, "verbose call end reason (%u,%d): [%s] %s",
-                     verbose_cer_type,
-                     verbose_cer_reason,
-                     verbose_cer_type_str,
-                     verbose_cer_reason_str);
+        mm_obj_msg (self, "  verbose call end reason (%u,%d): [%s] %s",
+                    verbose_cer_type,
+                    verbose_cer_reason,
+                    verbose_cer_type_str,
+                    verbose_cer_reason_str);
 
         /* If we have a 3GPP verbose call end reason, we try to build an error
          * with the exact error code and message */
@@ -1251,7 +1251,7 @@ mobile_equipment_error_from_start_network_output (MMBearerQmi                   
         const gchar *cer_str;
 
         cer_str = qmi_wds_call_end_reason_get_string (cer);
-        mm_obj_info (self, "call end reason (%u): %s", cer, cer_str);
+        mm_obj_msg (self, "  call end reason (%u): %s", cer, cer_str);
 
         return g_error_new (MM_MOBILE_EQUIPMENT_ERROR, MM_MOBILE_EQUIPMENT_ERROR_UNKNOWN,
                             "Call failed: %s", cer_str);
@@ -1291,7 +1291,7 @@ start_network_ready (QmiClientWds *client,
                 ctx->packet_data_handle_ipv6 = GLOBAL_PACKET_DATA_HANDLE;
             /* Fall down to a successful connection */
         } else {
-            mm_obj_info (self, "couldn't start network: %s", error->message);
+            mm_obj_msg (self, "couldn't start %s network: %s", ctx->running_ipv4 ? "IPv4" : "IPv6", error->message);
             if (g_error_matches (error, QMI_PROTOCOL_ERROR, QMI_PROTOCOL_ERROR_CALL_FAILED)) {
                 g_clear_error (&error);
                 error = mobile_equipment_error_from_start_network_output (self, output);
@@ -1396,11 +1396,11 @@ packet_service_status_indication_cb (QmiClientWds *client,
 
             verbose_cer_type_str = qmi_wds_verbose_call_end_reason_type_get_string (verbose_cer_type);
             verbose_cer_reason_str = qmi_wds_verbose_call_end_reason_get_string (verbose_cer_type, verbose_cer_reason);
-            mm_obj_info (self, "verbose call end reason (%u,%d): [%s] %s",
-                         verbose_cer_type,
-                         verbose_cer_reason,
-                         verbose_cer_type_str,
-                         verbose_cer_reason_str);
+            mm_obj_msg (self, "verbose call end reason (%u,%d): [%s] %s",
+                        verbose_cer_type,
+                        verbose_cer_reason,
+                        verbose_cer_type_str,
+                        verbose_cer_reason_str);
 
             /* If we have a 3GPP verbose call end reason, we try to build an error
              * with the exact error code and message */
@@ -1416,7 +1416,7 @@ packet_service_status_indication_cb (QmiClientWds *client,
             const gchar *cer_str;
 
             cer_str = qmi_wds_call_end_reason_get_string (cer);
-            mm_obj_info (self, "call end reason (%u): %s", cer, cer_str);
+            mm_obj_msg (self, "call end reason (%u): %s", cer, cer_str);
 
             connection_error = g_error_new (MM_MOBILE_EQUIPMENT_ERROR, MM_MOBILE_EQUIPMENT_ERROR_UNKNOWN,
                                             "Call failed: %s", cer_str);
@@ -1775,7 +1775,7 @@ setup_link_ready (MMPortQmi     *qmi,
 
     /* From now on link_name will be set, and we'll use that to know
      * whether we should cleanup the link upon a connection failure */
-    mm_obj_info (ctx->self, "net link %s created (mux id %u)", ctx->link_name, ctx->mux_id);
+    mm_obj_msg (ctx->self, "net link %s created (mux id %u)", ctx->link_name, ctx->mux_id);
 
     /* Wait for the data port with the given interface name, which will be
      * added asynchronously */
@@ -2442,8 +2442,21 @@ load_settings_from_bearer (MMBearerQmi         *self,
     GError              *inner_error = NULL;
     const gchar         *str;
     const gchar         *data_port_driver;
+    guint                current_multiplexed_bearers;
+    guint                max_multiplexed_bearers;
+    gboolean             multiplex_supported = TRUE;
 
+    if (!mm_broadband_modem_get_active_multiplexed_bearers (MM_BROADBAND_MODEM (ctx->modem),
+                                                            &current_multiplexed_bearers,
+                                                            &max_multiplexed_bearers,
+                                                            error))
+        return FALSE;
+
+    /* Check multiplex support in the kernel and the device */
     data_port_driver = mm_kernel_device_get_driver (mm_port_peek_kernel_device (ctx->data));
+    /* All drivers should support multiplexing */
+    if (!max_multiplexed_bearers)
+        multiplex_supported = FALSE;
 
     /* If no multiplex setting given by the user, assume none; unless in IPA */
     ctx->multiplex = mm_bearer_properties_get_multiplex (properties);
@@ -2456,9 +2469,31 @@ load_settings_from_bearer (MMBearerQmi         *self,
             ctx->multiplex = MM_BEARER_MULTIPLEX_SUPPORT_NONE;
     }
 
-    /* The link prefix hint given must be modem-specific */
+    /* If multiplex unsupported, either abort or default to none */
+    if (!multiplex_supported) {
+        if (ctx->multiplex == MM_BEARER_MULTIPLEX_SUPPORT_REQUIRED) {
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                         "Multiplexing required but not supported");
+            return FALSE;
+        }
+        if (ctx->multiplex == MM_BEARER_MULTIPLEX_SUPPORT_REQUESTED) {
+            mm_obj_dbg (self, "Multiplexing unsupported");
+            ctx->multiplex = MM_BEARER_MULTIPLEX_SUPPORT_NONE;
+        }
+    }
+
+    /* Go on with multiplexing enabled */
     if (ctx->multiplex == MM_BEARER_MULTIPLEX_SUPPORT_REQUESTED ||
         ctx->multiplex == MM_BEARER_MULTIPLEX_SUPPORT_REQUIRED) {
+        g_assert (multiplex_supported);
+
+        if (current_multiplexed_bearers == max_multiplexed_bearers) {
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                         "Maximum number of multiplexed bearers reached");
+            return FALSE;
+        }
+
+        /* The link prefix hint given must be modem-specific */
         ctx->link_prefix_hint = g_strdup_printf ("qmapmux%u.", mm_base_modem_get_dbus_id (MM_BASE_MODEM (modem)));
     }
 

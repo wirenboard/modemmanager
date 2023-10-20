@@ -273,6 +273,16 @@ struct _MMIfaceModem3gpp {
     gboolean (* set_nr5g_registration_settings_finish) (MMIfaceModem3gpp             *self,
                                                         GAsyncResult                 *res,
                                                         GError                      **error);
+
+    /* Set carrier lock */
+    void     (* set_carrier_lock)       (MMIfaceModem3gpp    *self,
+                                         const guint8        *data,
+                                         gsize                data_size,
+                                         GAsyncReadyCallback  callback,
+                                         gpointer             user_data);
+    gboolean (*set_carrier_lock_finish) (MMIfaceModem3gpp    *self,
+                                         GAsyncResult        *res,
+                                         GError             **error);
 };
 
 GType mm_iface_modem_3gpp_get_type (void);
@@ -342,6 +352,9 @@ void mm_iface_modem_3gpp_update_5gs_registration_state     (MMIfaceModem3gpp    
                                                             gboolean                      deferred);
 void mm_iface_modem_3gpp_apply_deferred_registration_state (MMIfaceModem3gpp             *self);
 
+void mm_iface_modem_3gpp_update_packet_service_state (MMIfaceModem3gpp              *self,
+                                                      MMModem3gppPacketServiceState  state);
+
 void mm_iface_modem_3gpp_update_subscription_state (MMIfaceModem3gpp *self,
                                                     MMModem3gppSubscriptionState state);
 void mm_iface_modem_3gpp_update_access_technologies (MMIfaceModem3gpp *self,
@@ -392,8 +405,19 @@ gboolean mm_iface_modem_3gpp_reregister_in_network_finish (MMIfaceModem3gpp     
                                                            GAsyncResult         *res,
                                                            GError              **error);
 
+/* Allow requesting packet service explicitly */
+void     mm_iface_modem_3gpp_set_packet_service_state        (MMIfaceModem3gpp              *self,
+                                                              MMModem3gppPacketServiceState  packet_service_state,
+                                                              GAsyncReadyCallback            callback,
+                                                              gpointer                       user_data);
+gboolean mm_iface_modem_3gpp_set_packet_service_state_finish (MMIfaceModem3gpp              *self,
+                                                              GAsyncResult                  *res,
+                                                              GError                       **error);
+
+/* Allow waiting for packet service */
 void                          mm_iface_modem_3gpp_wait_for_packet_service_state        (MMIfaceModem3gpp              *self,
                                                                                         MMModem3gppPacketServiceState  final_state,
+                                                                                        GCancellable                  *cancellable,
                                                                                         GAsyncReadyCallback            callback,
                                                                                         gpointer                       user_data);
 MMModem3gppPacketServiceState mm_iface_modem_3gpp_wait_for_packet_service_state_finish (MMIfaceModem3gpp  *self,

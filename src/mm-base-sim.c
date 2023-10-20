@@ -960,7 +960,7 @@ handle_send_puk_ready (MMBaseSim *self,
         mm_gdbus_sim_complete_send_puk (MM_GDBUS_SIM (self), ctx->invocation);
 
     if (sim_error) {
-        mm_obj_info (self, "Received critical sim error. SIM might be permanently blocked. Reprobing...");
+        mm_obj_msg (self, "received critical sim error: SIM might be permanently blocked, reprobing...");
         mm_iface_modem_process_sim_event (MM_IFACE_MODEM (self->priv->modem));
     }
 
@@ -1147,17 +1147,15 @@ set_preferred_networks_reload_ready (MMBaseSim    *self,
                                      GAsyncResult *res,
                                      GTask        *task)
 {
-    GError                      *error = NULL;
+    g_autoptr(GError)            error = NULL;
     GList                       *preferred_nets_list;
     SetPreferredNetworksContext *ctx;
 
     ctx = g_task_get_task_data (task);
 
     preferred_nets_list = MM_BASE_SIM_GET_CLASS (self)->load_preferred_networks_finish (self, res, &error);
-    if (error) {
-        mm_obj_warn (self, "couldn't load list of preferred networks: %s", error->message);
-        g_error_free (error);
-    }
+    if (error)
+        mm_obj_dbg (self, "couldn't load list of preferred networks: %s", error->message);
 
     mm_gdbus_sim_set_preferred_networks (MM_GDBUS_SIM (self),
                                          mm_sim_preferred_network_list_get_variant (preferred_nets_list));
@@ -2458,55 +2456,63 @@ initable_init_finish (GAsyncInitable  *initable,
     return g_task_propagate_boolean (G_TASK (result), error);
 }
 
+#undef COMMON_STR_REPLY_READY_FN
+#define COMMON_STR_REPLY_READY_FN(NAME,DISPLAY,VALUE_FORMAT)                              \
+    static void                                                                           \
+    init_load_##NAME##_ready (MMBaseSim    *self,                                         \
+                              GAsyncResult *res,                                          \
+                              GTask        *task)                                         \
+    {                                                                                     \
+        InitAsyncContext  *ctx;                                                           \
+        g_autoptr(GError)  error = NULL;                                                  \
+        g_autofree gchar  *val = NULL;                                                    \
+                                                                                          \
+        val = MM_BASE_SIM_GET_CLASS (self)->load_##NAME##_finish (self, res, &error);     \
+        mm_gdbus_sim_set_##NAME (MM_GDBUS_SIM (self), val);                               \
+                                                                                          \
+        if (error)                                                                        \
+            mm_obj_dbg (self, "couldn't load %s: %s", DISPLAY, error->message);           \
+        else                                                                              \
+            mm_obj_info (self, "loaded %s: %s", DISPLAY, VALUE_FORMAT (val));             \
+                                                                                          \
+        /* Go on to next step */                                                          \
+        ctx = g_task_get_task_data (task);                                                \
+        ctx->step++;                                                                      \
+        interface_initialization_step (task);                                             \
+    }
+
 #undef STR_REPLY_READY_FN
-#define STR_REPLY_READY_FN(NAME,DISPLAY)                                \
-    static void                                                         \
-    init_load_##NAME##_ready (MMBaseSim *self,                          \
-                              GAsyncResult *res,                        \
-                              GTask *task)                              \
-    {                                                                   \
-        InitAsyncContext *ctx;                                          \
-        GError *error = NULL;                                           \
-        gchar *val;                                                     \
-                                                                        \
+#define STR_REPLY_READY_FN(NAME,DISPLAY) COMMON_STR_REPLY_READY_FN (NAME, DISPLAY, (const gchar *))
+
+#undef PERSONAL_STR_REPLY_READY_FN
+#define PERSONAL_STR_REPLY_READY_FN(NAME,DISPLAY) COMMON_STR_REPLY_READY_FN (NAME, DISPLAY, mm_log_str_personal_info)
+
+#undef ENUM_REPLY_READY_FN
+#define ENUM_REPLY_READY_FN(NAME,DISPLAY,ENUM_TYPE,ENUM_GET_STRING)                   \
+    static void                                                                       \
+    init_load_##NAME##_ready (MMBaseSim    *self,                                     \
+                              GAsyncResult *res,                                      \
+                              GTask        *task)                                     \
+    {                                                                                 \
+        InitAsyncContext  *ctx;                                                       \
+        g_autoptr(GError)  error = NULL;                                              \
+        ENUM_TYPE          val;                                                       \
+                                                                                      \
         val = MM_BASE_SIM_GET_CLASS (self)->load_##NAME##_finish (self, res, &error); \
-        mm_gdbus_sim_set_##NAME (MM_GDBUS_SIM (self), val);             \
-        g_free (val);                                                   \
-                                                                        \
-        if (error) {                                                    \
-            mm_obj_warn (self, "couldn't load %s: %s", DISPLAY, error->message); \
-            g_error_free (error);                                       \
-        }                                                               \
-                                                                        \
-        /* Go on to next step */                                        \
-        ctx = g_task_get_task_data (task);                              \
-        ctx->step++;                                                    \
-        interface_initialization_step (task);                           \
+        mm_gdbus_sim_set_##NAME (MM_GDBUS_SIM (self), (guint) val);                   \
+                                                                                      \
+        if (error)                                                                    \
+            mm_obj_dbg (self, "couldn't load %s: %s", DISPLAY, error->message);       \
+        else                                                                          \
+            mm_obj_info (self, "loaded %s: %s", DISPLAY, ENUM_GET_STRING (val));      \
+                                                                                      \
+        /* Go on to next step */                                                      \
+        ctx = g_task_get_task_data (task);                                            \
+        ctx->step++;                                                                  \
+        interface_initialization_step (task);                                         \
     }
 
-#undef UINT_REPLY_READY_FN
-#define UINT_REPLY_READY_FN(NAME,DISPLAY)                               \
-    static void                                                         \
-    init_load_##NAME##_ready (MMBaseSim    *self,                       \
-                              GAsyncResult *res,                        \
-                              GTask        *task)                       \
-    {                                                                   \
-        InitAsyncContext  *ctx;                                         \
-        g_autoptr(GError)  error = NULL;                                \
-        guint              val;                                         \
-                                                                        \
-        val = (guint) MM_BASE_SIM_GET_CLASS (self)->load_##NAME##_finish (self, res, &error); \
-        mm_gdbus_sim_set_##NAME (MM_GDBUS_SIM (self), val);             \
-                                                                        \
-        if (error)                                                      \
-            mm_obj_warn (self, "couldn't load %s: %s", DISPLAY, error->message); \
-                                                                        \
-        /* Go on to next step */                                        \
-        ctx = g_task_get_task_data (task);                              \
-        ctx->step++;                                                    \
-        interface_initialization_step (task);                           \
-    }
-
+#undef BYTEARRAY_REPLY_READY_FN
 #define BYTEARRAY_REPLY_READY_FN(NAME,DISPLAY)                                    \
     static void                                                                   \
     init_load_##NAME##_ready (MMBaseSim    *self,                                 \
@@ -2527,7 +2533,13 @@ initable_init_finish (GAsyncInitable  *initable,
                                   NULL));                                         \
                                                                                   \
         if (error)                                                                \
-            mm_obj_warn (self, "couldn't load %s: %s", DISPLAY, error->message);  \
+            mm_obj_dbg (self, "couldn't load %s: %s", DISPLAY, error->message);   \
+        else {                                                                    \
+            g_autofree gchar *bytearray_str = NULL;                               \
+                                                                                  \
+            bytearray_str = mm_utils_bin2hexstr (bytearray->data, bytearray->len); \
+            mm_obj_info (self, "loaded %s: %s", DISPLAY, bytearray_str);          \
+        }                                                                         \
                                                                                   \
         /* Go on to next step */                                                  \
         ctx = g_task_get_task_data (task);                                        \
@@ -2535,28 +2547,43 @@ initable_init_finish (GAsyncInitable  *initable,
         interface_initialization_step (task);                                     \
     }
 
-UINT_REPLY_READY_FN (removability, "removability")
-STR_REPLY_READY_FN  (eid, "EID")
-BYTEARRAY_REPLY_READY_FN (gid2, "GID2")
-BYTEARRAY_REPLY_READY_FN (gid1, "GID1")
+ENUM_REPLY_READY_FN         (removability, "removability", MMSimRemovability, mm_sim_removability_get_string)
+PERSONAL_STR_REPLY_READY_FN (eid,          "EID")
+BYTEARRAY_REPLY_READY_FN    (gid2,         "GID2")
+BYTEARRAY_REPLY_READY_FN    (gid1,         "GID1")
 
 static void
 init_load_preferred_networks_ready (MMBaseSim    *self,
                                     GAsyncResult *res,
                                     GTask        *task)
 {
-    InitAsyncContext *ctx;
-    GError           *error = NULL;
-    GList            *preferred_nets_list;
+    InitAsyncContext  *ctx;
+    g_autoptr(GError)  error = NULL;
+    GList             *preferred_nets_list;
 
     preferred_nets_list = MM_BASE_SIM_GET_CLASS (self)->load_preferred_networks_finish (self, res, &error);
-    if (error) {
-        mm_obj_warn (self, "couldn't load list of preferred networks: %s", error->message);
-        g_error_free (error);
+    if (error)
+        mm_obj_dbg (self, "couldn't load list of preferred networks: %s", error->message);
+    else {
+        g_autoptr(GString)  str = NULL;
+        GList              *l;
+
+        str = g_string_new ("");
+        for (l = preferred_nets_list; l; l = g_list_next (l)) {
+            MMSimPreferredNetwork *item;
+            g_autofree gchar      *access_tech_str = NULL;
+
+            item = (MMSimPreferredNetwork *)(l->data);
+            access_tech_str = mm_modem_access_technology_build_string_from_mask (mm_sim_preferred_network_get_access_technology (item));
+            g_string_append_printf (str, "%s%s (%s)", str->len ? ", " : "", mm_sim_preferred_network_get_operator_code (item), access_tech_str);
+        }
+
+        mm_obj_info (self, "loaded list of preferred networks: %s", str->str);
     }
 
     mm_gdbus_sim_set_preferred_networks (MM_GDBUS_SIM (self),
                                          mm_sim_preferred_network_list_get_variant (preferred_nets_list));
+
     g_list_free_full (preferred_nets_list, (GDestroyNotify) mm_sim_preferred_network_free);
 
     /* Go on to next step */
@@ -2570,20 +2597,24 @@ init_load_emergency_numbers_ready (MMBaseSim    *self,
                                    GAsyncResult *res,
                                    GTask        *task)
 {
-    InitAsyncContext *ctx;
-    GError           *error = NULL;
-    GStrv             str_list;
+    InitAsyncContext  *ctx;
+    g_autoptr(GError)  error = NULL;
+    g_auto(GStrv)      str_list = NULL;
 
     str_list = MM_BASE_SIM_GET_CLASS (self)->load_emergency_numbers_finish (self, res, &error);
-    if (error) {
-        mm_obj_warn (self, "couldn't load list of emergency numbers: %s", error->message);
-        g_error_free (error);
+    if (error)
+        mm_obj_dbg (self, "couldn't load list of emergency numbers: %s", error->message);
+    else {
+        g_autoptr(GString) str = NULL;
+        guint              i;
+
+        str = g_string_new ("");
+        for (i = 0; str_list && str_list[i]; i++)
+            g_string_append_printf (str, "%s%s", str->len ? ", " : "", str_list[i]);
+        mm_obj_info (self, "loaded list of emergency numbers: %s", str->str);
     }
 
-    if (str_list) {
-        mm_gdbus_sim_set_emergency_numbers (MM_GDBUS_SIM (self), (const gchar *const *) str_list);
-        g_strfreev (str_list);
-    }
+    mm_gdbus_sim_set_emergency_numbers (MM_GDBUS_SIM (self), (const gchar *const *) str_list);
 
     /* Go on to next step */
     ctx = g_task_get_task_data (task);
@@ -2591,9 +2622,9 @@ init_load_emergency_numbers_ready (MMBaseSim    *self,
     interface_initialization_step (task);
 }
 
-STR_REPLY_READY_FN (operator_name, "operator name")
-STR_REPLY_READY_FN (operator_identifier, "operator identifier")
-STR_REPLY_READY_FN (imsi, "IMSI")
+STR_REPLY_READY_FN          (operator_name,       "operator name")
+STR_REPLY_READY_FN          (operator_identifier, "operator identifier")
+PERSONAL_STR_REPLY_READY_FN (imsi,                "IMSI")
 
 static void
 init_load_sim_identifier_ready (MMBaseSim *self,
@@ -2621,7 +2652,8 @@ init_load_sim_identifier_ready (MMBaseSim *self,
 
         mm_obj_warn (self, "couldn't load SIM identifier: %s", error ? error->message : "unknown error");
         g_clear_error (&error);
-    }
+    } else
+        mm_obj_info (self, "loaded SIM identifier: %s", mm_log_str_personal_info (simid));
 
     mm_gdbus_sim_set_sim_identifier (MM_GDBUS_SIM (self), simid);
     g_free (simid);
@@ -2631,8 +2663,8 @@ init_load_sim_identifier_ready (MMBaseSim *self,
     interface_initialization_step (task);
 }
 
-UINT_REPLY_READY_FN (esim_status,  "esim status")
-UINT_REPLY_READY_FN (sim_type,     "sim type")
+ENUM_REPLY_READY_FN (esim_status, "esim status", MMSimEsimStatus, mm_sim_esim_status_get_string)
+ENUM_REPLY_READY_FN (sim_type,    "sim type",    MMSimType,       mm_sim_type_get_string)
 
 static void
 init_wait_sim_ready (MMBaseSim    *self,
@@ -2643,7 +2675,7 @@ init_wait_sim_ready (MMBaseSim    *self,
     g_autoptr(GError)  error = NULL;
 
     if (!MM_BASE_SIM_GET_CLASS (self)->wait_sim_ready_finish (self, res, &error))
-        mm_obj_warn (self, "couldn't wait for SIM to be ready: %s", error->message);
+        mm_obj_dbg (self, "couldn't wait for SIM to be ready: %s", error->message);
 
     /* Go on to next step */
     ctx = g_task_get_task_data (task);

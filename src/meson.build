@@ -4,6 +4,7 @@
 # helpers library
 src_inc = include_directories('.')
 kerneldevice_inc = include_directories('kerneldevice')
+plugins_inc = include_directories('plugins')
 
 headers = files(
   'mm-modem-helpers.h',
@@ -13,19 +14,32 @@ headers = files(
 enums_types = 'mm-helper-enums-types'
 
 enums_sources = []
-enums_sources += gnome.mkenums(
+
+enums_sources += custom_target(
   enums_types + '.c',
-  sources: headers,
-  c_template: build_aux_dir / enums_types + '.c.template',
-  fhead: '#include "mm-helper-enums-types.h"',
+  input: headers,
+  output: enums_types + '.c',
+  command: [
+    python,
+    mm_mkenums,
+    '--fhead', '#include "mm-helper-enums-types.h"\n',
+    '--template', files(templates_dir / enums_types + '.c.template'),
+    '@INPUT@'],
+  capture: true,
 )
 
-enums_sources += gnome.mkenums(
+enums_sources += custom_target(
   enums_types + '.h',
-  sources: headers,
-  h_template: build_aux_dir / enums_types + '.h.template',
-  fhead: '#include "mm-sms-part.h"\n#include "mm-modem-helpers.h"\n#ifndef __MM_HELPER_ENUMS_TYPES_H__\n#define __MM_HELPER_ENUMS_TYPES_H__\n',
-  ftail: '#endif /* __MM_HELPER_ENUMS_TYPES_H__ */\n',
+  input: headers,
+  output: enums_types + '.h',
+  command: [
+    python,
+    mm_mkenums,
+    '--fhead', '#include "mm-sms-part.h"\n#include "mm-modem-helpers.h"\n#ifndef __MM_HELPER_ENUMS_TYPES_H__\n#define __MM_HELPER_ENUMS_TYPES_H__\n',
+    '--template', files(templates_dir / enums_types + '.h.template'),
+    '--ftail', '#endif /* __MM_HELPER_ENUMS_TYPES_H__ */\n',
+    '@INPUT@'],
+  capture: true,
 )
 
 sources = files(
@@ -148,19 +162,31 @@ endif
 enums_types = 'mm-port-enums-types'
 
 port_enums_sources = []
-port_enums_sources += gnome.mkenums(
+port_enums_sources += custom_target(
   enums_types + '.c',
-  sources: headers,
-  c_template: build_aux_dir / enums_types + '.c.template',
-  fhead: '#include "mm-port-enums-types.h"',
+  input: headers,
+  output: enums_types + '.c',
+  command: [
+    python,
+    mm_mkenums,
+    '--fhead', '#include "mm-port-enums-types.h"\n',
+    '--template', files(templates_dir / enums_types + '.c.template'),
+    '@INPUT@'],
+  capture: true,
 )
 
-port_enums_sources += gnome.mkenums(
+port_enums_sources += custom_target(
   enums_types + '.h',
-  sources: headers,
-  h_template: build_aux_dir / enums_types + '.h.template',
-  fhead: '#include "config.h"\n#include "mm-port.h"\n#include "mm-port-serial-at.h"\n#if defined WITH_QMI\n#include "mm-port-qmi.h"\n#endif\n#ifndef __MM_PORT_ENUMS_TYPES_H__\n#define __MM_PORT_ENUMS_TYPES_H__\n',
-  ftail: '#endif /* __MM_PORT_ENUMS_TYPES_H__ */\n',
+  input: headers,
+  output: enums_types + '.h',
+  command: [
+    python,
+    mm_mkenums,
+    '--fhead', '#include "config.h"\n#include "mm-port.h"\n#include "mm-port-serial-at.h"\n#if defined WITH_QMI\n#include "mm-port-qmi.h"\n#endif\n#ifndef __MM_PORT_ENUMS_TYPES_H__\n#define __MM_PORT_ENUMS_TYPES_H__\n',
+    '--template', files(templates_dir / enums_types + '.h.template'),
+    '--ftail', '#endif /* __MM_PORT_ENUMS_TYPES_H__ */\n',
+    '@INPUT@'],
+  capture: true,
 )
 
 libport = static_library(
@@ -177,13 +203,53 @@ libport_dep = declare_dependency(
   link_with: libport,
 )
 
-# ModemManager daemon
+# Daemon enums, required by plugins
 headers = files(
   'mm-base-bearer.h',
   'mm-filter.h',
   'mm-port-probe.h',
 )
 
+enums_types = 'mm-daemon-enums-types'
+
+daemon_enums_sources = []
+
+daemon_enums_sources += custom_target(
+  enums_types + '.c',
+  input: headers,
+  output: enums_types + '.c',
+  command: [
+    python,
+    mm_mkenums,
+    '--fhead', '#include "mm-daemon-enums-types.h"\n',
+    '--template', files(templates_dir / enums_types + '.c.template'),
+    '@INPUT@'],
+  capture: true,
+)
+
+daemon_enums_sources += custom_target(
+  enums_types + '.h',
+  input: headers,
+  output: enums_types + '.h',
+  command: [
+    python,
+    mm_mkenums,
+    '--fhead', '#include "mm-filter.h"\n#include "mm-base-bearer.h"\n#include "mm-port-probe.h"\n#ifndef __MM_DAEMON_ENUMS_TYPES_H__\n#define __MM_DAEMON_ENUMS_TYPES_H__\n',
+    '--template', files(templates_dir / enums_types + '.h.template'),
+    '--ftail', '#endif /* __MM_DAEMON_ENUMS_TYPES_H__ */\n',
+    '@INPUT@'],
+  capture: true,
+)
+
+daemon_enums_types_dep = declare_dependency(
+  sources: daemon_enums_sources[1],
+  include_directories: '.',
+)
+
+# Additional vendor plugins
+subdir('plugins')
+
+# ModemManager daemon
 sources = files(
   'main.c',
   'mm-auth-provider.c',
@@ -218,6 +284,7 @@ sources = files(
   'mm-iface-modem-simple.c',
   'mm-iface-modem-time.c',
   'mm-iface-modem-voice.c',
+  'mm-log-helpers.c',
   'mm-plugin.c',
   'mm-plugin-manager.c',
   'mm-port-probe.c',
@@ -226,23 +293,7 @@ sources = files(
   'mm-sms-list.c',
 )
 
-enums_types = 'mm-daemon-enums-types'
-
-daemon_enums_sources = []
-daemon_enums_sources += gnome.mkenums(
-  enums_types + '.c',
-  sources: headers,
-  c_template: build_aux_dir / enums_types + '.c.template',
-  fhead: '#include "mm-daemon-enums-types.h"',
-)
-
-daemon_enums_sources += gnome.mkenums(
-  enums_types + '.h',
-  sources: headers,
-  h_template: build_aux_dir / enums_types + '.h.template',
-  fhead: '#include "mm-filter.h"\n#include "mm-base-bearer.h"\n#include "mm-port-probe.h"\n#ifndef __MM_DAEMON_ENUMS_TYPES_H__\n#define __MM_DAEMON_ENUMS_TYPES_H__\n',
-  ftail: '#endif /* __MM_DAEMON_ENUMS_TYPES_H__ */\n',
-)
+sources += daemon_enums_sources
 
 deps = [
   gmodule_dep,
@@ -310,10 +361,11 @@ endif
 
 executable(
   'ModemManager',
-  sources: sources + daemon_enums_sources,
-  include_directories: top_inc,
+  sources: [sources, builtin_sources],
+  include_directories: [ top_inc, plugins_inc ],
   dependencies: deps,
   c_args: c_args,
+  link_whole: builtin_plugins,
   install: true,
   install_dir: mm_sbindir,
 )

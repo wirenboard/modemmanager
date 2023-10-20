@@ -3,7 +3,7 @@
 
 project(
   'ModemManager', 'c',
-  version: '1.20.6',
+  version: '1.22.0',
   license: 'GPL2',
   default_options: [
     'buildtype=debugoptimized',
@@ -40,9 +40,9 @@ mm_glib_pkgincludedir = mm_includedir / mm_glib_name
 # - Otherwise, increment c and zero r.
 #   - If the interface has grown (that is, the new library is compatible with old code), increment a.
 #   - If the interface has changed in an incompatible way (that is, functions have changed or been removed), then zero a.
-current = 9
+current = 10
 revision = 0
-age = 9
+age = 10
 mm_glib_version = '@0@.@1@.@2@'.format(current - age, age, revision)
 
 mm_gir_version = '1.0'
@@ -50,14 +50,18 @@ mm_gir_version = '1.0'
 gnome = import('gnome')
 i18n = import('i18n')
 pkg = import('pkgconfig')
+python = import('python').find_installation('python3')
 
 source_root = meson.current_source_dir()
 build_root = meson.current_build_dir()
 
 build_aux_dir = source_root / 'build-aux'
-plugins_dir = source_root / 'plugins'
+templates_dir = source_root / 'build-aux/templates'
 po_dir = source_root / 'po'
 src_dir = source_root / 'src'
+plugins_dir = source_root / 'src/plugins'
+
+mm_mkenums = find_program(source_root / 'build-aux/mm-mkenums')
 
 top_inc = include_directories('.')
 
@@ -149,7 +153,6 @@ deps = [
 c_args = [
   '-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_' + glib_version.underscorify(),
   '-DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_' + glib_version.underscorify(),
-  '-DGLIB_DISABLE_DEPRECATION_WARNINGS',
 ]
 
 glib_deps = declare_dependency(
@@ -184,9 +187,10 @@ if enable_udev
 endif
 config_h.set('WITH_UDEV', enable_udev)
 
-# udev base directory
+# udev base directory (required to install rules even when udev support is disabled)
 udev_udevdir = get_option('udevdir')
 if udev_udevdir == ''
+  assert(enable_udev, 'udevdir must be explicitly given if udev support is disabled')
   udev_udevdir = dependency('udev').get_pkgconfig_variable('udevdir')
 endif
 udev_rulesdir = udev_udevdir / 'rules.d'
@@ -242,17 +246,21 @@ config_h.set('WITH_POLKIT', enable_polkit)
 enable_at_command_via_dbus = get_option('at_command_via_dbus')
 config_h.set('WITH_AT_COMMAND_VIA_DBUS', enable_at_command_via_dbus)
 
+# Builtin plugin support (disabled by default)
+enable_builtin_plugins =  get_option('builtin_plugins')
+config_h.set('WITH_BUILTIN_PLUGINS', enable_builtin_plugins)
+
 # MBIM support (enabled by default)
 enable_mbim = get_option('mbim')
 if enable_mbim
-  mbim_glib_dep = dependency('mbim-glib', version: '>= 1.28.0')
+  mbim_glib_dep = dependency('mbim-glib', version: '>= 1.30.0')
 endif
 config_h.set('WITH_MBIM', enable_mbim)
 
 # QMI support (enabled by default)
 enable_qmi = get_option('qmi')
 if enable_qmi
-  qmi_glib_dep = dependency('qmi-glib', version: '>= 1.32.0')
+  qmi_glib_dep = dependency('qmi-glib', version: '>= 1.34.0')
 endif
 config_h.set('WITH_QMI', enable_qmi)
 
@@ -399,7 +407,6 @@ endif
 
 subdir('libmm-glib')
 subdir('src')
-subdir('plugins')
 subdir('cli')
 
 if enable_tests
@@ -418,6 +425,8 @@ if enable_gtk_doc
   subdir('docs/reference/api')
   subdir('docs/reference/libmm-glib')
 endif
+
+enable_fuzzer = get_option('fuzzer')
 
 configure_file(
   output: 'config.h',
@@ -447,6 +456,7 @@ summary({
   'powerd suspend/resume': enable_powerd_suspend_resume,
   'systemd journal': enable_systemd_journal,
   'at command via dbus': enable_at_command_via_dbus,
+  'builtin plugins': enable_builtin_plugins,
 }, section: 'Features')
 
 summary(plugins_shared, section: 'Shared utils')
@@ -460,4 +470,5 @@ summary({
   'bash completion': enable_bash_completion,
   'vala bindings': enable_vapi,
   'code coverage': get_option('b_coverage'),
+  'fuzzer': enable_fuzzer,
 }, section: 'Miscellaneous')

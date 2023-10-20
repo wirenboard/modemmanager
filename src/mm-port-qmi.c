@@ -33,6 +33,7 @@
 
 /* as internally defined in the kernel */
 #define RMNET_MAX_PACKET_SIZE 16384
+#define MHI_NET_MTU_DEFAULT   16384
 
 G_DEFINE_TYPE (MMPortQmi, mm_port_qmi, MM_TYPE_PORT)
 
@@ -81,6 +82,8 @@ struct _MMPortQmiPrivate {
     MMPort   *preallocated_links_main;
     GArray   *preallocated_links;
     GList    *preallocated_links_setup_pending;
+    /* first multiplex setup */
+    gboolean first_multiplex_setup;
 };
 
 /*****************************************************************************/
@@ -150,6 +153,9 @@ initialize_endpoint_info (MMPortQmi *self)
             self->priv->endpoint_interface_number = 1;
             break;
         case QMI_DATA_ENDPOINT_TYPE_PCIE:
+            /* Qualcomm magic number */
+            self->priv->endpoint_interface_number = 4;
+            break;
         case QMI_DATA_ENDPOINT_TYPE_UNDEFINED:
         case QMI_DATA_ENDPOINT_TYPE_HSIC:
         case QMI_DATA_ENDPOINT_TYPE_BAM_DMUX:
@@ -682,6 +688,54 @@ initialize_preallocated_links_ready (MMPortQmi    *self,
     }
 }
 
+static QmiDeviceAddLinkFlags
+get_rmnet_device_add_link_flags (MMPortQmi *self)
+{
+    QmiDeviceAddLinkFlags flags = QMI_DEVICE_ADD_LINK_FLAGS_NONE;
+    g_autofree gchar *flags_str = NULL;
+
+    if (g_strcmp0 (self->priv->net_driver, "ipa") == 0) {
+        g_autofree gchar *tx_sysfs_path = NULL;
+        g_autofree gchar *rx_sysfs_path = NULL;
+        g_autofree gchar *tx_sysfs_str = NULL;
+        g_autofree gchar *rx_sysfs_str = NULL;
+
+        tx_sysfs_path = g_build_filename (self->priv->net_sysfs_path, "device", "feature", "tx_offload", NULL);
+        rx_sysfs_path = g_build_filename (self->priv->net_sysfs_path, "device", "feature", "rx_offload", NULL);
+
+        if (g_file_get_contents (rx_sysfs_path, &rx_sysfs_str, NULL, NULL) && rx_sysfs_str) {
+            if (g_str_has_prefix (rx_sysfs_str, "MAPv4"))
+                flags |= QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV4;
+            else if (g_str_has_prefix (rx_sysfs_str, "MAPv5"))
+                flags |= QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV5;
+        }
+
+        if (g_file_get_contents (tx_sysfs_path, &tx_sysfs_str, NULL, NULL) && tx_sysfs_str) {
+            if (g_str_has_prefix (tx_sysfs_str, "MAPv4"))
+                flags |= QMI_DEVICE_ADD_LINK_FLAGS_EGRESS_MAP_CKSUMV4;
+            else if (g_str_has_prefix (tx_sysfs_str, "MAPv5"))
+                flags |= QMI_DEVICE_ADD_LINK_FLAGS_EGRESS_MAP_CKSUMV5;
+        }
+    }
+
+    if (g_strcmp0 (self->priv->net_driver, "qmi_wwan") == 0 ||
+        g_strcmp0 (self->priv->net_driver, "mhi_net") == 0) {
+        QmiWdaDataAggregationProtocol dap;
+
+        dap = mm_port_qmi_get_data_aggregation_protocol (self);
+        if (dap == QMI_WDA_DATA_AGGREGATION_PROTOCOL_QMAPV5)
+            flags |= (QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV5 |
+                      QMI_DEVICE_ADD_LINK_FLAGS_EGRESS_MAP_CKSUMV5);
+        else if (dap == QMI_WDA_DATA_AGGREGATION_PROTOCOL_QMAPV4)
+            flags |= (QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV4 |
+                      QMI_DEVICE_ADD_LINK_FLAGS_EGRESS_MAP_CKSUMV4);
+    }
+
+    flags_str = qmi_device_add_link_flags_build_string_from_mask (flags);
+    mm_obj_dbg (self, "Creating RMNET link with flags: %s", flags_str);
+    return flags;
+}
+
 void
 mm_port_qmi_setup_link (MMPortQmi           *self,
                         MMPort              *data,
@@ -719,23 +773,11 @@ mm_port_qmi_setup_link (MMPortQmi           *self,
 
     /* When using rmnet, just try to add link in the QmiDevice */
     if (self->priv->kernel_data_modes & MM_PORT_QMI_KERNEL_DATA_MODE_MUX_RMNET) {
-        QmiDeviceAddLinkFlags flags = QMI_DEVICE_ADD_LINK_FLAGS_NONE;
-
-        /* This may not be fully right, but it's the only way forward we know
-         * right now for the Qualcomm SoCs based on QRTR+IPA, where QMAPV4 is
-         * used and the device has checksum offload enabled by default, so we
-         * should create the link with special flags. Ideally, we would have a
-         * way to know in advance whether the checksum offload flags are needed
-         * or not.
-         */
-        if (self->priv->dap == QMI_WDA_DATA_AGGREGATION_PROTOCOL_QMAPV4)
-            flags = (QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV4 | QMI_DEVICE_ADD_LINK_FLAGS_EGRESS_MAP_CKSUMV4);
-
         qmi_device_add_link_with_flags (self->priv->qmi_device,
                                         QMI_DEVICE_MUX_ID_AUTOMATIC,
                                         mm_kernel_device_get_name (mm_port_peek_kernel_device (data)),
                                         link_prefix_hint,
-                                        flags,
+                                        get_rmnet_device_add_link_flags (self),
                                         NULL,
                                         (GAsyncReadyCallback) device_add_link_ready,
                                         task);
@@ -940,6 +982,7 @@ internal_reset (MMPortQmi           *self,
 {
     GTask                *task;
     InternalResetContext *ctx;
+    guint                 mtu;
 
     task = g_task_new (self, NULL, callback, user_data);
 
@@ -948,12 +991,18 @@ internal_reset (MMPortQmi           *self,
     ctx->device = g_object_ref (device);
     g_task_set_task_data (task, ctx, (GDestroyNotify) internal_reset_context_free);
 
+    /* mhi_net has a custom default MTU set by the kernel driver */
+    if (g_strcmp0 (self->priv->net_driver, "mhi_net") == 0)
+        mtu = MHI_NET_MTU_DEFAULT;
+    else
+        mtu = MM_PORT_NET_MTU_DEFAULT;
+
     /* first, bring down main interface */
     mm_obj_dbg (self, "bringing down data interface '%s'",
                 mm_port_get_device (ctx->data));
     mm_port_net_link_setup (MM_PORT_NET (ctx->data),
                             FALSE,
-                            MM_PORT_NET_MTU_DEFAULT,
+                            mtu,
                             NULL,
                             (GAsyncReadyCallback) net_link_down_ready,
                             task);
@@ -1113,6 +1162,9 @@ load_current_kernel_data_modes (MMPortQmi *self,
         }
     }
 
+    if (g_strcmp0 (self->priv->net_driver, "mhi_net") == 0)
+        return (MM_PORT_QMI_KERNEL_DATA_MODE_RAW_IP | MM_PORT_QMI_KERNEL_DATA_MODE_MUX_RMNET);
+
     /* For any driver, assume raw-ip only */
     return MM_PORT_QMI_KERNEL_DATA_MODE_RAW_IP;
 }
@@ -1151,14 +1203,19 @@ load_supported_kernel_data_modes (MMPortQmi *self,
         return supported;
     }
 
+    /* PCIe based setups support both raw ip and QMAP through rmnet */
+    if (g_strcmp0 (self->priv->net_driver, "mhi_net") == 0)
+        return (MM_PORT_QMI_KERNEL_DATA_MODE_RAW_IP | MM_PORT_QMI_KERNEL_DATA_MODE_MUX_RMNET);
+
     /* For any driver, assume raw-ip only */
     return MM_PORT_QMI_KERNEL_DATA_MODE_RAW_IP;
 }
 
 /*****************************************************************************/
 
-#define DEFAULT_DOWNLINK_DATA_AGGREGATION_MAX_SIZE      32768
-#define DEFAULT_DOWNLINK_DATA_AGGREGATION_MAX_DATAGRAMS 32
+#define DEFAULT_DOWNLINK_DATA_AGGREGATION_MAX_SIZE                32768
+#define DEFAULT_DOWNLINK_DATA_AGGREGATION_MAX_SIZE_QMI_WWAN_RMNET 16384
+#define DEFAULT_DOWNLINK_DATA_AGGREGATION_MAX_DATAGRAMS           32
 
 typedef struct {
     MMPortQmiKernelDataMode       kernel_data_mode;
@@ -1473,7 +1530,11 @@ sync_wda_data_format (GTask *task)
     qmi_message_wda_set_data_format_input_set_uplink_data_aggregation_protocol (input, ctx->wda_ul_dap_requested, NULL);
     qmi_message_wda_set_data_format_input_set_downlink_data_aggregation_protocol (input, ctx->wda_dl_dap_requested, NULL);
     if (ctx->wda_dl_dap_requested != QMI_WDA_DATA_AGGREGATION_PROTOCOL_DISABLED) {
-        qmi_message_wda_set_data_format_input_set_downlink_data_aggregation_max_size (input, DEFAULT_DOWNLINK_DATA_AGGREGATION_MAX_SIZE, NULL);
+        if ((g_strcmp0 (self->priv->net_driver, "qmi_wwan") == 0) &&
+            (ctx->kernel_data_modes_supported & MM_PORT_QMI_KERNEL_DATA_MODE_MUX_RMNET))
+            qmi_message_wda_set_data_format_input_set_downlink_data_aggregation_max_size (input, DEFAULT_DOWNLINK_DATA_AGGREGATION_MAX_SIZE_QMI_WWAN_RMNET, NULL);
+        else
+            qmi_message_wda_set_data_format_input_set_downlink_data_aggregation_max_size (input, DEFAULT_DOWNLINK_DATA_AGGREGATION_MAX_SIZE, NULL);
         qmi_message_wda_set_data_format_input_set_downlink_data_aggregation_max_datagrams (input, DEFAULT_DOWNLINK_DATA_AGGREGATION_MAX_DATAGRAMS, NULL);
     }
     if (ctx->use_endpoint)
@@ -2017,8 +2078,10 @@ internal_setup_data_format_ready (MMPortQmi    *self,
                                             NULL, /* not expected to update */
                                             &error))
         g_task_return_error (task, error);
-    else
+    else {
+        self->priv->first_multiplex_setup = FALSE;
         g_task_return_boolean (task, TRUE);
+    }
     g_object_unref (task);
 }
 
@@ -2066,7 +2129,11 @@ count_links_setup (MMPortQmi *self,
             return 0;
         }
 
-        return links->len;
+        if (links)
+            return links->len;
+
+        /* No list of links returned, so there are none */
+        return 0;
     }
 
     if (self->priv->kernel_data_modes & MM_PORT_QMI_KERNEL_DATA_MODE_MUX_QMIWWAN)
@@ -2107,9 +2174,12 @@ mm_port_qmi_setup_data_format (MMPortQmi                      *self,
         (self->priv->kernel_data_modes & (MM_PORT_QMI_KERNEL_DATA_MODE_MUX_RMNET | MM_PORT_QMI_KERNEL_DATA_MODE_MUX_QMIWWAN)) &&
         MM_PORT_QMI_DAP_IS_SUPPORTED_QMAP (self->priv->dap)) {
         mm_obj_dbg (self, "multiplex support already available when setting up data format");
-        g_task_return_boolean (task, TRUE);
-        g_object_unref (task);
-        return;
+        /* If this is the first time that multiplex is used, perform anyway the internal reset operation, so that the links are properly managed */
+        if (!self->priv->first_multiplex_setup) {
+            g_task_return_boolean (task, TRUE);
+            g_object_unref (task);
+            return;
+        }
     }
 
     if ((action == MM_PORT_QMI_SETUP_DATA_FORMAT_ACTION_SET_DEFAULT) &&
@@ -2370,6 +2440,7 @@ port_open_step (GTask *task)
     switch (ctx->step) {
     case PORT_OPEN_STEP_FIRST:
         mm_obj_dbg (self, "Opening QMI device...");
+        self->priv->first_multiplex_setup = TRUE;
         ctx->step++;
         /* Fall through */
 
@@ -2404,7 +2475,7 @@ port_open_step (GTask *task)
 
 #if defined WITH_QRTR
         if (self->priv->node) {
-            mm_obj_info (self, "Creating QMI device from QRTR node...");
+            mm_obj_dbg (self, "Creating QMI device from QRTR node...");
             qmi_device_new_from_node (self->priv->node,
                                       g_task_get_cancellable (task),
                                       (GAsyncReadyCallback) qmi_device_new_ready,

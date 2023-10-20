@@ -146,7 +146,7 @@ typedef struct {
     MmGdbusModemMessaging *skeleton;
     GDBusMethodInvocation *invocation;
     MMIfaceModemMessaging *self;
-    gchar *path;
+    gchar                 *path;
 } HandleDeleteContext;
 
 static void
@@ -156,32 +156,33 @@ handle_delete_context_free (HandleDeleteContext *ctx)
     g_object_unref (ctx->invocation);
     g_object_unref (ctx->self);
     g_free (ctx->path);
-    g_free (ctx);
+    g_slice_free (HandleDeleteContext, ctx);
 }
 
 static void
-handle_delete_ready (MMSmsList *list,
-                     GAsyncResult *res,
+handle_delete_ready (MMSmsList           *list,
+                     GAsyncResult        *res,
                      HandleDeleteContext *ctx)
 {
     GError *error = NULL;
 
-    if (!mm_sms_list_delete_sms_finish (list, res, &error))
+    if (!mm_sms_list_delete_sms_finish (list, res, &error)) {
+        mm_obj_warn (ctx->self, "failed deleting SMS message '%s': %s", ctx->path, error->message);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
-    else
+    } else {
+        mm_obj_info (ctx->self, "deleted SMS message '%s'", ctx->path);
         mm_gdbus_modem_messaging_complete_delete (ctx->skeleton, ctx->invocation);
-
+    }
     handle_delete_context_free (ctx);
 }
 
 static void
-handle_delete_auth_ready (MMBaseModem *self,
-                          GAsyncResult *res,
+handle_delete_auth_ready (MMBaseModem         *self,
+                          GAsyncResult        *res,
                           HandleDeleteContext *ctx)
 {
-    MMModemState modem_state = MM_MODEM_STATE_UNKNOWN;
-    MMSmsList *list = NULL;
-    GError *error = NULL;
+    g_autoptr(MMSmsList)  list = NULL;
+    GError               *error = NULL;
 
     if (!mm_base_modem_authorize_finish (self, res, &error)) {
         g_dbus_method_invocation_take_error (ctx->invocation, error);
@@ -189,20 +190,14 @@ handle_delete_auth_ready (MMBaseModem *self,
         return;
     }
 
-    g_object_get (self,
-                  MM_IFACE_MODEM_STATE, &modem_state,
-                  NULL);
-
     /* We do allow deleting SMS messages while enabling or disabling, it doesn't
      * interfere with the state transition logic to do so. The main reason to allow
      * this is that during modem enabling we're emitting "Added" signals before we
      * reach the enabled state, and so users listening to the signal may want to
      * delete the SMS message as soon as it's read. */
-    if (modem_state <= MM_MODEM_STATE_DISABLED) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_WRONG_STATE,
-                                               "Cannot delete SMS: device not yet enabled");
+    if (mm_iface_modem_abort_invocation_if_state_not_reached (MM_IFACE_MODEM (self),
+                                                              ctx->invocation,
+                                                              MM_MODEM_STATE_DISABLING)) {
         handle_delete_context_free (ctx);
         return;
     }
@@ -219,22 +214,22 @@ handle_delete_auth_ready (MMBaseModem *self,
         return;
     }
 
+    mm_obj_info (self, "processing user request to delete SMS message '%s'...", ctx->path);
     mm_sms_list_delete_sms (list,
                             ctx->path,
                             (GAsyncReadyCallback)handle_delete_ready,
                             ctx);
-    g_object_unref (list);
 }
 
 static gboolean
 handle_delete (MmGdbusModemMessaging *skeleton,
                GDBusMethodInvocation *invocation,
-               const gchar *path,
+               const gchar           *path,
                MMIfaceModemMessaging *self)
 {
     HandleDeleteContext *ctx;
 
-    ctx = g_new (HandleDeleteContext, 1);
+    ctx = g_slice_new0 (HandleDeleteContext);
     ctx->skeleton = g_object_ref (skeleton);
     ctx->invocation = g_object_ref (invocation);
     ctx->self = g_object_ref (self);
@@ -254,7 +249,7 @@ typedef struct {
     MmGdbusModemMessaging *skeleton;
     GDBusMethodInvocation *invocation;
     MMIfaceModemMessaging *self;
-    GVariant *dictionary;
+    GVariant              *dictionary;
 } HandleCreateContext;
 
 static void
@@ -264,19 +259,18 @@ handle_create_context_free (HandleCreateContext *ctx)
     g_object_unref (ctx->invocation);
     g_object_unref (ctx->self);
     g_variant_unref (ctx->dictionary);
-    g_free (ctx);
+    g_slice_free (HandleCreateContext, ctx);
 }
 
 static void
-handle_create_auth_ready (MMBaseModem *self,
-                          GAsyncResult *res,
+handle_create_auth_ready (MMBaseModem         *self,
+                          GAsyncResult        *res,
                           HandleCreateContext *ctx)
 {
-    MMModemState modem_state = MM_MODEM_STATE_UNKNOWN;
-    MMSmsList *list = NULL;
-    GError *error = NULL;
-    MMSmsProperties *properties;
-    MMBaseSms *sms;
+    GError                     *error = NULL;
+    g_autoptr(MMSmsList)        list = NULL;
+    g_autoptr(MMSmsProperties)  properties = NULL;
+    g_autoptr(MMBaseSms)        sms = NULL;
 
     if (!mm_base_modem_authorize_finish (self, res, &error)) {
         g_dbus_method_invocation_take_error (ctx->invocation, error);
@@ -284,15 +278,9 @@ handle_create_auth_ready (MMBaseModem *self,
         return;
     }
 
-    g_object_get (self,
-                  MM_IFACE_MODEM_STATE, &modem_state,
-                  NULL);
-
-    if (modem_state < MM_MODEM_STATE_ENABLED) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_WRONG_STATE,
-                                               "Cannot create SMS: device not yet enabled");
+    if (mm_iface_modem_abort_invocation_if_state_not_reached (MM_IFACE_MODEM (self),
+                                                              ctx->invocation,
+                                                              MM_MODEM_STATE_ENABLED)) {
         handle_create_context_free (ctx);
         return;
     }
@@ -305,11 +293,8 @@ handle_create_auth_ready (MMBaseModem *self,
         return;
     }
 
-    sms = mm_base_sms_new_from_properties (MM_BASE_MODEM (self),
-                                           properties,
-                                           &error);
+    sms = mm_base_sms_new_from_properties (MM_BASE_MODEM (self), properties, &error);
     if (!sms) {
-        g_object_unref (properties);
         g_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_create_context_free (ctx);
         return;
@@ -319,8 +304,6 @@ handle_create_auth_ready (MMBaseModem *self,
                   MM_IFACE_MODEM_MESSAGING_SMS_LIST, &list,
                   NULL);
     if (!list) {
-        g_object_unref (properties);
-        g_object_unref (sms);
         g_dbus_method_invocation_return_error (ctx->invocation,
                                                MM_CORE_ERROR,
                                                MM_CORE_ERROR_WRONG_STATE,
@@ -329,30 +312,24 @@ handle_create_auth_ready (MMBaseModem *self,
         return;
     }
 
-    /* Add it to the list */
+    mm_obj_info (self, "processing user request to create SMS message...");
     mm_sms_list_add_sms (list, sms);
-
-    /* Complete the DBus call */
     mm_gdbus_modem_messaging_complete_create (ctx->skeleton,
                                               ctx->invocation,
                                               mm_base_sms_get_path (sms));
-    g_object_unref (sms);
-
-    g_object_unref (properties);
-    g_object_unref (list);
-
+    mm_obj_info (self, "created SMS message: %s", mm_base_sms_get_path (sms));
     handle_create_context_free (ctx);
 }
 
 static gboolean
 handle_create (MmGdbusModemMessaging *skeleton,
                GDBusMethodInvocation *invocation,
-               GVariant *dictionary,
+               GVariant              *dictionary,
                MMIfaceModemMessaging *self)
 {
     HandleCreateContext *ctx;
 
-    ctx = g_new (HandleCreateContext, 1);
+    ctx = g_slice_new0 (HandleCreateContext);
     ctx->skeleton = g_object_ref (skeleton);
     ctx->invocation = g_object_ref (invocation);
     ctx->self = g_object_ref (self);
@@ -373,23 +350,13 @@ handle_list (MmGdbusModemMessaging *skeleton,
              GDBusMethodInvocation *invocation,
              MMIfaceModemMessaging *self)
 {
-    GStrv paths;
-    MMSmsList *list = NULL;
-    MMModemState modem_state;
+    g_auto(GStrv)        paths = NULL;
+    g_autoptr(MMSmsList) list = NULL;
 
-    modem_state = MM_MODEM_STATE_UNKNOWN;
-    g_object_get (self,
-                  MM_IFACE_MODEM_STATE, &modem_state,
-                  NULL);
-
-    if (modem_state < MM_MODEM_STATE_ENABLED) {
-        g_dbus_method_invocation_return_error (invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_WRONG_STATE,
-                                               "Cannot list SMS messages: "
-                                               "device not yet enabled");
+    if (mm_iface_modem_abort_invocation_if_state_not_reached (MM_IFACE_MODEM (self),
+                                                              invocation,
+                                                              MM_MODEM_STATE_ENABLED))
         return TRUE;
-    }
 
     g_object_get (self,
                   MM_IFACE_MODEM_MESSAGING_SMS_LIST, &list,
@@ -402,12 +369,12 @@ handle_list (MmGdbusModemMessaging *skeleton,
         return TRUE;
     }
 
+    mm_obj_info (self, "processing user request to list SMS messages...");
     paths = mm_sms_list_get_paths (list);
     mm_gdbus_modem_messaging_complete_list (skeleton,
                                             invocation,
                                             (const gchar *const *)paths);
-    g_strfreev (paths);
-    g_object_unref (list);
+    mm_obj_info (self, "reported %u SMS messages available", paths ? g_strv_length (paths) : 0);
     return TRUE;
 }
 
