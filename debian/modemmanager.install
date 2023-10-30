@@ -12,3 +12,4 @@ usr/share/icons/
 usr/share/man/
 usr/share/locale/
 usr/lib/*/ModemManager/
+usr/lib/systemd

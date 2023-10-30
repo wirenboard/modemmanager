@@ -22,7 +22,6 @@ override_dh_auto_configure:
 	dh_auto_configure -- $(configure_flags) \
 		-Ddbus_policy_dir=/usr/share/dbus-1/system.d \
 		-Dpolkit=permissive \
-		-Dsystemdsystemunitdir=/lib/systemd/system \
 		-Dvapi=true
 
 override_dh_install:
