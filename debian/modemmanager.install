@@ -1,6 +1,5 @@
-debian/77-mm-qdl-device-blacklist.rules lib/udev/rules.d/
+debian/77-mm-qdl-device-blacklist.rules usr/lib/udev/rules.d/
 etc/
-lib/
 usr/bin/
 usr/sbin/
 usr/share/ModemManager/
@@ -13,3 +12,4 @@ usr/share/man/
 usr/share/locale/
 usr/lib/*/ModemManager/
 usr/lib/systemd
+usr/lib/udev
