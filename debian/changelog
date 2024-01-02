@@ -1,3 +1,15 @@
+modemmanager (1.22.0-2~exp1) experimental; urgency=medium
+
+  * d/gbp.conf: use 'debian/experimental' as debian branch
+  * debian: keep systemd service under /usr.
+    In the current state of the Debian "/usr merge", we are allowed to move
+    systemd services under `/usr/lib/systemd` when relying on
+    `dh_installsystemd`. This requires adding a versioned dependency on
+    `debhelper`.
+    Let's comply by no longer overriding `systemdsystemunitdir`.
+
+ -- Arnaud Ferraris <aferraris@debian.org>  Mon, 30 Oct 2023 17:41:57 +0100
+
 modemmanager (1.22.0-1) unstable; urgency=medium
 
   * New upstream version 1.22.0
