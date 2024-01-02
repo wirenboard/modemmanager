@@ -1,3 +1,15 @@
+modemmanager (1.22.0-2) unstable; urgency=medium
+
+  * modemmanager: acknowledge udev rules now being under /usr.
+    (Closes: #1057269)
+  * d/control: make libmm-glib-dev depend on libglib2.0-dev.
+    This is required as `libmm-glib` is actually built on top of `glib`.
+    (Closes: #1035481)
+  * d/gbp.conf: use 'debian/latest' as debian branch.
+    This way we stay consistent with the other team-maintained packages.
+
+ -- Arnaud Ferraris <aferraris@debian.org>  Tue, 02 Jan 2024 09:35:55 +0100
+
 modemmanager (1.22.0-2~exp1) experimental; urgency=medium
 
   * d/gbp.conf: use 'debian/experimental' as debian branch
