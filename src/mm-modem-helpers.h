@@ -233,6 +233,7 @@ gboolean mm_3gpp_parse_cpms_test_response (const gchar  *reply,
 gboolean mm_3gpp_parse_cpms_query_response (const gchar *reply,
                                             MMSmsStorage *mem1,
                                             MMSmsStorage *mem2,
+                                            MMSmsStorage *mem3,
                                             GError** error);
 gboolean mm_3gpp_get_cpms_storage_match (GMatchInfo *match_info,
                                          const gchar *match_name,
