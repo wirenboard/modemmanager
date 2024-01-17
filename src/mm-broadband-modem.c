@@ -2052,13 +2052,14 @@ supported_ip_families_cgdcont_test_ready (MMBaseModem *self,
                 MM_BEARER_IP_FAMILY_IPV4 |
                 MM_BEARER_IP_FAMILY_IPV6 |
                 MM_BEARER_IP_FAMILY_IPV4V6);
+            g_object_unref (task);
         } else {
             g_timeout_add_seconds (1, (GSourceFunc) modem_load_supported_ip_families_retry, task);
         }
-    else
+    else {
         g_task_return_int (task, mask);
-
-    g_object_unref (task);
+        g_object_unref (task);
+    }
 }
 
 static void
