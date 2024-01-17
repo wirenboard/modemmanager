@@ -2074,7 +2074,7 @@ modem_load_supported_ip_families (MMIfaceModem *self,
     ctx = g_new (LoadSupportedIpFamiliesContext, 1);
     ctx->retry = 10;
     ctx->modem = MM_BASE_MODEM (self);
-    g_task_set_task_data (task, ctx, load_supported_ip_families_context_free);
+    g_task_set_task_data (task, ctx, (GDestroyNotify) load_supported_ip_families_context_free);
 
     if (mm_iface_modem_is_cdma_only (self)) {
         g_task_return_int (task, MM_BEARER_IP_FAMILY_IPV4);
