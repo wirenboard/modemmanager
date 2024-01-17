@@ -1144,52 +1144,6 @@ load_current_modes (MMIfaceModem        *self,
 }
 
 /*****************************************************************************/
-/* Load supported IP families (Modem interface) */
-
-static void
-load_supported_ip_families (MMIfaceModem *self,
-                            GAsyncReadyCallback callback,
-                            gpointer user_data)
-{
-    GTask *task;
-    /* For SIM A7600E-H return all possible IP families without testing.
-       load_supported_ip_families is called once and SIM A7600E-H can return ERROR if internal logic is not ready
-       It will lead to errors during connection up in NetworkManager
-       So call callback without actual querying a modem
-     */
-    if (g_str_has_prefix (mm_iface_modem_get_model (self), "A7600E-H")) {
-        mm_obj_dbg (self, "loading supported IP families...");
-
-        task = g_task_new (self, NULL, callback, user_data);
-        /* Assume IPv4 + IPv6 + IPv4v6 supported */
-        g_task_return_int (task,
-                        MM_BEARER_IP_FAMILY_IPV4 |
-                        MM_BEARER_IP_FAMILY_IPV6 |
-                        MM_BEARER_IP_FAMILY_IPV4V6);
-        g_object_unref (task);
-        return;
-    }
-    /* fallback to default implementation */
-    iface_modem_parent->load_supported_ip_families(self, callback, user_data);
-}
-
-static MMBearerIpFamily
-load_supported_ip_families_finish (MMIfaceModem *self,
-                                   GAsyncResult *res,
-                                   GError **error)
-{
-    GError *inner_error = NULL;
-    gssize value;
-
-    value = g_task_propagate_int (G_TASK (res), &inner_error);
-    if (inner_error) {
-        g_propagate_error (error, inner_error);
-        return MM_BEARER_IP_FAMILY_NONE;
-    }
-    return (MMBearerIpFamily)value;
-}
-
-/*****************************************************************************/
 /* Check unlock required (Modem interface) */
 
 static void
@@ -1893,8 +1847,6 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_supported_modes_finish = load_supported_modes_finish;
     iface->load_current_modes = load_current_modes;
     iface->load_current_modes_finish = load_current_modes_finish;
-    iface->load_supported_ip_families = load_supported_ip_families;
-    iface->load_supported_ip_families_finish = load_supported_ip_families_finish;
     iface->set_current_modes = set_current_modes;
     iface->set_current_modes_finish = set_current_modes_finish;
     iface->load_sim_slots = mm_broadband_modem_simtech_load_sim_slots;

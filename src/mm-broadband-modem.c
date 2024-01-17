@@ -1970,6 +1970,18 @@ modem_load_supported_modes (MMIfaceModem *self,
 /*****************************************************************************/
 /* Supported IP families loading (Modem interface) */
 
+typedef struct {
+    int retry;
+    MMBaseModem *modem;
+} LoadSupportedIpFamiliesContext;
+
+static void
+load_supported_ip_families_context_free (LoadSupportedIpFamiliesContext *ctx)
+{
+    g_object_unref (ctx->modem);
+    g_free (ctx);
+}
+
 static MMBearerIpFamily
 modem_load_supported_ip_families_finish (MMIfaceModem *self,
                                          GAsyncResult *res,
@@ -1987,6 +1999,23 @@ modem_load_supported_ip_families_finish (MMIfaceModem *self,
 }
 
 static void
+modem_load_supported_ip_families_retry (GTask* task)
+{
+    LoadSupportedIpFamiliesContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    /* Query with CGDCONT=? */
+    mm_base_modem_at_command (
+        ctx->modem,
+        "+CGDCONT=?",
+        3,
+        TRUE, /* allow caching, it's a test command */
+        (GAsyncReadyCallback)supported_ip_families_cgdcont_test_ready,
+        task);
+}
+
+static void
 supported_ip_families_cgdcont_test_ready (MMBaseModem *self,
                                           GAsyncResult *res,
                                           GTask *task)
@@ -1994,6 +2023,9 @@ supported_ip_families_cgdcont_test_ready (MMBaseModem *self,
     const gchar *response;
     GError *error = NULL;
     MMBearerIpFamily mask = MM_BEARER_IP_FAMILY_NONE;
+    LoadSupportedIpFamiliesContext *ctx;
+
+    ctx = g_task_get_task_data (task);
 
     response = mm_base_modem_at_command_finish (self, res, &error);
     if (response) {
@@ -2006,8 +2038,18 @@ supported_ip_families_cgdcont_test_ready (MMBaseModem *self,
         mm_3gpp_pdp_context_format_list_free (formats);
     }
 
+    --ctx->retry;
     if (error)
-        g_task_return_error (task, error);
+        if (ctx->retry <= 0) {
+            /* Can't get information, assume IPv4 + IPv6 + IPv4v6 supported */
+            g_task_return_int (
+                task,
+                MM_BEARER_IP_FAMILY_IPV4 |
+                MM_BEARER_IP_FAMILY_IPV6 |
+                MM_BEARER_IP_FAMILY_IPV4V6);
+        } else {
+            g_timeout_add_seconds (1, (GSourceFunc) modem_load_supported_ip_families_retry, task);
+        }
     else
         g_task_return_int (task, mask);
 
@@ -2020,9 +2062,14 @@ modem_load_supported_ip_families (MMIfaceModem *self,
                                   gpointer user_data)
 {
     GTask *task;
+    LoadSupportedIpFamiliesContext *ctx;
 
     mm_obj_dbg (self, "loading supported IP families...");
     task = g_task_new (self, NULL, callback, user_data);
+    ctx = g_new (LoadSupportedIpFamiliesContext, 1);
+    ctx->retry = 10;
+    ctx->modem = MM_BASE_MODEM (self);
+    g_task_set_task_data (task, ctx, load_supported_ip_families_context_free);
 
     if (mm_iface_modem_is_cdma_only (self)) {
         g_task_return_int (task, MM_BEARER_IP_FAMILY_IPV4);
@@ -2030,14 +2077,7 @@ modem_load_supported_ip_families (MMIfaceModem *self,
         return;
     }
 
-    /* Query with CGDCONT=? */
-    mm_base_modem_at_command (
-        MM_BASE_MODEM (self),
-        "+CGDCONT=?",
-        3,
-        TRUE, /* allow caching, it's a test command */
-        (GAsyncReadyCallback)supported_ip_families_cgdcont_test_ready,
-        task);
+    modem_load_supported_ip_families_retry(task);
 }
 
 /*****************************************************************************/

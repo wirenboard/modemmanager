@@ -1,3 +1,9 @@
+modemmanager (1.20.0-1~bpo11+1-wb107) stable; urgency=medium
+
+  * 
+
+ -- Petr Krasnoshchekov <petr.krasnoshchekov@wirenboard.com>  Wed, 17 Jan 2024 10:22:31 +0500
+
 modemmanager (1.20.0-1~bpo11+1-wb106) stable; urgency=medium
 
   * Fix SIM A7602E-H SMS storage selection.
