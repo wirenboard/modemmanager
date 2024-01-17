@@ -2014,7 +2014,7 @@ modem_load_supported_ip_families_retry (GTask* task)
     mm_base_modem_at_command (
         ctx->modem,
         "+CGDCONT=?",
-        3,
+        10,
         TRUE, /* allow caching, it's a test command */
         (GAsyncReadyCallback)supported_ip_families_cgdcont_test_ready,
         task);
