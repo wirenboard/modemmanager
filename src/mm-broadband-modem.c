@@ -1999,6 +1999,11 @@ modem_load_supported_ip_families_finish (MMIfaceModem *self,
 }
 
 static void
+supported_ip_families_cgdcont_test_ready (MMBaseModem *self,
+                                          GAsyncResult *res,
+                                          GTask *task);
+
+static void
 modem_load_supported_ip_families_retry (GTask* task)
 {
     LoadSupportedIpFamiliesContext *ctx;
