@@ -25,7 +25,7 @@ Build-Depends: debhelper-compat (= 13),
                polkitd,
                python3-dbus,
                python3-gi,
-               udev,
+               systemd-dev,
                valac (>= 0.22),
 # Needed for building documentation
                gtk-doc-tools <!nodoc>,
