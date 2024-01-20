@@ -1,3 +1,16 @@
+modemmanager (1.22.0-3) unstable; urgency=medium
+
+  [ Jeremy Bícha ]
+  * d/control: update build dependencies.
+    Upstream bumped the required version for `libmbim` and `libqmi`.
+
+  [ Arnaud Ferraris ]
+  * d/control: build-depend on systemd-dev instead of udev.
+    We only needed `udev` for its pkg-config file, which is now shipped in
+    `systemd-dev`. (Closes: #1060566)
+
+ -- Arnaud Ferraris <aferraris@debian.org>  Sat, 20 Jan 2024 12:14:00 +0100
+
 modemmanager (1.22.0-2) unstable; urgency=medium
 
   * modemmanager: acknowledge udev rules now being under /usr.
