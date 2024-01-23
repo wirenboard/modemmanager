@@ -1,8 +1,15 @@
-modemmanager (1.20.0-1~bpo11+1-wb106) stable; urgency=medium
+modemmanager (1.20.0-1~bpo11+1-wb107) stable; urgency=medium
 
   * Add USSD support for SIM A7600E-H/A7602E-H
 
- -- Petr Krasnoshchekov <petr.krasnoshchekov@wirenboard.com>  Fri, 07 Jul 2023 11:42:05 +0500
+ -- Petr Krasnoshchekov <petr.krasnoshchekov@wirenboard.com>  Tue, 23 Jan 2024 16:01:45 +0500
+
+modemmanager (1.20.0-1~bpo11+1-wb106) stable; urgency=medium
+
+  * Fix SIM A7602E-H SMS storage selection.
+    SIM A7602E-H resets SMS storages to default SM, if they are omitted in AT+CPMS write command. So always send all 3 parameters.
+
+ -- Petr Krasnoshchekov <petr.krasnoshchekov@wirenboard.com>  Mon, 15 Jan 2024 11:14:20 +0500
 
 modemmanager (1.20.0-1~bpo11+1-wb105) stable; urgency=medium
 

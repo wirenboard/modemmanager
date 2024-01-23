@@ -257,6 +257,7 @@ struct _MMBroadbandModemPrivate {
     MMSmsStorage current_sms_mem1_storage;
     gboolean mem2_storage_locked;
     MMSmsStorage current_sms_mem2_storage;
+    MMSmsStorage current_sms_mem3_storage;
 
     /*<--- Modem Voice interface --->*/
     /* Properties */
@@ -6642,6 +6643,7 @@ cpms_query_ready (MMBroadbandModem *self,
     GError *error = NULL;
     MMSmsStorage mem1;
     MMSmsStorage mem2;
+    MMSmsStorage mem3;
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
     if (error) {
@@ -6654,6 +6656,7 @@ cpms_query_ready (MMBroadbandModem *self,
     if (!mm_3gpp_parse_cpms_query_response (response,
                                             &mem1,
                                             &mem2,
+                                            &mem3,
                                             &error)) {
         g_task_return_error (task, error);
     } else {
@@ -6661,6 +6664,7 @@ cpms_query_ready (MMBroadbandModem *self,
 
         self->priv->current_sms_mem1_storage = mem1;
         self->priv->current_sms_mem2_storage = mem2;
+        self->priv->current_sms_mem3_storage = mem3;
 
         mm_obj_dbg (self, "current storages initialized:");
 
@@ -6670,6 +6674,10 @@ cpms_query_ready (MMBroadbandModem *self,
 
         aux = mm_common_build_sms_storages_string (&mem2, 1);
         mm_obj_dbg (self, "  mem2 (write/send) storages:       '%s'", aux);
+        g_free (aux);
+
+        aux = mm_common_build_sms_storages_string (&mem3, 1);
+        mm_obj_dbg (self, "  mem3 (receive) storages:       '%s'", aux);
         g_free (aux);
 
         g_task_return_boolean (task, TRUE);
@@ -6790,6 +6798,7 @@ mm_broadband_modem_lock_sms_storages (MMBroadbandModem *self,
     gchar *cmd = NULL;
     gchar *mem1_str = NULL;
     gchar *mem2_str = NULL;
+    gchar *mem3_str = NULL;
 
     /* If storages are currently locked by someone else, just return an
      * error */
@@ -6818,6 +6827,7 @@ mm_broadband_modem_lock_sms_storages (MMBroadbandModem *self,
     /* Some modems may not support empty string parameters, then if mem1 is
      * UNKNOWN, and current sms mem1 storage has a valid value, we send again
      * the already locked mem1 value in place of an empty string.
+     * The same applies to mem2.
      * This way we also avoid to confuse the environment of other sync operation
      * that have potentially locked mem1 previously.
      */
@@ -6847,19 +6857,38 @@ mm_broadband_modem_lock_sms_storages (MMBroadbandModem *self,
         self->priv->mem2_storage_locked = TRUE;
         self->priv->current_sms_mem2_storage = mem2;
 
-        mem2_str = g_ascii_strup (mm_sms_storage_get_string (self->priv->current_sms_mem2_storage), -1);
+    } else if (self->priv->current_sms_mem2_storage != MM_SMS_STORAGE_UNKNOWN) {
+        mm_obj_dbg (self, "given sms mem2 storage is unknown. Using current sms mem2 storage value '%s' instead",
+                    mm_sms_storage_get_string (self->priv->current_sms_mem2_storage));
+    } else {
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_RETRY,
+                                 "Cannot lock mem1 storage alone when current mem2 storage is unknown");
+        g_object_unref (task);
+        return;
     }
+    mem2_str = g_ascii_strup (mm_sms_storage_get_string (self->priv->current_sms_mem2_storage), -1);
+
+    /* Some modems reset mem3 to default if omitted. So always send it */
+    if (self->priv->current_sms_mem3_storage == MM_SMS_STORAGE_UNKNOWN) {
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_RETRY,
+                                 "Cannot lock mem1 or mem2 storage when current mem3 storage is unknown");
+        g_object_unref (task);
+        return;
+    }
+    mem3_str = g_ascii_strup (mm_sms_storage_get_string (self->priv->current_sms_mem3_storage), -1);
 
     g_assert (mem1_str != NULL);
+    g_assert (mem2_str != NULL);
+    g_assert (mem3_str != NULL);
 
-    /* We don't touch 'mem3' here */
-    mm_obj_dbg (self, "locking SMS storages to: mem1 (%s), mem2 (%s)...",
-                mem1_str, mem2_str ? mem2_str : "none");
+    mm_obj_dbg (self, "locking SMS storages to: mem1 (%s), mem2 (%s), mem2 (%s)",
+                mem1_str, mem2_str, mem3_str);
 
-    if (mem2_str)
-        cmd = g_strdup_printf ("+CPMS=\"%s\",\"%s\"", mem1_str, mem2_str);
-    else
-        cmd = g_strdup_printf ("+CPMS=\"%s\"", mem1_str);
+    cmd = g_strdup_printf ("+CPMS=\"%s\",\"%s\",\"%s\"", mem1_str, mem2_str, mem3_str);
 
     mm_base_modem_at_command (MM_BASE_MODEM (self),
                               cmd,
@@ -6869,6 +6898,7 @@ mm_broadband_modem_lock_sms_storages (MMBroadbandModem *self,
                               task);
     g_free (mem1_str);
     g_free (mem2_str);
+    g_free (mem3_str);
     g_free (cmd);
 }
 
@@ -6924,6 +6954,7 @@ modem_messaging_set_default_storage (MMIfaceModemMessaging *_self,
 
     /* Set defaults as current */
     self->priv->current_sms_mem2_storage = storage;
+    self->priv->current_sms_mem3_storage = storage;
 
     mem1_str = g_ascii_strup (mm_sms_storage_get_string (self->priv->current_sms_mem1_storage), -1);
     mem_str = g_ascii_strup (mm_sms_storage_get_string (storage), -1);
@@ -13271,6 +13302,7 @@ mm_broadband_modem_init (MMBroadbandModem *self)
     self->priv->modem_messaging_sms_default_storage = MM_SMS_STORAGE_UNKNOWN;
     self->priv->current_sms_mem1_storage = MM_SMS_STORAGE_UNKNOWN;
     self->priv->current_sms_mem2_storage = MM_SMS_STORAGE_UNKNOWN;
+    self->priv->current_sms_mem3_storage = MM_SMS_STORAGE_UNKNOWN;
     self->priv->sim_hot_swap_supported = FALSE;
     self->priv->periodic_signal_check_disabled = FALSE;
     self->priv->periodic_access_tech_check_disabled = FALSE;
