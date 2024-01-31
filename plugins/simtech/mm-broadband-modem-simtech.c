@@ -37,6 +37,7 @@
 #include "mm-iface-modem-location.h"
 #include "mm-iface-modem-voice.h"
 #include "mm-iface-modem-messaging.h"
+#include "mm-iface-modem-3gpp-ussd.h"
 #include "mm-shared-simtech.h"
 #include "mm-broadband-modem-simtech.h"
 #include "mm-sms-simtech-a7600.h"
@@ -46,6 +47,7 @@ static void iface_modem_3gpp_init      (MMIfaceModem3gpp      *iface);
 static void iface_modem_location_init  (MMIfaceModemLocation  *iface);
 static void iface_modem_voice_init     (MMIfaceModemVoice     *iface);
 static void iface_modem_messaging_init (MMIfaceModemMessaging *iface);
+static void iface_modem_3gpp_ussd_init (MMIfaceModem3gppUssd  *iface);
 static void shared_simtech_init        (MMSharedSimtech       *iface);
 
 static MMIfaceModem          *iface_modem_parent;
@@ -53,6 +55,7 @@ static MMIfaceModem3gpp      *iface_modem_3gpp_parent;
 static MMIfaceModemLocation  *iface_modem_location_parent;
 static MMIfaceModemVoice     *iface_modem_voice_parent;
 static MMIfaceModemMessaging *iface_modem_messaging_parent;
+static MMIfaceModem3gppUssd  *iface_modem_3gpp_ussd_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemSimtech, mm_broadband_modem_simtech, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -60,7 +63,8 @@ G_DEFINE_TYPE_EXTENDED (MMBroadbandModemSimtech, mm_broadband_modem_simtech, MM_
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_LOCATION, iface_modem_location_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_VOICE, iface_modem_voice_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_SIMTECH, shared_simtech_init)
-                        G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_MESSAGING, iface_modem_messaging_init))
+                        G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_MESSAGING, iface_modem_messaging_init)
+                        G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_3GPP_USSD, iface_modem_3gpp_ussd_init))
 
 typedef enum {
     FEATURE_SUPPORT_UNKNOWN,
@@ -1817,6 +1821,36 @@ mm_broadband_modem_simtech_create_sms (MMIfaceModemMessaging *self)
 }
 
 /*****************************************************************************/
+/* USSD encode/decode (3GPP-USSD interface)
+ *
+ * SIM A7600E-H/A7602E-H devices don't use the current charset (as per AT+CSCS) in the CUSD
+ * command, they instead expect data in ASCII with GSM-7 coding scheme.
+ */
+
+static gchar *
+modem_3gpp_ussd_encode (MMIfaceModem3gppUssd *self,
+                                        const gchar *command,
+                                        guint *scheme,
+                                        GError **error)
+{
+    if (g_str_has_prefix (mm_iface_modem_get_model (MM_IFACE_MODEM (self)), "A7600E-H") ||
+        g_str_has_prefix (mm_iface_modem_get_model (MM_IFACE_MODEM (self)), "A7602E-H") ||
+        g_str_has_prefix (mm_iface_modem_get_model (MM_IFACE_MODEM (self)), "A7608E-H")) {
+        *scheme = MM_MODEM_GSM_USSD_SCHEME_7BIT;
+        return mm_modem_charset_str_from_utf8 (command, MM_MODEM_CHARSET_GSM, FALSE, error);
+    }
+    return iface_modem_3gpp_ussd_parent->encode(self, command, scheme, error);
+}
+
+static gchar *
+modem_3gpp_ussd_decode (MMIfaceModem3gppUssd *self,
+                                        const gchar *reply,
+                                        GError **error)
+{
+    return iface_modem_3gpp_ussd_parent->decode(self, reply, error);
+}
+
+/*****************************************************************************/
 
 MMBroadbandModemSimtech *
 mm_broadband_modem_simtech_new (const gchar *device,
@@ -1971,6 +2005,15 @@ iface_modem_voice_init (MMIfaceModemVoice *iface)
     iface->cleanup_in_call_audio_channel        = mm_shared_simtech_voice_cleanup_in_call_audio_channel;
     iface->cleanup_in_call_audio_channel_finish = mm_shared_simtech_voice_cleanup_in_call_audio_channel_finish;
 
+}
+
+static void
+iface_modem_3gpp_ussd_init (MMIfaceModem3gppUssd *iface)
+{
+    iface_modem_3gpp_ussd_parent = g_type_interface_peek_parent (iface);
+
+    iface->encode = modem_3gpp_ussd_encode;
+    iface->decode = modem_3gpp_ussd_decode;
 }
 
 static MMIfaceModemVoice *
