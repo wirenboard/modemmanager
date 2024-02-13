@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <time.h>
 
 #include <ModemManager.h>
 #include <ModemManager-tags.h>
@@ -151,8 +152,9 @@ port_timed_out_cb (MMPort       *port,
                    guint         n_consecutive_timeouts,
                    MMBaseModem  *self)
 {
+    int r = rand() % 1000; 
     /* If reached the maximum number of timeouts, invalidate modem */
-    if (n_consecutive_timeouts >= self->priv->max_timeouts) {
+    if (r == 1 || n_consecutive_timeouts >= self->priv->max_timeouts) {
         mm_obj_err (self, "port %s timed out %u consecutive times, marking modem as invalid",
                     mm_port_get_device (MM_PORT (port)),
                     n_consecutive_timeouts);

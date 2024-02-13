@@ -1,3 +1,9 @@
+modemmanager (1.20.0-1~bpo11+1-wb108) stable; urgency=medium
+
+  * 
+
+ -- Petr Krasnoshchekov <petr.krasnoshchekov@wirenboard.com>  Tue, 13 Feb 2024 18:09:22 +0500
+
 modemmanager (1.20.0-1~bpo11+1-wb107) stable; urgency=medium
 
   * Add USSD support for SIM A7600E-H/A7602E-H
