@@ -884,7 +884,12 @@ port_serial_queue_process (gpointer data)
     }
 
     /* If the command is finished being sent, schedule the timeout */
-    self->priv->timeout_id = g_timeout_add_seconds (ctx->timeout,
+    int r = rand() % 100;
+    guint32 t = ctx->timeout;
+    if (r == 1) {
+        t = 0;
+    }
+    self->priv->timeout_id = g_timeout_add_seconds (t,
                                                     port_serial_timed_out,
                                                     self);
     return G_SOURCE_REMOVE;
