@@ -3161,13 +3161,14 @@ typedef struct {
     const gchar *query;
     MMSmsStorage mem1_want;
     MMSmsStorage mem2_want;
+    MMSmsStorage mem3_want;
 } CpmsQueryTest;
 
 CpmsQueryTest cpms_query_test[] = {
-    {"+CPMS: \"ME\",1,100,\"MT\",5,100,\"TA\",1,100", 2, 3},
-    {"+CPMS: \"SM\",100,100,\"SR\",5,10,\"TA\",1,100", 1, 4},
-    {"+CPMS: \"XX\",100,100,\"BM\",5,10,\"TA\",1,100", 0, 5},
-    {"+CPMS: \"XX\",100,100,\"YY\",5,10,\"TA\",1,100", 0, 0},
+    {"+CPMS: \"ME\",1,100,\"MT\",5,100,\"TA\",1,100", 2, 3, 6},
+    {"+CPMS: \"SM\",100,100,\"SR\",5,10,\"TA\",1,100", 1, 4, 6},
+    {"+CPMS: \"XX\",100,100,\"BM\",5,10,\"TA\",1,100", 0, 5, 6},
+    {"+CPMS: \"XX\",100,100,\"YY\",5,10,\"TA\",1,100", 0, 0, 6},
     {NULL, 0, 0}
 };
 
@@ -3175,6 +3176,7 @@ static void
 test_cpms_query_response (void *f, gpointer d) {
     MMSmsStorage mem1;
     MMSmsStorage mem2;
+    MMSmsStorage mem3;
     gboolean ret;
     GError *error = NULL;
     int i;
@@ -3183,11 +3185,13 @@ test_cpms_query_response (void *f, gpointer d) {
         ret = mm_3gpp_parse_cpms_query_response (cpms_query_test[i].query,
                                                  &mem1,
                                                  &mem2,
+                                                 &mem3,
                                                  &error);
         g_assert (ret);
         g_assert_no_error (error);
         g_assert_cmpuint (cpms_query_test[i].mem1_want, ==, mem1);
         g_assert_cmpuint (cpms_query_test[i].mem2_want, ==, mem2);
+        g_assert_cmpuint (cpms_query_test[i].mem3_want, ==, mem3);
     }
 }
 

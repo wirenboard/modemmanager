@@ -3010,7 +3010,7 @@ mm_3gpp_parse_cpms_test_response (const gchar  *reply,
 
 /**********************************************************************
  * AT+CPMS?
- * +CPMS: <memr>,<usedr>,<totalr>,<memw>,<usedw>,<totalw>, <mems>,<useds>,<totals>
+ * +CPMS: <memr>,<usedr>,<totalr>,<memw>,<usedw>,<totalw>,<mems>,<useds>,<totals>
  */
 
 #define CPMS_QUERY_REGEX "\\+CPMS:\\s*\"(?P<memr>.*)\",[0-9]+,[0-9]+,\"(?P<memw>.*)\",[0-9]+,[0-9]+,\"(?P<mems>.*)\",[0-9]+,[0-9]"
@@ -3019,6 +3019,7 @@ gboolean
 mm_3gpp_parse_cpms_query_response (const gchar *reply,
                                    MMSmsStorage *memr,
                                    MMSmsStorage *memw,
+                                   MMSmsStorage *mems,
                                    GError **error)
 {
     g_autoptr(GRegex)     r = NULL;
@@ -3043,6 +3044,9 @@ mm_3gpp_parse_cpms_query_response (const gchar *reply,
         return FALSE;
 
     if (!mm_3gpp_get_cpms_storage_match (match_info, "memw", memw, error))
+        return FALSE;
+
+    if (!mm_3gpp_get_cpms_storage_match (match_info, "mems", mems, error))
         return FALSE;
 
     return TRUE;
