@@ -1,3 +1,9 @@
+modemmanager (1.20.0-1~bpo11+1-wb108) stable; urgency=medium
+
+  * Add arm64 build, no functional changes
+
+ -- Nikolay Korotkiy <nikolay.korotkiy@wirenboard.com>  Tue, 26 Mar 2024 13:01:00 +0400
+
 modemmanager (1.20.0-1~bpo11+1-wb107) stable; urgency=medium
 
   * Add USSD support for SIM A7600E-H/A7602E-H
