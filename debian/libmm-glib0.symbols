@@ -100,6 +100,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_bearer_properties_get_apn@Base 0.7.991
  mm_bearer_properties_get_apn_type@Base 1.18.2
  mm_bearer_properties_get_dictionary@Base 0.7.991
+ mm_bearer_properties_get_force@Base 1.23.12
  mm_bearer_properties_get_ip_type@Base 0.7.991
  mm_bearer_properties_get_multiplex@Base 1.18.2
  mm_bearer_properties_get_number@Base 0.7.991
@@ -121,6 +122,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_bearer_properties_set_allowed_auth@Base 0.7.991
  mm_bearer_properties_set_apn@Base 0.7.991
  mm_bearer_properties_set_apn_type@Base 1.18.2
+ mm_bearer_properties_set_force@Base 1.23.12
  mm_bearer_properties_set_ip_type@Base 0.7.991
  mm_bearer_properties_set_multiplex@Base 1.18.2
  mm_bearer_properties_set_number@Base 0.7.991
@@ -223,6 +225,8 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_call_state_get_type@Base 1.5.993
  mm_call_state_reason_get_string@Base 1.5.993
  mm_call_state_reason_get_type@Base 1.5.993
+ mm_carrier_lock_error_get_type@Base 1.23.12
+ mm_carrier_lock_error_quark@Base 1.23.12
  mm_cdma_activation_error_get_type@Base 0.7.991
  mm_cdma_activation_error_quark@Base 0.7.991
  mm_cdma_manual_activation_properties_get_dictionary@Base 1.2.0
@@ -620,6 +624,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem3gpp_dup_imei@Base 0.7.991
  mm_gdbus_modem3gpp_dup_initial_eps_bearer@Base 1.10.0
  mm_gdbus_modem3gpp_dup_initial_eps_bearer_settings@Base 1.10.0
+ mm_gdbus_modem3gpp_dup_network_rejection@Base 1.23.12
  mm_gdbus_modem3gpp_dup_nr5g_registration_settings@Base 1.20.0
  mm_gdbus_modem3gpp_dup_operator_code@Base 0.7.991
  mm_gdbus_modem3gpp_dup_operator_name@Base 0.7.991
@@ -629,6 +634,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem3gpp_get_imei@Base 0.7.991
  mm_gdbus_modem3gpp_get_initial_eps_bearer@Base 1.10.0
  mm_gdbus_modem3gpp_get_initial_eps_bearer_settings@Base 1.10.0
+ mm_gdbus_modem3gpp_get_network_rejection@Base 1.23.12
  mm_gdbus_modem3gpp_get_nr5g_registration_settings@Base 1.20.0
  mm_gdbus_modem3gpp_get_operator_code@Base 0.7.991
  mm_gdbus_modem3gpp_get_operator_name@Base 0.7.991
@@ -679,6 +685,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem3gpp_set_imei@Base 0.7.991
  mm_gdbus_modem3gpp_set_initial_eps_bearer@Base 1.10.0
  mm_gdbus_modem3gpp_set_initial_eps_bearer_settings@Base 1.10.0
+ mm_gdbus_modem3gpp_set_network_rejection@Base 1.23.12
  mm_gdbus_modem3gpp_set_nr5g_registration_settings@Base 1.20.0
  mm_gdbus_modem3gpp_set_operator_code@Base 0.7.991
  mm_gdbus_modem3gpp_set_operator_name@Base 0.7.991
@@ -956,9 +963,13 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_messaging_call_list@Base 0.7.991
  mm_gdbus_modem_messaging_call_list_finish@Base 0.7.991
  mm_gdbus_modem_messaging_call_list_sync@Base 0.7.991
+ mm_gdbus_modem_messaging_call_set_default_storage@Base 1.23.12
+ mm_gdbus_modem_messaging_call_set_default_storage_finish@Base 1.23.12
+ mm_gdbus_modem_messaging_call_set_default_storage_sync@Base 1.23.12
  mm_gdbus_modem_messaging_complete_create@Base 0.7.991
  mm_gdbus_modem_messaging_complete_delete@Base 0.7.991
  mm_gdbus_modem_messaging_complete_list@Base 0.7.991
+ mm_gdbus_modem_messaging_complete_set_default_storage@Base 1.23.12
  mm_gdbus_modem_messaging_dup_messages@Base 1.2.0
  mm_gdbus_modem_messaging_dup_supported_storages@Base 0.7.991
  mm_gdbus_modem_messaging_emit_added@Base 0.7.991
@@ -1558,6 +1569,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_3gpp_get_initial_eps_bearer_path@Base 1.10.0
  mm_modem_3gpp_get_initial_eps_bearer_settings@Base 1.10.0
  mm_modem_3gpp_get_initial_eps_bearer_sync@Base 1.10.0
+ mm_modem_3gpp_get_network_rejection@Base 1.23.12
  mm_modem_3gpp_get_nr5g_registration_settings@Base 1.20.0
  mm_modem_3gpp_get_operator_code@Base 0.7.991
  mm_modem_3gpp_get_operator_name@Base 0.7.991
@@ -1581,6 +1593,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_3gpp_packet_service_state_get_string@Base 1.20.0
  mm_modem_3gpp_packet_service_state_get_type@Base 1.20.0
  mm_modem_3gpp_peek_initial_eps_bearer_settings@Base 1.10.0
+ mm_modem_3gpp_peek_network_rejection@Base 1.23.12
  mm_modem_3gpp_peek_nr5g_registration_settings@Base 1.20.0
  mm_modem_3gpp_profile_manager_delete@Base 1.18.2
  mm_modem_3gpp_profile_manager_delete_finish@Base 1.18.2
@@ -1840,6 +1853,9 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_messaging_list_finish@Base 0.7.991
  mm_modem_messaging_list_sync@Base 0.7.991
  mm_modem_messaging_peek_supported_storages@Base 0.7.991
+ mm_modem_messaging_set_default_storage@Base 1.23.12
+ mm_modem_messaging_set_default_storage_finish@Base 1.23.12
+ mm_modem_messaging_set_default_storage_sync@Base 1.23.12
  mm_modem_mode_build_string_from_mask@Base 0.7.991
  mm_modem_mode_get_type@Base 0.7.991
  mm_modem_oma_accept_network_initiated_session@Base 1.2.0
@@ -1984,6 +2000,20 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_voice_transfer@Base 1.12.6
  mm_modem_voice_transfer_finish@Base 1.12.6
  mm_modem_voice_transfer_sync@Base 1.12.6
+ mm_network_error_get_string@Base 1.23.12
+ mm_network_error_get_type@Base 1.23.12
+ mm_network_rejection_get_access_technology@Base 1.23.12
+ mm_network_rejection_get_dictionary@Base 1.23.12
+ mm_network_rejection_get_error@Base 1.23.12
+ mm_network_rejection_get_operator_id@Base 1.23.12
+ mm_network_rejection_get_operator_name@Base 1.23.12
+ mm_network_rejection_get_type@Base 1.23.12
+ mm_network_rejection_new@Base 1.23.12
+ mm_network_rejection_new_from_dictionary@Base 1.23.12
+ mm_network_rejection_set_access_technology@Base 1.23.12
+ mm_network_rejection_set_error@Base 1.23.12
+ mm_network_rejection_set_operator_id@Base 1.23.12
+ mm_network_rejection_set_operator_name@Base 1.23.12
  mm_network_timezone_get_dictionary@Base 0.7.991
  mm_network_timezone_get_dst_offset@Base 0.7.991
  mm_network_timezone_get_leap_seconds@Base 0.7.991
