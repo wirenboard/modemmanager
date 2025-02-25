@@ -19,6 +19,7 @@
 
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-firmware.h"
+#include "mm-error-helpers.h"
 #include "mm-log-object.h"
 
 #if defined WITH_QMI
@@ -27,6 +28,8 @@
 #if defined WITH_MBIM
 # include "mm-broadband-modem-mbim.h"
 #endif
+
+G_DEFINE_INTERFACE (MMIfaceModemFirmware, mm_iface_modem_firmware, MM_TYPE_IFACE_MODEM)
 
 /*****************************************************************************/
 
@@ -69,11 +72,11 @@ load_current_ready (MMIfaceModemFirmware *self,
     GList *l;
     GError *error = NULL;
 
-    ctx->current = MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_current_finish (self, res, &error);
+    ctx->current = MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->load_current_finish (self, res, &error);
     if (!ctx->current) {
         /* Not found isn't fatal */
         if (!g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND)) {
-            g_dbus_method_invocation_take_error (ctx->invocation, error);
+            mm_dbus_method_invocation_take_error (ctx->invocation, error);
             handle_list_context_free (ctx);
             return;
         }
@@ -106,11 +109,11 @@ load_list_ready (MMIfaceModemFirmware *self,
 {
     GError *error = NULL;
 
-    ctx->list = MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_list_finish (self, res, &error);
+    ctx->list = MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->load_list_finish (self, res, &error);
     if (!ctx->list) {
         /* Not found isn't fatal */
         if (!g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND)) {
-            g_dbus_method_invocation_take_error (ctx->invocation, error);
+            mm_dbus_method_invocation_take_error (ctx->invocation, error);
             handle_list_context_free (ctx);
             return;
         }
@@ -118,9 +121,10 @@ load_list_ready (MMIfaceModemFirmware *self,
         g_clear_error (&error);
     }
 
-    MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_current (MM_IFACE_MODEM_FIRMWARE (self),
-                                                                (GAsyncReadyCallback)load_current_ready,
-                                                                ctx);
+    MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->load_current (
+        MM_IFACE_MODEM_FIRMWARE (self),
+        (GAsyncReadyCallback)load_current_ready,
+        ctx);
 }
 
 static void
@@ -131,26 +135,26 @@ list_auth_ready (MMBaseModem *self,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (self, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_list_context_free (ctx);
         return;
     }
 
-    if (!MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_list ||
-        !MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_list_finish ||
-        !MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_current ||
-        !MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_current_finish) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot list firmware: operation not supported");
+    if (!MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->load_list ||
+        !MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->load_list_finish ||
+        !MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->load_current ||
+        !MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->load_current_finish) {
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot list firmware: operation not supported");
         handle_list_context_free (ctx);
         return;
     }
 
-    MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_list (MM_IFACE_MODEM_FIRMWARE (self),
-                                                             (GAsyncReadyCallback)load_list_ready,
-                                                             ctx);
+    mm_obj_info (self, "processing user request to load firmware list...");
+    MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->load_list (
+        MM_IFACE_MODEM_FIRMWARE (self),
+        (GAsyncReadyCallback)load_list_ready,
+        ctx);
 }
 
 static gboolean
@@ -201,8 +205,8 @@ change_current_ready (MMIfaceModemFirmware *self,
 {
     GError *error = NULL;
 
-    if (!MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->change_current_finish (self, res, &error))
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+    if (!MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->change_current_finish (self, res, &error))
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     else
         mm_gdbus_modem_firmware_complete_select (ctx->skeleton, ctx->invocation);
     handle_select_context_free (ctx);
@@ -216,26 +220,26 @@ select_auth_ready (MMBaseModem *self,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (self, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_select_context_free (ctx);
         return;
     }
 
 
-    if (!MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->change_current ||
-        !MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->change_current_finish) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot select firmware: operation not supported");
+    if (!MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->change_current ||
+        !MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->change_current_finish) {
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot select firmware: operation not supported");
         handle_select_context_free (ctx);
         return;
     }
 
-    MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->change_current (MM_IFACE_MODEM_FIRMWARE (self),
-                                                                  ctx->name,
-                                                                  (GAsyncReadyCallback)change_current_ready,
-                                                                  ctx);
+    mm_obj_info (self, "processing user request to select firmware...");
+    MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->change_current (
+        MM_IFACE_MODEM_FIRMWARE (self),
+        ctx->name,
+        (GAsyncReadyCallback)change_current_ready,
+        ctx);
 }
 
 static gboolean
@@ -353,7 +357,13 @@ mm_iface_firmware_build_generic_device_ids (MMIfaceModemFirmware  *self,
 #endif
     if (!primary)
         primary = MM_PORT (mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)));
-    g_assert (primary != NULL);
+
+    if (!primary) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "No valid primary port");
+        return NULL;
+    }
+
     rid = mm_kernel_device_get_physdev_revision (mm_port_peek_kernel_device (primary));
 
     subsystem = mm_kernel_device_get_physdev_subsystem (mm_port_peek_kernel_device (primary));
@@ -412,7 +422,7 @@ load_update_settings_ready (MMIfaceModemFirmware *self,
 
     ctx = g_task_get_task_data (task);
 
-    update_settings = MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_update_settings_finish (self, res, &error);
+    update_settings = MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->load_update_settings_finish (self, res, &error);
     if (!update_settings) {
         mm_obj_dbg (self, "couldn't load update settings: %s", error->message);
         g_error_free (error);
@@ -477,9 +487,9 @@ interface_initialization_step (GTask *task)
         /* fall through */
 
     case INITIALIZATION_STEP_UPDATE_SETTINGS:
-        if (MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_update_settings &&
-            MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_update_settings_finish) {
-            MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE (self)->load_update_settings (
+        if (MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->load_update_settings &&
+            MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->load_update_settings_finish) {
+            MM_IFACE_MODEM_FIRMWARE_GET_IFACE (self)->load_update_settings (
                 self,
                 (GAsyncReadyCallback)load_update_settings_ready,
                 task);
@@ -559,52 +569,29 @@ mm_iface_modem_firmware_shutdown (MMIfaceModemFirmware *self)
 /*****************************************************************************/
 
 static void
-iface_modem_firmware_init (gpointer g_iface)
+mm_iface_modem_firmware_default_init (MMIfaceModemFirmwareInterface *iface)
 {
-    static gboolean initialized = FALSE;
+    static gsize initialized = 0;
 
-    if (initialized)
+    if (!g_once_init_enter (&initialized))
         return;
 
     /* Properties */
-    g_object_interface_install_property
-        (g_iface,
-         g_param_spec_object (MM_IFACE_MODEM_FIRMWARE_DBUS_SKELETON,
-                              "Firmware DBus skeleton",
-                              "DBus skeleton for the Firmware interface",
-                              MM_GDBUS_TYPE_MODEM_FIRMWARE_SKELETON,
-                              G_PARAM_READWRITE));
+    g_object_interface_install_property (
+        iface,
+        g_param_spec_object (MM_IFACE_MODEM_FIRMWARE_DBUS_SKELETON,
+                             "Firmware DBus skeleton",
+                             "DBus skeleton for the Firmware interface",
+                             MM_GDBUS_TYPE_MODEM_FIRMWARE_SKELETON,
+                             G_PARAM_READWRITE));
 
-    g_object_interface_install_property
-        (g_iface,
-         g_param_spec_boolean (MM_IFACE_MODEM_FIRMWARE_IGNORE_CARRIER,
-                               "Ignore carrier info in firmware details",
-                               "Whether carrier info (version, name) should be ignored when showing the firmware details",
-                               FALSE,
-                               G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    g_object_interface_install_property (
+        iface,
+        g_param_spec_boolean (MM_IFACE_MODEM_FIRMWARE_IGNORE_CARRIER,
+                              "Ignore carrier info in firmware details",
+                              "Whether carrier info (version, name) should be ignored when showing the firmware details",
+                              FALSE,
+                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
-    initialized = TRUE;
-}
-
-GType
-mm_iface_modem_firmware_get_type (void)
-{
-    static GType iface_modem_firmware_type = 0;
-
-    if (!G_UNLIKELY (iface_modem_firmware_type)) {
-        static const GTypeInfo info = {
-            sizeof (MMIfaceModemFirmware), /* class_size */
-            iface_modem_firmware_init,     /* base_init */
-            NULL,                           /* base_finalize */
-        };
-
-        iface_modem_firmware_type = g_type_register_static (G_TYPE_INTERFACE,
-                                                            "MMIfaceModemFirmware",
-                                                            &info,
-                                                            0);
-
-        g_type_interface_add_prerequisite (iface_modem_firmware_type, MM_TYPE_IFACE_MODEM);
-    }
-
-    return iface_modem_firmware_type;
+    g_once_init_leave (&initialized, 1);
 }

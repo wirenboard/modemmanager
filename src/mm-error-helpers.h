@@ -23,10 +23,31 @@
 #include <ModemManager.h>
 #include <libmm-glib.h>
 
-GError *mm_connection_error_for_code         (MMConnectionError       code, gpointer log_object);
-GError *mm_mobile_equipment_error_for_code   (MMMobileEquipmentError  code, gpointer log_object);
-GError *mm_mobile_equipment_error_for_string (const gchar            *str,  gpointer log_object);
-GError *mm_message_error_for_code            (MMMessageError          code, gpointer log_object);
-GError *mm_message_error_for_string          (const gchar            *str,  gpointer log_object);
+GError *mm_connection_error_for_code         (MMConnectionError       code,  gpointer log_object);
+GError *mm_mobile_equipment_error_for_code   (MMMobileEquipmentError  code,  gpointer log_object);
+GError *mm_mobile_equipment_error_for_string (const gchar            *str,   gpointer log_object);
+GError *mm_message_error_for_code            (MMMessageError          code,  gpointer log_object);
+GError *mm_message_error_for_string          (const gchar            *str,   gpointer log_object);
+GError *mm_normalize_error                   (const GError           *error);
+void    mm_register_error_mapping            (GQuark                  input_error_domain,
+                                              gint                    input_error_code,
+                                              GQuark                  output_error_domain,
+                                              gint                    output_error_code);
+
+/* Replacements for the dbus method invocation completions but with our error normalization
+ * procedure in place, so that we only report back MM-specific errors. */
+void mm_dbus_method_invocation_take_error           (GDBusMethodInvocation *invocation,
+                                                     GError                *error);
+void mm_dbus_method_invocation_return_error_literal (GDBusMethodInvocation *invocation,
+                                                     GQuark                 domain,
+                                                     gint                   code,
+                                                     const gchar           *message);
+void mm_dbus_method_invocation_return_error         (GDBusMethodInvocation *invocation,
+                                                     GQuark                 domain,
+                                                     gint                   code,
+                                                     const gchar           *format,
+                                                     ...) G_GNUC_PRINTF(4, 5);;
+void mm_dbus_method_invocation_return_gerror        (GDBusMethodInvocation *invocation,
+                                                     const GError          *error);
 
 #endif /* MM_ERROR_HELPERS_H */

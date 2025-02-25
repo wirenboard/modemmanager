@@ -21,7 +21,6 @@
 #include <ctype.h>
 #include <glib.h>
 #include <string.h>
-#include <ctype.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
 
@@ -449,6 +448,34 @@ mm_bcd_to_string (const guint8 *bcd, gsize bcd_len, gboolean low_nybble_first)
         if (!low_nybble_first)
             str = g_string_append_c (str, bcd_chars[bcd[i] & 0xF]);
     }
+    return g_string_free (str, FALSE);
+}
+
+/*****************************************************************************/
+
+gchar *
+mm_at_quote_string (const gchar *input)
+{
+    GString *str;
+    gsize    input_len;
+
+    input_len = input ? strlen (input) : 0;
+    str = g_string_sized_new (3 + 3 * input_len); /* worst case */
+    g_string_append_c (str, '"');
+
+    if (input) {
+        gsize i, len;
+
+        len = strlen (input);
+        for (i = 0 ; i < len; i++) {
+            if (input[i] < 0x20 || input[i] == '"' || input[i] == '\\')
+                g_string_append_printf (str, "\\%02X", input[i]);
+            else
+                g_string_append_c (str, input[i]);
+        }
+    }
+    g_string_append_c (str, '"');
+
     return g_string_free (str, FALSE);
 }
 
@@ -1826,7 +1853,7 @@ mm_3gpp_parse_cgdcont_read_response (const gchar *reply,
         /* No APNs configured, all done */
         return NULL;
 
-    r = g_regex_new ("\\+CGDCONT:\\s*(\\d+)\\s*,([^, \\)]*)\\s*,([^, \\)]*)\\s*,([^, \\)]*)",
+    r = g_regex_new ("\\+CGDCONT:\\s*(\\d+)\\s*,([^, \\)]*)\\s*,([^,\\s\\)]*)",
                      G_REGEX_DOLLAR_ENDONLY | G_REGEX_RAW,
                      0, NULL);
     g_assert (r);
@@ -1842,6 +1869,8 @@ mm_3gpp_parse_cgdcont_read_response (const gchar *reply,
             MM3gppPdpContext *pdp;
 
             pdp = g_slice_new0 (MM3gppPdpContext);
+            list = g_list_prepend (list, pdp);
+
             if (!mm_get_uint_from_match_info (match_info, 1, &pdp->cid)) {
                 inner_error = g_error_new (MM_CORE_ERROR,
                                            MM_CORE_ERROR_FAILED,
@@ -1851,8 +1880,6 @@ mm_3gpp_parse_cgdcont_read_response (const gchar *reply,
             }
             pdp->pdp_type = ip_family;
             pdp->apn = mm_get_string_unquoted_from_match_info (match_info, 3);
-
-            list = g_list_prepend (list, pdp);
         }
 
         g_free (str);
@@ -4119,11 +4146,16 @@ mm_3gpp_get_ip_family_from_pdp_type (const gchar *pdp_type)
 }
 
 gboolean
-mm_3gpp_normalize_ip_family (MMBearerIpFamily *family)
+mm_3gpp_normalize_ip_family (MMBearerIpFamily *family, gboolean from_user)
 {
-    /* if nothing specific requested, default to IPv4 */
+    /* To address limitations in reading IP_TYPE information (in some cases) for
+     * profile requests, default to IPv4v6 (dual-stack) for profile requests and
+     * IPv4 only for user requests (to ensure backward compatibility) if nothing
+     * specific is requested. This ensures network compatibility across IPv4 and IPv6 networks,
+     * preventing potential connectivity issues in IPv6 environments.
+    */
     if (*family == MM_BEARER_IP_FAMILY_NONE || *family == MM_BEARER_IP_FAMILY_ANY) {
-        *family = MM_BEARER_IP_FAMILY_IPV4;
+        *family = from_user ? MM_BEARER_IP_FAMILY_IPV4 : MM_BEARER_IP_FAMILY_IPV4V6;
         return TRUE;
     }
 
@@ -5297,6 +5329,56 @@ mm_sim_parse_cpol_test_response (const gchar  *response,
     return TRUE;
 }
 
+gchar *
+mm_sim_convert_spn_to_utf8 (const guint8  *bin,
+                            gsize          binlen,
+                            GError       **error)
+{
+    g_autoptr(GByteArray) bin_array = NULL;
+
+    /* Remove the FF filler at the end */
+    while (binlen > 1 && bin[binlen - 1] == 0xff)
+        binlen--;
+    if (binlen <= 1) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "SIM returned empty response");
+        return NULL;
+    }
+
+    /* Setup as bytearray.
+     * First byte is metadata; remainder is GSM-7 unpacked into octets; convert to UTF8 */
+    bin_array = g_byte_array_sized_new (binlen - 1);
+    g_byte_array_append (bin_array, bin + 1, binlen - 1);
+
+    return mm_modem_charset_bytearray_to_utf8 (bin_array, MM_MODEM_CHARSET_GSM, FALSE, error);
+}
+
+guint
+mm_sim_validate_mnc_length (const guint8  *bin,
+                            gsize          binlen,
+                            GError       **error)
+{
+    guint mnc_len;
+
+    if (binlen < 4) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "SIM returned too short response of length %lu (should be 4)",
+                     binlen);
+        return 0;
+    }
+
+    /* MNC length is byte 4 of this SIM file */
+    mnc_len = bin[3];
+    if (mnc_len != 2 && mnc_len != 3) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "SIM returned invalid MNC length %u (should be either 2 or 3)",
+                     mnc_len);
+        return 0;
+    }
+
+    return mnc_len;
+}
+
 #define EID_BYTE_LENGTH 16
 
 gchar *
@@ -5306,4 +5388,21 @@ mm_decode_eid (const gchar *eid, gsize eid_len)
         return NULL;
 
     return mm_bcd_to_string ((const guint8 *) eid, eid_len, FALSE /* low_nybble_first */);
+}
+
+/*****************************************************************************/
+
+guint
+mm_string_uint_map_lookup (const MMStringUintMap *map,
+                           const gsize            map_size,
+                           const gchar           *str,
+                           const guint            default_value)
+{
+    guint i;
+
+    for (i = 0; i < map_size; i++) {
+        if (g_str_equal (str, map[i].str))
+            return map[i].val;
+    }
+    return default_value;
 }

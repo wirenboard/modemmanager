@@ -33,6 +33,7 @@
 #include "mm-base-modem.h"
 #include "mm-log-object.h"
 #include "mm-modem-helpers.h"
+#include "mm-error-helpers.h"
 
 static void async_initable_iface_init (GAsyncInitableIface *iface);
 static void log_object_iface_init     (MMLogObjectInterface *iface);
@@ -205,7 +206,7 @@ after_change_update_lock_info_ready (MMIfaceModem *modem,
     mm_iface_modem_update_lock_info_finish (modem, res, NULL);
 
     if (ctx->save_error) {
-        g_dbus_method_invocation_return_gerror (ctx->invocation, ctx->save_error);
+        mm_dbus_method_invocation_return_gerror (ctx->invocation, ctx->save_error);
         reprobe_if_puk_discovered (ctx->self, ctx->save_error);
         g_clear_error (&ctx->save_error);
     } else {
@@ -244,7 +245,7 @@ handle_change_pin_auth_ready (MMBaseModem *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_change_pin_context_free (ctx);
         return;
     }
@@ -252,35 +253,27 @@ handle_change_pin_auth_ready (MMBaseModem *modem,
     /* If changing PIN is not implemented, report an error */
     if (!MM_BASE_SIM_GET_CLASS (ctx->self)->change_pin ||
         !MM_BASE_SIM_GET_CLASS (ctx->self)->change_pin_finish) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot change PIN: "
-                                               "operation not supported");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot change PIN: operation not supported");
         handle_change_pin_context_free (ctx);
         return;
     }
 
     if (!mm_gdbus_sim_get_active (MM_GDBUS_SIM (ctx->self))) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot change PIN: "
-                                               "SIM not currently active");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot change PIN: SIM not currently active");
         handle_change_pin_context_free (ctx);
         return;
     }
 
     if (IS_ESIM_WITHOUT_PROFILES (ctx->self)) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot change PIN: "
-                                               "eSIM without profiles");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot change PIN: eSIM without profiles");
         handle_change_pin_context_free (ctx);
         return;
     }
 
+    mm_obj_info (ctx->self, "processing user request to change PIN...");
     MM_BASE_SIM_GET_CLASS (ctx->self)->change_pin (ctx->self,
                                                    ctx->old_pin,
                                                    ctx->new_pin,
@@ -394,7 +387,7 @@ after_enable_update_lock_info_ready (MMIfaceModem *modem,
     mm_iface_modem_update_lock_info_finish (modem, res, NULL);
 
     if (ctx->save_error) {
-        g_dbus_method_invocation_return_gerror (ctx->invocation, ctx->save_error);
+        mm_dbus_method_invocation_return_gerror (ctx->invocation, ctx->save_error);
         reprobe_if_puk_discovered (ctx->self, ctx->save_error);
         g_clear_error (&ctx->save_error);
     } else {
@@ -435,7 +428,7 @@ handle_enable_pin_auth_ready (MMBaseModem *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_enable_pin_context_free (ctx);
         return;
     }
@@ -443,35 +436,27 @@ handle_enable_pin_auth_ready (MMBaseModem *modem,
     /* If changing PIN is not implemented, report an error */
     if (!MM_BASE_SIM_GET_CLASS (ctx->self)->enable_pin ||
         !MM_BASE_SIM_GET_CLASS (ctx->self)->enable_pin_finish) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot enable/disable PIN: "
-                                               "operation not supported");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot enable/disable PIN: operation not supported");
         handle_enable_pin_context_free (ctx);
         return;
     }
 
     if (!mm_gdbus_sim_get_active (MM_GDBUS_SIM (ctx->self))) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot enable/disable PIN: "
-                                               "SIM not currently active");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot enable/disable PIN: SIM not currently active");
         handle_enable_pin_context_free (ctx);
         return;
     }
 
     if (IS_ESIM_WITHOUT_PROFILES (ctx->self)) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot enable/disable PIN: "
-                                               "eSIM without profiles");
+        mm_dbus_method_invocation_return_error (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                "Cannot enable/disable PIN: eSIM without profiles");
         handle_enable_pin_context_free (ctx);
         return;
     }
 
+    mm_obj_info (ctx->self, "processing user request to %s PIN...", ctx->enabled ? "enable" : "disable");
     MM_BASE_SIM_GET_CLASS (ctx->self)->enable_pin (ctx->self,
                                                    ctx->pin,
                                                    ctx->enabled,
@@ -849,7 +834,7 @@ handle_send_pin_ready (MMBaseSim *self,
     GError *error = NULL;
 
     if (!mm_base_sim_send_pin_finish (self, res, &error)) {
-        g_dbus_method_invocation_return_gerror (ctx->invocation, error);
+        mm_dbus_method_invocation_return_gerror (ctx->invocation, error);
         reprobe_if_puk_discovered (self, error);
         g_clear_error (&error);
     } else
@@ -866,31 +851,26 @@ handle_send_pin_auth_ready (MMBaseModem *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_send_pin_context_free (ctx);
         return;
     }
 
     if (!mm_gdbus_sim_get_active (MM_GDBUS_SIM (ctx->self))) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot send PIN: "
-                                               "SIM not currently active");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot send PIN: SIM not currently active");
         handle_send_pin_context_free (ctx);
         return;
     }
 
     if (IS_ESIM_WITHOUT_PROFILES (ctx->self)) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot send PIN: "
-                                               "eSIM without profiles");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot send PIN: eSIM without profiles");
         handle_send_pin_context_free (ctx);
         return;
     }
 
+    mm_obj_info (ctx->self, "processing user request to send PIN...");
     mm_base_sim_send_pin (ctx->self,
                           ctx->pin,
                           (GAsyncReadyCallback)handle_send_pin_ready,
@@ -955,7 +935,7 @@ handle_send_puk_ready (MMBaseSim *self,
                     g_error_matches (error,
                                      MM_MOBILE_EQUIPMENT_ERROR,
                                      MM_MOBILE_EQUIPMENT_ERROR_SIM_WRONG);
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     } else
         mm_gdbus_sim_complete_send_puk (MM_GDBUS_SIM (self), ctx->invocation);
 
@@ -975,31 +955,26 @@ handle_send_puk_auth_ready (MMBaseModem *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_send_puk_context_free (ctx);
         return;
     }
 
     if (!mm_gdbus_sim_get_active (MM_GDBUS_SIM (ctx->self))) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot send PUK: "
-                                               "SIM not currently active");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot send PUK: SIM not currently active");
         handle_send_puk_context_free (ctx);
         return;
     }
 
     if (IS_ESIM_WITHOUT_PROFILES (ctx->self)) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot send PUK: "
-                                               "eSIM without profiles");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot send PUK: eSIM without profiles");
         handle_send_puk_context_free (ctx);
         return;
     }
 
+    mm_obj_info (ctx->self, "processing user request to send PUK...");
     mm_base_sim_send_puk (ctx->self,
                           ctx->puk,
                           ctx->new_pin,
@@ -1519,7 +1494,7 @@ handle_set_preferred_networks_ready (MMBaseSim *self,
     MM_BASE_SIM_GET_CLASS (self)->set_preferred_networks_finish (self, res, &error);
     if (error) {
         mm_obj_warn (self, "couldn't set preferred networks: %s", error->message);
-        g_dbus_method_invocation_take_error (ctx->invocation, g_steal_pointer (&error));
+        mm_dbus_method_invocation_take_error (ctx->invocation, g_steal_pointer (&error));
     } else {
         mm_gdbus_sim_set_preferred_networks (MM_GDBUS_SIM (self), ctx->networks);
         mm_gdbus_sim_complete_set_preferred_networks (MM_GDBUS_SIM (self), ctx->invocation);
@@ -1536,42 +1511,34 @@ handle_set_preferred_networks_auth_ready (MMBaseModem *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_set_preferred_networks_context_free (ctx);
         return;
     }
 
     if (!mm_gdbus_sim_get_active (MM_GDBUS_SIM (ctx->self))) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot set preferred networks: "
-                                               "SIM not currently active");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot set preferred networks: SIM not currently active");
         handle_set_preferred_networks_context_free (ctx);
         return;
     }
 
     if (IS_ESIM_WITHOUT_PROFILES (ctx->self)) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot set preferred networks: "
-                                               "eSIM without profiles");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot set preferred networks: eSIM without profiles");
         handle_set_preferred_networks_context_free (ctx);
         return;
     }
 
     if (!MM_BASE_SIM_GET_CLASS (ctx->self)->set_preferred_networks ||
         !MM_BASE_SIM_GET_CLASS (ctx->self)->set_preferred_networks_finish) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Cannot set preferred networks: "
-                                               "not implemented");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Cannot set preferred networks: not implemented");
         handle_set_preferred_networks_context_free (ctx);
         return;
     }
 
+    mm_obj_info (ctx->self, "processing user request to set preferred networks...");
     MM_BASE_SIM_GET_CLASS (ctx->self)->set_preferred_networks (
             ctx->self,
             mm_sim_preferred_network_list_new_from_variant (ctx->networks),
@@ -1843,19 +1810,10 @@ load_preferred_networks_finish (MMBaseSim     *self,
                                 GAsyncResult  *res,
                                 GError       **error)
 {
-    gchar *result;
-    GList *preferred_network_list;
+    g_autofree gchar *result = NULL;
 
     result = g_task_propagate_pointer (G_TASK (res), error);
-    if (!result)
-        return NULL;
-
-    preferred_network_list = parse_preferred_networks (result, error);
-    mm_obj_dbg (self, "loaded %u preferred networks", g_list_length (preferred_network_list));
-
-    g_free (result);
-
-    return preferred_network_list;
+    return result ? parse_preferred_networks (result, error) : NULL;
 }
 
 STR_REPLY_READY_FN (load_preferred_networks)
@@ -1987,20 +1945,10 @@ load_sim_identifier_finish (MMBaseSim *self,
                             GAsyncResult *res,
                             GError **error)
 {
-    gchar *result;
-    gchar *sim_identifier;
+    g_autofree gchar *result = NULL;
 
     result = g_task_propagate_pointer (G_TASK (res), error);
-    if (!result)
-        return NULL;
-
-    sim_identifier = parse_iccid (result, error);
-    g_free (result);
-    if (!sim_identifier)
-        return NULL;
-
-    mm_obj_dbg (self, "loaded SIM identifier: %s", sim_identifier);
-    return sim_identifier;
+    return result ? parse_iccid (result, error) : NULL;
 }
 
 STR_REPLY_READY_FN (load_sim_identifier)
@@ -2055,20 +2003,10 @@ load_imsi_finish (MMBaseSim *self,
                   GAsyncResult *res,
                   GError **error)
 {
-    gchar *result;
-    gchar *imsi;
+    g_autofree gchar *result = NULL;
 
     result = g_task_propagate_pointer (G_TASK (res), error);
-    if (!result)
-        return NULL;
-
-    imsi = parse_imsi (result, error);
-    g_free (result);
-    if (!imsi)
-        return NULL;
-
-    mm_obj_dbg (self, "loaded IMSI: %s", imsi);
-    return imsi;
+    return result ? parse_imsi (result, error) : NULL;
 }
 
 STR_REPLY_READY_FN (load_imsi)
@@ -2112,7 +2050,6 @@ parse_mnc_length (const gchar *response,
         (sw1 == 0x92) ||
         (sw1 == 0x9f)) {
         gsize              buflen = 0;
-        guint32            mnc_len;
         g_autofree guint8 *bin = NULL;
 
         /* Convert hex string to binary */
@@ -2121,20 +2058,8 @@ parse_mnc_length (const gchar *response,
             g_prefix_error (error, "SIM returned malformed response '%s': ", hex);
             return 0;
         }
-        if (buflen < 4) {
-            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                         "SIM returned malformed response '%s': too short", hex);
-            return 0;
-        }
 
-        /* MNC length is byte 4 of this SIM file */
-        mnc_len = bin[3];
-        if (mnc_len == 2 || mnc_len == 3)
-            return mnc_len;
-
-        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                     "SIM returned invalid MNC length %d (should be either 2 or 3)", mnc_len);
-        return 0;
+        return mm_sim_validate_mnc_length (bin, buflen, error);
     }
 
     g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
@@ -2185,11 +2110,13 @@ load_operator_identifier (MMBaseSim *self,
 {
     mm_obj_dbg (self, "loading operator ID...");
 
-    /* READ BINARY of EFad (Administrative Data) ETSI 51.011 section 10.3.18 */
+    /* READ BINARY of EFad (Administrative Data) ETSI 51.011 section 10.3.18
+     * SIMCOM A760xE-H modems can answer in 10s or more, so use rather big timeout
+     */
     mm_base_modem_at_command (
         self->priv->modem,
         "+CRSM=176,28589,0,0,4",
-        10,
+        20,
         FALSE,
         (GAsyncReadyCallback)load_operator_identifier_command_ready,
         g_task_new (self, NULL, callback, user_data));
@@ -2217,7 +2144,6 @@ parse_spn (const gchar *response,
         (sw1 == 0x91) ||
         (sw1 == 0x92) ||
         (sw1 == 0x9f)) {
-        g_autoptr(GByteArray)  bin_array = NULL;
         g_autofree guint8     *bin = NULL;
         gsize                  binlen = 0;
 
@@ -2228,20 +2154,7 @@ parse_spn (const gchar *response,
             return NULL;
         }
 
-        /* Remove the FF filler at the end */
-        while (binlen > 1 && bin[binlen - 1] == 0xff)
-            binlen--;
-        if (binlen <= 1) {
-            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
-                         "SIM returned empty response '%s'", hex);
-            return NULL;
-        }
-        /* Setup as bytearray.
-         * First byte is metadata; remainder is GSM-7 unpacked into octets; convert to UTF8 */
-        bin_array = g_byte_array_sized_new (binlen - 1);
-        g_byte_array_append (bin_array, bin + 1, binlen - 1);
-
-        return mm_modem_charset_bytearray_to_utf8 (bin_array, MM_MODEM_CHARSET_GSM, FALSE, error);
+        return mm_sim_convert_spn_to_utf8 (bin, binlen, error);
     }
 
     g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,

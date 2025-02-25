@@ -31,6 +31,8 @@
 #include "mm-shared-xmm.h"
 #include "mm-modem-helpers-xmm.h"
 
+G_DEFINE_INTERFACE (MMSharedXmm, mm_shared_xmm, MM_TYPE_IFACE_MODEM)
+
 /*****************************************************************************/
 /* Private data context */
 
@@ -48,19 +50,22 @@ typedef struct {
     /* Broadband modem class support */
     MMBroadbandModemClass *broadband_modem_class_parent;
 
+    /* URCs to ignore */
+    GRegex *xbipi_regex;
+
     /* Modem interface support */
     GArray      *supported_modes;
     GArray      *supported_bands;
     MMModemMode  allowed_modes;
 
     /* Location interface support */
-    MMIfaceModemLocation  *iface_modem_location_parent;
-    MMModemLocationSource  supported_sources;
-    MMModemLocationSource  enabled_sources;
-    GpsEngineState         gps_engine_state;
-    MMPortSerialAt        *gps_port;
-    GRegex                *xlsrstop_regex;
-    GRegex                *nmea_regex;
+    MMIfaceModemLocationInterface *iface_modem_location_parent;
+    MMModemLocationSource          supported_sources;
+    MMModemLocationSource          enabled_sources;
+    GpsEngineState                 gps_engine_state;
+    MMPortSerialAt                *gps_port;
+    GRegex                        *xlsrstop_regex;
+    GRegex                        *nmea_regex;
 
     /* Asynchronous GPS engine stop task completion */
     GTask *pending_gps_engine_stop_task;
@@ -77,6 +82,7 @@ private_free (Private *priv)
         g_array_unref (priv->supported_bands);
     g_regex_unref (priv->xlsrstop_regex);
     g_regex_unref (priv->nmea_regex);
+    g_regex_unref (priv->xbipi_regex);
     g_slice_free (Private, priv);
 }
 
@@ -94,16 +100,17 @@ get_private (MMSharedXmm *self)
         priv->gps_engine_state = GPS_ENGINE_STATE_OFF;
 
         /* Setup regex for URCs */
+        priv->xbipi_regex    = g_regex_new ("\\r\\n\\+XBIPI:(.*)\\r\\n", G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
         priv->xlsrstop_regex = g_regex_new ("\\r\\n\\+XLSRSTOP:(.*)\\r\\n", G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
         priv->nmea_regex     = g_regex_new ("(?:\\r\\n)?(?:\\r\\n)?(\\$G.*)\\r\\n", G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
 
         /* Setup parent class' MMBroadbandModemClass */
-        g_assert (MM_SHARED_XMM_GET_INTERFACE (self)->peek_parent_broadband_modem_class);
-        priv->broadband_modem_class_parent = MM_SHARED_XMM_GET_INTERFACE (self)->peek_parent_broadband_modem_class (self);
+        g_assert (MM_SHARED_XMM_GET_IFACE (self)->peek_parent_broadband_modem_class);
+        priv->broadband_modem_class_parent = MM_SHARED_XMM_GET_IFACE (self)->peek_parent_broadband_modem_class (self);
 
         /* Setup parent class' MMIfaceModemLocation */
-        g_assert (MM_SHARED_XMM_GET_INTERFACE (self)->peek_parent_location_interface);
-        priv->iface_modem_location_parent = MM_SHARED_XMM_GET_INTERFACE (self)->peek_parent_location_interface (self);
+        g_assert (MM_SHARED_XMM_GET_IFACE (self)->peek_parent_location_interface);
+        priv->iface_modem_location_parent = MM_SHARED_XMM_GET_IFACE (self)->peek_parent_location_interface (self);
 
         g_object_set_qdata_full (G_OBJECT (self), private_quark, priv, (GDestroyNotify)private_free);
     }
@@ -1110,7 +1117,7 @@ gps_engine_start (GTask *task)
     g_assert (priv->gps_port);
     cmd = g_strdup_printf ("AT+XLCSLSR=%u,%u,,,,,1,,,1,118,0", transport_protocol, pos_mode);
     mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                   priv->gps_port,
+                                   MM_IFACE_PORT_AT (priv->gps_port),
                                    cmd,
                                    3,
                                    FALSE,
@@ -1287,7 +1294,7 @@ gps_engine_stop (GTask *task)
         NULL);
 
     mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                   priv->gps_port,
+                                   MM_IFACE_PORT_AT (priv->gps_port),
                                    "+XLSRSTOP",
                                    3,
                                    FALSE,
@@ -1655,7 +1662,11 @@ void
 mm_shared_xmm_setup_ports (MMBroadbandModem *self)
 {
     Private                   *priv;
+    MMPortSerialAt            *ports[2];
     g_autoptr(MMPortSerialAt)  gps_port = NULL;
+    guint                      i;
+
+    mm_obj_dbg (self, "setting up ports in XMM modem...");
 
     priv = get_private (MM_SHARED_XMM (self));
     g_assert (priv->broadband_modem_class_parent);
@@ -1664,7 +1675,19 @@ mm_shared_xmm_setup_ports (MMBroadbandModem *self)
     /* Parent setup first always */
     priv->broadband_modem_class_parent->setup_ports (self);
 
-    /* Then, setup the GPS port */
+    /* Setup AT ports */
+    ports[0] = mm_base_modem_peek_port_primary   (MM_BASE_MODEM (self));
+    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
+        if (!ports[i])
+            continue;
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            priv->xbipi_regex,
+            NULL, NULL, NULL);
+    }
+
+    /* Setup the GPS port */
     gps_port = shared_xmm_get_gps_control_port (MM_SHARED_XMM (self), NULL);
     if (gps_port) {
         /* After running AT+XLSRSTOP we may get an unsolicited response
@@ -1676,7 +1699,7 @@ mm_shared_xmm_setup_ports (MMBroadbandModem *self)
 
         /* make sure GPS is stopped in case it was left enabled */
         mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                       gps_port,
+                                       MM_IFACE_PORT_AT (gps_port),
                                        "+XLSRSTOP",
                                        3, FALSE, FALSE, NULL, NULL, NULL);
     }
@@ -1685,26 +1708,6 @@ mm_shared_xmm_setup_ports (MMBroadbandModem *self)
 /*****************************************************************************/
 
 static void
-shared_xmm_init (gpointer g_iface)
+mm_shared_xmm_default_init (MMSharedXmmInterface *iface)
 {
-}
-
-GType
-mm_shared_xmm_get_type (void)
-{
-    static GType shared_xmm_type = 0;
-
-    if (!G_UNLIKELY (shared_xmm_type)) {
-        static const GTypeInfo info = {
-            sizeof (MMSharedXmm),  /* class_size */
-            shared_xmm_init,       /* base_init */
-            NULL,                  /* base_finalize */
-        };
-
-        shared_xmm_type = g_type_register_static (G_TYPE_INTERFACE, "MMSharedXmm", &info, 0);
-        g_type_interface_add_prerequisite (shared_xmm_type, MM_TYPE_IFACE_MODEM);
-        g_type_interface_add_prerequisite (shared_xmm_type, MM_TYPE_IFACE_MODEM_LOCATION);
-    }
-
-    return shared_xmm_type;
 }

@@ -39,14 +39,14 @@
 #include "mm-broadband-modem-icera.h"
 #include "mm-modem-helpers-icera.h"
 
-static void iface_modem_init                      (MMIfaceModem                   *iface);
-static void iface_modem_3gpp_init                 (MMIfaceModem3gpp               *iface);
-static void iface_modem_3gpp_profile_manager_init (MMIfaceModem3gppProfileManager *iface);
-static void iface_modem_time_init                 (MMIfaceModemTime               *iface);
+static void iface_modem_init                      (MMIfaceModemInterface                   *iface);
+static void iface_modem_3gpp_init                 (MMIfaceModem3gppInterface               *iface);
+static void iface_modem_3gpp_profile_manager_init (MMIfaceModem3gppProfileManagerInterface *iface);
+static void iface_modem_time_init                 (MMIfaceModemTimeInterface               *iface);
 
-static MMIfaceModem                   *iface_modem_parent;
-static MMIfaceModem3gpp               *iface_modem_3gpp_parent;
-static MMIfaceModem3gppProfileManager *iface_modem_3gpp_profile_manager_parent;
+static MMIfaceModem                            *iface_modem_parent;
+static MMIfaceModem3gppInterface               *iface_modem_3gpp_parent;
+static MMIfaceModem3gppProfileManagerInterface *iface_modem_3gpp_profile_manager_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemIcera, mm_broadband_modem_icera, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -2052,8 +2052,8 @@ profile_manager_store_profile_auth_settings (GTask *task)
                 return;
             }
 
-            quoted_user     = mm_port_serial_at_quote_string (user);
-            quoted_password = mm_port_serial_at_quote_string (password);
+            quoted_user     = mm_at_quote_string (user);
+            quoted_password = mm_at_quote_string (password);
             ctx->cmd = g_strdup_printf ("%%IPDPCFG=%d,0,%u,%s,%s",
                                         ctx->profile_id,
                                         icera_auth,
@@ -2277,7 +2277,7 @@ finalize (GObject *object)
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     iface_modem_parent = g_type_interface_peek_parent (iface);
 
@@ -2310,7 +2310,7 @@ iface_modem_init (MMIfaceModem *iface)
 }
 
 static void
-iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
+iface_modem_3gpp_init (MMIfaceModem3gppInterface *iface)
 {
     iface_modem_3gpp_parent = g_type_interface_peek_parent (iface);
 
@@ -2325,7 +2325,7 @@ iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
 }
 
 static void
-iface_modem_3gpp_profile_manager_init (MMIfaceModem3gppProfileManager *iface)
+iface_modem_3gpp_profile_manager_init (MMIfaceModem3gppProfileManagerInterface *iface)
 {
     iface_modem_3gpp_profile_manager_parent = g_type_interface_peek_parent (iface);
 
@@ -2342,7 +2342,7 @@ iface_modem_3gpp_profile_manager_init (MMIfaceModem3gppProfileManager *iface)
 }
 
 static void
-iface_modem_time_init (MMIfaceModemTime *iface)
+iface_modem_time_init (MMIfaceModemTimeInterface *iface)
 {
     iface->check_support = modem_time_check_support;
     iface->check_support_finish = modem_time_check_support_finish;

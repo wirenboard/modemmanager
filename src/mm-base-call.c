@@ -182,7 +182,7 @@ handle_start_ready (MMBaseCall         *self,
         else
             mm_base_call_change_state (self, MM_CALL_STATE_TERMINATED, MM_CALL_STATE_REASON_UNKNOWN);
 
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_start_context_free (ctx);
         return;
     }
@@ -212,7 +212,7 @@ handle_start_auth_ready (MMBaseModem *modem,
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
         mm_base_call_change_state (ctx->self, MM_CALL_STATE_TERMINATED, MM_CALL_STATE_REASON_UNKNOWN);
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_start_context_free (ctx);
         return;
     }
@@ -221,20 +221,18 @@ handle_start_auth_ready (MMBaseModem *modem,
     state = mm_gdbus_call_get_state (MM_GDBUS_CALL (ctx->self));
 
     if (state != MM_CALL_STATE_UNKNOWN) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_FAILED,
-                                               "This call was not in unknown state, cannot start it");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                        "This call was not in unknown state, cannot start it");
         handle_start_context_free (ctx);
         return;
     }
 
-    mm_obj_msg (ctx->self, "user request to start call");
+    mm_obj_info (ctx->self, "processing user request to start voice call...");
 
     /* Disallow non-emergency calls when in emergency-only state */
     if (!mm_iface_modem_voice_authorize_outgoing_call (MM_IFACE_MODEM_VOICE (modem), ctx->self, &error)) {
         mm_base_call_change_state (ctx->self, MM_CALL_STATE_TERMINATED, MM_CALL_STATE_REASON_UNKNOWN);
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_start_context_free (ctx);
         return;
     }
@@ -243,10 +241,8 @@ handle_start_auth_ready (MMBaseModem *modem,
     if (!MM_BASE_CALL_GET_CLASS (ctx->self)->start ||
         !MM_BASE_CALL_GET_CLASS (ctx->self)->start_finish) {
         mm_base_call_change_state (ctx->self, MM_CALL_STATE_TERMINATED, MM_CALL_STATE_REASON_UNKNOWN);
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Starting call is not supported by this modem");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Starting call is not supported by this modem");
         handle_start_context_free (ctx);
         return;
     }
@@ -311,7 +307,7 @@ handle_accept_ready (MMBaseCall *self,
 
     if (!MM_BASE_CALL_GET_CLASS (self)->accept_finish (self, res, &error)) {
         mm_base_call_change_state (self, MM_CALL_STATE_TERMINATED, MM_CALL_STATE_REASON_ERROR);
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_accept_context_free (ctx);
         return;
     }
@@ -336,7 +332,7 @@ handle_accept_auth_ready (MMBaseModem *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_accept_context_free (ctx);
         return;
     }
@@ -345,26 +341,22 @@ handle_accept_auth_ready (MMBaseModem *modem,
 
     /* We can only accept incoming call in ringing state */
     if (state != MM_CALL_STATE_RINGING_IN) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_FAILED,
-                                               "This call was not ringing, cannot accept");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                        "This call was not ringing, cannot accept");
         handle_accept_context_free (ctx);
         return;
     }
-
-    mm_obj_msg (ctx->self, "user request to accept call");
 
     /* Check if we do support doing it */
     if (!MM_BASE_CALL_GET_CLASS (ctx->self)->accept ||
         !MM_BASE_CALL_GET_CLASS (ctx->self)->accept_finish) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Accepting call is not supported by this modem");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Accepting call is not supported by this modem");
         handle_accept_context_free (ctx);
         return;
     }
+
+    mm_obj_info (ctx->self, "processing user request to accept voice call...");
 
     MM_BASE_CALL_GET_CLASS (ctx->self)->accept (ctx->self,
                                                 (GAsyncReadyCallback)handle_accept_ready,
@@ -421,7 +413,7 @@ handle_deflect_ready (MMBaseCall           *self,
 
     if (!MM_BASE_CALL_GET_CLASS (self)->deflect_finish (self, res, &error)) {
         mm_base_call_change_state (self, MM_CALL_STATE_TERMINATED, MM_CALL_STATE_REASON_ERROR);
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_deflect_context_free (ctx);
         return;
     }
@@ -441,7 +433,7 @@ handle_deflect_auth_ready (MMBaseModem          *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_deflect_context_free (ctx);
         return;
     }
@@ -450,27 +442,22 @@ handle_deflect_auth_ready (MMBaseModem          *modem,
 
     /* We can only deflect incoming call in ringing or waiting state */
     if (state != MM_CALL_STATE_RINGING_IN && state != MM_CALL_STATE_WAITING) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_FAILED,
-                                               "This call was not ringing/waiting, cannot deflect");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                        "This call was not ringing/waiting, cannot deflect");
         handle_deflect_context_free (ctx);
         return;
     }
-
-    mm_obj_msg (ctx->self, "user request to deflect call");
 
     /* Check if we do support doing it */
     if (!MM_BASE_CALL_GET_CLASS (ctx->self)->deflect ||
         !MM_BASE_CALL_GET_CLASS (ctx->self)->deflect_finish) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Deflecting call is not supported by this modem");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Deflecting call is not supported by this modem");
         handle_deflect_context_free (ctx);
         return;
     }
 
+    mm_obj_info (ctx->self, "processing user request to deflect voice call...");
     MM_BASE_CALL_GET_CLASS (ctx->self)->deflect (ctx->self,
                                                  ctx->number,
                                                  (GAsyncReadyCallback)handle_deflect_ready,
@@ -526,7 +513,7 @@ modem_voice_join_multiparty_ready (MMIfaceModemVoice           *modem,
     GError *error = NULL;
 
     if (!mm_iface_modem_voice_join_multiparty_finish (modem, res, &error))
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     else
         mm_gdbus_call_complete_join_multiparty (MM_GDBUS_CALL (ctx->self), ctx->invocation);
     handle_join_multiparty_context_free (ctx);
@@ -540,10 +527,12 @@ handle_join_multiparty_auth_ready (MMBaseModem                  *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_join_multiparty_context_free (ctx);
         return;
     }
+
+    mm_obj_info (ctx->self, "processing user request to join multiparty voice call...");
 
     /* This action is provided in the Call API, but implemented in the Modem.Voice interface
      * logic, because the action affects not only one call object, but all call objects that
@@ -601,7 +590,7 @@ modem_voice_leave_multiparty_ready (MMIfaceModemVoice            *modem,
     GError *error = NULL;
 
     if (!mm_iface_modem_voice_leave_multiparty_finish (modem, res, &error))
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     else
         mm_gdbus_call_complete_leave_multiparty (MM_GDBUS_CALL (ctx->self), ctx->invocation);
 
@@ -616,10 +605,12 @@ handle_leave_multiparty_auth_ready (MMBaseModem                  *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_leave_multiparty_context_free (ctx);
         return;
     }
+
+    mm_obj_info (ctx->self, "processing user request to leave multiparty voice call...");
 
     /* This action is provided in the Call API, but implemented in the Modem.Voice interface
      * logic, because the action affects not only one call object, but all call objects that
@@ -680,7 +671,7 @@ handle_hangup_ready (MMBaseCall *self,
     mm_base_call_change_state (self, MM_CALL_STATE_TERMINATED, MM_CALL_STATE_REASON_TERMINATED);
 
     if (!MM_BASE_CALL_GET_CLASS (self)->hangup_finish (self, res, &error))
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     else {
         /* note: timeouts are already removed when setting state as TERMINATED */
         mm_gdbus_call_complete_hangup (MM_GDBUS_CALL (ctx->self), ctx->invocation);
@@ -698,7 +689,7 @@ handle_hangup_auth_ready (MMBaseModem *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_hangup_context_free (ctx);
         return;
     }
@@ -707,27 +698,22 @@ handle_hangup_auth_ready (MMBaseModem *modem,
 
     /* We can only hangup call in a valid state */
     if (state == MM_CALL_STATE_TERMINATED || state == MM_CALL_STATE_UNKNOWN) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_FAILED,
-                                               "This call was not active, cannot hangup");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                        "This call was not active, cannot hangup");
         handle_hangup_context_free (ctx);
         return;
     }
-
-    mm_obj_msg (ctx->self, "user request to hangup call");
 
     /* Check if we do support doing it */
     if (!MM_BASE_CALL_GET_CLASS (ctx->self)->hangup ||
         !MM_BASE_CALL_GET_CLASS (ctx->self)->hangup_finish) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Hanging up call is not supported by this modem");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Hanging up call is not supported by this modem");
         handle_hangup_context_free (ctx);
         return;
     }
 
+    mm_obj_info (ctx->self, "processing user request to hangup voice call...");
     MM_BASE_CALL_GET_CLASS (ctx->self)->hangup (ctx->self,
                                                 (GAsyncReadyCallback)handle_hangup_ready,
                                                 ctx);
@@ -782,7 +768,7 @@ handle_send_dtmf_ready (MMBaseCall *self,
     GError *error = NULL;
 
     if (!MM_BASE_CALL_GET_CLASS (self)->send_dtmf_finish (self, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     } else {
         mm_gdbus_call_complete_send_dtmf (MM_GDBUS_CALL (ctx->self), ctx->invocation);
     }
@@ -799,7 +785,7 @@ handle_send_dtmf_auth_ready (MMBaseModem *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_send_dtmf_context_free (ctx);
         return;
     }
@@ -809,24 +795,21 @@ handle_send_dtmf_auth_ready (MMBaseModem *modem,
     /* Check if we do support doing it */
     if (!MM_BASE_CALL_GET_CLASS (ctx->self)->send_dtmf ||
         !MM_BASE_CALL_GET_CLASS (ctx->self)->send_dtmf_finish) {
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_UNSUPPORTED,
-                                               "Sending dtmf is not supported by this modem");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Sending dtmf is not supported by this modem");
         handle_send_dtmf_context_free (ctx);
         return;
     }
 
     /* We can only send_dtmf when call is in ACTIVE state */
     if (state != MM_CALL_STATE_ACTIVE ){
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_FAILED,
-                                               "This call was not active, cannot send dtmf");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                                        "This call was not active, cannot send dtmf");
         handle_send_dtmf_context_free (ctx);
         return;
     }
 
+    mm_obj_info (ctx->self, "processing user request to send DTMF...");
     MM_BASE_CALL_GET_CLASS (ctx->self)->send_dtmf (ctx->self, ctx->dtmf,
                                                    (GAsyncReadyCallback)handle_send_dtmf_ready,
                                                    ctx);
@@ -1065,7 +1048,7 @@ call_start (MMBaseCall          *self,
     GError         *error = NULL;
     GTask          *task;
     gchar          *cmd;
-    MMPortSerialAt *port;
+    MMIfacePortAt  *port;
 
     task = g_task_new (self, NULL, callback, user_data);
 

@@ -80,6 +80,44 @@ test_ctzu (void)
 }
 
 /*****************************************************************************/
+/* Test ^FIRMVERSION test responses */
+static void
+test_firmversion (void)
+{
+    gboolean valid = TRUE;
+
+    valid = mm_quectel_check_standard_firmware_version_valid ("EM05GFAR07A07M1G_01.016.01.016");
+    g_assert_cmpuint (valid, ==, TRUE);
+
+    valid = mm_quectel_check_standard_firmware_version_valid ("EM05GFAR07A07M1G_01.016.00.000");
+    g_assert_cmpuint (valid, ==, FALSE);
+}
+
+static void
+test_parse_revision (void)
+{
+    gboolean valid;
+    guint release;
+    guint minor;
+
+    valid = mm_quectel_get_version_from_revision ("EM05GFAR07A07M1G_01.016.01.016", &release, &minor, NULL);
+    g_assert_cmpuint (valid, ==, TRUE);
+    g_assert_cmpuint (release, ==, 7);
+    g_assert_cmpuint (minor, ==, 7);
+
+    valid = mm_quectel_get_version_from_revision ("EM05GFAR10A02M1G", &release, &minor, NULL);
+    g_assert_cmpuint (valid, ==, TRUE);
+    g_assert_cmpuint (release, ==, 10);
+    g_assert_cmpuint (minor, ==, 2);
+
+    valid = mm_quectel_get_version_from_revision ("EM05GFAR07AM1G", &release, &minor, NULL);
+    g_assert_cmpuint (valid, ==, FALSE);
+
+    valid = mm_quectel_get_version_from_revision ("EM05GFARA07M1G", &release, &minor, NULL);
+    g_assert_cmpuint (valid, ==, FALSE);
+}
+
+/*****************************************************************************/
 
 int main (int argc, char **argv)
 {
@@ -88,6 +126,10 @@ int main (int argc, char **argv)
     g_test_init (&argc, &argv, NULL);
 
     g_test_add_func ("/MM/quectel/ctzu", test_ctzu);
+
+    g_test_add_func ("/MM/quectel/firmversion", test_firmversion);
+
+    g_test_add_func ("/MM/quectel/parse_revision", test_parse_revision);
 
     return g_test_run ();
 }

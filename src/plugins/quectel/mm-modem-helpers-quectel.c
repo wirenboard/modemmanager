@@ -89,3 +89,112 @@ mm_quectel_parse_ctzu_test_response (const gchar  *response,
 
     return TRUE;
 }
+
+/*****************************************************************************/
+/* standard firmware info
+ * Format of the string is:
+ * "[main version]_[modem and app version]"
+ * e.g. EM05GFAR07A07M1G_01.016.01.016
+ */
+#define QUECTEL_STD_FIRMWARE_VERSION_SEG  2
+
+/* Format of the string is:
+ * "modem_main.modem_minor.ap_main.ap_minor"
+ * e.g. 01.016.01.016
+ */
+#define QUECTEL_STD_MODEM_AP_FIRMWARE_VER_SEG  4
+#define QUECTEL_STD_MODEM_AP_FIRMWARE_VER_LEN  13
+
+#define QUECTEL_MAIN_VERSION_INVALID_TAG   "00"
+#define QUECTEL_MINOR_VERSION_INVALID_TAG  "000"
+
+gboolean
+mm_quectel_check_standard_firmware_version_valid (const gchar *std_str)
+{
+    gboolean      valid = TRUE;
+    g_auto(GStrv) split_std_fw = NULL;
+    g_auto(GStrv) split_modem_ap_fw = NULL;
+    const gchar   *modem_ap_fw;
+
+    if (std_str) {
+        split_std_fw = g_strsplit (std_str, "_", QUECTEL_STD_FIRMWARE_VERSION_SEG);
+        /* Quectel standard format of the [main version]_[modem and app version]
+         * Sometimes we find that the [modem and app version] query is missing by [AT+QMGR]
+         * for example: we expect EM05GFAR07A07M1G_01.016.01.016,but unexpected EM05GFAR07A07M1G_01.016.00.000 was returned
+         * Quectel will check for this abnormal [modem and app version] and flag it
+         */
+        if (g_strv_length (split_std_fw) == QUECTEL_STD_FIRMWARE_VERSION_SEG) {
+            modem_ap_fw = split_std_fw[1];
+            if (strlen (modem_ap_fw) == QUECTEL_STD_MODEM_AP_FIRMWARE_VER_LEN) {
+                split_modem_ap_fw = g_strsplit (modem_ap_fw, ".", QUECTEL_STD_MODEM_AP_FIRMWARE_VER_SEG);
+
+                if (g_strv_length (split_modem_ap_fw) == QUECTEL_STD_MODEM_AP_FIRMWARE_VER_SEG &&
+                    !g_strcmp0 (split_modem_ap_fw[2], QUECTEL_MAIN_VERSION_INVALID_TAG) &&
+                    !g_strcmp0 (split_modem_ap_fw[3], QUECTEL_MINOR_VERSION_INVALID_TAG)){
+                    valid = FALSE;
+                }
+            }
+        }
+    }
+    return valid;
+}
+
+gboolean
+mm_quectel_get_version_from_revision (const gchar  *revision,
+                                      guint        *release,
+                                      guint        *minor,
+                                      GError      **error)
+{
+    g_autoptr(GRegex) version_regex = NULL;
+    g_autoptr(GMatchInfo) match_info = NULL;
+
+    version_regex = g_regex_new ("R(\\d+)A(\\d+)",
+                                 G_REGEX_RAW | G_REGEX_OPTIMIZE,
+                                 0,
+                                 NULL);
+
+    if (!g_regex_match (version_regex, revision, 0, &match_info)) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "Cannot parse revision version %s", revision);
+        return FALSE;
+    }
+    if (!mm_get_uint_from_match_info (match_info, 1, release)) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "Couldn't get release version from revision %s", revision);
+        return FALSE;
+    }
+    if (!mm_get_uint_from_match_info (match_info, 2, minor)) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "Couldn't get minor version from revision %s", revision);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+gboolean
+mm_quectel_is_profile_manager_supported (const gchar *revision,
+                                         guint        release,
+                                         guint        minor)
+{
+    guint i;
+    static const struct {
+        const gchar *revision_prefix;
+        guint minimum_release;
+        guint minimum_minor;
+    } profile_support_map [] = {
+        {"EC25", 6, 10},
+    };
+
+    for (i = 0; i < G_N_ELEMENTS (profile_support_map); ++i) {
+        if (g_str_has_prefix (revision, profile_support_map[i].revision_prefix)) {
+            guint minimum_release = profile_support_map[i].minimum_release;
+            guint minimum_minor = profile_support_map[i].minimum_minor;
+
+            return ((release > minimum_release) ||
+                    (release == minimum_release && minor >= minimum_minor));
+        }
+    }
+
+    return TRUE;
+}

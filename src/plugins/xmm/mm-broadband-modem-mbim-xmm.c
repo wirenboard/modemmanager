@@ -27,11 +27,11 @@
 #include "mm-broadband-modem-mbim-xmm.h"
 #include "mm-shared-xmm.h"
 
-static void iface_modem_init          (MMIfaceModem         *iface);
-static void iface_modem_location_init (MMIfaceModemLocation *iface);
-static void shared_xmm_init           (MMSharedXmm          *iface);
+static void iface_modem_init          (MMIfaceModemInterface         *iface);
+static void iface_modem_location_init (MMIfaceModemLocationInterface *iface);
+static void shared_xmm_init           (MMSharedXmmInterface          *iface);
 
-static MMIfaceModemLocation *iface_modem_location_parent;
+static MMIfaceModemLocationInterface *iface_modem_location_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemMbimXmm, mm_broadband_modem_mbim_xmm, MM_TYPE_BROADBAND_MODEM_MBIM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -72,7 +72,7 @@ mm_broadband_modem_mbim_xmm_init (MMBroadbandModemMbimXmm *self)
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     iface->load_supported_modes        = mm_shared_xmm_load_supported_modes;
     iface->load_supported_modes_finish = mm_shared_xmm_load_supported_modes_finish;
@@ -96,7 +96,7 @@ iface_modem_init (MMIfaceModem *iface)
 }
 
 static void
-iface_modem_location_init (MMIfaceModemLocation *iface)
+iface_modem_location_init (MMIfaceModemLocationInterface *iface)
 {
     iface_modem_location_parent = g_type_interface_peek_parent (iface);
 
@@ -118,14 +118,14 @@ peek_parent_broadband_modem_class (MMSharedXmm *self)
     return MM_BROADBAND_MODEM_CLASS (mm_broadband_modem_mbim_xmm_parent_class);
 }
 
-static MMIfaceModemLocation *
+static MMIfaceModemLocationInterface *
 peek_parent_location_interface (MMSharedXmm *self)
 {
     return iface_modem_location_parent;
 }
 
 static void
-shared_xmm_init (MMSharedXmm *iface)
+shared_xmm_init (MMSharedXmmInterface *iface)
 {
     iface->peek_parent_broadband_modem_class = peek_parent_broadband_modem_class;
     iface->peek_parent_location_interface    = peek_parent_location_interface;

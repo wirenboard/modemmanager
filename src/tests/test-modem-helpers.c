@@ -2688,6 +2688,22 @@ test_cgdcont_read_response_samsung (void *f, gpointer d)
     test_cgdcont_read_results ("Samsung", reply, &expected[0], G_N_ELEMENTS (expected));
 }
 
+static void
+test_cgdcont_read_response_simcom (void *f, gpointer d)
+{
+    const gchar *reply =
+        "+CGDCONT: 1,\"IP\",\"nate.sktelecom.com\"\r\n"
+        "+CGDCONT: 2,\"IP\",\"epc.tmobile.com\"\r\n"
+        "+CGDCONT: 3,\"IP\",\"MAXROAM.com\"\r\n";
+    static MM3gppPdpContext expected[] = {
+        { 1, MM_BEARER_IP_FAMILY_IPV4, (gchar *) "nate.sktelecom.com" },
+        { 2, MM_BEARER_IP_FAMILY_IPV4, (gchar *) "epc.tmobile.com"    },
+        { 3, MM_BEARER_IP_FAMILY_IPV4, (gchar *) "MAXROAM.com"        }
+    };
+
+    test_cgdcont_read_results ("Simcom", reply, &expected[0], G_N_ELEMENTS (expected));
+}
+
 /*****************************************************************************/
 /* Test CGDCONT read responses */
 
@@ -4530,6 +4546,34 @@ test_bcd_to_string (void *f, gpointer d)
 /*****************************************************************************/
 
 typedef struct {
+    const gchar *input;
+    const gchar *expected;
+} AtQuoteStringTest;
+
+static const AtQuoteStringTest at_quote_string_tests[] = {
+    { "", "\"\"" },
+    { "internet", "\"internet\"" },
+    { "\"internet", "\"\\22internet\"" },  /* double quote is \22 */
+    { "\r\ninternet", "\"\\0D\\0Ainternet\"" },  /* CRLF is \0D\0A */
+    { "\r\ninternet\r\n", "\"\\0D\\0Ainternet\\0D\\0A\"" },  /* CRLF is \0D\0A */
+};
+
+static void
+test_at_quote_string (void *f, gpointer d)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (at_quote_string_tests); i++) {
+        g_autofree gchar *str = NULL;
+
+        str = mm_at_quote_string (at_quote_string_tests[i].input);
+        g_assert_cmpstr (str, ==, at_quote_string_tests[i].expected);
+    }
+}
+
+/*****************************************************************************/
+
+typedef struct {
     const gchar *response;
     gboolean     expected_error;
     guint        expected_index;
@@ -4600,6 +4644,129 @@ test_cpol_response (void)
             g_assert_cmpuint (act_count, ==, test_cpol[i].expected_act_count);
         }
         g_free (operator_code);
+    }
+}
+
+/*****************************************************************************/
+
+typedef struct {
+    const gchar *response;
+    gboolean     expected_empty;
+    const gchar *expected_groups[4];
+} TestStringGroup;
+
+static const TestStringGroup test_groups[] = {
+    { "(\"SM\",\"ME\"),(\"SM\",\"ME\"),(\"SM\",\"ME\")", FALSE, { "\"SM\",\"ME\"", "\"SM\",\"ME\"", "\"SM\",\"ME\"", NULL } },
+    { "\"SM\",\"SM\",\"SM\"",                            FALSE, { "\"SM\"", "\"SM\"", "\"SM\"", NULL } },
+    { "\"SM\",(\"SM\",\"ME\"),(\"SM\",\"ME\")",          FALSE, { "\"SM\"", "\"SM\",\"ME\"", "\"SM\",\"ME\"", NULL } },
+    { "",                                                FALSE, { "", NULL } },
+    { ",,",                                              FALSE, { "", "", "", NULL } },
+    { "(A,B",                                            FALSE, { "A,B", NULL } },
+    { "A,B)",                                            FALSE, { "A", "B)", NULL } },
+    { NULL,                                              TRUE,  { NULL } },
+};
+
+static void
+test_mm_split_string_groups (void)
+{
+    guint i, j;
+
+    for (i = 0; i < G_N_ELEMENTS (test_groups); i++) {
+        g_auto(GStrv) groups = NULL;
+
+        groups = mm_split_string_groups (test_groups[i].response);
+        if (test_groups[i].expected_empty) {
+            g_assert_null (groups);
+        } else {
+            g_assert (groups);
+            g_assert_cmpint (g_strv_length (groups), ==, g_strv_length ((gchar **) test_groups[i].expected_groups));
+            for (j = 0; j < g_strv_length (groups); j++) {
+                g_assert_cmpstr (groups[j], ==, test_groups[i].expected_groups[j]);
+            }
+        }
+    }
+}
+
+/*****************************************************************************/
+
+typedef struct {
+    const guint8  bin_array[10];
+    gsize         bin_len;
+    const gchar  *expected_name;
+    gboolean      expected_error;
+} TestSpnData;
+
+static const TestSpnData test_spn_data[] = {
+    { { 0, 'T', 'e', 's', 't', 0xff, 0xff, 0xff, 0xff, 0xff }, 10, "Test",   FALSE },
+    { { 'T', 'e', 's', 't', 0xff, 0xff },                       6, "est",    FALSE },
+    { { 0, 0, '$', 'T', 'e', 's', 't' },                        7, "@¤Test", FALSE },
+    { { 0 },                                                    0, "",       TRUE },
+    { { 0, 0xff },                                              2, "",       TRUE },
+    { { 0xff, 0xff },                                           2, "",       TRUE },
+};
+
+static void
+test_spn_to_utf8 (void)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (test_spn_data); i++) {
+        gchar  *result = NULL;
+        GError *error = NULL;
+
+        result = mm_sim_convert_spn_to_utf8 (test_spn_data[i].bin_array,
+                                             test_spn_data[i].bin_len,
+                                             &error);
+
+        if (test_spn_data[i].expected_error) {
+            g_assert (!result);
+            g_assert (error);
+            g_error_free (error);
+        } else {
+            g_assert (result);
+            g_assert_no_error (error);
+            g_assert_cmpstr (result, ==, test_spn_data[i].expected_name);
+            g_free (result);
+        }
+    }
+}
+
+typedef struct {
+    const guint8 bin_array[4];
+    gsize        bin_len;
+    guint        expected_length;
+    gboolean     expected_error;
+} TestMncData;
+
+static const TestMncData test_mnc_data[] = {
+    { { 0 }, 0, 0, TRUE },
+    { { 0, 0, 0, 2 }, 3, 0, TRUE },
+    { { 0, 0, 0, 2 }, 5, 2, FALSE },
+    { { 0, 0, 0, 2 }, 4, 2, FALSE },
+    { { 0, 0, 0, 3 }, 4, 3, FALSE },
+    { { 0, 0, 0, 4 }, 4, 0, TRUE },
+};
+
+static void
+test_mnc_length (void)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (test_mnc_data); i++) {
+        guint   result;
+        GError *error = NULL;
+
+        result = mm_sim_validate_mnc_length (test_mnc_data[i].bin_array,
+                                             test_mnc_data[i].bin_len,
+                                             &error);
+
+        if (test_mnc_data[i].expected_error) {
+            g_assert (error);
+            g_error_free (error);
+        } else {
+            g_assert_no_error (error);
+        }
+        g_assert_cmpuint (result, ==, test_mnc_data[i].expected_length);
     }
 }
 
@@ -4778,6 +4945,7 @@ int main (int argc, char **argv)
 
     g_test_suite_add (suite, TESTCASE (test_cgdcont_read_response_nokia, NULL));
     g_test_suite_add (suite, TESTCASE (test_cgdcont_read_response_samsung, NULL));
+    g_test_suite_add (suite, TESTCASE (test_cgdcont_read_response_simcom, NULL));
 
     g_test_suite_add (suite, TESTCASE (test_profile_selection, NULL));
 
@@ -4838,7 +5006,14 @@ int main (int argc, char **argv)
 
     g_test_suite_add (suite, TESTCASE (test_bcd_to_string, NULL));
 
+    g_test_suite_add (suite, TESTCASE (test_at_quote_string, NULL));
+
     g_test_suite_add (suite, TESTCASE (test_cpol_response, NULL));
+
+    g_test_suite_add (suite, TESTCASE (test_mm_split_string_groups, NULL));
+
+    g_test_suite_add (suite, TESTCASE (test_spn_to_utf8, NULL));
+    g_test_suite_add (suite, TESTCASE (test_mnc_length, NULL));
 
     result = g_test_run ();
 

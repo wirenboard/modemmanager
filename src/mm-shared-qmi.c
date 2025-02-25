@@ -81,15 +81,15 @@ typedef struct {
     GArray            *supported_bands;
 
     /* Location helpers */
-    MMIfaceModemLocation   *iface_modem_location_parent;
-    MMModemLocationSource   enabled_sources;
-    QmiClient              *pds_client;
-    gulong                  pds_location_event_report_indication_id;
-    QmiClient              *loc_client;
-    gulong                  loc_location_nmea_indication_id;
-    gchar                 **loc_assistance_data_servers;
-    guint32                 loc_assistance_data_max_file_size;
-    guint32                 loc_assistance_data_max_part_size;
+    MMIfaceModemLocationInterface  *iface_modem_location_parent;
+    MMModemLocationSource           enabled_sources;
+    QmiClient                      *pds_client;
+    gulong                          pds_location_event_report_indication_id;
+    QmiClient                      *loc_client;
+    gulong                          loc_location_nmea_indication_id;
+    gchar                         **loc_assistance_data_servers;
+    guint32                         loc_assistance_data_max_file_size;
+    guint32                         loc_assistance_data_max_part_size;
 
     /* Carrier config helpers */
     gboolean  config_active_default;
@@ -3649,7 +3649,7 @@ uim_start_refresh_timeout (MMSharedQmi *self)
 
     mm_obj_dbg (self, "refresh start timed out; trigger SIM change check");
 
-    mm_iface_modem_check_for_sim_swap (MM_IFACE_MODEM (self), NULL, NULL, NULL, NULL);
+    mm_iface_modem_check_for_sim_swap (MM_IFACE_MODEM (self), NULL, NULL);
 
     return G_SOURCE_REMOVE;
 }
@@ -3715,7 +3715,7 @@ uim_refresh_indication_cb (QmiClientUim                  *client,
                 g_source_remove (priv->uim_refresh_start_timeout_id);
                 priv->uim_refresh_start_timeout_id = 0;
             }
-            mm_iface_modem_check_for_sim_swap (MM_IFACE_MODEM (self), NULL, NULL, NULL, NULL);
+            mm_iface_modem_check_for_sim_swap (MM_IFACE_MODEM (self), NULL, NULL);
         }
     }
 }
@@ -4795,9 +4795,10 @@ pds_get_agps_config_ready (QmiClientPds *client,
         str = g_strdup ("");
 
 out:
-    if (error)
+    if (error) {
+        g_free (str);
         g_task_return_error (task, error);
-    else {
+    } else {
         g_assert (str);
         g_task_return_pointer (task, str, g_free);
     }
@@ -4905,9 +4906,10 @@ loc_location_get_server_indication_cb (QmiClientLoc                    *client,
         str = g_strdup ("");
 
 out:
-    if (error)
+    if (error) {
+        g_free (str);
         g_task_return_error (task, error);
-    else {
+    } else {
         g_assert (str);
         g_task_return_pointer (task, str, g_free);
     }

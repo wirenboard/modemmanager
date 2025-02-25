@@ -81,8 +81,9 @@ typedef gboolean (* MMPortProbeAtCustomInitFinish) (MMPortProbe *probe,
 GType mm_port_probe_get_type (void);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (MMPortProbe, g_object_unref)
 
-MMPortProbe *mm_port_probe_new (MMDevice       *device,
-                                MMKernelDevice *port);
+MMPortProbe *mm_port_probe_new   (MMDevice       *device,
+                                  MMKernelDevice *port);
+void         mm_port_probe_reset (MMPortProbe    *self);
 
 MMDevice       *mm_port_probe_peek_device     (MMPortProbe *self);
 MMDevice       *mm_port_probe_get_device      (MMPortProbe *self);
@@ -133,6 +134,7 @@ gboolean      mm_port_probe_is_at            (MMPortProbe *self);
 gboolean      mm_port_probe_is_qcdm          (MMPortProbe *self);
 gboolean      mm_port_probe_is_qmi           (MMPortProbe *self);
 gboolean      mm_port_probe_is_mbim          (MMPortProbe *self);
+gboolean      mm_port_probe_is_xmmrpc        (MMPortProbe *self);
 const gchar  *mm_port_probe_get_vendor       (MMPortProbe *self);
 const gchar  *mm_port_probe_get_product      (MMPortProbe *self);
 gboolean      mm_port_probe_is_icera         (MMPortProbe *self);
@@ -140,10 +142,11 @@ gboolean      mm_port_probe_is_xmm           (MMPortProbe *self);
 gboolean      mm_port_probe_is_ignored       (MMPortProbe *self);
 
 /* Additional helpers */
-gboolean mm_port_probe_list_has_at_port   (GList *list);
-gboolean mm_port_probe_list_has_qmi_port  (GList *list);
-gboolean mm_port_probe_list_has_mbim_port (GList *list);
-gboolean mm_port_probe_list_is_icera      (GList *list);
-gboolean mm_port_probe_list_is_xmm        (GList *list);
+gboolean mm_port_probe_list_has_at_port     (GList *list);
+gboolean mm_port_probe_list_has_qmi_port    (GList *list);
+gboolean mm_port_probe_list_has_mbim_port   (GList *list);
+gboolean mm_port_probe_list_has_xmmrpc_port (GList *list);
+gboolean mm_port_probe_list_is_icera        (GList *list);
+gboolean mm_port_probe_list_is_xmm          (GList *list);
 
 #endif /* MM_PORT_PROBE_H */

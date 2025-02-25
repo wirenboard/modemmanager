@@ -35,6 +35,7 @@
 #include "mm-port-serial-at.h"
 #include "mm-port-serial-qcdm.h"
 #include "mm-port-serial-gps.h"
+#include "mm-iface-port-at.h"
 
 #if defined WITH_QMI
 #include "mm-port-qmi.h"
@@ -77,50 +78,49 @@ struct _MMBaseModem {
     MMBaseModemPrivate *priv;
 };
 
+/* Common state operation definitions */
+typedef void     (* StateOperation)      (MMBaseModem          *self,
+                                          GCancellable         *cancellable,
+                                          GAsyncReadyCallback   callback,
+                                          gpointer              user_data);
+typedef gboolean (*StateOperationFinish) (MMBaseModem          *self,
+                                          GAsyncResult         *res,
+                                          GError              **error);
+
 struct _MMBaseModemClass {
     MmGdbusObjectSkeletonClass parent;
 
-    /* Modem initialization.
-     * As soon as the ports are organized, this method gets called */
-    void (* initialize) (MMBaseModem *self,
-                         GCancellable *cancellable,
-                         GAsyncReadyCallback callback,
-                         gpointer user_data);
-    gboolean (*initialize_finish) (MMBaseModem *self,
-                                   GAsyncResult *res,
-                                   GError **error);
+    /* Modem initialization. As soon as the ports are organized, this method gets called */
+    StateOperation       initialize;
+    StateOperationFinish initialize_finish;
 
-    /* Modem enabling.
-     * User action requested from DBus, usually */
-    void (* enable) (MMBaseModem *self,
-                     GCancellable *cancellable,
-                     GAsyncReadyCallback callback,
-                     gpointer user_data);
-    gboolean (*enable_finish) (MMBaseModem *self,
-                               GAsyncResult *res,
-                               GError **error);
+    /* Modem enabling. User action requested from DBus, usually */
+    StateOperation       enable;
+    StateOperationFinish enable_finish;
 
-    /* Modem disabling.
-     * User action requested from DBus, usually */
-    void (* disable) (MMBaseModem *self,
-                      GCancellable *cancellable,
-                      GAsyncReadyCallback callback,
-                      gpointer user_data);
-    gboolean (*disable_finish) (MMBaseModem *self,
-                                GAsyncResult *res,
-                                GError **error);
+    /* Modem disabling. Either user action or internally triggered. */
+    StateOperation       disable;
+    StateOperationFinish disable_finish;
 
 #if defined WITH_SUSPEND_RESUME
     /* Modem synchronization.
      * When resuming in quick suspend/resume mode,
      * this method triggers a synchronization of all modem interfaces */
-    void (* sync) (MMBaseModem *self,
-                   GAsyncReadyCallback callback,
-                   gpointer user_data);
-    gboolean (* sync_finish) (MMBaseModem *self,
-                              GAsyncResult *res,
-                              GError **error);
+    StateOperation       sync;
+    StateOperationFinish sync_finish;
 #endif
+
+    /* Allow plugins to subclass port object creation as needed */
+    MMPort * (* create_tty_port)     (MMBaseModem    *self,
+                                      const gchar    *name,
+                                      MMKernelDevice *kernel_device,
+                                      MMPortType      ptype);
+    MMPort * (* create_usbmisc_port) (MMBaseModem    *self,
+                                      const gchar    *name,
+                                      MMPortType      ptype);
+    MMPort * (* create_wwan_port)    (MMBaseModem    *self,
+                                      const gchar    *name,
+                                      MMPortType      ptype);
 
     /* signals */
     void (* link_port_grabbed)  (MMBaseModem *self,
@@ -157,8 +157,6 @@ MMPort   *mm_base_modem_wait_link_port_finish (MMBaseModem          *self,
                                                GAsyncResult         *res,
                                                GError              **error);
 
-gboolean  mm_base_modem_has_at_port  (MMBaseModem *self);
-
 gboolean  mm_base_modem_organize_ports (MMBaseModem *self,
                                         GError **error);
 
@@ -168,7 +166,7 @@ MMPortSerialQcdm *mm_base_modem_peek_port_qcdm         (MMBaseModem *self);
 MMPortSerialAt   *mm_base_modem_peek_port_gps_control  (MMBaseModem *self);
 MMPortSerialGps  *mm_base_modem_peek_port_gps          (MMBaseModem *self);
 MMPortSerial     *mm_base_modem_peek_port_audio        (MMBaseModem *self);
-MMPortSerialAt   *mm_base_modem_peek_best_at_port      (MMBaseModem *self, GError **error);
+MMIfacePortAt    *mm_base_modem_peek_best_at_port      (MMBaseModem *self, GError **error);
 MMPort           *mm_base_modem_peek_best_data_port    (MMBaseModem *self, MMPortType type);
 GList            *mm_base_modem_peek_data_ports        (MMBaseModem *self);
 
@@ -178,7 +176,7 @@ MMPortSerialQcdm *mm_base_modem_get_port_qcdm         (MMBaseModem *self);
 MMPortSerialAt   *mm_base_modem_get_port_gps_control  (MMBaseModem *self);
 MMPortSerialGps  *mm_base_modem_get_port_gps          (MMBaseModem *self);
 MMPortSerial     *mm_base_modem_get_port_audio        (MMBaseModem *self);
-MMPortSerialAt   *mm_base_modem_get_best_at_port      (MMBaseModem *self, GError **error);
+MMIfacePortAt    *mm_base_modem_get_best_at_port      (MMBaseModem *self, GError **error);
 MMPort           *mm_base_modem_get_best_data_port    (MMBaseModem *self, MMPortType type);
 GList            *mm_base_modem_get_data_ports        (MMBaseModem *self);
 
@@ -216,45 +214,95 @@ guint mm_base_modem_get_subsystem_vendor_id (MMBaseModem *self);
 
 GCancellable *mm_base_modem_peek_cancellable (MMBaseModem *self);
 
-void     mm_base_modem_authorize        (MMBaseModem *self,
-                                         GDBusMethodInvocation *invocation,
-                                         const gchar *authorization,
-                                         GAsyncReadyCallback callback,
-                                         gpointer user_data);
-gboolean mm_base_modem_authorize_finish (MMBaseModem *self,
-                                         GAsyncResult *res,
-                                         GError **error);
+/******************************************************************************/
+/* Polkit */
 
-void     mm_base_modem_initialize        (MMBaseModem *self,
-                                          GAsyncReadyCallback callback,
-                                          gpointer user_data);
-gboolean mm_base_modem_initialize_finish (MMBaseModem *self,
-                                          GAsyncResult *res,
-                                          GError **error);
+void     mm_base_modem_authorize        (MMBaseModem            *self,
+                                         GDBusMethodInvocation  *invocation,
+                                         const gchar            *authorization,
+                                         GAsyncReadyCallback     callback,
+                                         gpointer                user_data);
+gboolean mm_base_modem_authorize_finish (MMBaseModem            *self,
+                                         GAsyncResult           *res,
+                                         GError                **error);
 
-void     mm_base_modem_enable        (MMBaseModem *self,
-                                      GAsyncReadyCallback callback,
-                                      gpointer user_data);
-gboolean mm_base_modem_enable_finish (MMBaseModem *self,
-                                      GAsyncResult *res,
-                                      GError **error);
+/******************************************************************************/
+/* Operation lock support */
 
-void     mm_base_modem_disable        (MMBaseModem *self,
-                                       GAsyncReadyCallback callback,
-                                       gpointer user_data);
-gboolean mm_base_modem_disable_finish (MMBaseModem *self,
-                                       GAsyncResult *res,
-                                       GError **error);
+typedef enum {  /*< underscore_name=mm_base_modem_operation_priority >*/
+    MM_BASE_MODEM_OPERATION_PRIORITY_UNKNOWN,
+    /* Default operations are scheduled at the end of the list of pending
+     * operations */
+    MM_BASE_MODEM_OPERATION_PRIORITY_DEFAULT,
+    /* An override operation will make all pending operations be cancelled, and
+     * it will also disallow adding new operations. This type of operation would
+     * be the last one expected in a modem object. */
+    MM_BASE_MODEM_OPERATION_PRIORITY_OVERRIDE,
+} MMBaseModemOperationPriority;
+
+void   mm_base_modem_operation_lock        (MMBaseModem                  *self,
+                                            MMBaseModemOperationPriority  priority,
+                                            const gchar                  *description,
+                                            GAsyncReadyCallback           callback,
+                                            gpointer                      user_data);
+gssize mm_base_modem_operation_lock_finish (MMBaseModem                  *self,
+                                            GAsyncResult                 *res,
+                                            GError                      **error);
+void   mm_base_modem_operation_unlock      (MMBaseModem                  *self,
+                                            gssize                        operation_id);
+
+void    mm_base_modem_authorize_and_operation_lock       (MMBaseModem                  *self,
+                                                          GDBusMethodInvocation        *invocation,
+                                                          const gchar                  *authorization,
+                                                          MMBaseModemOperationPriority  operation_priority,
+                                                          const gchar                  *operation_description,
+                                                          GAsyncReadyCallback           callback,
+                                                          gpointer                      user_data);
+gssize mm_base_modem_authorize_and_operation_lock_finish (MMBaseModem                  *self,
+                                                          GAsyncResult                 *res,
+                                                          GError                      **error);
+
+/******************************************************************************/
+/* State operations */
+
+typedef enum {
+    MM_BASE_MODEM_OPERATION_LOCK_REQUIRED,
+    MM_BASE_MODEM_OPERATION_LOCK_ALREADY_ACQUIRED,
+} MMBaseModemOperationLock;
+
+void     mm_base_modem_initialize        (MMBaseModem              *self,
+                                          MMBaseModemOperationLock  operation_lock,
+                                          GAsyncReadyCallback       callback,
+                                          gpointer                  user_data);
+gboolean mm_base_modem_initialize_finish (MMBaseModem              *self,
+                                          GAsyncResult             *res,
+                                          GError                  **error);
+
+void     mm_base_modem_enable            (MMBaseModem              *self,
+                                          MMBaseModemOperationLock  operation_lock,
+                                          GAsyncReadyCallback       callback,
+                                          gpointer                  user_data);
+gboolean mm_base_modem_enable_finish     (MMBaseModem              *self,
+                                          GAsyncResult             *res,
+                                          GError                  **error);
+
+void     mm_base_modem_disable           (MMBaseModem                   *self,
+                                          MMBaseModemOperationLock       operation_lock,
+                                          MMBaseModemOperationPriority   priority,
+                                          GAsyncReadyCallback            callback,
+                                          gpointer                       user_data);
+gboolean mm_base_modem_disable_finish    (MMBaseModem                   *self,
+                                          GAsyncResult                  *res,
+                                          GError                       **error);
 
 #if defined WITH_SUSPEND_RESUME
-
-void     mm_base_modem_sync           (MMBaseModem *self,
-                                       GAsyncReadyCallback callback,
-                                       gpointer user_data);
-gboolean mm_base_modem_sync_finish    (MMBaseModem *self,
-                                       GAsyncResult *res,
-                                       GError **error);
-
+void     mm_base_modem_sync              (MMBaseModem              *self,
+                                          MMBaseModemOperationLock  operation_lock,
+                                          GAsyncReadyCallback       callback,
+                                          gpointer                  user_data);
+gboolean mm_base_modem_sync_finish       (MMBaseModem              *self,
+                                          GAsyncResult             *res,
+                                          GError                  **error);
 #endif
 
 #endif /* MM_BASE_MODEM_H */

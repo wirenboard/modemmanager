@@ -34,10 +34,10 @@
 #include "mm-modem-helpers-ublox.h"
 #include "mm-ublox-enums-types.h"
 
-static void iface_modem_init (MMIfaceModem *iface);
-static void iface_modem_voice_init (MMIfaceModemVoice *iface);
+static void iface_modem_init       (MMIfaceModemInterface      *iface);
+static void iface_modem_voice_init (MMIfaceModemVoiceInterface *iface);
 
-static MMIfaceModemVoice *iface_modem_voice_parent;
+static MMIfaceModemVoiceInterface *iface_modem_voice_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemUblox, mm_broadband_modem_ublox, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -51,9 +51,6 @@ struct _MMBroadbandModemUbloxPrivate {
     /* Networking mode in use */
     MMUbloxNetworkingMode mode;
     gboolean              mode_checked;
-
-    /* Flag to specify whether a power operation is ongoing */
-    gboolean power_operation_ongoing;
 
     /* Mode combination to apply if "any" requested */
     MMModemMode any_allowed;
@@ -134,28 +131,6 @@ preload_support_config (MMBroadbandModemUblox *self)
         default:
             g_assert_not_reached();
     }
-}
-
-/*****************************************************************************/
-
-static gboolean
-acquire_power_operation (MMBroadbandModemUblox  *self,
-                         GError                **error)
-{
-    if (self->priv->power_operation_ongoing) {
-        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_RETRY,
-                     "An operation which requires power updates is currently in progress");
-        return FALSE;
-    }
-    self->priv->power_operation_ongoing = TRUE;
-    return TRUE;
-}
-
-static void
-release_power_operation (MMBroadbandModemUblox *self)
-{
-    g_assert (self->priv->power_operation_ongoing);
-    self->priv->power_operation_ongoing = FALSE;
 }
 
 /*****************************************************************************/
@@ -301,12 +276,10 @@ load_current_bands (MMIfaceModem        *_self,
 
 typedef enum {
     SET_CURRENT_MODES_BANDS_STEP_FIRST,
-    SET_CURRENT_MODES_BANDS_STEP_ACQUIRE,
     SET_CURRENT_MODES_BANDS_STEP_CURRENT_POWER,
     SET_CURRENT_MODES_BANDS_STEP_BEFORE_COMMAND,
     SET_CURRENT_MODES_BANDS_STEP_COMMAND,
     SET_CURRENT_MODES_BANDS_STEP_AFTER_COMMAND,
-    SET_CURRENT_MODES_BANDS_STEP_RELEASE,
     SET_CURRENT_MODES_BANDS_STEP_LAST,
 } SetCurrentModesBandsStep;
 
@@ -360,7 +333,7 @@ set_current_modes_bands_reregister_in_network_ready (MMIfaceModem3gpp *self,
     /* propagate the error if none already set */
     mm_iface_modem_3gpp_reregister_in_network_finish (self, res, ctx->saved_error ? NULL : &ctx->saved_error);
 
-    /* Go to next step (release power operation) regardless of the result */
+    /* Go to next step regardless of the result */
     ctx->step++;
     set_current_modes_bands_step (task);
 }
@@ -377,7 +350,7 @@ set_current_modes_bands_after_command_ready (MMBaseModem  *self,
     /* propagate the error if none already set */
     mm_base_modem_at_command_finish (self, res, ctx->saved_error ? NULL : &ctx->saved_error);
 
-    /* Go to next step (release power operation) regardless of the result */
+    /* Go to next step regardless of the result */
     ctx->step++;
     set_current_modes_bands_step (task);
 }
@@ -392,7 +365,7 @@ set_current_modes_bands_command_ready (MMBaseModem  *self,
     ctx = g_task_get_task_data (task);
 
     if (!mm_base_modem_at_command_finish (self, res, &ctx->saved_error))
-        ctx->step = SET_CURRENT_MODES_BANDS_STEP_RELEASE;
+        ctx->step = SET_CURRENT_MODES_BANDS_STEP_LAST;
     else
         ctx->step++;
 
@@ -409,7 +382,7 @@ set_current_modes_bands_before_command_ready (MMBaseModem  *self,
     ctx = g_task_get_task_data (task);
 
     if (!mm_base_modem_at_command_finish (self, res, &ctx->saved_error))
-        ctx->step = SET_CURRENT_MODES_BANDS_STEP_RELEASE;
+        ctx->step = SET_CURRENT_MODES_BANDS_STEP_LAST;
     else
         ctx->step++;
 
@@ -431,7 +404,7 @@ set_current_modes_bands_current_power_ready (MMBaseModem  *_self,
 
     response = mm_base_modem_at_command_finish (_self, res, &ctx->saved_error);
     if (!response || !mm_ublox_parse_cfun_response (response, &ctx->initial_state, &ctx->saved_error))
-        ctx->step = SET_CURRENT_MODES_BANDS_STEP_RELEASE;
+        ctx->step = SET_CURRENT_MODES_BANDS_STEP_LAST;
     else
         ctx->step++;
 
@@ -449,16 +422,6 @@ set_current_modes_bands_step (GTask *task)
 
     switch (ctx->step) {
     case SET_CURRENT_MODES_BANDS_STEP_FIRST:
-        ctx->step++;
-        /* fall through */
-
-    case SET_CURRENT_MODES_BANDS_STEP_ACQUIRE:
-        mm_obj_dbg (self, "acquiring power operation...");
-        if (!acquire_power_operation (self, &ctx->saved_error)) {
-            ctx->step = SET_CURRENT_MODES_BANDS_STEP_LAST;
-            set_current_modes_bands_step (task);
-            return;
-        }
         ctx->step++;
         /* fall through */
 
@@ -546,12 +509,6 @@ set_current_modes_bands_step (GTask *task)
                 return;
             }
         }
-        ctx->step++;
-        /* fall through */
-
-    case SET_CURRENT_MODES_BANDS_STEP_RELEASE:
-        mm_obj_dbg (self, "releasing power operation...");
-        release_power_operation (self);
         ctx->step++;
         /* fall through */
 
@@ -749,23 +706,7 @@ common_modem_power_operation_finish (MMIfaceModem  *self,
                                      GAsyncResult  *res,
                                      GError       **error)
 {
-    return g_task_propagate_boolean (G_TASK (res), error);
-}
-
-static void
-power_operation_ready (MMBaseModem  *self,
-                       GAsyncResult *res,
-                       GTask        *task)
-{
-    GError *error = NULL;
-
-    release_power_operation (MM_BROADBAND_MODEM_UBLOX (self));
-
-    if (!mm_base_modem_at_command_finish (self, res, &error))
-        g_task_return_error (task, error);
-    else
-        g_task_return_boolean (task, TRUE);
-    g_object_unref (task);
+    return !!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, error);
 }
 
 static void
@@ -774,25 +715,12 @@ common_modem_power_operation (MMBroadbandModemUblox  *self,
                               GAsyncReadyCallback     callback,
                               gpointer                user_data)
 {
-    GTask  *task;
-    GError *error = NULL;
-
-    task = g_task_new (self, NULL, callback, user_data);
-
-    /* Fail if there is already an ongoing power management operation */
-    if (!acquire_power_operation (self, &error)) {
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    /* Use AT+CFUN=4 for power down, puts device in airplane mode */
     mm_base_modem_at_command (MM_BASE_MODEM (self),
                               command,
                               30,
                               FALSE,
-                              (GAsyncReadyCallback) power_operation_ready,
-                              task);
+                              callback,
+                              user_data);
 }
 
 static void
@@ -973,7 +901,7 @@ voice_unsolicited_events_context_step (GTask *task)
             mm_obj_dbg (self, "%s extended call status reporting in primary port...",
                         ctx->enable ? "enabling" : "disabling");
             mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                           ctx->primary,
+                                           MM_IFACE_PORT_AT (ctx->primary),
                                            ctx->ucallstat_command,
                                            3,
                                            FALSE,
@@ -991,7 +919,7 @@ voice_unsolicited_events_context_step (GTask *task)
             mm_obj_dbg (self, "%s extended call status reporting in secondary port...",
                         ctx->enable ? "enabling" : "disabling");
             mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                           ctx->secondary,
+                                           MM_IFACE_PORT_AT (ctx->secondary),
                                            ctx->ucallstat_command,
                                            3,
                                            FALSE,
@@ -1009,7 +937,7 @@ voice_unsolicited_events_context_step (GTask *task)
             mm_obj_dbg (self, "%s DTMF detection and reporting in primary port...",
                         ctx->enable ? "enabling" : "disabling");
             mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                           ctx->primary,
+                                           MM_IFACE_PORT_AT (ctx->primary),
                                            ctx->udtmfd_command,
                                            3,
                                            FALSE,
@@ -1027,7 +955,7 @@ voice_unsolicited_events_context_step (GTask *task)
             mm_obj_dbg (self, "%s DTMF detection and reporting in secondary port...",
                         ctx->enable ? "enabling" : "disabling");
             mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                           ctx->secondary,
+                                           MM_IFACE_PORT_AT (ctx->secondary),
                                            ctx->udtmfd_command,
                                            3,
                                            FALSE,
@@ -1124,31 +1052,29 @@ ublox_setup_ciev_handler (MMIfaceModem *self,
 {
     g_autoptr(GRegex)  pattern = NULL;
     g_autofree gchar  *ciev_regex = NULL;
-    MMPortSerialAt    *primary_port;
-    MMPortSerialAt    *secondary_port;
+    MMPortSerialAt    *ports[2];
+    guint              i;
 
-    primary_port = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
     mm_obj_dbg (self, "setting up simind 'CIEV: %d' events handler", simind_idx);
     ciev_regex = g_strdup_printf ("\\r\\n\\+CIEV: %d,([0-1]{1})\\r\\n", simind_idx);
     pattern = g_regex_new (ciev_regex,
                            G_REGEX_RAW | G_REGEX_OPTIMIZE,
                            0, NULL);
     g_assert (pattern);
-    mm_port_serial_at_add_unsolicited_msg_handler (
-        primary_port,
-        pattern,
-        (MMPortSerialAtUnsolicitedMsgFn) ublox_ciev_unsolicited_handler,
-        self,
-        NULL);
 
-    secondary_port = mm_base_modem_get_port_secondary (MM_BASE_MODEM (self));
-    if (secondary_port)
+    ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
+        if (!ports[i])
+            continue;
+
         mm_port_serial_at_add_unsolicited_msg_handler (
-            secondary_port,
+            ports[i],
             pattern,
             (MMPortSerialAtUnsolicitedMsgFn) ublox_ciev_unsolicited_handler,
             self,
             NULL);
+    }
 }
 
 static void
@@ -2012,7 +1938,7 @@ mm_broadband_modem_ublox_init (MMBroadbandModemUblox *self)
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     iface->create_sim = modem_create_sim;
     iface->create_sim_finish = modem_create_sim_finish;
@@ -2048,7 +1974,7 @@ iface_modem_init (MMIfaceModem *iface)
 }
 
 static void
-iface_modem_voice_init (MMIfaceModemVoice *iface)
+iface_modem_voice_init (MMIfaceModemVoiceInterface *iface)
 {
     iface_modem_voice_parent = g_type_interface_peek_parent (iface);
 
