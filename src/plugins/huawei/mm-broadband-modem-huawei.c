@@ -50,20 +50,20 @@
 #include "mm-bearer-list.h"
 #include "mm-sim-huawei.h"
 
-static void iface_modem_init (MMIfaceModem *iface);
-static void iface_modem_3gpp_init (MMIfaceModem3gpp *iface);
-static void iface_modem_3gpp_ussd_init (MMIfaceModem3gppUssd *iface);
-static void iface_modem_location_init (MMIfaceModemLocation *iface);
-static void iface_modem_cdma_init (MMIfaceModemCdma *iface);
-static void iface_modem_time_init (MMIfaceModemTime *iface);
-static void iface_modem_voice_init (MMIfaceModemVoice *iface);
-static void iface_modem_signal_init (MMIfaceModemSignal *iface);
+static void iface_modem_init           (MMIfaceModemInterface         *iface);
+static void iface_modem_3gpp_init      (MMIfaceModem3gppInterface     *iface);
+static void iface_modem_3gpp_ussd_init (MMIfaceModem3gppUssdInterface *iface);
+static void iface_modem_location_init  (MMIfaceModemLocationInterface *iface);
+static void iface_modem_cdma_init      (MMIfaceModemCdmaInterface     *iface);
+static void iface_modem_time_init      (MMIfaceModemTimeInterface     *iface);
+static void iface_modem_voice_init     (MMIfaceModemVoiceInterface    *iface);
+static void iface_modem_signal_init    (MMIfaceModemSignalInterface   *iface);
 
-static MMIfaceModem *iface_modem_parent;
-static MMIfaceModem3gpp *iface_modem_3gpp_parent;
-static MMIfaceModemLocation *iface_modem_location_parent;
-static MMIfaceModemCdma *iface_modem_cdma_parent;
-static MMIfaceModemVoice *iface_modem_voice_parent;
+static MMIfaceModemInterface         *iface_modem_parent;
+static MMIfaceModem3gppInterface     *iface_modem_3gpp_parent;
+static MMIfaceModemLocationInterface *iface_modem_location_parent;
+static MMIfaceModemCdmaInterface     *iface_modem_cdma_parent;
+static MMIfaceModemVoiceInterface    *iface_modem_voice_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemHuawei, mm_broadband_modem_huawei, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -148,6 +148,9 @@ struct _MMBroadbandModemHuaweiPrivate {
     GArray *syscfg_supported_modes;
     GArray *syscfgex_supported_modes;
     GArray *prefmode_supported_modes;
+
+    guint64 supported_gsm_umts_bands;
+    guint64 supported_lte_bands;
 
     DetailedSignal detailed_signal;
 
@@ -735,61 +738,122 @@ modem_after_sim_unlock (MMIfaceModem *self,
 
 typedef struct {
     MMModemBand mm;
-    guint32 huawei;
+    guint64 huawei;
 } BandTable;
 
-static BandTable bands[] = {
+static BandTable gsm_umts_bands[] = {
     /* Sort 3G first since it's preferred */
-    { MM_MODEM_BAND_UTRAN_1, 0x00400000 },
-    { MM_MODEM_BAND_UTRAN_2, 0x00800000 },
-    { MM_MODEM_BAND_UTRAN_5, 0x04000000 },
-    { MM_MODEM_BAND_UTRAN_8, 0x00020000 },
+    { MM_MODEM_BAND_UTRAN_1,  G_GUINT64_CONSTANT (0x0000000000400000) },
+    { MM_MODEM_BAND_UTRAN_2,  G_GUINT64_CONSTANT (0x0000000000800000) },
+    { MM_MODEM_BAND_UTRAN_3,  G_GUINT64_CONSTANT (0x0000000001000000) },
+    { MM_MODEM_BAND_UTRAN_4,  G_GUINT64_CONSTANT (0x0000000002000000) },
+    { MM_MODEM_BAND_UTRAN_5,  G_GUINT64_CONSTANT (0x0000000004000000) },
+    { MM_MODEM_BAND_UTRAN_6,  G_GUINT64_CONSTANT (0x0000000008000000) },
+    { MM_MODEM_BAND_UTRAN_8,  G_GUINT64_CONSTANT (0x0002000000000000) },
+    { MM_MODEM_BAND_UTRAN_9,  G_GUINT64_CONSTANT (0x0004000000000000) },
+    { MM_MODEM_BAND_UTRAN_19, G_GUINT64_CONSTANT (0x1000000000000000) },
     /* 2G second */
-    { MM_MODEM_BAND_G850,  0x00080000 },
-    { MM_MODEM_BAND_DCS,   0x00000080 },
-    { MM_MODEM_BAND_EGSM,  0x00000100 },
-    { MM_MODEM_BAND_PCS,   0x00200000 }
+    { MM_MODEM_BAND_G850, G_GUINT64_CONSTANT (0x080000) },
+    { MM_MODEM_BAND_DCS,  G_GUINT64_CONSTANT (0x000080) },
+    { MM_MODEM_BAND_EGSM, G_GUINT64_CONSTANT (0x000100) },
+    { MM_MODEM_BAND_PCS,  G_GUINT64_CONSTANT (0x200000) }
+};
+
+/* LTE band values reported by ^SYSCFGEX overlap with GSM/UMTS band values */
+#define LTE_BAND_TO_HUAWEI(band) (G_GUINT64_CONSTANT(1) << ((band) - 1))
+
+static BandTable lte_bands[] = {
+    { MM_MODEM_BAND_EUTRAN_1, LTE_BAND_TO_HUAWEI(1) },
+    { MM_MODEM_BAND_EUTRAN_2, LTE_BAND_TO_HUAWEI(2) },
+    { MM_MODEM_BAND_EUTRAN_3, LTE_BAND_TO_HUAWEI(3) },
+    { MM_MODEM_BAND_EUTRAN_4, LTE_BAND_TO_HUAWEI(4) },
+    { MM_MODEM_BAND_EUTRAN_5, LTE_BAND_TO_HUAWEI(5) },
+    { MM_MODEM_BAND_EUTRAN_6, LTE_BAND_TO_HUAWEI(6) },
+    { MM_MODEM_BAND_EUTRAN_7, LTE_BAND_TO_HUAWEI(7) },
+    { MM_MODEM_BAND_EUTRAN_8, LTE_BAND_TO_HUAWEI(8) },
+    { MM_MODEM_BAND_EUTRAN_9, LTE_BAND_TO_HUAWEI(9) },
+    { MM_MODEM_BAND_EUTRAN_10, LTE_BAND_TO_HUAWEI(10) },
+    { MM_MODEM_BAND_EUTRAN_11, LTE_BAND_TO_HUAWEI(11) },
+    { MM_MODEM_BAND_EUTRAN_12, LTE_BAND_TO_HUAWEI(12) },
+    { MM_MODEM_BAND_EUTRAN_13, LTE_BAND_TO_HUAWEI(13) },
+    { MM_MODEM_BAND_EUTRAN_14, LTE_BAND_TO_HUAWEI(14) },
+    { MM_MODEM_BAND_EUTRAN_17, LTE_BAND_TO_HUAWEI(17) },
+    { MM_MODEM_BAND_EUTRAN_18, LTE_BAND_TO_HUAWEI(18) },
+    { MM_MODEM_BAND_EUTRAN_19, LTE_BAND_TO_HUAWEI(19) },
+    { MM_MODEM_BAND_EUTRAN_20, LTE_BAND_TO_HUAWEI(20) },
+    { MM_MODEM_BAND_EUTRAN_21, LTE_BAND_TO_HUAWEI(21) },
+    { MM_MODEM_BAND_EUTRAN_25, LTE_BAND_TO_HUAWEI(25) },
+    { MM_MODEM_BAND_EUTRAN_26, LTE_BAND_TO_HUAWEI(26) },
+    { MM_MODEM_BAND_EUTRAN_28, LTE_BAND_TO_HUAWEI(28) },
+    { MM_MODEM_BAND_EUTRAN_33, LTE_BAND_TO_HUAWEI(33) },
+    { MM_MODEM_BAND_EUTRAN_34, LTE_BAND_TO_HUAWEI(34) },
+    { MM_MODEM_BAND_EUTRAN_35, LTE_BAND_TO_HUAWEI(35) },
+    { MM_MODEM_BAND_EUTRAN_36, LTE_BAND_TO_HUAWEI(36) },
+    { MM_MODEM_BAND_EUTRAN_37, LTE_BAND_TO_HUAWEI(37) },
+    { MM_MODEM_BAND_EUTRAN_38, LTE_BAND_TO_HUAWEI(38) },
+    { MM_MODEM_BAND_EUTRAN_39, LTE_BAND_TO_HUAWEI(39) },
+    { MM_MODEM_BAND_EUTRAN_40, LTE_BAND_TO_HUAWEI(40) },
+    { MM_MODEM_BAND_EUTRAN_41, LTE_BAND_TO_HUAWEI(41) },
+    { MM_MODEM_BAND_EUTRAN_42, LTE_BAND_TO_HUAWEI(42) },
+    { MM_MODEM_BAND_EUTRAN_43, LTE_BAND_TO_HUAWEI(43) },
 };
 
 static gboolean
-bands_array_to_huawei (GArray *bands_array,
-                       guint32 *out_huawei)
+bands_array_to_huawei (GArray  *bands_array,
+                       guint64 *out_gsm_umts_huawei,
+                       guint64 *out_lte_huawei)
 {
     guint i;
+    MMModemBand mm_band;
 
-    /* Treat ANY as a special case: All huawei flags enabled */
-    if (bands_array->len == 1 &&
-        g_array_index (bands_array, MMModemBand, 0) == MM_MODEM_BAND_ANY) {
-        *out_huawei = 0x3FFFFFFF;
+    g_assert (out_gsm_umts_huawei);
+    g_assert (out_lte_huawei);
+
+    if (bands_array->len == 1 && g_array_index (bands_array, MMModemBand, 0) == MM_MODEM_BAND_ANY) {
+        *out_gsm_umts_huawei = MM_HUAWEI_SYSCFG_BAND_ANY;
+        *out_lte_huawei = MM_HUAWEI_SYSCFGEX_BAND_ANY_LTE;
         return TRUE;
     }
 
-    *out_huawei = 0;
+    *out_gsm_umts_huawei = 0;
+    *out_lte_huawei = 0;
+
     for (i = 0; i < bands_array->len; i++) {
         guint j;
 
-        for (j = 0; j < G_N_ELEMENTS (bands); j++) {
-            if (g_array_index (bands_array, MMModemBand, i) == bands[j].mm)
-                *out_huawei |= bands[j].huawei;
+        mm_band = g_array_index (bands_array, MMModemBand, i);
+
+        if (mm_band < MM_MODEM_BAND_EUTRAN_1) {
+            for (j = 0; j < G_N_ELEMENTS (gsm_umts_bands); j++) {
+                if (mm_band == gsm_umts_bands[j].mm)
+                    *out_gsm_umts_huawei |= gsm_umts_bands[j].huawei;
+            }
+        } else {
+            for (j = 0; j < G_N_ELEMENTS (lte_bands); j++) {
+                if (mm_band == lte_bands[j].mm)
+                    *out_lte_huawei |= lte_bands[j].huawei;
+            }
         }
     }
 
-    return (*out_huawei > 0 ? TRUE : FALSE);
+    return (*out_gsm_umts_huawei + *out_lte_huawei) > 0;
 }
 
 static gboolean
-huawei_to_bands_array (guint32 huawei,
-                       GArray **bands_array,
-                       GError **error)
+huawei_to_bands_array (BandTable *band_table,
+                       guint      band_table_len,
+                       guint64    huawei,
+                       GArray   **bands_array,
+                       GError   **error)
 {
     guint i;
 
     *bands_array = NULL;
-    for (i = 0; i < G_N_ELEMENTS (bands); i++) {
-        if (huawei & bands[i].huawei) {
+    for (i = 0; i < band_table_len; i++) {
+        if (huawei & band_table[i].huawei) {
             if (G_UNLIKELY (!*bands_array))
                 *bands_array = g_array_new (FALSE, FALSE, sizeof (MMModemBand));
-            g_array_append_val (*bands_array, bands[i].mm);
+            g_array_append_val (*bands_array, band_table[i].mm);
         }
     }
 
@@ -797,7 +861,7 @@ huawei_to_bands_array (guint32 huawei,
         g_set_error (error,
                      MM_CORE_ERROR,
                      MM_CORE_ERROR_FAILED,
-                     "Couldn't build bands array from '%u'",
+                     "Couldn't build bands array from '%" G_GUINT64_FORMAT "'",
                      huawei);
         return FALSE;
     }
@@ -806,34 +870,19 @@ huawei_to_bands_array (guint32 huawei,
 }
 
 static gboolean
-parse_syscfg (const gchar *response,
-              GArray **bands_array,
-              GError **error)
+gsm_umts_huawei_to_bands_array (guint64  huawei,
+                                GArray **bands_array,
+                                GError **error)
 {
-    gint mode;
-    gint acquisition_order;
-    guint32 band;
-    gint roaming;
-    gint srv_domain;
+    return huawei_to_bands_array (gsm_umts_bands, G_N_ELEMENTS (gsm_umts_bands), huawei, bands_array, error);
+}
 
-    if (!response ||
-        strncmp (response, "^SYSCFG:", 8) != 0 ||
-        !sscanf (response + 8, "%d,%d,%x,%d,%d", &mode, &acquisition_order, &band, &roaming, &srv_domain)) {
-        /* Dump error to upper layer */
-        g_set_error (error,
-                     MM_CORE_ERROR,
-                     MM_CORE_ERROR_FAILED,
-                     "Unexpected SYSCFG response: '%s'",
-                     response);
-        return FALSE;
-    }
-
-    /* Band */
-    if (bands_array &&
-        !huawei_to_bands_array (band, bands_array, error))
-        return FALSE;
-
-    return TRUE;
+static gboolean
+lte_huawei_to_bands_array (guint64  huawei,
+                           GArray **bands_array,
+                           GError **error)
+{
+    return huawei_to_bands_array (lte_bands, G_N_ELEMENTS (lte_bands), huawei, bands_array, error);
 }
 
 /*****************************************************************************/
@@ -844,30 +893,115 @@ load_current_bands_finish (MMIfaceModem *self,
                            GAsyncResult *res,
                            GError **error)
 {
-    const gchar *response;
-    GArray *bands_array = NULL;
-
-    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, error);
-    if (!response)
-        return NULL;
-
-    if (!parse_syscfg (response, &bands_array, error))
-        return NULL;
-
-    return bands_array;
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
-load_current_bands (MMIfaceModem *self,
+syscfg_load_current_bands_ready (MMBroadbandModemHuawei *self,
+                                 GAsyncResult           *res,
+                                 GTask                  *task)
+{
+    const gchar *response;
+    GError      *error       = NULL;
+    GArray      *bands_array = NULL;
+
+    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
+    if (response) {
+        guint64 huawei_bands;
+
+        if (mm_huawei_parse_syscfg_response (response, NULL, &huawei_bands, &error)) {
+            if (huawei_bands == MM_HUAWEI_SYSCFG_BAND_ANY)
+                huawei_bands = self->priv->supported_gsm_umts_bands;
+
+            gsm_umts_huawei_to_bands_array (huawei_bands, &bands_array, &error);
+        }
+    }
+
+    if (error)
+        g_task_return_error (task, error);
+    else
+        g_task_return_pointer (task, bands_array, (GDestroyNotify)g_array_unref);
+
+    g_object_unref (task);
+}
+
+static void
+syscfgex_load_current_bands_ready (MMBroadbandModemHuawei *self,
+                                   GAsyncResult           *res,
+                                   GTask                  *task)
+{
+    const gchar      *response;
+    GError           *error = NULL;
+    g_autoptr(GArray) bands_array = NULL;
+
+    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
+    if (response) {
+        guint64 huawei_gsm_umts_bands;
+        guint64 huawei_lte_bands;
+        GArray *bands_temp;
+
+        if (!mm_huawei_parse_syscfgex_response (response, NULL, &huawei_gsm_umts_bands, &huawei_lte_bands, &error)) {
+            g_task_return_error (task, error);
+            g_object_unref (task);
+            return;
+        }
+
+        bands_array = g_array_new (FALSE, FALSE, sizeof (MMModemBand));
+
+        /* handle special "all bands" values */
+        if (huawei_gsm_umts_bands == MM_HUAWEI_SYSCFG_BAND_ANY)
+            huawei_gsm_umts_bands = self->priv->supported_gsm_umts_bands;
+
+        if (huawei_lte_bands == MM_HUAWEI_SYSCFGEX_BAND_ANY_LTE)
+            huawei_lte_bands = self->priv->supported_lte_bands;
+
+        if (gsm_umts_huawei_to_bands_array (huawei_gsm_umts_bands, &bands_temp, &error)) {
+            g_array_append_vals (bands_array, bands_temp->data, bands_temp->len);
+            g_array_free (bands_temp, TRUE);
+
+            if (lte_huawei_to_bands_array (huawei_lte_bands, &bands_temp, &error)) {
+                g_array_append_vals (bands_array, bands_temp->data, bands_temp->len);
+                g_array_free (bands_temp, TRUE);
+            }
+        }
+    }
+
+    if (error)
+        g_task_return_error (task, error);
+    else
+        g_task_return_pointer (task, g_steal_pointer (&bands_array), (GDestroyNotify)g_array_unref);
+
+    g_object_unref (task);
+}
+
+static void
+load_current_bands (MMIfaceModem *_self,
                     GAsyncReadyCallback callback,
                     gpointer user_data)
 {
+    MMBroadbandModemHuawei *self = MM_BROADBAND_MODEM_HUAWEI (_self);
+    GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    if (self->priv->syscfgex_support == FEATURE_SUPPORTED) {
+        mm_base_modem_at_command (
+            MM_BASE_MODEM (self),
+            "^SYSCFGEX?",
+            3,
+            FALSE,
+            (GAsyncReadyCallback)syscfgex_load_current_bands_ready,
+            task);
+        return;
+    }
+
+    /* fallback */
     mm_base_modem_at_command (MM_BASE_MODEM (self),
                               "^SYSCFG?",
                               3,
                               FALSE,
-                              callback,
-                              user_data);
+                              (GAsyncReadyCallback)syscfg_load_current_bands_ready,
+                              task);
 }
 
 /*****************************************************************************/
@@ -898,91 +1032,123 @@ syscfg_set_ready (MMBaseModem *self,
 }
 
 static void
-set_current_bands (MMIfaceModem *self,
-                   GArray *bands_array,
-                   GAsyncReadyCallback callback,
-                   gpointer user_data)
+set_current_bands (MMIfaceModem        *self,
+                   GArray              *bands_array,
+                   GAsyncReadyCallback  callback,
+                   gpointer             user_data)
 {
     GTask *task;
-    gchar *cmd;
-    guint32 huawei_band = 0x3FFFFFFF;
-    gchar *bands_string;
+    g_autofree gchar *cmd = NULL;
+    g_autofree gchar *bands_string = NULL;
+    guint64 huawei_gsm_umts_bands;
+    guint64 huawei_lte_bands;
 
     task = g_task_new (self, NULL, callback, user_data);
 
     bands_string = mm_common_build_bands_string ((MMModemBand *)(gpointer)bands_array->data,
                                                  bands_array->len);
 
-    if (!bands_array_to_huawei (bands_array, &huawei_band)) {
+    /* We need to split the bands array into two parts: gsm/umts and lte bands.
+     * The encoded huawei values overlap and need to be passed as separate
+     * AT command parameters to ^SYSCFG(EX) */
+    if (!bands_array_to_huawei (bands_array, &huawei_gsm_umts_bands, &huawei_lte_bands)) {
         g_task_return_new_error (task,
                                  MM_CORE_ERROR,
                                  MM_CORE_ERROR_FAILED,
                                  "Invalid bands requested: '%s'",
                                  bands_string);
         g_object_unref (task);
-        g_free (bands_string);
         return;
     }
 
-    cmd = g_strdup_printf ("AT^SYSCFG=16,3,%X,2,4", huawei_band);
+    /* Note: SYSCFG(EX) requires at least one band per enabled technology/mode.
+     * E.g. if the user wants to set only LTE bands, we'd also need to switch
+     * to LTE-only mode ("03"). "Automatic" mode ("00") won't work in this case.
+     * "No Change" ("99" or 16) will work if the mode is already set accordingly.
+     * So to keep things simple here, assume that the current mode is correct.
+     */
+    if (MM_BROADBAND_MODEM_HUAWEI (self)->priv->syscfgex_support == FEATURE_SUPPORTED) {
+        cmd = g_strdup_printf ("^SYSCFGEX=\"99\",%" G_GINT64_MODIFIER "X,2,4,%" G_GINT64_MODIFIER "X,,",
+                               huawei_gsm_umts_bands,
+                               huawei_lte_bands);
+    } else if (MM_BROADBAND_MODEM_HUAWEI (self)->priv->syscfg_support == FEATURE_SUPPORTED) {
+        cmd = g_strdup_printf ("^SYSCFG=16,3,%" G_GINT64_MODIFIER "X,2,4",
+                               huawei_gsm_umts_bands);
+    } else {
+        g_task_return_new_error (task,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_UNSUPPORTED,
+                                 "Neither ^SYSCFG nor ^SYSCFGEX is supported to set bands");
+        g_object_unref (task);
+        return;
+    }
+
     mm_base_modem_at_command (MM_BASE_MODEM (self),
                               cmd,
                               3,
                               FALSE,
                               (GAsyncReadyCallback)syscfg_set_ready,
                               task);
-    g_free (cmd);
-    g_free (bands_string);
 }
 
 /*****************************************************************************/
 /* Load supported modes (Modem interface) */
 
 static GArray *
-load_supported_modes_finish (MMIfaceModem *self,
-                             GAsyncResult *res,
-                             GError **error)
+load_supported_modes_finish (MMIfaceModem  *_self,
+                             GAsyncResult  *res,
+                             GError       **error)
 {
-    return g_task_propagate_pointer (G_TASK (res), error);
-}
+    MMBroadbandModemHuawei *self;
+    self = MM_BROADBAND_MODEM_HUAWEI (_self);
 
-static void
-syscfg_test_ready (MMBroadbandModemHuawei *self,
-                   GAsyncResult *res,
-                   GTask *task)
-{
-    const gchar *response;
-    GError *error = NULL;
-
-    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
-    if (response) {
-        /* There are 2G+3G Huawei modems out there which support mode switching with
-         * AT^SYSCFG, but fail to provide a valid response for AT^SYSCFG=? (they just
-         * return an empty string). So handle that case by providing a default response
-         * string to get parsed. Ugly, ugly, blame Huawei.
-         */
-        if (response[0])
-            self->priv->syscfg_supported_modes = mm_huawei_parse_syscfg_test (response, self, &error);
-        else {
-            self->priv->syscfg_supported_modes = mm_huawei_parse_syscfg_test (MM_HUAWEI_DEFAULT_SYSCFG_FMT, self, NULL);
-            g_assert (self->priv->syscfg_supported_modes != NULL);
-        }
+    if (!g_task_propagate_boolean (G_TASK (res), error)) {
+        return NULL;
     }
 
-    if (self->priv->syscfg_supported_modes) {
+    /* check SYSCFGEX first */
+    if (self->priv->syscfgex_supported_modes) {
         MMModemModeCombination mode;
-        guint i;
-        GArray *combinations;
+        GArray                *supported_modes;
+        GArray                *combinations;
+        guint                  i;
+
+        supported_modes = self->priv->syscfgex_supported_modes;
 
         /* Build list of combinations */
         combinations = g_array_sized_new (FALSE,
                                           FALSE,
                                           sizeof (MMModemModeCombination),
-                                          self->priv->syscfg_supported_modes->len);
-        for (i = 0; i < self->priv->syscfg_supported_modes->len; i++) {
+                                          supported_modes->len);
+        for (i = 0; i < supported_modes->len; i++) {
+            MMHuaweiSyscfgexCombination *huawei_mode;
+
+            huawei_mode    = &g_array_index (supported_modes, MMHuaweiSyscfgexCombination, i);
+            mode.allowed   = huawei_mode->allowed;
+            mode.preferred = huawei_mode->preferred;
+            g_array_append_val (combinations, mode);
+        }
+
+        return combinations;
+    }
+
+    if (self->priv->syscfg_supported_modes) {
+        MMModemModeCombination mode;
+        GArray                *supported_modes;
+        GArray                *combinations;
+        guint                  i;
+
+        supported_modes = self->priv->syscfg_supported_modes;
+
+        /* Build list of combinations */
+        combinations = g_array_sized_new (FALSE,
+                                          FALSE,
+                                          sizeof (MMModemModeCombination),
+                                          supported_modes->len);
+        for (i = 0; i < supported_modes->len; i++) {
             MMHuaweiSyscfgCombination *huawei_mode;
 
-            huawei_mode = &g_array_index (self->priv->syscfg_supported_modes,
+            huawei_mode = &g_array_index (supported_modes,
                                           MMHuaweiSyscfgCombination,
                                           i);
             mode.allowed = huawei_mode->allowed;
@@ -990,11 +1156,29 @@ syscfg_test_ready (MMBroadbandModemHuawei *self,
             g_array_append_val (combinations, mode);
         }
 
-        self->priv->syscfg_support = FEATURE_SUPPORTED;
-        g_task_return_pointer (task,
-                               combinations,
-                               (GDestroyNotify)g_array_unref);
-    } else {
+        return combinations;
+    }
+
+    if (self->priv->prefmode_supported_modes) {
+        return g_array_ref (self->priv->prefmode_supported_modes);
+    }
+
+    g_set_error_literal (error, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED, "No method found to retrieve supported modes");
+    return NULL;
+}
+
+static void
+syscfg_test_ready (MMBroadbandModemHuawei *self,
+                   GAsyncResult           *res,
+                   GTask                  *task)
+{
+    const gchar *response;
+    GError      *error           = NULL;
+    GArray      *supported_modes = NULL;
+    guint64      supported_gsm_umts_bands = 0;
+
+    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
+    if (!response) {
         mm_obj_dbg (self, "error while checking ^SYSCFG format: %s", error->message);
         /* If SIM-PIN error, don't mark as feature unsupported; we'll retry later */
         if (!g_error_matches (error,
@@ -1002,49 +1186,67 @@ syscfg_test_ready (MMBroadbandModemHuawei *self,
                               MM_MOBILE_EQUIPMENT_ERROR_SIM_PIN))
             self->priv->syscfg_support = FEATURE_NOT_SUPPORTED;
         g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
     }
 
+    /* There are 2G+3G Huawei modems out there which support mode switching with
+     * AT^SYSCFG, but fail to provide a valid response for AT^SYSCFG=? (they just
+     * return an empty string). So handle that case by providing a default response
+     * string to get parsed. Ugly, ugly, blame Huawei.
+     */
+    if (!response[0])
+        response = MM_HUAWEI_DEFAULT_SYSCFG_FMT;
+
+    if (!mm_huawei_parse_syscfg_test (response, &supported_modes, &supported_gsm_umts_bands, &error)) {
+        self->priv->syscfg_support = FEATURE_NOT_SUPPORTED;
+
+        mm_obj_dbg (self, "failed to parse ^SYSCFG test response: %s", error->message);
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    self->priv->syscfg_support = FEATURE_SUPPORTED;
+    self->priv->syscfg_supported_modes = supported_modes;
+    self->priv->supported_gsm_umts_bands = supported_gsm_umts_bands;
+
+    g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
 
 static void
 syscfgex_test_ready (MMBroadbandModemHuawei *self,
-                     GAsyncResult *res,
-                     GTask *task)
+                     GAsyncResult           *res,
+                     GTask                  *task)
 {
     const gchar *response;
-    GError *error = NULL;
+    GError      *error           = NULL;
+    GArray      *supported_modes = NULL;
+    guint64      supported_gsm_umts_bands;
+    guint64      supported_lte_bands;
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
-    if (response)
-        self->priv->syscfgex_supported_modes = mm_huawei_parse_syscfgex_test (response, &error);
+    if (response) {
+        if (!mm_huawei_parse_syscfgex_test (response,
+                                            &supported_modes,
+                                            &supported_gsm_umts_bands,
+                                            &supported_lte_bands,
+                                            &error)) {
+            self->priv->syscfgex_support = FEATURE_NOT_SUPPORTED;
 
-    if (self->priv->syscfgex_supported_modes) {
-        MMModemModeCombination mode;
-        guint i;
-        GArray *combinations;
-
-        /* Build list of combinations */
-        combinations = g_array_sized_new (FALSE,
-                                          FALSE,
-                                          sizeof (MMModemModeCombination),
-                                          self->priv->syscfgex_supported_modes->len);
-        for (i = 0; i < self->priv->syscfgex_supported_modes->len; i++) {
-            MMHuaweiSyscfgexCombination *huawei_mode;
-
-            huawei_mode = &g_array_index (self->priv->syscfgex_supported_modes,
-                                          MMHuaweiSyscfgexCombination,
-                                          i);
-            mode.allowed = huawei_mode->allowed;
-            mode.preferred = huawei_mode->preferred;
-            g_array_append_val (combinations, mode);
+            mm_obj_dbg (self, "failed to parse ^SYSCFGEX test response: %s", error->message);
+            g_task_return_error (task, error);
+            g_object_unref (task);
+            return;
         }
 
         self->priv->syscfgex_support = FEATURE_SUPPORTED;
+        self->priv->syscfgex_supported_modes = supported_modes;
+        self->priv->supported_gsm_umts_bands = supported_gsm_umts_bands;
+        self->priv->supported_lte_bands = supported_lte_bands;
 
-        g_task_return_pointer (task,
-                               combinations,
-                               (GDestroyNotify)g_array_unref);
+        g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
     }
@@ -1124,6 +1326,17 @@ prefmode_test_ready (MMBroadbandModemHuawei *self,
 }
 
 static void
+syscfgex_load_supported_modes_bands (GTask *task)
+{
+    mm_base_modem_at_command (MM_BASE_MODEM (g_task_get_source_object (task)),
+                              "^SYSCFGEX=?",
+                              3,
+                              TRUE,
+                              (GAsyncReadyCallback)syscfgex_test_ready,
+                              task);
+}
+
+static void
 load_supported_modes (MMIfaceModem *_self,
                       GAsyncReadyCallback callback,
                       gpointer user_data)
@@ -1146,14 +1359,73 @@ load_supported_modes (MMIfaceModem *_self,
         return;
     }
 
-    /* Check SYSCFGEX */
+    /* Check SYSCFGEX (with fallback to SYSCFG) */
     self->priv->prefmode_support = FEATURE_NOT_SUPPORTED;
-    mm_base_modem_at_command (MM_BASE_MODEM (self),
-                              "^SYSCFGEX=?",
-                              3,
-                              TRUE,
-                              (GAsyncReadyCallback)syscfgex_test_ready,
-                              task);
+
+    if (!self->priv->syscfgex_supported_modes) {
+        syscfgex_load_supported_modes_bands (task);
+        return;
+    }
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+/*****************************************************************************/
+/* Load supported bands (Modem interface) */
+
+static GArray *
+load_supported_bands_finish (MMIfaceModem *_self,
+                             GAsyncResult *res,
+                             GError      **error)
+{
+    MMBroadbandModemHuawei *self;
+    GArray *bands_array = NULL;
+    GArray *bands_temp  = NULL;
+
+    if (!g_task_propagate_boolean (G_TASK (res), error)) {
+        return NULL;
+    }
+
+    self = MM_BROADBAND_MODEM_HUAWEI (_self);
+    bands_array = g_array_new (FALSE, FALSE, sizeof (MMModemBand));
+
+    if (self->priv->supported_gsm_umts_bands &&
+        gsm_umts_huawei_to_bands_array (self->priv->supported_gsm_umts_bands, &bands_temp, error)) {
+
+        g_array_append_vals (bands_array, bands_temp->data, bands_temp->len);
+        g_array_free (bands_temp, TRUE);
+    }
+
+    if (self->priv->supported_lte_bands &&
+        lte_huawei_to_bands_array (self->priv->supported_lte_bands, &bands_temp, error)) {
+
+        g_array_append_vals (bands_array, bands_temp->data, bands_temp->len);
+        g_array_free (bands_temp, TRUE);
+    }
+
+    return bands_array;
+}
+
+static void
+load_supported_bands (MMIfaceModem       *_self,
+                      GAsyncReadyCallback callback,
+                      gpointer            user_data)
+{
+    MMBroadbandModemHuawei *self;
+    GTask                  *task;
+
+    self = MM_BROADBAND_MODEM_HUAWEI (_self);
+    task = g_task_new (self, NULL, callback, user_data);
+
+    /* likely already fetched by load_supported_modes() */
+    if (self->priv->supported_gsm_umts_bands == 0 && self->priv->supported_lte_bands == 0) {
+        syscfgex_load_supported_modes_bands (task);
+        return;
+    }
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 /*****************************************************************************/
@@ -1209,55 +1481,59 @@ prefmode_load_current_modes_ready (MMBroadbandModemHuawei *self,
 
 static void
 syscfg_load_current_modes_ready (MMBroadbandModemHuawei *self,
-                                 GAsyncResult *res,
-                                 GTask *task)
+                                 GAsyncResult           *res,
+                                 GTask                  *task)
 {
     const gchar *response;
-    GError *error = NULL;
-    const MMHuaweiSyscfgCombination *current = NULL;
+    GError      *error = NULL;
+
+    g_autofree MMModemModeCombination *mode = NULL;
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
-    if (response)
-        current = mm_huawei_parse_syscfg_response (response,
-                                                   self->priv->syscfg_supported_modes,
-                                                   &error);
+    if (response) {
+        mode = g_new0 (MMModemModeCombination, 1);
+        mm_huawei_parse_syscfg_response (response, mode, NULL, &error);
+    }
 
     if (error)
         g_task_return_error (task, error);
-    else {
-        MMModemModeCombination *out;
+    else
+        g_task_return_pointer (task, g_steal_pointer (&mode), g_free);
 
-        out = g_new (MMModemModeCombination, 1);
-        out->allowed = current->allowed;
-        out->preferred = current->preferred;
-        g_task_return_pointer (task, out, g_free);
-    }
     g_object_unref (task);
 }
 
 static void
 syscfgex_load_current_modes_ready (MMBroadbandModemHuawei *self,
-                                   GAsyncResult *res,
-                                   GTask *task)
+                                   GAsyncResult           *res,
+                                   GTask                  *task)
 {
     const gchar *response;
-    GError *error = NULL;
-    const MMHuaweiSyscfgexCombination *current = NULL;
+    GError      *error = NULL;
+
+    g_autofree MMModemModeCombination *mode = NULL;
 
     response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
-    if (response)
-        current = mm_huawei_parse_syscfgex_response (response,
-                                                     self->priv->syscfgex_supported_modes,
-                                                     &error);
+    if (response) {
+        mode = g_new0 (MMModemModeCombination, 1);
+
+        if (mm_huawei_parse_syscfgex_response (response, mode, NULL, NULL, &error)) {
+            if (mode->allowed == MM_MODEM_MODE_ANY) {
+                guint         i;
+                const GArray *supported_modes = self->priv->syscfgex_supported_modes;
+
+                mode->allowed = MM_MODEM_MODE_NONE;
+                for (i = 0; i < supported_modes->len; i++) {
+                    mode->allowed |= g_array_index (supported_modes, MMHuaweiSyscfgexCombination, i).allowed;
+                }
+            }
+        }
+    }
+
     if (error)
         g_task_return_error (task, error);
     else {
-        MMModemModeCombination *out;
-
-        out = g_new (MMModemModeCombination, 1);
-        out->allowed = current->allowed;
-        out->preferred = current->preferred;
-        g_task_return_pointer (task, out, g_free);
+        g_task_return_pointer (task, g_steal_pointer (&mode), g_free);
     }
     g_object_unref (task);
 }
@@ -1416,9 +1692,10 @@ syscfg_set_current_modes (MMBroadbandModemHuawei *self,
         return FALSE;
     }
 
-    command = g_strdup_printf ("^SYSCFG=%u,%u,40000000,2,4",
+    command = g_strdup_printf ("^SYSCFG=%u,%u,%x,2,4",
                                found->mode,
-                               found->acqorder);
+                               found->acqorder,
+                               MM_HUAWEI_SYSCFG_BAND_NO_CHANGE);
     mm_base_modem_at_command (
         MM_BASE_MODEM (self),
         command,
@@ -1461,8 +1738,10 @@ syscfgex_set_current_modes (MMBroadbandModemHuawei *self,
         return FALSE;
     }
 
-    command = g_strdup_printf ("^SYSCFGEX=\"%s\",3fffffff,2,4,7fffffffffffffff,,",
-                               found->mode_str);
+    command = g_strdup_printf ("^SYSCFGEX=\"%s\",%x,2,4,%" G_GINT64_MODIFIER "x,,",
+                               found->mode_str,
+                               MM_HUAWEI_SYSCFG_BAND_ANY,
+                               MM_HUAWEI_SYSCFGEX_BAND_ANY_LTE);
     mm_base_modem_at_command (
         MM_BASE_MODEM (self),
         command,
@@ -1502,6 +1781,104 @@ set_current_modes (MMIfaceModem *_self,
         g_task_return_error (task, error);
         g_object_unref (task);
     }
+}
+
+/*****************************************************************************/
+/* Supported IP families (Modem interface) */
+static MMBearerIpFamily
+load_supported_ip_families_finish (MMIfaceModem *self,
+                                   GAsyncResult *res,
+                                   GError      **error)
+{
+    GError *inner_error = NULL;
+    gssize  value;
+
+    value = g_task_propagate_int (G_TASK (res), &inner_error);
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return MM_BEARER_IP_FAMILY_NONE;
+    }
+    return (MMBearerIpFamily)value;
+}
+
+static void
+parent_load_supported_ip_families_ready (MMIfaceModem *self,
+                                         GAsyncResult *res,
+                                         GTask *task)
+{
+    GError *error = NULL;
+    MMBearerIpFamily families = MM_BEARER_IP_FAMILY_NONE;
+
+    families = iface_modem_parent->load_supported_ip_families_finish (self, res, &error);
+    if (error)
+        g_task_return_error (task, error);
+    else
+        g_task_return_int (task, families);
+    g_object_unref (task);
+}
+
+static void
+load_supported_ip_families_ready (MMIfaceModem *self,
+                                  GAsyncResult *res,
+                                  GTask        *task)
+{
+    const gchar     *response;
+    MMBearerIpFamily families = MM_BEARER_IP_FAMILY_NONE;
+    gboolean         ipv4_available;
+    gboolean         ipv4_connected;
+    gboolean         ipv6_available;
+    gboolean         ipv6_connected;
+    GError          *error = NULL;
+
+    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
+    if (!response) {
+        mm_obj_dbg (self, "failed to fetch supported IP families using ^NDISSTATQRY: %s", error->message);
+        /* fallback to generic detection with AT+CGDCONT=? */
+        iface_modem_parent->load_supported_ip_families (
+            self,
+            (GAsyncReadyCallback)parent_load_supported_ip_families_ready,
+            task);
+        g_error_free (error);
+        return;
+    }
+
+    if (mm_huawei_parse_ndisstatqry_response (response,
+                                              &ipv4_available,
+                                              &ipv4_connected,
+                                              &ipv6_available,
+                                              &ipv6_connected,
+                                              &error)) {
+        families |= ipv4_available ? MM_BEARER_IP_FAMILY_IPV4 : 0;
+        families |= ipv6_available ? MM_BEARER_IP_FAMILY_IPV6 : 0;
+        families |= (ipv4_available && ipv6_available) ? MM_BEARER_IP_FAMILY_IPV4V6 : 0;
+    }
+
+    if (error) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "failed to load supported IP families via ^NDISSTATQRY: %s", error->message);
+        g_error_free (error);
+    } else {
+        g_task_return_int (task, (gssize)families);
+    }
+
+    g_object_unref (task);
+}
+
+static void
+load_supported_ip_families (MMIfaceModem       *self,
+                            GAsyncReadyCallback callback,
+                            gpointer            user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "^NDISSTATQRY?",
+                              3,
+                              TRUE,
+                              (GAsyncReadyCallback)load_supported_ip_families_ready,
+                              task);
 }
 
 /*****************************************************************************/
@@ -1642,14 +2019,18 @@ static void
 bearer_report_connection_status (MMBaseBearer *bearer,
                                  NdisstatResult *ndisstat_result)
 {
-    if (ndisstat_result->ipv4_available) {
-        /* TODO: MMBroadbandBearerHuawei does not currently support IPv6.
-         * When it does, we should check the IP family associated with each bearer. */
-        mm_base_bearer_report_connection_status (bearer,
-                                                 ndisstat_result->ipv4_connected ?
-                                                 MM_BEARER_CONNECTION_STATUS_CONNECTED :
-                                                 MM_BEARER_CONNECTION_STATUS_DISCONNECTED);
-    }
+    MMBearerConnectionStatus status;
+
+    /* Note: unsolicited ^NDISSTAT messages can contain:
+     *   a) only IPv4, b) both IPv4 and IPv6, c) only IPv6 connection status
+     * A disconnect (^NDISDUP=1,0) seems to trigger two separate messages though
+     */
+    status = (ndisstat_result->ipv4_available && ndisstat_result->ipv4_connected) ||
+             (ndisstat_result->ipv6_available && ndisstat_result->ipv6_connected) ?
+             MM_BEARER_CONNECTION_STATUS_CONNECTED :
+             MM_BEARER_CONNECTION_STATUS_DISCONNECTED;
+
+    mm_base_bearer_report_connection_status (bearer, status);
 }
 
 static void
@@ -2000,17 +2381,26 @@ parent_enable_unsolicited_events_ready (MMIfaceModem3gpp *self,
                                         GAsyncResult *res,
                                         GTask *task)
 {
-    GError *error = NULL;
+    MMPortSerialAt *primary;
+    GError         *error = NULL;
 
     if (!iface_modem_3gpp_parent->enable_unsolicited_events_finish (self, res, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
+        return;
     }
 
-    /* Our own enable now */
+    primary = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    if (!primary) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "Couldn't enable unsolicited events: no primary port");
+        g_object_unref (task);
+        return;
+    }
+
     mm_base_modem_at_sequence_full (
         MM_BASE_MODEM (self),
-        mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
+        MM_IFACE_PORT_AT (primary),
         unsolicited_enable_sequence,
         NULL, /* response_processor_context */
         NULL, /* response_processor_context_free */
@@ -2086,14 +2476,23 @@ modem_3gpp_disable_unsolicited_events (MMIfaceModem3gpp *self,
                                        GAsyncReadyCallback callback,
                                        gpointer user_data)
 {
-    GTask *task;
+    GTask          *task;
+    MMPortSerialAt *primary;
 
     task = g_task_new (self, NULL, callback, user_data);
+
+    primary = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    if (!primary) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "Couldn't disable unsolicited events: no primary port");
+        g_object_unref (task);
+        return;
+    }
 
     /* Our own disable first */
     mm_base_modem_at_command_full (
         MM_BASE_MODEM (self),
-        mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
+        MM_IFACE_PORT_AT (primary),
         "^CURC=0",
         5,
         FALSE, /* allow_cached */
@@ -3348,7 +3747,8 @@ parent_voice_enable_unsolicited_events_ready (MMIfaceModemVoice *self,
                                               GAsyncResult      *res,
                                               GTask             *task)
 {
-    GError *error = NULL;
+    MMPortSerialAt *primary;
+    GError         *error = NULL;
 
     if (!iface_modem_voice_parent->enable_unsolicited_events_finish (self, res, &error)) {
         g_task_return_error (task, error);
@@ -3356,10 +3756,17 @@ parent_voice_enable_unsolicited_events_ready (MMIfaceModemVoice *self,
         return;
     }
 
-    /* Our own enable now */
+    primary = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    if (!primary) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "Couldn't enable voice unsolicited events: no primary port");
+        g_object_unref (task);
+        return;
+    }
+
     mm_base_modem_at_sequence_full (
         MM_BASE_MODEM (self),
-        mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
+        MM_IFACE_PORT_AT (primary),
         unsolicited_voice_enable_sequence,
         NULL, /* response_processor_context */
         NULL, /* response_processor_context_free */
@@ -3421,7 +3828,8 @@ parent_voice_disable_unsolicited_events_ready (MMIfaceModemVoice *self,
                                                GAsyncResult      *res,
                                                GTask             *task)
 {
-    GError *error = NULL;
+    MMPortSerialAt *primary;
+    GError         *error = NULL;
 
     if (!iface_modem_voice_parent->disable_unsolicited_events_finish (self, res, &error)) {
         g_task_return_error (task, error);
@@ -3429,11 +3837,17 @@ parent_voice_disable_unsolicited_events_ready (MMIfaceModemVoice *self,
         return;
     }
 
-    /* our own disable now */
+    primary = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    if (!primary) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "Couldn't disable voice unsolicited events: no primary port");
+        g_object_unref (task);
+        return;
+    }
 
     mm_base_modem_at_sequence_full (
         MM_BASE_MODEM (self),
-        mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
+        MM_IFACE_PORT_AT (primary),
         unsolicited_voice_disable_sequence,
         NULL, /* response_processor_context */
         NULL, /* response_processor_context_free */
@@ -4406,10 +4820,7 @@ setup_ports (MMBroadbandModem *self)
     gps_data_port = mm_base_modem_peek_port_gps (MM_BASE_MODEM (self));
     if (gps_data_port) {
         /* make sure GPS is stopped incase it was left enabled */
-        mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                       mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
-                                       "^WPEND",
-                                       3, FALSE, FALSE, NULL, NULL, NULL);
+        mm_base_modem_at_command (MM_BASE_MODEM (self), "^WPEND", 3, FALSE, NULL, NULL);
         /* Add handler for the NMEA traces */
         mm_port_serial_gps_add_trace_handler (gps_data_port,
                                               (MMPortSerialGpsTraceFn)gps_trace_received,
@@ -4590,7 +5001,7 @@ finalize (GObject *object)
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     iface_modem_parent = g_type_interface_peek_parent (iface);
 
@@ -4602,6 +5013,8 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_unlock_retries_finish = load_unlock_retries_finish;
     iface->modem_after_sim_unlock = modem_after_sim_unlock;
     iface->modem_after_sim_unlock_finish = modem_after_sim_unlock_finish;
+    iface->load_supported_bands = load_supported_bands;
+    iface->load_supported_bands_finish = load_supported_bands_finish;
     iface->load_current_bands = load_current_bands;
     iface->load_current_bands_finish = load_current_bands_finish;
     iface->set_current_bands = set_current_bands;
@@ -4612,6 +5025,8 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_current_modes_finish = load_current_modes_finish;
     iface->set_current_modes = set_current_modes;
     iface->set_current_modes_finish = set_current_modes_finish;
+    iface->load_supported_ip_families = load_supported_ip_families;
+    iface->load_supported_ip_families_finish = load_supported_ip_families_finish;
     iface->load_signal_quality = modem_load_signal_quality;
     iface->load_signal_quality_finish = modem_load_signal_quality_finish;
     iface->create_bearer = huawei_modem_create_bearer;
@@ -4627,7 +5042,7 @@ iface_modem_init (MMIfaceModem *iface)
 }
 
 static void
-iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
+iface_modem_3gpp_init (MMIfaceModem3gppInterface *iface)
 {
     iface_modem_3gpp_parent = g_type_interface_peek_parent (iface);
 
@@ -4642,14 +5057,14 @@ iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
 }
 
 static void
-iface_modem_3gpp_ussd_init (MMIfaceModem3gppUssd *iface)
+iface_modem_3gpp_ussd_init (MMIfaceModem3gppUssdInterface *iface)
 {
     iface->encode = encode;
     iface->decode = decode;
 }
 
 static void
-iface_modem_cdma_init (MMIfaceModemCdma *iface)
+iface_modem_cdma_init (MMIfaceModemCdmaInterface *iface)
 {
     iface_modem_cdma_parent = g_type_interface_peek_parent (iface);
 
@@ -4664,7 +5079,7 @@ iface_modem_cdma_init (MMIfaceModemCdma *iface)
 }
 
 static void
-iface_modem_location_init (MMIfaceModemLocation *iface)
+iface_modem_location_init (MMIfaceModemLocationInterface *iface)
 {
     iface_modem_location_parent = g_type_interface_peek_parent (iface);
 
@@ -4677,7 +5092,7 @@ iface_modem_location_init (MMIfaceModemLocation *iface)
 }
 
 static void
-iface_modem_time_init (MMIfaceModemTime *iface)
+iface_modem_time_init (MMIfaceModemTimeInterface *iface)
 {
     iface->check_support = modem_time_check_support;
     iface->check_support_finish = modem_time_check_support_finish;
@@ -4688,7 +5103,7 @@ iface_modem_time_init (MMIfaceModemTime *iface)
 }
 
 static void
-iface_modem_voice_init (MMIfaceModemVoice *iface)
+iface_modem_voice_init (MMIfaceModemVoiceInterface *iface)
 {
     iface_modem_voice_parent = g_type_interface_peek_parent (iface);
 
@@ -4711,7 +5126,7 @@ iface_modem_voice_init (MMIfaceModemVoice *iface)
 }
 
 static void
-iface_modem_signal_init (MMIfaceModemSignal *iface)
+iface_modem_signal_init (MMIfaceModemSignalInterface *iface)
 {
     iface->check_support = signal_check_support;
     iface->check_support_finish = signal_check_support_finish;

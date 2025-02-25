@@ -30,6 +30,8 @@
 #include "mm-shared-simtech.h"
 #include "mm-modem-helpers-simtech.h"
 
+G_DEFINE_INTERFACE (MMSharedSimtech, mm_shared_simtech, MM_TYPE_IFACE_MODEM)
+
 /*****************************************************************************/
 /* Private data context */
 
@@ -44,19 +46,19 @@ typedef enum {
 
 typedef struct {
     /* location */
-    MMIfaceModemLocation  *iface_modem_location_parent;
-    MMModemLocationSource  supported_sources;
-    MMModemLocationSource  enabled_sources;
-    FeatureSupport         cgps_support;
+    MMIfaceModemLocationInterface *iface_modem_location_parent;
+    MMModemLocationSource          supported_sources;
+    MMModemLocationSource          enabled_sources;
+    FeatureSupport                 cgps_support;
     /* voice */
-    MMIfaceModemVoice     *iface_modem_voice_parent;
-    FeatureSupport         cpcmreg_support;
-    FeatureSupport         clcc_urc_support;
-    GRegex                *clcc_urc_regex;
-    GRegex                *voice_call_regex;
-    GRegex                *missed_call_regex;
-    GRegex                *cring_regex;
-    GRegex                *rxdtmf_regex;
+    MMIfaceModemVoiceInterface *iface_modem_voice_parent;
+    FeatureSupport              cpcmreg_support;
+    FeatureSupport              clcc_urc_support;
+    GRegex                     *clcc_urc_regex;
+    GRegex                     *voice_call_regex;
+    GRegex                     *missed_call_regex;
+    GRegex                     *cring_regex;
+    GRegex                     *rxdtmf_regex;
 } Private;
 
 static void
@@ -94,11 +96,11 @@ get_private (MMSharedSimtech *self)
 
         /* Setup parent class' MMIfaceModemLocation and MMIfaceModemVoice */
 
-        g_assert (MM_SHARED_SIMTECH_GET_INTERFACE (self)->peek_parent_location_interface);
-        priv->iface_modem_location_parent = MM_SHARED_SIMTECH_GET_INTERFACE (self)->peek_parent_location_interface (self);
+        g_assert (MM_SHARED_SIMTECH_GET_IFACE (self)->peek_parent_location_interface);
+        priv->iface_modem_location_parent = MM_SHARED_SIMTECH_GET_IFACE (self)->peek_parent_location_interface (self);
 
-        g_assert (MM_SHARED_SIMTECH_GET_INTERFACE (self)->peek_parent_voice_interface);
-        priv->iface_modem_voice_parent = MM_SHARED_SIMTECH_GET_INTERFACE (self)->peek_parent_voice_interface (self);
+        g_assert (MM_SHARED_SIMTECH_GET_IFACE (self)->peek_parent_voice_interface);
+        priv->iface_modem_voice_parent = MM_SHARED_SIMTECH_GET_IFACE (self)->peek_parent_voice_interface (self);
 
         g_object_set_qdata_full (G_OBJECT (self), private_quark, priv, (GDestroyNotify)private_free);
     }
@@ -585,7 +587,7 @@ run_voice_enable_disable_unsolicited_events (GTask *task)
 
     if (port) {
         mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                       port,
+                                       MM_IFACE_PORT_AT (port),
                                        ctx->clcc_command,
                                        3,
                                        FALSE,
@@ -1237,25 +1239,6 @@ mm_shared_simtech_voice_check_support (MMIfaceModemVoice   *self,
 /*****************************************************************************/
 
 static void
-shared_simtech_init (gpointer g_iface)
+mm_shared_simtech_default_init (MMSharedSimtechInterface *iface)
 {
-}
-
-GType
-mm_shared_simtech_get_type (void)
-{
-    static GType shared_simtech_type = 0;
-
-    if (!G_UNLIKELY (shared_simtech_type)) {
-        static const GTypeInfo info = {
-            sizeof (MMSharedSimtech),  /* class_size */
-            shared_simtech_init,       /* base_init */
-            NULL,                  /* base_finalize */
-        };
-
-        shared_simtech_type = g_type_register_static (G_TYPE_INTERFACE, "MMSharedSimtech", &info, 0);
-        g_type_interface_add_prerequisite (shared_simtech_type, MM_TYPE_IFACE_MODEM_LOCATION);
-    }
-
-    return shared_simtech_type;
 }

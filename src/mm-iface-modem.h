@@ -24,15 +24,14 @@
 #include <libmm-glib.h>
 
 #include "mm-charsets.h"
+#include "mm-base-modem.h"
 #include "mm-port-serial-at.h"
 #include "mm-base-bearer.h"
 #include "mm-base-sim.h"
 #include "mm-bearer-list.h"
 
-#define MM_TYPE_IFACE_MODEM            (mm_iface_modem_get_type ())
-#define MM_IFACE_MODEM(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), MM_TYPE_IFACE_MODEM, MMIfaceModem))
-#define MM_IS_IFACE_MODEM(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), MM_TYPE_IFACE_MODEM))
-#define MM_IFACE_MODEM_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), MM_TYPE_IFACE_MODEM, MMIfaceModem))
+#define MM_TYPE_IFACE_MODEM mm_iface_modem_get_type ()
+G_DECLARE_INTERFACE (MMIfaceModem, mm_iface_modem, MM, IFACE_MODEM, MMBaseModem)
 
 #define MM_IFACE_MODEM_DBUS_SKELETON           "iface-modem-dbus-skeleton"
 #define MM_IFACE_MODEM_STATE                   "iface-modem-state"
@@ -44,9 +43,7 @@
 #define MM_IFACE_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED      "iface-modem-periodic-signal-check-disabled"
 #define MM_IFACE_MODEM_PERIODIC_ACCESS_TECH_CHECK_DISABLED "iface-modem-periodic-access-tech-check-disabled"
 
-typedef struct _MMIfaceModem MMIfaceModem;
-
-struct _MMIfaceModem {
+struct _MMIfaceModemInterface {
     GTypeInterface g_iface;
 
     /* Loading of the SupportedCapabilities property */
@@ -122,13 +119,14 @@ struct _MMIfaceModem {
                                       GError **error);
 
     /* Loading of the UnlockRequired property */
-    void (*load_unlock_required) (MMIfaceModem *self,
-                                  gboolean last_attempt,
-                                  GAsyncReadyCallback callback,
-                                  gpointer user_data);
-    MMModemLock (*load_unlock_required_finish) (MMIfaceModem *self,
-                                                GAsyncResult *res,
-                                                GError **error);
+    void        (*load_unlock_required)        (MMIfaceModem        *self,
+                                                gboolean             last_attempt,
+                                                GCancellable        *cancellable,
+                                                GAsyncReadyCallback  callback,
+                                                gpointer             user_data);
+    MMModemLock (*load_unlock_required_finish) (MMIfaceModem        *self,
+                                                GAsyncResult        *res,
+                                                GError             **error);
 
     /* Loading of the UnlockRetries property */
     void (*load_unlock_retries) (MMIfaceModem *self,
@@ -291,13 +289,21 @@ struct _MMIfaceModem {
      * Useful for when the modem changes power states since we might
      * not get the relevant notifications from the modem. */
     void (*check_for_sim_swap) (MMIfaceModem *self,
-                                const gchar *iccid,
-                                const gchar *imsi,
                                 GAsyncReadyCallback callback,
                                 gpointer user_data);
     gboolean (*check_for_sim_swap_finish) (MMIfaceModem *self,
                                            GAsyncResult *res,
                                            GError **error);
+
+    void (*check_basic_sim_details) (MMIfaceModem *self,
+                                     GAsyncReadyCallback callback,
+                                     gpointer user_data);
+    gboolean (*check_basic_sim_details_finish) (MMIfaceModem  *self,
+                                                GAsyncResult  *res,
+                                                gboolean      *sim_inserted,
+                                                gchar         **iccid,
+                                                gchar         **imsi,
+                                                GError        **error);
 
     /* Asynchronous flow control setup */
     void (*setup_flow_control) (MMIfaceModem *self,
@@ -416,9 +422,6 @@ struct _MMIfaceModem {
                                       GError              **error);
 };
 
-GType mm_iface_modem_get_type (void);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (MMIfaceModem, g_object_unref)
-
 /* Helpers to query access technologies */
 MMModemAccessTechnology mm_iface_modem_get_access_technologies (MMIfaceModem *self);
 
@@ -496,25 +499,26 @@ gboolean mm_iface_modem_sync_finish    (MMIfaceModem *self,
 #endif
 
 /* Allow setting power state */
-void     mm_iface_modem_set_power_state        (MMIfaceModem *self,
-                                                MMModemPowerState power_state,
-                                                GAsyncReadyCallback callback,
-                                                gpointer user_data);
-gboolean mm_iface_modem_set_power_state_finish (MMIfaceModem *self,
-                                                GAsyncResult *res,
-                                                GError **error);
+void     mm_iface_modem_set_power_state        (MMIfaceModem        *self,
+                                                MMModemPowerState    power_state,
+                                                GAsyncReadyCallback  callback,
+                                                gpointer             user_data);
+gboolean mm_iface_modem_set_power_state_finish (MMIfaceModem        *self,
+                                                GAsyncResult        *res,
+                                                MMModemPowerState   *previous_power_state,
+                                                GError             **error);
 
 /* Request lock info update.
  * It will not only return the lock status, but also set the property values
  * in the DBus interface. If 'known_lock' is given, that lock status will be
  * assumed. */
-void        mm_iface_modem_update_lock_info        (MMIfaceModem *self,
-                                                    MMModemLock known_lock,
-                                                    GAsyncReadyCallback callback,
-                                                    gpointer user_data);
-MMModemLock mm_iface_modem_update_lock_info_finish (MMIfaceModem *self,
-                                                    GAsyncResult *res,
-                                                    GError **error);
+void        mm_iface_modem_update_lock_info        (MMIfaceModem        *self,
+                                                    MMModemLock          known_lock,
+                                                    GAsyncReadyCallback  callback,
+                                                    gpointer             user_data);
+MMModemLock mm_iface_modem_update_lock_info_finish (MMIfaceModem        *self,
+                                                    GAsyncResult        *res,
+                                                    GError             **error);
 
 MMModemLock      mm_iface_modem_get_unlock_required (MMIfaceModem *self);
 MMUnlockRetries *mm_iface_modem_get_unlock_retries  (MMIfaceModem *self);
@@ -599,8 +603,6 @@ void mm_iface_modem_bind_simple_status (MMIfaceModem *self,
 
 /* Check if the SIM or eSIM profile has changed */
 void     mm_iface_modem_check_for_sim_swap        (MMIfaceModem *self,
-                                                   const gchar *iccid,
-                                                   const gchar *imsi,
                                                    GAsyncReadyCallback callback,
                                                    gpointer user_data);
 gboolean mm_iface_modem_check_for_sim_swap_finish (MMIfaceModem *self,
@@ -612,6 +614,5 @@ void mm_iface_modem_modify_sim (MMIfaceModem *self,
                                 MMBaseSim *new_sim);
 
 void mm_iface_modem_process_sim_event (MMIfaceModem *self);
-
 
 #endif /* MM_IFACE_MODEM_H */

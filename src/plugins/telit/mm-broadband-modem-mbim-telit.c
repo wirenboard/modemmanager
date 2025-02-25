@@ -30,10 +30,10 @@
 #include "mm-modem-helpers-telit.h"
 #include "mm-shared-telit.h"
 
-static void iface_modem_init  (MMIfaceModem  *iface);
-static void shared_telit_init (MMSharedTelit *iface);
+static void iface_modem_init  (MMIfaceModemInterface  *iface);
+static void shared_telit_init (MMSharedTelitInterface *iface);
 
-static MMIfaceModem *iface_modem_parent;
+static MMIfaceModemInterface *iface_modem_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemMbimTelit, mm_broadband_modem_mbim_telit, MM_TYPE_BROADBAND_MODEM_MBIM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -221,6 +221,7 @@ mm_broadband_modem_mbim_telit_new (const gchar  *device,
                          MM_BASE_MODEM_DATA_NET_SUPPORTED, TRUE,
                          MM_BASE_MODEM_DATA_TTY_SUPPORTED, FALSE,
                          MM_IFACE_MODEM_SIM_HOT_SWAP_SUPPORTED, TRUE,
+                         MM_IFACE_MODEM_PERIODIC_SIGNAL_CHECK_DISABLED, TRUE,
                          NULL);
 }
 
@@ -230,7 +231,7 @@ mm_broadband_modem_mbim_telit_init (MMBroadbandModemMbimTelit *self)
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     iface_modem_parent = g_type_interface_peek_parent (iface);
 
@@ -250,14 +251,14 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_revision = load_revision;
 }
 
-static MMIfaceModem *
+static MMIfaceModemInterface *
 peek_parent_modem_interface (MMSharedTelit *self)
 {
     return iface_modem_parent;
 }
 
 static void
-shared_telit_init (MMSharedTelit *iface)
+shared_telit_init (MMSharedTelitInterface *iface)
 {
     iface->peek_parent_modem_interface = peek_parent_modem_interface;
 }

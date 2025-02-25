@@ -33,12 +33,12 @@
 #include "mm-broadband-modem-option.h"
 #include "mm-shared-option.h"
 
-static void shared_option_init (MMSharedOption *iface);
-static void iface_modem_init (MMIfaceModem *iface);
-static void iface_modem_3gpp_init (MMIfaceModem3gpp *iface);
+static void shared_option_init    (MMSharedOptionInterface   *iface);
+static void iface_modem_init      (MMIfaceModemInterface     *iface);
+static void iface_modem_3gpp_init (MMIfaceModem3gppInterface *iface);
 
-static MMIfaceModem *iface_modem_parent;
-static MMIfaceModem3gpp *iface_modem_3gpp_parent;
+static MMIfaceModemInterface     *iface_modem_parent;
+static MMIfaceModem3gppInterface *iface_modem_3gpp_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemOption, mm_broadband_modem_option, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_OPTION, shared_option_init)
@@ -980,17 +980,27 @@ parent_enable_unsolicited_events_ready (MMIfaceModem3gpp *self,
                                         GAsyncResult *res,
                                         GTask *task)
 {
-    GError *error = NULL;
+    MMPortSerialAt *primary;
+    GError         *error = NULL;
 
     if (!iface_modem_3gpp_parent->enable_unsolicited_events_finish (self, res, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
+        return;
+    }
+
+    primary = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    if (!primary) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "Couldn't enable unsolicited events: no primary port");
+        g_object_unref (task);
+        return;
     }
 
     /* Our own enable now */
     mm_base_modem_at_sequence_full (
         MM_BASE_MODEM (self),
-        mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
+        MM_IFACE_PORT_AT (primary),
         unsolicited_enable_sequence,
         NULL, /* response_processor_context */
         NULL, /* response_processor_context_free */
@@ -1071,16 +1081,29 @@ modem_3gpp_disable_unsolicited_events (MMIfaceModem3gpp *self,
                                        GAsyncReadyCallback callback,
                                        gpointer user_data)
 {
+    GTask          *task;
+    MMPortSerialAt *primary;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    primary = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    if (!primary) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "Couldn't disable unsolicited events: no primary port");
+        g_object_unref (task);
+        return;
+    }
+
     /* Our own disable first */
     mm_base_modem_at_sequence_full (
         MM_BASE_MODEM (self),
-        mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
+        MM_IFACE_PORT_AT (primary),
         unsolicited_disable_sequence,
         NULL, /* response_processor_context */
         NULL, /* response_processor_context_free */
         NULL, /* cancellable */
         (GAsyncReadyCallback)own_disable_unsolicited_events_ready,
-        g_task_new (self, NULL, callback, user_data));
+        task);
 }
 
 /*****************************************************************************/
@@ -1177,12 +1200,12 @@ mm_broadband_modem_option_init (MMBroadbandModemOption *self)
 }
 
 static void
-shared_option_init (MMSharedOption *iface)
+shared_option_init (MMSharedOptionInterface *iface)
 {
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     iface_modem_parent = g_type_interface_peek_parent (iface);
 
@@ -1201,7 +1224,7 @@ iface_modem_init (MMIfaceModem *iface)
 }
 
 static void
-iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
+iface_modem_3gpp_init (MMIfaceModem3gppInterface *iface)
 {
     iface_modem_3gpp_parent = g_type_interface_peek_parent (iface);
 

@@ -39,13 +39,12 @@
 # include "mm-log.h"
 #endif
 
-static void iface_modem_location_init (MMIfaceModemLocation *iface);
-
+static void iface_modem_location_init (MMIfaceModemLocationInterface *iface);
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-static void iface_modem_firmware_init (MMIfaceModemFirmware *iface);
+static void iface_modem_firmware_init (MMIfaceModemFirmwareInterface *iface);
 #endif
 
-static MMIfaceModemLocation *iface_modem_location_parent;
+static MMIfaceModemLocationInterface *iface_modem_location_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemMbimFoxconn, mm_broadband_modem_mbim_foxconn, MM_TYPE_BROADBAND_MODEM_MBIM, 0,
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
@@ -582,7 +581,7 @@ mm_broadband_modem_mbim_foxconn_init (MMBroadbandModemMbimFoxconn *self)
 }
 
 static void
-iface_modem_location_init (MMIfaceModemLocation *iface)
+iface_modem_location_init (MMIfaceModemLocationInterface *iface)
 {
     iface_modem_location_parent = g_type_interface_peek_parent (iface);
 
@@ -597,7 +596,7 @@ iface_modem_location_init (MMIfaceModemLocation *iface)
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
 
 static void
-iface_modem_firmware_init (MMIfaceModemFirmware *iface)
+iface_modem_firmware_init (MMIfaceModemFirmwareInterface *iface)
 {
     iface->load_update_settings = firmware_load_update_settings;
     iface->load_update_settings_finish = firmware_load_update_settings_finish;

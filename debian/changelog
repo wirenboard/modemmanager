@@ -1,3 +1,23 @@
+modemmanager (1.23.12-1~1.gbpeb0f9b) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @eb0f9be641964c56cbd1a9a405cf1793f341b897 **
+
+  [ Arnaud Ferraris ]
+  * New upstream version 1.22.0
+  * d/control: depend on gobject-introspection-bin.
+    This is now the package containing `dh_girepository`, having been split
+    from `gobject-introspection`.
+    Fixes: lintian: missing-build-dependency-for-dh-addon gir
+
+  [ Jeremy Bicha ]
+  * Drop unnecessary Build-Depends: gnome-common, intltool, libtool
+
+  [ Guido Günther ]
+  * gbp.conf: Use branches that don't conflict with released versions
+  * New upstream version 1.23.12
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 25 Feb 2025 15:17:49 +0100
+
 modemmanager (1.22.0-3) unstable; urgency=medium
 
   [ Jeremy Bícha ]

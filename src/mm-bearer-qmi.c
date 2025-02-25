@@ -1212,8 +1212,9 @@ register_for_wds_indication (ConnectContext *ctx,
 }
 
 static GError *
-mobile_equipment_error_from_start_network_output (MMBearerQmi                     *self,
-                                                  QmiMessageWdsStartNetworkOutput *output)
+error_from_start_network_output (MMBearerQmi                     *self,
+                                 gboolean                         running_ipv4,
+                                 QmiMessageWdsStartNetworkOutput *output)
 {
     QmiWdsCallEndReason            cer;
     QmiWdsVerboseCallEndReasonType verbose_cer_type;
@@ -1224,24 +1225,9 @@ mobile_equipment_error_from_start_network_output (MMBearerQmi                   
             &verbose_cer_type,
             &verbose_cer_reason,
             NULL)) {
-        const gchar *verbose_cer_type_str;
-        const gchar *verbose_cer_reason_str;
-
-        verbose_cer_type_str = qmi_wds_verbose_call_end_reason_type_get_string (verbose_cer_type);
-        verbose_cer_reason_str = qmi_wds_verbose_call_end_reason_get_string (verbose_cer_type, verbose_cer_reason);
-        mm_obj_msg (self, "  verbose call end reason (%u,%d): [%s] %s",
-                    verbose_cer_type,
-                    verbose_cer_reason,
-                    verbose_cer_type_str,
-                    verbose_cer_reason_str);
-
-        /* If we have a 3GPP verbose call end reason, we try to build an error
-         * with the exact error code and message */
-        if (verbose_cer_type == QMI_WDS_VERBOSE_CALL_END_REASON_TYPE_3GPP)
-            return qmi_mobile_equipment_error_from_verbose_call_end_reason_3gpp ((QmiWdsVerboseCallEndReason3gpp)verbose_cer_reason, self);
-
-        return g_error_new (MM_MOBILE_EQUIPMENT_ERROR, MM_MOBILE_EQUIPMENT_ERROR_UNKNOWN,
-                            "Call failed: %s error: %s", verbose_cer_type_str, verbose_cer_reason_str);
+        return mm_error_from_wds_verbose_call_end_reason (verbose_cer_type, verbose_cer_reason,
+                                                          running_ipv4 ? MM_BEARER_IP_FAMILY_IPV4 : MM_BEARER_IP_FAMILY_IPV6,
+                                                          self);
     }
 
     if (qmi_message_wds_start_network_output_get_call_end_reason (
@@ -1294,7 +1280,7 @@ start_network_ready (QmiClientWds *client,
             mm_obj_msg (self, "couldn't start %s network: %s", ctx->running_ipv4 ? "IPv4" : "IPv6", error->message);
             if (g_error_matches (error, QMI_PROTOCOL_ERROR, QMI_PROTOCOL_ERROR_CALL_FAILED)) {
                 g_clear_error (&error);
-                error = mobile_equipment_error_from_start_network_output (self, output);
+                error = error_from_start_network_output (self, ctx->running_ipv4, output);
             }
         }
     }
@@ -1344,7 +1330,7 @@ build_start_network_input (ConnectContext *ctx)
         if (ctx->auth != QMI_WDS_AUTHENTICATION_NONE) {
             if (ctx->user)
                 qmi_message_wds_start_network_input_set_username (input, ctx->user, NULL);
-            if (ctx->user)
+            if (ctx->password)
                 qmi_message_wds_start_network_input_set_password (input, ctx->password, NULL);
         }
     }
@@ -1391,28 +1377,18 @@ packet_service_status_indication_cb (QmiClientWds *client,
                 &verbose_cer_type,
                 &verbose_cer_reason,
                 NULL)) {
-            const gchar *verbose_cer_type_str;
-            const gchar *verbose_cer_reason_str;
-
-            verbose_cer_type_str = qmi_wds_verbose_call_end_reason_type_get_string (verbose_cer_type);
-            verbose_cer_reason_str = qmi_wds_verbose_call_end_reason_get_string (verbose_cer_type, verbose_cer_reason);
-            mm_obj_msg (self, "verbose call end reason (%u,%d): [%s] %s",
-                        verbose_cer_type,
-                        verbose_cer_reason,
-                        verbose_cer_type_str,
-                        verbose_cer_reason_str);
-
-            /* If we have a 3GPP verbose call end reason, we try to build an error
-             * with the exact error code and message */
-            if (verbose_cer_type == QMI_WDS_VERBOSE_CALL_END_REASON_TYPE_3GPP)
-                connection_error = qmi_mobile_equipment_error_from_verbose_call_end_reason_3gpp ((QmiWdsVerboseCallEndReason3gpp)verbose_cer_reason, self);
-            else
-                connection_error = g_error_new (MM_MOBILE_EQUIPMENT_ERROR, MM_MOBILE_EQUIPMENT_ERROR_UNKNOWN,
-                                                "Call failed: %s error: %s", verbose_cer_type_str, verbose_cer_reason_str);
-        } else if  (qmi_indication_wds_packet_service_status_output_get_call_end_reason (
-                        output,
-                        &cer,
-                        NULL)) {
+            /* Create MM error based on the verbose call end reason details. There is no real
+             * need for now to provide the correct IP type associated to the QMI WDS client
+             * that received the indication, because the type of errors that need this info
+             * would happen upon a Start Network operation, not after the modem has been
+             * connected. */
+            connection_error = mm_error_from_wds_verbose_call_end_reason (verbose_cer_type, verbose_cer_reason,
+                                                                          MM_BEARER_IP_FAMILY_NONE,
+                                                                          self);
+        } else if (qmi_indication_wds_packet_service_status_output_get_call_end_reason (
+                       output,
+                       &cer,
+                       NULL)) {
             const gchar *cer_str;
 
             cer_str = qmi_wds_call_end_reason_get_string (cer);
@@ -1866,7 +1842,7 @@ load_ip_type_settings_from_profile (ConnectContext *ctx,
     MMBearerIpFamily ip_family;
 
     ip_family = mm_3gpp_profile_get_ip_type (profile);
-    if (mm_3gpp_normalize_ip_family (&ip_family))
+    if (mm_3gpp_normalize_ip_family (&ip_family, TRUE))
         ctx->no_ip_family_preference = TRUE;
     if (ip_family & MM_BEARER_IP_FAMILY_IPV4)
         ctx->ipv4 = TRUE;
@@ -1901,15 +1877,13 @@ get_profile_ready (MMIfaceModem3gppProfileManager *modem,
 
     profile = mm_iface_modem_3gpp_profile_manager_get_profile_finish (modem, res, &error);
     if (!profile) {
-        g_task_return_error (task, error);
-        g_object_unref (task);
+        complete_connect (task, NULL, error);
         return;
     }
 
     if (!load_ip_type_settings_from_profile (ctx, profile, &error)) {
         g_prefix_error (&error, "Couldn't load ip type settings from profile: ");
-        g_task_return_error (task, error);
-        g_object_unref (task);
+        complete_connect (task, NULL, error);
         return;
     }
 
@@ -2698,6 +2672,10 @@ reset_bearer_connection (MMBearerQmi *self,
                 cleanup_event_report_unsolicited_events (self,
                                                          self->priv->client_ipv4,
                                                          &self->priv->event_report_ipv4_indication_id);
+            if (self->priv->extended_ipv4_config_change_id) {
+                g_signal_handler_disconnect (self->priv->client_ipv4, self->priv->extended_ipv4_config_change_id);
+                self->priv->extended_ipv4_config_change_id = 0;
+            }
         }
         self->priv->packet_data_handle_ipv4 = 0;
         g_clear_object (&self->priv->client_ipv4);
@@ -2714,6 +2692,10 @@ reset_bearer_connection (MMBearerQmi *self,
                 cleanup_event_report_unsolicited_events (self,
                                                          self->priv->client_ipv6,
                                                          &self->priv->event_report_ipv6_indication_id);
+            if (self->priv->extended_ipv6_config_change_id) {
+                g_signal_handler_disconnect (self->priv->client_ipv6, self->priv->extended_ipv6_config_change_id);
+                self->priv->extended_ipv6_config_change_id = 0;
+            }
         }
         self->priv->packet_data_handle_ipv6 = 0;
         g_clear_object (&self->priv->client_ipv6);

@@ -37,16 +37,16 @@
 #include "mm-shared-simtech.h"
 #include "mm-broadband-modem-simtech.h"
 
-static void iface_modem_init          (MMIfaceModem         *iface);
-static void iface_modem_3gpp_init     (MMIfaceModem3gpp     *iface);
-static void iface_modem_location_init (MMIfaceModemLocation *iface);
-static void iface_modem_voice_init    (MMIfaceModemVoice    *iface);
-static void shared_simtech_init       (MMSharedSimtech      *iface);
+static void iface_modem_init          (MMIfaceModemInterface         *iface);
+static void iface_modem_3gpp_init     (MMIfaceModem3gppInterface     *iface);
+static void iface_modem_location_init (MMIfaceModemLocationInterface *iface);
+static void iface_modem_voice_init    (MMIfaceModemVoiceInterface    *iface);
+static void shared_simtech_init       (MMSharedSimtechInterface      *iface);
 
-static MMIfaceModem         *iface_modem_parent;
-static MMIfaceModem3gpp     *iface_modem_3gpp_parent;
-static MMIfaceModemLocation *iface_modem_location_parent;
-static MMIfaceModemVoice    *iface_modem_voice_parent;
+static MMIfaceModemInterface         *iface_modem_parent;
+static MMIfaceModem3gppInterface     *iface_modem_3gpp_parent;
+static MMIfaceModemLocationInterface *iface_modem_location_parent;
+static MMIfaceModemVoiceInterface    *iface_modem_voice_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemSimtech, mm_broadband_modem_simtech, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -66,6 +66,35 @@ struct _MMBroadbandModemSimtechPrivate {
     FeatureSupport  autocsq_support;
     GRegex         *cnsmod_regex;
     GRegex         *csq_regex;
+    GRegex         *ri_done_regex;
+    GRegex         *nitz_regex;
+    GRegex         *cpin_regex;
+    MMModemLock     sim_lock;
+};
+
+typedef struct {
+    const gchar *result;
+    MMModemLock code;
+} CPinResult;
+
+static CPinResult unlock_results[] = {
+    { "READY",         MM_MODEM_LOCK_NONE           },
+    { "SIM PIN2",      MM_MODEM_LOCK_SIM_PIN2       },
+    { "SIM PUK2",      MM_MODEM_LOCK_SIM_PUK2       },
+    { "SIM PIN",       MM_MODEM_LOCK_SIM_PIN        },
+    { "SIM PUK",       MM_MODEM_LOCK_SIM_PUK        },
+    { "PH-NETSUB PIN", MM_MODEM_LOCK_PH_NETSUB_PIN  },
+    { "PH-NETSUB PUK", MM_MODEM_LOCK_PH_NETSUB_PUK  },
+    { "PH-FSIM PIN",   MM_MODEM_LOCK_PH_FSIM_PIN    },
+    { "PH-FSIM PUK",   MM_MODEM_LOCK_PH_FSIM_PUK    },
+    { "PH-CORP PIN",   MM_MODEM_LOCK_PH_CORP_PIN    },
+    { "PH-CORP PUK",   MM_MODEM_LOCK_PH_CORP_PUK    },
+    { "PH-SIM PIN",    MM_MODEM_LOCK_PH_SIM_PIN     },
+    { "PH-NET PIN",    MM_MODEM_LOCK_PH_NET_PIN     },
+    { "PH-NET PUK",    MM_MODEM_LOCK_PH_NET_PUK     },
+    { "PH-SP PIN",     MM_MODEM_LOCK_PH_SP_PIN      },
+    { "PH-SP PUK",     MM_MODEM_LOCK_PH_SP_PUK      },
+    { NULL }
 };
 
 /*****************************************************************************/
@@ -121,6 +150,28 @@ simtech_signal_changed (MMPortSerialAt *port,
         quality = 0;
 
     mm_iface_modem_update_signal_quality (MM_IFACE_MODEM (self), quality);
+}
+
+static void
+simtech_cpin_changed (MMPortSerialAt *port,
+                      GMatchInfo *match_info,
+                      MMBroadbandModemSimtech *self)
+{
+    g_autofree gchar *str = NULL;
+    CPinResult *iter;
+
+    str = mm_get_string_unquoted_from_match_info (match_info, 1);
+    if (str) {
+        iter = &unlock_results[0];
+        /* Translate the reply */
+        while (iter->result) {
+            if (g_str_has_prefix (str, iter->result)) {
+                self->priv->sim_lock = iter->code;
+                return;
+            }
+            iter++;
+        }
+    }
 }
 
 static void
@@ -1061,6 +1112,94 @@ load_current_modes (MMIfaceModem        *self,
 }
 
 /*****************************************************************************/
+/* Check unlock required (Modem interface) */
+
+static MMModemLock
+load_unlock_required_finish (MMIfaceModem *self,
+                             GAsyncResult *res,
+                             GError **error)
+{
+    GError *inner_error = NULL;
+    gssize value;
+
+    value = g_task_propagate_int (G_TASK (res), &inner_error);
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return MM_MODEM_LOCK_UNKNOWN;
+    }
+    return (MMModemLock)value;
+}
+
+static void
+cpin_query_ready (MMIfaceModem *_self,
+                  GAsyncResult *res,
+                  GTask *task)
+{
+    GError *error = NULL;
+    MMBroadbandModemSimtech *self;
+
+    mm_base_modem_at_command_finish (MM_BASE_MODEM (_self), res, &error);
+    if (error) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    self = MM_BROADBAND_MODEM_SIMTECH (_self);
+    if (self->priv->sim_lock == MM_MODEM_LOCK_UNKNOWN) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "Unable to get SIM lock status");
+    } else {
+        g_task_return_int (task, self->priv->sim_lock);
+    }
+    g_object_unref (task);
+}
+
+static void
+load_unlock_required (MMIfaceModem *self,
+                      gboolean last_attempt,
+                      GCancellable *cancellable,
+                      GAsyncReadyCallback callback,
+                      gpointer user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    mm_obj_dbg (self, "checking if unlock required...");
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "+CPIN?",
+                              10,
+                              FALSE,
+                              (GAsyncReadyCallback)cpin_query_ready,
+                              task);
+}
+
+/*****************************************************************************/
+/* Reset (Modem interface) */
+
+static gboolean
+reset_finish (MMIfaceModem *self,
+              GAsyncResult *res,
+              GError **error)
+{
+    return !!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, error);
+}
+
+static void
+reset (MMIfaceModem *self,
+       GAsyncReadyCallback callback,
+       gpointer user_data)
+{
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "+CRESET",
+                              9,
+                              FALSE,
+                              callback,
+                              user_data);
+}
+
+/*****************************************************************************/
 /* Set allowed modes (Modem interface) */
 
 typedef struct {
@@ -1193,11 +1332,47 @@ set_current_modes (MMIfaceModem        *self,
 static void
 setup_ports (MMBroadbandModem *self)
 {
+    MMBroadbandModemSimtech *modem = (MM_BROADBAND_MODEM_SIMTECH (self));
+    MMPortSerialAt          *ports[2];
+    guint                    i;
+
     /* Call parent's setup ports first always */
     MM_BROADBAND_MODEM_CLASS (mm_broadband_modem_simtech_parent_class)->setup_ports (self);
 
     /* Now reset the unsolicited messages we'll handle when enabled */
     set_unsolicited_events_handlers (MM_BROADBAND_MODEM_SIMTECH (self), FALSE);
+
+    ports[0] = mm_base_modem_peek_port_primary   (MM_BASE_MODEM (modem));
+    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (modem));
+
+    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
+        if (!ports[i])
+            continue;
+
+        /* Ignore PB DONE and SMS DONE */
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            modem->priv->ri_done_regex,
+            NULL,
+            NULL,
+            NULL);
+
+        /* Ignore +NITZ: */
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            modem->priv->nitz_regex,
+            NULL,
+            NULL,
+            NULL);
+
+        /* URC +CPIN: */
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            modem->priv->cpin_regex,
+            (MMPortSerialAtUnsolicitedMsgFn)simtech_cpin_changed,
+            self,
+            NULL);
+    }
 }
 
 /*****************************************************************************/
@@ -1235,10 +1410,18 @@ mm_broadband_modem_simtech_init (MMBroadbandModemSimtech *self)
     self->priv->cnsmod_support = FEATURE_SUPPORT_UNKNOWN;
     self->priv->autocsq_support = FEATURE_SUPPORT_UNKNOWN;
 
-    self->priv->cnsmod_regex = g_regex_new ("\\r\\n\\+CNSMOD:\\s*(\\d+)\\r\\n",
-                                            G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
-    self->priv->csq_regex    = g_regex_new ("\\r\\n\\+CSQ:\\s*(\\d+),(\\d+)\\r\\n",
-                                            G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->cnsmod_regex  = g_regex_new ("\\r\\n\\+CNSMOD:\\s*(\\d+)\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->csq_regex     = g_regex_new ("\\r\\n\\+CSQ:\\s*(\\d+),(\\d+)\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->ri_done_regex = g_regex_new ("\\r\\n(PB DONE)|(SMS DONE)\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->nitz_regex    = g_regex_new ("\\r\\n\\+NITZ:(.*)\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->cpin_regex    = g_regex_new ("\\r\\n\\+CPIN: (.*)\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->sim_lock = MM_MODEM_LOCK_UNKNOWN;
 }
 
 static void
@@ -1248,12 +1431,15 @@ finalize (GObject *object)
 
     g_regex_unref (self->priv->cnsmod_regex);
     g_regex_unref (self->priv->csq_regex);
+    g_regex_unref (self->priv->ri_done_regex);
+    g_regex_unref (self->priv->nitz_regex);
+    g_regex_unref (self->priv->cpin_regex);
 
     G_OBJECT_CLASS (mm_broadband_modem_simtech_parent_class)->finalize (object);
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     iface_modem_parent = g_type_interface_peek_parent (iface);
 
@@ -1267,10 +1453,14 @@ iface_modem_init (MMIfaceModem *iface)
     iface->load_current_modes_finish = load_current_modes_finish;
     iface->set_current_modes = set_current_modes;
     iface->set_current_modes_finish = set_current_modes_finish;
+    iface->reset = reset;
+    iface->reset_finish = reset_finish;
+    iface->load_unlock_required = load_unlock_required;
+    iface->load_unlock_required_finish = load_unlock_required_finish;
 }
 
 static void
-iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
+iface_modem_3gpp_init (MMIfaceModem3gppInterface *iface)
 {
     iface_modem_3gpp_parent = g_type_interface_peek_parent (iface);
 
@@ -1286,7 +1476,7 @@ iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
 }
 
 static void
-iface_modem_location_init (MMIfaceModemLocation *iface)
+iface_modem_location_init (MMIfaceModemLocationInterface *iface)
 {
     iface_modem_location_parent = g_type_interface_peek_parent (iface);
 
@@ -1298,14 +1488,14 @@ iface_modem_location_init (MMIfaceModemLocation *iface)
     iface->disable_location_gathering_finish = mm_shared_simtech_disable_location_gathering_finish;
 }
 
-static MMIfaceModemLocation *
+static MMIfaceModemLocationInterface *
 peek_parent_location_interface (MMSharedSimtech *self)
 {
     return iface_modem_location_parent;
 }
 
 static void
-iface_modem_voice_init (MMIfaceModemVoice *iface)
+iface_modem_voice_init (MMIfaceModemVoiceInterface *iface)
 {
     iface_modem_voice_parent = g_type_interface_peek_parent (iface);
 
@@ -1326,14 +1516,14 @@ iface_modem_voice_init (MMIfaceModemVoice *iface)
 
 }
 
-static MMIfaceModemVoice *
+static MMIfaceModemVoiceInterface *
 peek_parent_voice_interface (MMSharedSimtech *self)
 {
     return iface_modem_voice_parent;
 }
 
 static void
-shared_simtech_init (MMSharedSimtech *iface)
+shared_simtech_init (MMSharedSimtechInterface *iface)
 {
     iface->peek_parent_location_interface = peek_parent_location_interface;
     iface->peek_parent_voice_interface    = peek_parent_voice_interface;

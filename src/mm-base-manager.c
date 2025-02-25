@@ -40,6 +40,8 @@
 #include <ModemManager-tags.h>
 
 #include <mm-errors-types.h>
+#include "mm-error-helpers.h"
+
 #include <mm-gdbus-manager.h>
 #if defined WITH_TESTS
 # include <mm-gdbus-test.h>
@@ -55,6 +57,9 @@
 #include "mm-filter.h"
 #include "mm-log-object.h"
 #include "mm-base-modem.h"
+#include "mm-iface-modem.h"
+
+#include "mm-dispatcher-modem-setup.h"
 
 static void initable_iface_init   (GInitableIface       *iface);
 static void log_object_iface_init (MMLogObjectInterface *iface);
@@ -187,7 +192,7 @@ find_device_by_physdev_uid (MMBaseManager *self,
 
 typedef struct {
     MMBaseManager *self;
-    MMDevice *device;
+    MMDevice      *device;
 } FindDeviceSupportContext;
 
 static void
@@ -199,38 +204,111 @@ find_device_support_context_free (FindDeviceSupportContext *ctx)
 }
 
 static void
+dispatcher_modem_setup_ready (MMDispatcherModemSetup    *dispatcher,
+                              GAsyncResult              *res,
+                              FindDeviceSupportContext  *ctx)
+{
+    g_autoptr(GError) error = NULL;
+
+    if (!mm_dispatcher_modem_setup_run_finish (dispatcher, res, &error)) {
+        if (!g_error_matches(error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND))
+            mm_obj_warn (ctx->self, "couldn't run setup for device '%s': %s",
+                         mm_device_get_uid (ctx->device), error->message);
+        else
+            mm_obj_dbg (ctx->self, "no need to run setup for device '%s'",
+                        mm_device_get_uid (ctx->device));
+    } else
+        mm_obj_dbg (ctx->self, "setup for device '%s' finished",
+                    mm_device_get_uid (ctx->device));
+
+    /* launch async modem initialization */
+    mm_device_initialize_modem (ctx->device);
+
+    find_device_support_context_free (ctx);
+}
+
+static void
+modem_setup (FindDeviceSupportContext *ctx)
+{
+    guint                     n_port_infos = 0;
+    g_auto(GStrv)             modem_ports = NULL;
+    MMDispatcherModemSetup   *dispatcher;
+    MMModemPortInfo          *port_infos;
+    MMBaseModem              *modem = NULL;
+    GPtrArray                *aux;
+    guint                     i;
+
+    dispatcher = mm_dispatcher_modem_setup_get ();
+
+    modem = mm_device_peek_modem (ctx->device);
+
+    aux = g_ptr_array_new ();
+    port_infos = mm_base_modem_get_port_infos (modem, &n_port_infos);
+    for (i = 0; i < n_port_infos; i++) {
+        switch (port_infos[i].type) {
+            case MM_MODEM_PORT_TYPE_AT:
+            case MM_MODEM_PORT_TYPE_QMI:
+            case MM_MODEM_PORT_TYPE_MBIM:
+            case MM_MODEM_PORT_TYPE_XMMRPC:
+                g_ptr_array_add (aux, g_strdup (port_infos[i].name));
+                break;
+            case MM_MODEM_PORT_TYPE_UNKNOWN:
+            case MM_MODEM_PORT_TYPE_NET:
+            case MM_MODEM_PORT_TYPE_QCDM:
+            case MM_MODEM_PORT_TYPE_GPS:
+            case MM_MODEM_PORT_TYPE_AUDIO:
+            case MM_MODEM_PORT_TYPE_IGNORED:
+            default:
+                break;
+        }
+    }
+
+    mm_modem_port_info_array_free (port_infos, n_port_infos);
+    g_ptr_array_add (aux, NULL);
+    modem_ports = (GStrv) g_ptr_array_free (aux, FALSE);
+
+    mm_obj_msg (ctx->self, "running setup for device '%s'...",
+                mm_device_get_uid (ctx->device));
+    mm_dispatcher_modem_setup_run (dispatcher,
+                                   mm_base_modem_get_vendor_id (modem),
+                                   mm_base_modem_get_product_id (modem),
+                                   mm_base_modem_get_device (modem),
+                                   modem_ports,
+                                   NULL,
+                                   (GAsyncReadyCallback)dispatcher_modem_setup_ready,
+                                   ctx);
+}
+
+static void
 device_support_check_ready (MMPluginManager          *plugin_manager,
                             GAsyncResult             *res,
                             FindDeviceSupportContext *ctx)
 {
-    GError   *error = NULL;
-    MMPlugin *plugin;
+    g_autoptr(GError)   error = NULL;
+    g_autoptr(MMPlugin) plugin = NULL;
 
     /* If the device support check fails, either with an error, or afterwards
-     * when trying to create a modem object, we must remove the MMDevice from
-     * the tracking table of devices, so that a manual scan request afterwards
-     * re-scans all ports. */
+     * when trying to create a modem object, we must reset the port probe list
+     * in the MMDevice, so that a manual scan request afterwards re-scans all
+     * ports. */
 
     /* Receive plugin result from the plugin manager */
     plugin = mm_plugin_manager_device_support_check_finish (plugin_manager, res, &error);
     if (!plugin) {
         mm_obj_msg (ctx->self, "couldn't check support for device '%s': %s",
                     mm_device_get_uid (ctx->device), error->message);
-        g_error_free (error);
-        g_hash_table_remove (ctx->self->priv->devices, mm_device_get_uid (ctx->device));
+        mm_device_reset_port_probe_list (ctx->device);
         find_device_support_context_free (ctx);
         return;
     }
 
     /* Set the plugin as the one expected in the device */
     mm_device_set_plugin (ctx->device, G_OBJECT (plugin));
-    g_object_unref (plugin);
 
     if (!mm_device_create_modem (ctx->device, &error)) {
         mm_obj_warn (ctx->self, "couldn't create modem for device '%s': %s",
                      mm_device_get_uid (ctx->device), error->message);
-        g_error_free (error);
-        g_hash_table_remove (ctx->self->priv->devices, mm_device_get_uid (ctx->device));
+        mm_device_reset_port_probe_list (ctx->device);
         find_device_support_context_free (ctx);
         return;
     }
@@ -238,7 +316,8 @@ device_support_check_ready (MMPluginManager          *plugin_manager,
     /* Modem now created */
     mm_obj_msg (ctx->self, "modem for device '%s' successfully created",
                 mm_device_get_uid (ctx->device));
-    find_device_support_context_free (ctx);
+
+    modem_setup (ctx);
 }
 
 static gboolean is_device_inhibited           (MMBaseManager  *self,
@@ -294,14 +373,178 @@ device_removed (MMBaseManager *self,
 }
 
 static void
+device_support_check_add_all_ports (MMBaseManager  *self,
+                                    MMDevice       *device)
+{
+    FindDeviceSupportContext *ctx;
+    GList                    *l;
+
+    g_assert (!mm_plugin_manager_device_support_check_ongoing (self->priv->plugin_manager, device));
+
+    /* There is no running device support context, so we launch a new one */
+    ctx = g_slice_new (FindDeviceSupportContext);
+    ctx->self = g_object_ref (self);
+    ctx->device = g_object_ref (device);
+    mm_plugin_manager_device_support_check (self->priv->plugin_manager,
+                                            device,
+                                            (GAsyncReadyCallback) device_support_check_ready,
+                                            ctx);
+
+    g_assert (mm_plugin_manager_device_support_check_ongoing (self->priv->plugin_manager, device));
+
+    /* Iterate all known ports and notify them one by one */
+    for (l = mm_device_peek_port_probe_list (device); l; l = g_list_next (l)) {
+        mm_plugin_manager_device_support_check_add_port (self->priv->plugin_manager,
+                                                         device,
+                                                         mm_port_probe_peek_port (MM_PORT_PROBE (l->data)));
+    }
+}
+
+static void
+device_support_check_add_single_port (MMBaseManager  *self,
+                                      MMDevice       *device,
+                                      MMKernelDevice *port)
+{
+    FindDeviceSupportContext *ctx;
+    gboolean                  added;
+
+    /* Try to add the port to an already running device support context */
+    if (mm_plugin_manager_device_support_check_add_port (self->priv->plugin_manager, device, port))
+        return;
+
+    /* There is no running device support context, so we launch a new one */
+    ctx = g_slice_new (FindDeviceSupportContext);
+    ctx->self = g_object_ref (self);
+    ctx->device = g_object_ref (device);
+    mm_plugin_manager_device_support_check (self->priv->plugin_manager,
+                                            device,
+                                            (GAsyncReadyCallback) device_support_check_ready,
+                                            ctx);
+
+    /* Retry now, which should never fail */
+    added = mm_plugin_manager_device_support_check_add_port (self->priv->plugin_manager, device, port);
+    g_assert (added);
+}
+
+static void
+existing_port (MMBaseManager  *self,
+               MMDevice       *device,
+               MMKernelDevice *port)
+{
+    const gchar *name;
+    const gchar *uid;
+
+    name = mm_kernel_device_get_name (port);
+    uid = mm_device_get_uid (device);
+
+    mm_obj_dbg (self, "port %s already available in device '%s'", name, uid);
+
+    /* If the port exists already in the device, and we already have a valid modem
+     * object created, there is no point in processing this event, we can warn about
+     * the situation and bail out. This may happen e.g. if a manual scan is requested
+     * after having successfully finished the last probing operation. */
+    if (mm_device_peek_plugin (device) && mm_device_peek_modem (device)) {
+        mm_obj_dbg (self, "ignoring port %s as device '%s' already has a valid modem", name, uid);
+        return;
+    }
+
+    /* The port exists in the device, but we don't have a valid modem associated with
+     * it. This may happen if a manual scan is requested after having failed the last
+     * device probing operation. We need to relaunch a new device probing task, unless
+     * one is already running. */
+    device_support_check_add_single_port (self, device, port);
+}
+
+static void
+additional_port (MMBaseManager  *self,
+                 MMDevice       *device,
+                 MMKernelDevice *port)
+{
+    MMBaseModem *modem;
+    const gchar *name;
+    const gchar *uid;
+
+    name = mm_kernel_device_get_name (port);
+    uid = mm_device_get_uid (device);
+
+    mm_obj_dbg (self, "additional port %s in device '%s'", name, uid);
+
+    /* Do nothing if the device is ignoring the new port */
+    if (!mm_device_grab_port (device, port))
+        return;
+
+    /* If there is an ongoing support check, we can add the single port right away */
+    if (mm_plugin_manager_device_support_check_ongoing (self->priv->plugin_manager, device)) {
+        device_support_check_add_single_port (self, device, port);
+        return;
+    }
+
+    mm_obj_warn (self, "additional port %s in device '%s' added after device probing has already finished", name, uid);
+
+    /* If there is no plugin assigned in the device, it means the device probing had failed earlier,
+     * for example if none of the ports that were used for the device probing were usable control ports */
+    if (!mm_device_peek_plugin (device)) {
+        g_assert (!mm_device_peek_modem (device));
+        mm_obj_info (self, "last device '%s' probing had failed, will retry", uid);
+        device_support_check_add_all_ports (self, device);
+        return;
+    }
+
+    /* If there is no modem object assigned to the device, it means the modem object creation had failed earlier,
+     * for example if a required port was missing (e.g. missing net port in a QMI or MBIM modem) */
+    modem = mm_device_peek_modem (device);
+    if (!modem) {
+        mm_obj_info (self, "last modem object creation in device '%s' had failed, will retry", uid);
+        device_support_check_add_all_ports (self, device);
+        return;
+    }
+
+    mm_obj_info (self, "last modem object creation in device '%s' succeeded, but we have a new port addition, will retry", uid);
+    g_cancellable_cancel (mm_base_modem_peek_cancellable (modem));
+    mm_device_remove_modem (device);
+    device_support_check_add_all_ports (self, device);
+}
+
+static void
+first_port (MMBaseManager  *self,
+            MMKernelDevice *port,
+            gboolean        hotplugged)
+{
+    g_autoptr(MMDevice)  device = NULL;
+    const gchar         *name;
+    const gchar         *uid;
+    const gchar         *physdev;
+
+    name = mm_kernel_device_get_name (port);
+    uid = mm_kernel_device_get_physdev_uid (port);
+
+    mm_obj_dbg (self, "port %s is first in device '%s'", name, uid);
+
+    physdev = mm_kernel_device_get_physdev_sysfs_path (port);
+    device = mm_device_new (uid, physdev, hotplugged, FALSE, self->priv->object_manager);
+
+    /* If the device is ignoring the new port, discard the new device as well */
+    if (!mm_device_grab_port (device, port)) {
+        mm_obj_dbg (self, "discarding device '%s' as the first port is not grabbed", uid);
+        return;
+    }
+
+    /* Store the device */
+    g_hash_table_insert (self->priv->devices, g_strdup (uid), g_object_ref (device));
+
+    /* And start device support check */
+    device_support_check_add_single_port (self, device, port);
+}
+
+static void
 device_added (MMBaseManager  *self,
               MMKernelDevice *port,
               gboolean        hotplugged,
               gboolean        manual_scan)
 {
     MMDevice    *device;
-    const gchar *physdev_uid;
     const gchar *name;
+    const gchar *uid;
 
     g_return_if_fail (port != NULL);
 
@@ -330,15 +573,15 @@ device_added (MMBaseManager  *self,
 
     /* Get the port's physical device's uid. All ports of the same physical
      * device will share the same uid. */
-    physdev_uid = mm_kernel_device_get_physdev_uid (port);
-    g_assert (physdev_uid);
+    uid = mm_kernel_device_get_physdev_uid (port);
+    g_assert (uid);
 
     /* If the device is inhibited, do nothing else */
-    if (is_device_inhibited (self, physdev_uid)) {
+    if (is_device_inhibited (self, uid)) {
         /* Note: we will not report as hotplugged an inhibited device port
          * because we don't know what was done with the port out of our
          * context. */
-        device_inhibited_track_port (self, physdev_uid, port, manual_scan);
+        device_inhibited_track_port (self, uid, port, manual_scan);
         return;
     }
 
@@ -346,42 +589,22 @@ device_added (MMBaseManager  *self,
     if (!mm_filter_port (self->priv->filter, port, manual_scan))
         return;
 
-    /* If already added, ignore new event */
-    if (find_device_by_port (self, port)) {
-        mm_obj_dbg (self, "port %s already added", name);
+    /* If the port is already added, don't add it again */
+    device = find_device_by_port (self, port);
+    if (device) {
+        existing_port (self, device, port);
         return;
     }
 
     /* See if we already created an object to handle ports in this device */
-    device = find_device_by_physdev_uid (self, physdev_uid);
-    if (!device) {
-        const gchar *physdev;
-        FindDeviceSupportContext *ctx;
+    device = find_device_by_physdev_uid (self, uid);
+    if (device) {
+        additional_port (self, device, port);
+        return;
+    }
 
-        mm_obj_dbg (self, "port %s is first in device %s", name, physdev_uid);
-
-        physdev = mm_kernel_device_get_physdev_sysfs_path (port);
-
-        /* Keep the device listed in the Manager */
-        device = mm_device_new (physdev_uid, physdev, hotplugged, FALSE, self->priv->object_manager);
-        g_hash_table_insert (self->priv->devices,
-                             g_strdup (physdev_uid),
-                             device);
-
-        /* Launch device support check */
-        ctx = g_slice_new (FindDeviceSupportContext);
-        ctx->self = g_object_ref (self);
-        ctx->device = g_object_ref (device);
-        mm_plugin_manager_device_support_check (
-            self->priv->plugin_manager,
-            device,
-            (GAsyncReadyCallback) device_support_check_ready,
-            ctx);
-    } else
-        mm_obj_dbg (self, "additional port %s in device %s", name, physdev_uid);
-
-    /* Grab the port in the existing device. */
-    mm_device_grab_port (device, port);
+    /* This is the first port in a new device */
+    first_port (self, port, hotplugged);
 }
 
 #if defined WITH_QRTR
@@ -650,39 +873,104 @@ mm_base_manager_start (MMBaseManager *self,
 
 /*****************************************************************************/
 
+typedef struct {
+    MMBaseManager *self;
+    gboolean       low_power;
+    gboolean       remove;
+} DisableContext;
+
 static void
-remove_disable_ready (MMBaseModem *modem,
-                      GAsyncResult *res,
-                      MMBaseManager *self)
+disable_context_free (DisableContext *ctx)
+{
+    g_object_unref (ctx->self);
+    g_slice_free (DisableContext, ctx);
+}
+
+static void
+remove_device_after_disable (MMBaseModem    *modem,
+                             DisableContext *ctx)
 {
     MMDevice *device;
 
-    /* We don't care about errors disabling at this point */
-    mm_base_modem_disable_finish (modem, res, NULL);
-
-    device = find_device_by_modem (self, modem);
+    device = find_device_by_modem (ctx->self, modem);
     if (device) {
         g_cancellable_cancel (mm_base_modem_peek_cancellable (modem));
         mm_device_remove_modem (device);
-        g_hash_table_remove (self->priv->devices, mm_device_get_uid (device));
+        g_hash_table_remove (ctx->self->priv->devices, mm_device_get_uid (device));
     }
+
+    disable_context_free (ctx);
 }
 
 static void
-foreach_disable (gpointer key,
-                 MMDevice *device,
-                 MMBaseManager *self)
+shutdown_low_power_ready (MMIfaceModem   *modem,
+                          GAsyncResult   *res,
+                          DisableContext *ctx)
 {
-    MMBaseModem *modem;
+    g_autoptr(GError) error = NULL;
+
+    if (!mm_iface_modem_set_power_state_finish (modem, res, NULL, &error))
+        mm_obj_info (ctx->self, "changing to low power state failed: %s", error->message);
+
+    if (ctx->remove)
+        remove_device_after_disable (MM_BASE_MODEM (modem), ctx);
+    else
+        disable_context_free (ctx);
+}
+
+static void
+shutdown_disable_ready (MMBaseModem    *modem,
+                        GAsyncResult   *res,
+                        DisableContext *ctx)
+{
+    g_autoptr(GError) error = NULL;
+
+    /* We don't care about errors disabling at this point */
+    if (!mm_base_modem_disable_finish (modem, res, &error)) {
+        mm_obj_info (ctx->self, "disabling modem failed: %s", error->message);
+    }
+    /* Bring the modem to low power mode if requested */
+    else if (ctx->low_power) {
+        mm_iface_modem_set_power_state (MM_IFACE_MODEM (modem),
+                                        MM_MODEM_POWER_STATE_LOW,
+                                        (GAsyncReadyCallback)shutdown_low_power_ready,
+                                        ctx);
+        return;
+    }
+
+    if (ctx->remove)
+        remove_device_after_disable (modem, ctx);
+    else
+        disable_context_free (ctx);
+}
+
+static void
+foreach_disable (gpointer        key,
+                 MMDevice       *device,
+                 DisableContext *foreach_ctx)
+{
+    MMBaseModem    *modem;
+    DisableContext *ctx;
 
     modem = mm_device_peek_modem (device);
-    if (modem)
-        mm_base_modem_disable (modem, (GAsyncReadyCallback)remove_disable_ready, self);
+    if (!modem)
+        return;
+
+    ctx = g_slice_new0 (DisableContext);
+    ctx->self = g_object_ref (foreach_ctx->self);
+    ctx->low_power = foreach_ctx->low_power;
+    ctx->remove = foreach_ctx->remove;
+
+    mm_base_modem_disable (modem,
+                           MM_BASE_MODEM_OPERATION_LOCK_REQUIRED,
+                           MM_BASE_MODEM_OPERATION_PRIORITY_OVERRIDE,
+                           (GAsyncReadyCallback)shutdown_disable_ready,
+                           ctx);
 }
 
 static gboolean
-foreach_remove (gpointer key,
-                MMDevice *device,
+foreach_remove (gpointer       key,
+                MMDevice      *device,
                 MMBaseManager *self)
 {
     MMBaseModem *modem;
@@ -696,7 +984,9 @@ foreach_remove (gpointer key,
 
 void
 mm_base_manager_shutdown (MMBaseManager *self,
-                          gboolean disable)
+                          gboolean       disable,
+                          gboolean       low_power,
+                          gboolean       remove)
 {
     g_return_if_fail (self != NULL);
     g_return_if_fail (MM_IS_BASE_MANAGER (self));
@@ -705,7 +995,12 @@ mm_base_manager_shutdown (MMBaseManager *self,
     g_cancellable_cancel (self->priv->authp_cancellable);
 
     if (disable) {
-        g_hash_table_foreach (self->priv->devices, (GHFunc)foreach_disable, self);
+        DisableContext foreach_ctx = {
+            .self = self,
+            .low_power = low_power,
+            .remove = remove,
+        };
+        g_hash_table_foreach (self->priv->devices, (GHFunc)foreach_disable, &foreach_ctx);
 
         /* Disabling may take a few iterations of the mainloop, so the caller
          * has to iterate the mainloop until all devices have been disabled and
@@ -714,8 +1009,10 @@ mm_base_manager_shutdown (MMBaseManager *self,
         return;
     }
 
-    /* Otherwise, just remove directly */
-    g_hash_table_foreach_remove (self->priv->devices, (GHRFunc)foreach_remove, self);
+    if (remove) {
+        /* Otherwise, just remove directly */
+        g_hash_table_foreach_remove (self->priv->devices, (GHRFunc)foreach_remove, self);
+    }
 }
 
 guint32
@@ -774,8 +1071,12 @@ mm_base_manager_sync (MMBaseManager *self)
         modem = mm_device_peek_modem (MM_DEVICE (value));
 
         /* We just want to start the synchronization, we don't need the result */
-        if (modem)
-            mm_base_modem_sync (modem, (GAsyncReadyCallback)base_modem_sync_ready, NULL);
+        if (modem) {
+            mm_base_modem_sync (modem,
+                                MM_BASE_MODEM_OPERATION_LOCK_REQUIRED,
+                                (GAsyncReadyCallback)base_modem_sync_ready,
+                                NULL);
+        }
     }
 }
 
@@ -807,9 +1108,9 @@ set_logging_auth_ready (MMAuthProvider    *authp,
     GError *error = NULL;
 
     if (!mm_auth_provider_authorize_finish (authp, res, &error))
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     else if (!mm_log_set_level (ctx->level, &error))
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     else {
         mm_obj_msg (ctx->self, "logging: level '%s'", ctx->level);
         mm_gdbus_org_freedesktop_modem_manager1_complete_set_logging (
@@ -865,7 +1166,7 @@ scan_devices_auth_ready (MMAuthProvider *authp,
     GError *error = NULL;
 
     if (!mm_auth_provider_authorize_finish (authp, res, &error))
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     else {
 #if defined WITH_UDEV
         if (!mm_context_get_test_no_udev ()) {
@@ -876,9 +1177,8 @@ scan_devices_auth_ready (MMAuthProvider *authp,
                 ctx->invocation);
         } else
 #endif
-            g_dbus_method_invocation_return_error_literal (
-                ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
-                "Cannot request manual scan of devices: unsupported");
+            mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                            "Cannot request manual scan of devices: unsupported");
     }
 
     scan_devices_context_free (ctx);
@@ -949,7 +1249,7 @@ report_kernel_event_auth_ready (MMAuthProvider           *authp,
 out:
     if (error) {
         mm_obj_warn (ctx->self, "couldn't handle kernel event: %s", error->message);
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     } else
         mm_gdbus_org_freedesktop_modem_manager1_complete_report_kernel_event (
             MM_GDBUS_ORG_FREEDESKTOP_MODEM_MANAGER1 (ctx->self),
@@ -1226,7 +1526,7 @@ device_inhibit_ready (MMDevice             *device,
     GError                   *error = NULL;
 
     if (!mm_device_inhibit_finish (device, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         inhibit_device_context_free (ctx);
         return;
     }
@@ -1266,15 +1566,15 @@ base_manager_inhibit_device (InhibitDeviceContext *ctx)
 
     device = find_device_by_physdev_uid (ctx->self, ctx->uid);
     if (!device) {
-        g_dbus_method_invocation_return_error (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
-                                               "No device found with uid '%s'", ctx->uid);
+        mm_dbus_method_invocation_return_error (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
+                                                "No device found with uid '%s'", ctx->uid);
         inhibit_device_context_free (ctx);
         return;
     }
 
     if (mm_device_get_inhibited (device)) {
-        g_dbus_method_invocation_return_error (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_IN_PROGRESS,
-                                               "Device '%s' is already inhibited", ctx->uid);
+        mm_dbus_method_invocation_return_error (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_IN_PROGRESS,
+                                                "Device '%s' is already inhibited", ctx->uid);
         inhibit_device_context_free (ctx);
         return;
     }
@@ -1295,8 +1595,8 @@ base_manager_uninhibit_device (InhibitDeviceContext *ctx)
     sender = g_dbus_method_invocation_get_sender (ctx->invocation);
     info = find_inhibited_device_info_by_physdev_uid (ctx->self, ctx->uid);
     if (!info || (g_strcmp0 (info->sender, sender) != 0)) {
-        g_dbus_method_invocation_return_error (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
-                                               "No inhibition found for uid '%s'", ctx->uid);
+        mm_dbus_method_invocation_return_error (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND,
+                                                "No inhibition found for uid '%s'", ctx->uid);
         inhibit_device_context_free (ctx);
         return;
     }
@@ -1319,7 +1619,7 @@ inhibit_device_auth_ready (MMAuthProvider       *authp,
     GError *error = NULL;
 
     if (!mm_auth_provider_authorize_finish (authp, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         inhibit_device_context_free (ctx);
         return;
     }
@@ -1407,12 +1707,15 @@ handle_set_profile (MmGdbusTest *skeleton,
     mm_obj_msg (self, "modem for virtual device '%s' successfully created",
                 mm_device_get_uid (device));
 
+    /* launch async modem initialization */
+    mm_device_initialize_modem (device);
+
 out:
 
     if (error) {
         mm_device_remove_modem (device);
         g_hash_table_remove (self->priv->devices, mm_device_get_uid (device));
-        g_dbus_method_invocation_return_gerror (invocation, error);
+        mm_dbus_method_invocation_return_gerror (invocation, error);
         g_error_free (error);
     } else
         mm_gdbus_test_complete_set_profile (skeleton, invocation);

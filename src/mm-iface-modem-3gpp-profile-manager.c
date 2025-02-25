@@ -26,6 +26,7 @@
 #include "mm-iface-modem-3gpp-profile-manager.h"
 #include "mm-base-modem.h"
 #include "mm-log-object.h"
+#include "mm-error-helpers.h"
 #include "mm-log-helpers.h"
 
 #define SUPPORT_CHECKED_TAG "3gpp-profile-manager-support-checked-tag"
@@ -33,6 +34,46 @@
 
 static GQuark support_checked_quark;
 static GQuark supported_quark;
+
+G_DEFINE_INTERFACE (MMIfaceModem3gppProfileManager, mm_iface_modem_3gpp_profile_manager, MM_TYPE_IFACE_MODEM_3GPP)
+
+/*****************************************************************************/
+/* Private data context */
+
+#define PRIVATE_TAG "3gpp-profile-manager-private-tag"
+static GQuark private_quark;
+
+typedef struct {
+    /* reported updates should be ignored */
+    gint  update_ignored;
+    /* throttle updated signal */
+    guint updated_timeout_source;
+} Private;
+
+static void
+private_free (Private *priv)
+{
+    if (priv->updated_timeout_source)
+        g_source_remove (priv->updated_timeout_source);
+    g_slice_free (Private, priv);
+}
+
+static Private *
+get_private (MMIfaceModem3gppProfileManager *self)
+{
+    Private *priv;
+
+    if (G_UNLIKELY (!private_quark))
+        private_quark = g_quark_from_static_string (PRIVATE_TAG);
+
+    priv = g_object_get_qdata (G_OBJECT (self), private_quark);
+    if (!priv) {
+        priv = g_slice_new0 (Private);
+        g_object_set_qdata_full (G_OBJECT (self), private_quark, priv, (GDestroyNotify)private_free);
+    }
+
+    return priv;
+}
 
 /*****************************************************************************/
 
@@ -46,57 +87,119 @@ mm_iface_modem_3gpp_profile_manager_bind_simple_status (MMIfaceModem3gppProfileM
 /*****************************************************************************/
 
 void
-mm_iface_modem_3gpp_profile_manager_updated (MMIfaceModem3gppProfileManager *self)
+mm_iface_modem_3gpp_profile_manager_update_ignore_start (MMIfaceModem3gppProfileManager *self)
+{
+    Private *priv;
+
+    if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self), supported_quark))) {
+        mm_obj_dbg (self, "skipping profile manager update ignore start: unsupported");
+        return;
+    }
+
+    priv = get_private (self);
+    g_assert_cmpint (priv->update_ignored, >=, 0);
+    priv->update_ignored++;
+    mm_obj_dbg (self, "ignoring profile manager updates during our own operations (%d ongoing)", priv->update_ignored);
+}
+
+void
+mm_iface_modem_3gpp_profile_manager_update_ignore_stop (MMIfaceModem3gppProfileManager *self)
+{
+    Private *priv;
+
+    if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self), supported_quark))) {
+        mm_obj_dbg (self, "skipping profile manager update ignore stop: unsupported");
+        return;
+    }
+
+    priv = get_private (self);
+    g_assert_cmpint (priv->update_ignored, >, 0);
+    priv->update_ignored--;
+    if (priv->update_ignored > 0)
+        mm_obj_dbg (self, "still ignoring profile manager updates during our own operations (%d ongoing)", priv->update_ignored);
+    else
+        mm_obj_dbg (self, "no longer ignoring profile manager updates during our own operations");
+}
+
+/* Wait some ms before actually enabling back the update requests */
+#define DELAYED_UPDATE_IGNORE_STOP_TIMEOUT_MS 100
+
+static gboolean
+update_ignore_stop_delayed_cb (MMIfaceModem3gppProfileManager *self) /* full ref */
+{
+    mm_iface_modem_3gpp_profile_manager_update_ignore_stop (self);
+    g_object_unref (self);
+    return G_SOURCE_REMOVE;
+}
+
+void
+mm_iface_modem_3gpp_profile_manager_update_ignore_stop_delayed (MMIfaceModem3gppProfileManager *self)
+{
+    if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self), supported_quark))) {
+        mm_obj_dbg (self, "skipping profile manager update ignore stop delayed: unsupported");
+        return;
+    }
+
+    mm_obj_dbg (self, "delayed request to stop ignoring profile manager updates");
+    g_timeout_add (DELAYED_UPDATE_IGNORE_STOP_TIMEOUT_MS,
+                   (GSourceFunc) update_ignore_stop_delayed_cb,
+                   g_object_ref (self));
+}
+
+/*****************************************************************************/
+
+/* Throttle the amount of "Updated" signals we emit, e.g. so that if we receive
+ * multiple modem indications in a very short time span, we don't emit one signal
+ * for each of them. */
+#define UPDATED_TIMEOUT_SECS 2
+
+static gboolean
+profile_manager_updated_emit (MMIfaceModem3gppProfileManager *self)
 {
     g_autoptr(MmGdbusModem3gppProfileManagerSkeleton) skeleton = NULL;
+    Private *priv;
+
+    priv = get_private (self);
 
     g_object_get (self,
                   MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_DBUS_SKELETON, &skeleton,
                   NULL);
 
-    if (skeleton)
+    if (skeleton) {
+        mm_obj_info (self, "emitting profile manager updated...");
         mm_gdbus_modem3gpp_profile_manager_emit_updated (MM_GDBUS_MODEM3GPP_PROFILE_MANAGER (skeleton));
+    } else {
+        mm_obj_warn (self, "skipping profile manager updated signal: interface disabled");
+    }
+
+    priv->updated_timeout_source = 0;
+    return G_SOURCE_REMOVE;
 }
 
-static gboolean
-profile_manager_fail_if_connected_bearer (MMIfaceModem3gppProfileManager  *self,
-                                          const gchar                     *index_field,
-                                          gint                             profile_id,
-                                          MMBearerApnType                  apn_type,
-                                          GError                         **error)
+void
+mm_iface_modem_3gpp_profile_manager_updated (MMIfaceModem3gppProfileManager *self)
 {
-    g_autoptr(MMBearerList) bearer_list = NULL;
-    g_autoptr(MMBaseBearer) bearer = NULL;
+    Private *priv;
 
-    g_object_get (self, MM_IFACE_MODEM_BEARER_LIST, &bearer_list, NULL);
-    if (bearer_list) {
-        if (g_strcmp0 (index_field, "profile-id") == 0)
-            bearer = mm_bearer_list_find_by_profile_id (bearer_list, profile_id);
-        else if (g_strcmp0 (index_field, "apn-type") == 0)
-            bearer = mm_bearer_list_find_by_apn_type (bearer_list, apn_type);
-        else
-            g_assert_not_reached ();
+    priv = get_private (self);
+
+    if (!GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (self), supported_quark))) {
+        mm_obj_info (self, "skipping profile manager updated signal: unsupported");
+        return;
     }
 
-    /* If a bearer is found reporting the profile id we're targeting to use,
-     * it means we have a known connected bearer, and we must abort the
-     * operation right away. */
-    if (bearer) {
-        if (g_strcmp0 (index_field, "profile-id") == 0) {
-            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_CONNECTED,
-                         "Cannot use profile %d: found an already connected bearer", profile_id);
-        } else if (g_strcmp0 (index_field, "apn-type") == 0) {
-            g_autofree gchar *apn_type_str = NULL;
-
-            apn_type_str = mm_bearer_apn_type_build_string_from_mask (apn_type);
-            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_CONNECTED,
-                         "Cannot use profile %s: found an already connected bearer", apn_type_str);
-        } else
-            g_assert_not_reached ();
-        return FALSE;
+    if (priv->update_ignored > 0) {
+        mm_obj_info (self, "skipping profile manager updated signal: ignored");
+        return;
     }
 
-    return TRUE;
+    if (priv->updated_timeout_source) {
+        mm_obj_info (self, "skipping profile manager updated signal: one already scheduled");
+        return;
+    }
+
+    mm_obj_info (self, "profile manager updated signal scheduled");
+    priv->updated_timeout_source = g_timeout_add_seconds (UPDATED_TIMEOUT_SECS, (GSourceFunc) profile_manager_updated_emit, self);
 }
 
 /*****************************************************************************/
@@ -204,7 +307,7 @@ profile_manager_store_profile_ready (MMIfaceModem3gppProfileManager *self,
 
     ctx = g_task_get_task_data (task);
 
-    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->store_profile_finish (self, res, &profile_id, &apn_type, &error)) {
+    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->store_profile_finish (self, res, &profile_id, &apn_type, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -238,7 +341,7 @@ set_profile_step_store_profile (GTask *task)
 
     g_assert (!ctx->stored);
 
-    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->store_profile (
+    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->store_profile (
         self,
         ctx->requested,
         ctx->index_field,
@@ -257,7 +360,7 @@ profile_manager_deactivate_profile_ready (MMIfaceModem3gppProfileManager *self,
     ctx = g_task_get_task_data (task);
 
     /* profile deactivation errors aren't fatal per se */
-    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->deactivate_profile_finish (self, res, &error))
+    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->deactivate_profile_finish (self, res, &error))
         mm_obj_dbg (self, "couldn't deactivate profile '%s': %s", ctx->index_field_value_str, error->message);
     else
         mm_obj_dbg (self, "deactivated profile '%s'", ctx->index_field_value_str);
@@ -275,8 +378,8 @@ set_profile_step_deactivate_profile (GTask *task)
     self = g_task_get_source_object (task);
     ctx  = g_task_get_task_data (task);
 
-    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->deactivate_profile ||
-        !MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->deactivate_profile_finish) {
+    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->deactivate_profile ||
+        !MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->deactivate_profile_finish) {
         mm_obj_dbg (self, "skipping profile deactivation");
         ctx->step++;
         set_profile_step (task);
@@ -288,7 +391,7 @@ set_profile_step_deactivate_profile (GTask *task)
      * bearer tracked. This covers e.g. a clean recovery of a previous daemon
      * crash, and is now defined as a supported step in the core logic, instead
      * of doing it differently in the different plugins and protocols. */
-    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->deactivate_profile (
+    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->deactivate_profile (
         self,
         ctx->requested,
         (GAsyncReadyCallback) profile_manager_deactivate_profile_ready,
@@ -306,7 +409,7 @@ profile_manager_check_activated_profile_ready (MMIfaceModem3gppProfileManager *s
 
     ctx = g_task_get_task_data (task);
 
-    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->check_activated_profile_finish (self, res, &activated, &error)) {
+    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->check_activated_profile_finish (self, res, &activated, &error)) {
         if (g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_NOT_FOUND)) {
             mm_obj_dbg (self, "profile '%s' is not activated: %s", ctx->index_field_value_str, error->message);
             ctx->step = SET_PROFILE_STEP_STORE_PROFILE;
@@ -322,6 +425,47 @@ profile_manager_check_activated_profile_ready (MMIfaceModem3gppProfileManager *s
         ctx->step = SET_PROFILE_STEP_STORE_PROFILE;
     }
     set_profile_step (task);
+}
+
+static gboolean
+profile_manager_fail_if_connected_bearer (MMIfaceModem3gppProfileManager  *self,
+                                          const gchar                     *index_field,
+                                          gint                             profile_id,
+                                          MMBearerApnType                  apn_type,
+                                          GError                         **error)
+{
+    g_autoptr(MMBearerList) bearer_list = NULL;
+    g_autoptr(MMBaseBearer) bearer = NULL;
+
+    g_object_get (self, MM_IFACE_MODEM_BEARER_LIST, &bearer_list, NULL);
+    if (bearer_list) {
+        if (g_strcmp0 (index_field, "profile-id") == 0)
+            bearer = mm_bearer_list_find_by_profile_id (bearer_list, profile_id);
+        else if (g_strcmp0 (index_field, "apn-type") == 0)
+            bearer = mm_bearer_list_find_by_apn_type (bearer_list, apn_type);
+        else
+            g_assert_not_reached ();
+    }
+
+    /* If a bearer is found reporting the profile id we're targeting to use,
+     * it means we have a known connected bearer, and we must abort the
+     * operation right away. */
+    if (bearer) {
+        if (g_strcmp0 (index_field, "profile-id") == 0) {
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_CONNECTED,
+                         "Cannot use profile %d: found an already connected bearer", profile_id);
+        } else if (g_strcmp0 (index_field, "apn-type") == 0) {
+            g_autofree gchar *apn_type_str = NULL;
+
+            apn_type_str = mm_bearer_apn_type_build_string_from_mask (apn_type);
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_CONNECTED,
+                         "Cannot use profile %s: found an already connected bearer", apn_type_str);
+        } else
+            g_assert_not_reached ();
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 static void
@@ -349,8 +493,8 @@ set_profile_step_check_activated_profile (GTask *task)
         return;
     }
 
-    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->check_activated_profile ||
-        !MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->check_activated_profile_finish) {
+    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->check_activated_profile ||
+        !MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->check_activated_profile_finish) {
         ctx->step = SET_PROFILE_STEP_DEACTIVATE_PROFILE;
         set_profile_step (task);
         return;
@@ -358,7 +502,7 @@ set_profile_step_check_activated_profile (GTask *task)
 
     /* Second, an actual query to the modem, in order to trigger the profile
      * deactivation before we attempt to activate it again */
-    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->check_activated_profile (
+    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->check_activated_profile (
         self,
         ctx->requested,
         (GAsyncReadyCallback) profile_manager_check_activated_profile_ready,
@@ -516,7 +660,7 @@ set_profile_check_format_ready (MMIfaceModem3gppProfileManager *self,
 
     ctx = g_task_get_task_data (task);
 
-    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->check_format_finish (
+    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->check_format_finish (
             self, res,
             &ctx->new_id,
             &ctx->min_profile_id,
@@ -545,7 +689,7 @@ set_profile_step_check_format (GTask *task)
     self = g_task_get_source_object (task);
     ctx  = g_task_get_task_data (task);
 
-    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->check_format (
+    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->check_format (
         self,
         mm_3gpp_profile_get_ip_type (ctx->requested),
         (GAsyncReadyCallback)set_profile_check_format_ready,
@@ -727,13 +871,16 @@ mm_iface_modem_3gpp_profile_manager_set_profile (MMIfaceModem3gppProfileManager 
 
     /* normalize IP family right away */
     ip_family = mm_3gpp_profile_get_ip_type (ctx->requested);
-    mm_3gpp_normalize_ip_family (&ip_family);
+    mm_3gpp_normalize_ip_family (&ip_family, TRUE);
     mm_3gpp_profile_set_ip_type (ctx->requested, ip_family);
 
     set_profile_step (task);
 }
 
 /*****************************************************************************/
+/* Get a single profile.
+ *   NOTE: this method may be called before the interface is initialized.
+ */
 
 MM3gppProfile *
 mm_iface_modem_3gpp_profile_manager_get_profile_finish (MMIfaceModem3gppProfileManager  *self,
@@ -755,7 +902,7 @@ get_profile_list_ready (MMIfaceModem3gppProfileManager *self,
 
     profile_id = GPOINTER_TO_INT (g_task_get_task_data (task));
 
-    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->list_profiles_finish (self, res, &profiles, &error)) {
+    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->list_profiles_finish (self, res, &profiles, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -782,7 +929,7 @@ get_profile_single_ready (MMIfaceModem3gppProfileManager *self,
     GError        *error = NULL;
     MM3gppProfile *profile;
 
-    profile = MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->get_profile_finish (self, res, &error);
+    profile = MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->get_profile_finish (self, res, &error);
     if (!profile)
         g_task_return_error (task, error);
     else
@@ -800,12 +947,13 @@ mm_iface_modem_3gpp_profile_manager_get_profile (MMIfaceModem3gppProfileManager 
 
     task = g_task_new (self, NULL, callback, user_data);
 
-    if (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->get_profile &&
-        MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->get_profile_finish) {
-        MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->get_profile (self,
-                                                                               profile_id,
-                                                                               (GAsyncReadyCallback)get_profile_single_ready,
-                                                                               task);
+    if (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->get_profile &&
+        MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->get_profile_finish) {
+        MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->get_profile (
+            self,
+            profile_id,
+            (GAsyncReadyCallback)get_profile_single_ready,
+            task);
         return;
     }
 
@@ -818,6 +966,9 @@ mm_iface_modem_3gpp_profile_manager_get_profile (MMIfaceModem3gppProfileManager 
 }
 
 /*****************************************************************************/
+/* List all profiles.
+ *   NOTE: this method may be called before the interface is initialized.
+ */
 
 typedef struct {
     GList *profiles;
@@ -858,7 +1009,7 @@ internal_list_profiles_ready (MMIfaceModem3gppProfileManager *self,
     ctx = g_slice_new0 (ListProfilesContext);
     g_task_set_task_data (task, ctx, (GDestroyNotify) list_profiles_context_free);
 
-    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->list_profiles_finish (self, res, &ctx->profiles, &error))
+    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->list_profiles_finish (self, res, &ctx->profiles, &error))
         g_task_return_error (task, error);
     else
         g_task_return_boolean (task, TRUE);
@@ -877,15 +1028,15 @@ mm_iface_modem_3gpp_profile_manager_list_profiles (MMIfaceModem3gppProfileManage
     /* Internal calls to the list profile logic may be performed even if the 3GPP Profile Manager
      * interface is not exposed in DBus, therefore, make sure this logic exits cleanly if there
      * is no support for listing profiles */
-    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->list_profiles ||
-        !MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->list_profiles_finish) {
+    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->list_profiles ||
+        !MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->list_profiles_finish) {
         g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
                                  "Listing profiles is unsupported");
         g_object_unref (task);
         return;
     }
 
-    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->list_profiles (
+    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->list_profiles (
         MM_IFACE_MODEM_3GPP_PROFILE_MANAGER (self),
         (GAsyncReadyCallback)internal_list_profiles_ready,
         task);
@@ -945,7 +1096,7 @@ list_profiles_ready (MMIfaceModem3gppProfileManager *self,
 
     if (!mm_iface_modem_3gpp_profile_manager_list_profiles_finish (self, res, &profiles, &error)) {
         mm_obj_warn (self, "failed listing 3GPP profiles: %s", error->message);
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_list_context_free (ctx);
         return;
     }
@@ -965,7 +1116,7 @@ handle_list_auth_ready (MMBaseModem       *self,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (self, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_list_context_free (ctx);
         return;
     }
@@ -1038,13 +1189,18 @@ set_profile_ready (MMIfaceModem3gppProfileManager *self,
     profile_stored = mm_iface_modem_3gpp_profile_manager_set_profile_finish (self, res, &error);
     if (!profile_stored) {
         mm_obj_warn (self, "failed setting 3GPP profile: %s", error->message);
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        /* process profile manager updates right away on error */
+        mm_iface_modem_3gpp_profile_manager_update_ignore_stop (self);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_set_context_free (ctx);
         return;
     }
 
     mm_obj_info (self, "3GPP profile set:");
     mm_log_3gpp_profile (self, MM_LOG_LEVEL_INFO, "  ", profile_stored);
+
+    /* delay processing profile manager updates on success */
+    mm_iface_modem_3gpp_profile_manager_update_ignore_stop_delayed (self);
 
     profile_dictionary = mm_3gpp_profile_get_dictionary (profile_stored);
     mm_gdbus_modem3gpp_profile_manager_complete_set (ctx->skeleton, ctx->invocation, profile_dictionary);
@@ -1061,7 +1217,7 @@ handle_set_auth_ready (MMBaseModem      *self,
     g_autoptr(MM3gppProfile)  profile_requested = NULL;
 
     if (!mm_base_modem_authorize_finish (self, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_set_context_free (ctx);
         return;
     }
@@ -1074,7 +1230,7 @@ handle_set_auth_ready (MMBaseModem      *self,
     }
 
     if (!ctx->requested_dictionary) {
-        g_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
                                                        "Missing requested profile settings");
         handle_set_context_free (ctx);
         return;
@@ -1082,7 +1238,7 @@ handle_set_auth_ready (MMBaseModem      *self,
 
     profile_requested = mm_3gpp_profile_new_from_dictionary (ctx->requested_dictionary, &error);
     if (!profile_requested) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_set_context_free (ctx);
         return;
     }
@@ -1091,6 +1247,9 @@ handle_set_auth_ready (MMBaseModem      *self,
     mm_log_3gpp_profile (self, MM_LOG_LEVEL_INFO, "  ", profile_requested);
 
     index_field = mm_gdbus_modem3gpp_profile_manager_get_index_field (ctx->skeleton);
+
+    /* Start ignoring our own indications */
+    mm_iface_modem_3gpp_profile_manager_update_ignore_start (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER (self));
 
     /* Don't call the class callback directly, use the common helper method
      * that is also used by other internal operations. */
@@ -1151,11 +1310,15 @@ delete_profile_ready (MMIfaceModem3gppProfileManager *self,
 {
     GError *error = NULL;
 
-    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->delete_profile_finish (self, res, &error)) {
+    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->delete_profile_finish (self, res, &error)) {
         mm_obj_warn (self, "failed deleting 3GPP profile: %s", error->message);
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        /* process profile manager updates right away on error */
+        mm_iface_modem_3gpp_profile_manager_update_ignore_stop (self);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     } else {
         mm_obj_info (self, "3GPP profile deleted");
+        /* delay processing profile manager updates on success */
+        mm_iface_modem_3gpp_profile_manager_update_ignore_stop_delayed (self);
         mm_gdbus_modem3gpp_profile_manager_complete_delete (ctx->skeleton, ctx->invocation);
     }
     handle_delete_context_free (ctx);
@@ -1173,7 +1336,7 @@ handle_delete_auth_ready (MMBaseModem         *self,
     MMBearerApnType           apn_type = MM_BEARER_APN_TYPE_NONE;
 
     if (!mm_base_modem_authorize_finish (self, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_delete_context_free (ctx);
         return;
     }
@@ -1185,24 +1348,24 @@ handle_delete_auth_ready (MMBaseModem         *self,
         return;
     }
 
-    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->delete_profile ||
-        !MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->delete_profile_finish) {
-        g_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
-                                                       "Deleting profiles is not supported");
+    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->delete_profile ||
+        !MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->delete_profile_finish) {
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
+                                                        "Deleting profiles is not supported");
         handle_delete_context_free (ctx);
         return;
     }
 
     if (!ctx->dictionary) {
-        g_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
-                                                       "Missing profile settings");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                                                        "Missing profile settings");
         handle_delete_context_free (ctx);
         return;
     }
 
     profile = mm_3gpp_profile_new_from_dictionary (ctx->dictionary, &error);
     if (!profile) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_delete_context_free (ctx);
         return;
     }
@@ -1211,16 +1374,16 @@ handle_delete_auth_ready (MMBaseModem         *self,
     if (g_strcmp0 (index_field, "profile-id") == 0) {
         profile_id = mm_3gpp_profile_get_profile_id (profile);
         if (profile_id == MM_3GPP_PROFILE_ID_UNKNOWN) {
-            g_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
-                                                           "Missing index field ('profile-id') in profile settings");
+            mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                                                            "Missing index field ('profile-id') in profile settings");
             handle_delete_context_free (ctx);
             return;
         }
     } else if (g_strcmp0 (index_field, "apn-type") == 0) {
         apn_type = mm_3gpp_profile_get_apn_type (profile);
         if (apn_type == MM_BEARER_APN_TYPE_NONE) {
-            g_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
-                                                           "Missing index field ('apn-type') in profile settings");
+            mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                                                            "Missing index field ('apn-type') in profile settings");
             handle_delete_context_free (ctx);
             return;
         }
@@ -1232,7 +1395,7 @@ handle_delete_auth_ready (MMBaseModem         *self,
                                                    profile_id,
                                                    apn_type,
                                                    &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_delete_context_free (ctx);
         return;
     }
@@ -1240,7 +1403,10 @@ handle_delete_auth_ready (MMBaseModem         *self,
     mm_obj_info (self, "processing user request to delete 3GPP profile...");
     mm_log_3gpp_profile (self, MM_LOG_LEVEL_INFO, "  ", profile);
 
-    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->delete_profile (
+    /* Start ignoring our own indications */
+    mm_iface_modem_3gpp_profile_manager_update_ignore_start (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER (self));
+
+    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->delete_profile (
         MM_IFACE_MODEM_3GPP_PROFILE_MANAGER (self),
         profile,
         index_field,
@@ -1310,7 +1476,7 @@ disable_unsolicited_events_ready (MMIfaceModem3gppProfileManager *self,
     DisablingContext  *ctx;
     g_autoptr(GError)  error = NULL;
 
-    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->disable_unsolicited_events_finish (self, res, &error);
+    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->disable_unsolicited_events_finish (self, res, &error);
     if (error) {
         /* This error shouldn't be treated as critical */
         mm_obj_dbg (self, "couldn't disable unsolicited profile management events: %s", error->message);
@@ -1330,7 +1496,7 @@ cleanup_unsolicited_events_ready (MMIfaceModem3gppProfileManager *self,
     DisablingContext  *ctx;
     g_autoptr(GError)  error = NULL;
 
-    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->cleanup_unsolicited_events_finish (self, res, &error);
+    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->cleanup_unsolicited_events_finish (self, res, &error);
     if (error) {
         /* This error shouldn't be treated as critical */
         mm_obj_dbg (self, "couldn't cleanup unsolicited profile management events: %s", error->message);
@@ -1357,9 +1523,9 @@ interface_disabling_step (GTask *task)
         /* fall through */
 
     case DISABLING_STEP_DISABLE_UNSOLICITED_EVENTS:
-        if (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->disable_unsolicited_events &&
-            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->disable_unsolicited_events_finish) {
-            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->disable_unsolicited_events (
+        if (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->disable_unsolicited_events &&
+            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->disable_unsolicited_events_finish) {
+            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->disable_unsolicited_events (
                 self,
                 (GAsyncReadyCallback)disable_unsolicited_events_ready,
                 task);
@@ -1369,9 +1535,9 @@ interface_disabling_step (GTask *task)
         /* fall through */
 
     case DISABLING_STEP_CLEANUP_UNSOLICITED_EVENTS:
-        if (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->cleanup_unsolicited_events &&
-            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->cleanup_unsolicited_events_finish) {
-            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->cleanup_unsolicited_events (
+        if (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->cleanup_unsolicited_events &&
+            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->cleanup_unsolicited_events_finish) {
+            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->cleanup_unsolicited_events (
                 self,
                 (GAsyncReadyCallback)cleanup_unsolicited_events_ready,
                 task);
@@ -1460,7 +1626,7 @@ setup_unsolicited_events_ready (MMIfaceModem3gppProfileManager *self,
     EnablingContext   *ctx;
     g_autoptr(GError)  error = NULL;
 
-    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->setup_unsolicited_events_finish (self, res, &error);
+    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->setup_unsolicited_events_finish (self, res, &error);
     if (error) {
         /* This error shouldn't be treated as critical */
         mm_obj_dbg (self, "couldn't setup unsolicited profile management events: %s", error->message);
@@ -1480,7 +1646,7 @@ enable_unsolicited_events_ready (MMIfaceModem3gppProfileManager *self,
     EnablingContext   *ctx;
     g_autoptr(GError)  error = NULL;
 
-    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->enable_unsolicited_events_finish (self, res, &error);
+    MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->enable_unsolicited_events_finish (self, res, &error);
     if (error) {
         /* This error shouldn't be treated as critical */
         mm_obj_dbg (self, "couldn't enable unsolicited profile management events: %s", error->message);
@@ -1507,9 +1673,9 @@ interface_enabling_step (GTask *task)
         /* fall through */
 
     case ENABLING_STEP_SETUP_UNSOLICITED_EVENTS:
-        if (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->setup_unsolicited_events &&
-            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->setup_unsolicited_events_finish) {
-            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->setup_unsolicited_events (
+        if (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->setup_unsolicited_events &&
+            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->setup_unsolicited_events_finish) {
+            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->setup_unsolicited_events (
                 self,
                 (GAsyncReadyCallback)setup_unsolicited_events_ready,
                 task);
@@ -1519,9 +1685,9 @@ interface_enabling_step (GTask *task)
         /* fall through */
 
     case ENABLING_STEP_ENABLE_UNSOLICITED_EVENTS:
-        if (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->enable_unsolicited_events &&
-            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->enable_unsolicited_events_finish) {
-            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->enable_unsolicited_events (
+        if (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->enable_unsolicited_events &&
+            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->enable_unsolicited_events_finish) {
+            MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->enable_unsolicited_events (
                 self,
                 (GAsyncReadyCallback)enable_unsolicited_events_ready,
                 task);
@@ -1613,7 +1779,7 @@ check_support_ready (MMIfaceModem3gppProfileManager *self,
 
     ctx = g_task_get_task_data (task);
 
-    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->check_support_finish (self, res, &index_field, &error)) {
+    if (!MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->check_support_finish (self, res, &index_field, &error)) {
         if (error) {
             /* This error shouldn't be treated as critical */
             mm_obj_dbg (self, "profile management support check failed: %s", error->message);
@@ -1678,9 +1844,9 @@ interface_initialization_step (GTask *task)
             g_object_set_qdata (G_OBJECT (self), support_checked_quark, GUINT_TO_POINTER (TRUE));
             /* Initially, assume we don't support it */
             g_object_set_qdata (G_OBJECT (self), supported_quark, GUINT_TO_POINTER (FALSE));
-            if (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->check_support &&
-                MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->check_support_finish) {
-                MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_INTERFACE (self)->check_support (
+            if (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->check_support &&
+                MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->check_support_finish) {
+                MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_GET_IFACE (self)->check_support (
                     self,
                     (GAsyncReadyCallback)check_support_ready,
                     task);
@@ -1781,43 +1947,21 @@ mm_iface_modem_3gpp_profile_manager_shutdown (MMIfaceModem3gppProfileManager *se
 /*****************************************************************************/
 
 static void
-iface_modem_3gpp_profile_manager_init (gpointer g_iface)
+mm_iface_modem_3gpp_profile_manager_default_init (MMIfaceModem3gppProfileManagerInterface *iface)
 {
-    static gboolean initialized = FALSE;
+    static gsize initialized = 0;
 
-    if (initialized)
+    if (!g_once_init_enter (&initialized))
         return;
 
     /* Properties */
-    g_object_interface_install_property
-        (g_iface,
-         g_param_spec_object (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_DBUS_SKELETON,
-                              "3GPP Profile Manager DBus skeleton",
-                              "DBus skeleton for the 3GPP Profile Manager interface",
-                              MM_GDBUS_TYPE_MODEM3GPP_PROFILE_MANAGER_SKELETON,
-                              G_PARAM_READWRITE));
+    g_object_interface_install_property (
+        iface,
+        g_param_spec_object (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER_DBUS_SKELETON,
+                             "3GPP Profile Manager DBus skeleton",
+                             "DBus skeleton for the 3GPP Profile Manager interface",
+                             MM_GDBUS_TYPE_MODEM3GPP_PROFILE_MANAGER_SKELETON,
+                             G_PARAM_READWRITE));
 
-    initialized = TRUE;
-}
-
-GType
-mm_iface_modem_3gpp_profile_manager_get_type (void)
-{
-    static GType iface_modem_3gpp_profile_manager_type = 0;
-
-    if (!G_UNLIKELY (iface_modem_3gpp_profile_manager_type)) {
-        static const GTypeInfo info = {
-            sizeof (MMIfaceModem3gppProfileManager), /* class_size */
-            iface_modem_3gpp_profile_manager_init,   /* base_init */
-            NULL,                                    /* base_finalize */
-        };
-
-        iface_modem_3gpp_profile_manager_type = g_type_register_static (G_TYPE_INTERFACE,
-                                                                        "MMIfaceModem3gppProfileManager",
-                                                                        &info, 0);
-
-        g_type_interface_add_prerequisite (iface_modem_3gpp_profile_manager_type, MM_TYPE_IFACE_MODEM_3GPP);
-    }
-
-    return iface_modem_3gpp_profile_manager_type;
+    g_once_init_leave (&initialized, 1);
 }

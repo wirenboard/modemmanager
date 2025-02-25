@@ -47,13 +47,13 @@
 /* sets the interval in seconds on how often the card emits the NMEA sentences */
 #define MBM_GPS_NMEA_INTERVAL   "5"
 
-static void iface_modem_init (MMIfaceModem *iface);
-static void iface_modem_3gpp_init (MMIfaceModem3gpp *iface);
-static void iface_modem_location_init (MMIfaceModemLocation *iface);
+static void iface_modem_init          (MMIfaceModemInterface         *iface);
+static void iface_modem_3gpp_init     (MMIfaceModem3gppInterface     *iface);
+static void iface_modem_location_init (MMIfaceModemLocationInterface *iface);
 
-static MMIfaceModem *iface_modem_parent;
-static MMIfaceModem3gpp *iface_modem_3gpp_parent;
-static MMIfaceModemLocation *iface_modem_location_parent;
+static MMIfaceModemInterface         *iface_modem_parent;
+static MMIfaceModem3gppInterface     *iface_modem_3gpp_parent;
+static MMIfaceModemLocationInterface *iface_modem_location_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemMbm, mm_broadband_modem_mbm, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -415,11 +415,20 @@ static const MMBaseModemAtCommand enabling_modem_init_sequence[] = {
 static void
 run_enabling_init_sequence (GTask *task)
 {
-    MMBaseModem *self;
+    MMBaseModem    *self;
+    MMPortSerialAt *primary;
 
     self = g_task_get_source_object (task);
+    primary = mm_base_modem_peek_port_primary (self);
+    if (!primary) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "Failed to run init sequence: primary port missing");
+        g_object_unref (task);
+        return;
+    }
+
     mm_base_modem_at_sequence_full (self,
-                                    mm_base_modem_peek_port_primary (self),
+                                    MM_IFACE_PORT_AT (primary),
                                     enabling_modem_init_sequence,
                                     NULL,  /* response_processor_context */
                                     NULL,  /* response_processor_context_free */
@@ -952,7 +961,8 @@ parent_enable_unsolicited_events_ready (MMIfaceModem3gpp *self,
                                         GAsyncResult *res,
                                         GTask *task)
 {
-    GError *error = NULL;
+    MMPortSerialAt *primary;
+    GError         *error = NULL;
 
     if (!iface_modem_3gpp_parent->enable_unsolicited_events_finish (self, res, &error)) {
         g_task_return_error (task, error);
@@ -960,10 +970,18 @@ parent_enable_unsolicited_events_ready (MMIfaceModem3gpp *self,
         return;
     }
 
+    primary = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    if (!primary) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "Couldn't enable unsolicited events: no primary port");
+        g_object_unref (task);
+        return;
+    }
+
     /* Our own enable now */
     mm_base_modem_at_sequence_full (
         MM_BASE_MODEM (self),
-        mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
+        MM_IFACE_PORT_AT (primary),
         unsolicited_enable_sequence,
         NULL,  /* response_processor_context */
         NULL,  /* response_processor_context_free */
@@ -1042,16 +1060,29 @@ modem_3gpp_disable_unsolicited_events (MMIfaceModem3gpp *self,
                                        GAsyncReadyCallback callback,
                                        gpointer user_data)
 {
+    MMPortSerialAt *primary;
+    GTask          *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    primary = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    if (!primary) {
+        g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                 "Couldn't disable unsolicited events: no primary port");
+        g_object_unref (task);
+        return;
+    }
+
     /* Our own disable first */
     mm_base_modem_at_sequence_full (
         MM_BASE_MODEM (self),
-        mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
+        MM_IFACE_PORT_AT (primary),
         unsolicited_disable_sequence,
         NULL, /* response_processor_context */
         NULL, /* response_processor_context_free */
         NULL, /* cancellable */
         (GAsyncReadyCallback)own_disable_unsolicited_events_ready,
-        g_task_new (self, NULL, callback, user_data));
+        task);
 }
 
 /*****************************************************************************/
@@ -1140,7 +1171,7 @@ gps_disabled_ready (MMBaseModem *self,
 
     ctx = g_task_get_task_data (task);
 
-    mm_base_modem_at_command_full_finish (self, res, &error);
+    mm_base_modem_at_command_finish (self, res, &error);
 
     /* Only use the GPS port in NMEA/RAW setups */
     if (ctx->source & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
@@ -1189,15 +1220,12 @@ disable_location_gathering (MMIfaceModemLocation *_self,
     }
 
     if (stop_gps) {
-        mm_base_modem_at_command_full (MM_BASE_MODEM (_self),
-                                       mm_base_modem_peek_port_primary (MM_BASE_MODEM (_self)),
-                                       "AT*E2GPSCTL=0",
-                                       3,
-                                       FALSE,
-                                       FALSE, /* raw */
-                                       NULL, /* cancellable */
-                                       (GAsyncReadyCallback)gps_disabled_ready,
-                                       task);
+        mm_base_modem_at_command (MM_BASE_MODEM (_self),
+                                  "AT*E2GPSCTL=0",
+                                  3,
+                                  FALSE,
+                                  (GAsyncReadyCallback)gps_disabled_ready,
+                                  task);
         return;
     }
 
@@ -1226,7 +1254,7 @@ gps_enabled_ready (MMBaseModem *self,
     GError *error = NULL;
     MMPortSerialGps *gps_port;
 
-    if (!mm_base_modem_at_command_full_finish (self, res, &error)) {
+    if (!mm_base_modem_at_command_finish (self, res, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -1308,15 +1336,12 @@ parent_enable_location_gathering_ready (MMIfaceModemLocation *_self,
     }
 
     if (start_gps) {
-        mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                       mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
-                                       "AT*E2GPSCTL=1," MBM_GPS_NMEA_INTERVAL ",0",
-                                       3,
-                                       FALSE,
-                                       FALSE, /* raw */
-                                       NULL, /* cancellable */
-                                       (GAsyncReadyCallback)gps_enabled_ready,
-                                       task);
+        mm_base_modem_at_command (MM_BASE_MODEM (self),
+                                  "AT*E2GPSCTL=1," MBM_GPS_NMEA_INTERVAL ",0",
+                                  3,
+                                  FALSE,
+                                  (GAsyncReadyCallback)gps_enabled_ready,
+                                  task);
         return;
     }
 
@@ -1429,15 +1454,17 @@ setup_ports (MMBroadbandModem *_self)
     /* NMEA GPS monitoring */
     gps_data_port = mm_base_modem_peek_port_gps (MM_BASE_MODEM (self));
     if (gps_data_port) {
-        /* make sure GPS is stopped incase it was left enabled */
-        mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                       mm_base_modem_peek_port_primary (MM_BASE_MODEM (self)),
-                                       "AT*E2GPSCTL=0",
-                                       3, FALSE, FALSE, NULL, NULL, NULL);
-        /* Add handler for the NMEA traces */
-        mm_port_serial_gps_add_trace_handler (gps_data_port,
-                                              (MMPortSerialGpsTraceFn)gps_trace_received,
-                                              self, NULL);
+        /* make sure GPS is stopped if it should be in case it was left enabled */
+        if (!(self->priv->enabled_sources & (MM_MODEM_LOCATION_SOURCE_GPS_NMEA |
+                                             MM_MODEM_LOCATION_SOURCE_GPS_RAW |
+                                             MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED))) {
+            /* make sure GPS is stopped incase it was left enabled */
+            mm_base_modem_at_command (MM_BASE_MODEM (self), "AT*E2GPSCTL=0", 3, FALSE, NULL, NULL);
+            /* Add handler for the NMEA traces */
+            mm_port_serial_gps_add_trace_handler (gps_data_port,
+                                                  (MMPortSerialGpsTraceFn)gps_trace_received,
+                                                  self, NULL);
+        }
     }
 }
 
@@ -1511,7 +1538,7 @@ finalize (GObject *object)
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     iface_modem_parent = g_type_interface_peek_parent (iface);
 
@@ -1542,7 +1569,7 @@ iface_modem_init (MMIfaceModem *iface)
 }
 
 static void
-iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
+iface_modem_3gpp_init (MMIfaceModem3gppInterface *iface)
 {
     iface_modem_3gpp_parent = g_type_interface_peek_parent (iface);
 
@@ -1558,7 +1585,7 @@ iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
 }
 
 static void
-iface_modem_location_init (MMIfaceModemLocation *iface)
+iface_modem_location_init (MMIfaceModemLocationInterface *iface)
 {
     iface_modem_location_parent = g_type_interface_peek_parent (iface);
 

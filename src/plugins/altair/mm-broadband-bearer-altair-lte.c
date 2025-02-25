@@ -117,7 +117,7 @@ connect_3gpp_apnsettings_ready (MMBaseModem *modem,
     ctx = g_task_get_task_data (task);
 
     mm_base_modem_at_command_full (ctx->modem,
-                                   ctx->primary,
+                                   MM_IFACE_PORT_AT (ctx->primary),
                                    "%DPDNACT=1",
                                    MM_BASE_BEARER_DEFAULT_CONNECTION_TIMEOUT, /* timeout */
                                    FALSE, /* allow_cached */
@@ -196,11 +196,11 @@ connect_3gpp (MMBroadbandBearer *self,
     g_task_set_task_data (task, ctx, (GDestroyNotify)detailed_connect_context_free);
 
     config = mm_base_bearer_peek_config (MM_BASE_BEARER (self));
-    apn = mm_port_serial_at_quote_string (mm_bearer_properties_get_apn (config));
+    apn = mm_at_quote_string (mm_bearer_properties_get_apn (config));
     command = g_strdup_printf ("%%APNN=%s", apn);
     g_free (apn);
     mm_base_modem_at_command_full (ctx->modem,
-                                   ctx->primary,
+                                   MM_IFACE_PORT_AT (ctx->primary),
                                    command,
                                    10, /* timeout */
                                    FALSE, /* allow_cached */
@@ -294,7 +294,7 @@ disconnect_3gpp (MMBroadbandBearer *self,
     g_task_set_task_data (task, ctx, (GDestroyNotify)detailed_disconnect_context_free);
 
     mm_base_modem_at_command_full (ctx->modem,
-                                   ctx->primary,
+                                   MM_IFACE_PORT_AT (ctx->primary),
                                    "%DPDNACT=0",
                                    MM_BASE_BEARER_DEFAULT_DISCONNECTION_TIMEOUT, /* timeout */
                                    FALSE, /* allow_cached */

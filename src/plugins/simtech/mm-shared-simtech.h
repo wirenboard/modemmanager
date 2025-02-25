@@ -27,24 +27,18 @@
 #include "mm-iface-modem-location.h"
 #include "mm-iface-modem-voice.h"
 
-#define MM_TYPE_SHARED_SIMTECH               (mm_shared_simtech_get_type ())
-#define MM_SHARED_SIMTECH(obj)               (G_TYPE_CHECK_INSTANCE_CAST ((obj), MM_TYPE_SHARED_SIMTECH, MMSharedSimtech))
-#define MM_IS_SHARED_SIMTECH(obj)            (G_TYPE_CHECK_INSTANCE_TYPE ((obj), MM_TYPE_SHARED_SIMTECH))
-#define MM_SHARED_SIMTECH_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), MM_TYPE_SHARED_SIMTECH, MMSharedSimtech))
+#define MM_TYPE_SHARED_SIMTECH mm_shared_simtech_get_type ()
+G_DECLARE_INTERFACE (MMSharedSimtech, mm_shared_simtech, MM, SHARED_SIMTECH, MMIfaceModem)
 
-typedef struct _MMSharedSimtech MMSharedSimtech;
-
-struct _MMSharedSimtech {
+struct _MMSharedSimtechInterface {
     GTypeInterface g_iface;
 
     /* Peek location interface of the parent class of the object */
-    MMIfaceModemLocation *  (* peek_parent_location_interface) (MMSharedSimtech *self);
+    MMIfaceModemLocationInterface *  (* peek_parent_location_interface) (MMSharedSimtech *self);
 
     /* Peek voice interface of the parent class of the object */
-    MMIfaceModemVoice *  (* peek_parent_voice_interface) (MMSharedSimtech *self);
+    MMIfaceModemVoiceInterface *  (* peek_parent_voice_interface) (MMSharedSimtech *self);
 };
-
-GType mm_shared_simtech_get_type (void);
 
 /*****************************************************************************/
 /* Location interface */

@@ -41,10 +41,12 @@
 #include "mm-serial-parsers.h"
 #include "mm-bearer-list.h"
 
-static void iface_modem_init (MMIfaceModem *iface);
-static void iface_modem_3gpp_init (MMIfaceModem3gpp *iface);
-static void iface_modem_3gpp_ussd_init (MMIfaceModem3gppUssd *iface);
-static void iface_modem_messaging_init (MMIfaceModemMessaging *iface);
+static void iface_modem_init           (MMIfaceModemInterface          *iface);
+static void iface_modem_3gpp_init      (MMIfaceModem3gppInterface      *iface);
+static void iface_modem_3gpp_ussd_init (MMIfaceModem3gppUssdInterface  *iface);
+static void iface_modem_messaging_init (MMIfaceModemMessagingInterface *iface);
+
+static MMIfaceModem3gppInterface *iface_modem_3gpp_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemAltairLte, mm_broadband_modem_altair_lte, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -70,9 +72,6 @@ struct _MMBroadbandModemAltairLtePrivate {
 
     GList *pco_list;
 };
-
-static MMIfaceModem3gpp *iface_modem_3gpp_parent;
-
 
 /*****************************************************************************/
 /* Modem power down (Modem interface) */
@@ -626,7 +625,7 @@ altair_load_own_numbers_ready (MMIfaceModem *iface_modem,
     GError *error = NULL;
     GStrv str_list;
 
-    str_list = MM_IFACE_MODEM_GET_INTERFACE (self)->load_own_numbers_finish (MM_IFACE_MODEM (self), res, &error);
+    str_list = MM_IFACE_MODEM_GET_IFACE (self)->load_own_numbers_finish (MM_IFACE_MODEM (self), res, &error);
     if (error) {
         mm_obj_warn (self, "Couldn't reload Own Numbers: '%s'", error->message);
         g_error_free (error);
@@ -656,9 +655,9 @@ altair_sim_refresh_timer_expired (MMBroadbandModemAltairLte *self)
 {
     mm_obj_dbg (self, "no more SIM refreshes, reloading own numbers and reregistering modem");
 
-    g_assert (MM_IFACE_MODEM_GET_INTERFACE (self)->load_own_numbers);
-    g_assert (MM_IFACE_MODEM_GET_INTERFACE (self)->load_own_numbers_finish);
-    MM_IFACE_MODEM_GET_INTERFACE (self)->load_own_numbers (
+    g_assert (MM_IFACE_MODEM_GET_IFACE (self)->load_own_numbers);
+    g_assert (MM_IFACE_MODEM_GET_IFACE (self)->load_own_numbers_finish);
+    MM_IFACE_MODEM_GET_IFACE (self)->load_own_numbers (
         MM_IFACE_MODEM (self),
         (GAsyncReadyCallback)altair_load_own_numbers_ready,
         self);
@@ -1220,7 +1219,7 @@ finalize (GObject *object)
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     iface->modem_power_down = modem_power_down;
     iface->modem_power_down_finish = modem_power_down_finish;
@@ -1250,7 +1249,7 @@ iface_modem_init (MMIfaceModem *iface)
 }
 
 static void
-iface_modem_3gpp_ussd_init (MMIfaceModem3gppUssd *iface)
+iface_modem_3gpp_ussd_init (MMIfaceModem3gppUssdInterface *iface)
 {
     /* we don't have USSD support */
     iface->check_support = NULL;
@@ -1258,7 +1257,7 @@ iface_modem_3gpp_ussd_init (MMIfaceModem3gppUssd *iface)
 }
 
 static void
-iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
+iface_modem_3gpp_init (MMIfaceModem3gppInterface *iface)
 {
     iface_modem_3gpp_parent = g_type_interface_peek_parent (iface);
 
@@ -1288,7 +1287,7 @@ iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
 }
 
 static void
-iface_modem_messaging_init (MMIfaceModemMessaging *iface)
+iface_modem_messaging_init (MMIfaceModemMessagingInterface *iface)
 {
     /* Currently no messaging is implemented - so skip checking*/
     iface->check_support = NULL;

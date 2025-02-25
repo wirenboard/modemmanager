@@ -585,21 +585,37 @@ mm_cinterion_get_available_from_simlocal (const gchar  *response,
                                           GError      **error)
 {
     g_autoptr(GArray)  tmp_available = NULL;
+    g_auto(GStrv)      sim_groups = NULL;
     GError            *inner_error = NULL;
+    guint              sim_length;
+    guint              i;
 
     if (!response) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "Missing response");
         return FALSE;
     }
 
-    tmp_available = mm_parse_uint_list (response, &inner_error);
-    if (inner_error) {
-        g_propagate_error (error, inner_error);
-        return FALSE;
+    sim_groups = mm_split_string_groups (response);
+    sim_length = g_strv_length (sim_groups);
+    tmp_available = g_array_sized_new (FALSE, FALSE, sizeof (gboolean), sim_length);
+
+    for (i = 0; i < sim_length; i++) {
+        guint    index_value;
+        gboolean is_available;
+
+        if (!mm_get_uint_from_str (sim_groups[i], &index_value)) {
+            inner_error = g_error_new (MM_CORE_ERROR,
+                                       MM_CORE_ERROR_FAILED,
+                                       "Could not parse SIM index value '%s'",
+                                       sim_groups[i]);
+            g_propagate_error (error, inner_error);
+            return FALSE;
+        }
+        is_available = (gboolean) index_value;
+        g_array_append_val (tmp_available, is_available);
     }
 
     *available = g_steal_pointer (&tmp_available);
-
     return TRUE;
 }
 
@@ -1817,6 +1833,19 @@ mm_cinterion_build_auth_string (gpointer                log_object,
     has_passwd   = (passwd && passwd[0]);
     encoded_auth = parse_auth_type (auth);
 
+    /* No explicit auth type requested? */
+    if (encoded_auth == BEARER_CINTERION_AUTH_UNKNOWN) {
+        if (!has_user && !has_passwd) {
+            /* If no user/passwd given, default to 'none' */
+            mm_obj_dbg (log_object, "APN user/password and authentication type not given: defaulting to 'none'");
+            encoded_auth = BEARER_CINTERION_AUTH_NONE;
+        } else {
+            /* If user/passwd given, default to CHAP (more common than PAP) */
+            mm_obj_dbg (log_object, "APN user/password given but no authentication type explicitly requested: defaulting to 'CHAP'");
+            encoded_auth = BEARER_CINTERION_AUTH_CHAP;
+        }
+    }
+
     /* When 'none' requested, we won't require user/password */
     if (encoded_auth == BEARER_CINTERION_AUTH_NONE) {
         if (has_user || has_passwd)
@@ -1826,19 +1855,8 @@ mm_cinterion_build_auth_string (gpointer                log_object,
         return g_strdup_printf ("^SGAUTH=%u,%d", cid, encoded_auth);
     }
 
-    /* No explicit auth type requested? */
-    if (encoded_auth == BEARER_CINTERION_AUTH_UNKNOWN) {
-        /* If no user/passwd given, do nothing */
-        if (!has_user && !has_passwd)
-            return NULL;
-
-        /* If user/passwd given, default to CHAP (more common than PAP) */
-        mm_obj_dbg (log_object, "APN user/password given but no authentication type explicitly requested: defaulting to 'CHAP'");
-        encoded_auth = BEARER_CINTERION_AUTH_CHAP;
-    }
-
-    quoted_user   = mm_port_serial_at_quote_string (user   ? user   : "");
-    quoted_passwd = mm_port_serial_at_quote_string (passwd ? passwd : "");
+    quoted_user   = mm_at_quote_string (user   ? user   : "");
+    quoted_passwd = mm_at_quote_string (passwd ? passwd : "");
 
     if (modem_family == MM_CINTERION_MODEM_FAMILY_IMT)
         return g_strdup_printf ("^SGAUTH=%u,%d,%s,%s",

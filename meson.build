@@ -3,7 +3,7 @@
 
 project(
   'ModemManager', 'c',
-  version: '1.22.0',
+  version: '1.23.12',
   license: 'GPL2',
   default_options: [
     'buildtype=debugoptimized',
@@ -12,6 +12,11 @@ project(
   ],
   meson_version: '>= 0.53.0',
 )
+
+meson_version = meson.version()
+if meson_version.version_compare('>=1.0.0')
+  fs = import('fs')
+endif
 
 mm_name = meson.project_name()
 mm_version = meson.project_version()
@@ -253,14 +258,14 @@ config_h.set('WITH_BUILTIN_PLUGINS', enable_builtin_plugins)
 # MBIM support (enabled by default)
 enable_mbim = get_option('mbim')
 if enable_mbim
-  mbim_glib_dep = dependency('mbim-glib', version: '>= 1.30.0')
+  mbim_glib_dep = dependency('mbim-glib', version: '>= 1.31.5')
 endif
 config_h.set('WITH_MBIM', enable_mbim)
 
 # QMI support (enabled by default)
 enable_qmi = get_option('qmi')
 if enable_qmi
-  qmi_glib_dep = dependency('qmi-glib', version: '>= 1.34.0')
+  qmi_glib_dep = dependency('qmi-glib', version: '>= 1.35.6')
 endif
 config_h.set('WITH_QMI', enable_qmi)
 
@@ -298,22 +303,24 @@ enable_gtk_doc = get_option('gtk_doc')
 enable_plugins = not get_option('auto_features').disabled()
 
 plugins_shared_reqs = {
-  'fibocom': enable_mbim,
+  'fibocom': true,
   'foxconn': enable_mbim,
   'icera': true,
+  'mtk': true,
   'novatel': true,
   'option': true,
   'sierra': true,
   'telit': true,
   'xmm': true,
+  'quectel': true,
 }
 
-
-fibocom_shared_reqs = ['xmm']
 dell_shared_reqs = ['novatel', 'sierra', 'telit', 'xmm']
+mtk_shared_reqs = ['mtk']
 if enable_mbim
-  fibocom_shared_reqs += ['fibocom']
   dell_shared_reqs += ['foxconn']
+  # only the MBIM implementation in MTK needs the shared fibocom utils
+  mtk_shared_reqs += ['fibocom']
 endif
 
 plugins_options_reqs = {
@@ -323,7 +330,7 @@ plugins_options_reqs = {
   'cinterion': {'available': true, 'shared': []},
   'dell': {'available': true, 'shared': dell_shared_reqs},
   'dlink': {'available': true, 'shared': []},
-  'fibocom': {'available': true, 'shared': fibocom_shared_reqs},
+  'fibocom': {'available': true, 'shared': ['xmm', 'fibocom']},
   'foxconn': {'available': enable_mbim, 'shared': ['foxconn']},
   'generic': {'available': true, 'shared': []},
   'gosuncn': {'available': true, 'shared': []},
@@ -335,7 +342,9 @@ plugins_options_reqs = {
   'longcheer': {'available': true, 'shared': []},
   'mbm': {'available': true, 'shared': []},
   'motorola': {'available': true, 'shared': []},
-  'mtk': {'available': true, 'shared': []},
+  'mtk-legacy': {'available': true, 'shared': mtk_shared_reqs},
+  'mtk': {'available': true, 'shared': mtk_shared_reqs},
+  'netprisma': {'available': true, 'shared': ['quectel']},
   'nokia': {'available': true, 'shared': []},
   'nokia-icera': {'available': true, 'shared': ['icera']},
   'novatel': {'available': true, 'shared': ['novatel']},
@@ -344,7 +353,8 @@ plugins_options_reqs = {
   'option-hso': {'available': true, 'shared': ['option']},
   'pantech': {'available': true, 'shared': []},
   'qcom-soc': {'available': enable_qmi, 'shared': []},
-  'quectel': {'available': true, 'shared': []},
+  'quectel': {'available': true, 'shared': ['quectel']},
+  'rolling': {'available': true, 'shared': ['fibocom']},
   'samsung': {'available': true, 'shared': ['icera']},
   'sierra-legacy': {'available': true, 'shared': ['icera', 'sierra']},
   'sierra': {'available': true, 'shared': ['xmm']},
@@ -396,6 +406,7 @@ subdir('data')
 if get_option('examples')
   subdir('data/dispatcher-connection')
   subdir('data/dispatcher-fcc-unlock')
+  subdir('data/dispatcher-modem-setup')
 endif
 subdir('introspection')
 subdir('include')
