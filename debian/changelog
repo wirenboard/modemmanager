@@ -1,6 +1,4 @@
-modemmanager (1.23.12-1~1.gbpeb0f9b) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @eb0f9be641964c56cbd1a9a405cf1793f341b897 **
+modemmanager (1.23.12-1) experimental; urgency=medium
 
   [ Arnaud Ferraris ]
   * New upstream version 1.22.0
@@ -15,8 +13,11 @@ modemmanager (1.23.12-1~1.gbpeb0f9b) UNRELEASED; urgency=medium
   [ Guido Günther ]
   * gbp.conf: Use branches that don't conflict with released versions
   * New upstream version 1.23.12
+  * docs: README got renamed to README.md
+  * Update symbols
+  * d/control: Bump libqmi build-dep
 
- -- Guido Günther <agx@sigxcpu.org>  Tue, 25 Feb 2025 15:17:49 +0100
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 25 Feb 2025 15:19:33 +0100
 
 modemmanager (1.22.0-3) unstable; urgency=medium
 
