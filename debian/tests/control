@@ -12,3 +12,7 @@ Test-Command: pkgconf --libs --cflags mm-glib
 Restrictions: superficial
 Depends: pkgconf,
  libmm-glib-dev,
+
+Tests: smoke
+Depends: @
+Restrictions: needs-root, superficial
