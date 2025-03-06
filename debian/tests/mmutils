@@ -1,0 +1,28 @@
+#!/bin/bash
+set -e
+
+meson setup debian/build
+cd debian/build
+meson compile mmsmspdu mmrules mmsmsmonitor #lsudev mmtty
+
+# run some ModemManager utils, linking the system version of libmm-glib.so
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libmm-glib.so
+
+# SMSPDU
+PDU="0391242411000A8110325476980000FF13C8329BFD0635DFE472BB197687CF657908"
+test/mmsmspdu -v -p $PDU | tee output.txt
+grep "text: Hello ModemManager!" output.txt
+grep "number: 0123456789" output.txt
+grep "encoding: GSM7" output.txt
+grep "smsc: +4242" output.txt
+
+# confirm MM_CANDIDATE udev rules are properly installed
+test/mmrules -v -p /usr/lib/udev/rules.d/
+
+# connect to ModemManager.service, listening for incoming SMS
+# NB: We will not receive anything, but can make sure the service is running
+#     properly and we can connect through the expected interfaces.
+source ../tests/launch-mm.sh
+
+# listen to smsmonitor for 2 sec
+timeout --preserve-status 2 test/mmsmsmonitor 2>&1

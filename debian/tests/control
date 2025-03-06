@@ -20,3 +20,7 @@ Restrictions: needs-root, superficial
 Tests: unittests
 Depends: @, @builddeps@, git
 Restrictions: needs-root
+
+Tests: mmutils
+Depends: @, @builddeps@
+Restrictions: needs-root
