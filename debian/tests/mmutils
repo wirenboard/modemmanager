@@ -6,7 +6,7 @@ cd debian/build
 meson compile mmsmspdu mmrules mmsmsmonitor #lsudev mmtty
 
 # run some ModemManager utils, linking the system version of libmm-glib.so
-export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libmm-glib.so
+export LD_PRELOAD="/usr/lib/$(dpkg-architecture -q DEB_HOST_MULTIARCH)/libmm-glib.so"
 
 # SMSPDU
 PDU="0391242411000A8110325476980000FF13C8329BFD0635DFE472BB197687CF657908"

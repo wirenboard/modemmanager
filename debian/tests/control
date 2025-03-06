@@ -22,5 +22,5 @@ Depends: @, @builddeps@, git
 Restrictions: needs-root
 
 Tests: mmutils
-Depends: @, @builddeps@
+Depends: @, @builddeps@, dpkg-dev
 Restrictions: needs-root
