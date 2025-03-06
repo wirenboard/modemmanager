@@ -16,3 +16,7 @@ Depends: pkgconf,
 Tests: smoke
 Depends: @
 Restrictions: needs-root, superficial
+
+Tests: unittests
+Depends: @, @builddeps@, git
+Restrictions: needs-root
