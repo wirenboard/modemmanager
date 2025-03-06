@@ -17,7 +17,13 @@ grep "encoding: GSM7" output.txt
 grep "smsc: +4242" output.txt
 
 # confirm MM_CANDIDATE udev rules are properly installed
-test/mmrules -v -p /usr/lib/udev/rules.d/
+# NB: We need a properly working udev to execute this test, which is not
+#     not available in LXC containers (such as DebCI).
+if [[ $(systemctl is-active systemd-udevd.service) == "active" ]]; then
+  test/mmrules -v -p /usr/lib/udev/rules.d/
+else
+  echo "SKIP: 'mmrules' due to inactive udev ..."
+fi
 
 # connect to ModemManager.service, listening for incoming SMS
 # NB: We will not receive anything, but can make sure the service is running
