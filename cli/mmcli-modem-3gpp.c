@@ -550,6 +550,10 @@ get_modem_ready (GObject      *source,
     /* Request to scan networks? */
     if (scan_flag) {
         g_debug ("Asynchronously scanning for networks...");
+
+        /* Setup operation timeout: 5 minutes 17 seconds (to match MM internal
+         * timeout with a bit of slack) */
+        g_dbus_proxy_set_default_timeout (G_DBUS_PROXY (ctx->modem_3gpp), ((5 * 60) + 17) * 1000);
         mm_modem_3gpp_scan (ctx->modem_3gpp,
                             ctx->cancellable,
                             (GAsyncReadyCallback)scan_ready,
@@ -560,6 +564,10 @@ get_modem_ready (GObject      *source,
     /* Request to register the modem? */
     if (register_in_operator_str || register_home_flag) {
         g_debug ("Asynchronously registering the modem...");
+
+        /* Setup operation timeout: 2 minutes 2 seconds (to match MM internal
+         * timeout with a bit of slack) */
+        g_dbus_proxy_set_default_timeout (G_DBUS_PROXY (ctx->modem_3gpp), ((2 * 60) + 2) * 1000);
         mm_modem_3gpp_register (ctx->modem_3gpp,
                                 (register_in_operator_str ? register_in_operator_str : ""),
                                 ctx->cancellable,

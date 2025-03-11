@@ -427,6 +427,7 @@ typedef enum { /*< underscore_name=mm_modem_mode >*/
  * @MM_MODEM_BAND_NGRAN_53: NGRAN band 53. Since 1.20.
  * @MM_MODEM_BAND_NGRAN_65: NGRAN band 65. Since 1.20.
  * @MM_MODEM_BAND_NGRAN_66: NGRAN band 66. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_67: NGRAN band 67. Since 1.24.
  * @MM_MODEM_BAND_NGRAN_70: NGRAN band 70. Since 1.20.
  * @MM_MODEM_BAND_NGRAN_71: NGRAN band 71. Since 1.20.
  * @MM_MODEM_BAND_NGRAN_74: NGRAN band 74. Since 1.20.
@@ -619,6 +620,7 @@ typedef enum { /*< underscore_name=mm_modem_band >*/
     MM_MODEM_BAND_NGRAN_53 = 353,
     MM_MODEM_BAND_NGRAN_65 = 365,
     MM_MODEM_BAND_NGRAN_66 = 366,
+    MM_MODEM_BAND_NGRAN_67 = 367,
     MM_MODEM_BAND_NGRAN_70 = 370,
     MM_MODEM_BAND_NGRAN_71 = 371,
     MM_MODEM_BAND_NGRAN_74 = 374,
@@ -1106,6 +1108,22 @@ typedef enum { /*< underscore_name=mm_sms_cdma_service_category >*/
     MM_SMS_CDMA_SERVICE_CATEGORY_CMAS_CHILD_ABDUCTION_EMERGENCY   = 0x1003,
     MM_SMS_CDMA_SERVICE_CATEGORY_CMAS_TEST                        = 0x1004,
 } MMSmsCdmaServiceCategory;
+
+/**
+ * MMCbmState:
+ * @MM_CBM_STATE_UNKNOWN: State unknown or not reportable.
+ * @MM_CBM_STATE_RECEIVING: The message is being received but is not yet complete.
+ * @MM_CBM_STATE_RECEIVED: The message has been completely received.
+ *
+ * State of a given CBM.
+ *
+ * Since: 1.24
+ */
+typedef enum { /*< underscore_name=mm_cbm_state >*/
+    MM_CBM_STATE_UNKNOWN   = 0,
+    MM_CBM_STATE_RECEIVING = 1,
+    MM_CBM_STATE_RECEIVED  = 2,
+} MMCbmState;
 
 /**
  * MMModemLocationSource:

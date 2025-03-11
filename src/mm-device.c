@@ -72,6 +72,8 @@ struct _MMDevicePrivate {
     guint16 product;
     /* Subsystem vendor ID for PCI devices */
     guint16 subsystem_vendor;
+    /* Subsystem device ID for PCI devices */
+    guint16 subsystem_device;
 
     /* Kernel drivers managing this device */
     gchar **drivers;
@@ -269,6 +271,9 @@ mm_device_grab_port (MMDevice       *self,
     if (!self->priv->subsystem_vendor)
         self->priv->subsystem_vendor  = mm_kernel_device_get_physdev_subsystem_vid (kernel_port);
 
+    if (!self->priv->subsystem_device)
+        self->priv->subsystem_device  = mm_kernel_device_get_physdev_subsystem_pid (kernel_port);
+
     /* Add new port driver */
     add_port_driver (self, kernel_port);
 
@@ -386,21 +391,11 @@ export_modem (MMDevice *self)
                   "g-object-path", path,
                   MM_BASE_MODEM_CONNECTION, connection,
                   NULL);
-    g_object_unref (connection);
 
     g_dbus_object_manager_server_export (self->priv->object_manager,
                                          G_DBUS_OBJECT_SKELETON (self->priv->modem));
 
     mm_obj_dbg (self, " exported modem at path '%s'", path);
-    mm_obj_dbg (self, "    plugin:  %s", mm_base_modem_get_plugin (self->priv->modem));
-    mm_obj_dbg (self, "    vid:pid: 0x%04X:0x%04X",
-                (mm_base_modem_get_vendor_id (self->priv->modem) & 0xFFFF),
-                (mm_base_modem_get_product_id (self->priv->modem) & 0xFFFF));
-    if (mm_base_modem_get_subsystem_vendor_id (self->priv->modem))
-        mm_obj_dbg (self, "    subsystem vid: 0x%04X",
-                    (mm_base_modem_get_subsystem_vendor_id (self->priv->modem) & 0xFFFF));
-    if (self->priv->virtual)
-        mm_obj_dbg (self, "    virtual");
 }
 
 /*****************************************************************************/
@@ -531,6 +526,8 @@ mm_device_create_modem (MMDevice  *self,
     }
 
     if (!self->priv->virtual) {
+        g_autofree gchar *device_id_info = NULL;
+
         if (!self->priv->port_probes) {
             g_set_error (error,
                          MM_CORE_ERROR,
@@ -539,9 +536,26 @@ mm_device_create_modem (MMDevice  *self,
             return FALSE;
         }
 
-        mm_obj_msg (self, "creating modem with plugin '%s' and '%u' ports",
+        /* PCI devices will have all subsystem vendor, vendor and product */
+        if (self->priv->subsystem_vendor) {
+            device_id_info = g_strdup_printf ("(%04x:%04x:%04x)",
+                                              self->priv->subsystem_vendor,
+                                              self->priv->vendor,
+                                              self->priv->product);
+        }
+        /* USB devices will have all vendor and product */
+        else if (self->priv->vendor || self->priv->product) {
+            device_id_info = g_strdup_printf ("(%04x:%04x)",
+                                              self->priv->vendor,
+                                              self->priv->product);
+        }
+        /* else, serial devices will not have any */
+
+        mm_obj_msg (self, "creating modem with plugin '%s' and '%u' ports %s",
                     mm_plugin_get_name (self->priv->plugin),
-                    g_list_length (self->priv->port_probes));
+                    g_list_length (self->priv->port_probes),
+                    device_id_info ? device_id_info : "");
+
     } else {
         if (!self->priv->virtual_ports) {
             g_set_error (error,
@@ -604,6 +618,13 @@ mm_device_get_subsystem_vendor (MMDevice *self)
 {
     return self->priv->subsystem_vendor;
 }
+
+guint16
+mm_device_get_subsystem_device (MMDevice *self)
+{
+    return self->priv->subsystem_device;
+}
+
 
 void
 mm_device_set_plugin (MMDevice *self,
@@ -687,6 +708,12 @@ gboolean
 mm_device_get_hotplugged (MMDevice *self)
 {
     return self->priv->hotplugged;
+}
+
+void
+mm_device_reset_hotplugged (MMDevice *self)
+{
+    self->priv->hotplugged = FALSE;
 }
 
 gboolean

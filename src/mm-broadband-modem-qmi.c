@@ -4173,6 +4173,7 @@ typedef struct {
     QmiClientNas *client;
     gboolean enable; /* TRUE for enabling, FALSE for disabling */
     gboolean system_info_checked;
+    gboolean serving_system_disabled;
 } UnsolicitedRegistrationEventsContext;
 
 static void
@@ -4225,13 +4226,14 @@ ri_serving_system_or_system_info_ready (QmiClientNas *client,
     UnsolicitedRegistrationEventsContext              *ctx;
     g_autoptr(QmiMessageNasRegisterIndicationsOutput)  output = NULL;
     g_autoptr(GError)                                  error = NULL;
+    g_autoptr(QmiMessageNasRegisterIndicationsInput)   input = NULL;
 
     self = g_task_get_source_object (task);
     ctx  = g_task_get_task_data     (task);
 
     output = qmi_client_nas_register_indications_finish (client, res, &error);
     if (!output || !qmi_message_nas_register_indications_output_get_result (output, &error)) {
-        if (!ctx->system_info_checked) {
+        if (!ctx->system_info_checked && !ctx->serving_system_disabled) {
             mm_obj_dbg (self, "couldn't register system info indication: '%s', falling-back to serving system", error->message);
             ctx->system_info_checked = TRUE;
             common_enable_disable_unsolicited_registration_events_serving_system (task);
@@ -4245,7 +4247,25 @@ ri_serving_system_or_system_info_ready (QmiClientNas *client,
     }
 
     if (!ctx->system_info_checked) {
+        /* When enabling system info, serving system events are turned-off, since some
+         * modems have them active by default.
+         */
+        if (ctx->enable && !ctx->serving_system_disabled) {
+            input = qmi_message_nas_register_indications_input_new ();
+            qmi_message_nas_register_indications_input_set_serving_system_events (input, FALSE, NULL);
+            qmi_client_nas_register_indications (
+                ctx->client,
+                input,
+                5,
+                NULL,
+                (GAsyncReadyCallback)ri_serving_system_or_system_info_ready,
+                task);
+            ctx->serving_system_disabled = TRUE;
+            return;
+        }
+
         ctx->system_info_checked = TRUE;
+
         /* registered system info indications. now try to register for system status indications */
         if (self->priv->dsd_supported) {
             common_enable_disable_unsolicited_registration_events_system_status (task);
@@ -4349,11 +4369,6 @@ common_enable_disable_unsolicited_registration_events_system_info (GTask *task)
     ctx = g_task_get_task_data (task);
     input = qmi_message_nas_register_indications_input_new ();
     qmi_message_nas_register_indications_input_set_system_info (input, ctx->enable, NULL);
-    /* When enabling, serving system events are turned-off, since some modems have them
-     * active by default. They will be turned-on again if setting system info events fails
-     */
-    if (ctx->enable)
-        qmi_message_nas_register_indications_input_set_serving_system_events (input, FALSE, NULL);
     qmi_message_nas_register_indications_input_set_network_reject_information (input, ctx->enable, FALSE, NULL);
     qmi_client_nas_register_indications (
         ctx->client,
@@ -5408,7 +5423,7 @@ network_reject_indication_cb (QmiClientNas                        *client,
     guint16                    mcc = 0;
     guint16                    mnc = 0;
     guint32                    closed_subscriber_group = 0;
-    gboolean                   has_pcs_digit;
+    gboolean                   has_pcs_digit = FALSE;
 
     mm_obj_warn (self, "network reject indication received");
     if (qmi_indication_nas_network_reject_output_get_service_domain (output, &service_domain, NULL))
@@ -5431,10 +5446,12 @@ network_reject_indication_cb (QmiClientNas                        *client,
 
         mm_nw_error = mm_modem_nw_error_from_qmi_nw_error (reject_cause);
         access_technology  = mm_modem_access_technology_from_qmi_radio_interface (radio_interface);
-        if (has_pcs_digit)
-            operator_id = g_strdup_printf ("%.3" G_GUINT16_FORMAT "%.3" G_GUINT16_FORMAT, mcc, mnc);
-        else
-            operator_id = g_strdup_printf ("%.3" G_GUINT16_FORMAT "%.2" G_GUINT16_FORMAT, mcc, mnc);
+        if (mcc) {
+            if (has_pcs_digit)
+                operator_id = g_strdup_printf ("%.3" G_GUINT16_FORMAT "%.3" G_GUINT16_FORMAT, mcc, mnc);
+            else
+                operator_id = g_strdup_printf ("%.3" G_GUINT16_FORMAT "%.2" G_GUINT16_FORMAT, mcc, mnc);
+        }
 
         mm_iface_modem_3gpp_update_network_rejection (MM_IFACE_MODEM_3GPP (self),
                                                       mm_nw_error, operator_id, NULL, access_technology);
@@ -7597,6 +7614,104 @@ messaging_load_supported_storages (MMIfaceModemMessaging *_self,
     task = g_task_new (self, NULL, callback, user_data);
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
+}
+
+/*****************************************************************************/
+/* Init current SMS storages (Messaging interface) */
+
+static gboolean
+messaging_init_current_storages_finish (MMIfaceModemMessaging *_self,
+                                        GAsyncResult          *res,
+                                        MMSmsStorage          *current_storage,
+                                        GError                **error)
+{
+    MMBroadbandModemQmi *self = MM_BROADBAND_MODEM_QMI (_self);
+    gssize result;
+
+    /* Handle AT URC only fallback */
+    if (self->priv->messaging_fallback_at_only) {
+        return iface_modem_messaging_parent->init_current_storages_finish (_self, res, current_storage, error);
+    }
+
+    result = g_task_propagate_int (G_TASK (res), error);
+    if (result < 0)
+        return FALSE;
+
+    if (current_storage)
+        *current_storage = (MMSmsStorage)result;
+    return TRUE;
+}
+
+static void
+wms_get_routes_ready (QmiClientWms *client,
+                      GAsyncResult *res,
+                      GTask *task)
+{
+    g_autoptr(QmiMessageWmsGetRoutesOutput) output = NULL;
+    GError *error = NULL;
+    GArray *route_list;
+    guint i;
+    MMSmsStorage storage = MM_SMS_STORAGE_UNKNOWN;
+    MMBroadbandModemQmi *self;
+
+    self = g_task_get_source_object (task);
+
+    output = qmi_client_wms_get_routes_finish (client, res, &error);
+    if (!output) {
+        g_prefix_error (&error, "QMI operation failed: ");
+        g_task_return_error (task, error);
+    } else if (!qmi_message_wms_get_routes_output_get_result (output, &error)) {
+        g_prefix_error (&error, "Couldn't get SMS routes: ");
+        g_task_return_error (task, error);
+    } else if (!qmi_message_wms_get_routes_output_get_route_list (output, &route_list, &error)) {
+        g_prefix_error (&error, "got invalid SMS routes: ");
+        g_task_return_error (task, error);
+    } else {
+        for (i = 0; i < route_list->len; i++) {
+            QmiMessageWmsGetRoutesOutputRouteListElement *route;
+
+            route = &g_array_index (route_list, QmiMessageWmsGetRoutesOutputRouteListElement, i);
+
+            if ((route->message_class == QMI_WMS_MESSAGE_CLASS_0 ||
+                 route->message_class == QMI_WMS_MESSAGE_CLASS_1) &&
+                 (route->receipt_action == QMI_WMS_RECEIPT_ACTION_STORE_AND_NOTIFY)) {
+                storage = mm_sms_storage_from_qmi_storage_type (route->storage);
+            }
+            mm_obj_dbg (self, "Default route defined for SMS Messaging is set to store at: %s",
+                        mm_sms_storage_get_string (storage));
+        }
+        g_task_return_int (task, storage);
+    }
+
+    g_object_unref (task);
+}
+
+static void
+messaging_init_current_storages (MMIfaceModemMessaging *_self,
+                                 GAsyncReadyCallback callback,
+                                 gpointer user_data)
+{
+    MMBroadbandModemQmi *self = MM_BROADBAND_MODEM_QMI (_self);
+    QmiClient *client = NULL;
+
+    /* Handle AT URC only fallback */
+    if (self->priv->messaging_fallback_at_only) {
+        iface_modem_messaging_parent->init_current_storages (_self, callback, user_data);
+        return;
+    }
+
+    if (!mm_shared_qmi_ensure_client (MM_SHARED_QMI (self),
+                                      QMI_SERVICE_WMS, &client,
+                                      callback, user_data))
+        return;
+
+    mm_obj_dbg (self, "getting default messaging routes...");
+    qmi_client_wms_get_routes (QMI_CLIENT_WMS (client),
+                               NULL,
+                               5,
+                               NULL,
+                               (GAsyncReadyCallback)wms_get_routes_ready,
+                               g_task_new (self, NULL, callback, user_data));
 }
 
 /*****************************************************************************/
@@ -11731,6 +11846,230 @@ modem_3gpp_load_initial_eps_bearer_settings (MMIfaceModem3gpp    *_self,
 }
 
 /*****************************************************************************/
+/* UE mode of operation for EPS loading (3GPP interface) */
+
+static MMModem3gppEpsUeModeOperation
+modem_3gpp_load_eps_ue_mode_operation_finish (MMIfaceModem3gpp  *self,
+                                              GAsyncResult      *res,
+                                              GError          **error)
+{
+    GError *inner_error = NULL;
+    gssize uemode;
+
+    uemode = g_task_propagate_int (G_TASK (res), &inner_error);
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_UNKNOWN;
+    }
+
+    return (MMModem3gppEpsUeModeOperation)uemode;
+}
+
+static MMModem3gppEpsUeModeOperation
+qmi_uemode_find (QmiNasServiceDomainPreference service_domain_preference,
+                 QmiNasUsagePreference usage_preference)
+{
+    switch (service_domain_preference) {
+    case QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_ONLY:
+        if (usage_preference == QMI_NAS_USAGE_PREFERENCE_VOICE_CENTRIC)
+            return MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_PS_1;
+        else
+            return MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_PS_2;
+    case QMI_NAS_SERVICE_DOMAIN_PREFERENCE_CS_PS:
+        if (usage_preference == QMI_NAS_USAGE_PREFERENCE_VOICE_CENTRIC)
+            return MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_CSPS_1;
+        else
+            return MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_CSPS_2;
+    case QMI_NAS_SERVICE_DOMAIN_PREFERENCE_CS_ONLY:
+    case QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_ATTACH:
+    case QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_DETACH:
+    default:
+        return MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_UNKNOWN;
+    }
+}
+
+static void
+get_uemode_ready (QmiClientNas *client,
+                  GAsyncResult *res,
+                  GTask *task)
+{
+    g_autoptr(QmiMessageNasGetSystemSelectionPreferenceOutput) output = NULL;
+    QmiNasServiceDomainPreference service_domain_preference = QMI_NAS_SERVICE_DOMAIN_PREFERENCE_CS_ONLY;
+    QmiNasUsagePreference usage_preference = QMI_NAS_USAGE_PREFERENCE_UNKNOWN;
+    MMBroadbandModemQmi *self;
+    GError *error = NULL;
+
+    self = g_task_get_source_object (task);
+
+    output = qmi_client_nas_get_system_selection_preference_finish (client, res, &error);
+    if (!output) {
+        mm_obj_warn (self, "couldn't get system selection preference: '%s'", error->message);
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    if (!qmi_message_nas_get_system_selection_preference_output_get_result (output, &error)) {
+        mm_obj_warn (self, "couldn't get system selection preference: '%s'", error->message);
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    if (!qmi_message_nas_get_system_selection_preference_output_get_service_domain_preference (
+        output,
+        &service_domain_preference,
+        &error)) {
+            mm_obj_warn (self, "couldn't get service domain preference: '%s'", error->message);
+            g_task_return_error (task, error);
+            g_object_unref (task);
+            return;
+    }
+
+    if (!qmi_message_nas_get_system_selection_preference_output_get_usage_preference (
+        output,
+        &usage_preference,
+        &error)) {
+            mm_obj_warn (self, "couldn't get usage domain preference: '%s'", error->message);
+            g_task_return_error (task, error);
+            g_object_unref (task);
+            return;
+    }
+
+    g_task_return_int (task, qmi_uemode_find (service_domain_preference, usage_preference));
+
+    g_object_unref (task);
+}
+
+static void
+modem_3gpp_load_eps_ue_mode_operation (MMIfaceModem3gpp    *_self,
+                                       GAsyncReadyCallback  callback,
+                                       gpointer             user_data)
+{
+    MMBroadbandModemQmi *self = MM_BROADBAND_MODEM_QMI (_self);
+    QmiClient *client = NULL;
+    GTask *task;
+
+    if (!mm_shared_qmi_ensure_client (MM_SHARED_QMI (self),
+                                      QMI_SERVICE_NAS, &client,
+                                      callback, user_data))
+        return;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    mm_obj_dbg (self, "loading UE mode of operation for EPS via QMI...");
+    qmi_client_nas_get_system_selection_preference (QMI_CLIENT_NAS (client),
+                                                    NULL,
+                                                    10,
+                                                    NULL,
+                                                    (GAsyncReadyCallback)get_uemode_ready,
+                                                    task);
+}
+
+/*****************************************************************************/
+/* UE mode of operation for EPS setting (3GPP interface) */
+
+static gboolean
+modem_3gpp_set_eps_ue_mode_operation_finish (MMIfaceModem3gpp  *self,
+                                             GAsyncResult      *res,
+                                             GError          **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+set_uemode_ready (QmiClientNas *client,
+                  GAsyncResult *res,
+                  GTask *task)
+{
+    g_autoptr(QmiMessageNasSetSystemSelectionPreferenceOutput) output = NULL;
+    GError *error = NULL;
+
+    output = qmi_client_nas_set_system_selection_preference_finish (client, res, &error);
+    if (!output || !qmi_message_nas_set_system_selection_preference_output_get_result (output, &error))
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+
+    g_object_unref (task);
+}
+
+static void
+qmi_uemode_build (MMModem3gppEpsUeModeOperation mode,
+                  QmiMessageNasSetSystemSelectionPreferenceInput *input)
+{
+    QmiNasServiceDomainPreference service_domain_preference;
+    QmiNasUsagePreference usage_preference;
+
+    g_return_if_fail (mode != MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_UNKNOWN);
+
+    switch (mode) {
+    case MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_PS_1:
+        service_domain_preference = QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_ONLY;
+        usage_preference = QMI_NAS_USAGE_PREFERENCE_VOICE_CENTRIC;
+        break;
+    case MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_PS_2:
+        service_domain_preference = QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_ONLY;
+        usage_preference = QMI_NAS_USAGE_PREFERENCE_DATA_CENTRIC;
+        break;
+    case MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_CSPS_1:
+        service_domain_preference = QMI_NAS_SERVICE_DOMAIN_PREFERENCE_CS_PS;
+        usage_preference = QMI_NAS_USAGE_PREFERENCE_VOICE_CENTRIC;
+        break;
+    case MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_CSPS_2:
+        service_domain_preference = QMI_NAS_SERVICE_DOMAIN_PREFERENCE_CS_PS;
+        usage_preference = QMI_NAS_USAGE_PREFERENCE_DATA_CENTRIC;
+        break;
+    case MM_MODEM_3GPP_EPS_UE_MODE_OPERATION_UNKNOWN:
+    default:
+        return;
+    }
+
+    qmi_message_nas_set_system_selection_preference_input_set_usage_preference (
+        input,
+        usage_preference,
+        NULL);
+    qmi_message_nas_set_system_selection_preference_input_set_service_domain_preference (
+        input,
+        service_domain_preference,
+        NULL);
+}
+
+static void
+modem_3gpp_set_eps_ue_mode_operation (MMIfaceModem3gpp              *_self,
+                                      MMModem3gppEpsUeModeOperation  mode,
+                                      GAsyncReadyCallback            callback,
+                                      gpointer                       user_data)
+{
+    MMBroadbandModemQmi *self = MM_BROADBAND_MODEM_QMI (_self);
+    QmiMessageNasSetSystemSelectionPreferenceInput *input;
+    QmiClient *client = NULL;
+    GTask *task;
+
+    if (!mm_shared_qmi_ensure_client (MM_SHARED_QMI (self),
+                                      QMI_SERVICE_NAS, &client,
+                                      callback, user_data))
+        return;
+
+    task = g_task_new (self, NULL, callback, user_data);
+    mm_obj_dbg (self, "updating UE mode of operation for EPS via QMI...");
+
+    input = qmi_message_nas_set_system_selection_preference_input_new ();
+
+    qmi_uemode_build (mode, input);
+
+    qmi_client_nas_set_system_selection_preference (
+        QMI_CLIENT_NAS (client),
+        input,
+        10,
+        NULL,
+        (GAsyncReadyCallback)set_uemode_ready,
+        task);
+
+    qmi_message_nas_set_system_selection_preference_input_unref (input);
+}
+
+/*****************************************************************************/
 /* Check firmware support (Firmware interface) */
 
 typedef struct {
@@ -13088,6 +13427,29 @@ signal_setup_thresholds (MMIfaceModemSignal  *self,
 }
 
 /*****************************************************************************/
+/* Load update settings (Firmware interface) */
+
+static MMFirmwareUpdateSettings *
+modem_firmware_load_update_settings_finish (MMIfaceModemFirmware  *self,
+                                            GAsyncResult          *res,
+                                            GError               **error)
+{
+    return mm_iface_modem_firmware_load_update_settings_in_port_finish (self, res, error);
+}
+
+static void
+modem_firmware_load_update_settings (MMIfaceModemFirmware *self,
+                                     GAsyncReadyCallback   callback,
+                                     gpointer              user_data)
+{
+    mm_iface_modem_firmware_load_update_settings_in_port (
+        self,
+        MM_PORT (mm_broadband_modem_qmi_peek_port_qmi (MM_BROADBAND_MODEM_QMI (self))),
+        callback,
+        user_data);
+}
+
+/*****************************************************************************/
 /* Reset data interfaces during initialization */
 
 typedef struct {
@@ -13536,7 +13898,7 @@ initialization_reset_ports (GTask *task)
 
     self = g_task_get_source_object (task);
 
-    /* reseting the data interfaces is really only needed if the device
+    /* resetting the data interfaces is really only needed if the device
      * hasn't been hotplugged */
     if (mm_base_modem_get_hotplugged (MM_BASE_MODEM (self))) {
         mm_obj_dbg (self, "not running data interface reset procedure: device is hotplugged");
@@ -13797,6 +14159,10 @@ iface_modem_3gpp_init (MMIfaceModem3gppInterface *iface)
     iface->disable_facility_lock_finish = modem_3gpp_disable_facility_lock_finish;
     iface->set_packet_service_state = mm_shared_qmi_set_packet_service_state;
     iface->set_packet_service_state_finish = mm_shared_qmi_set_packet_service_state_finish;
+    iface->load_eps_ue_mode_operation = modem_3gpp_load_eps_ue_mode_operation;
+    iface->load_eps_ue_mode_operation_finish = modem_3gpp_load_eps_ue_mode_operation_finish;
+    iface->set_eps_ue_mode_operation = modem_3gpp_set_eps_ue_mode_operation;
+    iface->set_eps_ue_mode_operation_finish = modem_3gpp_set_eps_ue_mode_operation_finish;
 }
 
 static void
@@ -13947,6 +14313,8 @@ iface_modem_messaging_init (MMIfaceModemMessagingInterface *iface)
     iface->disable_unsolicited_events = messaging_disable_unsolicited_events;
     iface->disable_unsolicited_events_finish = messaging_disable_unsolicited_events_finish;
     iface->create_sms = messaging_create_sms;
+    iface->init_current_storages = messaging_init_current_storages;
+    iface->init_current_storages_finish = messaging_init_current_storages_finish;
 }
 
 static void
@@ -14033,6 +14401,8 @@ iface_modem_firmware_init (MMIfaceModemFirmwareInterface *iface)
     iface->load_current_finish = firmware_load_current_finish;
     iface->change_current = firmware_change_current;
     iface->change_current_finish = firmware_change_current_finish;
+    iface->load_update_settings = modem_firmware_load_update_settings;
+    iface->load_update_settings_finish = modem_firmware_load_update_settings_finish;
 }
 
 static MMIfaceModemLocationInterface *

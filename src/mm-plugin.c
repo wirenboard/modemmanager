@@ -956,12 +956,15 @@ mm_plugin_create_modem (MMPlugin  *self,
                                                       mm_device_get_vendor (device),
                                                       mm_device_get_product (device),
                                                       mm_device_get_subsystem_vendor (device),
+                                                      mm_device_get_subsystem_device (device),
                                                       port_probes,
                                                       error);
     if (!modem)
         return NULL;
 
     mm_base_modem_set_hotplugged (modem, mm_device_get_hotplugged (device));
+    /* Reset hotplugged flag to guarantee full reconfiguration on next probe */
+    mm_device_reset_hotplugged (device);
 
     if (port_probes) {
         GList *l;
