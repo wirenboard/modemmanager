@@ -1,0 +1,14 @@
+Test-Command: mmcli --help
+Restrictions: superficial
+Depends:
+ modemmanager,
+
+Test-Command: /usr/sbin/ModemManager --help
+Restrictions: superficial
+Depends:
+ modemmanager,
+
+Test-Command: pkgconf --libs --cflags mm-glib
+Restrictions: superficial
+Depends: pkgconf,
+ libmm-glib-dev,
