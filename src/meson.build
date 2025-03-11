@@ -43,6 +43,7 @@ enums_sources += custom_target(
 )
 
 sources = files(
+  'mm-cbm-part.c',
   'mm-charsets.c',
   'mm-error-helpers.c',
   'mm-log.c',
@@ -258,6 +259,7 @@ sources = files(
   'mm-auth-provider.c',
   'mm-base-bearer.c',
   'mm-base-call.c',
+  'mm-base-cbm.c',
   'mm-base-manager.c',
   'mm-base-modem-at.c',
   'mm-base-modem.c',
@@ -267,6 +269,7 @@ sources = files(
   'mm-broadband-bearer.c',
   'mm-broadband-modem.c',
   'mm-call-list.c',
+  'mm-cbm-list.c',
   'mm-context.c',
   'mm-device.c',
   'mm-dispatcher.c',
@@ -279,6 +282,7 @@ sources = files(
   'mm-iface-modem-3gpp-ussd.c',
   'mm-iface-modem.c',
   'mm-iface-modem-cdma.c',
+  'mm-iface-modem-cell-broadcast.c',
   'mm-iface-modem-firmware.c',
   'mm-iface-modem-location.c',
   'mm-iface-modem-messaging.c',

@@ -1329,6 +1329,13 @@ handle_set_initial_eps_bearer_settings_power_down_ready (MMIfaceModem           
         mm_obj_warn (self, "failed to power down modem before updating initial EPS bearer settings: %s", ctx->saved_error->message);
         ctx->step = HANDLE_SET_INITIAL_EPS_BEARER_SETTINGS_STEP_LAST;
     } else {
+        /* If we could not load the previous power state, assume it was 'on', which is the most likely
+         * case on these type of failures. */
+        if (ctx->previous_power_state == MM_MODEM_POWER_STATE_UNKNOWN) {
+            mm_obj_warn (ctx->self, "power state before the initial EPS bearer settings is unknown, will assume 'on'");
+            ctx->previous_power_state = MM_MODEM_POWER_STATE_ON;
+        }
+
         mm_obj_dbg (self, "modem power state updated: %s -> %s",
                     mm_modem_power_state_get_string (ctx->previous_power_state),
                     mm_modem_power_state_get_string (MM_MODEM_POWER_STATE_LOW));
@@ -3871,6 +3878,18 @@ mm_iface_modem_3gpp_shutdown (MMIfaceModem3gpp *self)
     g_object_set (self,
                   MM_IFACE_MODEM_3GPP_DBUS_SKELETON, NULL,
                   NULL);
+}
+
+/*****************************************************************************/
+
+gchar *
+mm_iface_modem_3gpp_get_manual_registration_operator_id (MMIfaceModem3gpp *self)
+{
+    Private *priv;
+
+    priv = get_private (self);
+
+    return g_strdup (priv->manual_registration_operator_id);
 }
 
 /*****************************************************************************/

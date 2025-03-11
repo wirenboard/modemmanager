@@ -2608,7 +2608,7 @@ handle_reset_auth_ready (MMBaseModem        *self,
         return;
     }
 
-    /* If reseting is not implemented, report an error */
+    /* If resetting is not implemented, report an error */
     if (!MM_IFACE_MODEM_GET_IFACE (self)->reset || !MM_IFACE_MODEM_GET_IFACE (self)->reset_finish) {
         mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
                                                         "Operation not supported");
@@ -2701,7 +2701,7 @@ handle_factory_reset_auth_ready (MMBaseModem               *self,
         return;
     }
 
-    /* If reseting is not implemented, report an error */
+    /* If resetting is not implemented, report an error */
     if (!MM_IFACE_MODEM_GET_IFACE (self)->factory_reset || !MM_IFACE_MODEM_GET_IFACE (self)->factory_reset_finish) {
         mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
                                                         "Operation not supported");
@@ -6678,6 +6678,29 @@ mm_iface_modem_get_carrier_config (MMIfaceModem  *self,
     if (revision)
         *revision = mm_gdbus_modem_get_carrier_configuration_revision (skeleton);
     g_object_unref (skeleton);
+    return TRUE;
+}
+
+/*****************************************************************************/
+
+gboolean
+mm_iface_modem_get_current_modes (MMIfaceModem *self,
+                                  MMModemMode  *allowed,
+                                  MMModemMode  *preferred)
+{
+    g_autoptr(MmGdbusModemSkeleton) skeleton = NULL;
+
+    g_object_get (self,
+                  MM_IFACE_MODEM_DBUS_SKELETON, &skeleton,
+                  NULL);
+    if (!skeleton)
+        return FALSE;
+
+    g_variant_get (mm_gdbus_modem_get_current_modes (MM_GDBUS_MODEM (skeleton)),
+                   "(uu)",
+                   allowed,
+                   preferred);
+
     return TRUE;
 }
 

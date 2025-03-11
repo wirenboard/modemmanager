@@ -144,7 +144,7 @@ connect_process_reply (MMBearer *result,
         exit (EXIT_FAILURE);
     }
 
-    g_print ("successfully connected the modem\n");
+    g_print ("successfully connected the modem at bearer %s\n", mm_bearer_get_path (result));
     g_object_unref (result);
 }
 
@@ -210,6 +210,9 @@ get_modem_ready (GObject      *source,
 
         g_debug ("Asynchronously connecting the modem...");
 
+        /* Setup operation timeout: 2 minutes 2 seconds (to match MM internal
+         * timeout with a bit of slack) */
+        g_dbus_proxy_set_default_timeout (G_DBUS_PROXY (ctx->modem_simple), ((2 * 60) + 2) * 1000);
         properties = mm_simple_connect_properties_new_from_string (connect_str, &error);
         if (!properties) {
             g_printerr ("Error parsing connect string: '%s'\n", error->message);

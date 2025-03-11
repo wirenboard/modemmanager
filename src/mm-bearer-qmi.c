@@ -429,15 +429,10 @@ load_connection_status (MMBaseBearer        *_self,
     task = g_task_new (self, NULL, callback, user_data);
 
     /* Connection status polling is an optional feature that must be
-     * enabled explicitly via udev tags. If not set, out as unsupported.
-     * Note that when connected via a muxed link, the udev tag should be
-     * checked on the main interface (lower device) */
-    if ((self->priv->data &&
-         !mm_kernel_device_get_global_property_as_boolean (mm_port_peek_kernel_device (self->priv->data),
-                                                           "ID_MM_QMI_CONNECTION_STATUS_POLLING_ENABLE")) ||
-        (self->priv->link &&
-         !mm_kernel_device_get_global_property_as_boolean (mm_kernel_device_peek_lower_device (mm_port_peek_kernel_device (self->priv->link)),
-                                                           "ID_MM_QMI_CONNECTION_STATUS_POLLING_ENABLE"))) {
+     * enabled explicitly via udev tags. If not set, out as unsupported. */
+    if (self->priv->qmi &&
+        !mm_kernel_device_get_global_property_as_boolean (mm_port_peek_kernel_device (MM_PORT (self->priv->qmi)),
+                                                          "ID_MM_QMI_CONNECTION_STATUS_POLLING_ENABLE")) {
         g_task_return_new_error (task, MM_CORE_ERROR, MM_CORE_ERROR_UNSUPPORTED,
                                  "Connection status polling not required");
         g_object_unref (task);
@@ -1103,10 +1098,12 @@ get_current_settings_ready (QmiClientWds *client,
 static void
 get_current_settings (GTask *task, QmiClientWds *client)
 {
-    ConnectContext *ctx;
-    QmiMessageWdsGetCurrentSettingsInput *input;
-    QmiWdsRequestedSettings requested;
+    MMBearerQmi                           *self;
+    ConnectContext                        *ctx;
+    QmiMessageWdsGetCurrentSettingsInput  *input;
+    QmiWdsRequestedSettings                requested;
 
+    self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
     g_assert (ctx->running_ipv4 || ctx->running_ipv6);
 
@@ -1116,8 +1113,15 @@ get_current_settings (GTask *task, QmiClientWds *client)
                 QMI_WDS_REQUESTED_SETTINGS_GATEWAY_INFO |
                 QMI_WDS_REQUESTED_SETTINGS_MTU |
                 QMI_WDS_REQUESTED_SETTINGS_DOMAIN_NAME_LIST |
-                QMI_WDS_REQUESTED_SETTINGS_IP_FAMILY |
-                QMI_WDS_REQUESTED_SETTINGS_OPERATOR_RESERVED_PCO;
+                QMI_WDS_REQUESTED_SETTINGS_IP_FAMILY;
+
+    /* Modems like Qualcomm MPL200 and SimTech SIM7100E eventually crash when enabling PCO.
+     * Avoid crashing by skip registering for PCO */
+    if (!mm_kernel_device_get_global_property_as_boolean (mm_port_peek_kernel_device (MM_PORT (ctx->qmi)),
+                                                          "ID_MM_QMI_PCO_DISABLED")) {
+        mm_obj_dbg (self, "Requesting QMI WDS Operator Reserved PCO");
+        requested |= QMI_WDS_REQUESTED_SETTINGS_OPERATOR_RESERVED_PCO;
+    }
 
     input = qmi_message_wds_get_current_settings_input_new ();
     qmi_message_wds_get_current_settings_input_set_requested_settings (input, requested, NULL);

@@ -100,6 +100,8 @@ const gchar    **mm_device_get_drivers          (MMDevice       *self);
 guint16          mm_device_get_vendor           (MMDevice       *self);
 guint16          mm_device_get_product          (MMDevice       *self);
 guint16          mm_device_get_subsystem_vendor (MMDevice       *self);
+guint16          mm_device_get_subsystem_device (MMDevice       *self);
+
 void             mm_device_set_plugin           (MMDevice       *self,
                                                  GObject        *plugin);
 GObject         *mm_device_peek_plugin          (MMDevice       *self);
@@ -107,6 +109,7 @@ GObject         *mm_device_get_plugin           (MMDevice       *self);
 MMBaseModem     *mm_device_peek_modem           (MMDevice       *self);
 MMBaseModem     *mm_device_get_modem            (MMDevice       *self);
 gboolean         mm_device_get_hotplugged       (MMDevice       *self);
+void             mm_device_reset_hotplugged     (MMDevice       *self);
 gboolean         mm_device_get_inhibited        (MMDevice       *self);
 
 GObject         *mm_device_peek_port_probe       (MMDevice       *self,
