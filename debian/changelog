@@ -1,7 +1,17 @@
+modemmanager (1.23.95-1) experimental; urgency=medium
+
+  * New upstream version 1.23.95
+  * Add superficial autopktests
+  * Bump libqmi and libmbim build dependencies
+  * Update symbols
+  * Bump standards version
+  * Depend on dh-sequence-gir
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 11 Mar 2025 17:49:57 +0100
+
 modemmanager (1.23.12-1) experimental; urgency=medium
 
   [ Arnaud Ferraris ]
-  * New upstream version 1.22.0
   * d/control: depend on gobject-introspection-bin.
     This is now the package containing `dh_girepository`, having been split
     from `gobject-introspection`.
