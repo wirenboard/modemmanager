@@ -1,3 +1,10 @@
+modemmanager (1.23.95-2) unstable; urgency=medium
+
+  * Upload to unstable
+  * Bump standards version to 4.7.2
+
+ -- Guido Günther <agx@sigxcpu.org>  Thu, 13 Mar 2025 14:34:38 +0100
+
 modemmanager (1.23.95-1) experimental; urgency=medium
 
   * New upstream version 1.23.95
