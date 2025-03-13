@@ -15,12 +15,12 @@ Depends: pkgconf,
 
 Tests: smoke
 Depends: @
-Restrictions: needs-root, breaks-testbed, superficial
+Restrictions: needs-sudo, breaks-testbed, superficial
 
 Tests: unittests
 Depends: @, @builddeps@
-Restrictions: needs-root, breaks-testbed
+Restrictions: needs-sudo, breaks-testbed
 
 Tests: mmutils
 Depends: @, @builddeps@, dpkg-dev
-Restrictions: needs-root, breaks-testbed
+Restrictions: needs-sudo, breaks-testbed
