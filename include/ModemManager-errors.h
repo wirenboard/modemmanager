@@ -1,14 +1,21 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * ModemManager Interface Specification
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details:
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2011 Red Hat, Inc.
  * Copyright (C) 2011 Google, Inc.
@@ -30,6 +37,8 @@
  * This section defines errors that may be reported when using methods from the
  * ModemManager interface.
  **/
+
+/******************************************************************************/
 
 /**
  * MM_CORE_ERROR_DBUS_PREFIX:
@@ -86,6 +95,17 @@
 #define MM_CDMA_ACTIVATION_ERROR_DBUS_PREFIX MM_DBUS_ERROR_PREFIX ".CdmaActivation"
 
 /**
+ * MM_CARRIER_LOCK_ERROR_DBUS_PREFIX:
+ *
+ * DBus prefix for #MMCarrierLockError errors.
+ *
+ * Since: 1.24
+ */
+#define MM_CARRIER_LOCK_ERROR_DBUS_PREFIX MM_DBUS_ERROR_PREFIX ".CarrierLock"
+
+/******************************************************************************/
+
+/**
  * MMCoreError:
  * @MM_CORE_ERROR_FAILED: Operation failed.
  * @MM_CORE_ERROR_CANCELLED: Operation was cancelled.
@@ -103,6 +123,9 @@
  * @MM_CORE_ERROR_EXISTS: Item already exists.
  * @MM_CORE_ERROR_WRONG_SIM_STATE: Operation cannot be executed in the current SIM state. Since 1.20.
  * @MM_CORE_ERROR_RESET_AND_RETRY: Operation cannot yet be performed, reset the retry count and retry later. Since 1.22.
+ * @MM_CORE_ERROR_TIMEOUT: Operation timed out. Since 1.24.
+ * @MM_CORE_ERROR_PROTOCOL: Operation failed due to an underlying control protocol error. Since 1.24.
+ * @MM_CORE_ERROR_THROTTLED: Operation was attempted too many times. Since 1.24.
  *
  * Common errors that may be reported by ModemManager.
  *
@@ -125,6 +148,9 @@ typedef enum { /*< underscore_name=mm_core_error >*/
     MM_CORE_ERROR_EXISTS          = 13, /*< nick=Exists        >*/
     MM_CORE_ERROR_WRONG_SIM_STATE = 14, /*< nick=WrongSimState >*/
     MM_CORE_ERROR_RESET_AND_RETRY = 15, /*< nick=ResetRetry    >*/
+    MM_CORE_ERROR_TIMEOUT         = 16, /*< nick=Timeout       >*/
+    MM_CORE_ERROR_PROTOCOL        = 17, /*< nick=Protocol      >*/
+    MM_CORE_ERROR_THROTTLED       = 18, /*< nick=Throttled     >*/
 } MMCoreError;
 
 /**
@@ -599,5 +625,31 @@ typedef enum { /*< underscore_name=mm_cdma_activation_error >*/
     MM_CDMA_ACTIVATION_ERROR_TIMED_OUT                      = 8, /*< nick=TimedOut                     >*/
     MM_CDMA_ACTIVATION_ERROR_START_FAILED                   = 9  /*< nick=StartFailed                  >*/
 } MMCdmaActivationError;
+
+/**
+ * MMCarrierLockError:
+ * @MM_CARRIER_LOCK_ERROR_UNKNOWN: Unknown error.
+ * @MM_CARRIER_LOCK_ERROR_INVALID_SIGNATURE: Invalid signature.
+ * @MM_CARRIER_LOCK_ERROR_INVALID_IMEI: Invalid IMEI.
+ * @MM_CARRIER_LOCK_ERROR_INVALID_TIMESTAMP: Invalid timestamp.
+ * @MM_CARRIER_LOCK_ERROR_NETWORK_LIST_TOO_LARGE: Network list too large.
+ * @MM_CARRIER_LOCK_ERROR_SIGNATURE_ALGORITHM_NOT_SUPPORTED: Algorithm not supported.
+ * @MM_CARRIER_LOCK_ERROR_FEATURE_NOT_SUPPORTED: Feature not supported.
+ * @MM_CARRIER_LOCK_ERROR_DECODE_OR_PARSING_ERROR: Decode or parsing error.
+ *
+ * Carrier lock operation errors.
+ *
+ * Since: 1.24
+ */
+typedef enum { /*< underscore_name=mm_carrier_lock_error >*/
+    MM_CARRIER_LOCK_ERROR_UNKNOWN                           = 0, /*< nick=Unknown                        >*/
+    MM_CARRIER_LOCK_ERROR_INVALID_SIGNATURE                 = 1, /*< nick=InvalidSignature               >*/
+    MM_CARRIER_LOCK_ERROR_INVALID_IMEI                      = 2, /*< nick=InvalidImei                    >*/
+    MM_CARRIER_LOCK_ERROR_INVALID_TIMESTAMP                 = 3, /*< nick=InvalidTimestamp               >*/
+    MM_CARRIER_LOCK_ERROR_NETWORK_LIST_TOO_LARGE            = 6, /*< nick=NetworkListTooLarge            >*/
+    MM_CARRIER_LOCK_ERROR_SIGNATURE_ALGORITHM_NOT_SUPPORTED = 7, /*< nick=SignatureAlgorithmNotSupported >*/
+    MM_CARRIER_LOCK_ERROR_FEATURE_NOT_SUPPORTED             = 8, /*< nick=FeatureNotSupported            >*/
+    MM_CARRIER_LOCK_ERROR_DECODE_OR_PARSING_ERROR           = 9, /*< nick=DecodeOrParsingError           >*/
+} MMCarrierLockError;
 
 #endif /*  _MODEMMANAGER_ERRORS_H_ */

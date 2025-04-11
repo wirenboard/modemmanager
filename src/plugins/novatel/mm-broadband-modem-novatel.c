@@ -38,12 +38,12 @@
 #include "libqcdm/src/result.h"
 #include "mm-log-object.h"
 
-static void iface_modem_init (MMIfaceModem *iface);
-static void iface_modem_messaging_init (MMIfaceModemMessaging *iface);
-static void iface_modem_cdma_init (MMIfaceModemCdma *iface);
-static void iface_modem_time_init (MMIfaceModemTime *iface);
+static void iface_modem_init           (MMIfaceModemInterface          *iface);
+static void iface_modem_messaging_init (MMIfaceModemMessagingInterface *iface);
+static void iface_modem_cdma_init      (MMIfaceModemCdmaInterface      *iface);
+static void iface_modem_time_init      (MMIfaceModemTimeInterface      *iface);
 
-static MMIfaceModem *iface_modem_parent;
+static MMIfaceModemInterface *iface_modem_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemNovatel, mm_broadband_modem_novatel, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -1560,7 +1560,7 @@ mm_broadband_modem_novatel_init (MMBroadbandModemNovatel *self)
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     iface_modem_parent = g_type_interface_peek_parent (iface);
 
@@ -1577,14 +1577,14 @@ iface_modem_init (MMIfaceModem *iface)
 }
 
 static void
-iface_modem_messaging_init (MMIfaceModemMessaging *iface)
+iface_modem_messaging_init (MMIfaceModemMessagingInterface *iface)
 {
     iface->enable_unsolicited_events = messaging_enable_unsolicited_events;
     iface->enable_unsolicited_events_finish = messaging_enable_unsolicited_events_finish;
 }
 
 static void
-iface_modem_cdma_init (MMIfaceModemCdma *iface)
+iface_modem_cdma_init (MMIfaceModemCdmaInterface *iface)
 {
     iface->get_detailed_registration_state = modem_cdma_get_detailed_registration_state;
     iface->get_detailed_registration_state_finish = modem_cdma_get_detailed_registration_state_finish;
@@ -1595,7 +1595,7 @@ iface_modem_cdma_init (MMIfaceModemCdma *iface)
 }
 
 static void
-iface_modem_time_init (MMIfaceModemTime *iface)
+iface_modem_time_init (MMIfaceModemTimeInterface *iface)
 {
     iface->check_support = modem_time_check_support;
     iface->check_support_finish = modem_time_check_support_finish;

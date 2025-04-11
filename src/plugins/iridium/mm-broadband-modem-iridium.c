@@ -34,9 +34,9 @@
 #include "mm-bearer-iridium.h"
 #include "mm-modem-helpers.h"
 
-static void iface_modem_init (MMIfaceModem *iface);
-static void iface_modem_3gpp_init (MMIfaceModem3gpp *iface);
-static void iface_modem_messaging_init (MMIfaceModemMessaging *iface);
+static void iface_modem_init           (MMIfaceModemInterface          *iface);
+static void iface_modem_3gpp_init      (MMIfaceModem3gppInterface      *iface);
+static void iface_modem_messaging_init (MMIfaceModemMessagingInterface *iface);
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemIridium, mm_broadband_modem_iridium, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -221,7 +221,7 @@ setup_flow_control (MMIfaceModem *self,
 }
 
 /*****************************************************************************/
-/* Load supported modes (Modem inteface) */
+/* Load supported modes (Modem interface) */
 
 static GArray *
 load_supported_modes_finish (MMIfaceModem *self,
@@ -254,7 +254,7 @@ load_supported_modes (MMIfaceModem *self,
 }
 
 /*****************************************************************************/
-/* Create SIM (Modem inteface) */
+/* Create SIM (Modem interface) */
 
 static MMBaseSim *
 create_sim_finish (MMIfaceModem *self,
@@ -369,7 +369,7 @@ mm_broadband_modem_iridium_init (MMBroadbandModemIridium *self)
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     /* Create Iridium-specific SIM and bearer*/
     iface->create_sim = create_sim;
@@ -399,7 +399,7 @@ iface_modem_init (MMIfaceModem *iface)
 }
 
 static void
-iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
+iface_modem_3gpp_init (MMIfaceModem3gppInterface *iface)
 {
     /* Fixed operator code and name to be reported */
     iface->load_operator_name = load_operator_name;
@@ -420,7 +420,7 @@ iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
 }
 
 static void
-iface_modem_messaging_init (MMIfaceModemMessaging *iface)
+iface_modem_messaging_init (MMIfaceModemMessagingInterface *iface)
 {
     iface->enable_unsolicited_events = messaging_enable_unsolicited_events;
     iface->enable_unsolicited_events_finish = messaging_enable_unsolicited_events_finish;

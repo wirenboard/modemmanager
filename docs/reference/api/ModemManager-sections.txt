@@ -49,6 +49,7 @@ MMModemStateChangeReason
 MMModemPowerState
 MMModemPortType
 MMModemFirmwareUpdateMethod
+MMNetworkError
 MMOmaFeature
 MMOmaSessionState
 MMOmaSessionStateFailedReason
@@ -65,6 +66,7 @@ MMSimEsimStatus
 MMSimRemovability
 MMCellType
 MMServingCellType
+MMCbmState
 </SECTION>
 
 <SECTION>
@@ -76,12 +78,14 @@ MM_CONNECTION_ERROR_DBUS_PREFIX
 MM_SERIAL_ERROR_DBUS_PREFIX
 MM_MESSAGE_ERROR_DBUS_PREFIX
 MM_CDMA_ACTIVATION_ERROR_DBUS_PREFIX
+MM_CARRIER_LOCK_ERROR_DBUS_PREFIX
 MMCoreError
 MMMobileEquipmentError
 MMConnectionError
 MMSerialError
 MMMessageError
 MMCdmaActivationError
+MMCarrierLockError
 </SECTION>
 
 <SECTION>
@@ -220,6 +224,7 @@ ID_MM_PORT_TYPE_QCDM
 ID_MM_PORT_TYPE_AUDIO
 ID_MM_PORT_TYPE_QMI
 ID_MM_PORT_TYPE_MBIM
+ID_MM_PORT_TYPE_XMMRPC
 ID_MM_TTY_BAUDRATE
 ID_MM_TTY_FLOW_CONTROL
 ID_MM_REQUIRED

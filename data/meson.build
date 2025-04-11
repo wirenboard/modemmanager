@@ -11,12 +11,21 @@ service_conf = {
 }
 
 # DBus Service file
-configure_file(
-  input: 'org.freedesktop.ModemManager1.conf.@0@polkit'.format(enable_polkit ? '' : 'no'),
-  output: '@BASENAME@',
-  copy: true,
-  install_dir: dbus_policy_dir,
-)
+if meson_version.version_compare('>=1.0.0')
+  fs.copyfile(
+    'org.freedesktop.ModemManager1.conf.@0@polkit'.format(enable_polkit ? '' : 'no'),
+    '@BASENAME@',
+    install: true,
+    install_dir: dbus_policy_dir,
+  )
+else
+  configure_file(
+    input: 'org.freedesktop.ModemManager1.conf.@0@polkit'.format(enable_polkit ? '' : 'no'),
+    output: '@BASENAME@',
+    copy: true,
+    install_dir: dbus_policy_dir,
+  )
+endif
 
 # DBus Activation file
 configure_file(
@@ -49,6 +58,7 @@ if enable_polkit
     ),
     output: '@BASENAME@',
     po_dir: po_dir,
+    data_dirs: [data_dir],
     install: true,
     install_dir: polkit_gobject_policydir,
   )

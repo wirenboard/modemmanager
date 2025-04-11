@@ -1,0 +1,86 @@
+#!/bin/sh
+
+# SPDX-License-Identifier: CC0-1.0
+# 2023 Thilo-Alexander Ginkel <thilo@ginkel.com>
+# 2025 Jongmin Kim <jmkim@debian.org>
+#
+# Lenovo-shipped Fibocom FM350-GL (14c3:4d75) FCC unlock
+
+[ "$FCC_UNLOCK_DEBUG_LOG" = '1' ] && {
+    exec 3>&1 4>&2
+    trap 'exec 2>&4 1>&3' 0 1 2 3
+    exec 1>>'/var/log/mm-fm350-fcc.log' 2>&1
+}
+
+# require program name and at least 2 arguments
+[ $# -lt 2 ] && exit 1
+
+# first argument is DBus path, not needed here
+shift
+
+# second and next arguments are control port names
+for PORT in "$@"; do
+  # match port type in Linux 5.14 and newer
+  grep -q AT "/sys/class/wwan/$PORT/type" 2>/dev/null ||
+  # match port name in Linux 5.13
+  echo "$PORT" | grep -qi AT && {
+    AT_PORT="$PORT"
+    break
+  }
+done
+
+# fail if no AT port exposed
+[ -n "$AT_PORT" ] || exit 2
+
+DEVICE="/dev/$AT_PORT"
+
+at_command() {
+    exec 9<>"$DEVICE"
+    printf "%s\r" "$1" >&9
+    read answer <&9
+    read answer <&9
+    echo "$answer"
+    exec 9>&-
+}
+
+log() {
+    echo "$1"
+}
+
+error() {
+    echo "$1" >&2
+}
+
+VENDOR_ID_HASH='3df8c719'
+
+i=1
+while [ "$i" -le 9 ]; do
+    log "Requesting challenge from WWAN modem (attempt #$i)"
+    RAW_CHALLENGE="$(at_command 'at+gtfcclockgen')"
+    CHALLENGE="$(echo "$RAW_CHALLENGE" | grep -o '0x[0-9a-fA-F]\+' | awk '{print $1}')"
+
+    [ -n "$CHALLENGE" ] && {
+        log "Got challenge from modem: $CHALLENGE"
+        HEX_CHALLENGE="$(printf '%08x' "$CHALLENGE")"
+        COMBINED_CHALLENGE="$HEX_CHALLENGE$(printf '%.8s' "$VENDOR_ID_HASH")"
+        RESPONSE_HASH="$(echo "$COMBINED_CHALLENGE" | xxd -r -p | sha256sum | cut -d ' ' -f 1)"
+        TRUNCATED_RESPONSE="$(printf '%.8s' "$RESPONSE_HASH")"
+        RESPONSE="$(printf '%d' "0x$TRUNCATED_RESPONSE")"
+
+        log "Sending response to WWAN modem: $RESPONSE"
+        UNLOCK_RESPONSE="$(at_command "at+gtfcclockver=$RESPONSE")"
+
+        echo "$UNLOCK_RESPONSE" | grep -q '^+GTFCCLOCKVER:' && {
+            UNLOCK_RESULT="$(echo "$UNLOCK_RESPONSE" | grep -o '[0-9]*')"
+            [ "$UNLOCK_RESULT" = '1' ] && {
+                log "FCC unlock succeeded"
+                exit 0
+            } || error "FCC unlock failed. Got result: $UNLOCK_RESULT"
+        } || error "Unlock failed. Got response: $UNLOCK_RESPONSE"
+    } || error "Failed to obtain FCC challenge. Got: $RAW_CHALLENGE"
+
+    sleep 0.5
+    i="$((i + 1))"
+done
+
+exit 2

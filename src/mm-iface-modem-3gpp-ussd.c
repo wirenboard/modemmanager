@@ -26,6 +26,7 @@
 #include "mm-iface-modem-3gpp-ussd.h"
 #include "mm-base-modem.h"
 #include "mm-modem-helpers.h"
+#include "mm-error-helpers.h"
 #include "mm-log-object.h"
 
 #define SUPPORT_CHECKED_TAG "3gpp-ussd-support-checked-tag"
@@ -33,6 +34,8 @@
 
 static GQuark support_checked_quark;
 static GQuark supported_quark;
+
+G_DEFINE_INTERFACE (MMIfaceModem3gppUssd, mm_iface_modem_3gpp_ussd, MM_TYPE_IFACE_MODEM_3GPP)
 
 /*****************************************************************************/
 
@@ -67,8 +70,8 @@ handle_cancel_ready (MMIfaceModem3gppUssd *self,
 {
     GError *error = NULL;
 
-    if (!MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->cancel_finish (self, res, &error))
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+    if (!MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->cancel_finish (self, res, &error))
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     else
         mm_gdbus_modem3gpp_ussd_complete_cancel (ctx->skeleton, ctx->invocation);
 
@@ -83,7 +86,7 @@ handle_cancel_auth_ready (MMBaseModem *self,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (self, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_cancel_context_free (ctx);
         return;
     }
@@ -95,10 +98,11 @@ handle_cancel_auth_ready (MMBaseModem *self,
         return;
     }
 
-    g_assert (MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->cancel != NULL);
-    g_assert (MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->cancel_finish != NULL);
+    g_assert (MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->cancel != NULL);
+    g_assert (MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->cancel_finish != NULL);
 
-    MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->cancel (
+    mm_obj_info (self, "processing user request to cancel USSD...");
+    MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->cancel (
         MM_IFACE_MODEM_3GPP_USSD (self),
         (GAsyncReadyCallback)handle_cancel_ready,
         ctx);
@@ -151,9 +155,9 @@ handle_respond_ready (MMIfaceModem3gppUssd *self,
     GError *error = NULL;
     gchar *reply;
 
-    reply = MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->send_finish (self, res, &error);
+    reply = MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->send_finish (self, res, &error);
     if (!reply)
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     else {
         mm_gdbus_modem3gpp_ussd_complete_respond (ctx->skeleton,
                                                   ctx->invocation,
@@ -171,7 +175,7 @@ handle_respond_auth_ready (MMBaseModem *self,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (self, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_respond_context_free (ctx);
         return;
     }
@@ -183,21 +187,19 @@ handle_respond_auth_ready (MMBaseModem *self,
         return;
     }
 
-    g_assert (MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->send != NULL);
-    g_assert (MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->send_finish != NULL);
+    g_assert (MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->send != NULL);
+    g_assert (MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->send_finish != NULL);
 
     switch (mm_gdbus_modem3gpp_ussd_get_state (ctx->skeleton)) {
     case MM_MODEM_3GPP_USSD_SESSION_STATE_ACTIVE:
     case MM_MODEM_3GPP_USSD_SESSION_STATE_IDLE:
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_WRONG_STATE,
-                                               "Cannot respond USSD: "
-                                               "no active session");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_WRONG_STATE,
+                                                        "Cannot respond USSD: no active session");
         break;
 
     case MM_MODEM_3GPP_USSD_SESSION_STATE_USER_RESPONSE:
-        MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->send (
+        mm_obj_info (self, "processing user request to respond USSD...");
+        MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->send (
             MM_IFACE_MODEM_3GPP_USSD (self),
             ctx->command,
             (GAsyncReadyCallback)handle_respond_ready,
@@ -263,9 +265,9 @@ handle_initiate_ready (MMIfaceModem3gppUssd *self,
     GError *error = NULL;
     gchar *reply;
 
-    reply = MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->send_finish (self, res, &error);
+    reply = MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->send_finish (self, res, &error);
     if (!reply)
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     else {
         mm_gdbus_modem3gpp_ussd_complete_initiate (ctx->skeleton,
                                                    ctx->invocation,
@@ -283,7 +285,7 @@ handle_initiate_auth_ready (MMBaseModem *self,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (self, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_initiate_context_free (ctx);
         return;
     }
@@ -295,21 +297,19 @@ handle_initiate_auth_ready (MMBaseModem *self,
         return;
     }
 
-    g_assert (MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->send != NULL);
-    g_assert (MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->send_finish != NULL);
+    g_assert (MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->send != NULL);
+    g_assert (MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->send_finish != NULL);
 
     switch (mm_gdbus_modem3gpp_ussd_get_state (ctx->skeleton)) {
     case MM_MODEM_3GPP_USSD_SESSION_STATE_ACTIVE:
     case MM_MODEM_3GPP_USSD_SESSION_STATE_USER_RESPONSE:
-        g_dbus_method_invocation_return_error (ctx->invocation,
-                                               MM_CORE_ERROR,
-                                               MM_CORE_ERROR_WRONG_STATE,
-                                               "Cannot initiate USSD: "
-                                               "a session is already active");
+        mm_dbus_method_invocation_return_error_literal (ctx->invocation, MM_CORE_ERROR, MM_CORE_ERROR_WRONG_STATE,
+                                                        "Cannot initiate USSD: a session is already active");
         break;
 
     case MM_MODEM_3GPP_USSD_SESSION_STATE_IDLE:
-        MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->send (
+        mm_obj_info (self, "processing user request to initiate USSD...");
+        MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->send (
             MM_IFACE_MODEM_3GPP_USSD (self),
             ctx->command,
             (GAsyncReadyCallback)handle_initiate_ready,
@@ -356,7 +356,7 @@ mm_iface_modem_3gpp_ussd_encode (MMIfaceModem3gppUssd *self,
                                  guint *scheme,
                                  GError **error)
 {
-    return MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->encode (self, command, scheme, error);
+    return MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->encode (self, command, scheme, error);
 }
 
 gchar *
@@ -364,7 +364,7 @@ mm_iface_modem_3gpp_ussd_decode (MMIfaceModem3gppUssd *self,
                                  const gchar *reply,
                                  GError **error)
 {
-    return MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->decode (self, reply, error);
+    return MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->decode (self, reply, error);
 }
 
 /*****************************************************************************/
@@ -486,7 +486,7 @@ disable_unsolicited_events_ready (MMIfaceModem3gppUssd *self,
     DisablingContext *ctx;
     GError *error = NULL;
 
-    MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->disable_unsolicited_events_finish (self, res, &error);
+    MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->disable_unsolicited_events_finish (self, res, &error);
     if (error) {
         /* This error shouldn't be treated as critical */
         mm_obj_dbg (self, "couldn't disable unsolicited USSD events: %s", error->message);
@@ -507,7 +507,7 @@ cleanup_unsolicited_events_ready (MMIfaceModem3gppUssd *self,
     DisablingContext *ctx;
     GError *error = NULL;
 
-    MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->cleanup_unsolicited_events_finish (self, res, &error);
+    MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->cleanup_unsolicited_events_finish (self, res, &error);
     if (error) {
         /* This error shouldn't be treated as critical */
         mm_obj_dbg (self, "couldn't cleanup unsolicited USSD events: %s", error->message);
@@ -535,14 +535,14 @@ interface_disabling_step (GTask *task)
         /* fall through */
 
     case DISABLING_STEP_DISABLE_UNSOLICITED_EVENTS:
-        MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->disable_unsolicited_events (
+        MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->disable_unsolicited_events (
             self,
             (GAsyncReadyCallback)disable_unsolicited_events_ready,
             task);
         return;
 
     case DISABLING_STEP_CLEANUP_UNSOLICITED_EVENTS:
-        MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->cleanup_unsolicited_events (
+        MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->cleanup_unsolicited_events (
             self,
             (GAsyncReadyCallback)cleanup_unsolicited_events_ready,
             task);
@@ -633,7 +633,7 @@ setup_unsolicited_events_ready (MMIfaceModem3gppUssd *self,
     EnablingContext *ctx;
     GError *error = NULL;
 
-    MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->setup_unsolicited_events_finish (self, res, &error);
+    MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->setup_unsolicited_events_finish (self, res, &error);
     if (error) {
         /* This error shouldn't be treated as critical */
         mm_obj_dbg (self, "couldn't setup unsolicited USSD events: %s", error->message);
@@ -654,7 +654,7 @@ enable_unsolicited_events_ready (MMIfaceModem3gppUssd *self,
     EnablingContext *ctx;
     GError *error = NULL;
 
-    MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->enable_unsolicited_events_finish (self, res, &error);
+    MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->enable_unsolicited_events_finish (self, res, &error);
     if (error) {
         /* This error shouldn't be treated as critical */
         mm_obj_dbg (self, "couldn't enable unsolicited USSD events: %s", error->message);
@@ -682,14 +682,14 @@ interface_enabling_step (GTask *task)
         /* fall through */
 
     case ENABLING_STEP_SETUP_UNSOLICITED_EVENTS:
-        MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->setup_unsolicited_events (
+        MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->setup_unsolicited_events (
             self,
             (GAsyncReadyCallback)setup_unsolicited_events_ready,
             task);
         return;
 
     case ENABLING_STEP_ENABLE_UNSOLICITED_EVENTS:
-        MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->enable_unsolicited_events (
+        MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->enable_unsolicited_events (
             self,
             (GAsyncReadyCallback)enable_unsolicited_events_ready,
             task);
@@ -771,9 +771,7 @@ check_support_ready (MMIfaceModem3gppUssd *self,
     InitializationContext *ctx;
     GError *error = NULL;
 
-    if (!MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->check_support_finish (self,
-                                                                              res,
-                                                                              &error)) {
+    if (!MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->check_support_finish (self, res, &error)) {
         if (error) {
             /* This error shouldn't be treated as critical */
             mm_obj_dbg (self, "USSD support check failed: %s", error->message);
@@ -826,9 +824,9 @@ interface_initialization_step (GTask *task)
                                 supported_quark,
                                 GUINT_TO_POINTER (FALSE));
 
-            if (MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->check_support &&
-                MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->check_support_finish) {
-                MM_IFACE_MODEM_3GPP_USSD_GET_INTERFACE (self)->check_support (
+            if (MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->check_support &&
+                MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->check_support_finish) {
+                MM_IFACE_MODEM_3GPP_USSD_GET_IFACE (self)->check_support (
                     self,
                     (GAsyncReadyCallback)check_support_ready,
                     task);
@@ -947,44 +945,21 @@ mm_iface_modem_3gpp_ussd_shutdown (MMIfaceModem3gppUssd *self)
 /*****************************************************************************/
 
 static void
-iface_modem_3gpp_ussd_init (gpointer g_iface)
+mm_iface_modem_3gpp_ussd_default_init (MMIfaceModem3gppUssdInterface *iface)
 {
-    static gboolean initialized = FALSE;
+    static gsize initialized = 0;
 
-    if (initialized)
+    if (!g_once_init_enter (&initialized))
         return;
 
     /* Properties */
-    g_object_interface_install_property
-        (g_iface,
-         g_param_spec_object (MM_IFACE_MODEM_3GPP_USSD_DBUS_SKELETON,
-                              "3GPP DBus skeleton",
-                              "DBus skeleton for the 3GPP interface",
-                              MM_GDBUS_TYPE_MODEM3GPP_USSD_SKELETON,
-                              G_PARAM_READWRITE));
+    g_object_interface_install_property (
+        iface,
+        g_param_spec_object (MM_IFACE_MODEM_3GPP_USSD_DBUS_SKELETON,
+                             "3GPP DBus skeleton",
+                             "DBus skeleton for the 3GPP interface",
+                             MM_GDBUS_TYPE_MODEM3GPP_USSD_SKELETON,
+                             G_PARAM_READWRITE));
 
-    initialized = TRUE;
-}
-
-GType
-mm_iface_modem_3gpp_ussd_get_type (void)
-{
-    static GType iface_modem_3gpp_ussd_type = 0;
-
-    if (!G_UNLIKELY (iface_modem_3gpp_ussd_type)) {
-        static const GTypeInfo info = {
-            sizeof (MMIfaceModem3gppUssd), /* class_size */
-            iface_modem_3gpp_ussd_init,      /* base_init */
-            NULL,                  /* base_finalize */
-        };
-
-        iface_modem_3gpp_ussd_type = g_type_register_static (G_TYPE_INTERFACE,
-                                                        "MMIfaceModem3gppUssd",
-                                                        &info,
-                                                        0);
-
-        g_type_interface_add_prerequisite (iface_modem_3gpp_ussd_type, MM_TYPE_IFACE_MODEM_3GPP);
-    }
-
-    return iface_modem_3gpp_ussd_type;
+    g_once_init_leave (&initialized, 1);
 }

@@ -571,8 +571,8 @@ mm_cinterion_parse_scfg_sim_response (const gchar  *response,
     }
 
     if (!mm_get_uint_from_match_info (match_info, 1, active_slot)) {
-        g_prefix_error (&inner_error, "Could not parse SIM slot index: ");
-        g_propagate_error (error, inner_error);
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "Could not parse SIM slot index in ^SCFG response");
         return FALSE;
     }
 
@@ -585,21 +585,37 @@ mm_cinterion_get_available_from_simlocal (const gchar  *response,
                                           GError      **error)
 {
     g_autoptr(GArray)  tmp_available = NULL;
+    g_auto(GStrv)      sim_groups = NULL;
     GError            *inner_error = NULL;
+    guint              sim_length;
+    guint              i;
 
     if (!response) {
         g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "Missing response");
         return FALSE;
     }
 
-    tmp_available = mm_parse_uint_list (response, &inner_error);
-    if (inner_error) {
-        g_propagate_error (error, inner_error);
-        return FALSE;
+    sim_groups = mm_split_string_groups (response);
+    sim_length = g_strv_length (sim_groups);
+    tmp_available = g_array_sized_new (FALSE, FALSE, sizeof (gboolean), sim_length);
+
+    for (i = 0; i < sim_length; i++) {
+        guint    index_value;
+        gboolean is_available;
+
+        if (!mm_get_uint_from_str (sim_groups[i], &index_value)) {
+            inner_error = g_error_new (MM_CORE_ERROR,
+                                       MM_CORE_ERROR_FAILED,
+                                       "Could not parse SIM index value '%s'",
+                                       sim_groups[i]);
+            g_propagate_error (error, inner_error);
+            return FALSE;
+        }
+        is_available = (gboolean) index_value;
+        g_array_append_val (tmp_available, is_available);
     }
 
     *available = g_steal_pointer (&tmp_available);
-
     return TRUE;
 }
 
@@ -1817,6 +1833,19 @@ mm_cinterion_build_auth_string (gpointer                log_object,
     has_passwd   = (passwd && passwd[0]);
     encoded_auth = parse_auth_type (auth);
 
+    /* No explicit auth type requested? */
+    if (encoded_auth == BEARER_CINTERION_AUTH_UNKNOWN) {
+        if (!has_user && !has_passwd) {
+            /* If no user/passwd given, default to 'none' */
+            mm_obj_dbg (log_object, "APN user/password and authentication type not given: defaulting to 'none'");
+            encoded_auth = BEARER_CINTERION_AUTH_NONE;
+        } else {
+            /* If user/passwd given, default to CHAP (more common than PAP) */
+            mm_obj_dbg (log_object, "APN user/password given but no authentication type explicitly requested: defaulting to 'CHAP'");
+            encoded_auth = BEARER_CINTERION_AUTH_CHAP;
+        }
+    }
+
     /* When 'none' requested, we won't require user/password */
     if (encoded_auth == BEARER_CINTERION_AUTH_NONE) {
         if (has_user || has_passwd)
@@ -1826,19 +1855,8 @@ mm_cinterion_build_auth_string (gpointer                log_object,
         return g_strdup_printf ("^SGAUTH=%u,%d", cid, encoded_auth);
     }
 
-    /* No explicit auth type requested? */
-    if (encoded_auth == BEARER_CINTERION_AUTH_UNKNOWN) {
-        /* If no user/passwd given, do nothing */
-        if (!has_user && !has_passwd)
-            return NULL;
-
-        /* If user/passwd given, default to CHAP (more common than PAP) */
-        mm_obj_dbg (log_object, "APN user/password given but no authentication type explicitly requested: defaulting to 'CHAP'");
-        encoded_auth = BEARER_CINTERION_AUTH_CHAP;
-    }
-
-    quoted_user   = mm_port_serial_at_quote_string (user   ? user   : "");
-    quoted_passwd = mm_port_serial_at_quote_string (passwd ? passwd : "");
+    quoted_user   = mm_at_quote_string (user   ? user   : "");
+    quoted_passwd = mm_at_quote_string (passwd ? passwd : "");
 
     if (modem_family == MM_CINTERION_MODEM_FAMILY_IMT)
         return g_strdup_printf ("^SGAUTH=%u,%d,%s,%s",
@@ -1915,4 +1933,133 @@ mm_cinterion_build_sxrat_set_command (MMModemMode allowed,
     }
 
     return g_string_free (command, FALSE);
+}
+
+static gboolean
+modem_mode_to_cops_uint (MMModemMode   mode,
+                         guint        *out,
+                         GError      **error)
+{
+    switch (mode) {
+        case MM_MODEM_MODE_2G:
+            /* 2G-only force GERAN RAT (AcT=0) */
+            *out = 0;
+            break;
+        case MM_MODEM_MODE_3G:
+            /* 3G-only force UTRAN RAT (AcT=2) */
+            *out = 2;
+            break;
+        case MM_MODEM_MODE_4G:
+            /* 4G-only force E-UTRAN RAT (AcT=7) */
+            *out = 7;
+            break;
+        case MM_MODEM_MODE_NONE:
+        case MM_MODEM_MODE_CS:
+        case MM_MODEM_MODE_5G:
+        case MM_MODEM_MODE_ANY:
+        default:
+            g_set_error (error,
+                         MM_CORE_ERROR,
+                         MM_CORE_ERROR_FAILED,
+                         "Cannot use mode '%s' for COPS",
+                         mm_modem_mode_build_string_from_mask (mode));
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+gboolean
+mm_cinterion_build_cops_set_command (MMModemMode   mode,
+                                     const gchar  *operator_code,
+                                     gchar       **out,
+                                     GError      **error)
+{
+    GString *command;
+    guint    cops_mode;
+
+    command = g_string_new ("+COPS=");
+
+    if (!operator_code && mode == MM_MODEM_MODE_ANY) {
+        /* any operator, any mode */
+        g_string_append (command, "0");
+    } else {
+        /* append <mode>,<operator format>,<operator> */
+        if (!operator_code)
+            g_string_append (command, "0,,");
+        else
+            g_string_append_printf (command, "1,2,\"%s\"", operator_code);
+
+        if (mode != MM_MODEM_MODE_ANY) {
+            /* append <RaT> */
+            if (!modem_mode_to_cops_uint (mode, &cops_mode, error)) {
+                g_string_free (command, TRUE);
+                return FALSE;
+            }
+            g_string_append_printf (command, ",%u", cops_mode);
+        }
+    }
+
+    *out = g_string_free (command, FALSE);
+    return TRUE;
+}
+
+gboolean
+mm_cinterion_parse_ws46_response (const gchar  *response,
+                                  MMModemMode  *result,
+                                  GError      **error)
+{
+    g_autoptr(GRegex)     r = NULL;
+    g_autoptr(GMatchInfo) match_info = NULL;
+    guint                 mode_num;
+
+    r = g_regex_new ("\\+WS46:\\s*(\\d+)",
+                     G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert (r != NULL);
+
+    if (!g_regex_match (r, response, 0, &match_info)) {
+        g_set_error (error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "Failed to parse WS46 response '%s'",
+                     response);
+        return FALSE;
+    }
+
+    if (!mm_get_uint_from_match_info (match_info, 1, &mode_num)) {
+        g_set_error (error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "Failed to get mode from WS46 response '%s'",
+                     response);
+        return FALSE;
+    }
+
+    switch (mode_num) {
+        case 12:
+            /* GSM digital cellular (GERAN only) */
+            *result = MM_MODEM_MODE_2G;
+            break;
+        case 22:
+            /* UTRAN only */
+            *result = MM_MODEM_MODE_3G;
+            break;
+        case 25:
+            /* GERAN, UTRAN and E-UTRAN */
+            *result = MM_MODEM_MODE_ANY;
+            break;
+        case 28:
+            /* E-UTRAN only */
+            *result = MM_MODEM_MODE_4G;
+            break;
+        default:
+            g_set_error (error,
+                         MM_CORE_ERROR,
+                         MM_CORE_ERROR_FAILED,
+                         "Unknown WS46 mode '%u'",
+                         mode_num);
+            return FALSE;
+    }
+
+    return TRUE;
 }

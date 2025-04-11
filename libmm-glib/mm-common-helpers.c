@@ -174,6 +174,36 @@ mm_common_build_mode_combinations_string (const MMModemModeCombination *modes,
     return g_string_free (str, FALSE);
 }
 
+gchar *
+mm_common_build_channels_string (const MMCellBroadcastChannels *channels,
+                                 guint                          n_channels)
+{
+    gboolean first = TRUE;
+    GString *str;
+    guint i;
+
+    if (!channels || !n_channels)
+        return g_strdup ("none");
+
+    str = g_string_new ("");
+    for (i = 0; i < n_channels; i++) {
+        if (channels[i].start == channels[i].end) {
+            g_string_append_printf (str, "%s%u",
+                                    first ? "" : ",",
+                                    channels[i].start);
+        } else {
+            g_string_append_printf (str, "%s%u-%u",
+                                    first ? "" : ",",
+                                    channels[i].start, channels[i].end);
+        }
+
+        if (first)
+            first = FALSE;
+    }
+
+    return g_string_free (str, FALSE);
+}
+
 /******************************************************************************/
 /* String to enums/flags parsers */
 
@@ -738,6 +768,90 @@ mm_common_get_profile_source_from_string (const gchar  *str,
                               error);
 }
 
+gboolean
+mm_common_get_cell_broadcast_channels_from_string (const gchar              *str,
+                                                   MMCellBroadcastChannels **channels,
+                                                   guint                    *n_channels,
+                                                   GError                  **error)
+{
+    GError                *inner_error = NULL;
+    GArray                *array;
+    g_auto(GStrv)          channel_strings = NULL;
+
+    array = g_array_new (FALSE, FALSE, sizeof (MMCellBroadcastChannels));
+
+    channel_strings = g_strsplit (str, ",", -1);
+
+    if (channel_strings) {
+        guint i;
+
+        for (i = 0; channel_strings[i]; i++) {
+            char *startptr, *endptr;
+            gint64 start;
+
+            startptr = channel_strings[i];
+            start = g_ascii_strtoll (startptr, &endptr, 10);
+            if (startptr == endptr || start > G_MAXUINT16 || start < 0) {
+                inner_error = g_error_new (MM_CORE_ERROR,
+                                           MM_CORE_ERROR_INVALID_ARGS,
+                                           "Couldn't parse '%s' as MMCellBroadcastChannel start value",
+                                           channel_strings[i]);
+                break;
+            }
+            if (*endptr == '\0') {
+                MMCellBroadcastChannels ch;
+
+                ch.start = start;
+                ch.end = start;
+                g_array_append_val (array, ch);
+            } else if (*endptr == '-') {
+                gint64 end;
+
+                startptr = endptr + 1;
+                end = g_ascii_strtoll (startptr, &endptr, 10);
+                if (startptr == endptr || end > G_MAXUINT16 || end < 0) {
+                    inner_error = g_error_new (MM_CORE_ERROR,
+                                               MM_CORE_ERROR_INVALID_ARGS,
+                                               "Couldn't parse '%s' as MMCellBroadcastChannel end value",
+                                               channel_strings[i]);
+                    break;
+                }
+                if (*endptr == '\0') {
+                    MMCellBroadcastChannels ch;
+
+                    ch.start = start;
+                    ch.end = end;
+                    g_array_append_val (array, ch);
+                } else {
+                    inner_error = g_error_new (MM_CORE_ERROR,
+                                               MM_CORE_ERROR_INVALID_ARGS,
+                                               "Couldn't parse '%s' as MMCellBroadcastChannel end value",
+                                               channel_strings[i]);
+                    break;
+                }
+            } else {
+                inner_error = g_error_new (MM_CORE_ERROR,
+                                           MM_CORE_ERROR_INVALID_ARGS,
+                                           "Couldn't parse '%s' as MMCellBroadcastChannel value",
+                                           channel_strings[i]);
+                break;
+            }
+        }
+    }
+
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        g_array_free (array, TRUE);
+        *n_channels = 0;
+        *channels = NULL;
+        return FALSE;
+    }
+
+    *n_channels = array->len;
+    *channels = (MMCellBroadcastChannels *)g_array_free (array, FALSE);
+    return TRUE;
+}
+
 /******************************************************************************/
 /* MMModemPortInfo array management */
 
@@ -1273,6 +1387,77 @@ mm_common_oma_pending_network_initiated_sessions_garray_to_variant (GArray *arra
 
 GVariant *
 mm_common_build_oma_pending_network_initiated_sessions_default (void)
+{
+    GVariantBuilder builder;
+
+    g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(uu)"));
+    return g_variant_builder_end (&builder);
+}
+
+/******************************************************************************/
+/* MMModemCellbroadcastChannel array management */
+
+GArray *
+mm_common_cell_broadcast_channels_variant_to_garray (GVariant *variant)
+{
+    GArray *array = NULL;
+
+    if (variant) {
+        GVariantIter iter;
+        guint n;
+
+        g_variant_iter_init (&iter, variant);
+        n = g_variant_iter_n_children (&iter);
+
+        if (n > 0) {
+            MMCellBroadcastChannels channels;
+
+            array = g_array_sized_new (FALSE, FALSE, sizeof (MMCellBroadcastChannels), n);
+            while (g_variant_iter_loop (&iter, "(uu)", &channels.start, &channels.end))
+                g_array_append_val (array, channels);
+        }
+    }
+
+    /* If nothing set, fallback to empty */
+    if (!array)
+        array = g_array_new (FALSE, FALSE, sizeof (MMCellBroadcastChannels));
+
+    return array;
+}
+
+GVariant *
+mm_common_cell_broadcast_channels_array_to_variant (const MMCellBroadcastChannels *channels,
+                                                    guint                          n_sessions)
+{
+    if (n_sessions > 0) {
+        GVariantBuilder builder;
+        guint i;
+
+        g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(uu)"));
+
+        for (i = 0; i < n_sessions; i++)
+            g_variant_builder_add_value (&builder,
+                                         g_variant_new ("(uu)",
+                                                        ((guint32)channels[i].start),
+                                                        ((guint32)channels[i].end)));
+        return g_variant_builder_end (&builder);
+    }
+
+    return mm_common_build_cell_broadcast_channels_default ();
+}
+
+GVariant *
+mm_common_cell_broadcast_channels_garray_to_variant (GArray *array)
+{
+    if (array)
+        return mm_common_cell_broadcast_channels_array_to_variant ((const MMCellBroadcastChannels *)array->data,
+                                                                   array->len);
+
+    return mm_common_cell_broadcast_channels_array_to_variant (NULL, 0);
+}
+
+GVariant *
+mm_common_build_cell_broadcast_channels_default (void)
 {
     GVariantBuilder builder;
 
@@ -2081,6 +2266,7 @@ mm_common_register_errors (void)
     aux |= MM_SERIAL_ERROR;
     aux |= MM_MESSAGE_ERROR;
     aux |= MM_CDMA_ACTIVATION_ERROR;
+    aux |= MM_CARRIER_LOCK_ERROR;
 
     return TRUE;
 }

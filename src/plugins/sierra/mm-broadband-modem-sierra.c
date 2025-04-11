@@ -37,12 +37,12 @@
 #include "mm-common-sierra.h"
 #include "mm-broadband-bearer-sierra.h"
 
-static void iface_modem_init (MMIfaceModem *iface);
-static void iface_modem_cdma_init (MMIfaceModemCdma *iface);
-static void iface_modem_time_init (MMIfaceModemTime *iface);
+static void iface_modem_init      (MMIfaceModemInterface     *iface);
+static void iface_modem_cdma_init (MMIfaceModemCdmaInterface *iface);
+static void iface_modem_time_init (MMIfaceModemTimeInterface *iface);
 
-static MMIfaceModem *iface_modem_parent;
-static MMIfaceModemCdma *iface_modem_cdma_parent;
+static MMIfaceModemInterface     *iface_modem_parent;
+static MMIfaceModemCdmaInterface *iface_modem_cdma_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemSierra, mm_broadband_modem_sierra, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -765,7 +765,7 @@ load_current_modes (MMIfaceModem *self,
     }
 
     mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                   primary,
+                                   MM_IFACE_PORT_AT (primary),
                                    "!SELRAT?",
                                    3,
                                    FALSE,
@@ -883,7 +883,7 @@ set_current_modes (MMIfaceModem *self,
 
     command = g_strdup_printf ("!SELRAT=%d", idx);
     mm_base_modem_at_command_full (MM_BASE_MODEM (self),
-                                   primary,
+                                   MM_IFACE_PORT_AT (primary),
                                    command,
                                    3,
                                    FALSE,
@@ -1869,7 +1869,7 @@ mm_broadband_modem_sierra_init (MMBroadbandModemSierra *self)
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     iface_modem_parent = g_type_interface_peek_parent (iface);
 
@@ -1904,7 +1904,7 @@ iface_modem_init (MMIfaceModem *iface)
 }
 
 static void
-iface_modem_cdma_init (MMIfaceModemCdma *iface)
+iface_modem_cdma_init (MMIfaceModemCdmaInterface *iface)
 {
     iface_modem_cdma_parent = g_type_interface_peek_parent (iface);
 
@@ -1919,7 +1919,7 @@ iface_modem_cdma_init (MMIfaceModemCdma *iface)
 }
 
 static void
-iface_modem_time_init (MMIfaceModemTime *iface)
+iface_modem_time_init (MMIfaceModemTimeInterface *iface)
 {
     iface->check_support = modem_time_check_support;
     iface->check_support_finish = modem_time_check_support_finish;

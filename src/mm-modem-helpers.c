@@ -21,7 +21,6 @@
 #include <ctype.h>
 #include <glib.h>
 #include <string.h>
-#include <ctype.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
 
@@ -278,7 +277,7 @@ mm_create_device_identifier (guint        vid,
     if (ati)
         g_string_append (devid, ati);
     if (ati1) {
-        /* Only append "ATI1" if it's differnet than "ATI" */
+        /* Only append "ATI1" if it's different than "ATI" */
         if (!ati || (strcmp (ati, ati1) != 0))
             g_string_append (devid, ati1);
     }
@@ -449,6 +448,34 @@ mm_bcd_to_string (const guint8 *bcd, gsize bcd_len, gboolean low_nybble_first)
         if (!low_nybble_first)
             str = g_string_append_c (str, bcd_chars[bcd[i] & 0xF]);
     }
+    return g_string_free (str, FALSE);
+}
+
+/*****************************************************************************/
+
+gchar *
+mm_at_quote_string (const gchar *input)
+{
+    GString *str;
+    gsize    input_len;
+
+    input_len = input ? strlen (input) : 0;
+    str = g_string_sized_new (3 + 3 * input_len); /* worst case */
+    g_string_append_c (str, '"');
+
+    if (input) {
+        gsize i, len;
+
+        len = strlen (input);
+        for (i = 0 ; i < len; i++) {
+            if (input[i] < 0x20 || input[i] == '"' || input[i] == '\\')
+                g_string_append_printf (str, "\\%02X", input[i]);
+            else
+                g_string_append_c (str, input[i]);
+        }
+    }
+    g_string_append_c (str, '"');
+
     return g_string_free (str, FALSE);
 }
 
@@ -941,6 +968,16 @@ mm_3gpp_cds_regex_get (void)
                         NULL);
 }
 
+GRegex *
+mm_3gpp_cbm_regex_get (void)
+{
+    /* +CBM: <length><CR><LF><PDU> */
+    return g_regex_new ("\\r\\n\\+CBM:\\s*(\\d+)\\r\\n(.*)\\r\\n",
+                        G_REGEX_RAW | G_REGEX_OPTIMIZE,
+                        0,
+                        NULL);
+}
+
 /*************************************************************************/
 /* AT+WS46=? response parser
  *
@@ -1224,7 +1261,7 @@ mm_3gpp_parse_cops_test_response (const gchar     *reply,
 
     /* Cell access technology (GSM, UTRAN, etc) got added later and not all
      * modems implement it.  Some modesm have quirks that make it hard to
-     * use one regular experession for matching both pre-UMTS and UMTS
+     * use one regular expression for matching both pre-UMTS and UMTS
      * responses.  So try UMTS-format first and fall back to pre-UMTS if
      * we get no UMTS-formst matches.
      */
@@ -1826,7 +1863,7 @@ mm_3gpp_parse_cgdcont_read_response (const gchar *reply,
         /* No APNs configured, all done */
         return NULL;
 
-    r = g_regex_new ("\\+CGDCONT:\\s*(\\d+)\\s*,([^, \\)]*)\\s*,([^, \\)]*)\\s*,([^, \\)]*)",
+    r = g_regex_new ("\\+CGDCONT:\\s*(\\d+)\\s*,([^, \\)]*)\\s*,([^,\\s\\)]*)",
                      G_REGEX_DOLLAR_ENDONLY | G_REGEX_RAW,
                      0, NULL);
     g_assert (r);
@@ -1842,6 +1879,8 @@ mm_3gpp_parse_cgdcont_read_response (const gchar *reply,
             MM3gppPdpContext *pdp;
 
             pdp = g_slice_new0 (MM3gppPdpContext);
+            list = g_list_prepend (list, pdp);
+
             if (!mm_get_uint_from_match_info (match_info, 1, &pdp->cid)) {
                 inner_error = g_error_new (MM_CORE_ERROR,
                                            MM_CORE_ERROR_FAILED,
@@ -1851,8 +1890,6 @@ mm_3gpp_parse_cgdcont_read_response (const gchar *reply,
             }
             pdp->pdp_type = ip_family;
             pdp->apn = mm_get_string_unquoted_from_match_info (match_info, 3);
-
-            list = g_list_prepend (list, pdp);
         }
 
         g_free (str);
@@ -2897,6 +2934,110 @@ out:
         *status = (gboolean) class_1_status;
 
     return TRUE;
+}
+
+/*************************************************************************/
+
+#define CBS_MAX_CHANNEL G_MAXUINT16
+
+GArray *
+mm_3gpp_parse_cscb_response (const char *response, GError **error)
+{
+    g_autoptr(GRegex) r = NULL;
+    g_autoptr(GMatchInfo)  match_info = NULL;
+    GError *inner_error = NULL;
+    gsize len;
+    g_autoptr (GArray) array = g_array_new (FALSE, FALSE, sizeof (MMCellBroadcastChannels));
+    g_autofree char *str = NULL;
+    g_auto (GStrv) intervals = NULL;
+    int i;
+
+    len = strlen (response);
+    if (!len) {
+        inner_error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS, "empty channel list");
+        goto out;
+    }
+
+    /*
+     * AT+CSCB=[0|1],"<channels>","<coding-scheme>"
+     */
+    r = g_regex_new ("\\+CSCB:\\s*"
+                     "(\\d),\\s*"         /* [0|1] */
+                     "\"([\\d,\\-]*)\","  /* channel list */
+                     "\"\"",              /* encodings */
+                     G_REGEX_NEWLINE_CRLF,
+                     0,
+                     NULL);
+    g_assert (r != NULL);
+
+    g_regex_match_full (r, response, -1, 0, 0, &match_info, &inner_error);
+    if (inner_error)
+        goto out;
+
+    if (!g_match_info_matches (match_info)) {
+        inner_error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED, "Couldn't match CSCB response");
+        goto out;
+    }
+
+    str = g_match_info_fetch (match_info, 1);
+    if (!g_str_equal (str, "0")) {
+        inner_error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                   "Couldn't match type of CSCB response: '%s'", str);
+        goto out;
+    }
+
+    str = g_match_info_fetch (match_info, 2);
+    intervals = g_strsplit (str, ",", -1);
+    for (i = 0; intervals[i]; i++) {
+        gchar *interval_separator;
+
+        g_strstrip (intervals[i]);
+        interval_separator = strstr (intervals[i], "-");
+        if (interval_separator) {
+            /* Add an interval */
+            gchar *end;
+            g_autofree gchar *start = NULL;
+            MMCellBroadcastChannels channels;
+
+            start = g_strdup (intervals[i]);
+            interval_separator = strstr (start, "-");
+            *(interval_separator++) = '\0';
+            end = interval_separator;
+
+            if (mm_get_uint_from_str (start, &channels.start) &&
+                mm_get_uint_from_str (end, &channels.end) &&
+                channels.start <= channels.end &&
+                channels.end <= CBS_MAX_CHANNEL)
+                g_array_append_val (array, channels);
+            else {
+                inner_error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                           "Couldn't parse CSCB interval '%s'", intervals[i]);
+                goto out;
+            }
+        } else {
+            guint channel;
+
+            /* Add single value */
+            if (mm_get_uint_from_str (intervals[i], &channel)) {
+                MMCellBroadcastChannels channels = {
+                    .start = channel,
+                    .end = channel
+                };
+                g_array_append_val (array, channels);
+            } else {
+                inner_error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                                           "Couldn't parse CSCB value '%s'", intervals[i]);
+                goto out;
+            }
+        }
+    }
+
+    return g_steal_pointer (&array);
+
+ out:
+    g_assert (inner_error);
+    g_propagate_error (error, inner_error);
+    return NULL;
 }
 
 /*************************************************************************/
@@ -4119,11 +4260,16 @@ mm_3gpp_get_ip_family_from_pdp_type (const gchar *pdp_type)
 }
 
 gboolean
-mm_3gpp_normalize_ip_family (MMBearerIpFamily *family)
+mm_3gpp_normalize_ip_family (MMBearerIpFamily *family, gboolean from_user)
 {
-    /* if nothing specific requested, default to IPv4 */
+    /* To address limitations in reading IP_TYPE information (in some cases) for
+     * profile requests, default to IPv4v6 (dual-stack) for profile requests and
+     * IPv4 only for user requests (to ensure backward compatibility) if nothing
+     * specific is requested. This ensures network compatibility across IPv4 and IPv6 networks,
+     * preventing potential connectivity issues in IPv6 environments.
+    */
     if (*family == MM_BEARER_IP_FAMILY_NONE || *family == MM_BEARER_IP_FAMILY_ANY) {
-        *family = MM_BEARER_IP_FAMILY_IPV4;
+        *family = from_user ? MM_BEARER_IP_FAMILY_IPV4 : MM_BEARER_IP_FAMILY_IPV4V6;
         return TRUE;
     }
 
@@ -5159,6 +5305,38 @@ out:
 /*****************************************************************************/
 
 gboolean
+mm_validate_cbs_channels (GArray *channels, GError **error)
+{
+    guint i;
+
+    for (i = 0; i < channels->len; i++) {
+        MMCellBroadcastChannels ch = g_array_index (channels, MMCellBroadcastChannels, i);
+
+        if (ch.end < ch.start) {
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                         "Invalid channels: End channel smaller than start channel");
+            return FALSE;
+        }
+
+        if (ch.start > CBS_MAX_CHANNEL) {
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                         "Invalid channels: Start channel %u too large", ch.start);
+            return FALSE;
+        }
+
+        if (ch.end > CBS_MAX_CHANNEL) {
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_INVALID_ARGS,
+                         "Invalid channels: End channel %u too large", ch.end);
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+/*****************************************************************************/
+
+gboolean
 mm_sim_parse_cpol_query_response (const gchar  *response,
                                   guint        *out_index,
                                   gchar       **out_operator_code,
@@ -5297,6 +5475,56 @@ mm_sim_parse_cpol_test_response (const gchar  *response,
     return TRUE;
 }
 
+gchar *
+mm_sim_convert_spn_to_utf8 (const guint8  *bin,
+                            gsize          binlen,
+                            GError       **error)
+{
+    g_autoptr(GByteArray) bin_array = NULL;
+
+    /* Remove the FF filler at the end */
+    while (binlen > 1 && bin[binlen - 1] == 0xff)
+        binlen--;
+    if (binlen <= 1) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "SIM returned empty response");
+        return NULL;
+    }
+
+    /* Setup as bytearray.
+     * First byte is metadata; remainder is GSM-7 unpacked into octets; convert to UTF8 */
+    bin_array = g_byte_array_sized_new (binlen - 1);
+    g_byte_array_append (bin_array, bin + 1, binlen - 1);
+
+    return mm_modem_charset_bytearray_to_utf8 (bin_array, MM_MODEM_CHARSET_GSM, FALSE, error);
+}
+
+guint
+mm_sim_validate_mnc_length (const guint8  *bin,
+                            gsize          binlen,
+                            GError       **error)
+{
+    guint mnc_len;
+
+    if (binlen < 4) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "SIM returned too short response of length %" G_GSIZE_FORMAT " (should be 4)",
+                     binlen);
+        return 0;
+    }
+
+    /* MNC length is byte 4 of this SIM file */
+    mnc_len = bin[3];
+    if (mnc_len != 2 && mnc_len != 3) {
+        g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                     "SIM returned invalid MNC length %u (should be either 2 or 3)",
+                     mnc_len);
+        return 0;
+    }
+
+    return mnc_len;
+}
+
 #define EID_BYTE_LENGTH 16
 
 gchar *
@@ -5306,4 +5534,21 @@ mm_decode_eid (const gchar *eid, gsize eid_len)
         return NULL;
 
     return mm_bcd_to_string ((const guint8 *) eid, eid_len, FALSE /* low_nybble_first */);
+}
+
+/*****************************************************************************/
+
+guint
+mm_string_uint_map_lookup (const MMStringUintMap *map,
+                           const gsize            map_size,
+                           const gchar           *str,
+                           const guint            default_value)
+{
+    guint i;
+
+    for (i = 0; i < map_size; i++) {
+        if (g_str_equal (str, map[i].str))
+            return map[i].val;
+    }
+    return default_value;
 }

@@ -46,6 +46,8 @@ gchar *mm_common_build_sms_storages_string      (const MMSmsStorage           *s
                                                  guint                         n_storages);
 gchar *mm_common_build_mode_combinations_string (const MMModemModeCombination *modes,
                                                  guint                         n_modes);
+gchar *mm_common_build_channels_string          (const MMCellBroadcastChannels *channels,
+                                                 guint                          n_channels);
 
 /******************************************************************************/
 /* String to enums/flags parsers */
@@ -101,6 +103,10 @@ MMModem3gppDrxCycle           mm_common_get_3gpp_drx_cycle_from_string          
 MMBearerAccessTypePreference  mm_common_get_access_type_preference_from_string    (const gchar  *str,
                                                                                    GError      **error);
 MMBearerProfileSource         mm_common_get_profile_source_from_string            (const gchar  *str,
+                                                                                   GError      **error);
+gboolean                      mm_common_get_cell_broadcast_channels_from_string   (const gchar  *str,
+                                                                                   MMCellBroadcastChannels **channels,
+                                                                                   guint        *n_channels,
                                                                                    GError      **error);
 
 /******************************************************************************/
@@ -163,6 +169,13 @@ GVariant *mm_common_oma_pending_network_initiated_sessions_array_to_variant  (co
                                                                               guint                                      n_modes);
 GVariant *mm_common_oma_pending_network_initiated_sessions_garray_to_variant (GArray                                    *array);
 GVariant *mm_common_build_oma_pending_network_initiated_sessions_default     (void);
+
+/* MMModemCellbroadcastChannel array management */
+GArray   *mm_common_cell_broadcast_channels_variant_to_garray (GVariant                      *variant);
+GVariant *mm_common_cell_broadcast_channels_array_to_variant  (const MMCellBroadcastChannels *channels,
+                                                               guint                          n_sessions);
+GVariant *mm_common_cell_broadcast_channels_garray_to_variant (GArray *array);
+GVariant *mm_common_build_cell_broadcast_channels_default     (void);
 
 /******************************************************************************/
 

@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details:
  *
- * Copyright (C) 2012 Google, Inc.
+ * Copyright (C) 2012-2024 Google, Inc.
  */
 
 #include <config.h>
@@ -26,6 +26,7 @@
 #include "mm-device.h"
 #include "mm-plugin.h"
 #include "mm-log-object.h"
+#include "mm-daemon-enums-types.h"
 
 static void log_object_iface_init (MMLogObjectInterface *iface);
 
@@ -46,7 +47,6 @@ enum {
 };
 
 enum {
-    SIGNAL_PORT_GRABBED,
     SIGNAL_PORT_RELEASED,
     SIGNAL_LAST
 };
@@ -72,11 +72,14 @@ struct _MMDevicePrivate {
     guint16 product;
     /* Subsystem vendor ID for PCI devices */
     guint16 subsystem_vendor;
+    /* Subsystem device ID for PCI devices */
+    guint16 subsystem_device;
 
     /* Kernel drivers managing this device */
     gchar **drivers;
 
-    /* Best plugin to manage this device */
+    /* Best plugin to manage this device, only if the device probing
+     * has finished successfully. */
     MMPlugin *plugin;
 
     /* Lists of port probes in the device */
@@ -213,7 +216,7 @@ add_port_driver (MMDevice       *self,
     self->priv->drivers[n_items + 1] = NULL;
 }
 
-void
+gboolean
 mm_device_grab_port (MMDevice       *self,
                      MMKernelDevice *kernel_port)
 {
@@ -221,22 +224,19 @@ mm_device_grab_port (MMDevice       *self,
     MMKernelDevice *lower_port;
 
     if (mm_device_owns_port (self, kernel_port))
-        return;
+        return TRUE;
 
     lower_port = mm_kernel_device_peek_lower_device (kernel_port);
     if (lower_port) {
         g_autoptr(GError) error = NULL;
 
         /* No port probing done, at this point this is not something we require
-         * as all the virtual instantiated ports are net devices. We also avoid
-         * emitting the PORT_GRABBED signal in the MMDevice, because that is
-         * exclusively linked to a port being added to the list of probes, which
-         * we don't do here. */
+         * as all the virtual instantiated ports are net devices. */
         if (self->priv->modem && !mm_base_modem_grab_link_port (self->priv->modem, kernel_port, &error))
             mm_obj_dbg (self, "fully ignoring link port %s from now on: %s",
                         mm_kernel_device_get_name (kernel_port),
                         error->message);
-        return;
+        return FALSE;
     }
     if (!g_strcmp0 ("net", mm_kernel_device_get_subsystem (kernel_port)) &&
         mm_kernel_device_get_wwandev_sysfs_path (kernel_port)) {
@@ -256,7 +256,7 @@ mm_device_grab_port (MMDevice       *self,
                 mm_obj_dbg (self, "fully ignoring link port %s from now on: %s",
                             mm_kernel_device_get_name (kernel_port),
                             error->message);
-            return;
+            return FALSE;
         }
     }
 
@@ -271,6 +271,9 @@ mm_device_grab_port (MMDevice       *self,
     if (!self->priv->subsystem_vendor)
         self->priv->subsystem_vendor  = mm_kernel_device_get_physdev_subsystem_vid (kernel_port);
 
+    if (!self->priv->subsystem_device)
+        self->priv->subsystem_device  = mm_kernel_device_get_physdev_subsystem_pid (kernel_port);
+
     /* Add new port driver */
     add_port_driver (self, kernel_port);
 
@@ -278,8 +281,7 @@ mm_device_grab_port (MMDevice       *self,
     probe = mm_port_probe_new (self, kernel_port);
     self->priv->port_probes = g_list_prepend (self->priv->port_probes, probe);
 
-    /* Notify about the grabbed port */
-    g_signal_emit (self, signals[SIGNAL_PORT_GRABBED], 0, kernel_port);
+    return TRUE;
 }
 
 void
@@ -351,8 +353,9 @@ unexport_modem (MMDevice *self)
 static void
 export_modem (MMDevice *self)
 {
-    GDBusConnection *connection = NULL;
-    gchar           *path;
+    g_autoptr(GDBusConnection) connection = NULL;
+    g_autofree gchar *existing_path = NULL;
+    g_autofree gchar *path = NULL;
 
     g_assert (MM_IS_BASE_MODEM (self->priv->modem));
     g_assert (G_IS_DBUS_OBJECT_MANAGER (self->priv->object_manager));
@@ -363,12 +366,20 @@ export_modem (MMDevice *self)
         return;
     }
 
+    /* Don't export if we've aborted initialization */
+    g_object_get (self->priv->object_manager,
+                  "connection", &connection,
+                  NULL);
+    if (!connection) {
+        mm_obj_dbg (self, "exporting aborted as there is no bus connection");
+        return;
+    }
+
     /* Don't export already exported modems */
     g_object_get (self->priv->modem,
-                  "g-object-path", &path,
+                  "g-object-path", &existing_path,
                   NULL);
-    if (path) {
-        g_free (path);
+    if (existing_path) {
         mm_obj_dbg (self, "modem already exported");
         return;
     }
@@ -376,30 +387,58 @@ export_modem (MMDevice *self)
     /* No outstanding port tasks, so if the modem is valid we can export it */
 
     path = g_strdup_printf (MM_DBUS_MODEM_PREFIX "/%d", mm_base_modem_get_dbus_id (self->priv->modem));
-    g_object_get (self->priv->object_manager,
-                  "connection", &connection,
-                  NULL);
     g_object_set (self->priv->modem,
                   "g-object-path", path,
                   MM_BASE_MODEM_CONNECTION, connection,
                   NULL);
-    g_object_unref (connection);
 
     g_dbus_object_manager_server_export (self->priv->object_manager,
                                          G_DBUS_OBJECT_SKELETON (self->priv->modem));
 
     mm_obj_dbg (self, " exported modem at path '%s'", path);
-    mm_obj_dbg (self, "    plugin:  %s", mm_base_modem_get_plugin (self->priv->modem));
-    mm_obj_dbg (self, "    vid:pid: 0x%04X:0x%04X",
-                (mm_base_modem_get_vendor_id (self->priv->modem) & 0xFFFF),
-                (mm_base_modem_get_product_id (self->priv->modem) & 0xFFFF));
-    if (mm_base_modem_get_subsystem_vendor_id (self->priv->modem))
-        mm_obj_dbg (self, "    subsystem vid: 0x%04X",
-                    (mm_base_modem_get_subsystem_vendor_id (self->priv->modem) & 0xFFFF));
-    if (self->priv->virtual)
-        mm_obj_dbg (self, "    virtual");
+}
 
-    g_free (path);
+/*****************************************************************************/
+
+static void
+initialize_ready (MMBaseModem   *modem,
+                  GAsyncResult  *res,
+                  MMDevice      *_self) /* full reference */
+{
+    g_autoptr(MMDevice) self = _self;
+    g_autoptr(GError)   error = NULL;
+
+    if (!mm_base_modem_initialize_finish (modem, res, &error)) {
+        if (g_error_matches (error, MM_CORE_ERROR, MM_CORE_ERROR_ABORTED)) {
+            /* FATAL error, won't even be exported in DBus */
+            mm_obj_err (self, "fatal error initializing: %s", error->message);
+        } else {
+            /* non-fatal error */
+            mm_obj_warn (self, "error initializing: %s", error->message);
+            mm_base_modem_set_valid (modem, TRUE);
+        }
+    } else {
+        mm_obj_dbg (self, "modem initialized");
+        mm_base_modem_set_valid (modem, TRUE);
+    }
+}
+
+void
+mm_device_initialize_modem (MMDevice *self)
+{
+    MMBaseModem *modem;
+
+    modem = mm_device_peek_modem (self);
+    if (!modem) {
+        mm_obj_warn (self, "cannot initialize modem: not found");
+        return;
+    }
+
+    mm_obj_dbg (self, "modem initializing...");
+    mm_base_modem_initialize (modem,
+                              MM_BASE_MODEM_OPERATION_LOCK_REQUIRED,
+                              (GAsyncReadyCallback)initialize_ready,
+                              g_object_ref (self));
 }
 
 /*****************************************************************************/
@@ -437,16 +476,17 @@ mm_device_remove_modem (MMDevice  *self)
 static gboolean
 reprobe (MMDevice *self)
 {
-    GError *error = NULL;
+    g_autoptr (GError) error = NULL;
 
     self->priv->reprobe_id = 0;
 
     mm_obj_dbg (self, "Reprobing modem...");
     if (!mm_device_create_modem (self, &error)) {
         mm_obj_warn (self, "could not recreate modem: %s", error->message);
-        g_error_free (error);
-    } else
+    } else {
         mm_obj_dbg (self, "modem recreated");
+        mm_device_initialize_modem (self);
+    }
 
     return G_SOURCE_REMOVE;
 }
@@ -486,6 +526,8 @@ mm_device_create_modem (MMDevice  *self,
     }
 
     if (!self->priv->virtual) {
+        g_autofree gchar *device_id_info = NULL;
+
         if (!self->priv->port_probes) {
             g_set_error (error,
                          MM_CORE_ERROR,
@@ -494,9 +536,26 @@ mm_device_create_modem (MMDevice  *self,
             return FALSE;
         }
 
-        mm_obj_msg (self, "creating modem with plugin '%s' and '%u' ports",
+        /* PCI devices will have all subsystem vendor, vendor and product */
+        if (self->priv->subsystem_vendor) {
+            device_id_info = g_strdup_printf ("(%04x:%04x:%04x)",
+                                              self->priv->subsystem_vendor,
+                                              self->priv->vendor,
+                                              self->priv->product);
+        }
+        /* USB devices will have all vendor and product */
+        else if (self->priv->vendor || self->priv->product) {
+            device_id_info = g_strdup_printf ("(%04x:%04x)",
+                                              self->priv->vendor,
+                                              self->priv->product);
+        }
+        /* else, serial devices will not have any */
+
+        mm_obj_msg (self, "creating modem with plugin '%s' and '%u' ports %s",
                     mm_plugin_get_name (self->priv->plugin),
-                    g_list_length (self->priv->port_probes));
+                    g_list_length (self->priv->port_probes),
+                    device_id_info ? device_id_info : "");
+
     } else {
         if (!self->priv->virtual_ports) {
             g_set_error (error,
@@ -559,6 +618,13 @@ mm_device_get_subsystem_vendor (MMDevice *self)
 {
     return self->priv->subsystem_vendor;
 }
+
+guint16
+mm_device_get_subsystem_device (MMDevice *self)
+{
+    return self->priv->subsystem_device;
+}
+
 
 void
 mm_device_set_plugin (MMDevice *self,
@@ -627,18 +693,27 @@ mm_device_peek_port_probe_list (MMDevice *self)
     return self->priv->port_probes;
 }
 
-GList *
-mm_device_get_port_probe_list (MMDevice *self)
+void
+mm_device_reset_port_probe_list (MMDevice *self)
 {
-    return g_list_copy_deep (self->priv->port_probes,
-                             (GCopyFunc)g_object_ref,
-                             NULL);
+    GList *l;
+
+    mm_obj_dbg (self, "port probe list reset...");
+    for (l = self->priv->port_probes; l; l = g_list_next (l)) {
+        mm_port_probe_reset (MM_PORT_PROBE (l->data));
+    }
 }
 
 gboolean
 mm_device_get_hotplugged (MMDevice *self)
 {
     return self->priv->hotplugged;
+}
+
+void
+mm_device_reset_hotplugged (MMDevice *self)
+{
+    self->priv->hotplugged = FALSE;
 }
 
 gboolean
@@ -704,8 +779,12 @@ mm_device_inhibit (MMDevice            *self,
     g_assert (!self->priv->inhibited);
     self->priv->inhibited = TRUE;
 
-    /* Make sure modem is disabled while inhibited */
+    /* Make sure modem is disabled while inhibited. This operation requests
+     * an exclusive lock marked as override, so the modem object will not
+     * allow any additional lock request any more. */
     mm_base_modem_disable (self->priv->modem,
+                           MM_BASE_MODEM_OPERATION_LOCK_REQUIRED,
+                           MM_BASE_MODEM_OPERATION_PRIORITY_OVERRIDE,
                            (GAsyncReadyCallback)inhibit_disable_ready,
                            task);
 }
@@ -716,7 +795,12 @@ mm_device_uninhibit (MMDevice  *self,
 {
     g_assert (self->priv->inhibited);
     self->priv->inhibited = FALSE;
-    return mm_device_create_modem (self, error);
+
+    if (!mm_device_create_modem (self, error))
+        return FALSE;
+
+    mm_device_initialize_modem (self);
+    return TRUE;
 }
 
 /*****************************************************************************/
@@ -988,15 +1072,6 @@ mm_device_class_init (MMDeviceClass *klass)
                               FALSE,
                               G_PARAM_READWRITE);
     g_object_class_install_property (object_class, PROP_INHIBITED, properties[PROP_INHIBITED]);
-
-    signals[SIGNAL_PORT_GRABBED] =
-        g_signal_new (MM_DEVICE_PORT_GRABBED,
-                      G_OBJECT_CLASS_TYPE (object_class),
-                      G_SIGNAL_RUN_FIRST,
-                      G_STRUCT_OFFSET (MMDeviceClass, port_grabbed),
-                      NULL, NULL,
-                      g_cclosure_marshal_generic,
-                      G_TYPE_NONE, 1, MM_TYPE_KERNEL_DEVICE);
 
     signals[SIGNAL_PORT_RELEASED] =
         g_signal_new (MM_DEVICE_PORT_RELEASED,

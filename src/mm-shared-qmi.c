@@ -81,15 +81,15 @@ typedef struct {
     GArray            *supported_bands;
 
     /* Location helpers */
-    MMIfaceModemLocation   *iface_modem_location_parent;
-    MMModemLocationSource   enabled_sources;
-    QmiClient              *pds_client;
-    gulong                  pds_location_event_report_indication_id;
-    QmiClient              *loc_client;
-    gulong                  loc_location_nmea_indication_id;
-    gchar                 **loc_assistance_data_servers;
-    guint32                 loc_assistance_data_max_file_size;
-    guint32                 loc_assistance_data_max_part_size;
+    MMIfaceModemLocationInterface  *iface_modem_location_parent;
+    MMModemLocationSource           enabled_sources;
+    QmiClient                      *pds_client;
+    gulong                          pds_location_event_report_indication_id;
+    QmiClient                      *loc_client;
+    gulong                          loc_location_nmea_indication_id;
+    gchar                         **loc_assistance_data_servers;
+    guint32                         loc_assistance_data_max_file_size;
+    guint32                         loc_assistance_data_max_part_size;
 
     /* Carrier config helpers */
     gboolean  config_active_default;
@@ -1072,7 +1072,7 @@ mm_shared_qmi_load_current_capabilities (MMIfaceModem        *self,
      *  "mode preference" TLV to select currently enabled capabilities.
      *  b) If the device supports NAS Technology Preference (older devices),
      *  we use this method to select currently enabled capabilities.
-     *  c) If none of those messages is supported we don't allow swiching
+     *  c) If none of those messages is supported we don't allow switching
      *  capabilities.
      */
 
@@ -1728,6 +1728,7 @@ mm_shared_qmi_load_supported_modes (MMIfaceModem        *self,
     MMQmiSupportedModesContext  ctx = { 0 };
     guint                       i;
     GArray                     *combinations;
+    GError                     *error = NULL;
 
     task = g_task_new (self, NULL, callback, user_data);
 
@@ -1753,8 +1754,11 @@ mm_shared_qmi_load_supported_modes (MMIfaceModem        *self,
     ctx.current_capabilities = priv->current_capabilities;
     ctx.multimode = priv->multimode;
 
-    combinations = mm_supported_modes_from_qmi_supported_modes_context (&ctx, self);
-    g_task_return_pointer (task, combinations, (GDestroyNotify) g_array_unref);
+    combinations = mm_supported_modes_from_qmi_supported_modes_context (&ctx, self, &error);
+    if (error)
+        g_task_return_error (task, error);
+    else
+        g_task_return_pointer (task, combinations, (GDestroyNotify) g_array_unref);
     g_object_unref (task);
 }
 
@@ -3649,7 +3653,7 @@ uim_start_refresh_timeout (MMSharedQmi *self)
 
     mm_obj_dbg (self, "refresh start timed out; trigger SIM change check");
 
-    mm_iface_modem_check_for_sim_swap (MM_IFACE_MODEM (self), NULL, NULL, NULL, NULL);
+    mm_iface_modem_check_for_sim_swap (MM_IFACE_MODEM (self), NULL, NULL);
 
     return G_SOURCE_REMOVE;
 }
@@ -3715,7 +3719,7 @@ uim_refresh_indication_cb (QmiClientUim                  *client,
                 g_source_remove (priv->uim_refresh_start_timeout_id);
                 priv->uim_refresh_start_timeout_id = 0;
             }
-            mm_iface_modem_check_for_sim_swap (MM_IFACE_MODEM (self), NULL, NULL, NULL, NULL);
+            mm_iface_modem_check_for_sim_swap (MM_IFACE_MODEM (self), NULL, NULL);
         }
     }
 }
@@ -4795,9 +4799,10 @@ pds_get_agps_config_ready (QmiClientPds *client,
         str = g_strdup ("");
 
 out:
-    if (error)
+    if (error) {
+        g_free (str);
         g_task_return_error (task, error);
-    else {
+    } else {
         g_assert (str);
         g_task_return_pointer (task, str, g_free);
     }
@@ -4905,9 +4910,10 @@ loc_location_get_server_indication_cb (QmiClientLoc                    *client,
         str = g_strdup ("");
 
 out:
-    if (error)
+    if (error) {
+        g_free (str);
         g_task_return_error (task, error);
-    else {
+    } else {
         g_assert (str);
         g_task_return_pointer (task, str, g_free);
     }
@@ -6646,7 +6652,8 @@ loc_location_get_predicted_orbits_data_source_indication_cb (QmiClientLoc       
         }
         g_ptr_array_add (tmp, NULL);
 
-        g_assert (!priv->loc_assistance_data_servers);
+
+        g_strfreev (priv->loc_assistance_data_servers);
         priv->loc_assistance_data_servers = (gchar **) g_ptr_array_free (tmp, FALSE);
 
         supported = TRUE;

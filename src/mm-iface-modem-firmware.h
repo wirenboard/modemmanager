@@ -22,17 +22,15 @@
 #define _LIBMM_INSIDE_MM
 #include <libmm-glib.h>
 
-#define MM_TYPE_IFACE_MODEM_FIRMWARE               (mm_iface_modem_firmware_get_type ())
-#define MM_IFACE_MODEM_FIRMWARE(obj)               (G_TYPE_CHECK_INSTANCE_CAST ((obj), MM_TYPE_IFACE_MODEM_FIRMWARE, MMIfaceModemFirmware))
-#define MM_IS_IFACE_MODEM_FIRMWARE(obj)            (G_TYPE_CHECK_INSTANCE_TYPE ((obj), MM_TYPE_IFACE_MODEM_FIRMWARE))
-#define MM_IFACE_MODEM_FIRMWARE_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), MM_TYPE_IFACE_MODEM_FIRMWARE, MMIfaceModemFirmware))
+#include "mm-iface-modem.h"
+
+#define MM_TYPE_IFACE_MODEM_FIRMWARE mm_iface_modem_firmware_get_type ()
+G_DECLARE_INTERFACE (MMIfaceModemFirmware, mm_iface_modem_firmware, MM, IFACE_MODEM_FIRMWARE, MMIfaceModem)
 
 #define MM_IFACE_MODEM_FIRMWARE_DBUS_SKELETON  "iface-modem-firmware-dbus-skeleton"
 #define MM_IFACE_MODEM_FIRMWARE_IGNORE_CARRIER "iface-modem-firmware-ignore-carrier"
 
-typedef struct _MMIfaceModemFirmware MMIfaceModemFirmware;
-
-struct _MMIfaceModemFirmware {
+struct _MMIfaceModemFirmwareInterface {
     GTypeInterface g_iface;
 
     /* Get update settings (async) */
@@ -69,9 +67,6 @@ struct _MMIfaceModemFirmware {
                                         GError **error);
 };
 
-GType mm_iface_modem_firmware_get_type (void);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (MMIfaceModemFirmware, g_object_unref)
-
 /* Get generic device ids */
 GPtrArray *mm_iface_firmware_build_generic_device_ids (MMIfaceModemFirmware  *self,
                                                        GError               **error);
@@ -91,5 +86,16 @@ void mm_iface_modem_firmware_shutdown (MMIfaceModemFirmware *self);
 /* Bind properties for simple GetStatus() */
 void mm_iface_modem_firmware_bind_simple_status (MMIfaceModemFirmware *self,
                                                  MMSimpleStatus *status);
+
+/* Helper to load common update settings on the primary port */
+void mm_iface_modem_firmware_load_update_settings_in_port (
+    MMIfaceModemFirmware *self,
+    MMPort               *port,
+    GAsyncReadyCallback   callback,
+    gpointer              user_data);
+MMFirmwareUpdateSettings *mm_iface_modem_firmware_load_update_settings_in_port_finish (
+    MMIfaceModemFirmware  *self,
+    GAsyncResult          *res,
+    GError               **error);
 
 #endif /* MM_IFACE_MODEM_FIRMWARE_H */

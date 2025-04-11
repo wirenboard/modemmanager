@@ -13,7 +13,7 @@ mm_fccunlockdirpackage = mm_pkglibdir / 'fcc-unlock.d'
 examples = files(
   '105b',
   '1199',
-  '1eac',
+  '14c3',
   '2c7c',
 )
 
@@ -30,8 +30,14 @@ vidpids = {
   '1199:9079': '1199',
   '413c:81a3': '1199',
   '413c:81a8': '1199',
-  '1eac:1001': '1eac',
+  '14c3:4d75': '14c3',
+  '1eac:1001': '2c7c',
+  '1eac:1004': '2c7c',
+  '1eac:1007': '2c7c',
   '2c7c:030a': '2c7c',
+  '2c7c:0313': '2c7c',
+  '2c7c:0314': '2c7c',
+  '2c7c:0801': '2c7c',
 }
 
 ln_cmd = 'ln -fs @0@ ${DESTDIR}@1@'

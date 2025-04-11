@@ -28,6 +28,9 @@ MMPlugin *mm_plugin_create_anydata (void);
 #if defined ENABLE_PLUGIN_BROADMOBI
 MMPlugin *mm_plugin_create_broadmobi (void);
 #endif
+#if defined ENABLE_PLUGIN_CELLIENT
+MMPlugin *mm_plugin_create_cellient (void);
+#endif
 #if defined ENABLE_PLUGIN_CINTERION
 MMPlugin *mm_plugin_create_cinterion (void);
 #endif
@@ -103,6 +106,9 @@ MMPlugin *mm_plugin_create_qcom_soc (void);
 #if defined ENABLE_PLUGIN_QUECTEL
 MMPlugin *mm_plugin_create_quectel (void);
 #endif
+#if defined ENABLE_PLUGIN_ROLLING
+MMPlugin *mm_plugin_create_rolling (void);
+#endif
 #if defined ENABLE_PLUGIN_SAMSUNG
 MMPlugin *mm_plugin_create_samsung (void);
 #endif
@@ -139,6 +145,9 @@ MMPlugin *mm_plugin_create_x22x (void);
 #if defined ENABLE_PLUGIN_ZTE
 MMPlugin *mm_plugin_create_zte (void);
 #endif
+#if defined ENABLE_PLUGIN_NETPRISMA
+MMPlugin *mm_plugin_create_netprisma (void);
+#endif
 
 GList *
 mm_builtin_plugins_load (void)
@@ -156,6 +165,9 @@ mm_builtin_plugins_load (void)
 #endif
 #if defined ENABLE_PLUGIN_BROADMOBI
     PREPEND_PLUGIN (broadmobi);
+#endif
+#if defined ENABLE_PLUGIN_CELLIENT
+    PREPEND_PLUGIN (cellient);
 #endif
 #if defined ENABLE_PLUGIN_CINTERION
     PREPEND_PLUGIN (cinterion);
@@ -232,6 +244,9 @@ mm_builtin_plugins_load (void)
 #if defined ENABLE_PLUGIN_QUECTEL
     PREPEND_PLUGIN (quectel);
 #endif
+#if defined ENABLE_PLUGIN_ROLLING
+    PREPEND_PLUGIN (rolling);
+#endif
 #if defined ENABLE_PLUGIN_SAMSUNG
     PREPEND_PLUGIN (samsung);
 #endif
@@ -267,6 +282,9 @@ mm_builtin_plugins_load (void)
 #endif
 #if defined ENABLE_PLUGIN_ZTE
     PREPEND_PLUGIN (zte);
+#endif
+#if defined ENABLE_PLUGIN_NETPRISMA
+    PREPEND_PLUGIN (netprisma);
 #endif
 #undef PREPEND_PLUGIN
     return builtin_plugins;

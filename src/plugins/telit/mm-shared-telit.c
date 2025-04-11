@@ -31,6 +31,8 @@
 #include "mm-modem-helpers-telit.h"
 #include "mm-shared-telit.h"
 
+G_DEFINE_INTERFACE (MMSharedTelit, mm_shared_telit, MM_TYPE_IFACE_MODEM)
+
 /*****************************************************************************/
 /* Private data context */
 
@@ -40,12 +42,12 @@
 static GQuark private_quark;
 
 typedef struct {
-    MMIfaceModem *iface_modem_parent;
-    gboolean      alternate_3g_bands;
-    gboolean      ext_4g_bands;
-    GArray       *supported_bands;
-    GArray       *supported_modes;
-    gchar        *software_package_version;
+    MMIfaceModemInterface *iface_modem_parent;
+    gboolean               alternate_3g_bands;
+    gboolean               ext_4g_bands;
+    GArray                *supported_bands;
+    GArray                *supported_modes;
+    gchar                 *software_package_version;
 } Private;
 
 static void
@@ -113,8 +115,8 @@ get_private (MMSharedTelit *self)
     if (!priv) {
         priv = g_slice_new0 (Private);
 
-        if (MM_SHARED_TELIT_GET_INTERFACE (self)->peek_parent_modem_interface)
-            priv->iface_modem_parent = MM_SHARED_TELIT_GET_INTERFACE (self)->peek_parent_modem_interface (self);
+        if (MM_SHARED_TELIT_GET_IFACE (self)->peek_parent_modem_interface)
+            priv->iface_modem_parent = MM_SHARED_TELIT_GET_IFACE (self)->peek_parent_modem_interface (self);
 
         g_object_set_qdata_full (G_OBJECT (self), private_quark, priv, (GDestroyNotify)private_free);
     }
@@ -692,7 +694,7 @@ load_revision_ready (MMBaseModem *self,
                      GAsyncResult *res,
                      GTask *task)
 {
-    GError *error;
+    GError *error = NULL;
     GVariant *result;
 
     result = mm_base_modem_at_sequence_finish (self, res, NULL, &error);
@@ -792,26 +794,6 @@ mm_shared_telit_modem_load_revision (MMIfaceModem *self,
 /*****************************************************************************/
 
 static void
-shared_telit_init (gpointer g_iface)
+mm_shared_telit_default_init (MMSharedTelitInterface *iface)
 {
 }
-
-GType
-mm_shared_telit_get_type (void)
-{
-    static GType shared_telit_type = 0;
-
-    if (!G_UNLIKELY (shared_telit_type)) {
-        static const GTypeInfo info = {
-            sizeof (MMSharedTelit),  /* class_size */
-            shared_telit_init,       /* base_init */
-            NULL,                  /* base_finalize */
-        };
-
-        shared_telit_type = g_type_register_static (G_TYPE_INTERFACE, "MMSharedTelit", &info, 0);
-        g_type_interface_add_prerequisite (shared_telit_type, MM_TYPE_IFACE_MODEM);
-    }
-
-    return shared_telit_type;
-}
-

@@ -15,6 +15,7 @@ headers = files(
   'mm-call-audio-format.h',
   'mm-call.h',
   'mm-call-properties.h',
+  'mm-cbm.h',
   'mm-cdma-manual-activation-properties.h',
   'mm-cell-info.h',
   'mm-cell-info-cdma.h',
@@ -38,8 +39,10 @@ headers = files(
   'mm-modem-3gpp-profile-manager.h',
   'mm-modem-3gpp-ussd.h',
   'mm-modem-cdma.h',
+  'mm-modem-cell-broadcast.h',
   'mm-modem-firmware.h',
   'mm-modem.h',
+  'mm-modem-cell-broadcast.h',
   'mm-modem-location.h',
   'mm-modem-messaging.h',
   'mm-modem-oma.h',
@@ -61,6 +64,7 @@ headers = files(
   'mm-sms.h',
   'mm-sms-properties.h',
   'mm-unlock-retries.h',
+  'mm-network-rejection.h',
 )
 
 install_headers(
@@ -77,6 +81,7 @@ sources = files(
   'mm-call-audio-format.c',
   'mm-call.c',
   'mm-call-properties.c',
+  'mm-cbm.c',
   'mm-cdma-manual-activation-properties.c',
   'mm-cell-info.c',
   'mm-cell-info-cdma.c',
@@ -101,6 +106,7 @@ sources = files(
   'mm-modem-3gpp-ussd.c',
   'mm-modem.c',
   'mm-modem-cdma.c',
+  'mm-modem-cell-broadcast.c',
   'mm-modem-firmware.c',
   'mm-modem-location.c',
   'mm-modem-messaging.c',
@@ -123,6 +129,7 @@ sources = files(
   'mm-sms.c',
   'mm-sms-properties.c',
   'mm-unlock-retries.c',
+  'mm-network-rejection.c',
 )
 
 deps = [include_dep]

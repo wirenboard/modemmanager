@@ -39,13 +39,14 @@
 # include "mm-log.h"
 #endif
 
-static void iface_modem_location_init (MMIfaceModemLocation *iface);
-
+static void iface_modem_location_init (MMIfaceModemLocationInterface *iface);
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
-static void iface_modem_firmware_init (MMIfaceModemFirmware *iface);
+static void iface_modem_firmware_init (MMIfaceModemFirmwareInterface *iface);
+
+static MMIfaceModemFirmwareInterface *iface_modem_firmware_parent;
 #endif
 
-static MMIfaceModemLocation *iface_modem_location_parent;
+static MMIfaceModemLocationInterface *iface_modem_location_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemMbimFoxconn, mm_broadband_modem_mbim_foxconn, MM_TYPE_BROADBAND_MODEM_MBIM, 0,
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
@@ -122,23 +123,28 @@ needs_fastboot_and_qmi_pdc_mcfg_apps_version (MMIfaceModemFirmware *self)
     return (vendor_id == 0x413c && (product_id == 0x81d7 || product_id == 0x81e0 || product_id == 0x81e4 || product_id == 0x81e6));
 }
 
-static MMFirmwareUpdateSettings *
-create_update_settings (MMIfaceModemFirmware *self,
-                        const gchar          *version_str)
+static void
+fill_update_settings (MMIfaceModemFirmware     *self,
+                      MMFirmwareUpdateSettings *update_settings,
+                      const gchar              *version_str)
 {
-    MMModemFirmwareUpdateMethod  methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE;
-    MMFirmwareUpdateSettings    *update_settings = NULL;
+    MMModemFirmwareUpdateMethod methods;
 
-    if (needs_qdu_and_mcfg_apps_version (self))
-        methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU;
-    else
-        methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT | MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC;
+    methods = mm_firmware_update_settings_get_method (update_settings);
 
-    update_settings = mm_firmware_update_settings_new (methods);
-    if (methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT)
-        mm_firmware_update_settings_set_fastboot_at (update_settings, "AT^FASTBOOT");
+    /* Prefer any parent's update method */
+    if (methods == MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE) {
+        if (needs_qdu_and_mcfg_apps_version (self))
+            methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU;
+        else
+            methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT | MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC;
+
+        mm_firmware_update_settings_set_method (update_settings, methods);
+
+        if (methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT)
+            mm_firmware_update_settings_set_fastboot_at (update_settings, "AT^FASTBOOT");
+    }
     mm_firmware_update_settings_set_version (update_settings, version_str);
-    return update_settings;
 }
 
 static void
@@ -147,6 +153,7 @@ dms_foxconn_get_firmware_version_ready (QmiClientDms *client,
                                         GTask        *task)
 {
     g_autoptr(QmiMessageDmsFoxconnGetFirmwareVersionOutput)  output = NULL;
+    MMFirmwareUpdateSettings                                *update_settings = NULL;
     GError                                                  *error = NULL;
     const gchar                                             *str;
 
@@ -156,12 +163,12 @@ dms_foxconn_get_firmware_version_ready (QmiClientDms *client,
         g_object_unref (task);
         return;
     }
+    update_settings = g_task_get_task_data (task);
 
     qmi_message_dms_foxconn_get_firmware_version_output_get_version (output, &str, NULL);
 
-    g_task_return_pointer (task,
-                           create_update_settings (g_task_get_source_object (task), str),
-                           g_object_unref);
+    fill_update_settings (g_task_get_source_object (task), update_settings, str);
+    g_task_return_pointer (task, g_object_ref (update_settings), g_object_unref);
     g_object_unref (task);
 }
 
@@ -171,6 +178,7 @@ fox_get_firmware_version_ready (QmiClientFox *client,
                                 GTask        *task)
 {
     g_autoptr(QmiMessageFoxGetFirmwareVersionOutput)  output = NULL;
+    MMFirmwareUpdateSettings                         *update_settings = NULL;
     GError                                           *error = NULL;
     const gchar                                      *str;
 
@@ -180,12 +188,12 @@ fox_get_firmware_version_ready (QmiClientFox *client,
         g_object_unref (task);
         return;
     }
+    update_settings = g_task_get_task_data (task);
 
     qmi_message_fox_get_firmware_version_output_get_version (output, &str, NULL);
 
-    g_task_return_pointer (task,
-                           create_update_settings (g_task_get_source_object (task), str),
-                           g_object_unref);
+    fill_update_settings (g_task_get_source_object (task), update_settings, str);
+    g_task_return_pointer (task, g_object_ref (update_settings), g_object_unref);
     g_object_unref (task);
 }
 
@@ -256,14 +264,22 @@ mbim_port_allocate_qmi_client_ready (MMPortMbim     *mbim,
 }
 
 static void
-firmware_load_update_settings (MMIfaceModemFirmware *self,
-                               GAsyncReadyCallback   callback,
-                               gpointer              user_data)
+parent_load_update_settings_ready (MMIfaceModemFirmware *self,
+                                   GAsyncResult         *res,
+                                   GTask                *task)
 {
-    GTask      *task;
-    MMPortMbim *mbim;
+    MMPortMbim                          *mbim;
+    g_autoptr(GError)                    error = NULL;
+    g_autoptr(MMFirmwareUpdateSettings)  update_settings;
 
-    task = g_task_new (self, NULL, callback, user_data);
+    update_settings = iface_modem_firmware_parent->load_update_settings_finish (self, res, &error);
+    if (error) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_task_set_task_data (task, g_object_ref (update_settings), g_object_unref);
 
     mbim = mm_broadband_modem_mbim_peek_port_mbim (MM_BROADBAND_MODEM_MBIM (self));
     mm_port_mbim_allocate_qmi_client (mbim,
@@ -271,6 +287,25 @@ firmware_load_update_settings (MMIfaceModemFirmware *self,
                                       NULL,
                                       (GAsyncReadyCallback)mbim_port_allocate_qmi_client_ready,
                                       task);
+}
+
+static void
+firmware_load_update_settings (MMIfaceModemFirmware *self,
+                               GAsyncReadyCallback   callback,
+                               gpointer              user_data)
+{
+    GTask *task;
+
+    g_assert (iface_modem_firmware_parent);
+    g_assert (iface_modem_firmware_parent->load_update_settings);
+    g_assert (iface_modem_firmware_parent->load_update_settings_finish);
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    iface_modem_firmware_parent->load_update_settings (
+        self,
+        (GAsyncReadyCallback)parent_load_update_settings_ready,
+        task);
 }
 
 #endif
@@ -582,7 +617,7 @@ mm_broadband_modem_mbim_foxconn_init (MMBroadbandModemMbimFoxconn *self)
 }
 
 static void
-iface_modem_location_init (MMIfaceModemLocation *iface)
+iface_modem_location_init (MMIfaceModemLocationInterface *iface)
 {
     iface_modem_location_parent = g_type_interface_peek_parent (iface);
 
@@ -597,8 +632,10 @@ iface_modem_location_init (MMIfaceModemLocation *iface)
 #if defined WITH_QMI && QMI_MBIM_QMUX_SUPPORTED
 
 static void
-iface_modem_firmware_init (MMIfaceModemFirmware *iface)
+iface_modem_firmware_init (MMIfaceModemFirmwareInterface *iface)
 {
+    iface_modem_firmware_parent = g_type_interface_peek_parent (iface);
+
     iface->load_update_settings = firmware_load_update_settings;
     iface->load_update_settings_finish = firmware_load_update_settings_finish;
 }

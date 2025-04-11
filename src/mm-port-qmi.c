@@ -29,8 +29,6 @@
 #include "mm-modem-helpers-qmi.h"
 #include "mm-log-object.h"
 
-#define DEFAULT_LINK_PREALLOCATED_AMOUNT 4
-
 /* as internally defined in the kernel */
 #define RMNET_MAX_PACKET_SIZE 16384
 #define MHI_NET_MTU_DEFAULT   16384
@@ -61,6 +59,7 @@ struct _MMPortQmiPrivate {
     GList     *services;
     gchar     *net_driver;
     gchar     *net_sysfs_path;
+    guint      net_preallocated_links_requested;
 #if defined WITH_QRTR
     QrtrNode  *node;
 #endif
@@ -79,6 +78,7 @@ struct _MMPortQmiPrivate {
     QmiWdaDataAggregationProtocol dap;
     guint                         max_multiplexed_links;
     /* preallocated links */
+    guint     preallocated_links_needed;
     MMPort   *preallocated_links_main;
     GArray   *preallocated_links;
     GList    *preallocated_links_setup_pending;
@@ -485,9 +485,11 @@ acquire_preallocated_link (MMPortQmi  *self,
 /*****************************************************************************/
 
 typedef struct {
-    QmiDevice *qmi_device;
-    MMPort    *data;
-    GArray    *preallocated_links;
+    QmiDevice             *qmi_device;
+    gchar                 *link_prefix_hint;
+    QmiDeviceAddLinkFlags  flags;
+    MMPort                *data;
+    GArray                *preallocated_links;
 } InitializePreallocatedLinksContext;
 
 static void
@@ -497,6 +499,7 @@ initialize_preallocated_links_context_free (InitializePreallocatedLinksContext *
         delete_preallocated_links (ctx->qmi_device, ctx->preallocated_links);
         g_array_unref (ctx->preallocated_links);
     }
+    g_clear_pointer (&ctx->link_prefix_hint, g_free);
     g_object_unref (ctx->qmi_device);
     g_object_unref (ctx->data);
     g_slice_free (InitializePreallocatedLinksContext, ctx);
@@ -517,16 +520,18 @@ device_add_link_preallocated_ready (QmiDevice     *device,
                                     GAsyncResult  *res,
                                     GTask         *task)
 {
+    MMPortQmi                          *self;
     InitializePreallocatedLinksContext *ctx;
     GError                             *error = NULL;
     PreallocatedLinkInfo                info = { NULL, 0, FALSE };
 
-    ctx = g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
 
-    info.link_name = qmi_device_add_link_finish (device, res, &info.mux_id, &error);
+    info.link_name = qmi_device_add_link_with_flags_finish (device, res, &info.mux_id, &error);
     if (!info.link_name) {
         g_prefix_error (&error, "failed to add preallocated link (%u/%u) for device: ",
-                        ctx->preallocated_links->len + 1, DEFAULT_LINK_PREALLOCATED_AMOUNT);
+                        ctx->preallocated_links->len + 1, self->priv->preallocated_links_needed);
         g_task_return_error (task, error);
         return;
     }
@@ -551,25 +556,29 @@ initialize_preallocated_links_next (GTask *task)
         return;
     }
 
-    if (ctx->preallocated_links->len == DEFAULT_LINK_PREALLOCATED_AMOUNT) {
+    g_assert (self->priv->preallocated_links_needed > 0);
+    if (ctx->preallocated_links->len == (guint) self->priv->preallocated_links_needed) {
         g_task_return_pointer (task, g_steal_pointer (&ctx->preallocated_links), (GDestroyNotify)g_array_unref);
         g_object_unref (task);
         return;
     }
 
-    qmi_device_add_link (self->priv->qmi_device,
-                         ctx->preallocated_links->len + 1,
-                         mm_kernel_device_get_name (mm_port_peek_kernel_device (ctx->data)),
-                         "ignored", /* n/a in qmi_wwan add_mux */
-                         NULL,
-                         (GAsyncReadyCallback) device_add_link_preallocated_ready,
-                         task);
+    qmi_device_add_link_with_flags (self->priv->qmi_device,
+                                    ctx->preallocated_links->len + 1,
+                                    mm_kernel_device_get_name (mm_port_peek_kernel_device (ctx->data)),
+                                    ctx->link_prefix_hint,
+                                    ctx->flags,
+                                    NULL,
+                                    (GAsyncReadyCallback) device_add_link_preallocated_ready,
+                                    task);
 }
 
 static void
-initialize_preallocated_links (MMPortQmi           *self,
-                               GAsyncReadyCallback  callback,
-                               gpointer             user_data)
+initialize_preallocated_links (MMPortQmi             *self,
+                               const gchar           *link_prefix_hint,
+                               QmiDeviceAddLinkFlags  flags,
+                               GAsyncReadyCallback    callback,
+                               gpointer               user_data)
 {
     InitializePreallocatedLinksContext *ctx;
     GTask                              *task;
@@ -578,8 +587,10 @@ initialize_preallocated_links (MMPortQmi           *self,
 
     ctx = g_slice_new0 (InitializePreallocatedLinksContext);
     ctx->qmi_device = g_object_ref (self->priv->qmi_device);
+    ctx->link_prefix_hint = g_strdup (link_prefix_hint);
+    ctx->flags = flags;
     ctx->data = g_object_ref (self->priv->preallocated_links_main);
-    ctx->preallocated_links = g_array_sized_new (FALSE, FALSE, sizeof (PreallocatedLinkInfo), DEFAULT_LINK_PREALLOCATED_AMOUNT);
+    ctx->preallocated_links = g_array_sized_new (FALSE, FALSE, sizeof (PreallocatedLinkInfo), self->priv->preallocated_links_needed);
     g_array_set_clear_func (ctx->preallocated_links, (GDestroyNotify)preallocated_link_info_clear);
     g_task_set_task_data (task, ctx, (GDestroyNotify)initialize_preallocated_links_context_free);
 
@@ -771,21 +782,8 @@ mm_port_qmi_setup_link (MMPortQmi           *self,
     ctx->mux_id = QMI_DEVICE_MUX_ID_UNBOUND;
     g_task_set_task_data (task, ctx, (GDestroyNotify) setup_link_context_free);
 
-    /* When using rmnet, just try to add link in the QmiDevice */
-    if (self->priv->kernel_data_modes & MM_PORT_QMI_KERNEL_DATA_MODE_MUX_RMNET) {
-        qmi_device_add_link_with_flags (self->priv->qmi_device,
-                                        QMI_DEVICE_MUX_ID_AUTOMATIC,
-                                        mm_kernel_device_get_name (mm_port_peek_kernel_device (data)),
-                                        link_prefix_hint,
-                                        get_rmnet_device_add_link_flags (self),
-                                        NULL,
-                                        (GAsyncReadyCallback) device_add_link_ready,
-                                        task);
-        return;
-    }
-
-    /* For qmi_wwan, use preallocated links */
-    if (self->priv->kernel_data_modes & MM_PORT_QMI_KERNEL_DATA_MODE_MUX_QMIWWAN) {
+    /* If we're requested to use preallocated links, do it right away */
+    if (self->priv->preallocated_links_needed > 0) {
         if (self->priv->preallocated_links) {
             setup_preallocated_link (task);
             return;
@@ -803,8 +801,23 @@ mm_port_qmi_setup_link (MMPortQmi           *self,
         /* Store main to flag that we're initializing preallocated links */
         self->priv->preallocated_links_main = g_object_ref (data);
         initialize_preallocated_links (self,
+                                       link_prefix_hint,
+                                       get_rmnet_device_add_link_flags (self),
                                        (GAsyncReadyCallback) initialize_preallocated_links_ready,
                                        task);
+        return;
+    }
+
+    /* No preallocated links required and using rmnet, just try to add link in the QmiDevice */
+    if (self->priv->kernel_data_modes & MM_PORT_QMI_KERNEL_DATA_MODE_MUX_RMNET) {
+        qmi_device_add_link_with_flags (self->priv->qmi_device,
+                                        QMI_DEVICE_MUX_ID_AUTOMATIC,
+                                        mm_kernel_device_get_name (mm_port_peek_kernel_device (data)),
+                                        link_prefix_hint,
+                                        get_rmnet_device_add_link_flags (self),
+                                        NULL,
+                                        (GAsyncReadyCallback) device_add_link_ready,
+                                        task);
         return;
     }
 
@@ -865,7 +878,17 @@ mm_port_qmi_cleanup_link (MMPortQmi           *self,
         return;
     }
 
-    /* When using rmnet, just try to add link in the QmiDevice */
+    /* If using preallocated links, just release one */
+    if (self->priv->preallocated_links_needed > 0) {
+        if (!release_preallocated_link (self, link_name, mux_id, &error))
+            g_task_return_error (task, error);
+        else
+            g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    /* When using rmnet, just try to delete the link from the QmiDevice */
     if (self->priv->kernel_data_modes & MM_PORT_QMI_KERNEL_DATA_MODE_MUX_RMNET) {
         qmi_device_delete_link (self->priv->qmi_device,
                                 link_name,
@@ -873,16 +896,6 @@ mm_port_qmi_cleanup_link (MMPortQmi           *self,
                                 NULL,
                                 (GAsyncReadyCallback) device_delete_link_ready,
                                 task);
-        return;
-    }
-
-    /* For qmi_wwan, use preallocated links */
-    if (self->priv->kernel_data_modes & MM_PORT_QMI_KERNEL_DATA_MODE_MUX_QMIWWAN) {
-        if (!release_preallocated_link (self, link_name, mux_id, &error))
-            g_task_return_error (task, error);
-        else
-            g_task_return_boolean (task, TRUE);
-        g_object_unref (task);
         return;
     }
 
@@ -932,7 +945,7 @@ delete_all_links_ready (QmiDevice    *device,
 
     /* expected data format only applicable to qmi_wwan */
     if (g_strcmp0 (self->priv->net_driver, "qmi_wwan") == 0) {
-        mm_obj_dbg (self, "reseting expected kernel data format to 802.3 in data interface '%s'",
+        mm_obj_dbg (self, "resetting expected kernel data format to 802.3 in data interface '%s'",
                     mm_port_get_device (MM_PORT (ctx->data)));
         if (!qmi_device_set_expected_data_format (ctx->device, QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3, &error)) {
             g_task_return_error (task, error);
@@ -1213,6 +1226,7 @@ load_supported_kernel_data_modes (MMPortQmi *self,
 
 /*****************************************************************************/
 
+#define DEFAULT_QMI_WWAN_PREALLOCATED_LINKS                       4
 #define DEFAULT_DOWNLINK_DATA_AGGREGATION_MAX_SIZE                32768
 #define DEFAULT_DOWNLINK_DATA_AGGREGATION_MAX_SIZE_QMI_WWAN_RMNET 16384
 #define DEFAULT_DOWNLINK_DATA_AGGREGATION_MAX_DATAGRAMS           32
@@ -1300,6 +1314,57 @@ internal_setup_data_format_context_free (InternalSetupDataFormatContext *ctx)
     g_slice_free (InternalSetupDataFormatContext, ctx);
 }
 
+static void
+internal_setup_data_format_propagate_link_setup (GTask *task,
+                                                 guint *out_max_multiplexed_links,
+                                                 guint *out_preallocated_links)
+{
+    MMPortQmi                      *self;
+    InternalSetupDataFormatContext *ctx;
+    guint                           max_multiplexed_links;
+    guint                           preallocated_links;
+
+    if (!out_max_multiplexed_links && !out_preallocated_links)
+        return;
+
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
+
+    if (!ctx->wda_dap_supported) {
+        max_multiplexed_links = 0;
+        preallocated_links = 0;
+        mm_obj_dbg (self, "wda data aggregation protocol unsupported: no multiplexed bearers allowed");
+    } else {
+        /* if multiplex backend may be rmnet, MAX-MIN */
+        if (ctx->kernel_data_modes_supported & MM_PORT_QMI_KERNEL_DATA_MODE_MUX_RMNET) {
+            max_multiplexed_links = 1 + (QMI_DEVICE_MUX_ID_MAX - QMI_DEVICE_MUX_ID_MIN);
+            preallocated_links = (self->priv->net_preallocated_links_requested > max_multiplexed_links) ?
+                                 max_multiplexed_links :
+                                 self->priv->net_preallocated_links_requested;
+            mm_obj_dbg (self, "rmnet link management supported: %u multiplexed bearers allowed, %u links preallocated",
+                        max_multiplexed_links, preallocated_links);
+        }
+        /* if multiplex backend may be qmi_wwan, the max preallocated amount :/  */
+        else if (ctx->kernel_data_modes_supported & MM_PORT_QMI_KERNEL_DATA_MODE_MUX_QMIWWAN) {
+            preallocated_links = (self->priv->net_preallocated_links_requested > 0) ?
+                                 self->priv->net_preallocated_links_requested :
+                                 DEFAULT_QMI_WWAN_PREALLOCATED_LINKS;
+            max_multiplexed_links = preallocated_links;
+            mm_obj_dbg (self, "qmi_wwan link management supported: %u multiplexed bearers allowed, %u links preallocated",
+                        max_multiplexed_links, preallocated_links);
+        } else {
+            max_multiplexed_links = 0;
+            preallocated_links = 0;
+            mm_obj_dbg (self, "link management unsupported: no multiplexed bearers allowed");
+        }
+    }
+
+    if (out_max_multiplexed_links)
+        *out_max_multiplexed_links = max_multiplexed_links;
+    if (out_preallocated_links)
+        *out_preallocated_links = preallocated_links;
+}
+
 static gboolean
 internal_setup_data_format_finish (MMPortQmi                      *self,
                                    GAsyncResult                   *res,
@@ -1307,6 +1372,7 @@ internal_setup_data_format_finish (MMPortQmi                      *self,
                                    QmiWdaLinkLayerProtocol        *out_llp,
                                    QmiWdaDataAggregationProtocol  *out_dap,
                                    guint                          *out_max_multiplexed_links,
+                                   guint                          *out_preallocated_links,
                                    GError                        **error)
 {
     InternalSetupDataFormatContext *ctx;
@@ -1320,28 +1386,9 @@ internal_setup_data_format_finish (MMPortQmi                      *self,
     g_assert (ctx->wda_dl_dap_current == ctx->wda_ul_dap_current);
     *out_dap = ctx->wda_dl_dap_current;
 
-    if (out_max_multiplexed_links) {
-        if (!ctx->wda_dap_supported) {
-            *out_max_multiplexed_links = 0;
-            mm_obj_dbg (self, "wda data aggregation protocol unsupported: no multiplexed bearers allowed");
-        } else {
-            /* if multiplex backend may be rmnet, MAX-MIN */
-            if (ctx->kernel_data_modes_supported & MM_PORT_QMI_KERNEL_DATA_MODE_MUX_RMNET) {
-                *out_max_multiplexed_links = 1 + (QMI_DEVICE_MUX_ID_MAX - QMI_DEVICE_MUX_ID_MIN);
-                mm_obj_dbg (self, "rmnet link management supported: %u multiplexed bearers allowed",
-                            *out_max_multiplexed_links);
-            }
-            /* if multiplex backend may be qmi_wwan, the max preallocated amount :/  */
-            else if (ctx->kernel_data_modes_supported & MM_PORT_QMI_KERNEL_DATA_MODE_MUX_QMIWWAN) {
-                *out_max_multiplexed_links = DEFAULT_LINK_PREALLOCATED_AMOUNT;
-                mm_obj_dbg (self, "qmi_wwan link management supported: %u multiplexed bearers allowed",
-                            *out_max_multiplexed_links);
-            } else {
-                *out_max_multiplexed_links = 0;
-                mm_obj_dbg (self, "link management unsupported: no multiplexed bearers allowed");
-            }
-        }
-    }
+    internal_setup_data_format_propagate_link_setup (G_TASK (res),
+                                                     out_max_multiplexed_links,
+                                                     out_preallocated_links);
 
     return TRUE;
 }
@@ -1482,7 +1529,7 @@ set_data_format_ready (QmiClientWda *client,
 
     output = qmi_client_wda_set_data_format_finish (client, res, &error);
     if (!output || !qmi_message_wda_set_data_format_output_get_result (output, &error)) {
-        g_task_return_error (task, error);
+        g_task_return_error (task, g_steal_pointer (&error));
         g_object_unref (task);
         return;
     }
@@ -1594,7 +1641,7 @@ check_data_format_combination (GTask *task)
 
     /* go on to the next supported combination */
     for (++ctx->data_format_combination_i;
-         ctx->data_format_combination_i <= (gint)G_N_ELEMENTS (data_format_combinations);
+         ctx->data_format_combination_i < (gint)G_N_ELEMENTS (data_format_combinations);
          ctx->data_format_combination_i++) {
         const DataFormatCombination *combination;
         g_autofree gchar            *kernel_data_mode_str = NULL;
@@ -2076,6 +2123,7 @@ internal_setup_data_format_ready (MMPortQmi    *self,
                                             &self->priv->llp,
                                             &self->priv->dap,
                                             NULL, /* not expected to update */
+                                            NULL, /* not expected to update */
                                             &error))
         g_task_return_error (task, error);
     else {
@@ -2321,7 +2369,7 @@ qmi_device_open_second_ready (QmiDevice    *qmi_device,
         /* Otherwise, fatal */
         ctx->error = g_steal_pointer (&error);
     } else {
-        /* If the open with CTL data format is sucessful, update all settings
+        /* If the open with CTL data format is successful, update all settings
          * that we would have received with the internal setup data format
          * process */
         self->priv->kernel_data_modes = ctx->kernel_data_modes;
@@ -2375,6 +2423,7 @@ open_internal_setup_data_format_ready (MMPortQmi    *self,
                                             &self->priv->llp,
                                             &self->priv->dap,
                                             &self->priv->max_multiplexed_links,
+                                            &self->priv->preallocated_links_needed,
                                             &error)) {
         /* Continue with fallback to LLP requested via CTL */
         mm_obj_warn (self, "Couldn't setup data format: %s", error->message);
@@ -2652,26 +2701,29 @@ mm_port_qmi_is_open (MMPortQmi *self)
 }
 
 /*****************************************************************************/
+/* Sets network details that the QMI port should be aware of before even
+ * a data connection is started. */
 
 void
-mm_port_qmi_set_net_driver (MMPortQmi   *self,
-                            const gchar *net_driver)
+mm_port_qmi_set_net_details (MMPortQmi *self,
+                             MMPort    *first_net)
 {
+    MMKernelDevice *first_net_dev;
+
+    first_net_dev = mm_port_peek_kernel_device (first_net);
+
     g_assert (MM_IS_PORT_QMI (self));
+
     g_assert (!self->priv->net_driver);
-    self->priv->net_driver = g_strdup (net_driver);
-    initialize_endpoint_info (self);
-}
+    self->priv->net_driver = g_strdup (mm_kernel_device_get_driver (first_net_dev));
 
-/*****************************************************************************/
-
-void
-mm_port_qmi_set_net_sysfs_path (MMPortQmi   *self,
-                                const gchar *net_sysfs_path)
-{
-    g_assert (MM_IS_PORT_QMI (self));
     g_assert (!self->priv->net_sysfs_path);
-    self->priv->net_sysfs_path = g_strdup (net_sysfs_path);
+    self->priv->net_sysfs_path = g_strdup (mm_kernel_device_get_sysfs_path (first_net_dev));
+
+    g_assert (!self->priv->net_preallocated_links_requested);
+    self->priv->net_preallocated_links_requested = mm_kernel_device_get_global_property_as_int (first_net_dev, "ID_MM_QMI_PREALLOCATED_LINKS");
+
+    initialize_endpoint_info (self);
 }
 
 /*****************************************************************************/

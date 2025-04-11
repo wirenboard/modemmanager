@@ -33,8 +33,8 @@
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-cdma.h"
 
-static void iface_modem_init (MMIfaceModem *iface);
-static void iface_modem_cdma_init (MMIfaceModemCdma *iface);
+static void iface_modem_init      (MMIfaceModemInterface     *iface);
+static void iface_modem_cdma_init (MMIfaceModemCdmaInterface *iface);
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemAnydata, mm_broadband_modem_anydata, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
@@ -333,14 +333,14 @@ mm_broadband_modem_anydata_init (MMBroadbandModemAnydata *self)
 }
 
 static void
-iface_modem_init (MMIfaceModem *iface)
+iface_modem_init (MMIfaceModemInterface *iface)
 {
     iface->reset = reset;
     iface->reset_finish = reset_finish;
 }
 
 static void
-iface_modem_cdma_init (MMIfaceModemCdma *iface)
+iface_modem_cdma_init (MMIfaceModemCdmaInterface *iface)
 {
     iface->get_cdma1x_serving_system = NULL;
     iface->get_cdma1x_serving_system_finish = NULL;

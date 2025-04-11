@@ -43,6 +43,7 @@ enums_sources += custom_target(
 )
 
 sources = files(
+  'mm-cbm-part.c',
   'mm-charsets.c',
   'mm-error-helpers.c',
   'mm-log.c',
@@ -130,11 +131,13 @@ libkerneldevice_dep = declare_dependency(
 
 # ports library
 headers = files(
+  'mm-iface-port-at.h',
   'mm-port.h',
   'mm-port-serial-at.h',
 )
 
 sources = files(
+  'mm-iface-port-at.c',
   'mm-netlink.c',
   'mm-port.c',
   'mm-port-net.c',
@@ -206,6 +209,7 @@ libport_dep = declare_dependency(
 # Daemon enums, required by plugins
 headers = files(
   'mm-base-bearer.h',
+  'mm-base-modem.h',
   'mm-filter.h',
   'mm-port-probe.h',
 )
@@ -255,6 +259,7 @@ sources = files(
   'mm-auth-provider.c',
   'mm-base-bearer.c',
   'mm-base-call.c',
+  'mm-base-cbm.c',
   'mm-base-manager.c',
   'mm-base-modem-at.c',
   'mm-base-modem.c',
@@ -264,17 +269,20 @@ sources = files(
   'mm-broadband-bearer.c',
   'mm-broadband-modem.c',
   'mm-call-list.c',
+  'mm-cbm-list.c',
   'mm-context.c',
   'mm-device.c',
   'mm-dispatcher.c',
   'mm-dispatcher-connection.c',
   'mm-dispatcher-fcc-unlock.c',
+  'mm-dispatcher-modem-setup.c',
   'mm-filter.c',
   'mm-iface-modem-3gpp.c',
   'mm-iface-modem-3gpp-profile-manager.c',
   'mm-iface-modem-3gpp-ussd.c',
   'mm-iface-modem.c',
   'mm-iface-modem-cdma.c',
+  'mm-iface-modem-cell-broadcast.c',
   'mm-iface-modem-firmware.c',
   'mm-iface-modem-location.c',
   'mm-iface-modem-messaging.c',
@@ -308,6 +316,8 @@ endif
 c_args = [
   '-DMM_COMPILATION',
   '-DPLUGINDIR="@0@"'.format(mm_prefix / mm_pkglibdir),
+  '-DMODEMSETUPDIRPACKAGE="@0@"'.format(mm_prefix / mm_pkglibdir / 'modem-setup.d'),
+  '-DMODEMSETUPDIRUSER="@0@"'.format(mm_prefix / mm_pkgsysconfdir / 'modem-setup.d'),
   '-DFCCUNLOCKDIRPACKAGE="@0@"'.format(mm_prefix / mm_pkglibdir / 'fcc-unlock.d'),
   '-DFCCUNLOCKDIRUSER="@0@"'.format(mm_prefix / mm_pkgsysconfdir / 'fcc-unlock.d'),
   '-DCONNECTIONDIRPACKAGE="@0@"'.format(mm_prefix / mm_pkglibdir / 'connection.d'),

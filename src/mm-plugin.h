@@ -60,6 +60,7 @@
 #define MM_PLUGIN_REQUIRED_QCDM                "required-qcdm"
 #define MM_PLUGIN_ALLOWED_QMI                  "allowed-qmi"
 #define MM_PLUGIN_ALLOWED_MBIM                 "allowed-mbim"
+#define MM_PLUGIN_ALLOWED_XMMRPC               "allowed-xmmrpc"
 #define MM_PLUGIN_ICERA_PROBE                  "icera-probe"
 #define MM_PLUGIN_ALLOWED_ICERA                "allowed-icera"
 #define MM_PLUGIN_FORBIDDEN_ICERA              "forbidden-icera"
@@ -110,6 +111,7 @@ struct _MMPluginClass {
                                   guint16 vendor,
                                   guint16 product,
                                   guint16 subsystem_vendor,
+                                  guint16 subsystem_device,
                                   GList *probes,
                                   GError **error);
 

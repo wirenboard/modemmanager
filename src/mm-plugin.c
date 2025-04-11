@@ -94,6 +94,7 @@ struct _MMPluginPrivate {
     gboolean qcdm_required;
     gboolean qmi;
     gboolean mbim;
+    gboolean xmmrpc;
     gboolean icera_probe;
     gboolean xmm_probe;
     MMPortProbeAtCommand *custom_at_probe;
@@ -128,6 +129,7 @@ enum {
     PROP_REQUIRED_QCDM,
     PROP_ALLOWED_QMI,
     PROP_ALLOWED_MBIM,
+    PROP_ALLOWED_XMMRPC,
     PROP_ICERA_PROBE,
     PROP_ALLOWED_ICERA,
     PROP_FORBIDDEN_ICERA,
@@ -283,7 +285,8 @@ apply_pre_probing_filters (MMPlugin       *self,
     if (self->priv->drivers ||
         self->priv->forbidden_drivers ||
         !self->priv->qmi ||
-        !self->priv->mbim) {
+        !self->priv->mbim ||
+        !self->priv->xmmrpc) {
         static const gchar *virtual_drivers [] = { "virtual", NULL };
         const gchar **drivers;
 
@@ -746,6 +749,16 @@ mm_plugin_supports_port_finish (MMPlugin      *self,
     return (MMPluginSupportsResult)value;
 }
 
+static const MMStringUintMap subsys_flags_map[] = {
+    { "tty",     MM_PORT_PROBE_AT | MM_PORT_PROBE_QCDM },
+    { "usbmisc", MM_PORT_PROBE_QMI | MM_PORT_PROBE_MBIM | MM_PORT_PROBE_AT },
+    { "rpmsg",   MM_PORT_PROBE_AT | MM_PORT_PROBE_QMI },
+    { "wwan",    MM_PORT_PROBE_QMI | MM_PORT_PROBE_MBIM | MM_PORT_PROBE_AT | MM_PORT_PROBE_QCDM },
+#if defined WITH_QRTR
+    { "qrtr",    MM_PORT_PROBE_QMI },
+#endif
+};
+
 void
 mm_plugin_supports_port (MMPlugin            *self,
                          MMDevice            *device,
@@ -800,23 +813,14 @@ mm_plugin_supports_port (MMPlugin            *self,
     }
 
     /* Build mask of flags based on subsystem */
-    subsystem_expected_flags = MM_PORT_PROBE_NONE;
-    if (g_str_equal (mm_kernel_device_get_subsystem (port), "tty"))
-        subsystem_expected_flags |= (MM_PORT_PROBE_AT | MM_PORT_PROBE_QCDM);
-    else if (g_str_equal (mm_kernel_device_get_subsystem (port), "usbmisc"))
-        subsystem_expected_flags |= (MM_PORT_PROBE_QMI | MM_PORT_PROBE_MBIM | MM_PORT_PROBE_AT);
-    else if (g_str_equal (mm_kernel_device_get_subsystem (port), "rpmsg"))
-        subsystem_expected_flags |= (MM_PORT_PROBE_AT | MM_PORT_PROBE_QMI);
-    else if (g_str_equal (mm_kernel_device_get_subsystem (port), "wwan"))
-        subsystem_expected_flags |= (MM_PORT_PROBE_QMI | MM_PORT_PROBE_MBIM | MM_PORT_PROBE_AT | MM_PORT_PROBE_QCDM);
-#if defined WITH_QRTR
-    else if (g_str_equal (mm_kernel_device_get_subsystem (port), "qrtr"))
-        subsystem_expected_flags |= MM_PORT_PROBE_QMI;
-#endif
+    subsystem_expected_flags = mm_string_uint_map_lookup (subsys_flags_map,
+                                                          G_N_ELEMENTS (subsys_flags_map),
+                                                          mm_kernel_device_get_subsystem (port),
+                                                          MM_PORT_PROBE_NONE);
 
     /* Build mask of flags based on plugin */
     plugin_expected_flags = MM_PORT_PROBE_NONE;
-    if (self->priv->at)
+    if (self->priv->at || self->priv->single_at)
         plugin_expected_flags |= MM_PORT_PROBE_AT;
     if (self->priv->qcdm || self->priv->qcdm_required)
         plugin_expected_flags |= MM_PORT_PROBE_QCDM;
@@ -851,7 +855,7 @@ mm_plugin_supports_port (MMPlugin            *self,
     }
 
     /* If a modem is already available and the plugin says that only one AT port is
-     * expected, check if we alredy got the single AT port. And if so, we know this
+     * expected, check if we already got the single AT port. And if so, we know this
      * port being probed won't be AT. */
     if (self->priv->single_at &&
         mm_port_probe_list_has_at_port (mm_device_peek_port_probe_list (device)) &&
@@ -952,12 +956,15 @@ mm_plugin_create_modem (MMPlugin  *self,
                                                       mm_device_get_vendor (device),
                                                       mm_device_get_product (device),
                                                       mm_device_get_subsystem_vendor (device),
+                                                      mm_device_get_subsystem_device (device),
                                                       port_probes,
                                                       error);
     if (!modem)
         return NULL;
 
     mm_base_modem_set_hotplugged (modem, mm_device_get_hotplugged (device));
+    /* Reset hotplugged flag to guarantee full reconfiguration on next probe */
+    mm_device_reset_hotplugged (device);
 
     if (port_probes) {
         GList *l;
@@ -1256,6 +1263,10 @@ set_property (GObject *object,
         /* Construct only */
         self->priv->mbim = g_value_get_boolean (value);
         break;
+    case PROP_ALLOWED_XMMRPC:
+        /* Construct only */
+        self->priv->xmmrpc = g_value_get_boolean (value);
+        break;
     case PROP_ICERA_PROBE:
         /* Construct only */
         self->priv->icera_probe = g_value_get_boolean (value);
@@ -1368,6 +1379,9 @@ get_property (GObject *object,
         break;
     case PROP_ALLOWED_MBIM:
         g_value_set_boolean (value, self->priv->mbim);
+        break;
+    case PROP_ALLOWED_XMMRPC:
+        g_value_set_boolean (value, self->priv->xmmrpc);
         break;
     case PROP_ALLOWED_UDEV_TAGS:
         g_value_set_boxed (value, self->priv->udev_tags);
@@ -1617,6 +1631,14 @@ mm_plugin_class_init (MMPluginClass *klass)
          g_param_spec_boolean (MM_PLUGIN_ALLOWED_MBIM,
                                "Allowed MBIM",
                                "Whether MBIM ports are allowed in this plugin",
+                               FALSE,
+                               G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+        g_object_class_install_property
+        (object_class, PROP_ALLOWED_XMMRPC,
+         g_param_spec_boolean (MM_PLUGIN_ALLOWED_XMMRPC,
+                               "Allowed XMMRPC",
+                               "Whether XMMRPC ports are allowed in this plugin.",
                                FALSE,
                                G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 

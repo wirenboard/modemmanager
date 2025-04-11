@@ -1,14 +1,21 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * ModemManager Interface Specification
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details:
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2011 Red Hat, Inc.
  * Copyright (C) 2011 Google, Inc.
@@ -39,7 +46,7 @@
  * @MM_MODEM_CAPABILITY_LTE: Modem has LTE data capability.
  * @MM_MODEM_CAPABILITY_IRIDIUM: Modem has Iridium capabilities.
  * @MM_MODEM_CAPABILITY_5GNR: Modem has 5GNR capabilities. Since 1.14.
- * @MM_MODEM_CAPABILITY_TDS: Modem has TDS capabilties. Since 1.20.
+ * @MM_MODEM_CAPABILITY_TDS: Modem has TDS capabilities. Since 1.20.
  * @MM_MODEM_CAPABILITY_ANY: Mask specifying all capabilities.
  *
  * Flags describing one or more of the general access technology families that a
@@ -427,6 +434,7 @@ typedef enum { /*< underscore_name=mm_modem_mode >*/
  * @MM_MODEM_BAND_NGRAN_53: NGRAN band 53. Since 1.20.
  * @MM_MODEM_BAND_NGRAN_65: NGRAN band 65. Since 1.20.
  * @MM_MODEM_BAND_NGRAN_66: NGRAN band 66. Since 1.20.
+ * @MM_MODEM_BAND_NGRAN_67: NGRAN band 67. Since 1.24.
  * @MM_MODEM_BAND_NGRAN_70: NGRAN band 70. Since 1.20.
  * @MM_MODEM_BAND_NGRAN_71: NGRAN band 71. Since 1.20.
  * @MM_MODEM_BAND_NGRAN_74: NGRAN band 74. Since 1.20.
@@ -619,6 +627,7 @@ typedef enum { /*< underscore_name=mm_modem_band >*/
     MM_MODEM_BAND_NGRAN_53 = 353,
     MM_MODEM_BAND_NGRAN_65 = 365,
     MM_MODEM_BAND_NGRAN_66 = 366,
+    MM_MODEM_BAND_NGRAN_67 = 367,
     MM_MODEM_BAND_NGRAN_70 = 370,
     MM_MODEM_BAND_NGRAN_71 = 371,
     MM_MODEM_BAND_NGRAN_74 = 374,
@@ -657,6 +666,7 @@ typedef enum { /*< underscore_name=mm_modem_band >*/
  * @MM_MODEM_PORT_TYPE_MBIM: MBIM port.
  * @MM_MODEM_PORT_TYPE_AUDIO: Audio port. Since 1.12.
  * @MM_MODEM_PORT_TYPE_IGNORED: Ignored port. Since 1.16.
+ * @MM_MODEM_PORT_TYPE_XMMRPC: Control protocol for Intel XMM modems. Since 1.24.
  *
  * Type of modem port.
  *
@@ -672,6 +682,7 @@ typedef enum { /*< underscore_name=mm_modem_port_type >*/
     MM_MODEM_PORT_TYPE_MBIM    = 7,
     MM_MODEM_PORT_TYPE_AUDIO   = 8,
     MM_MODEM_PORT_TYPE_IGNORED = 9,
+    MM_MODEM_PORT_TYPE_XMMRPC  = 10,
 } MMModemPortType;
 
 /**
@@ -1106,6 +1117,22 @@ typedef enum { /*< underscore_name=mm_sms_cdma_service_category >*/
 } MMSmsCdmaServiceCategory;
 
 /**
+ * MMCbmState:
+ * @MM_CBM_STATE_UNKNOWN: State unknown or not reportable.
+ * @MM_CBM_STATE_RECEIVING: The message is being received but is not yet complete.
+ * @MM_CBM_STATE_RECEIVED: The message has been completely received.
+ *
+ * State of a given CBM.
+ *
+ * Since: 1.24
+ */
+typedef enum { /*< underscore_name=mm_cbm_state >*/
+    MM_CBM_STATE_UNKNOWN   = 0,
+    MM_CBM_STATE_RECEIVING = 1,
+    MM_CBM_STATE_RECEIVED  = 2,
+} MMCbmState;
+
+/**
  * MMModemLocationSource:
  * @MM_MODEM_LOCATION_SOURCE_NONE: None.
  * @MM_MODEM_LOCATION_SOURCE_3GPP_LAC_CI: Location Area Code and Cell ID.
@@ -1113,8 +1140,13 @@ typedef enum { /*< underscore_name=mm_sms_cdma_service_category >*/
  * @MM_MODEM_LOCATION_SOURCE_GPS_NMEA: GPS location given as NMEA traces.
  * @MM_MODEM_LOCATION_SOURCE_CDMA_BS: CDMA base station position.
  * @MM_MODEM_LOCATION_SOURCE_GPS_UNMANAGED: No location given, just GPS module setup. Since 1.4.
- * @MM_MODEM_LOCATION_SOURCE_AGPS_MSA: Mobile Station Assisted A-GPS location requested. Since 1.12.
- * @MM_MODEM_LOCATION_SOURCE_AGPS_MSB: Mobile Station Based A-GPS location requested. Since 1.12.
+ * @MM_MODEM_LOCATION_SOURCE_AGPS_MSA: Mobile Station Assisted A-GPS location requested. In
+ *  MSA A-GPS, the position fix is computed by a server online. The modem must have a valid SIM
+ *  card inserted and be enabled for this mode to be allowed. Since 1.12.
+ * @MM_MODEM_LOCATION_SOURCE_AGPS_MSB: Mobile Station Based A-GPS location requested. In MSB
+ *  A-GPS, the position fix is computed by the modem, but it first gathers information  from an
+ *  online server to facilitate the process (e.g. ephemeris). The modem must have a valid SIM
+ *  card inserted and be enabled for this mode to be allowed. Since 1.12.
  *
  * Sources of location information supported by the modem.
  *
@@ -1174,7 +1206,7 @@ typedef enum { /*< underscore_name=mm_modem_contacts_storage >*/
  * defined by the user of the API.
  * @MM_BEARER_TYPE_DEFAULT_ATTACH: The initial default bearer established
  * during LTE attach procedure, automatically connected as long as the device is
- * regitered in the LTE network.
+ * registered in the LTE network.
  * @MM_BEARER_TYPE_DEDICATED: Secondary context (2G/3G) or dedicated bearer
  * (4G), defined by the user of the API. These bearers use the same IP address
  * used by a primary context or default bearer and provide a dedicated flow for
@@ -1238,7 +1270,7 @@ typedef enum { /*< underscore_name=mm_bearer_ip_family >*/
     MM_BEARER_IP_FAMILY_IPV6    = 1 << 1,
     MM_BEARER_IP_FAMILY_IPV4V6  = 1 << 2,
     MM_BEARER_IP_FAMILY_NON_IP  = 1 << 3,
-    MM_BEARER_IP_FAMILY_ANY     = 0xFFFFFFF7
+    MM_BEARER_IP_FAMILY_ANY     = 0xFFFFFFFF
 } MMBearerIpFamily;
 
 /**
@@ -1662,18 +1694,22 @@ typedef enum { /*< underscore_name=mm_call_direction >*/
  * @MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU: Device supports MBIM QDU based update. Since 1.18.
  * @MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE: Device supports Firehose based update. Since 1.18.
  * @MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA: Device supports Sahara protocol. Usually used in combination with Firehose. Since 1.20.
+ * @MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA: Device supports Quectel DFOTA based update. Since 1.24.
+ * @MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL: Device supports AT^SFDL based update. Since 1.24.
  *
  * Type of firmware update method supported by the module.
  *
  * Since: 1.10
  */
 typedef enum { /*< underscore_name=mm_modem_firmware_update_method >*/
-    MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE     = 0,
-    MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT = 1 << 0,
-    MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC  = 1 << 1,
-    MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU = 1 << 2,
-    MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE = 1 << 3,
-    MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA   = 1 << 4,
+    MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE          = 0,
+    MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT      = 1 << 0,
+    MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC       = 1 << 1,
+    MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU      = 1 << 2,
+    MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE      = 1 << 3,
+    MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA        = 1 << 4,
+    MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA         = 1 << 5,
+    MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL = 1 << 6,
 } MMModemFirmwareUpdateMethod;
 
 /**
@@ -1776,7 +1812,7 @@ typedef enum { /*< underscore_name=mm_modem_3gpp_packet_service_state >*/
 /**
  * MMSimType:
  * @MM_SIM_TYPE_UNKNOWN: SIM type is not known.
- * @MM_SIM_TYPE_PHYSICAL: SIM is a pysical SIM.
+ * @MM_SIM_TYPE_PHYSICAL: SIM is a physical SIM.
  * @MM_SIM_TYPE_ESIM: SIM is a ESIM.
  *
  * SIM type indicating whether ESIM or not
@@ -1811,7 +1847,7 @@ typedef enum { /*< underscore_name=mm_sim_esim_status >*/
  * @MM_SIM_REMOVABILITY_REMOVABLE: SIM is a removable SIM.
  * @MM_SIM_REMOVABILITY_NOT_REMOVABLE: SIM is not a removable SIM.
  *
- * Respresents SIM removability of the current SIM.
+ * Represents SIM removability of the current SIM.
  *
  * Since: 1.20
  */
@@ -1948,5 +1984,159 @@ typedef enum { /*< underscore_name=mm_serving_cell_type >*/
     MM_SERVING_CELL_TYPE_SSCELL   = 4,
     MM_SERVING_CELL_TYPE_INVALID  = 0xFFFFFFFF
 } MMServingCellType;
+
+/**
+ * MMNetworkError:
+ * @MM_NETWORK_ERROR_NONE: No error.
+ * @MM_NETWORK_ERROR_IMSI_UNKNOWN_IN_HLR: IMSI unknown in the HLR.
+ * @MM_NETWORK_ERROR_ILLEGAL_MS: Illegal MS.
+ * @MM_NETWORK_ERROR_IMSI_UNKNOWN_IN_VLR: IMSI unknown in the VLR.
+ * @MM_NETWORK_ERROR_IMEI_NOT_ACCEPTED: IMEI not accepted.
+ * @MM_NETWORK_ERROR_ILLEGAL_ME: Illegal ME.
+ * @MM_NETWORK_ERROR_GPRS_NOT_ALLOWED: GPRS not allowed.
+ * @MM_NETWORK_ERROR_GPRS_AND_NON_GPRS_NOT_ALLOWED: GPRS and non-GPRS not allowed.
+ * @MM_NETWORK_ERROR_MS_IDENTITY_NOT_DERIVED_BY_NETWORK: MS identity cannot be derived by the network.
+ * @MM_NETWORK_ERROR_IMPLICITLY_DETACHED: Implicitly detached.
+ * @MM_NETWORK_ERROR_PLMN_NOT_ALLOWED: PLMN not allowed.
+ * @MM_NETWORK_ERROR_LOCATION_AREA_NOT_ALLOWED: Location area not allowed.
+ * @MM_NETWORK_ERROR_ROAMING_NOT_ALLOWED_IN_LOCATION_AREA: Roaming not allowed in the location area.
+ * @MM_NETWORK_ERROR_GPRS_NOT_ALLOWED_IN_PLMN: GPRS not allowed in PLMN.
+ * @MM_NETWORK_ERROR_NO_CELLS_IN_LOCATION_AREA: No cells in location area.
+ * @MM_NETWORK_ERROR_MSC_TEMPORARILY_NOT_REACHABLE: MSC temporarily not reachable.
+ * @MM_NETWORK_ERROR_NETWORK_FAILURE: Network failure.
+ * @MM_NETWORK_ERROR_MAC_FAILURE: MAC failure.
+ * @MM_NETWORK_ERROR_SYNCH_FAILURE: Synch failure.
+ * @MM_NETWORK_ERROR_CONGESTION: Congestion.
+ * @MM_NETWORK_ERROR_GSM_AUTHENTICATION_UNACCEPTABLE: GSM authentication unacceptable.
+ * @MM_NETWORK_ERROR_NOT_AUTHORIZED_FOR_CSG: Not authorized for this CSG.
+ * @MM_NETWORK_ERROR_INSUFFICIENT_RESOURCES: Insufficient resources.
+ * @MM_NETWORK_ERROR_MISSING_OR_UNKNOWN_APN: Missing or unknown access point name.
+ * @MM_NETWORK_ERROR_UNKNOWN_PDP_ADDRESS_OR_TYPE: Unknown PDP address or PDP type.
+ * @MM_NETWORK_ERROR_USER_AUTHENTICATION_FAILED: User authentication failed.
+ * @MM_NETWORK_ERROR_ACTIVATION_REJECTED_BY_GGSN_OR_GW: Activation rejected by GGSN, Serving GW or PDN GW.
+ * @MM_NETWORK_ERROR_SERVICE_OPTION_NOT_SUPPORTED: Service option not supported.
+ * @MM_NETWORK_ERROR_REQUESTED_SERVICE_OPTION_NOT_SUBSCRIBED: Requested service option not subscribed.
+ * @MM_NETWORK_ERROR_SERVICE_OPTION_TEMPORARILY_OUT_OF_ORDER: Service option temporarily out of order.
+ * @MM_NETWORK_ERROR_NO_PDP_CONTEXT_ACTIVATED: No PDP context activated.
+ * @MM_NETWORK_ERROR_SEMANTIC_ERROR_IN_THE_TFT_OPERATION: Semantic error in the TFT operation.
+ * @MM_NETWORK_ERROR_SYNTACTICAL_ERROR_IN_THE_TFT_OPERATION: Syntactical error in the TFT operation.
+ * @MM_NETWORK_ERROR_UNKNOWN_PDP_CONTEXT: Unknown PDP context.
+ * @MM_NETWORK_ERROR_SEMANTIC_ERRORS_IN_PACKET_FILTER: Semantic errors in packet filter.
+ * @MM_NETWORK_ERROR_SYNTACTICAL_ERRORS_IN_PACKET_FILTER: Syntactical errors in packet filter.
+ * @MM_NETWORK_ERROR_PDP_CONTEXT_WITHOUT_TFT_ALREADY_ACTIVATED: PDP context without TFT already activated.
+ * @MM_NETWORK_ERROR_REQUEST_REJECTED_OR_BEARER_CONTROL_MODE_VIOLATION: Request rejected, Bearer Control Mode violation.
+ * @MM_NETWORK_ERROR_LAST_PDN_DISCONNECTION_NOT_ALLOWED: Last PDN disconnection not allowed.
+ * @MM_NETWORK_ERROR_PDP_TYPE_IPV4_ONLY_ALLOWED: PDP type IPv4 only allowed.
+ * @MM_NETWORK_ERROR_PDP_TYPE_IPV6_ONLY_ALLOWED: PDP type IPv6 only allowed.
+ * @MM_NETWORK_ERROR_NO_NETWORK_SLICES_AVAILABLE: No network slices available.
+ * @MM_NETWORK_ERROR_MAXIMUM_NUMBER_OF_PDP_CONTEXTS_REACHED: Maximum number of PDP contexts reached.
+ * @MM_NETWORK_ERROR_REQUESTED_APN_NOT_SUPPORTED_IN_CURRENT_RAT_AND_PLMN: Requested APN not supported in current RAT and PLMN combination.
+ * @MM_NETWORK_ERROR_INSUFFICIENT_RESOURCES_FOR_SPECIFIC_SLICE_AND_DNN: Insufficient resources for specific slice and DNN.
+ * @MM_NETWORK_ERROR_INSUFFICIENT_RESOURCES_FOR_SPECIFIC_SLICE: Insufficient resources for specific slice.
+ * @MM_NETWORK_ERROR_NGKSI_ALREADY_IN_USE: NgKSI already in use.
+ * @MM_NETWORK_ERROR_NON_3GPP_ACCESS_TO_5GCN_NOT_ALLOWED: Non-3GPP access to 5GCN not allowed.
+ * @MM_NETWORK_ERROR_SERVING_NETWORK_NOT_AUTHORIZED: Serving network not authorized.
+ * @MM_NETWORK_ERROR_TEMPORARILY_NOT_AUTHORIZED_FOR_THIS_SNPN: Temporarily not authorized for this SNPN.
+ * @MM_NETWORK_ERROR_PERMANENTLY_NOT_AUTHORIZED_FOR_THIS_SNPN: Permanently not authorized for this SNPN.
+ * @MM_NETWORK_ERROR_NOT_AUTHORIZED_FOR_THIS_CAG_OR_AUTHORIZED_FOR_CAG_CELLS_ONLY: Not authorized for this CAG or authorized for CAG cells.
+ * @MM_NETWORK_ERROR_WIRELINE_ACCESS_AREA_NOT_ALLOWED: Wireline access area not allowed.
+ * @MM_NETWORK_ERROR_PAYLOAD_WAS_NOT_FORWARDED: Payload was not forwarded.
+ * @MM_NETWORK_ERROR_DNN_NOT_SUPPORTED_OR_NOT_SUBSCRIBED_IN_THE_SLICE: DNN not supported or not subscribed in the slice.
+ * @MM_NETWORK_ERROR_INSUFFICIENT_USER_PLANE_RESOURCES_FOR_THE_PDU_SESSION: Insufficient user-plane resources for the PDU session.
+ * @MM_NETWORK_ERROR_SEMANTICALLY_INCORRECT_MESSAGE: Semantically incorrect message.
+ * @MM_NETWORK_ERROR_INVALID_MANDATORY_INFORMATION: Invalid mandatory information.
+ * @MM_NETWORK_ERROR_MESSAGE_TYPE_NON_EXISTENT_OR_NOT_IMPLEMENTED: Message type non-existent or not implemented.
+ * @MM_NETWORK_ERROR_MESSAGE_TYPE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE: Message type not compatible with protocol state.
+ * @MM_NETWORK_ERROR_INFORMATION_ELEMENT_NON_EXISTENT_OR_NOT_IMPLEMENTED: Information element non-existent or not implemented.
+ * @MM_NETWORK_ERROR_CONDITIONAL_IE_ERROR: Conditional IE error.
+ * @MM_NETWORK_ERROR_MESSAGE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE: Message not compatible with protocol state.
+ * @MM_NETWORK_ERROR_PROTOCOL_ERROR_UNSPECIFIED: Protocol error, unspecified.
+ * @MM_NETWORK_ERROR_APN_RESTRICTION_VALUE_INCOMPATIBLE_WITH_ACTIVE_PDP_CONTEXT: APN restriction value incompatible with active PDP context.
+ * @MM_NETWORK_ERROR_MULTIPLE_ACCESSES_TO_A_PDN_CONNECTION_NOT_ALLOWED: Multiple accesses to a PDN connection not allowed.
+ *
+ * Network errors reported by the network when registration is rejected.
+ * Even though some error names make reference to legacy technologies (e.g. GPRS), errors are not
+ * technology specific and the same type of errors are reported even for newer
+ * technologies like LTE and 5G.
+ * Network errors are defined in 3GPP TS 24.008 in sections 10.5.3.6 and
+ * 10.5.5.14 (detailed in annex G) and in 3GPP TS 24.301 in section 9.9.3.9.
+ *
+ * Since: 1.24
+ */
+typedef enum { /*< underscore_name=mm_network_error >*/
+    MM_NETWORK_ERROR_NONE                                                         = 0,
+    MM_NETWORK_ERROR_IMSI_UNKNOWN_IN_HLR                                          = 2,
+    MM_NETWORK_ERROR_ILLEGAL_MS                                                   = 3,
+    MM_NETWORK_ERROR_IMSI_UNKNOWN_IN_VLR                                          = 4,
+    MM_NETWORK_ERROR_IMEI_NOT_ACCEPTED                                            = 5,
+    MM_NETWORK_ERROR_ILLEGAL_ME                                                   = 6,
+    MM_NETWORK_ERROR_GPRS_NOT_ALLOWED                                             = 7,
+    MM_NETWORK_ERROR_GPRS_AND_NON_GPRS_NOT_ALLOWED                                = 8,
+    MM_NETWORK_ERROR_MS_IDENTITY_NOT_DERIVED_BY_NETWORK                           = 9,
+    MM_NETWORK_ERROR_IMPLICITLY_DETACHED                                          = 10,
+    MM_NETWORK_ERROR_PLMN_NOT_ALLOWED                                             = 11,
+    MM_NETWORK_ERROR_LOCATION_AREA_NOT_ALLOWED                                    = 12,
+    MM_NETWORK_ERROR_ROAMING_NOT_ALLOWED_IN_LOCATION_AREA                         = 13,
+    MM_NETWORK_ERROR_GPRS_NOT_ALLOWED_IN_PLMN                                     = 14,
+    MM_NETWORK_ERROR_NO_CELLS_IN_LOCATION_AREA                                    = 15,
+    MM_NETWORK_ERROR_MSC_TEMPORARILY_NOT_REACHABLE                                = 16,
+    MM_NETWORK_ERROR_NETWORK_FAILURE                                              = 17,
+    MM_NETWORK_ERROR_CS_DOMAIN_NOT_AVAILABLE                                      = 18,
+    MM_NETWORK_ERROR_ESM_FAILURE                                                  = 19,
+    MM_NETWORK_ERROR_MAC_FAILURE                                                  = 20,
+    MM_NETWORK_ERROR_SYNCH_FAILURE                                                = 21,
+    MM_NETWORK_ERROR_CONGESTION                                                   = 22,
+    MM_NETWORK_ERROR_GSM_AUTHENTICATION_UNACCEPTABLE                              = 23,
+    MM_NETWORK_ERROR_NOT_AUTHORIZED_FOR_CSG                                       = 25,
+    MM_NETWORK_ERROR_INSUFFICIENT_RESOURCES                                       = 26,
+    MM_NETWORK_ERROR_MISSING_OR_UNKNOWN_APN                                       = 27,
+    MM_NETWORK_ERROR_UNKNOWN_PDP_ADDRESS_OR_TYPE                                  = 28,
+    MM_NETWORK_ERROR_USER_AUTHENTICATION_FAILED                                   = 29,
+    MM_NETWORK_ERROR_ACTIVATION_REJECTED_BY_GGSN_OR_GW                            = 30,
+    MM_NETWORK_ERROR_REDIRECTION_TO_5GCN_REQUIRED                                 = 31,
+    MM_NETWORK_ERROR_SERVICE_OPTION_NOT_SUPPORTED                                 = 32,
+    MM_NETWORK_ERROR_REQUESTED_SERVICE_OPTION_NOT_SUBSCRIBED                      = 33,
+    MM_NETWORK_ERROR_SERVICE_OPTION_TEMPORARILY_OUT_OF_ORDER                      = 34,
+    MM_NETWORK_ERROR_REQUESTED_SERVICE_OPTION_NOT_AUTHORIZED                      = 35,
+    MM_NETWORK_ERROR_CALL_CANNOT_BE_IDENTIFIED                                    = 38,
+    MM_NETWORK_ERROR_CS_SERVICE_TEMPORARILY_NOT_AVAILABLE                         = 39,
+    MM_NETWORK_ERROR_NO_PDP_CONTEXT_ACTIVATED                                     = 40,
+    MM_NETWORK_ERROR_SEMANTIC_ERROR_IN_THE_TFT_OPERATION                          = 41,
+    MM_NETWORK_ERROR_SYNTACTICAL_ERROR_IN_THE_TFT_OPERATION                       = 42,
+    MM_NETWORK_ERROR_UNKNOWN_PDP_CONTEXT                                          = 43,
+    MM_NETWORK_ERROR_SEMANTIC_ERRORS_IN_PACKET_FILTER                             = 44,
+    MM_NETWORK_ERROR_SYNTACTICAL_ERRORS_IN_PACKET_FILTER                          = 45,
+    MM_NETWORK_ERROR_PDP_CONTEXT_WITHOUT_TFT_ALREADY_ACTIVATED                    = 46,
+    MM_NETWORK_ERROR_REQUEST_REJECTED_OR_BEARER_CONTROL_MODE_VIOLATION            = 48,
+    MM_NETWORK_ERROR_LAST_PDN_DISCONNECTION_NOT_ALLOWED                           = 49,
+    MM_NETWORK_ERROR_PDP_TYPE_IPV4_ONLY_ALLOWED                                   = 50,
+    MM_NETWORK_ERROR_PDP_TYPE_IPV6_ONLY_ALLOWED                                   = 51,
+    MM_NETWORK_ERROR_NO_NETWORK_SLICES_AVAILABLE                                  = 62,
+    MM_NETWORK_ERROR_MAXIMUM_NUMBER_OF_PDP_CONTEXTS_REACHED                       = 65,
+    MM_NETWORK_ERROR_REQUESTED_APN_NOT_SUPPORTED_IN_CURRENT_RAT_AND_PLMN          = 66,
+    MM_NETWORK_ERROR_INSUFFICIENT_RESOURCES_FOR_SPECIFIC_SLICE_AND_DNN            = 67,
+    MM_NETWORK_ERROR_INSUFFICIENT_RESOURCES_FOR_SPECIFIC_SLICE                    = 69,
+    MM_NETWORK_ERROR_NGKSI_ALREADY_IN_USE                                         = 71,
+    MM_NETWORK_ERROR_NON_3GPP_ACCESS_TO_5GCN_NOT_ALLOWED                          = 72,
+    MM_NETWORK_ERROR_SERVING_NETWORK_NOT_AUTHORIZED                               = 73,
+    MM_NETWORK_ERROR_TEMPORARILY_NOT_AUTHORIZED_FOR_THIS_SNPN                     = 74,
+    MM_NETWORK_ERROR_PERMANENTLY_NOT_AUTHORIZED_FOR_THIS_SNPN                     = 75,
+    MM_NETWORK_ERROR_NOT_AUTHORIZED_FOR_THIS_CAG_OR_AUTHORIZED_FOR_CAG_CELLS_ONLY = 76,
+    MM_NETWORK_ERROR_WIRELINE_ACCESS_AREA_NOT_ALLOWED                             = 77,
+    MM_NETWORK_ERROR_PAYLOAD_WAS_NOT_FORWARDED                                    = 90,
+    MM_NETWORK_ERROR_DNN_NOT_SUPPORTED_OR_NOT_SUBSCRIBED_IN_THE_SLICE             = 91,
+    MM_NETWORK_ERROR_INSUFFICIENT_USER_PLANE_RESOURCES_FOR_THE_PDU_SESSION        = 92,
+    MM_NETWORK_ERROR_SEMANTICALLY_INCORRECT_MESSAGE                               = 95,
+    MM_NETWORK_ERROR_INVALID_MANDATORY_INFORMATION                                = 96,
+    MM_NETWORK_ERROR_MESSAGE_TYPE_NON_EXISTENT_OR_NOT_IMPLEMENTED                 = 97,
+    MM_NETWORK_ERROR_MESSAGE_TYPE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE              = 98,
+    MM_NETWORK_ERROR_INFORMATION_ELEMENT_NON_EXISTENT_OR_NOT_IMPLEMENTED          = 99,
+    MM_NETWORK_ERROR_CONDITIONAL_IE_ERROR                                         = 100,
+    MM_NETWORK_ERROR_MESSAGE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE                   = 101,
+    MM_NETWORK_ERROR_PROTOCOL_ERROR_UNSPECIFIED                                   = 111,
+    MM_NETWORK_ERROR_APN_RESTRICTION_VALUE_INCOMPATIBLE_WITH_ACTIVE_PDP_CONTEXT   = 112,
+    MM_NETWORK_ERROR_MULTIPLE_ACCESSES_TO_A_PDN_CONNECTION_NOT_ALLOWED            = 113,
+    MM_NETWORK_ERROR_UNKNOWN                                                      = 114,
+} MMNetworkError;
 
 #endif /*  _MODEMMANAGER_ENUMS_H_ */

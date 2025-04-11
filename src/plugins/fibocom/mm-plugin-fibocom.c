@@ -49,6 +49,7 @@ create_modem (MMPlugin     *self,
               guint16       vendor,
               guint16       product,
               guint16       subsystem_vendor,
+              guint16       subsystem_device,
               GList        *probes,
               GError      **error)
 {
@@ -110,15 +111,13 @@ MM_PLUGIN_NAMED_CREATOR_SCOPE MMPlugin *
 mm_plugin_create_fibocom (void)
 {
     static const gchar *subsystems[] = { "tty", "net", "usbmisc", NULL };
-    static const guint16 vendor_ids[] = { 0x2cb7, 0x1782, 0 };
-    static const gchar *drivers[] = { "cdc_mbim", "qmi_wwan", "cdc_ether", "option", NULL };
+    static const guint16 vendor_ids[] = { 0x2cb7, 0x1782, 0x1508, 0 };
 
     return MM_PLUGIN (
         g_object_new (MM_TYPE_PLUGIN_FIBOCOM,
                       MM_PLUGIN_NAME,               MM_MODULE_NAME,
                       MM_PLUGIN_ALLOWED_SUBSYSTEMS, subsystems,
                       MM_PLUGIN_ALLOWED_VENDOR_IDS, vendor_ids,
-                      MM_PLUGIN_ALLOWED_DRIVERS,    drivers,
                       MM_PLUGIN_ALLOWED_AT,         TRUE,
                       MM_PLUGIN_ALLOWED_MBIM,       TRUE,
                       MM_PLUGIN_ALLOWED_QMI,        TRUE,

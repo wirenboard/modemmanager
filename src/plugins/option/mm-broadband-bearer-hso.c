@@ -201,7 +201,7 @@ get_ip_config_3gpp (MMBroadbandBearer *self,
     command = g_strdup_printf ("AT_OWANDATA=%d", cid);
     mm_base_modem_at_command_full (
         MM_BASE_MODEM (modem),
-        primary,
+        MM_IFACE_PORT_AT (primary),
         command,
         3,
         FALSE,
@@ -283,7 +283,7 @@ connect_reset (GTask *task)
     /* Need to reset the connection attempt */
     command = g_strdup_printf ("AT_OWANCALL=%d,0,1", ctx->cid);
     mm_base_modem_at_command_full (ctx->modem,
-                                   ctx->primary,
+                                   MM_IFACE_PORT_AT (ctx->primary),
                                    command,
                                    3,
                                    FALSE,
@@ -477,7 +477,7 @@ authenticate_ready (MMBaseModem  *modem,
     /* Success, activate the PDP context and start the data session */
     command = g_strdup_printf ("AT_OWANCALL=%d,1,1", ctx->cid);
     mm_base_modem_at_command_full (ctx->modem,
-                                   ctx->primary,
+                                   MM_IFACE_PORT_AT (ctx->primary),
                                    command,
                                    3,
                                    FALSE,
@@ -557,8 +557,8 @@ authenticate (GTask *task)
             return;
         }
 
-        quoted_user     = mm_port_serial_at_quote_string (user);
-        quoted_password = mm_port_serial_at_quote_string (password);
+        quoted_user     = mm_at_quote_string (user);
+        quoted_password = mm_at_quote_string (password);
         command = g_strdup_printf ("%s=%d,%u,%s,%s",
                                    auth_commands[ctx->auth_idx],
                                    ctx->cid,
@@ -570,7 +570,7 @@ authenticate (GTask *task)
     }
 
     mm_base_modem_at_command_full (ctx->modem,
-                                   ctx->primary,
+                                   MM_IFACE_PORT_AT (ctx->primary),
                                    command,
                                    3,
                                    FALSE,
@@ -693,7 +693,7 @@ disconnect_3gpp (MMBroadbandBearer *self,
     /* Use specific CID */
     command = g_strdup_printf ("AT_OWANCALL=%d,0,0", cid);
     mm_base_modem_at_command_full (MM_BASE_MODEM (modem),
-                                   primary,
+                                   MM_IFACE_PORT_AT (primary),
                                    command,
                                    MM_BASE_BEARER_DEFAULT_DISCONNECTION_TIMEOUT,
                                    FALSE,

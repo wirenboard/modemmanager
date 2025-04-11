@@ -66,16 +66,25 @@ if enable_qmi
   plugins_deps += qmi_glib_dep
 endif
 
-# common Fibocom support library (MBIM only)
+# common Fibocom support library
 if plugins_shared['fibocom']
   fibocom_inc = include_directories('fibocom')
 
   c_args = '-DMM_MODULE_NAME="shared-fibocom"'
 
   sources = files(
+    'fibocom/mm-broadband-bearer-fibocom-ecm.c',
+    'fibocom/mm-broadband-modem-fibocom.c',
     'fibocom/mm-shared.c',
     'fibocom/mm-shared-fibocom.c',
   )
+
+  if enable_mbim
+    sources += files(
+      'fibocom/mm-broadband-modem-mbim-fibocom.c',
+      'fibocom/mm-port-mbim-fibocom.c',
+    )
+  endif
 
   plugins += {'shared-fibocom': {
     'plugin': false,
@@ -120,6 +129,23 @@ if plugins_shared['icera']
     'helper': {'sources': files('icera/mm-modem-helpers-icera.c'), 'include_directories': plugins_incs, 'c_args': common_c_args},
     'module': {'sources': sources, 'include_directories': plugins_incs, 'c_args': common_c_args},
     'test': {'sources': files('icera/tests/test-modem-helpers-icera.c'), 'include_directories': plugins_incs + [icera_inc], 'dependencies': libhelpers_dep},
+  }}
+endif
+
+# common mtk support library
+if plugins_shared['mtk']
+  mtk_inc = include_directories('mtk')
+
+  c_args = '-DMM_MODULE_NAME="shared-mtk"'
+
+  sources = files(
+    'mtk/mm-shared.c',
+    'mtk/mm-shared-mtk.c',
+  )
+
+  plugins += {'shared-mtk': {
+    'plugin': false,
+    'module': {'sources': sources, 'include_directories': plugins_incs, 'c_args': c_args},
   }}
 endif
 
@@ -256,6 +282,37 @@ if plugins_shared['xmm']
   }}
 endif
 
+# common quectel support library
+if plugins_shared['quectel']
+  quectel_inc = include_directories('quectel')
+
+  c_args = '-DMM_MODULE_NAME="shared-quectel"'
+
+  sources = files(
+    'quectel/mm-broadband-modem-quectel.c',
+    'quectel/mm-shared-quectel.c',
+    'quectel/mm-shared.c',
+  )
+
+  if enable_qmi
+    sources += files('quectel/mm-broadband-modem-qmi-quectel.c')
+  endif
+
+  if enable_mbim
+    sources += files(
+      'quectel/mm-broadband-modem-mbim-quectel.c',
+      'quectel/mm-port-mbim-quectel.c'
+    )
+  endif
+
+  plugins += {'shared-quectel': {
+    'plugin': false,
+    'helper': {'sources': files('quectel/mm-modem-helpers-quectel.c'), 'include_directories': plugins_incs, 'c_args': common_c_args},
+    'module': {'sources': sources, 'include_directories': plugins_incs, 'c_args': c_args},
+    'test': {'sources': files('quectel/tests/test-modem-helpers-quectel.c'), 'include_directories': include_directories('quectel'), 'dependencies': libhelpers_dep},
+  }}
+endif
+
 # plugin: altair lte
 if plugins_options['altair-lte']
   common_c_args = '-DMM_MODULE_NAME="altair-lte"'
@@ -298,6 +355,23 @@ if plugins_options['broadmobi']
   }}
 
   plugins_udev_rules += files('broadmobi/77-mm-broadmobi-port-types.rules')
+endif
+
+# plugin: cellient
+if plugins_options['cellient']
+  test_udev_rules_dir_c_args = ['-DTESTUDEVRULESDIR_CELLIENT="@0@"'.format(plugins_dir / 'cellient')]
+  plugins_test_udev_rules_dir_c_args += test_udev_rules_dir_c_args
+
+  sources = files(
+    'cellient/mm-plugin-cellient.c',
+  )
+
+  plugins += {'plugin-cellient': {
+    'plugin': true,
+    'module': {'sources': sources, 'include_directories': plugins_incs, 'c_args': test_udev_rules_dir_c_args + ['-DMM_MODULE_NAME="cellient"']},
+  }}
+
+  plugins_udev_rules += files('cellient/77-mm-cellient.rules')
 endif
 
 # plugin: cinterion (previously siemens)
@@ -374,19 +448,14 @@ if plugins_options['fibocom']
   test_udev_rules_dir_c_args = ['-DTESTUDEVRULESDIR_FIBOCOM="@0@"'.format(plugins_dir / 'fibocom')]
   plugins_test_udev_rules_dir_c_args += test_udev_rules_dir_c_args
 
-  incs = plugins_incs + [xmm_inc]
+  incs = plugins_incs + [xmm_inc] + [fibocom_inc]
 
   sources = files(
-    'fibocom/mm-broadband-bearer-fibocom-ecm.c',
-    'fibocom/mm-broadband-modem-fibocom.c',
     'fibocom/mm-plugin-fibocom.c',
   )
   if enable_mbim
-    incs += [fibocom_inc]
-
     sources += files(
       'fibocom/mm-broadband-modem-mbim-xmm-fibocom.c',
-      'fibocom/mm-broadband-modem-mbim-fibocom.c',
     )
   endif
   plugins += {'plugin-fibocom': {
@@ -503,9 +572,9 @@ if plugins_options['huawei']
 
   plugins += {'plugin-huawei': {
     'plugin': true,
-    'helper': {'sources': files('huawei/mm-modem-helpers-huawei.c'), 'include_directories': plugins_incs + [huawei_inc], 'c_args': common_c_args},
+    'helper': {'sources': files('huawei/mm-modem-helpers-huawei.c') + enums_sources, 'include_directories': plugins_incs + [huawei_inc], 'c_args': common_c_args},
     'module': {'sources': sources + enums_sources, 'include_directories': plugins_incs + [huawei_inc], 'c_args': common_c_args},
-    'test': {'sources': files('huawei/tests/test-modem-helpers-huawei.c') + enums_sources, 'include_directories': huawei_inc, 'dependencies': libhelpers_dep},
+    'test': {'sources': files('huawei/tests/test-modem-helpers-huawei.c'), 'include_directories': huawei_inc, 'dependencies': libhelpers_dep},
   }}
 
   plugins_udev_rules += files('huawei/77-mm-huawei-net-port-types.rules')
@@ -621,22 +690,48 @@ if plugins_options['motorola']
   }}
 endif
 
+# plugin: mtk-legacy
+if plugins_options['mtk-legacy']
+  test_udev_rules_dir_c_args = ['-DTESTUDEVRULESDIR_MTK="@0@"'.format(plugins_dir / 'mtk')]
+  plugins_test_udev_rules_dir_c_args += test_udev_rules_dir_c_args
+
+  incs = plugins_incs + [mtk_inc]
+  sources = files(
+    'mtk/mm-broadband-modem-mtk-legacy.c',
+    'mtk/mm-plugin-mtk-legacy.c',
+  )
+
+  plugins += {'plugin-mtk-legacy': {
+    'plugin': true,
+    'module': {'sources': sources, 'include_directories': incs, 'c_args': test_udev_rules_dir_c_args + ['-DMM_MODULE_NAME="mtk-legacy"']},
+  }}
+
+  plugins_udev_rules += files('mtk/77-mm-mtk-legacy-port-types.rules')
+endif
+
 # plugin: mtk
 if plugins_options['mtk']
   test_udev_rules_dir_c_args = ['-DTESTUDEVRULESDIR_MTK="@0@"'.format(plugins_dir / 'mtk')]
   plugins_test_udev_rules_dir_c_args += test_udev_rules_dir_c_args
 
+  incs = plugins_incs + [mtk_inc]
   sources = files(
-    'mtk/mm-broadband-modem-mtk.c',
     'mtk/mm-plugin-mtk.c',
   )
 
+  if enable_mbim
+    incs += [fibocom_inc]
+    sources += files(
+      'mtk/mm-bearer-mbim-mtk-fibocom.c',
+      'mtk/mm-broadband-modem-mbim-mtk.c',
+      'mtk/mm-broadband-modem-mbim-mtk-fibocom.c',
+    )
+  endif
+
   plugins += {'plugin-mtk': {
     'plugin': true,
-    'module': {'sources': sources, 'include_directories': plugins_incs, 'c_args': test_udev_rules_dir_c_args + ['-DMM_MODULE_NAME="motorola"']},
+    'module': {'sources': sources, 'include_directories': incs, 'c_args': '-DMM_MODULE_NAME="mtk"'},
   }}
-
-  plugins_udev_rules += files('mtk/77-mm-mtk-port-types.rules')
 endif
 
 # plugin: nokia
@@ -748,30 +843,39 @@ if plugins_options['quectel']
   test_udev_rules_dir_c_args = ['-DTESTUDEVRULESDIR_QUECTEL="@0@"'.format(plugins_dir / 'quectel')]
   plugins_test_udev_rules_dir_c_args += test_udev_rules_dir_c_args
 
+  incs = plugins_incs + [quectel_inc]
+
   common_c_args = test_udev_rules_dir_c_args + ['-DMM_MODULE_NAME="quectel"']
 
   sources = files(
-    'quectel/mm-broadband-modem-quectel.c',
     'quectel/mm-plugin-quectel.c',
-    'quectel/mm-shared-quectel.c',
   )
-
-  if enable_qmi
-    sources += files('quectel/mm-broadband-modem-qmi-quectel.c')
-  endif
-
-  if enable_mbim
-    sources += files('quectel/mm-broadband-modem-mbim-quectel.c')
-  endif
 
   plugins += {'plugin-quectel': {
     'plugin': true,
-    'helper': {'sources': files('quectel/mm-modem-helpers-quectel.c'), 'include_directories': plugins_incs, 'c_args': common_c_args},
     'module': {'sources': sources, 'include_directories': plugins_incs, 'c_args': common_c_args},
-    'test': {'sources': files('quectel/tests/test-modem-helpers-quectel.c'), 'include_directories': include_directories('quectel'), 'dependencies': libhelpers_dep},
   }}
 
   plugins_udev_rules += files('quectel/77-mm-quectel-port-types.rules')
+endif
+
+# plugin: rolling
+if plugins_options['rolling']
+  test_udev_rules_dir_c_args = ['-DTESTUDEVRULESDIR_ROLLING="@0@"'.format(plugins_dir / 'rolling')]
+  plugins_test_udev_rules_dir_c_args += test_udev_rules_dir_c_args
+
+  incs = plugins_incs + [fibocom_inc]
+
+  sources = files(
+    'rolling/mm-plugin-rolling.c',
+  )
+
+  plugins += {'plugin-rolling': {
+    'plugin': true,
+    'module': {'sources': sources, 'include_directories': incs, 'c_args': test_udev_rules_dir_c_args + ['-DMM_MODULE_NAME="rolling"']},
+  }}
+
+  plugins_udev_rules += files('rolling/77-mm-rolling-port-types.rules')
 endif
 
 # plugin: samsung
@@ -996,6 +1100,25 @@ if plugins_options['zte']
   }}
 
   plugins_udev_rules += files('zte/77-mm-zte-port-types.rules')
+endif
+
+# plugin: netprisma
+if plugins_options['netprisma']
+  test_udev_rules_dir_c_args = ['-DTESTUDEVRULESDIR_NETPRISMA="@0@"'.format(plugins_dir / 'netprisma')]
+  plugins_test_udev_rules_dir_c_args += test_udev_rules_dir_c_args
+
+  incs = plugins_incs + [quectel_inc]
+
+  sources = files(
+    'netprisma/mm-plugin-netprisma.c',
+  )
+
+  plugins += {'plugin-netprisma': {
+    'plugin': true,
+    'module': {'sources': sources, 'include_directories': incs, 'c_args': test_udev_rules_dir_c_args + ['-DMM_MODULE_NAME="netprisma"']},
+  }}
+
+  plugins_udev_rules += files('netprisma/77-mm-netprisma-port-types.rules')
 endif
 
 builtin_sources = []

@@ -27,9 +27,17 @@
 /*****************************************************************************/
 /* MBIM/BasicConnect to MM translations */
 
-MMModemCapability mm_modem_capability_from_mbim_device_caps (MbimCellularClass  caps_cellular_class,
-                                                             MbimDataClass      caps_data_class,
-                                                             const gchar       *caps_custom_data_class);
+MbimDataClass mm_mbim_data_class_from_custom_caps (MbimDataClass  orig_data_class,
+                                                   const gchar   *custom_data_class);
+
+MbimDataClass mm_modem_mbim_normalize_data_class_mask (MbimDataClass orig_data_class,
+                                                       MbimDataClass custom_data_class);
+
+MbimDataClass mm_modem_mbim_denormalize_data_class_mask (MbimDataClass orig_data_class,
+                                                         MbimDataClass custom_data_class);
+
+MMModemCapability mm_modem_capability_from_mbim_device_caps (MbimCellularClass caps_cellular_class,
+                                                             MbimDataClass     caps_data_class);
 
 MMModemLock mm_modem_lock_from_mbim_pin_type (MbimPinType pin_type);
 
@@ -40,8 +48,7 @@ MMModem3gppPacketServiceState mm_modem_3gpp_packet_service_state_from_mbim_packe
 MbimDataClass mm_mbim_data_class_from_mbim_data_class_v3_and_subclass (MbimDataClassV3  data_class_v3,
                                                                        MbimDataSubclass data_subclass);
 
-MMModemMode mm_modem_mode_from_mbim_data_class (MbimDataClass  data_class,
-                                                const gchar   *caps_custom_data_class);
+MMModemMode mm_modem_mode_from_mbim_data_class (MbimDataClass data_class);
 
 MbimDataClass mm_mbim_data_class_from_modem_mode (MMModemMode modem_mode,
                                                   gboolean    is_3gpp,
@@ -56,16 +63,15 @@ GList *mm_3gpp_network_info_list_from_mbim_providers (const MbimProvider *const 
 MbimPinType mbim_pin_type_from_mm_modem_3gpp_facility (MMModem3gppFacility facility);
 MMModem3gppFacility mm_modem_3gpp_facility_from_mbim_pin_type (MbimPinType pin_type);
 
-GError *mm_mobile_equipment_error_from_mbim_nw_error (MbimNwError nw_error,
-                                                      gpointer    log_object);
-
 MMBearerAllowedAuth mm_bearer_allowed_auth_from_mbim_auth_protocol (MbimAuthProtocol      auth_protocol);
 MbimAuthProtocol    mm_bearer_allowed_auth_to_mbim_auth_protocol   (MMBearerAllowedAuth   bearer_auth,
                                                                     gpointer              log_object,
                                                                     GError              **error);
+gchar              *mm_mbim_auth_protocol_get_printable            (MbimAuthProtocol      auth_protocol);
 MMBearerIpFamily    mm_bearer_ip_family_from_mbim_context_ip_type  (MbimContextIpType     ip_type);
 MbimContextIpType   mm_bearer_ip_family_to_mbim_context_ip_type    (MMBearerIpFamily      ip_family,
                                                                     GError              **error);
+gchar              *mm_mbim_context_ip_type_get_printable          (MbimContextIpType     ip_type);
 MMBearerApnType     mm_bearer_apn_type_from_mbim_context_type      (MbimContextType       context_type);
 MbimContextType     mm_bearer_apn_type_to_mbim_context_type        (MMBearerApnType       apn_type,
                                                                     gboolean              mbim_extensions_supported,
@@ -181,5 +187,13 @@ gdouble mm_earfcn_to_frequency (guint32  earfcn,
                                 gpointer log_object);
 gdouble mm_nrarfcn_to_frequency (guint32  nrarfcn,
                                  gpointer log_object);
+
+/*****************************************************************************/
+/* MM error translations */
+
+void    mm_register_mbim_errors     (void);
+GError *mm_error_from_mbim_nw_error (MbimNwError nw_error,
+                                     gpointer    log_object);
+MMNetworkError mm_modem_nw_error_from_mbim_nw_error (MbimNwError nw_error);
 
 #endif  /* MM_MODEM_HELPERS_MBIM_H */

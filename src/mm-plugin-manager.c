@@ -147,6 +147,9 @@ static void           device_context_unref (DeviceContext *device_context);
 static PortContext   *port_context_ref     (PortContext   *port_context);
 static void           port_context_unref   (PortContext   *port_context);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (DeviceContext, device_context_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (PortContext,   port_context_unref)
+
 typedef struct {
     MMPluginManager *self;
     DeviceContext   *device_context;
@@ -499,11 +502,12 @@ port_context_defer_until_suggested (PortContext *port_context,
 static void
 plugin_supports_port_ready (MMPlugin     *plugin,
                             GAsyncResult *res,
-                            PortContext  *port_context)
+                            PortContext  *_port_context) /* full reference */
 {
+    g_autoptr(PortContext)  port_context = _port_context;
+    g_autoptr(GError)       error = NULL;
     MMPluginManager        *self;
     MMPluginSupportsResult  support_result;
-    GError                 *error = NULL;
 
     self = g_task_get_source_object (port_context->task);
 
@@ -513,7 +517,6 @@ plugin_supports_port_ready (MMPlugin     *plugin,
         g_assert_cmpuint (support_result, ==, MM_PLUGIN_SUPPORTS_PORT_UNKNOWN);
         mm_obj_warn (self, "task %s: error when checking support with plugin '%s': %s",
                      port_context->name, mm_plugin_get_name (plugin), error->message);
-        g_error_free (error);
     }
 
     switch (support_result) {
@@ -533,10 +536,6 @@ plugin_supports_port_ready (MMPlugin     *plugin,
     default:
         g_assert_not_reached ();
     }
-
-    /* We received a full reference, to make sure the context was always
-     * valid during the async call */
-    port_context_unref (port_context);
 }
 
 static void
@@ -576,9 +575,15 @@ port_context_next (PortContext *port_context)
 }
 
 static gboolean
-port_context_cancel (PortContext *port_context)
+port_context_cancel (PortContext *_port_context)
 {
-    MMPluginManager *self;
+    g_autoptr(PortContext)  port_context = NULL;
+    MMPluginManager        *self;
+
+    /* Make sure we hold a port context reference while cancelling, as the
+     * cancellable signal handlers may end up unref-ing our last reference
+     * otherwise. */
+    port_context = port_context_ref (_port_context);
 
     /* Port context cancellation, which only makes sense if the context is
      * actually being run, so just exit if it isn't. */
@@ -592,27 +597,20 @@ port_context_cancel (PortContext *port_context)
     self = g_task_get_source_object (port_context->task);
     mm_obj_dbg (self, "task %s: cancellation requested", port_context->name);
 
-    /* Make sure we hold a port context reference while cancelling, as the
-     * cancellable signal handlers may end up unref-ing our last reference
-     * otherwise. */
-    port_context_ref (port_context);
-    {
-        /* The port context is cancelled now */
-        g_cancellable_cancel (port_context->cancellable);
+    /* The port context is cancelled now */
+    g_cancellable_cancel (port_context->cancellable);
 
-        /* If the task was deferred, we can cancel and complete it right away */
-        if (port_context->defer_id) {
-            g_source_remove (port_context->defer_id);
-            port_context->defer_id = 0;
-            port_context_complete (port_context);
-        }
-        /* If the task was deferred until a result is suggested, we can also
-         * complete it right away */
-        else if (port_context->defer_until_suggested)
-            port_context_complete (port_context);
-        /* else, the task may be currently checking support with a given plugin */
+    /* If the task was deferred, we can cancel and complete it right away */
+    if (port_context->defer_id) {
+        g_source_remove (port_context->defer_id);
+        port_context->defer_id = 0;
+        port_context_complete (port_context);
     }
-    port_context_unref (port_context);
+    /* If the task was deferred until a result is suggested, we can also
+     * complete it right away */
+    else if (port_context->defer_until_suggested)
+        port_context_complete (port_context);
+    /* else, the task may be currently checking support with a given plugin */
 
     return TRUE;
 }
@@ -784,10 +782,9 @@ struct _DeviceContext {
      * is reset to 0. */
     guint extra_probing_time_id;
 
-    /* Signal connection ids for the grabbed/released signals from the device.
-     * These are the signals that will give us notifications of what ports are
-     * available (or suddenly unavailable) in the device. */
-    gulong grabbed_id;
+    /* Signal connection ids for the released signal from the device. This is a
+     * signal that will give us notifications of ports suddenly unavailable in
+     * the device. */
     gulong released_id;
 
     /* Port support check contexts being run */
@@ -800,7 +797,6 @@ device_context_unref (DeviceContext *device_context)
     if (g_atomic_int_dec_and_test (&device_context->ref_count)) {
         /* When the last reference is gone there must be no source scheduled and no
          * pending port tasks. */
-        g_assert (!device_context->grabbed_id);
         g_assert (!device_context->released_id);
         g_assert (!device_context->min_wait_time_id);
         g_assert (!device_context->min_probing_time_id);
@@ -898,18 +894,13 @@ device_context_complete (DeviceContext *device_context)
 
     /* Steal the task from the context */
     g_assert (device_context->task);
-    task = device_context->task;
-    device_context->task = NULL;
+    task = g_steal_pointer (&device_context->task);
 
     /* Log about the time required to complete the checks */
     mm_obj_dbg (self, "task %s: finished in '%lf' seconds",
                 device_context->name, g_timer_elapsed (device_context->timer, NULL));
 
     /* Remove signal handlers */
-    if (device_context->grabbed_id) {
-        g_signal_handler_disconnect (device_context->device, device_context->grabbed_id);
-        device_context->grabbed_id = 0;
-    }
     if (device_context->released_id) {
         g_signal_handler_disconnect (device_context->device, device_context->released_id);
         device_context->released_id = 0;
@@ -1276,16 +1267,13 @@ device_context_port_released (DeviceContext  *device_context,
 }
 
 static void
-device_context_port_grabbed (DeviceContext  *device_context,
-                             MMKernelDevice *port)
+device_context_port_added (MMPluginManager *self,
+                           DeviceContext   *device_context,
+                           MMKernelDevice  *port)
 {
-    MMPluginManager *self;
-    PortContext     *port_context;
+    PortContext *port_context;
 
-    /* Recover plugin manager */
-    self = MM_PLUGIN_MANAGER (device_context->self);
-
-    mm_obj_dbg (self, "task %s: port grabbed: %s",
+    mm_obj_dbg (self, "task %s: port added: %s",
                 device_context->name, mm_kernel_device_get_name (port));
 
     /* Ignore if for any reason we still have it in the running list */
@@ -1311,7 +1299,7 @@ device_context_port_grabbed (DeviceContext  *device_context,
                                                            (GSourceFunc) device_context_extra_probing_time_elapsed,
                                                            device_context);
 
-    /* Setup a new port context for the newly grabbed port */
+    /* Setup a new port context for the newly added port */
     port_context = port_context_new (self,
                                      device_context->name,
                                      device_context->device,
@@ -1332,7 +1320,7 @@ device_context_port_grabbed (DeviceContext  *device_context,
     /* Store the port reference in the list within the device */
     device_context->port_contexts = g_list_prepend (device_context->port_contexts, port_context) ;
 
-    /* If the port has been grabbed after the min wait timeout expired, launch
+    /* If the port has been added after the min wait timeout expired, launch
      * probing directly */
     device_context_run_port_context (device_context, port_context);
 }
@@ -1342,14 +1330,12 @@ device_context_cancel (DeviceContext *device_context)
 {
     MMPluginManager *self;
 
-    /* If cancelled already, do nothing */
-    if (g_cancellable_is_cancelled (device_context->cancellable))
-        return FALSE;
-
+    g_assert (device_context->task);
     self = g_task_get_source_object (device_context->task);
     mm_obj_dbg (self, "task %s: cancellation requested", device_context->name);
 
     /* The device context is cancelled now */
+    g_assert (!g_cancellable_is_cancelled (device_context->cancellable));
     g_cancellable_cancel (device_context->cancellable);
 
     /* Remove all port contexts in the waiting list. This will allow early cancellation
@@ -1363,7 +1349,6 @@ device_context_cancel (DeviceContext *device_context)
     /* Cancel all ongoing port contexts, if they're not already cancelled */
     if (device_context->port_contexts) {
         g_assert (!device_context->wait_port_contexts);
-        /* Request cancellation, will be completed asynchronously */
         g_list_foreach (device_context->port_contexts, (GFunc) port_context_cancel, NULL);
     }
 
@@ -1381,8 +1366,9 @@ device_context_cancel (DeviceContext *device_context)
         device_context->extra_probing_time_id = 0;
     }
 
-    /* Wakeup the device context logic. If we were still waiting for the
-     * min probing time, this will complete the device context. */
+    /* If the device context task is not yet completed, wakeup the device context
+     * logic. If we were still waiting for the min probing time, this will complete
+     * the device context. */
     device_context_continue (device_context);
     return TRUE;
 }
@@ -1394,17 +1380,12 @@ device_context_run (MMPluginManager     *self,
                     gpointer             user_data)
 {
     g_assert (!device_context->task);
-    g_assert (!device_context->grabbed_id);
     g_assert (!device_context->released_id);
     g_assert (!device_context->min_wait_time_id);
     g_assert (!device_context->min_probing_time_id);
     g_assert (!device_context->extra_probing_time_id);
 
-    /* Connect to device port grabbed/released notifications from the device */
-    device_context->grabbed_id = g_signal_connect_swapped (device_context->device,
-                                                           MM_DEVICE_PORT_GRABBED,
-                                                           G_CALLBACK (device_context_port_grabbed),
-                                                           device_context);
+    /* Connect to device port released notifications from the device */
     device_context->released_id = g_signal_connect_swapped (device_context->device,
                                                             MM_DEVICE_PORT_RELEASED,
                                                             G_CALLBACK (device_context_port_released),
@@ -1507,19 +1488,17 @@ plugin_manager_peek_device_context (MMPluginManager *self,
     return NULL;
 }
 
-gboolean
-mm_plugin_manager_device_support_check_cancel (MMPluginManager *self,
-                                               MMDevice        *device)
+static void
+plugin_manager_untrack_device_context (MMPluginManager *self,
+                                       DeviceContext   *device_context)
 {
-    DeviceContext *device_context;
+    GList *found;
 
-    /* If the device context isn't found, ignore the cancellation request. */
-    device_context = plugin_manager_peek_device_context (self, device);
-    if (!device_context)
-        return FALSE;
-
-    /* Request cancellation, will be completed asynchronously */
-    return device_context_cancel (device_context);
+    found = g_list_find (self->priv->device_contexts, device_context);
+    if (found) {
+        self->priv->device_contexts = g_list_remove_link (self->priv->device_contexts, found);
+        g_list_free_full (found, (GDestroyNotify)device_context_unref);
+    }
 }
 
 static void
@@ -1535,13 +1514,11 @@ device_context_run_ready (MMPluginManager    *self,
 
     /*
      * Once the task is finished, we can also remove it from the plugin manager
-     * list. We MUST have the port context in the list at this point, because
-     * we're going to dispose the reference, so assert if this is not true.
+     * list. If the device support task was early cancelled, e.g. if the last
+     * port of an existing device is removed, the device context may not exist
+     * in the list tracked by the plugin manager.
      */
-    g_assert (g_list_find (common->self->priv->device_contexts, common->device_context));
-    common->self->priv->device_contexts = g_list_remove (common->self->priv->device_contexts,
-                                                         common->device_context);
-    device_context_unref (common->device_context);
+    plugin_manager_untrack_device_context (self, common->device_context);
 
     /* Report result or error once removed from our internal list */
     if (!best_plugin)
@@ -1596,6 +1573,64 @@ mm_plugin_manager_device_support_check (MMPluginManager     *self,
                                                   NULL,
                                                   task));
     g_object_unref (task);
+}
+
+/*****************************************************************************/
+/* Cancel the ongoing device support check, if any */
+
+gboolean
+mm_plugin_manager_device_support_check_cancel (MMPluginManager *self,
+                                               MMDevice        *device)
+{
+    g_autoptr(DeviceContext) device_context = NULL;
+
+    /* If the device context isn't found, ignore the cancellation request */
+    device_context = plugin_manager_peek_device_context (self, device);
+    if (!device_context)
+        return FALSE;
+
+    /* The device context cancellation operation will also independently request cancellation
+     * of each port context. Depending on the probing task of the port, this may be completed
+     * asynchronously or in-place. Therefore we need to consider the case where the last port
+     * context cancellation also completes the device context operation in-place, so we must
+     * ensure the DeviceContext is valid throughout the whole cancellation. */
+    device_context = device_context_ref (device_context);
+
+    /* Remove from the tracked list of device contexts, so that we never add
+     * new ports to a device context being cancelled */
+    plugin_manager_untrack_device_context (self, device_context);
+
+    /* Request cancellation, will be completed asynchronously. */
+    return device_context_cancel (device_context);
+}
+
+/*****************************************************************************/
+/* Ask if there is an ongoing device support check */
+
+gboolean
+mm_plugin_manager_device_support_check_ongoing (MMPluginManager *self,
+                                                MMDevice        *device)
+{
+    return !!plugin_manager_peek_device_context (self, device);
+}
+
+/*****************************************************************************/
+/* Report a new port to the ongoing device support check */
+
+gboolean
+mm_plugin_manager_device_support_check_add_port (MMPluginManager *self,
+                                                 MMDevice        *device,
+                                                 MMKernelDevice  *port)
+{
+    DeviceContext *device_context;
+
+    device_context = plugin_manager_peek_device_context (self, device);
+    if (device_context) {
+        device_context_port_added (self, device_context, port);
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /*****************************************************************************/

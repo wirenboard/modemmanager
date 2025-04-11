@@ -112,6 +112,14 @@ test_x22x (void)
 }
 #endif
 
+#if defined ENABLE_PLUGIN_CELLIENT
+static void
+test_cellient (void)
+{
+    common_test (TESTUDEVRULESDIR_CELLIENT);
+}
+#endif
+
 #if defined ENABLE_PLUGIN_CINTERION
 static void
 test_cinterion (void)
@@ -136,9 +144,9 @@ test_telit (void)
 }
 #endif
 
-#if defined ENABLE_PLUGIN_MTK
+#if defined ENABLE_PLUGIN_MTK_LEGACY
 static void
-test_mtk (void)
+test_mtk_legacy (void)
 {
     common_test (TESTUDEVRULESDIR_MTK);
 }
@@ -192,6 +200,22 @@ test_linktop (void)
 }
 #endif
 
+#if defined ENABLE_PLUGIN_ROLLING
+static void
+test_rolling (void)
+{
+    common_test (TESTUDEVRULESDIR_ROLLING);
+}
+#endif
+
+#if defined ENABLE_PLUGIN_NETPRISMA
+static void
+test_netprisma (void)
+{
+    common_test (TESTUDEVRULESDIR_NETPRISMA);
+}
+#endif
+
 /************************************************************/
 
 int main (int argc, char **argv)
@@ -222,6 +246,9 @@ int main (int argc, char **argv)
 #if defined ENABLE_PLUGIN_X22X
     g_test_add_func ("/MM/test-udev-rules/x22x", test_x22x);
 #endif
+#if defined ENABLE_PLUGIN_CELLIENT
+    g_test_add_func ("/MM/test-udev-rules/cellient", test_cellient);
+#endif
 #if defined ENABLE_PLUGIN_CINTERION
     g_test_add_func ("/MM/test-udev-rules/cinterion", test_cinterion);
 #endif
@@ -231,9 +258,10 @@ int main (int argc, char **argv)
 #if defined ENABLE_PLUGIN_TELIT
     g_test_add_func ("/MM/test-udev-rules/telit", test_telit);
 #endif
-#if defined ENABLE_PLUGIN_MTK
-    g_test_add_func ("/MM/test-udev-rules/mtk", test_mtk);
+#if defined ENABLE_PLUGIN_MTK_LEGACY
+    g_test_add_func ("/MM/test-udev-rules/mtk", test_mtk_legacy);
 #endif
+
 #if defined ENABLE_PLUGIN_HAIER
     g_test_add_func ("/MM/test-udev-rules/haier", test_haier);
 #endif
@@ -251,6 +279,12 @@ int main (int argc, char **argv)
 #endif
 #if defined ENABLE_PLUGIN_LINKTOP
     g_test_add_func ("/MM/test-udev-rules/linktop", test_linktop);
+#endif
+#if defined ENABLE_PLUGIN_ROLLING
+    g_test_add_func ("/MM/test-udev-rules/rolling", test_rolling);
+#endif
+#if defined ENABLE_PLUGIN_NETPRISMA
+    g_test_add_func ("/MM/test-udev-rules/netprisma", test_netprisma);
 #endif
 
     return g_test_run ();

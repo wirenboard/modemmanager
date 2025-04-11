@@ -19,7 +19,7 @@
 #include <gio/gio.h>
 
 #include "mm-base-modem.h"
-#include "mm-port-serial-at.h"
+#include "mm-iface-port-at.h"
 
 typedef enum {
     MM_BASE_MODEM_AT_RESPONSE_PROCESSOR_RESULT_CONTINUE,
@@ -67,35 +67,37 @@ typedef struct {
     gboolean allow_cached;
     /* The response processor */
     MMBaseModemAtResponseProcessor response_processor;
+    /* Time to wait before sending this command (in seconds) */
+    guint wait_seconds;
 } MMBaseModemAtCommand;
 
 /* Generic AT sequence handling, using the best AT port available and without
  * explicit cancellations. */
-void     mm_base_modem_at_sequence         (MMBaseModem *self,
-                                            const MMBaseModemAtCommand *sequence,
-                                            gpointer response_processor_context,
-                                            GDestroyNotify response_processor_context_free,
-                                            GAsyncReadyCallback callback,
-                                            gpointer user_data);
-GVariant *mm_base_modem_at_sequence_finish (MMBaseModem *self,
-                                            GAsyncResult *res,
-                                            gpointer *response_processor_context,
-                                            GError **error);
+void     mm_base_modem_at_sequence         (MMBaseModem                 *self,
+                                            const MMBaseModemAtCommand  *sequence,
+                                            gpointer                     response_processor_context,
+                                            GDestroyNotify               response_processor_context_free,
+                                            GAsyncReadyCallback          callback,
+                                            gpointer                     user_data);
+GVariant *mm_base_modem_at_sequence_finish (MMBaseModem                 *self,
+                                            GAsyncResult                *res,
+                                            gpointer                    *response_processor_context,
+                                            GError                     **error);
 
 /* Fully detailed AT sequence handling, when specific AT port and/or explicit
  * cancellations need to be used. */
-void     mm_base_modem_at_sequence_full         (MMBaseModem *self,
-                                                 MMPortSerialAt *port,
-                                                 const MMBaseModemAtCommand *sequence,
-                                                 gpointer response_processor_context,
-                                                 GDestroyNotify response_processor_context_free,
-                                                 GCancellable *cancellable,
-                                                 GAsyncReadyCallback callback,
-                                                 gpointer user_data);
-GVariant *mm_base_modem_at_sequence_full_finish (MMBaseModem *self,
-                                                 GAsyncResult *res,
-                                                 gpointer *response_processor_context,
-                                                 GError **error);
+void     mm_base_modem_at_sequence_full         (MMBaseModem                 *self,
+                                                 MMIfacePortAt               *port,
+                                                 const MMBaseModemAtCommand  *sequence,
+                                                 gpointer                     response_processor_context,
+                                                 GDestroyNotify               response_processor_context_free,
+                                                 GCancellable                *cancellable,
+                                                 GAsyncReadyCallback          callback,
+                                                 gpointer                     user_data);
+GVariant *mm_base_modem_at_sequence_full_finish (MMBaseModem                 *self,
+                                                 GAsyncResult                *res,
+                                                 gpointer                    *response_processor_context,
+                                                 GError                     **error);
 
 /* Common helper response processors */
 
@@ -162,7 +164,7 @@ MMBaseModemAtResponseProcessorResult mm_base_modem_response_processor_continue_o
                                                                                          GError       **result_error);
 
 /*
- * Response processor for commands that are partialy treated as OPTIONAL, where
+ * Response processor for commands that are partially treated as OPTIONAL, where
  * a failure in the command triggers a failure in the sequence only for non-AT
  * generic errors. If successful, it finishes the sequence with the response of
  * the command which didn't fail.
@@ -178,37 +180,30 @@ MMBaseModemAtResponseProcessorResult mm_base_modem_response_processor_string_ign
 
 /* Generic AT command handling, using the best AT port available and without
  * explicit cancellations. */
-void mm_base_modem_at_command                (MMBaseModem *self,
-                                              const gchar *command,
-                                              guint timeout,
-                                              gboolean allow_cached,
-                                              GAsyncReadyCallback callback,
-                                              gpointer user_data);
-/* Like mm_base_modem_at_command() except does not prefix with AT */
-void mm_base_modem_at_command_raw            (MMBaseModem *self,
-                                              const gchar *command,
-                                              guint timeout,
-                                              gboolean allow_cached,
-                                              GAsyncReadyCallback callback,
-                                              gpointer user_data);
-const gchar *mm_base_modem_at_command_finish (MMBaseModem *self,
-                                              GAsyncResult *res,
-                                              GError **error);
+void         mm_base_modem_at_command        (MMBaseModem          *self,
+                                              const gchar          *command,
+                                              guint                 timeout,
+                                              gboolean              allow_cached,
+                                              GAsyncReadyCallback   callback,
+                                              gpointer              user_data);
+const gchar *mm_base_modem_at_command_finish (MMBaseModem          *self,
+                                              GAsyncResult         *res,
+                                              GError              **error);
 
 /* Fully detailed AT command handling, when specific AT port and/or explicit
  * cancellations need to be used. */
-void mm_base_modem_at_command_full                (MMBaseModem *self,
-                                                   MMPortSerialAt *port,
-                                                   const gchar *command,
-                                                   guint timeout,
-                                                   gboolean allow_cached,
-                                                   gboolean is_raw,
-                                                   GCancellable *cancellable,
-                                                   GAsyncReadyCallback callback,
-                                                   gpointer user_data);
-const gchar *mm_base_modem_at_command_full_finish (MMBaseModem *self,
-                                                   GAsyncResult *res,
-                                                   GError **error);
+void         mm_base_modem_at_command_full        (MMBaseModem          *self,
+                                                   MMIfacePortAt        *port,
+                                                   const gchar          *command,
+                                                   guint                 timeout,
+                                                   gboolean              allow_cached,
+                                                   gboolean              is_raw,
+                                                   GCancellable         *cancellable,
+                                                   GAsyncReadyCallback   callback,
+                                                   gpointer              user_data);
+const gchar *mm_base_modem_at_command_full_finish (MMBaseModem          *self,
+                                                   GAsyncResult         *res,
+                                                   GError              **error);
 
 /******************************************************************************/
 /* Support for MMBaseModemAtCommand with heap allocated contents */
@@ -220,6 +215,7 @@ typedef struct {
     guint     timeout;
     gboolean  allow_cached;
     MMBaseModemAtResponseProcessor response_processor;
+    guint     wait_seconds;
 } MMBaseModemAtCommandAlloc;
 
 G_STATIC_ASSERT (sizeof (MMBaseModemAtCommandAlloc) == sizeof (MMBaseModemAtCommand));

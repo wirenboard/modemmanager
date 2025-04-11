@@ -3,6 +3,7 @@
 
 test_units = {
   'at-serial-port': libport_dep,
+  'cbm-part': libhelpers_dep,
   'charsets': libhelpers_dep,
   'error-helpers': libhelpers_dep,
   'kernel-device-helpers': libkerneldevice_dep,
@@ -22,6 +23,10 @@ test_units += {'qcdm-serial-port': deps}
 
 if enable_qmi
   test_units += {'modem-helpers-qmi': libkerneldevice_dep}
+endif
+
+if enable_mbim
+  test_units += {'modem-helpers-mbim': libkerneldevice_dep}
 endif
 
 foreach test_unit, test_deps: test_units

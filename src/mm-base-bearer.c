@@ -31,6 +31,7 @@
 #include "mm-daemon-enums-types.h"
 #include "mm-iface-modem.h"
 #include "mm-iface-modem-3gpp.h"
+#include "mm-iface-modem-3gpp-profile-manager.h"
 #include "mm-iface-modem-cdma.h"
 #include "mm-base-bearer.h"
 #include "mm-base-modem-at.h"
@@ -251,6 +252,8 @@ bearer_update_connection_error (MMBaseBearer *self,
     g_autoptr(GVariant) tuple = NULL;
 
     if (connection_error) {
+        g_autoptr(GError) normalized_error = NULL;
+
         /* Never overwrite a connection error if it's already set */
         tuple = mm_gdbus_bearer_dup_connection_error (MM_GDBUS_BEARER (self));
         if (tuple)
@@ -259,42 +262,9 @@ bearer_update_connection_error (MMBaseBearer *self,
         /*
          * Limit the type of errors we can expose in the interface;
          * e.g. we don't want QMI or MBIM specific errors reported.
-         *
-         * G_IO_ERROR_CANCELLED is an exception, because we map it to
-         * MM_CORE_ERROR_CANCELLED implicitly when building the DBus error name.
          */
-        if ((connection_error->domain != MM_CORE_ERROR) &&
-            (connection_error->domain != MM_MOBILE_EQUIPMENT_ERROR) &&
-            (connection_error->domain != MM_CONNECTION_ERROR) &&
-            (connection_error->domain != MM_SERIAL_ERROR) &&
-            (connection_error->domain != MM_CDMA_ACTIVATION_ERROR) &&
-            (!g_error_matches (connection_error, G_IO_ERROR, G_IO_ERROR_CANCELLED))) {
-            g_autoptr(GError) default_connection_error = NULL;
-
-#if defined WITH_QMI
-            if (connection_error->domain == QMI_CORE_ERROR)
-                mm_obj_dbg (self, "cannot set QMI core error as connection error: %s", connection_error->message);
-            else if (connection_error->domain == QMI_PROTOCOL_ERROR)
-                mm_obj_dbg (self, "cannot set QMI protocol error as connection error: %s", connection_error->message);
-            else
-#endif
-#if defined WITH_MBIM
-            if (connection_error->domain == MBIM_CORE_ERROR)
-                mm_obj_dbg (self, "cannot set MBIM core error as connection error: %s", connection_error->message);
-            else if (connection_error->domain == MBIM_PROTOCOL_ERROR)
-                mm_obj_dbg (self, "cannot set MBIM protocol error as connection error: %s", connection_error->message);
-            else if (connection_error->domain == MBIM_STATUS_ERROR)
-                mm_obj_dbg (self, "cannot set MBIM status error as connection error: %s", connection_error->message);
-            else
-#endif
-                mm_obj_dbg (self, "cannot set unhandled domain error as connection error: %s", connection_error->message);
-
-            default_connection_error = g_error_new (MM_MOBILE_EQUIPMENT_ERROR,
-                                                    MM_MOBILE_EQUIPMENT_ERROR_UNKNOWN,
-                                                    "%s", connection_error->message);
-            tuple = mm_common_error_to_tuple (default_connection_error);
-        } else
-            tuple = mm_common_error_to_tuple (connection_error);
+        normalized_error = mm_normalize_error (connection_error);
+        tuple = mm_common_error_to_tuple (normalized_error);
     }
     mm_gdbus_bearer_set_connection_error (MM_GDBUS_BEARER (self), tuple);
 }
@@ -549,7 +519,7 @@ bearer_update_status (MMBaseBearer *self,
     if (self->priv->status == MM_BEARER_STATUS_DISCONNECTED) {
         g_autoptr(GString) report = NULL;
 
-        /* Report disconnection via dispatcher scripts, before reseting the interface */
+        /* Report disconnection via dispatcher scripts, before resetting the interface */
         bearer_run_dispatcher_scripts (self, FALSE);
 
         bearer_reset_interface_status (self);
@@ -1005,9 +975,16 @@ connect_ready (MMBaseBearer *self,
         mm_obj_warn (self, "connection attempt #%u failed: %s",
                      mm_bearer_stats_get_attempts (self->priv->stats),
                      error->message);
+        /* process profile manager updates right away on error */
+        if (mm_iface_modem_is_3gpp (MM_IFACE_MODEM (self->priv->modem)))
+            mm_iface_modem_3gpp_profile_manager_update_ignore_stop (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER (self->priv->modem));
         connect_failed (self, task, error);
         return;
     }
+
+    /* delay processing profile manager updates on success */
+    if (mm_iface_modem_is_3gpp (MM_IFACE_MODEM (self->priv->modem)))
+        mm_iface_modem_3gpp_profile_manager_update_ignore_stop_delayed (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER (self->priv->modem));
 
     /* Handle cancellations detected after successful connection */
     if (connect_check_cancel (self, task))
@@ -1124,6 +1101,10 @@ mm_base_bearer_connect (MMBaseBearer *self,
     /* Clear previous connection error, if any */
     bearer_update_connection_error (self, NULL);
 
+    /* The connect request may imply a profile update internally, so ignore it */
+    if (mm_iface_modem_is_3gpp (MM_IFACE_MODEM (self->priv->modem)))
+        mm_iface_modem_3gpp_profile_manager_update_ignore_start (MM_IFACE_MODEM_3GPP_PROFILE_MANAGER (self->priv->modem));
+
     /* Connecting! */
     mm_obj_dbg (self, "connecting...");
     self->priv->connect_cancellable = g_cancellable_new ();
@@ -1158,7 +1139,7 @@ handle_connect_ready (MMBaseBearer *self,
     GError *error = NULL;
 
     if (!mm_base_bearer_connect_finish (self, res, &error))
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     else
         mm_gdbus_bearer_complete_connect (MM_GDBUS_BEARER (self), ctx->invocation);
 
@@ -1173,11 +1154,12 @@ handle_connect_auth_ready (MMBaseModem *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_connect_context_free (ctx);
         return;
     }
 
+    mm_obj_info (ctx->self, "processing user request to connect...");
     mm_base_bearer_connect (ctx->self,
                             (GAsyncReadyCallback)handle_connect_ready,
                             ctx);
@@ -1195,8 +1177,6 @@ handle_connect (MMBaseBearer *self,
     g_object_get (self,
                   MM_BASE_BEARER_MODEM, &ctx->modem,
                   NULL);
-
-    mm_obj_dbg (self, "user request to connect");
 
     mm_base_modem_authorize (ctx->modem,
                              invocation,
@@ -1297,8 +1277,6 @@ mm_base_bearer_disconnect (MMBaseBearer *self,
         return;
     }
 
-    mm_obj_dbg (self, "disconnecting...");
-
     /* If currently connecting, try to cancel that operation, and wait to get
      * disconnected. */
     if (self->priv->status == MM_BEARER_STATUS_CONNECTING) {
@@ -1350,7 +1328,7 @@ handle_disconnect_ready (MMBaseBearer *self,
     GError *error = NULL;
 
     if (!mm_base_bearer_disconnect_finish (self, res, &error))
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
     else
         mm_gdbus_bearer_complete_disconnect (MM_GDBUS_BEARER (self), ctx->invocation);
 
@@ -1365,11 +1343,12 @@ handle_disconnect_auth_ready (MMBaseModem *modem,
     GError *error = NULL;
 
     if (!mm_base_modem_authorize_finish (modem, res, &error)) {
-        g_dbus_method_invocation_take_error (ctx->invocation, error);
+        mm_dbus_method_invocation_take_error (ctx->invocation, error);
         handle_disconnect_context_free (ctx);
         return;
     }
 
+    mm_obj_info (ctx->self, "processing user request to disconnect...");
     mm_base_bearer_disconnect (ctx->self,
                                (GAsyncReadyCallback)handle_disconnect_ready,
                                ctx);
@@ -1387,8 +1366,6 @@ handle_disconnect (MMBaseBearer *self,
     g_object_get (self,
                   MM_BASE_BEARER_MODEM, &ctx->modem,
                   NULL);
-
-    mm_obj_dbg (self, "user request to disconnect");
 
     mm_base_modem_authorize (ctx->modem,
                              invocation,
