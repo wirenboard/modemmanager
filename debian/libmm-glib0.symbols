@@ -402,6 +402,8 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_common_build_bands_unknown@Base 0.7.991
  mm_common_build_capabilities_string@Base 0.7.991
  mm_common_build_capability_combinations_none@Base 0.7.991
+ mm_common_build_cell_broadcast_channels_default@Base 1.24.0
+ mm_common_build_channels_string@Base 1.24.0
  mm_common_build_mode_combinations_default@Base 0.7.991
  mm_common_build_mode_combinations_string@Base 0.7.991
  mm_common_build_oma_pending_network_initiated_sessions_default@Base 1.2.0
@@ -410,6 +412,9 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_common_capability_combinations_array_to_variant@Base 0.7.991
  mm_common_capability_combinations_garray_to_variant@Base 0.7.991
  mm_common_capability_combinations_variant_to_garray@Base 0.7.991
+ mm_common_cell_broadcast_channels_array_to_variant@Base 1.24.0
+ mm_common_cell_broadcast_channels_garray_to_variant@Base 1.24.0
+ mm_common_cell_broadcast_channels_variant_to_garray@Base 1.24.0
  mm_common_error_from_tuple@Base 1.18.2
  mm_common_error_to_tuple@Base 1.18.2
  mm_common_get_3gpp_drx_cycle_from_string@Base 1.20.0
@@ -426,6 +431,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_common_get_call_state_from_string@Base 1.5.993
  mm_common_get_call_state_reason_from_string@Base 1.5.993
  mm_common_get_capabilities_from_string@Base 0.7.991
+ mm_common_get_cell_broadcast_channels_from_string@Base 1.24.0
  mm_common_get_eps_ue_mode_operation_from_string@Base 1.7.990
  mm_common_get_ip_type_from_string@Base 0.7.991
  mm_common_get_modes_from_string@Base 0.7.991
@@ -843,12 +849,18 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_cell_broadcast_call_list@Base 1.23.95
  mm_gdbus_modem_cell_broadcast_call_list_finish@Base 1.23.95
  mm_gdbus_modem_cell_broadcast_call_list_sync@Base 1.23.95
+ mm_gdbus_modem_cell_broadcast_call_set_channels@Base 1.24.0
+ mm_gdbus_modem_cell_broadcast_call_set_channels_finish@Base 1.24.0
+ mm_gdbus_modem_cell_broadcast_call_set_channels_sync@Base 1.24.0
  mm_gdbus_modem_cell_broadcast_complete_delete@Base 1.23.95
  mm_gdbus_modem_cell_broadcast_complete_list@Base 1.23.95
+ mm_gdbus_modem_cell_broadcast_complete_set_channels@Base 1.24.0
  mm_gdbus_modem_cell_broadcast_dup_cell_broadcasts@Base 1.23.95
+ mm_gdbus_modem_cell_broadcast_dup_channels@Base 1.24.0
  mm_gdbus_modem_cell_broadcast_emit_added@Base 1.23.95
  mm_gdbus_modem_cell_broadcast_emit_deleted@Base 1.23.95
  mm_gdbus_modem_cell_broadcast_get_cell_broadcasts@Base 1.23.95
+ mm_gdbus_modem_cell_broadcast_get_channels@Base 1.24.0
  mm_gdbus_modem_cell_broadcast_get_type@Base 1.23.95
  mm_gdbus_modem_cell_broadcast_interface_info@Base 1.23.95
  mm_gdbus_modem_cell_broadcast_override_properties@Base 1.23.95
@@ -860,6 +872,7 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_gdbus_modem_cell_broadcast_proxy_new_for_bus_sync@Base 1.23.95
  mm_gdbus_modem_cell_broadcast_proxy_new_sync@Base 1.23.95
  mm_gdbus_modem_cell_broadcast_set_cell_broadcasts@Base 1.23.95
+ mm_gdbus_modem_cell_broadcast_set_channels@Base 1.24.0
  mm_gdbus_modem_cell_broadcast_skeleton_get_type@Base 1.23.95
  mm_gdbus_modem_cell_broadcast_skeleton_new@Base 1.23.95
  mm_gdbus_modem_complete_command@Base 0.7.991
@@ -1749,11 +1762,16 @@ libmm-glib.so.0 libmm-glib0 #MINVER#
  mm_modem_cell_broadcast_delete_finish@Base 1.23.95
  mm_modem_cell_broadcast_delete_sync@Base 1.23.95
  mm_modem_cell_broadcast_dup_path@Base 1.23.95
+ mm_modem_cell_broadcast_get_channels@Base 1.24.0
  mm_modem_cell_broadcast_get_path@Base 1.23.95
  mm_modem_cell_broadcast_get_type@Base 1.23.95
  mm_modem_cell_broadcast_list@Base 1.23.95
  mm_modem_cell_broadcast_list_finish@Base 1.23.95
  mm_modem_cell_broadcast_list_sync@Base 1.23.95
+ mm_modem_cell_broadcast_peek_channels@Base 1.24.0
+ mm_modem_cell_broadcast_set_channels@Base 1.24.0
+ mm_modem_cell_broadcast_set_channels_finish@Base 1.24.0
+ mm_modem_cell_broadcast_set_channels_sync@Base 1.24.0
  mm_modem_command@Base 0.7.991
  mm_modem_command_finish@Base 0.7.991
  mm_modem_command_sync@Base 0.7.991
