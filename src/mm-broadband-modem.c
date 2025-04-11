@@ -1730,6 +1730,8 @@ typedef struct {
     gboolean run_cnti;
     gboolean run_ws46;
     gboolean run_gcap;
+    gboolean run_cereg;
+    gboolean run_c5greg;
 } LoadSupportedModesContext;
 
 static GArray *
@@ -1758,6 +1760,42 @@ modem_load_supported_modes_finish (MMIfaceModem *self,
 }
 
 static void load_supported_modes_step (GTask *task);
+
+static void
+supported_modes_c5greg_ready (MMBaseModem *_self,
+                              GAsyncResult *res,
+                              GTask *task)
+{
+    LoadSupportedModesContext *ctx;
+    g_autoptr(GError)          error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    mm_base_modem_at_command_finish (_self, res, &error);
+    if (!error)
+        ctx->mode |= MM_MODEM_MODE_5G;
+
+    ctx->run_c5greg = FALSE;
+    load_supported_modes_step (task);
+}
+
+static void
+supported_modes_cereg_ready (MMBaseModem *_self,
+                             GAsyncResult *res,
+                             GTask *task)
+{
+    LoadSupportedModesContext *ctx;
+    g_autoptr(GError)          error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    mm_base_modem_at_command_finish (_self, res, &error);
+    if (!error)
+        ctx->mode |= MM_MODEM_MODE_4G;
+
+    ctx->run_cereg = FALSE;
+    load_supported_modes_step (task);
+}
 
 static void
 supported_modes_gcap_ready (MMBaseModem *_self,
@@ -1974,6 +2012,28 @@ load_supported_modes_step (GTask *task)
         return;
     }
 
+    if (ctx->run_cereg) {
+        mm_base_modem_at_command (
+            MM_BASE_MODEM (self),
+            "+CEREG=?",
+            3,
+            TRUE, /* allow caching */
+            (GAsyncReadyCallback)supported_modes_cereg_ready,
+            task);
+        return;
+    }
+
+    if (ctx->run_c5greg) {
+        mm_base_modem_at_command (
+            MM_BASE_MODEM (self),
+            "+C5GREG=?",
+            3,
+            TRUE, /* allow caching */
+            (GAsyncReadyCallback)supported_modes_c5greg_ready,
+            task);
+        return;
+    }
+
     /* All done.
      * If no mode found, error */
     if (ctx->mode == MM_MODEM_MODE_NONE)
@@ -2003,6 +2063,8 @@ modem_load_supported_modes (MMIfaceModem *self,
         /* Run +WS46=? and *CNTI=2 */
         ctx->run_ws46 = TRUE;
         ctx->run_cnti = TRUE;
+        ctx->run_cereg = TRUE;
+        ctx->run_c5greg = TRUE;
     }
 
     if (mm_iface_modem_is_cdma (self)) {
@@ -4545,6 +4607,8 @@ complete_sim_swap_check (GTask       *task,
     SimSwapContext   *ctx;
     const gchar      *cached;
     const gchar      *str;
+    gboolean          ignore_sim_event = FALSE;
+    gboolean          same;
 
     self = MM_BROADBAND_MODEM (g_task_get_source_object (task));
     ctx = g_task_get_task_data (task);
@@ -4557,20 +4621,30 @@ complete_sim_swap_check (GTask       *task,
         ctx->imsi_check_done = TRUE;
         cached = mm_gdbus_sim_get_imsi (MM_GDBUS_SIM (ctx->sim));
         str = "imsi";
+
+        /* If the modem is locked and we couldn't previously read the IMSI
+         * (because it was locked) then the IMSI change is probably not a swap.
+         */
+        ignore_sim_event = (self->priv->modem_state == MM_MODEM_STATE_LOCKED && !cached);
     } else
         g_assert_not_reached();
 
-    if (g_strcmp0 (current, cached) != 0) {
+    same = (g_strcmp0 (current, cached) == 0);
+    if (same) {
+        mm_obj_info (self, "SIM %s has not changed: %s",
+                     str, mm_log_str_personal_info (current));
+    } else {
         mm_obj_msg (self, "SIM %s has changed: '%s' -> '%s'",
                     str,
                     mm_log_str_personal_info (cached ? cached : ""),
                     mm_log_str_personal_info (current ? current : ""));
+    }
+
+    if (same || ignore_sim_event) {
+        ctx->step++;
+    } else {
         mm_iface_modem_process_sim_event (MM_IFACE_MODEM (self));
         ctx->step = SIM_SWAP_CHECK_STEP_LAST;
-    } else {
-        mm_obj_info (self, "SIM %s has not changed: %s",
-                     str, mm_log_str_personal_info (current));
-        ctx->step++;
     }
 
     sim_swap_check_step (task);
@@ -5074,7 +5148,7 @@ modem_3gpp_load_eps_ue_mode_operation (MMIfaceModem3gpp    *self,
 }
 
 /*****************************************************************************/
-/* UE mode of operation for EPS settin (3GPP interface) */
+/* UE mode of operation for EPS setting (3GPP interface) */
 
 static gboolean
 modem_3gpp_set_eps_ue_mode_operation_finish (MMIfaceModem3gpp  *self,
@@ -10426,6 +10500,65 @@ modem_cdma_register_in_network (MMIfaceModemCdma *_self,
 }
 
 /*****************************************************************************/
+/* Load currently active channels (CellBroadcast interface) */
+
+static GArray *
+modem_cell_broadcast_load_channels_finish (MMIfaceModemCellBroadcast *self,
+                                           GAsyncResult *res,
+                                           GError **error)
+{
+    return g_task_propagate_pointer (G_TASK (res), error);
+}
+
+static void
+cscb_channels_format_check_ready (MMBroadbandModem *self,
+                                  GAsyncResult *res,
+                                  GTask *task)
+{
+    const gchar *response;
+    GError *error = NULL;
+    GArray *result;
+
+    response = mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, &error);
+    if (error) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    /* Parse reply */
+    result = mm_3gpp_parse_cscb_response (response, &error);
+    if (!result) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_task_return_pointer (task,
+                           result,
+                           (GDestroyNotify)g_array_unref);
+    g_object_unref (task);
+}
+
+static void
+modem_cell_broadcast_load_channels (MMIfaceModemCellBroadcast *self,
+                                    GAsyncReadyCallback callback,
+                                    gpointer user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    /* Load configured channels */
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "+CSCB?",
+                              3,
+                              TRUE,
+                              (GAsyncReadyCallback)cscb_channels_format_check_ready,
+                              task);
+}
+
+/*****************************************************************************/
 
 static gboolean
 modem_cell_broadcast_setup_cleanup_unsolicited_events_finish (MMIfaceModemCellBroadcast *self,
@@ -10527,6 +10660,66 @@ static MMBaseCbm *
 modem_cell_broadcast_create_cbm (MMIfaceModemCellBroadcast *self)
 {
     return mm_base_cbm_new (MM_BASE_MODEM (self));
+}
+
+/***********************************************************************************/
+/* Get channels  (CellBroadcast interface) */
+
+static gboolean
+modem_cell_broadcast_set_channels_finish (MMIfaceModemCellBroadcast *self,
+                                          GAsyncResult *res,
+                                          GError **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+modem_cell_broadcast_set_channels_ready (MMBaseModem *self,
+                                         GAsyncResult *res,
+                                         GTask *task)
+{
+    GError *error = NULL;
+
+    if (!mm_base_modem_at_command_finish (self, res, &error))
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+modem_cell_broadcast_set_channels (MMIfaceModemCellBroadcast *self,
+                                   GArray *channels,
+                                   GAsyncReadyCallback callback,
+                                   gpointer user_data)
+{
+    GTask *task;
+    g_autoptr (GString) cmd = g_string_new ("+CSCB=0,\"");
+    guint i;
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    for (i = 0; i < channels->len; i++) {
+        MMCellBroadcastChannels ch = g_array_index (channels, MMCellBroadcastChannels, i);
+
+        if (i > 0)
+            g_string_append_c (cmd, ',');
+
+        if (ch.start == ch.end)
+            g_string_append_printf (cmd, "%u", ch.start);
+        else
+            g_string_append_printf (cmd, "%u-%u", ch.start, ch.end);
+    }
+    g_string_append (cmd, "\",\"\"");
+
+    mm_obj_dbg (self, "Setting channels...");
+    mm_base_modem_at_command (
+        MM_BASE_MODEM (self),
+        cmd->str,
+        3,
+        FALSE,
+        (GAsyncReadyCallback)modem_cell_broadcast_set_channels_ready,
+        task);
 }
 
 /*********************************************************/
@@ -14268,8 +14461,12 @@ iface_modem_cell_broadcast_init (MMIfaceModemCellBroadcastInterface *iface)
     iface->check_support_finish = modem_cell_broadcast_check_support_finish;
     iface->setup_unsolicited_events = modem_cell_broadcast_setup_unsolicited_events;
     iface->setup_unsolicited_events_finish = modem_cell_broadcast_setup_cleanup_unsolicited_events_finish;
+    iface->load_channels = modem_cell_broadcast_load_channels;
+    iface->load_channels_finish = modem_cell_broadcast_load_channels_finish;
     iface->cleanup_unsolicited_events = modem_cell_broadcast_cleanup_unsolicited_events;
     iface->cleanup_unsolicited_events_finish = modem_cell_broadcast_setup_cleanup_unsolicited_events_finish;
+    iface->set_channels = modem_cell_broadcast_set_channels;
+    iface->set_channels_finish = modem_cell_broadcast_set_channels_finish;
     iface->create_cbm = modem_cell_broadcast_create_cbm;
 }
 

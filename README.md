@@ -15,7 +15,7 @@ actual device (Generic AT, vendor-specific AT, QCDM, QMI, MBIM...).
 ## Getting Started
 
 ModemManager uses the meson build system. Meson is likely available as a
-package from your Linux distrubtion, but if not please refer to the [Meson
+package from your Linux distribution, but if not please refer to the [Meson
 project](https://mesonbuild.com/Quick-guide.html) for installation instructions. Once you have Meson installed you'll
 probably want to install [libmbim](https://gitlab.freedesktop.org/mobile-broadband/libmbim) and [libqmi](https://gitlab.freedesktop.org/mobile-broadband/libqmi) which most modems require.
 
@@ -61,8 +61,9 @@ and need to add or change some public method, feel free to suggest it!
 
 ## License
 
-The ModemManager and mmcli binaries are both GPLv2+.
-The libmm-glib library is LGPLv2+.
+The ModemManager and mmcli binaries are both GPLv2+ (See COPYING).
+The libmm-glib library and the ModemManager API headers are LGPLv2+ (See
+COPYING.LIB).
 
 ## Code of Conduct
 

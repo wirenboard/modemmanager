@@ -1580,7 +1580,7 @@ process_common_info (const gchar                   *info_name,
     /* On a successful registration (either home or roaming) we require a valid
      * domain and "available" service status */
     else if (domain_valid &&
-             domain != QMI_NAS_NETWORK_SERVICE_DOMAIN_UNKNOWN &&
+             domain != QMI_NAS_NETWORK_SERVICE_DOMAIN_CAMPED &&
              domain != QMI_NAS_NETWORK_SERVICE_DOMAIN_NONE &&
              service_status == QMI_NAS_SERVICE_STATUS_AVAILABLE) {
         MMModem3gppRegistrationState tmp_registration_state;
@@ -1641,7 +1641,7 @@ process_gsm_info (QmiMessageNasGetSystemInfoOutput *response_output,
 {
     QmiNasServiceStatus         service_status = QMI_NAS_SERVICE_STATUS_NONE;
     gboolean                    domain_valid = FALSE;
-    QmiNasNetworkServiceDomain  domain = QMI_NAS_NETWORK_SERVICE_DOMAIN_UNKNOWN;
+    QmiNasNetworkServiceDomain  domain = QMI_NAS_NETWORK_SERVICE_DOMAIN_NONE;
     gboolean                    roaming_status_valid = FALSE;
     QmiNasRoamingStatus         roaming_status = QMI_NAS_ROAMING_STATUS_OFF;
     gboolean                    forbidden_valid = FALSE;
@@ -1733,7 +1733,7 @@ process_wcdma_info (QmiMessageNasGetSystemInfoOutput *response_output,
 {
     QmiNasServiceStatus         service_status = QMI_NAS_SERVICE_STATUS_NONE;
     gboolean                    domain_valid = FALSE;
-    QmiNasNetworkServiceDomain  domain = QMI_NAS_NETWORK_SERVICE_DOMAIN_UNKNOWN;
+    QmiNasNetworkServiceDomain  domain = QMI_NAS_NETWORK_SERVICE_DOMAIN_NONE;
     gboolean                    roaming_status_valid = FALSE;
     QmiNasRoamingStatus         roaming_status = QMI_NAS_ROAMING_STATUS_OFF;
     gboolean                    forbidden_valid = FALSE;
@@ -1827,7 +1827,7 @@ process_lte_info (QmiMessageNasGetSystemInfoOutput *response_output,
 {
     QmiNasServiceStatus         service_status = QMI_NAS_SERVICE_STATUS_NONE;
     gboolean                    domain_valid = FALSE;
-    QmiNasNetworkServiceDomain  domain = QMI_NAS_NETWORK_SERVICE_DOMAIN_UNKNOWN;
+    QmiNasNetworkServiceDomain  domain = QMI_NAS_NETWORK_SERVICE_DOMAIN_NONE;
     gboolean                    roaming_status_valid = FALSE;
     QmiNasRoamingStatus         roaming_status = QMI_NAS_ROAMING_STATUS_OFF;
     gboolean                    forbidden_valid = FALSE;
@@ -1926,7 +1926,7 @@ process_nr5g_info (QmiMessageNasGetSystemInfoOutput *response_output,
 {
     QmiNasServiceStatus         service_status = QMI_NAS_SERVICE_STATUS_NONE;
     gboolean                    domain_valid = FALSE;
-    QmiNasNetworkServiceDomain  domain = QMI_NAS_NETWORK_SERVICE_DOMAIN_UNKNOWN;
+    QmiNasNetworkServiceDomain  domain = QMI_NAS_NETWORK_SERVICE_DOMAIN_NONE;
     gboolean                    roaming_status_valid = FALSE;
     QmiNasRoamingStatus         roaming_status = QMI_NAS_ROAMING_STATUS_OFF;
     gboolean                    forbidden_valid = FALSE;
@@ -2541,12 +2541,21 @@ mm_supported_capabilities_from_qmi_supported_capabilities_context (MMQmiSupporte
 /* Utility to build list of supported modes */
 
 GArray *
-mm_supported_modes_from_qmi_supported_modes_context (MMQmiSupportedModesContext *ctx,
-                                                     gpointer                    log_object)
+mm_supported_modes_from_qmi_supported_modes_context (MMQmiSupportedModesContext  *ctx,
+                                                     gpointer                     log_object,
+                                                     GError                     **error)
 {
     g_autoptr(GArray)       combinations = NULL;
     g_autoptr(GArray)       all = NULL;
     MMModemModeCombination  mode;
+
+    if (ctx->all == MM_MODEM_MODE_NONE) {
+        g_set_error (error,
+                     MM_CORE_ERROR,
+                     MM_CORE_ERROR_FAILED,
+                     "No supported modes reported");
+        return NULL;
+    }
 
     /* Start with a mode including ALL */
     mode.allowed = ctx->all;

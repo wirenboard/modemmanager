@@ -1,14 +1,21 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * ModemManager Interface Specification
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details:
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2018 Aleksander Morgado <aleksander@aleksander.es>
  */
@@ -299,6 +306,22 @@
  * Since: 1.22
  */
 #define ID_MM_MAX_MULTIPLEXED_LINKS "ID_MM_MAX_MULTIPLEXED_LINKS"
+
+/**
+ * ID_MM_TTY_AT_PROBE_TRIES:
+ *
+ * For ports that require a longer time to become ready to respond to AT
+ * commands, this tag specifies maximum number of AT probes to try as an
+ * integer between 1 and 20 (inclusive). Each probe attempt has a three-second
+ * timeout before the next probe is tried. Values outside the allowed range
+ * will be clamped to the min/max.
+ *
+ * Plugins implementing custom initialization without opting into this tag
+ * will ignore it.
+ *
+ * Since: 1.24
+ */
+#define ID_MM_TTY_AT_PROBE_TRIES "ID_MM_TTY_AT_PROBE_TRIES"
 
 /*
  * The following symbols are deprecated. We don't add them to -compat
