@@ -1,8 +1,11 @@
-modemmanager (1.24.0-1) UNRELEASED; urgency=medium
+modemmanager (1.24.0-1) unstable; urgency=medium
 
-  * New upstream release
+  * New upstream release. Final release of RC already in Trixie.
+  * libmm-glib0: Update symbols
+  * d/control: Bump libmbim and libqmi versions.
+    Depend on the final versions rather than the RCs.
 
- -- Guido Günther <agx@sigxcpu.org>  Fri, 11 Apr 2025 23:22:00 +0200
+ -- Guido Günther <agx@sigxcpu.org>  Fri, 11 Apr 2025 23:32:31 +0200
 
 modemmanager (1.23.95-2) unstable; urgency=medium
 
