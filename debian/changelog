@@ -1,3 +1,9 @@
+modemmanager (1.24.0-1+deb13u1-wb100) stable; urgency=medium
+
+  * 
+
+ -- Petr Krasnoshchekov <petr.krasnoshchekov@wirenboard.com>  Tue, 14 Oct 2025 12:46:49 +0500
+
 modemmanager (1.24.0-1+deb13u1) trixie; urgency=medium
 
   * d/gbp.conf: target stable branch
