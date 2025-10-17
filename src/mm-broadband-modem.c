@@ -6675,10 +6675,20 @@ cusd_process_string (MMBroadbandModem *self,
         break;
 
     case 2:
+        converted = decode_ussd_response (self, str, &error);
+        if (!converted) {
+            if (task)
+                error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_ABORTED, "USSD terminated by network");
+            break;
+        }
+        
         /* Response to the user's request? */
         if (task)
-            error = g_error_new (MM_CORE_ERROR, MM_CORE_ERROR_ABORTED, "USSD terminated by network");
-        break;
+            break;
+
+        /* Network-initiated USSD-Notify */
+        mm_iface_modem_3gpp_ussd_update_network_notification (MM_IFACE_MODEM_3GPP_USSD (self), converted);
+        g_clear_pointer (&converted, g_free);
 
     case 4:
         /* Response to the user's request? */
