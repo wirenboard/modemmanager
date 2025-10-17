@@ -53,9 +53,12 @@ plugins_incs = [
   plugins_inc,
 ]
 
+libgpiod_dep = dependency('libgpiod')
+
 plugins_deps = [
   daemon_enums_types_dep,
   libmm_glib_dep,
+  libgpiod_dep,
 ]
 
 if enable_mbim
@@ -925,6 +928,7 @@ if plugins_options['simtech']
     'simtech/mm-broadband-modem-simtech.c',
     'simtech/mm-plugin-simtech.c',
     'simtech/mm-shared-simtech.c',
+    'simtech/gpio-helper.c',
   )
 
   if enable_qmi
