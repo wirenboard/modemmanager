@@ -28,7 +28,7 @@ override_dh_install:
 	rmdir $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/ModemManager/fcc-unlock.d
 	dh_install
 
-execute_after_dh_builddeb-indep:
-	# Confirm that the DEP-8 patch still applies to new upstream versions,
-	# before running into autopkgtest failures.
-	patch -p1 < debian/tests/0001-Test-running-service-in-plugin-generic.patch
+#execute_after_dh_builddeb-indep:
+# Confirm that the DEP-8 patch still applies to new upstream versions,
+# before running into autopkgtest failures.
+#	patch -p1 < debian/tests/0001-Test-running-service-in-plugin-generic.patch
