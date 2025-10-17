@@ -929,6 +929,7 @@ if plugins_options['simtech']
     'simtech/mm-plugin-simtech.c',
     'simtech/mm-shared-simtech.c',
     'simtech/gpio-helper.c',
+    'simtech/mm-sms-simtech-a7600.c',
   )
 
   if enable_qmi
